@@ -13,15 +13,15 @@ public class ProcessHistoryEntry implements Serializable {
     private final Date createdDt;
     private final String initiator;
     private final ProcessStatus status;
-    private final Date lastChangeDt;
+    private final Date lastUpdateDt;
     private final String logFileName;
 
-    public ProcessHistoryEntry(String instanceId, Date createdDt, String initiator, ProcessStatus status, Date lastChangeDt, String logFileName) {
+    public ProcessHistoryEntry(String instanceId, Date createdDt, String initiator, ProcessStatus status, Date lastUpdateDt, String logFileName) {
         this.instanceId = instanceId;
         this.createdDt = createdDt;
         this.initiator = initiator;
         this.status = status;
-        this.lastChangeDt = lastChangeDt;
+        this.lastUpdateDt = lastUpdateDt;
         this.logFileName = logFileName;
     }
 
@@ -41,8 +41,8 @@ public class ProcessHistoryEntry implements Serializable {
         return status;
     }
 
-    public Date getLastChangeDt() {
-        return lastChangeDt;
+    public Date getlastUpdateDt() {
+        return lastUpdateDt;
     }
 
     public String getLogFileName() {
@@ -62,7 +62,7 @@ public class ProcessHistoryEntry implements Serializable {
                 ", createdDt=" + createdDt +
                 ", initiator='" + initiator + '\'' +
                 ", status=" + status +
-                ", lastChangeDt=" + lastChangeDt +
+                ", lastUpdateDt=" + lastUpdateDt +
                 ", logFileName='" + logFileName + '\'' +
                 '}';
     }

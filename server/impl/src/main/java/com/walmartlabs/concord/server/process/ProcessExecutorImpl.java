@@ -9,6 +9,7 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.AgentConfiguration;
 import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
 import com.walmartlabs.concord.server.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.inventory.InventoryPayloadProcessor;
 import com.walmartlabs.concord.server.template.TemplateEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
@@ -35,6 +36,11 @@ import java.util.zip.ZipOutputStream;
 public class ProcessExecutorImpl implements ProcessExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessExecutorImpl.class);
+
+    /**
+     * Minimal period of time (in ms) between updating the status of a process on the server.
+     */
+    private static final long PROCESS_UPDATE_PERIOD = 5000;
 
     private final LogStoreConfiguration logCfg;
     private final AgentConfiguration agentCfg;
@@ -106,7 +112,7 @@ public class ProcessExecutorImpl implements ProcessExecutor {
             // stream back the job's log
 
             try (OutputStream out = new BufferedOutputStream(new FileOutputStream(logFile, true))) {
-                a.stream(jobId, out);
+                a.stream(jobId, out, () -> callback.onUpdate(payload));
             } catch (IOException e) {
                 throw new ProcessExecutorException("Error while streaming an agent's log", e);
             }
@@ -193,7 +199,10 @@ public class ProcessExecutorImpl implements ProcessExecutor {
             this.logResource = ((ResteasyWebTarget) t).proxy(LogResource.class);
         }
 
-        public void stream(String jobIb, OutputStream out) throws IOException {
+        public void stream(String jobIb, OutputStream out, Runnable progressUpdater) throws IOException {
+            // TODO constants
+            progressUpdater = new ThrottledRunnable(progressUpdater, PROCESS_UPDATE_PERIOD);
+
             Response r = logResource.stream(jobIb);
             try (InputStream in = r.readEntity(InputStream.class)) {
                 byte[] ab = new byte[256];
@@ -201,6 +210,7 @@ public class ProcessExecutorImpl implements ProcessExecutor {
                 while ((read = in.read(ab)) > 0) {
                     out.write(ab, 0, read);
                     out.flush();
+                    progressUpdater.run();
                 }
             } finally {
                 if (r != null) {
@@ -212,6 +222,28 @@ public class ProcessExecutorImpl implements ProcessExecutor {
         @Override
         public void close() {
             client.close();
+        }
+    }
+
+    private static final class ThrottledRunnable implements Runnable {
+
+        private final Runnable delegate;
+        private final long period;
+
+        private long t1 = System.currentTimeMillis();
+
+        private ThrottledRunnable(Runnable delegate, long period) {
+            this.delegate = delegate;
+            this.period = period;
+        }
+
+        @Override
+        public void run() {
+            long t2 = System.currentTimeMillis();
+            if (t2 - t1 >= period) {
+                t1 = t2;
+                delegate.run();
+            }
         }
     }
 }

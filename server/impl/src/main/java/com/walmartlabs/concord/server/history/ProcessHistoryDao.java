@@ -54,7 +54,7 @@ public class ProcessHistoryDao extends AbstractDao {
                     .columns(PROCESS_HISTORY.INSTANCE_ID,
                             PROCESS_HISTORY.INITIATOR,
                             PROCESS_HISTORY.CREATED_DT,
-                            PROCESS_HISTORY.LAST_CHANGE_DT,
+                            PROCESS_HISTORY.LAST_UPDATE_DT,
                             PROCESS_HISTORY.CURRENT_STATUS,
                             PROCESS_HISTORY.LOG_FILE_NAME)
                     .values(value(instanceId),
@@ -73,7 +73,7 @@ public class ProcessHistoryDao extends AbstractDao {
             DSLContext create = DSL.using(cfg);
             int i = create.update(PROCESS_HISTORY)
                     .set(PROCESS_HISTORY.CURRENT_STATUS, processStatus.toString())
-                    .set(PROCESS_HISTORY.LAST_CHANGE_DT, currentTimestamp())
+                    .set(PROCESS_HISTORY.LAST_UPDATE_DT, currentTimestamp())
                     .where(PROCESS_HISTORY.INSTANCE_ID.eq(instanceId))
                     .execute();
 
@@ -83,6 +83,22 @@ public class ProcessHistoryDao extends AbstractDao {
             }
         });
         log.info("update ['{}', {}] -> done", instanceId, processStatus);
+    }
+
+    /**
+     * Update the timestamp of a process.
+     *
+     * @param instanceId
+     */
+    public void touch(String instanceId) {
+        transaction(cfg -> {
+            DSLContext create = DSL.using(cfg);
+            create.update(PROCESS_HISTORY)
+                    .set(PROCESS_HISTORY.LAST_UPDATE_DT, currentTimestamp())
+                    .where(PROCESS_HISTORY.INSTANCE_ID.eq(instanceId))
+                    .execute();
+        });
+        log.info("touch ['{}'] -> done", instanceId);
     }
 
     public List<ProcessHistoryEntry> list(int limit, ProcessStatus... filters) {
@@ -126,9 +142,9 @@ public class ProcessHistoryDao extends AbstractDao {
         Date createdDt = r.get(PROCESS_HISTORY.CREATED_DT);
         String initiator = r.get(PROCESS_HISTORY.INITIATOR);
         ProcessStatus status = ProcessStatus.valueOf(r.get(PROCESS_HISTORY.CURRENT_STATUS));
-        Date lastChangeDt = r.get(PROCESS_HISTORY.LAST_CHANGE_DT);
+        Date lastUpdateDt = r.get(PROCESS_HISTORY.LAST_UPDATE_DT);
         String logFileName = r.get(PROCESS_HISTORY.LOG_FILE_NAME);
-        return new ProcessHistoryEntry(instanceId, createdDt, initiator, status, lastChangeDt, logFileName);
+        return new ProcessHistoryEntry(instanceId, createdDt, initiator, status, lastUpdateDt, logFileName);
     }
 
     private static List<String> toString(ProcessStatus... as) {

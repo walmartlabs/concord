@@ -43,9 +43,13 @@ As a workaround you can use the `lowEntropy` profile:
 This profile starts [haveged](https://github.com/harbur/docker-haveged) before running
 the ITs.
 
+# Development
+
+See [the Development](docs/development.md) document.
+
 # Running
 
-See the [the Quick Start](docs/quickstart.md) document.
+See [the Quick Start](docs/quickstart.md) document.
 
 # Examples
 

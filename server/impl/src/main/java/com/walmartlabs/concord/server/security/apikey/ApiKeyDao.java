@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.security.apikey;
 
+import com.google.common.base.Throwables;
 import com.walmartlabs.concord.bootstrap.db.AbstractDao;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -45,7 +47,7 @@ public class ApiKeyDao extends AbstractDao {
             DSLContext create = DSL.using(cfg);
             create.insertInto(API_KEYS)
                     .columns(API_KEYS.USER_ID, API_KEYS.API_KEY)
-                    .values(userId, key)
+                    .values(userId, hash(key))
                     .execute();
         });
         log.info("insert ['{}', '*******'] -> done", userId);
@@ -55,7 +57,7 @@ public class ApiKeyDao extends AbstractDao {
         try (DSLContext create = DSL.using(cfg)) {
             String id = create.select(API_KEYS.USER_ID)
                     .from(API_KEYS)
-                    .where(API_KEYS.API_KEY.eq(key))
+                    .where(API_KEYS.API_KEY.eq(hash(key)))
                     .fetchOne(API_KEYS.USER_ID);
 
             if (id == null) {
@@ -66,5 +68,19 @@ public class ApiKeyDao extends AbstractDao {
             log.debug("findUserId ['{}'] -> found: {}", key, id);
             return id;
         }
+    }
+
+    private static String hash(String s) {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw Throwables.propagate(e);
+        }
+
+        byte[] ab = Base64.getDecoder().decode(s);
+        ab = md.digest(ab);
+
+        return Base64.getEncoder().withoutPadding().encodeToString(ab);
     }
 }

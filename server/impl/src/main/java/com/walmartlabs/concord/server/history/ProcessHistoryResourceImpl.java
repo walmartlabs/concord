@@ -27,7 +27,7 @@ public class ProcessHistoryResourceImpl implements ProcessHistoryResource, Resou
         key2Field.put("instanceId", PROCESS_HISTORY.INSTANCE_ID);
         key2Field.put("createdDt", PROCESS_HISTORY.CREATED_DT);
         key2Field.put("initiator", PROCESS_HISTORY.INITIATOR);
-        key2Field.put("lastChangeDt", PROCESS_HISTORY.LAST_CHANGE_DT);
+        key2Field.put("lastUpdateDt", PROCESS_HISTORY.LAST_UPDATE_DT);
         key2Field.put("status", PROCESS_HISTORY.CURRENT_STATUS);
     }
 

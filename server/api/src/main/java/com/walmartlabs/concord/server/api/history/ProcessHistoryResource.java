@@ -10,7 +10,7 @@ public interface ProcessHistoryResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessHistoryEntry> list(
-            @QueryParam("sortBy") @DefaultValue("lastChangeDt") String sortBy,
+            @QueryParam("sortBy") @DefaultValue("lastUpdateDt") String sortBy,
             @QueryParam("asc") @DefaultValue("true") boolean asc,
             @QueryParam("limit") @DefaultValue("30") int limit);
 }

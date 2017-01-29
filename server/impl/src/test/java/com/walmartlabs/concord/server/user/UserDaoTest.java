@@ -6,6 +6,7 @@ import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
@@ -31,7 +32,8 @@ public class UserDaoTest extends AbstractDaoTest {
 
         userDao.insert(userId, username, permissions);
 
-        String apiKey = "key#" + System.currentTimeMillis();
+        String s = "key#" + System.currentTimeMillis();
+        String apiKey = Base64.getEncoder().encodeToString(s.getBytes());
         apiKeyDao.insert(userId, apiKey);
 
         // ---

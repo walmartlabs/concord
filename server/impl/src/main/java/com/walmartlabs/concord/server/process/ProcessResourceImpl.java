@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
-import com.walmartlabs.concord.server.api.process.*;
+import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.project.ProjectDao;
@@ -17,7 +20,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -133,7 +135,17 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         String initiator = user.getName();
         String logFileName = instanceId + ".log";
 
-        ProcessExecutorCallback callback = (payload, status) -> historyDao.update(payload.getInstanceId(), status);
+        ProcessExecutorCallback callback = new ProcessExecutorCallback() {
+            @Override
+            public void onStatusChange(Payload payload, ProcessStatus status) {
+                historyDao.update(payload.getInstanceId(), status);
+            }
+
+            @Override
+            public void onUpdate(Payload payload) {
+                historyDao.touch(payload.getInstanceId());
+            }
+        };
 
         historyDao.insertInitial(instanceId, initiator, logFileName);
 
@@ -190,7 +202,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             log.warn("get ['{}'] -> not found", instanceId);
             throw new WebApplicationException(Status.NOT_FOUND);
         }
-        return new ProcessStatusResponse(r.getLastChangeDt(), r.getStatus(), r.getLogFileName());
+        return new ProcessStatusResponse(r.getlastUpdateDt(), r.getStatus(), r.getLogFileName());
     }
 
     private static Path unpack(InputStream in) {

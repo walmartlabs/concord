@@ -10,17 +10,17 @@ export const history = {
         {key: "instanceId", label: "Instance ID"},
         {key: "status", label: "Status"},
         {key: "initiator", label: "Initiator"},
-        {key: "lastChangeDt", label: "Updated"},
+        {key: "lastUpdateDt", label: "Updated"},
         {key: "createdDt", label: "Created"}
     ],
 
-    defaultSortKey: "lastChangeDt",
+    defaultSortKey: "lastUpdateDt",
     defaultSortDir: sort.DESC,
 
     logFileNameKey: "logFileName",
     logLinkKey: "instanceId",
 
-    dateKeys: ["lastChangeDt", "createdDt"],
+    dateKeys: ["lastUpdateDt", "createdDt"],
 
     statusKey: "status",
 

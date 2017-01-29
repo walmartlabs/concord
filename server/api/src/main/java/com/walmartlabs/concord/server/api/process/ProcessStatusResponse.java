@@ -9,21 +9,21 @@ import java.util.Date;
 public class ProcessStatusResponse implements Serializable {
 
     private final boolean ok = true;
-    private final Date lastChangeDt;
+    private final Date lastUpdateDt;
     private final ProcessStatus status;
     private final String logFileName;
 
     @JsonCreator
-    public ProcessStatusResponse(@JsonProperty("lastChangeDt") Date lastChangeDt,
+    public ProcessStatusResponse(@JsonProperty("lastUpdateDt") Date lastUpdateDt,
                                  @JsonProperty("status") ProcessStatus status,
                                  @JsonProperty("logFileName") String logFileName) {
-        this.lastChangeDt = lastChangeDt;
+        this.lastUpdateDt = lastUpdateDt;
         this.status = status;
         this.logFileName = logFileName;
     }
 
-    public Date getLastChangeDt() {
-        return lastChangeDt;
+    public Date getlastUpdateDt() {
+        return lastUpdateDt;
     }
 
     public ProcessStatus getStatus() {
@@ -42,7 +42,7 @@ public class ProcessStatusResponse implements Serializable {
     public String toString() {
         return "ProcessInstanceResponse{" +
                 "ok=" + ok +
-                ", lastChangeDt=" + lastChangeDt +
+                ", lastUpdateDt=" + lastUpdateDt +
                 ", status=" + status +
                 ", logFileName='" + logFileName + '\'' +
                 '}';

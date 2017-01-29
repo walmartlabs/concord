@@ -21,7 +21,7 @@
             <column name="CURRENT_STATUS" type="varchar(20)" remarks="Current status of a process">
                 <constraints nullable="false"/>
             </column>
-            <column name="LAST_CHANGE_DT" type="timestamp" remarks="Time of last status update">
+            <column name="LAST_UPDATE_DT" type="timestamp" remarks="Time of last update">
                 <constraints nullable="false"/>
             </column>
             <column name="LOG_FILE_NAME" type="varchar(256)" remarks="Process' log file">
@@ -97,7 +97,7 @@
 
     <changeSet id="1400" author="ibodrov@gmail.com">
         <createTable tableName="API_KEYS" remarks="API access keys">
-            <column name="API_KEY" type="varchar(22)">
+            <column name="API_KEY" type="varchar(64)" remarks="SHA-256 hash of a key">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="USER_ID" type="varchar(36)" remarks="ID of a key's user">
@@ -121,7 +121,8 @@
 
     <changeSet id="1430" author="ibodrov@gmail.com">
         <insert tableName="API_KEYS">
-            <column name="API_KEY">auBy4eDWrKWsyhiDp3AQiw</column>
+            <!-- original: auBy4eDWrKWsyhiDp3AQiw -->
+            <column name="API_KEY">KLI+ltQThpx6RQrOc2nDBaM/8tDyVGDw+UVYMXDrqaA</column>
             <column name="USER_ID">230c5c9c-d9a7-11e6-bcfd-bb681c07b26c</column>
         </insert>
     </changeSet>
