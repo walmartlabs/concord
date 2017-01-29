@@ -29,7 +29,7 @@ public class GroovyIT {
     @Before
     public void setUp() throws Exception {
         main = new Main();
-        main.start();
+        main.start(0);
 
         client = ClientBuilder.newClient();
     }
@@ -42,7 +42,7 @@ public class GroovyIT {
 
     @Test(timeout = 15000)
     public void test() throws Exception {
-        ResteasyWebTarget target = (ResteasyWebTarget) client.target("http://localhost:8002");
+        ResteasyWebTarget target = (ResteasyWebTarget) client.target("http://localhost:" + main.getLocalPort());
         JobResource proxy = target.proxy(JobResource.class);
 
         String resource = "test.groovy";

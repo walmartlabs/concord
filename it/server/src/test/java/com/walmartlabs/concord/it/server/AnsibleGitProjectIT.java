@@ -40,7 +40,7 @@ public class AnsibleGitProjectIT extends ProjectIT {
 
         String templateName = "ansible#" + System.currentTimeMillis();
         TemplateResource templateResource = proxy(TemplateResource.class);
-        try (InputStream in = new FileInputStream(getTemplatesDir() + "/ansible-template.zip")) {
+        try (InputStream in = new FileInputStream(ITConstants.TEMPLATES_DIR + "/ansible-template.zip")) {
             templateResource.create(templateName, in);
         }
 

@@ -10,7 +10,11 @@ public class Main {
     private Server server;
 
     public void start() throws Exception {
-        server = new Server(8002) {
+        start(8002);
+    }
+
+    public void start(int port) throws Exception {
+        server = new Server(port) {
             @Override
             protected Injector createInjector(ServletContextHandler h) {
                 return Bootstrap.createInjector(Main.class.getClassLoader());
@@ -18,6 +22,14 @@ public class Main {
         };
 
         server.start();
+    }
+
+    public int getLocalPort() {
+        if (server == null) {
+            return -1;
+        }
+
+        return server.getLocalPort();
     }
 
     public void stop() throws Exception {

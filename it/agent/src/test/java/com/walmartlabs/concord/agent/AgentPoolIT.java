@@ -19,7 +19,7 @@ public class AgentPoolIT {
     @Before
     public void setUp() throws Exception {
         main = new Main();
-        main.start();
+        main.start(0);
     }
 
     @After
@@ -29,7 +29,7 @@ public class AgentPoolIT {
 
     @Test
     public void testOk() throws Exception {
-        URI host = URI.create("http://localhost:8002");
+        URI host = URI.create("http://localhost:" + main.getLocalPort());
         AgentPool pool = new AgentPool(Collections.singleton(host));
 
         JobResource a = pool.acquire(5000);

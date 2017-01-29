@@ -21,7 +21,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
-import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.zip.ZipOutputStream;
 
@@ -35,17 +34,12 @@ public abstract class AbstractServerIT {
      */
     protected static final String DEFAULT_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
 
-    private Properties properties;
-
     private Client client;
     private WebTarget target;
     private String apiKey = DEFAULT_API_KEY;
 
     @Before
     public void _init() throws Exception {
-        properties = new Properties();
-        properties.load(ClassLoader.getSystemResourceAsStream("test.properties"));
-
         client = createClient(this::getApiKey);
         target = client.target(ITConstants.SERVER_URL);
     }
@@ -67,14 +61,6 @@ public abstract class AbstractServerIT {
 
     protected <T> T proxy(Class<T> klass) {
         return ((ResteasyWebTarget) target).proxy(klass);
-    }
-
-    protected String getDependenciesDir() {
-        return properties.getProperty("deps.dir");
-    }
-
-    protected String getTemplatesDir() {
-        return properties.getProperty("templates.dir");
     }
 
     protected static ProcessStatusResponse waitForCompletion(ProcessResource processResource, String instanceId) throws InterruptedException {

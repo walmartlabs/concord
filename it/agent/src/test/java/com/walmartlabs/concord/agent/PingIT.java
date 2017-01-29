@@ -19,7 +19,7 @@ public class PingIT {
     @Before
     public void setUp() throws Exception {
         main = new Main();
-        main.start();
+        main.start(0);
 
         client = ClientBuilder.newClient();
     }
@@ -32,7 +32,7 @@ public class PingIT {
 
     @Test
     public void test() throws Exception {
-        WebTarget t = client.target("http://localhost:8002/api/v1/agent/ping");
+        WebTarget t = client.target("http://localhost:" + main.getLocalPort() + "/api/v1/agent/ping");
         Response resp = t.request().get();
         assertEquals(200, resp.getStatus());
     }

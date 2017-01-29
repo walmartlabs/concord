@@ -28,6 +28,15 @@ public abstract class Server {
         server.start();
     }
 
+    public int getLocalPort() {
+        if (server == null) {
+            return -1;
+        }
+
+        ServerConnector c = (ServerConnector) server.getConnectors()[0];
+        return c.getLocalPort();
+    }
+
     private ServletContextHandler createServletContextHandler() {
         ServletContextHandler h = new ServletContextHandler();
 

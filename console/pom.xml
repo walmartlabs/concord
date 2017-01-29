@@ -13,6 +13,10 @@
     <artifactId>concord-console</artifactId>
     <packaging>pom</packaging>
 
+    <properties>
+        <skipNpmInstall>false</skipNpmInstall>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -32,6 +36,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
+                            <skip>${skipNpmInstall}</skip>
                             <arguments>install</arguments>
                         </configuration>
                     </execution>

@@ -16,7 +16,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test
     public void testHello() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansible").toURI();
-        byte[] payload = archive(dir, getDependenciesDir());
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
         // ---
 

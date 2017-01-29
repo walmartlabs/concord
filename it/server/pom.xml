@@ -126,6 +126,9 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
+                    <environmentVariables>
+                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
+                    </environmentVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -206,11 +209,11 @@
                                     <alias>agent</alias>
                                     <run>
                                         <ports>
-                                            <port>8002:8002</port>
+                                            <port>it.agent.port:8002</port>
                                         </ports>
                                         <wait>
                                             <http>
-                                                <url>http://localhost:8002/api/v1/agent/ping</url>
+                                                <url>http://localhost:${it.agent.port}/api/v1/agent/ping</url>
                                             </http>
                                         </wait>
                                     </run>
@@ -220,7 +223,7 @@
                                     <alias>server</alias>
                                     <run>
                                         <ports>
-                                            <port>8001:8001</port>
+                                            <port>it.server.port:8001</port>
                                         </ports>
                                         <volumes>
                                             <bind>
@@ -232,7 +235,7 @@
                                         </links>
                                         <wait>
                                             <http>
-                                                <url>http://localhost:8001/api/v1/server/ping</url>
+                                                <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
                                             </http>
                                         </wait>
                                     </run>

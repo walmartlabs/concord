@@ -50,7 +50,7 @@ public class JarIT {
     @Before
     public void setUp() throws Exception {
         main = new Main();
-        main.start();
+        main.start(0);
 
         // we need multi threaded http client for out async test cases
 
@@ -65,7 +65,7 @@ public class JarIT {
                 .httpEngine(httpEngine)
                 .build();
 
-        WebTarget t = client.target("http://localhost:8002");
+        WebTarget t = client.target("http://localhost:" + main.getLocalPort());
         jobResource = ((ResteasyWebTarget) t).proxy(JobResource.class);
         logResource = ((ResteasyWebTarget) t).proxy(LogResource.class);
     }
