@@ -1,0 +1,2 @@
+main:
+- expr: ${ansible.run(ansibleParams, "hello.yml", __attr_localPath.concat("/playbook"), null)}

@@ -1,0 +1,3 @@
+main:
+- expr: ${log.info("test", "Hello, ".concat(myName))}
+- expr: ${log.info("test", resource.asString(__attr_localPath.concat("/something.txt")))}

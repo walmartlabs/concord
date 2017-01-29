@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.walmartlabs.concord</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.walmartlabs.concord.it</groupId>
+    <artifactId>parent</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>agent</module>
+        <module>runner</module>
+        <module>server</module>
+    </modules>
+
+    <properties>
+        <skip.it.tests>true</skip.it.tests>
+        <skip.haveged>true</skip.haveged>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>it</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <skip.it.tests>false</skip.it.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>lowEntropy</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <skip.haveged>false</skip.haveged>
+            </properties>
+        </profile>
+    </profiles>
+</project>

@@ -1,0 +1,30 @@
+public nexusPerf:
+  - call: cleanTestRepos
+  - nexusPerf:
+      agentHosts: ${net.resolve(nexusPerfAgentHost)}
+      scenarios: ${nexusPerfScenarios}
+      scenarioDirTemplate: /app/scenarios/%s
+      nexusUrl: ${nexusUrl}
+      nexusMemberUrls: ${nexusMemberUrls}
+      nexusUsername: TestNexusAdmin
+      nexusPassword: Str@w-919-Cake
+  - assert:
+      - test: ${failures == 0}
+        description: nexus-perf agents reported no failures
+
+cleanTestRepos:
+  - ansible:
+      username: ${ansibleUsername}
+      password: ${ansiblePassword}
+      playbook: nexus.yml
+      playbookPath: ${util.localPath.concat("/nexus-ansible")}
+      hostsFileTemplate: "[nexus_bm:children]\nnexus_bm_test\n[nexus_bm_test]\n%s"
+      extraVars:
+        takari_version: ${nexusVersion}
+        nexus_env: test
+        nexus_cloud: dfw
+        update_config": yes
+        is_active: true
+        keystore_password: ${nexusKeystorePassword}
+      tags:
+        - cleanup

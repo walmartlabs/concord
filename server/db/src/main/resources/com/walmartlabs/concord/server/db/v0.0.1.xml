@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <!-- PROCESS_HISTORY -->
+
+    <changeSet id="1000" author="ibodrov@gmail.com">
+        <createTable tableName="PROCESS_HISTORY" remarks="History of process instances">
+            <column name="INSTANCE_ID" type="varchar(36)" remarks="Unique process ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="CREATED_DT" type="timestamp" remarks="Time of process creation">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INITIATOR" type="varchar(128)"
+                    remarks="Identifier of the process initiator (user), can be null">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CURRENT_STATUS" type="varchar(20)" remarks="Current status of a process">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LAST_CHANGE_DT" type="timestamp" remarks="Time of last status update">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LOG_FILE_NAME" type="varchar(256)" remarks="Process' log file">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- PROCESS_DEFINITIONS -->
+
+    <changeSet id="1100" author="ibodrov@gmail.com">
+        <createTable tableName="PROCESS_DEFINITIONS" remarks="Process definitions (source files)">
+            <column name="DEFINITION_ID" type="varchar(36)" remarks="Unique process definition ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="DEFINITION_TYPE" type="varchar(128)" remarks="Type of data">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DEFINITION_DATA" type="blob" remarks="Source file">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- USERS -->
+
+    <changeSet id="1200" author="ibodrov@gmail.com">
+        <createTable tableName="USERS" remarks="Users">
+            <column name="USER_ID" type="varchar(36)" remarks="Unique user ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="USERNAME" type="varchar(64)" remarks="Unique name of a user (login)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1210" author="ibodrov@gmail.com">
+        <insert tableName="USERS">
+            <column name="USER_ID">230c5c9c-d9a7-11e6-bcfd-bb681c07b26c</column>
+            <column name="USERNAME">admin</column>
+        </insert>
+    </changeSet>
+
+    <!-- USER_PERMISSIONS -->
+
+    <changeSet id="1300" author="ibodrov@gmail.com">
+        <createTable tableName="USER_PERMISSIONS" remarks="User permissions">
+            <column name="USER_ID" type="varchar(36)" remarks="ID of a user">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="PERMISSION" type="varchar(1024)" remarks="Permission wildcard">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1310" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_PERMISSIONS_USER"
+                                 baseTableName="USER_PERMISSIONS" baseColumnNames="USER_ID"
+                                 referencedTableName="USERS" referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="1320" author="ibodrov@gmail.com">
+        <insert tableName="USER_PERMISSIONS">
+            <column name="USER_ID">230c5c9c-d9a7-11e6-bcfd-bb681c07b26c</column>
+            <column name="PERMISSION">*:*:*</column>
+        </insert>
+    </changeSet>
+
+    <!-- API_KEYS -->
+
+    <changeSet id="1400" author="ibodrov@gmail.com">
+        <createTable tableName="API_KEYS" remarks="API access keys">
+            <column name="API_KEY" type="varchar(22)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="USER_ID" type="varchar(36)" remarks="ID of a key's user">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1410" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_API_KEY_USER"
+                                 baseTableName="API_KEYS" baseColumnNames="USER_ID"
+                                 referencedTableName="USERS" referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="1420" author="ibodrov@gmail.com">
+        <createIndex tableName="API_KEYS" indexName="IDX_API_KEY_USER">
+            <column name="USER_ID"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1430" author="ibodrov@gmail.com">
+        <insert tableName="API_KEYS">
+            <column name="API_KEY">auBy4eDWrKWsyhiDp3AQiw</column>
+            <column name="USER_ID">230c5c9c-d9a7-11e6-bcfd-bb681c07b26c</column>
+        </insert>
+    </changeSet>
+
+    <!-- PROJECTS -->
+
+    <changeSet id="1500" author="ibodrov@gmail.com">
+        <createTable tableName="PROJECTS">
+            <column name="PROJECT_ID" type="varchar(36)" remarks="Unique project ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="PROJECT_NAME" type="varchar(128)" remarks="Name (key) of a project">
+                <constraints unique="true" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1510" author="ibodrov@gmail.com">
+        <createIndex tableName="PROJECTS" indexName="IDX_PROJECT_NAME">
+            <column name="PROJECT_NAME"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- REPOSITORIES -->
+
+    <changeSet id="1600" author="ibodrov@gmail.com">
+        <createTable tableName="REPOSITORIES">
+            <column name="REPO_ID" type="varchar(36)" remarks="Unique repository ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="REPO_NAME" type="varchar(128)" remarks="Name (key) of a repository">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="REPO_URL" type="varchar(2048)" remarks="URL of a repository">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1610" author="ibodrov@gmail.com">
+        <createIndex tableName="REPOSITORIES" indexName="IDX_REPO_NAME">
+            <column name="REPO_NAME"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- PROJECT_REPOS -->
+
+    <changeSet id="1700" author="ibodrov@gmail.com">
+        <createTable tableName="PROJECT_REPOS">
+            <column name="PROJECT_ID" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="REPO_ID" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1710" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_PROJ_REPO_PROJ"
+                                 baseTableName="PROJECT_REPOS" baseColumnNames="PROJECT_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="1720" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_PROJ_REPO_REPO"
+                                 baseTableName="PROJECT_REPOS" baseColumnNames="REPO_ID"
+                                 referencedTableName="REPOSITORIES"
+                                 referencedColumnNames="REPO_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- TEMPLATES -->
+
+    <changeSet id="1800" author="ibodrov@gmail.com">
+        <createTable tableName="TEMPLATES">
+            <column name="TEMPLATE_ID" type="varchar(36)" remarks="Unique project template ID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TEMPLATE_NAME" type="varchar(128)" remarks="Name (key) of a project template">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="TEMPLATE_DATA" type="blob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1810" author="ibodrov@gmail.com">
+        <createIndex tableName="TEMPLATES" indexName="IDX_TEMPLATE_NAME">
+            <column name="TEMPLATE_NAME"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- PROJECT_TEMPLATES -->
+
+    <changeSet id="1900" author="ibodrov@gmail.com">
+        <createTable tableName="PROJECT_TEMPLATES">
+            <column name="PROJECT_ID" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TEMPLATE_ID" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1910" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_PROJ_TEMPLATE_PROJ"
+                                 baseTableName="PROJECT_TEMPLATES" baseColumnNames="PROJECT_ID"
+                                 referencedTableName="PROJECTS" referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="1920" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_PROJ_TEMPLATE_TEMP"
+                                 baseTableName="PROJECT_TEMPLATES" baseColumnNames="TEMPLATE_ID"
+                                 referencedTableName="TEMPLATES" referencedColumnNames="TEMPLATE_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,10 @@
+sayHello:
+- expr: ${test.sayHello(name)}
+
+simple6:
+- call: sayHello
+  in:
+    name: ${execution.getVariable("myName")}
+- call: sayHello
+  in:
+    name: A literal

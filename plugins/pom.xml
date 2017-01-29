@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.walmartlabs.concord</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.walmartlabs.concord.plugins</groupId>
+    <artifactId>parent</artifactId>
+
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>extensions/ansible-inventory</module>
+        <module>tasks/oneops</module>
+        <module>tasks/ansible</module>
+        <module>tasks/jenkins</module>
+        <module>tasks/smtp</module>
+        <module>tasks/nexus</module>
+        <module>formats/bpmn</module>
+        <module>formats/yaml</module>
+        <module>definition-providers/fs</module>
+        <module>templates/ansible</module>
+    </modules>
+</project>

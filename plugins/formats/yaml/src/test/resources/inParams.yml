@@ -1,0 +1,11 @@
+main:
+- call: proc
+  in:
+    myArray:
+    - 1
+    - 2
+    - "Hello heterogeneous collections"
+
+proc:
+- expr: ${test.checkArray(myArray, 3)}
+- expr: ${test.checkString(myArray[2])}

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.walmartlabs.concord.docker</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>concord-base</artifactId>
+    <packaging>docker</packaging>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <images>
+                        <image>
+                            <name>walmartlabs/concord-base:%v</name>
+                            <alias>base</alias>
+                            <build>
+                                <from>centos</from>
+                                <maintainer>${docker.maintainer}</maintainer>
+                                <tags>
+                                    <tag>latest</tag>
+                                    <tag>${project.version}</tag>
+                                </tags>
+                                <runCmds>
+                                    <run>yum -y upgrade</run>
+                                    <run>yum -y install java-1.8.0-openjdk-devel which libtool-ltdl</run>
+                                    <run>yum clean all</run>
+                                </runCmds>
+                                <env>
+                                    <JAVA_HOME>/usr/lib/jvm/java-1.8.0</JAVA_HOME>
+                                </env>
+                                <optimise>true</optimise>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

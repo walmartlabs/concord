@@ -1,0 +1,2 @@
+simple:
+- expr: ${log.info("test", "Hello, ".concat(myName))}

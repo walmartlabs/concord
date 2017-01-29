@@ -1,0 +1,11 @@
+errorsWithParams:
+- subprocess:
+  errors:
+  - call: handle
+    in:
+      name: A literal
+  steps:
+  - expr: ${test.doThrow("myError")}
+
+handle:
+- expr: ${test.sayHello(name)}

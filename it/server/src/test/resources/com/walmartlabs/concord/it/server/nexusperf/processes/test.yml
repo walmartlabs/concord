@@ -1,0 +1,4 @@
+main:
+- expr: ${perf2.loadAndStart(execution, "localhost", "scenarios", scenarios)}
+- expr: ${perf2.waitToFinish(execution, 15000)}
+- expr: ${perf2.close(execution)}

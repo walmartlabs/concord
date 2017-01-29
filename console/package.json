@@ -1,0 +1,32 @@
+{
+  "name": "concord-console",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "react-scripts": "0.8.5",
+    "express-http-proxy": "*",
+    "express": "*",
+    "babel-cli": "*"
+  },
+  "dependencies": {
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "react-router": "*",
+    "react-router-redux": "*",
+    "redux": "*",
+    "react-redux": "*",
+    "redux-form": "*",
+    "redux-saga": "*",
+    "redux-logger": "*",
+    "semantic-ui-react": "*",
+    "moment": "*"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "server": "babel-node --presets es2015 scripts/server.js"
+  },
+  "proxy": "http://localhost:8001/"
+}

@@ -1,0 +1,6 @@
+{
+  "entryPoint": "simple",
+  "arguments": {
+    "myName": "Concord"
+  }
+}

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.walmartlabs.concord.docker</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>concord-agent</artifactId>
+    <packaging>docker</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord.agent</groupId>
+            <artifactId>concord-agent</artifactId>
+            <version>${project.version}</version>
+            <type>tar.gz</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <images>
+                        <image>
+                            <name>walmartlabs/concord-agent-base:%v</name>
+                            <build>
+                                <from>walmartlabs/concord-base</from>
+                                <maintainer>${docker.maintainer}</maintainer>
+                                <tags>
+                                    <tag>latest</tag>
+                                    <tag>${project.version}</tag>
+                                </tags>
+                                <runCmds>
+                                    <run>yum -y install epel-release</run>
+                                    <rum>yum -y install ansible openssh-clients sshpass util-linux</rum>
+                                    <run>yum clean all</run>
+                                </runCmds>
+                                <optimise>true</optimise>
+                            </build>
+                        </image>
+                        <image>
+                            <name>walmartlabs/concord-agent:%v</name>
+                            <alias>agent</alias>
+                            <build>
+                                <skip>${docker.skip}</skip>
+                                <from>walmartlabs/concord-agent-base</from>
+                                <maintainer>${docker.maintainer}</maintainer>
+                                <tags>
+                                    <tag>latest</tag>
+                                    <tag>${project.version}</tag>
+                                </tags>
+                                <optimise>true</optimise>
+                                <entryPoint>
+                                    <shell>${concord.baseDir}/agent/start.sh</shell>
+                                </entryPoint>
+                                <ports>
+                                    <port>8002</port>
+                                </ports>
+                                <assembly>
+                                    <mode>dir</mode>
+                                    <basedir>${concord.baseDir}/agent</basedir>
+                                    <descriptor>assembly.xml</descriptor>
+                                </assembly>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

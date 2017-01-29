@@ -1,0 +1,39 @@
+simple7:
+- switch:
+  - expr: ${false}
+    steps:
+    - end: err1
+  - expr: ${true}
+    steps:
+    - expr: ${test.sayHello()}
+    - end: err2
+- end: err3
+
+simple8:
+- switch:
+  - expr: ${false}
+    steps:
+    - end: err1
+- expr: ${test.sayHello()}
+
+simple9:
+- switch:
+  - expr: ${true}
+    steps:
+    - switch:
+      - expr: ${true}
+        steps:
+        - expr: ${test.sayHello()}
+
+simple10:
+- switch:
+  - expr: ${true}
+    steps:
+    - expr: ${test.sayHello()}
+
+simple11:
+- switch:
+  - expr: ${false}
+    steps:
+    - expr: ${test.sayHello()}
+    - end:

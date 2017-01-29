@@ -1,0 +1,12 @@
+html, body {
+    height: 100%;
+}
+
+.maxHeight {
+    height: 100% !important;
+}
+
+.tight {
+    padding: 0 !important;
+    margin: 0 !important;
+}

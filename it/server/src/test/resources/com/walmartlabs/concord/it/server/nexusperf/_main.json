@@ -1,0 +1,11 @@
+{
+  "entryPoint": "main",
+  "arguments": {
+    "scenarios": [
+      {
+        "name": "test01",
+        "agents": 1
+      }
+    ]
+  }
+}
