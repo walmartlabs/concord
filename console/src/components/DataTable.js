@@ -11,7 +11,7 @@ class DataTable extends Component {
                     <Table.Row>
                         {
                             cols.map(c =>
-                                <Table.HeaderCell key={c.key}>
+                                <Table.HeaderCell key={c.key} collapsing={c.collapsing} width={c.width}>
                                     { headerFn ? headerFn(c.key, c.label) : c.label}
                                 </Table.HeaderCell>)
 
@@ -37,7 +37,9 @@ class DataTable extends Component {
 
 const columnType = PropTypes.shape({
     key: PropTypes.any.isRequired,
-    label: PropTypes.string.isRequired
+    label: PropTypes.string,
+    collapsing: PropTypes.bool,
+    width: PropTypes.number
 });
 
 DataTable.propTypes = {

@@ -8,6 +8,11 @@ export const fetchHistoryData = (sortBy, sortDir) => ({
     sortDir
 });
 
+export const killProc = (id) => ({
+    type: actionTypes.history.KILL_PROC_REQUEST,
+    id
+});
+
 // VisibleLogViewer
 
 export const fetchLogData = (fileName) => ({

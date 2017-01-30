@@ -11,6 +11,6 @@ public interface ProcessHistoryResource {
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessHistoryEntry> list(
             @QueryParam("sortBy") @DefaultValue("lastUpdateDt") String sortBy,
-            @QueryParam("asc") @DefaultValue("true") boolean asc,
+            @QueryParam("asc") @DefaultValue("false") boolean asc,
             @QueryParam("limit") @DefaultValue("30") int limit);
 }

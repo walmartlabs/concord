@@ -1,5 +1,5 @@
 import React from "react";
-import {Router, Route, IndexRedirect, hashHistory} from "react-router";
+import {Router, Route, IndexRedirect} from "react-router";
 import {syncHistoryWithStore} from "react-router-redux";
 import VisibleLayout from "./containers/VisibleLayout";
 import VisibleHistoryTable from "./containers/VisibleHistoryTable";
@@ -10,8 +10,8 @@ import {getIsLoggedIn} from "./reducers";
 export const getProcessHistoryPath = () => "/process/history";
 export const getProcessLogPath = (n) => "/process/log/" + n;
 
-export default (store) => {
-    const history = syncHistoryWithStore(hashHistory, store);
+export default (store, history) => {
+    const h = syncHistoryWithStore(history, store);
 
     const checkAuth = (nextState, replace) => {
         if (!getIsLoggedIn(store.getState())) {
@@ -19,7 +19,7 @@ export default (store) => {
         }
     };
 
-    return <Router history={history}>
+    return <Router history={h}>
         <Route path="/" component={VisibleLayout}>
             <IndexRedirect to="process"/>
             <Route path="login" component={VisibleLoginForm}/>

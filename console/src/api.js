@@ -26,6 +26,19 @@ export const fetchHistory = (sortBy, sortDir) => {
         });
 };
 
+export const killProc = (id) => {
+    console.debug("API: killProc ['%s'] -> starting...", id);
+
+    return fetch("/api/v1/process/" + id, {headers: authHeader, method: "DELETE"})
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+            }
+            console.debug("API: killProc ['%s'] -> done", id);
+            return true;
+        });
+};
+
 export const fetchLog = (fileName) => {
     console.debug("API: fetchLog ['%s'] -> starting...", fileName);
     return fetch("/logs/" + fileName, {headers: authHeader})

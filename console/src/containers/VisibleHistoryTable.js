@@ -23,13 +23,18 @@ class VisibleHistoryTable extends Component {
         fetchData(sortBy, sortDir);
     }
 
+    kill(id) {
+        const {killFn} = this.props;
+        killFn(id);
+    };
+
     render() {
         const {error, ...rest} = this.props;
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.update()}/>;
         }
 
-        return <HistoryTable {...rest} onRefreshFn={() => this.update()}/>;
+        return <HistoryTable {...rest} onRefreshFn={() => this.update()} onKillFn={(id) => this.kill(id)}/>;
     }
 }
 
@@ -48,7 +53,8 @@ const mapStateToProps = (state, {location}) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    fetchData: (sortBy, sortDir) => dispatch(actions.fetchHistoryData(sortBy, sortDir))
+    fetchData: (sortBy, sortDir) => dispatch(actions.fetchHistoryData(sortBy, sortDir)),
+    killFn: (id) => dispatch(actions.killProc(id))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(VisibleHistoryTable);

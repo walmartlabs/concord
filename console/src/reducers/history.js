@@ -31,7 +31,7 @@ const error = (state = null, action) => {
         default:
             return state;
     }
-}
+};
 
 export default combineReducers({rows, loading, error});
 

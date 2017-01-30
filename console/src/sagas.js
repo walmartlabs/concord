@@ -18,6 +18,23 @@ function* fetchHistoryData(action) {
     }
 }
 
+function* killProc(action) {
+    try {
+        yield call(api.killProc, action.id);
+        yield put({
+            type: actionTypes.history.KILL_PROC_SUCCESS,
+            id: action.id
+        });
+    } catch (e) {
+        yield put({
+            type: actionTypes.history.FETCH_HISTORY_DATA_FAILURE,
+            id: action.id,
+            error: true,
+            message: e.message || "Error while killing a process"
+        });
+    }
+}
+
 function* fetchLogData(action) {
     try {
         const response = yield call(api.fetchLog, action.fileName);
@@ -36,6 +53,7 @@ function* fetchLogData(action) {
 
 function* saga() {
     yield takeLatest(actionTypes.history.FETCH_HISTORY_DATA_REQUEST, fetchHistoryData);
+    yield takeLatest(actionTypes.history.KILL_PROC_REQUEST, killProc);
     yield takeLatest(actionTypes.log.FETCH_LOG_DATA_REQUEST, fetchLogData);
 }
 

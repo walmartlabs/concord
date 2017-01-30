@@ -9,7 +9,6 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.AgentConfiguration;
 import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
 import com.walmartlabs.concord.server.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.inventory.InventoryPayloadProcessor;
 import com.walmartlabs.concord.server.template.TemplateEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
@@ -138,7 +137,7 @@ public class ProcessExecutorImpl implements ProcessExecutor {
         }
 
         try (Agent a = new Agent(agentCfg.getUri())) {
-            a.jobResource.cancel(jobId, false);
+            a.jobResource.cancel(jobId, true);
         }
     }
 

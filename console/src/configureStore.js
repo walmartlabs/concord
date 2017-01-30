@@ -1,15 +1,16 @@
 import {createStore, applyMiddleware, combineReducers} from "redux";
 import createLogger from "redux-logger";
-import {routerReducer} from "react-router-redux";
+import {routerReducer, routerMiddleware} from "react-router-redux";
 import {reducer as formReducer} from "redux-form";
 import createSagaMiddleware from "redux-saga";
 import consoleApp from "./reducers";
 import saga from "./sagas";
 
-const configureStore = () => {
-    const sagaMiddleware = createSagaMiddleware();
+const configureStore = (history) => {
+    const sagaMw = createSagaMiddleware();
+    const routerMw = routerMiddleware(history);
 
-    const middleware = [sagaMiddleware];
+    const middleware = [sagaMw, routerMw];
     if (process.env.NODE_ENV !== "production") {
         middleware.push(createLogger());
     }
@@ -22,7 +23,7 @@ const configureStore = () => {
 
     const store = createStore(reducers, applyMiddleware(...middleware));
 
-    sagaMiddleware.run(saga);
+    sagaMw.run(saga);
 
     return store;
 };
