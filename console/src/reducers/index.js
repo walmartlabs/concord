@@ -7,6 +7,7 @@ export default {history, log, session};
 export const getHistoryRows = (state) => fromHistory.getRows(state.history);
 export const getIsHistoryLoading = (state) => fromHistory.getIsLoading(state.history);
 export const getHistoryLoadingError = (state) => fromHistory.getError(state.history);
+export const getHistoryLastQuery = (state) => fromHistory.getLastQuery(state.history);
 
 export const getLogData = (state) => fromLog.getData(state.log);
 export const getIsLogLoading = (state) => fromLog.getIsLoading(state.log);

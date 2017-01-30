@@ -1,6 +1,8 @@
-import {call, put, takeLatest} from "redux-saga/effects";
+import {call, put, takeLatest, select} from "redux-saga/effects";
+import {delay} from "redux-saga";
 import * as api from "./api";
 import actionTypes from "./actions/actionTypes";
+import {getHistoryLastQuery} from "./reducers";
 
 function* fetchHistoryData(action) {
     try {
@@ -24,6 +26,13 @@ function* killProc(action) {
         yield put({
             type: actionTypes.history.KILL_PROC_SUCCESS,
             id: action.id
+        });
+
+        const query = yield select(getHistoryLastQuery);
+        yield call(delay, 2000);
+        yield put({
+            type: actionTypes.history.FETCH_HISTORY_DATA_REQUEST,
+            ...query
         });
     } catch (e) {
         yield put({

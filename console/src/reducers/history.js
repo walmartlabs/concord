@@ -33,8 +33,18 @@ const error = (state = null, action) => {
     }
 };
 
-export default combineReducers({rows, loading, error});
+const lastQuery = (state = null, action) => {
+    switch (action.type) {
+        case actionTypes.history.FETCH_HISTORY_DATA_REQUEST:
+            return { sortBy: action.sortBy, sortDir: action.sortDir };
+        default:
+            return state;
+    }
+};
+
+export default combineReducers({rows, loading, error, lastQuery});
 
 export const getRows = (state) => state.rows;
 export const getIsLoading = (state) => state.loading;
 export const getError = (state) => state.error;
+export const getLastQuery = (state) => state.lastQuery;

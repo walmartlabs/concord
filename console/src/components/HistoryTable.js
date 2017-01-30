@@ -37,7 +37,7 @@ const cellFn = (onKillFn) => (row, key) => {
         const status = row[key];
         const failed = constants.history.failedStatuses.includes(status);
         const icon = constants.history.statusToIcon[status];
-        return <Label color={failed ? "red" : undefined}>
+        return <Label basic color={failed ? "red" : undefined}>
             <Icon name={icon}/> {status}
         </Label>;
     }
