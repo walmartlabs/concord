@@ -17,8 +17,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.mockito.Matchers.anyCollection;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.*;
 
 public class PerfTaskTest {

@@ -5,22 +5,26 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.junit.After;
 import org.junit.Before;
 
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.*;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.zip.ZipOutputStream;
 
@@ -51,6 +55,14 @@ public abstract class AbstractServerIT {
         }
     }
 
+    protected Client getClient() {
+        return client;
+    }
+
+    protected WebTarget newTarget(String path) {
+        return client.target(ITConstants.SERVER_URL + path);
+    }
+
     protected String getApiKey() {
         return apiKey;
     }
@@ -61,6 +73,22 @@ public abstract class AbstractServerIT {
 
     protected <T> T proxy(Class<T> klass) {
         return ((ResteasyWebTarget) target).proxy(klass);
+    }
+
+    protected StartProcessResponse start(String entryPoint, Map<String, InputStream> input) {
+        WebTarget target = newTarget(ProcessResource.class.getAnnotation(Path.class).value() + "/" + entryPoint);
+
+        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+        input.forEach((k, v) -> mdo.addFormData(k, v, MediaType.APPLICATION_OCTET_STREAM_TYPE));
+
+        GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
+        };
+
+        Response resp = target.request().post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
+        StartProcessResponse spr = resp.readEntity(StartProcessResponse.class);
+        resp.close();
+
+        return spr;
     }
 
     protected static ProcessStatusResponse waitForCompletion(ProcessResource processResource, String instanceId) throws InterruptedException {

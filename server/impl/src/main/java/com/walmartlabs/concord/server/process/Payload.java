@@ -1,46 +1,118 @@
 package com.walmartlabs.concord.server.process;
 
-import java.nio.file.Path;
-import java.util.Map;
+import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.keys.HeaderKey;
 
-public class Payload implements AutoCloseable {
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+public class Payload {
+
+    public static final HeaderKey<String> PROJECT_ID = HeaderKey.register("_projectId", String.class);
+    public static final HeaderKey<String[]> ENTRY_POINT = HeaderKey.register("_entryPoint", String[].class);
+    public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
+    public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
+    public static final HeaderKey<Map> REQUEST_DATA_MAP = HeaderKey.register("_meta", Map.class);
+
+    public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("_workspaceArchive");
 
     private final String instanceId;
-    private final String projectId;
-    private final String initiator;
-    private final String logFileName;
-    private final Path data;
+    private final Map<String, Object> headers;
+    private final Map<String, Path> attachments;
 
-    public Payload(String instanceId, String projectId, String initiator, String logFileName, Path data) {
+    public Payload(String instanceId) {
         this.instanceId = instanceId;
-        this.projectId = projectId;
-        this.initiator = initiator;
-        this.logFileName = logFileName;
-        this.data = data;
+        this.headers = Collections.emptyMap();
+        this.attachments = Collections.emptyMap();
+    }
+
+    private Payload(Payload old, Map<String, Object> headers, Map<String, Path> attachments) {
+        this.instanceId = old.instanceId;
+        this.headers = Objects.requireNonNull(headers, "Headers map cannot be null");
+        this.attachments = Objects.requireNonNull(attachments, "Attachments map cannot be null");
     }
 
     public String getInstanceId() {
         return instanceId;
     }
 
-    public String getProjectId() {
-        return projectId;
+    public <T> T getHeader(HeaderKey<T> key) {
+        return key.cast(headers.get(key.name()));
     }
 
-    public String getInitiator() {
-        return initiator;
+    public <T> T getHeader(String key) {
+        return (T) headers.get(key);
     }
 
-    public String getLogFileName() {
-        return logFileName;
+    public Map<String, Object> getHeaders() {
+        return Collections.unmodifiableMap(headers);
     }
 
-    public Path getData() {
-        return data;
+    public <T> Payload putHeader(HeaderKey<T> key, T value) {
+        Map<String, Object> m = new HashMap<>(headers);
+        m.put(key.name(), key.cast(value));
+        return new Payload(this, m, this.attachments);
+    }
+
+    public Payload putHeaders(Map<String, Object> values) {
+        Map<String, Object> m = new HashMap<>(headers);
+        m.putAll(values);
+        return new Payload(this, m, this.attachments);
+    }
+
+    public Payload removeHeader(HeaderKey<?> key) {
+        Map<String, Object> m = new HashMap<>(headers);
+        m.remove(key.name());
+        return new Payload(this, m, this.attachments);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Payload mergeValues(HeaderKey<Map> key, Map values) {
+        Map o = getHeader(key);
+        Map n = new HashMap(o != null ? o : Collections.emptyMap());
+        n.putAll(values);
+        return putHeader(key, n);
+    }
+
+    public Path getAttachment(AttachmentKey key) {
+        return key.cast(attachments.get(key.name()));
+    }
+
+    public Map<String, Path> getAttachments() {
+        return Collections.unmodifiableMap(attachments);
+    }
+
+    public Payload putAttachment(AttachmentKey key, Path value) {
+        Map<String, Path> m = new HashMap<>(attachments);
+        m.put(key.name(), value);
+        return new Payload(this, this.headers, m);
+    }
+
+    public Payload putAttachments(Map<String, Path> values) {
+        Map<String, Path> m = new HashMap<>(attachments);
+        m.putAll(values);
+        return new Payload(this, this.headers, m);
+    }
+
+    public Payload removeAttachment(AttachmentKey key) {
+        if (!attachments.containsKey(key.name())) {
+            return this;
+        }
+
+        Map<String, Path> m = new HashMap<>(attachments);
+        m.remove(key.name());
+        return new Payload(this, this.headers, m);
     }
 
     @Override
-    public void close() {
-        data.toFile().delete();
+    public String toString() {
+        return "Payload{" +
+                "instanceId='" + instanceId + '\'' +
+                ", headers=" + headers.size() +
+                ", attachments=" + attachments.size() +
+                '}';
     }
 }

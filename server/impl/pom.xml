@@ -75,12 +75,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins</groupId>
-            <artifactId>bpmn-format</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.plugins.ansible.inventory</groupId>
-            <artifactId>ansible-inventory-extension</artifactId>
+            <artifactId>ansible-tasks</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

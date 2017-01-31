@@ -1,22 +1,17 @@
 package com.walmartlabs.concord.server.process;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.Constants;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
+import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
+import com.walmartlabs.concord.server.process.pipelines.RequestDataOnlyPipeline;
+import com.walmartlabs.concord.server.process.pipelines.SelfContainedArchivePipeline;
 import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.repository.GitRepository;
-import com.walmartlabs.concord.server.repository.RepositoryDao;
-import com.walmartlabs.concord.server.security.User;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
-import org.eclipse.jgit.api.errors.GitAPIException;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -33,131 +28,158 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.zip.ZipInputStream;
 
 @Named
 public class ProcessResourceImpl implements ProcessResource, Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessResourceImpl.class);
 
-    public static final String ANONYMOUS_PROJECT_KEY = "_anon";
-
     private final ProjectDao projectDao;
-    private final RepositoryDao repositoryDao;
     private final ProcessHistoryDao historyDao;
-    private final ProcessExecutor processExecutor;
-    private final Executor threadPool;
+    private final ProjectPipeline projectPipeline;
+    private final SelfContainedArchivePipeline archivePipeline;
+    private final RequestDataOnlyPipeline requestPipeline;
+    private final ProcessExecutorImpl processExecutor;
 
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
-                               RepositoryDao repositoryDao,
                                ProcessHistoryDao historyDao,
-                               ProcessExecutor processExecutor) {
+                               ProjectPipeline projectPipeline,
+                               SelfContainedArchivePipeline archivePipeline,
+                               RequestDataOnlyPipeline requestPipeline,
+                               ProcessExecutorImpl processExecutor) {
 
         this.projectDao = projectDao;
-        this.repositoryDao = repositoryDao;
         this.historyDao = historyDao;
+        this.projectPipeline = projectPipeline;
+        this.archivePipeline = archivePipeline;
+        this.requestPipeline = requestPipeline;
         this.processExecutor = processExecutor;
-
-        // TODO cfg
-        this.threadPool = Executors.newCachedThreadPool();
     }
 
     @Override
     public StartProcessResponse start(InputStream in) {
         String instanceId = UUID.randomUUID().toString();
-        Path tmpPath = unpack(in);
-        return start(ANONYMOUS_PROJECT_KEY, instanceId, tmpPath);
+        Payload payload = createPayload(instanceId, in);
+        archivePipeline.process(payload);
+        return new StartProcessResponse(instanceId);
     }
 
     @Override
-    public StartProcessResponse start(String entryPoint, Map<String, Object> req) {
-        // TODO refactor
+    public StartProcessResponse start(@PathParam("entryPoint") String entryPoint, Map<String, Object> req) {
+        String instanceId = UUID.randomUUID().toString();
+        Payload payload = createPayload(instanceId, entryPoint, req);
+        requestPipeline.process(payload);
+        return new StartProcessResponse(instanceId);
+    }
+
+    @Override
+    public StartProcessResponse start(String entryPoint, MultipartInput input) {
+        String instanceId = UUID.randomUUID().toString();
+        Payload payload = createPayload(instanceId, entryPoint, input);
+        projectPipeline.process(payload);
+        return new StartProcessResponse(instanceId);
+    }
+
+    /**
+     * Creates a payload. It is implied that all necessary resources to start a process are
+     * supplied in the multipart data.
+     *
+     * @param instanceId
+     * @param input
+     * @return
+     */
+    private Payload createPayload(String instanceId, String entryPoint, MultipartInput input) {
+        try {
+            Path baseDir = Files.createTempDirectory("request");
+            Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
+            log.debug("createPayload ['{}'] -> baseDir: {}", instanceId, baseDir);
+
+            Payload p = PayloadParser.parse(instanceId, baseDir, input)
+                    .putHeader(Payload.WORKSPACE_DIR, workspaceDir);
+
+            return parseEntryPoint(p, entryPoint);
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while parsing a request", e);
+        }
+    }
+
+    /**
+     * Creates a payload from the supplied map of parameters.
+     *
+     * @param instanceId
+     * @param request
+     * @return
+     */
+    private Payload createPayload(String instanceId, String entryPoint, Map<String, Object> request) {
+        try {
+            Path baseDir = Files.createTempDirectory("request");
+            Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
+            log.debug("createPayload ['{}'] -> baseDir: {}", instanceId, baseDir);
+
+            Payload p = new Payload(instanceId)
+                    .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
+                    .mergeValues(Payload.REQUEST_DATA_MAP, request);
+
+            return parseEntryPoint(p, entryPoint);
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while parsing a request", e);
+        }
+    }
+
+    /**
+     * Creates a payload from an archive, containing all necessary resources.
+     *
+     * @param instanceId
+     * @param in
+     * @return
+     */
+    private Payload createPayload(String instanceId, InputStream in) {
+        try {
+            Path baseDir = Files.createTempDirectory("request");
+            Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
+            log.debug("createPayload ['{}'] -> baseDir: {}", instanceId, baseDir);
+
+            Path archive = baseDir.resolve("_input.zip");
+            Files.copy(in, archive);
+
+            return new Payload(instanceId)
+                    .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
+                    .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while parsing a request", e);
+        }
+    }
+
+    private Payload parseEntryPoint(Payload payload, String entryPoint) {
         String[] as = entryPoint.split(":");
-        if (as.length < 1 || as.length > 3) {
+        if (as.length < 1) {
             throw new WebApplicationException("Invalid entry point format", Status.BAD_REQUEST);
         }
 
-        String projectName = as[0].trim();
-        String repoName = as.length > 1 ? as[1].trim() : null;
-        String realEntryPoint = as.length > 2 ? as[2].trim() : null;
+        String projectId = resolveProjectId(as[0].trim());
 
-        String instanceId = UUID.randomUUID().toString();
-        Path payloadPath = null;
+        // TODO replace with a queue/stack/linkedlist?
+        String[] rest = as.length > 1 ? Arrays.copyOfRange(as, 1, as.length) : new String[0];
+        String realEntryPoint = rest.length > 0 ? rest[rest.length - 1] : null;
 
-        // if an entry point contains a name of a repository, we need to fetch our payload first
-        if (repoName != null) {
-            String url = repositoryDao.findUrl(projectName, repoName);
-            if (url == null) {
-                throw new WebApplicationException("Repository URL not found: " + entryPoint, Status.BAD_REQUEST);
-            }
+        // TODO check permissions
 
-            Path tmpPath;
-            try {
-                tmpPath = GitRepository.checkout(url);
-                payloadPath = tmpPath;
-            } catch (IOException | GitAPIException e) {
-                log.error("start ['{}'] -> error while cloning a repository", instanceId, e);
-                throw new WebApplicationException("Error while cloning a repository: " + e.getMessage(), e);
-            }
-        }
-
-        // running in a standalone mode (e.g. without a repository)
-        if (payloadPath == null) {
-            // TODO cfg?
-            try {
-                payloadPath = Files.createTempDirectory("payload");
-            } catch (IOException e) {
-                throw new WebApplicationException(e);
-            }
-        }
-
-        createMeta(payloadPath.resolve(Constants.METADATA_FILE_NAME), realEntryPoint, req);
-
-        return start(projectName, instanceId, payloadPath);
+        return payload.putHeader(Payload.PROJECT_ID, projectId)
+                .putHeader(Payload.ENTRY_POINT, rest)
+                .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(Constants.ENTRY_POINT_KEY, realEntryPoint));
     }
 
-    private StartProcessResponse start(String projectName, String instanceId, Path data) {
-        Subject subject = SecurityUtils.getSubject();
-        User user = (User) subject.getPrincipal();
-
-        if (!subject.isPermitted(String.format(Permissions.PROCESS_START_PROJECT, projectName))) {
-            log.warn("start ['{}'] -> forbidden", instanceId);
-            throw new WebApplicationException("The current user does not have permissions to start this project", Status.FORBIDDEN);
+    private String resolveProjectId(String projectName) {
+        String id = projectDao.getId(projectName);
+        if (id == null) {
+            throw new WebApplicationException("Unknown project name: " + projectName, Status.BAD_REQUEST);
         }
-
-        String projectId = projectDao.getId(projectName);
-        String initiator = user.getName();
-        String logFileName = instanceId + ".log";
-
-        ProcessExecutorCallback callback = new ProcessExecutorCallback() {
-            @Override
-            public void onStatusChange(Payload payload, ProcessStatus status) {
-                historyDao.update(payload.getInstanceId(), status);
-            }
-
-            @Override
-            public void onUpdate(Payload payload) {
-                historyDao.touch(payload.getInstanceId());
-            }
-        };
-
-        historyDao.insertInitial(instanceId, initiator, logFileName);
-
-        threadPool.execute(() -> {
-            try (Payload p = new Payload(instanceId, projectId, initiator, logFileName, data)) {
-                processExecutor.run(p, callback);
-            } catch (ProcessExecutorException e) {
-                throw new WebApplicationException(e);
-            }
-        });
-
-        return new StartProcessResponse(instanceId);
+        return id;
     }
 
     @Override
@@ -203,37 +225,5 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException(Status.NOT_FOUND);
         }
         return new ProcessStatusResponse(r.getlastUpdateDt(), r.getStatus(), r.getLogFileName());
-    }
-
-    private static Path unpack(InputStream in) {
-        // TODO validate payload
-        // TODO cfg
-        try {
-            Path p = Files.createTempDirectory("payload");
-            try (ZipInputStream zip = new ZipInputStream(in)) {
-                IOUtils.unzip(zip, p);
-            }
-            return p;
-        } catch (IOException e) {
-            log.error("unpack -> error unpacking the payload", e);
-            throw new WebApplicationException(e);
-        }
-    }
-
-    private static void createMeta(Path path, String entryPoint, Map<String, Object> args) {
-        // TODO constants
-        Map<String, Object> meta = new HashMap<>();
-        if (args != null) {
-            meta.putAll(args);
-        }
-        if (entryPoint != null) {
-            meta.put("entryPoint", entryPoint);
-        }
-        ObjectMapper om = new ObjectMapper();
-        try {
-            om.writeValue(path.toFile(), meta);
-        } catch (IOException e) {
-            throw new WebApplicationException(e);
-        }
     }
 }

@@ -26,6 +26,6 @@ public class TemplateTest {
         Object o = se.eval("load('classpath:_main.js')", b);
 
         ObjectMapper om = new ObjectMapper();
-        om.writeValue(System.out, (Map<String, Object>) o);
+        om.writeValue(System.out, o);
     }
 }

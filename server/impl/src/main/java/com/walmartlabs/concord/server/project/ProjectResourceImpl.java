@@ -87,7 +87,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
                     throw new WebApplicationException("Unknown template: " + n, Status.BAD_REQUEST);
                 }
                 return id;
-            }).toArray(size -> new String[size]);
+            }).toArray(String[]::new);
         }
         return templateIds;
     }

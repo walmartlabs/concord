@@ -52,7 +52,12 @@ public final class Utils {
         }
 
         Set<URL> deps = new HashSet<>();
-        for (File f : libDir.listFiles()) {
+        File[] fs = libDir.listFiles();
+        if (fs == null) {
+            return new URL[0];
+        }
+
+        for (File f : fs) {
             if (f.getName().endsWith(".jar")) {
                 deps.add(f.toURI().toURL());
             }

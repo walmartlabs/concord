@@ -1,72 +1,73 @@
 package com.walmartlabs.concord.it.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Sets;
-import com.walmartlabs.concord.plugins.ansible.inventory.api.InventoryResource;
+import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
-import com.walmartlabs.concord.server.api.security.Permissions;
+import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
+import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
+import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.server.api.repository.CreateRepositoryRequest;
+import com.walmartlabs.concord.server.api.repository.RepositoryResource;
 import com.walmartlabs.concord.server.api.template.TemplateResource;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @Ignore
-public class AnsibleGitProjectIT extends ProjectIT {
+public class AnsibleGitProjectIT extends AbstractServerIT {
 
-    private Map<String, Object> args;
-
-    @Before
-    public void setUp() throws Exception {
-        ObjectMapper om = new ObjectMapper();
-        args = om.readValue(AnsibleGitProjectIT.class.getResourceAsStream("ansiblegitproject/request.json"), Map.class);
-    }
-
-    @Test(timeout = 60000)
+    @Test
     public void test() throws Exception {
-        String inventoryName = "myInventory#" + System.currentTimeMillis();
-        InventoryResource inventoryResource = proxy(InventoryResource.class);
-        try (InputStream in = AnsibleGitProjectIT.class.getResourceAsStream("ansiblegitproject/inventory.ini")) {
-            inventoryResource.create(inventoryName, in);
-        }
-        // TODO constants
-        args.put("inventory", inventoryName);
+        String templateName = "template#" + System.currentTimeMillis();
+        String projectName = "project#" + System.currentTimeMillis();
+        String repoName = "repo#" + System.currentTimeMillis();
+        String repoUrl = "git@gecgithub01.walmart.com:devtools/concord-ansible-example.git";
+        String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
 
         // ---
 
-        String templateName = "ansible#" + System.currentTimeMillis();
         TemplateResource templateResource = proxy(TemplateResource.class);
-        try (InputStream in = new FileInputStream(ITConstants.TEMPLATES_DIR + "/ansible-template.zip")) {
-            templateResource.create(templateName, in);
-        }
+        templateResource.create(templateName, fsResource(ITConstants.TEMPLATES_DIR + "/ansible-template.zip"));
 
         // ---
 
-        String gitUrl = "git@gecgithub01.walmart.com:devtools/concord-ansible-example.git";
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, new String[]{templateName}));
 
         // ---
 
-        String projectName = "myProject#" + System.currentTimeMillis();
-        String[] projectTemplates = {templateName};
-        String userName = "myUser#" + System.currentTimeMillis();
-        Set<String> permissions = Sets.newHashSet(
-                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
-                Permissions.REPOSITORY_CREATE_NEW,
-                String.format(Permissions.PROCESS_START_PROJECT, projectName),
-                String.format(com.walmartlabs.concord.plugins.ansible.inventory.api.Permissions.INVENTORY_USE_INSTANCE, inventoryName));
-        String repoName = "myRepo#" + System.currentTimeMillis();
-        String repoUrl = gitUrl;
-        String entryPoint = projectName + ":" + repoName + ":main";
+        RepositoryResource repositoryResource = proxy(RepositoryResource.class);
+        repositoryResource.create(new CreateRepositoryRequest(cpr.getId(), repoName, repoUrl));
 
         // ---
 
-        ProcessStatusResponse psr = doTest(projectName, projectTemplates, userName, permissions, repoName, repoUrl, entryPoint, args);
+        Map<String, InputStream> input = new HashMap<>();
+        input.put("request", resource("ansiblegitproject/request.json"));
+        input.put("inventory", resource("ansiblegitproject/inventory.ini"));
+        StartProcessResponse spr = start(entryPoint, input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessStatusResponse psr = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
 
         byte[] ab = getLog(psr);
         assertLog(".*hey!.*", ab);
+    }
+
+    private static InputStream resource(String path) {
+        return AnsibleGitProjectIT.class.getResourceAsStream(path);
+    }
+
+    private static InputStream fsResource(String path) throws FileNotFoundException {
+        return new FileInputStream(path);
     }
 }

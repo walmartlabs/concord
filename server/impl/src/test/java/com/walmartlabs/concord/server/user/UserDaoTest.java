@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
-import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.junit.Before;
 import org.junit.Test;

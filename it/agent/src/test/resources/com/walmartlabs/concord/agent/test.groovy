@@ -4,6 +4,6 @@ class MyTest {
 
     @Test
     void test() throws Exception {
-        Thread.sleep(10000);
+        Thread.sleep(10000)
     }
 }

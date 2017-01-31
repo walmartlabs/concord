@@ -146,6 +146,13 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="1520" author="ibodrov@gmail.com">
+        <insert tableName="PROJECTS">
+            <column name="PROJECT_ID">ea706554-e739-11e6-8be1-7bc773cbeea1</column>
+            <column name="PROJECT_NAME">_raw</column>
+        </insert>
+    </changeSet>
+
     <!-- REPOSITORIES -->
 
     <changeSet id="1600" author="ibodrov@gmail.com">

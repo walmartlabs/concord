@@ -23,8 +23,7 @@ public class JobResourceImpl implements JobResource, Resource {
     @Override
     @Validate
     public String start(InputStream in, JobType type, String entryPoint) throws Exception {
-        String id = executionManager.start(in, type, entryPoint);
-        return id.toString();
+        return executionManager.start(in, type, entryPoint);
     }
 
     @Override

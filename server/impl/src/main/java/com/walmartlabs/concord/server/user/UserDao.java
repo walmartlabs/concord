@@ -2,7 +2,6 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.bootstrap.db.AbstractDao;
 import com.walmartlabs.concord.server.security.User;
-import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;

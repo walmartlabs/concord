@@ -77,35 +77,7 @@ http://localhost:8001/api/v1/repository
 }
 ```
 
-### 3. Create an inventory file
-
-Create the `myInventory.ini` file:
-
-```text
-[local]
-127.0.0.1
-
-[local:vars]
-ansible_connection=local
-```
-
-Upload the created file to the server:
-```
-curl -v \
--H "Content-Type: application/octet-stream" \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
---data-binary @myInventory.ini
-'http://localhost:8001/api/v1/ansible/inventory?name=myInventory'
-```
-
-```json
-{
-  "ok" : true,
-  "id" : "cd3c1936-76ef-47b0-ab65-9363faae47ad"
-}
-```
-
-### 4. Add a new user
+### 3. Add a new user
 
 ```
 curl -v \
@@ -124,7 +96,7 @@ Check [the permissions description](../security.md#permissions) in the documenta
 }
 ```
 
-### 5. Create an API key
+### 4. Create an API key
 
 Use the `id` value of the user created in the previous step.
 
@@ -143,7 +115,17 @@ http://localhost:8001/api/v1/apikey
 }
 ```
 
-### 6. Call a process
+### 5. Start a process
+
+Create the `inventory.ini` file:
+
+```text
+[local]
+127.0.0.1
+
+[local:vars]
+ansible_connection=local
+```
 
 Create the `request.json` file:
 
@@ -161,9 +143,9 @@ Make a call:
 
 ```
 curl -v \
--H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d @request.json \
+-F request=@request.json \
+-F inventory=@inventory.ini \
 http://localhost:8001/api/v1/process/myProject:myRepo
 ```
 
@@ -174,7 +156,7 @@ http://localhost:8001/api/v1/process/myProject:myRepo
 }
 ```
 
-### 7. Check the log
+### 6. Check the logs
 
 Use the `instanceId` value returned by the server in the previous step.
 

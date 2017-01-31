@@ -28,9 +28,14 @@ public final class Constants {
     public static final String DEFINITIONS_DIR_NAME = "processes";
 
     /**
-     * File containing metadata of a payload: process arguments, entry point name, etc.
+     * File containing request data of a payload: process arguments, entry point name, etc.
      */
-    public static final String METADATA_FILE_NAME = "_main.json";
+    public static final String REQUEST_DATA_FILE_NAME = "_main.json";
+
+    /**
+     * Process entry point.
+     */
+    public static final String ENTRY_POINT_KEY = "entryPoint";
 
     private Constants() {
     }

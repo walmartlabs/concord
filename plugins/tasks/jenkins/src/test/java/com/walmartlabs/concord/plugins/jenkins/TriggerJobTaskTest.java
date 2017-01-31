@@ -33,7 +33,7 @@ public class TriggerJobTaskTest {
 
         ExecutionContext ctx = mock(ExecutionContext.class);
         when(ctx.getVariables()).thenReturn(args);
-        when(ctx.getVariable(anyString())).then(i -> args.get((String) i.getArguments()[0]));
+        when(ctx.getVariable(anyString())).then(i -> args.get(i.getArguments()[0]));
 
         TriggerJobTask t = new TriggerJobTask();
         t.execute(ctx);

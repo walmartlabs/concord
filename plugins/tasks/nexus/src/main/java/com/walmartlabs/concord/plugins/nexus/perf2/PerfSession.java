@@ -93,7 +93,7 @@ public class PerfSession implements AutoCloseable {
                     jobs.putAll(scenarioJobs);
                 }
             } catch (Exception e) {
-                conns.parallelStream().forEach(a -> a.cancelAll());
+                conns.parallelStream().forEach(JobResource::cancelAll);
                 throw e;
             }
         }

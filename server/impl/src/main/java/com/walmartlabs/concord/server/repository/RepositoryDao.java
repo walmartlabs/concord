@@ -24,22 +24,22 @@ public class RepositoryDao extends AbstractDao {
         super(cfg);
     }
 
-    public String findUrl(String projectName, String repositoryName) {
+    public String findUrl(String projectId, String repositoryName) {
         try (DSLContext create = DSL.using(cfg)) {
             String url = create.select(REPOSITORIES.REPO_URL)
                     .from(REPOSITORIES, PROJECTS, PROJECT_REPOS)
                     .where(REPOSITORIES.REPO_NAME.eq(repositoryName)
                             .and(REPOSITORIES.REPO_ID.eq(PROJECT_REPOS.REPO_ID)
                                     .and(PROJECT_REPOS.PROJECT_ID.eq(PROJECTS.PROJECT_ID)
-                                            .and(PROJECTS.PROJECT_NAME.eq(projectName)))))
+                                            .and(PROJECTS.PROJECT_ID.eq(projectId)))))
                     .fetchOne(REPOSITORIES.REPO_URL);
 
             if (url == null) {
-                log.info("findUrl ['{}', '{}'] -> not found", projectName, repositoryName);
+                log.info("findUrl ['{}', '{}'] -> not found", projectId, repositoryName);
                 return null;
             }
 
-            log.info("findUrl ['{}', '{}'] -> found: {}", projectName, repositoryName, url);
+            log.info("findUrl ['{}', '{}'] -> found: {}", projectId, repositoryName, url);
             return url;
         }
     }

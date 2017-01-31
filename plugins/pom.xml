@@ -16,7 +16,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>extensions/ansible-inventory</module>
         <module>tasks/oneops</module>
         <module>tasks/ansible</module>
         <module>tasks/jenkins</module>

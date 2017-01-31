@@ -17,7 +17,7 @@ class Test01 {
     }
 
     @Test
-    public void test() {
+    void test() {
         System.out.println("Test01: test")
     }
 }

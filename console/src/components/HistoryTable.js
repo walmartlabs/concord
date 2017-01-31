@@ -7,7 +7,6 @@ import KillConfirmation from "./KillConfirmation";
 import moment from "moment";
 import * as constants from "../constants";
 import * as routes from "../routes";
-import "./HistoryTable.css";
 
 const headerFn = (currentKey, currentDir) => (key, label) => {
     if (!constants.history.sortableKeys.includes(key)) {
@@ -23,7 +22,7 @@ const headerFn = (currentKey, currentDir) => (key, label) => {
         { currentKey === key &&
         <Icon name={currentDir === constants.sort.ASC ? "sort ascending" : "sort descending"}/> }
     </Link>;
-}
+};
 
 const cellFn = (onKillFn) => (row, key) => {
     // columns with dates

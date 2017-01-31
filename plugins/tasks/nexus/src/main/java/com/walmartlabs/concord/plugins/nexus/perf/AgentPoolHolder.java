@@ -39,7 +39,7 @@ public class AgentPoolHolder {
     }
 
     public void close(String id) {
-        AgentPoolManager m = null;
+        AgentPoolManager m;
 
         synchronized (agents) {
             m = agents.remove(id);

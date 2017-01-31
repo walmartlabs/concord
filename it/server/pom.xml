@@ -43,12 +43,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.plugins.ansible.inventory</groupId>
-            <artifactId>ansible-inventory-api</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server</artifactId>
             <version>${project.version}</version>
@@ -126,6 +120,7 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
+                    <!--suppress MavenModelInspection -->
                     <environmentVariables>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                     </environmentVariables>
@@ -212,6 +207,7 @@
                                             <port>it.agent.port:8002</port>
                                         </ports>
                                         <wait>
+                                            <!--suppress MavenModelInspection -->
                                             <http>
                                                 <url>http://localhost:${it.agent.port}/api/v1/agent/ping</url>
                                             </http>
@@ -234,6 +230,7 @@
                                             <link>agent</link>
                                         </links>
                                         <wait>
+                                            <!--suppress MavenModelInspection -->
                                             <http>
                                                 <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
                                             </http>

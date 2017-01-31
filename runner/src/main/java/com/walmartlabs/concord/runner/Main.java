@@ -32,7 +32,6 @@ import java.util.Map;
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static final String ENTRY_POINT_KEY = "entryPoint";
     private static final String ARGUMENTS_KEY = "arguments";
 
     private final AutoParser parser;
@@ -55,7 +54,7 @@ public class Main {
         ProcessDefinitionProvider definitions = createDefinitionProvider(baseDir);
 
         Map<String, Object> cfg = readCfg(baseDir);
-        String entryPoint = (String) cfg.get(ENTRY_POINT_KEY);
+        String entryPoint = (String) cfg.get(Constants.ENTRY_POINT_KEY);
         Map<String, Object> args = createArgs(instanceId, cfg);
 
         Engine e = engineFactory.create(definitions);
@@ -78,7 +77,7 @@ public class Main {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> readCfg(Path baseDir) throws IOException {
         ObjectMapper om = new ObjectMapper();
-        return om.readValue(baseDir.resolve(Constants.METADATA_FILE_NAME).toFile(), Map.class);
+        return om.readValue(baseDir.resolve(Constants.REQUEST_DATA_FILE_NAME).toFile(), Map.class);
     }
 
     @SuppressWarnings("unchecked")

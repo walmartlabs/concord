@@ -1,10 +1,9 @@
 package com.walmartlabs.concord.server.template;
 
-import com.walmartlabs.concord.common.validation.ConcordId;
+import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.template.CreateTemplateResponse;
 import com.walmartlabs.concord.server.api.template.DeleteTemplateResponse;
 import com.walmartlabs.concord.server.api.template.TemplateResource;
-import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.template.UpdateTemplateResponse;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.sonatype.siesta.Resource;
@@ -12,7 +11,6 @@ import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.PathParam;
 import java.io.InputStream;
 import java.util.UUID;
 

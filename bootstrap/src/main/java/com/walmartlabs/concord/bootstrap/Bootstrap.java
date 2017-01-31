@@ -11,15 +11,14 @@ import org.eclipse.sisu.wire.WireModule;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 public final class Bootstrap {
 
     public static Injector createInjector(ClassLoader cl, Module... modules) {
         Collection<Module> ms = new ArrayList<>();
         if (modules != null) {
-            for (Module m : modules) {
-                ms.add(m);
-            }
+            Collections.addAll(ms, modules);
         }
 
         ClassSpace cs = new URLClassSpace(cl);

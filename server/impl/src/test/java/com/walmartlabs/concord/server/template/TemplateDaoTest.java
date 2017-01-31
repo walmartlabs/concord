@@ -2,7 +2,6 @@ package com.walmartlabs.concord.server.template;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.repository.RepositoryDao;
 import org.junit.Before;
 import org.junit.Test;
 

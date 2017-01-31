@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.Arrays;
+import java.util.Collections;
 
 @Named
 public class OneOpsTask implements Task {
@@ -115,7 +116,7 @@ public class OneOpsTask implements Task {
         String platform = (String) ctx.getVariable(PLATFORM_KEY);
 
         try {
-            connect(ctx).commitAndDeploy(org, asm, env, platform, false, false, Arrays.asList(platform), String.valueOf(DEFAULT_POLL_FREQUENCY));
+            connect(ctx).commitAndDeploy(org, asm, env, platform, false, false, Collections.singletonList(platform), String.valueOf(DEFAULT_POLL_FREQUENCY));
             log.info("commitAndDeploy ['{}', '{}', '{}', '{}'] -> done", org, asm, env, platform);
         } catch (BpmnError e) {
             log.error("commitAndDeploy ['{}', '{}', '{}', '{}'] -> error", org, asm, env, platform, e);

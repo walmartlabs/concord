@@ -72,6 +72,6 @@ public class LogManager {
             }
         }
 
-        return baseDir.resolve(id.toString() + ".log").toFile();
+        return baseDir.resolve(id + ".log").toFile();
     }
 }

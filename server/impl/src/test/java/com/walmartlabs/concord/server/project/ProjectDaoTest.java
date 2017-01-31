@@ -81,6 +81,6 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         assertNull(projectDao.getName(projectId));
         assertNotNull(templateDao.getId(templateName));
-        assertNull(repositoryDao.findUrl(projectName, repoName));
+        assertNull(repositoryDao.findUrl(projectId, repoName));
     }
 }

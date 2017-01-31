@@ -1,8 +1,6 @@
 package com.walmartlabs.concord.plugins.ansible;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.Task;
-import com.walmartlabs.concord.plugins.ansible.inventory.api.AnsibleInventoryConstants;
 import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +76,7 @@ public class RunPlaybookTask2 implements Task {
     }
 
     private static String createInventory(String payloadPath) throws IOException {
-        Path p = Paths.get(payloadPath, AnsibleInventoryConstants.GENERATED_INVENTORY_FILE_NAME);
+        Path p = Paths.get(payloadPath, AnsibleConstants.GENERATED_INVENTORY_FILE_NAME);
         if (!Files.exists(p)) {
             throw new IOException("Inventory file not found: " + p.toAbsolutePath());
         }
