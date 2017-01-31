@@ -1,0 +1,7 @@
+tools:
+  jdk:
+  - 8
+
+flows:
+  master:
+    - ./mvnw clean install

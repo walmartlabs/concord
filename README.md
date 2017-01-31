@@ -29,7 +29,7 @@ To automatically start and stop the server and the agent using docker, use the
 `docker` profile:
 
 ```
-./mwn verify -Pit -Pdocker
+./mvnw verify -Pit -Pdocker
 ```
 
 On older systems (e.g. CPUs without `rdrand` or `rdseed`) some ITs can take a long
@@ -37,7 +37,7 @@ time to finish due to extensive usage of `SecureRandom` and low entropy availabl
 As a workaround you can use the `lowEntropy` profile:
 
 ```
-./mwn verify -Pit -Pdocker -PlowEntropy
+./mvnw verify -Pit -Pdocker -PlowEntropy
 ```
 
 This profile starts [haveged](https://github.com/harbur/docker-haveged) before running
