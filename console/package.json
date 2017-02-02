@@ -18,6 +18,7 @@
     "redux-form": "*",
     "redux-saga": "*",
     "redux-logger": "*",
+    "http-range": "*",
     "semantic-ui-react": "*",
     "moment": "*"
   },

@@ -5,6 +5,13 @@ export const sort = {
 
 export const reverseSort = (dir) => dir === sort.ASC ? sort.DESC : sort.ASC;
 
+export const process = {
+    runningStatus: "RUNNING",
+    failedStatus: "FAILED",
+    finishedStatus: "FINISHED",
+    startingStatus: "STARTING"
+};
+
 export const history = {
     columns: [
         {key: "instanceId", label: "Instance ID", collapsing: true},
@@ -30,16 +37,15 @@ export const history = {
     dateKeys: ["lastUpdateDt", "createdDt"],
     statusKey: "status",
 
-    canBeKilledStatuses: ["RUNNING"],
-    failedStatuses: ["FAILED"],
+    canBeKilledStatuses: [process.runningStatus],
+    failedStatuses: [process.failedStatus],
 
     defaultSortKey: "lastUpdateDt",
     defaultSortDir: sort.DESC,
 };
 
-export const projects = {
-    columns: [
-        {key: "projectId", label: "Project ID"},
-        {key: "name", label: "Name"}
-    ]
+export const log = {
+    fetchIncrement: 2048,
+    fetchDelay: 5000,
+    defaultFetchRange: { low: undefined, high: 2048 }
 };

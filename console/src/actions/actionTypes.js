@@ -8,6 +8,12 @@ const history = {
     KILL_PROC_FAILURE: "KILL_PROC_FAILURE"
 };
 
+const process = {
+    FETCH_PROCESS_STATUS_REQUEST: "FETCH_PROCESS_STATUS_REQUEST",
+    FETCH_PROCESS_STATUS_RESPONSE: "FETCH_PROCESS_STATUS_RESPONSE",
+    FETCH_PROCESS_STATUS_FAILURE: "FETCH_PROCESS_STATUS_FAILURE"
+};
+
 const log = {
     FETCH_LOG_DATA_REQUEST: "FETCH_LOG_DATA_REQUEST",
     FETCH_LOG_DATA_SUCCESS: "FETCH_LOG_DATA_SUCCESS",
@@ -20,4 +26,4 @@ const session = {
     LOGIN_FAILURE: "LOGIN_FAILURE"
 };
 
-export default {history, log, session};
+export default {history, process, log, session};

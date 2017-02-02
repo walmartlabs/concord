@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from "react";
-import {Header, Icon, Label} from "semantic-ui-react";
+import {Header, Icon} from "semantic-ui-react";
 import {Link} from "react-router";
 import DataTable from "./DataTable";
 import RefreshButton from "./RefreshButton";
@@ -36,9 +36,7 @@ const cellFn = (onKillFn) => (row, key) => {
         const status = row[key];
         const failed = constants.history.failedStatuses.includes(status);
         const icon = constants.history.statusToIcon[status];
-        return <Label basic color={failed ? "red" : undefined}>
-            <Icon name={icon}/> {status}
-        </Label>;
+        return <div><Icon name={icon} color={failed ? "red" : undefined}/> {status}</div>;
     }
 
     // column with buttons (actions)
@@ -52,8 +50,9 @@ const cellFn = (onKillFn) => (row, key) => {
     // link to a process' log file
     if (key === constants.history.logLinkKey) {
         const n = row[constants.history.logFileNameKey];
+        const instanceId = row[constants.history.idKey];
         if (n) {
-            return <Link to={routes.getProcessLogPath(n)}>{row[key]}</Link>;
+            return <Link to={routes.getProcessLogPath(instanceId)}>{row[key]}</Link>;
         }
     }
 

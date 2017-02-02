@@ -4,6 +4,8 @@ import * as api from "./api";
 import actionTypes from "./actions/actionTypes";
 import {getHistoryLastQuery} from "./reducers";
 
+// history table - data
+
 function* fetchHistoryData(action) {
     try {
         const response = yield call(api.fetchHistory, action.sortBy, action.sortDir);
@@ -12,6 +14,7 @@ function* fetchHistoryData(action) {
             response
         });
     } catch (e) {
+        console.error("fetchHistoryData -> error", e);
         yield put({
             type: actionTypes.history.FETCH_HISTORY_DATA_FAILURE,
             error: true,
@@ -19,6 +22,8 @@ function* fetchHistoryData(action) {
         });
     }
 }
+
+// history table - killing running processes
 
 function* killProc(action) {
     try {
@@ -35,6 +40,7 @@ function* killProc(action) {
             ...query
         });
     } catch (e) {
+        console.error("killProc -> error", e);
         yield put({
             type: actionTypes.history.FETCH_HISTORY_DATA_FAILURE,
             id: action.id,
@@ -44,14 +50,20 @@ function* killProc(action) {
     }
 }
 
+// log viewer
+
 function* fetchLogData(action) {
     try {
-        const response = yield call(api.fetchLog, action.fileName);
+        const status = yield call(api.fetchProcessStatus, action.instanceId);
+        const response = yield call(api.fetchLog, status.logFileName, action.fetchRange);
+
         yield put({
             type: actionTypes.log.FETCH_LOG_DATA_SUCCESS,
-            response
+            ...response,
+            status: status.status
         });
     } catch (e) {
+        console.error("fetchLogData -> error", e);
         yield put({
             type: actionTypes.log.FETCH_LOG_DATA_FAILURE,
             error: true,

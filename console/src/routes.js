@@ -8,7 +8,7 @@ import VisibleLoginForm from "./containers/VisibleLoginForm";
 import {getIsLoggedIn} from "./reducers";
 
 export const getProcessHistoryPath = () => "/process/history";
-export const getProcessLogPath = (n) => "/process/log/" + n;
+export const getProcessLogPath = (instanceId) => "/process/log/" + instanceId;
 
 export default (store, history) => {
     const h = syncHistoryWithStore(history, store);

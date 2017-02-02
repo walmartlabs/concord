@@ -1,17 +1,44 @@
-import {sort} from "./constants";
+import ContentRange from "http-range/lib/content-range";
+import {sort, log as logConstants} from "./constants";
+
+// utils
+
+const queryParams = (params) => {
+    const esc = encodeURIComponent;
+    return Object.keys(params).map(k => esc(k) + "=" + esc(params[k])).join("&");
+};
+
+const str = (s) => s === undefined ? "" : s;
+
+const formatRangeHeader = (range) =>
+    ({"Range": `bytes=${str(range.low)}-${str(range.high)}`});
+
+const parseRange = (s) => {
+    if (!s) {
+        return null;
+    }
+    const range = ContentRange.prototype.parse(s);
+    return {
+        unit: range.unit,
+        length: range.length,
+        low: range.range.low,
+        high: range.range.high
+    };
+};
+
+// auth
 
 const authHeader = {"Authorization": "auBy4eDWrKWsyhiDp3AQiw"};
+
+// api functions
 
 export const fetchHistory = (sortBy, sortDir) => {
     console.debug("API: fetchHistory ['%s', '%s'] -> starting...", sortBy, sortDir);
 
-    const params = {
+    const query = queryParams({
         sortBy,
         asc: sort.ASC === sortDir
-    };
-
-    const esc = encodeURIComponent;
-    const query = Object.keys(params).map(k => esc(k) + "=" + esc(params[k])).join("&");
+    });
 
     return fetch("/api/v1/history?" + query, {headers: authHeader})
         .then(response => {
@@ -39,17 +66,56 @@ export const killProc = (id) => {
         });
 };
 
-export const fetchLog = (fileName) => {
-    console.debug("API: fetchLog ['%s'] -> starting...", fileName);
-    return fetch("/logs/" + fileName, {headers: authHeader})
+const offsetRange = (data, range) => {
+    // if our data starts from the beginning, do nothing
+    if (range.low <= 0) {
+        return {data, range};
+    }
+
+    // seek to the nearest newline
+    const i = data.indexOf("\n");
+
+    // no line breaks or a single line, do nothing
+    if (i < 0 || i + 1 >= data.length) {
+        return {data, range};
+    }
+
+    // trim data to a new line, add trimmed offest to the start of a range
+    return {
+        data: data.substr(i + 1),
+        range: {...range, low: range.low + i + 1}
+    };
+};
+
+export const fetchLog = (fileName, fetchRange = logConstants.defaultFetchRange) => {
+    const rangeHeader = formatRangeHeader(fetchRange);
+    console.debug("API: fetchLog ['%s', %o] -> starting...", fileName, rangeHeader);
+    return fetch("/logs/" + fileName, {headers: Object.assign({}, authHeader, rangeHeader)})
         .then(response => {
             if (!response.ok) {
                 throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
             }
-            return response.text();
+
+            const rangeHeader = response.headers.get("Content-Range");
+            return response.text().then(data => {
+                console.debug("API: fetchLog ['%s', %o] -> done, length: %d", fileName, fetchRange, data.length);
+                return offsetRange(data, parseRange(rangeHeader));
+            });
+        });
+};
+
+export const fetchProcessStatus = (id) => {
+    console.debug("API: fetchProcessStatus ['%s'] -> starting...", id);
+    return fetch("/api/v1/process/" + id, {headers: authHeader})
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+            }
+
+            return response.json();
         })
-        .then(text => {
-            console.debug("API: fetchLog ['%s'] -> done, length: %d", fileName, text.length);
-            return text;
+        .then(json => {
+            console.debug("API: fetchProcessStatus ['%s'] -> done: %o", id, json);
+            return json;
         });
 };

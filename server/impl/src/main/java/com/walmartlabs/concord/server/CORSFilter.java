@@ -23,6 +23,8 @@ public class CORSFilter implements Filter {
         HttpServletResponse httpResp = (HttpServletResponse) response;
         httpResp.setHeader("Access-Control-Allow-Origin", "*");
         httpResp.setHeader("Access-Control-Allow-Methods", "*");
+        httpResp.setHeader("Access-Control-Allow-Methods", "range");
+        httpResp.setHeader("Access-Control-Expose-Headers", "content-range,content-length,accept-ranges");
         chain.doFilter(request, response);
     }
 

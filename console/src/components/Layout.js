@@ -39,7 +39,7 @@ class Layout extends Component {
                         </Menu.Item>
                     </Menu>
                 </Grid.Column>
-                <Grid.Column width={14} className="mainContent">{children}</Grid.Column>
+                <Grid.Column id="mainContent" width={14} className="mainContent">{children}</Grid.Column>
             </Grid>
         );
     }

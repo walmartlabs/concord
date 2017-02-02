@@ -15,9 +15,11 @@ export const killProc = (id) => ({
 
 // VisibleLogViewer
 
-export const fetchLogData = (fileName) => ({
+export const fetchLogData = (instanceId, fetchRange, fresh) => ({
     type: actionTypes.log.FETCH_LOG_DATA_REQUEST,
-    fileName
+    instanceId,
+    fetchRange,
+    fresh
 });
 
 // VisibleLoginForm

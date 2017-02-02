@@ -46,11 +46,13 @@ public class LogManager {
     public void store(String id, InputStream src) {
         File f = logFile(id);
         log.info("store ['{}'] -> storing into {}", id, f.getAbsolutePath());
-        try (OutputStream dst = new BufferedOutputStream(new FileOutputStream(f, true))) {
-            byte[] ab = new byte[1024];
-            int read;
-            while ((read = src.read(ab)) > 0) {
-                dst.write(ab, 0, read);
+        try (OutputStream dst = new BufferedOutputStream(new FileOutputStream(f, true));
+             BufferedReader reader = new BufferedReader(new InputStreamReader(src))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                dst.write(line.getBytes());
+                dst.write('\n');
                 dst.flush();
             }
         } catch (IOException e) {
