@@ -42,15 +42,25 @@ public class ApiKeyDao extends AbstractDao {
         return e.encodeToString(ab);
     }
 
-    public void insert(String userId, String key) {
+    public void insert(String id, String userId, String key) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
             create.insertInto(API_KEYS)
-                    .columns(API_KEYS.USER_ID, API_KEYS.API_KEY)
-                    .values(userId, hash(key))
+                    .columns(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.API_KEY)
+                    .values(id, userId, hash(key))
                     .execute();
         });
-        log.info("insert ['{}', '*******'] -> done", userId);
+        log.info("insert ['{}', '{}', '*******'] -> done", id, userId);
+    }
+
+    public void delete(String id) {
+        transaction(cfg -> {
+            DSLContext create = DSL.using(cfg);
+            create.deleteFrom(API_KEYS)
+                    .where(API_KEYS.KEY_ID.eq(id))
+                    .execute();
+        });
+        log.info("delete ['{}'] -> done", id);
     }
 
     public String findUserId(String key) {

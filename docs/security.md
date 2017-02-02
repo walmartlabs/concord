@@ -7,6 +7,7 @@
 | Wildcard                  | Description                                                    | Examples                               |
 |---------------------------|----------------------------------------------------------------|----------------------------------------|
 | `apikey:create`           | Create a new API key.                                          |                                        |
+| `apikey:delete`           | Delete any API key.                                            |                                        |
 | `process:start:$project`  | Starting a process from the specified `project`.               | `process:start:*`, `process:start:ABC` |
 | `project:update:$project` | Update (modify) a project. E.g. add a repository to a project. | `project:update:ABC`                   |
 | `project:create`          | Create a new project.                                          |                                        |

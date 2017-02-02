@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.api.security;
 public final class Permissions {
     
     public static final String APIKEY_CREATE_NEW = "apikey:create";
+    public static final String APIKEY_DELETE_ANY = "apikey:delete";
 
     public static final String PROCESS_START_PROJECT = "process:start:%s";
 

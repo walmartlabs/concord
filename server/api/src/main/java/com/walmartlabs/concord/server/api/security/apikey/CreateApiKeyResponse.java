@@ -8,11 +8,17 @@ import java.io.Serializable;
 public class CreateApiKeyResponse implements Serializable {
 
     private final boolean ok = true;
+    private final String id;
     private final String key;
 
     @JsonCreator
-    public CreateApiKeyResponse(@JsonProperty("key") String key) {
+    public CreateApiKeyResponse(@JsonProperty("id") String id, @JsonProperty("key") String key) {
+        this.id = id;
         this.key = key;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getKey() {
@@ -27,6 +33,7 @@ public class CreateApiKeyResponse implements Serializable {
     public String toString() {
         return "CreateApiKeyResponse{" +
                 "ok=" + ok +
+                ", id='" + id + '\'' +
                 ", key='" + key + '\'' +
                 '}';
     }
