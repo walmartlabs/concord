@@ -7,7 +7,7 @@
     <dependencySets>
         <dependencySet>
             <includes>
-                <include>com.walmartlabs.concord.ui:concord-console:zip:dist</include>
+                <include>com.walmartlabs.concord:concord-console:zip:dist</include>
             </includes>
             <outputDirectory>.</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>

@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.server;
 
 import com.google.inject.servlet.ServletModule;
-import com.walmartlabs.concord.bootstrap.BootstrapModule;
-import com.walmartlabs.concord.bootstrap.db.DatabaseModule;
+import com.walmartlabs.concord.common.bootstrap.BootstrapModule;
+import com.walmartlabs.concord.common.db.DatabaseModule;
 import org.apache.shiro.guice.web.ShiroWebModule;
 
 import javax.inject.Named;

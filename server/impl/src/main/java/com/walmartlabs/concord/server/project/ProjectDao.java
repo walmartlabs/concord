@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.project;
 
-import com.walmartlabs.concord.bootstrap.db.AbstractDao;
+import com.walmartlabs.concord.common.db.AbstractDao;
 import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.bootstrap;
+package com.walmartlabs.concord.common.server;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;

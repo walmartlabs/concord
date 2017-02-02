@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.bootstrap.db;
+package com.walmartlabs.concord.common.db;
 
 import com.google.inject.AbstractModule;
 import org.jooq.Configuration;

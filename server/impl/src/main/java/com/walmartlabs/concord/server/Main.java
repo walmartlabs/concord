@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.server;
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.bootstrap.Bootstrap;
-import com.walmartlabs.concord.bootstrap.Server;
+import com.walmartlabs.concord.common.bootstrap.Bootstrap;
+import com.walmartlabs.concord.common.server.Server;
 import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
 import com.walmartlabs.concord.server.security.SecurityModule;
 import org.apache.shiro.guice.aop.ShiroAopModule;

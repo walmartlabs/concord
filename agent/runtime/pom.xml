@@ -29,9 +29,8 @@
             <artifactId>guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-bootstrap</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-servlet</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -53,6 +52,10 @@
         <dependency>
             <groupId>io.takari.siesta</groupId>
             <artifactId>siesta-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.takari.siesta</groupId>
+            <artifactId>siesta-server</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>

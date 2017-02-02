@@ -27,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-bootstrap</artifactId>
+            <artifactId>concord-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

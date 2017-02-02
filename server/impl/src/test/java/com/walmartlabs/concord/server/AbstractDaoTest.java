@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server;
 
-import com.walmartlabs.concord.bootstrap.db.DataSourceProvider;
+import com.walmartlabs.concord.common.db.DataSourceProvider;
 import com.walmartlabs.concord.db.DatabaseChangeLogProviderImpl;
 import com.walmartlabs.concord.server.cfg.DatabaseConfigurationProvider;
 import org.jooq.Configuration;

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.bootstrap.metrics;
+package com.walmartlabs.concord.common.metrics;
 
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;

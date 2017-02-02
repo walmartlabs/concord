@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.bootstrap;
+package com.walmartlabs.concord.common.bootstrap;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

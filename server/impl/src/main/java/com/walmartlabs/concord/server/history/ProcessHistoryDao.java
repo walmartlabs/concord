@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.history;
 
-import com.walmartlabs.concord.bootstrap.db.AbstractDao;
+import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.jooq.*;

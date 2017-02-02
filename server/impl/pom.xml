@@ -60,11 +60,6 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-bootstrap</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -93,6 +88,10 @@
         <dependency>
             <groupId>io.takari.siesta</groupId>
             <artifactId>siesta-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.takari.siesta</groupId>
+            <artifactId>siesta-server</artifactId>
         </dependency>
         <dependency>
             <groupId>io.takari.siesta</groupId>

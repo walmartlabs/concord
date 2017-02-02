@@ -17,7 +17,6 @@
 
     <modules>
         <module>common</module>
-        <module>bootstrap</module>
         <module>agent</module>
         <module>plugins</module>
         <module>runner</module>
@@ -228,6 +227,16 @@
                 <groupId>io.takari.siesta</groupId>
                 <artifactId>siesta-server</artifactId>
                 <version>${siesta.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>sisu-guice</artifactId>
+                        <groupId>org.sonatype.sisu</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>guice-servlet</artifactId>
+                        <groupId>org.sonatype.sisu.inject</groupId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>

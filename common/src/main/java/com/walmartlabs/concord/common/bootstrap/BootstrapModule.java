@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.bootstrap;
+package com.walmartlabs.concord.common.bootstrap;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.servlet.ServletModule;

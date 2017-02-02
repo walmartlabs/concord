@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.db;
 
-import com.walmartlabs.concord.bootstrap.db.DatabaseChangeLogProvider;
+import com.walmartlabs.concord.common.db.DatabaseChangeLogProvider;
 
 import javax.inject.Named;
 import javax.inject.Singleton;

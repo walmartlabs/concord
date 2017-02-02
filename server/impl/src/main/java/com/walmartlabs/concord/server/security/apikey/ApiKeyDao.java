@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.security.apikey;
 
 import com.google.common.base.Throwables;
-import com.walmartlabs.concord.bootstrap.db.AbstractDao;
+import com.walmartlabs.concord.common.db.AbstractDao;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;

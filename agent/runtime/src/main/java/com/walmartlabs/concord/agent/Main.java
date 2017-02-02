@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.agent;
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.bootstrap.Bootstrap;
-import com.walmartlabs.concord.bootstrap.Server;
+import com.walmartlabs.concord.common.bootstrap.Bootstrap;
+import com.walmartlabs.concord.common.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class Main {
