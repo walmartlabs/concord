@@ -63,10 +63,43 @@ public class ResultSetInputStream extends InputStream {
         return ensureDelegate().read(b, off, len);
     }
 
+    @Override
+    public int available() throws IOException {
+        return ensureDelegate().available();
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+        return ensureDelegate().skip(n);
+    }
+
+    @Override
+    public synchronized void mark(int readlimit) {
+        try {
+            ensureDelegate().mark(readlimit);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+        ensureDelegate().reset();
+    }
+
+    @Override
+    public boolean markSupported() {
+        try {
+            return ensureDelegate().markSupported();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private InputStream ensureDelegate() throws IOException {
         if (delegate == null) {
             try {
-                delegate = rs.getBinaryStream(1);
+                delegate = rs.getBinaryStream(columnIndex);
             } catch (SQLException e) {
                 throw new IOException("Can't open a stream", e);
             }

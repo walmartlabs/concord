@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 public final class PayloadParser {
 
-    private static final Pattern PART_NAME_PATTERN = Pattern.compile(".*name=\"(.*)\".*");
+    private static final Pattern PART_NAME_PATTERN = Pattern.compile("name=\"(.*)\"");
 
     public static Payload parse(String instanceId, Path baseDir, MultipartInput input) throws IOException {
         Map<String, Path> m = new HashMap<>();
@@ -44,17 +44,20 @@ public final class PayloadParser {
             return null;
         }
 
-        String s = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
-        if (s == null) {
+        String h = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        if (h == null) {
             return null;
         }
 
-        Matcher m = PART_NAME_PATTERN.matcher(s);
-        if (!m.matches()) {
-            return null;
+        String[] as = h.split(";");
+        for (String s : as) {
+            Matcher m = PART_NAME_PATTERN.matcher(s.trim());
+            if (m.matches()) {
+                return m.group(1);
+            }
         }
 
-        return m.group(1);
+        return null;
     }
 
     private PayloadParser() {

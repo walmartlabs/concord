@@ -55,6 +55,7 @@ public class TemplateProcessor implements PayloadProcessor {
         try (InputStream in = templateDao.get(templateIds.iterator().next())) {
             return process(payload, in);
         } catch (IOException e) {
+            log.error("process ['{}'] -> error", payload.getInstanceId(), e);
             throw new WebApplicationException("Error while processing a template", e);
         }
     }
@@ -102,7 +103,7 @@ public class TemplateProcessor implements PayloadProcessor {
     }
 
     private static void unpack(InputStream in, Path dir) throws IOException {
-        try (ZipInputStream zip = new ZipInputStream(new BufferedInputStream(in))) {
+        try (ZipInputStream zip = new ZipInputStream(in)) {
             IOUtils.unzip(zip, dir);
         }
     }

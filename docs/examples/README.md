@@ -2,7 +2,7 @@
 
 ## Projects
 
-* [ansible_project.md](ansible_project.md) - an example of creating an running an Ansible project.
+* [ansible_project](ansible_project) - an example of creating an running an Ansible project.
 
 ## Using a manually created payload
 

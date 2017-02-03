@@ -61,8 +61,6 @@ public final class IOUtils {
     }
 
     public static void unzip(ZipInputStream in, Path targetDir) throws IOException {
-        byte[] buf = new byte[4096];
-
         ZipEntry e;
         while ((e = in.getNextEntry()) != null) {
             File f = targetDir.resolve(e.getName()).toFile();
