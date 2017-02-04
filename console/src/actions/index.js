@@ -22,8 +22,3 @@ export const fetchLogData = (instanceId, fetchRange, fresh) => ({
     fresh
 });
 
-// VisibleLoginForm
-
-export const doLogin = (values) => {
-    // TODO
-};

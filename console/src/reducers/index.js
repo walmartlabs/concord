@@ -1,8 +1,8 @@
 import history, * as fromHistory from "./history";
 import log, * as fromLog from "./log";
-import session, * as fromSession from "./session";
+import * as fromSession from "./session";
 
-export default {history, process, log, session};
+export default {history, process, log};
 
 export const getHistoryRows = (state) => fromHistory.getRows(state.history);
 export const getIsHistoryLoading = (state) => fromHistory.getIsLoading(state.history);

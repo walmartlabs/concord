@@ -4,14 +4,15 @@ import actionTypes from "../actions/actionTypes";
 const data = (state = [], action) => {
     switch (action.type) {
         case actionTypes.log.FETCH_LOG_DATA_REQUEST:
+            if (action.error) {
+                return state;
+            }
             if (action.fresh) {
                 return [];
             }
             return state;
-        case actionTypes.log.FETCH_LOG_DATA_SUCCESS:
-            return [...state, action.data];
         case actionTypes.log.FETCH_LOG_DATA_FAILURE:
-            return [action.message];
+            return [...state, action.data];
         default:
             return state;
     }
@@ -21,7 +22,6 @@ const loading = (state = false, action) => {
     switch (action.type) {
         case actionTypes.log.FETCH_LOG_DATA_REQUEST:
             return true;
-        case actionTypes.log.FETCH_LOG_DATA_SUCCESS:
         case actionTypes.log.FETCH_LOG_DATA_FAILURE:
             return false;
         default:
@@ -31,10 +31,11 @@ const loading = (state = false, action) => {
 
 const error = (state = null, action) => {
     switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_SUCCESS:
-            return null;
         case actionTypes.log.FETCH_LOG_DATA_FAILURE:
-            return action.message;
+            if (action.error) {
+                return action.message;
+            }
+            return null;
         default:
             return state;
     }
@@ -47,7 +48,7 @@ const range = (state = {}, action) => {
                 return {};
             }
             return state;
-        case actionTypes.log.FETCH_LOG_DATA_SUCCESS:
+        case actionTypes.log.FETCH_LOG_DATA_FAILURE:
             const a = action.range.low;
             const b = state.min === undefined ? a : state.min;
             const min = Math.min(a, b);
@@ -59,7 +60,7 @@ const range = (state = {}, action) => {
 
 const status = (state = null, action) => {
     switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_SUCCESS:
+        case actionTypes.log.FETCH_LOG_DATA_FAILURE:
             return action.status;
         default:
             return state;

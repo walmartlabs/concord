@@ -3,7 +3,10 @@ import actionTypes from "../actions/actionTypes";
 
 const rows = (state = [], action) => {
     switch (action.type) {
-        case actionTypes.history.FETCH_HISTORY_DATA_SUCCESS:
+        case actionTypes.history.FETCH_HISTORY_DATA_RESULT:
+            if (action.error) {
+                return state;
+            }
             return action.response;
         default:
             return state;
@@ -14,8 +17,7 @@ const loading = (state = false, action) => {
     switch (action.type) {
         case actionTypes.history.FETCH_HISTORY_DATA_REQUEST:
             return true;
-        case actionTypes.history.FETCH_HISTORY_DATA_SUCCESS:
-        case actionTypes.history.FETCH_HISTORY_DATA_FAILURE:
+        case actionTypes.history.FETCH_HISTORY_DATA_RESULT:
             return false;
         default:
             return state;
@@ -24,10 +26,11 @@ const loading = (state = false, action) => {
 
 const error = (state = null, action) => {
     switch (action.type) {
-        case actionTypes.history.FETCH_HISTORY_DATA_SUCCESS:
+        case actionTypes.history.FETCH_HISTORY_DATA_RESULT:
+            if (action.error) {
+                return action.message;
+            }
             return null;
-        case actionTypes.history.FETCH_HISTORY_DATA_FAILURE:
-            return action.message;
         default:
             return state;
     }

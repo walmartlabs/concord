@@ -10,13 +10,13 @@ function* fetchHistoryData(action) {
     try {
         const response = yield call(api.fetchHistory, action.sortBy, action.sortDir);
         yield put({
-            type: actionTypes.history.FETCH_HISTORY_DATA_SUCCESS,
+            type: actionTypes.history.FETCH_HISTORY_DATA_RESULT,
             response
         });
     } catch (e) {
         console.error("fetchHistoryData -> error", e);
         yield put({
-            type: actionTypes.history.FETCH_HISTORY_DATA_FAILURE,
+            type: actionTypes.history.FETCH_HISTORY_DATA_RESULT,
             error: true,
             message: e.message || "Error while loading process history"
         });
@@ -29,7 +29,7 @@ function* killProc(action) {
     try {
         yield call(api.killProc, action.id);
         yield put({
-            type: actionTypes.history.KILL_PROC_SUCCESS,
+            type: actionTypes.history.KILL_PROC_RESULT,
             id: action.id
         });
 
@@ -42,7 +42,7 @@ function* killProc(action) {
     } catch (e) {
         console.error("killProc -> error", e);
         yield put({
-            type: actionTypes.history.FETCH_HISTORY_DATA_FAILURE,
+            type: actionTypes.history.KILL_PROC_RESULT,
             id: action.id,
             error: true,
             message: e.message || "Error while killing a process"
@@ -58,7 +58,7 @@ function* fetchLogData(action) {
         const response = yield call(api.fetchLog, status.logFileName, action.fetchRange);
 
         yield put({
-            type: actionTypes.log.FETCH_LOG_DATA_SUCCESS,
+            type: actionTypes.log.FETCH_LOG_DATA_FAILURE,
             ...response,
             status: status.status
         });
