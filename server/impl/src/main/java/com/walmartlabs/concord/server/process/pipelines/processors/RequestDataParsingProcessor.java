@@ -2,12 +2,12 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +39,7 @@ public class RequestDataParsingProcessor implements PayloadProcessor {
             data = om.readValue(in, Map.class);
         } catch (IOException e) {
             log.error("process ['{}'] -> error while parsing a request data attachment", payload);
-            throw new WebApplicationException("Invalid request data format", e, Status.BAD_REQUEST);
+            throw new ProcessException("Invalid request data format", e, Status.BAD_REQUEST);
         }
 
         return payload.removeAttachment(REQUEST_ATTACHMENT_KEY)

@@ -89,6 +89,24 @@ public class UserDao extends AbstractDao {
         }
     }
 
+    public boolean exists(String username) {
+        try (DSLContext create = DSL.using(cfg)) {
+            int cnt = create.fetchCount(create.selectFrom(USERS)
+                    .where(USERS.USERNAME.eq(username)));
+
+            return cnt > 0;
+        }
+    }
+
+    public boolean existsById(String id) {
+        try (DSLContext create = DSL.using(cfg)) {
+            int cnt = create.fetchCount(create.selectFrom(USERS)
+                    .where(USERS.USER_ID.eq(id)));
+
+            return cnt > 0;
+        }
+    }
+
     private static void insertPermissions(DSLContext create, String userId, Set<String> permissions) {
         if (permissions != null && !permissions.isEmpty()) {
             BatchBindStep b = create.batch(create.insertInto(USER_PERMISSIONS)

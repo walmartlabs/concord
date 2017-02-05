@@ -4,11 +4,10 @@ import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryResource;
 import org.jooq.Field;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,7 @@ public class ProcessHistoryResourceImpl implements ProcessHistoryResource, Resou
     public List<ProcessHistoryEntry> list(String sortBy, boolean asc, int limit) {
         Field<?> sortField = key2Field.get(sortBy);
         if (sortField == null) {
-            throw new WebApplicationException("Unknown sort field: " + sortBy, Status.BAD_REQUEST);
+            throw new ValidationErrorsException("Unknown sort field: " + sortBy);
         }
         return historyDao.list(limit, sortField, asc);
     }

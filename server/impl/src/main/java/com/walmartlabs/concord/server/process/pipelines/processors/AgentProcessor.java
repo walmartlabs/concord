@@ -4,12 +4,10 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessExecutorCallback;
-import com.walmartlabs.concord.server.process.ProcessExecutorException;
 import com.walmartlabs.concord.server.process.ProcessExecutorImpl;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -54,15 +52,11 @@ public class AgentProcessor implements PayloadProcessor {
         };
 
         threadPool.execute(() -> {
-            try {
-                executor.run(payload.getInstanceId(),
-                        payload.getHeader(ArchivingProcessor.ARCHIVE_FILE),
-                        payload.getHeader(DependenciesProcessor.ENTRY_POINT_NAME),
-                        payload.getHeader(LogFileProcessor.LOG_FILE_PATH),
-                        callback);
-            } catch (ProcessExecutorException e) {
-                throw new WebApplicationException("Error while executing a process", e);
-            }
+            executor.run(payload.getInstanceId(),
+                    payload.getHeader(ArchivingProcessor.ARCHIVE_FILE),
+                    payload.getHeader(DependenciesProcessor.ENTRY_POINT_NAME),
+                    payload.getHeader(LogFileProcessor.LOG_FILE_PATH),
+                    callback);
         });
 
         return payload.removeHeader(ArchivingProcessor.ARCHIVE_FILE);

@@ -3,8 +3,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
 
-import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -31,7 +31,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
         try (Writer writer = Files.newBufferedWriter(dst)) {
             om.writeValue(writer, meta);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while saving a metadata file: " + dst, e);
+            throw new ProcessException("Error while saving a metadata file: " + dst, e);
         }
 
         return payload;

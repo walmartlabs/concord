@@ -49,7 +49,7 @@ public class ProcessExecutorImpl {
     }
 
     public void run(String instanceId, Path archive, String entryPoint, Path logFile,
-                    ProcessExecutorCallback callback) throws ProcessExecutorException {
+                    ProcessExecutorCallback callback) {
 
         try {
             _run(instanceId, archive, entryPoint, logFile, callback);
@@ -61,7 +61,7 @@ public class ProcessExecutorImpl {
     }
 
     private void _run(String instanceId, Path archive, String entryPoint, Path logFile,
-                      ProcessExecutorCallback callback) throws ProcessExecutorException {
+                      ProcessExecutorCallback callback) {
 
         log.info("run ['{}'] -> starting (log file: {})...", instanceId, logFile.toAbsolutePath());
         log(logFile, "Starting %s...", instanceId);
@@ -82,7 +82,7 @@ public class ProcessExecutorImpl {
             } catch (Exception e) {
                 // TODO stacktrace
                 log(logFile, "Error while starting a process: %s", e.getMessage());
-                throw new ProcessExecutorException("Error while starting a process", e);
+                throw new ProcessException("Error while starting a process", e);
             }
 
             // stream back the job's log
@@ -90,7 +90,7 @@ public class ProcessExecutorImpl {
             try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(logFile, StandardOpenOption.APPEND))) {
                 a.stream(jobId, out, () -> callback.onUpdate(instanceId));
             } catch (IOException e) {
-                throw new ProcessExecutorException("Error while streaming an agent's log", e);
+                throw new ProcessException("Error while streaming an agent's log", e);
             }
 
             log(logFile, "...done");
@@ -117,17 +117,17 @@ public class ProcessExecutorImpl {
         }
     }
 
-    private static void addRunner(Path src, RunnerConfiguration cfg) throws ProcessExecutorException {
+    private static void addRunner(Path src, RunnerConfiguration cfg) {
         Path runnerPath = cfg.getPath();
         Path dst = src.resolve(cfg.getTargetName());
         try {
             Files.copy(runnerPath, dst);
         } catch (IOException e) {
-            throw new ProcessExecutorException("Error while adding the runner's runtime", e);
+            throw new ProcessException("Error while adding the runner's runtime", e);
         }
     }
 
-    private static Path pack(Path src) throws ProcessExecutorException {
+    private static Path pack(Path src) {
         try {
             // TODO cfg?
             Path dst = Files.createTempFile("payload", ".zip");
@@ -136,14 +136,14 @@ public class ProcessExecutorImpl {
             }
             return dst;
         } catch (IOException e) {
-            throw new ProcessExecutorException("Error while processing a payload", e);
+            throw new ProcessException("Error while processing a payload", e);
         }
     }
 
-    private static File createLogFile(Path p, String logFileName) throws ProcessExecutorException {
+    private static File createLogFile(Path p, String logFileName) {
         File dir = p.toFile();
         if (!dir.exists() && !dir.mkdirs()) {
-            throw new ProcessExecutorException("Can't create the log directory: " + dir.getAbsolutePath());
+            throw new ProcessException("Can't create the log directory: " + dir.getAbsolutePath());
         }
         return new File(dir, logFileName);
     }

@@ -1,12 +1,12 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
+import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.keys.HeaderKey;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +48,7 @@ public class LogFileProcessor implements PayloadProcessor {
             return payload.putHeader(LOG_FILE_NAME, name)
                     .putHeader(LOG_FILE_PATH, path);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while creating a process log file", e);
+            throw new ProcessException("Error while creating a process log file", e);
         }
     }
 }

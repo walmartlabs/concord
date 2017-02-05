@@ -1,9 +1,9 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
 
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -19,7 +19,7 @@ public class ValidatingProcessor implements PayloadProcessor {
         Map<String, Path> attachments = payload.getAttachments();
         if (!attachments.isEmpty()) {
             String msg = "Validation error, unprocessed payload attachments: " + String.join(", ", attachments.keySet());
-            throw new WebApplicationException(msg, BAD_REQUEST);
+            throw new ProcessException(msg, BAD_REQUEST);
         }
 
         return payload;

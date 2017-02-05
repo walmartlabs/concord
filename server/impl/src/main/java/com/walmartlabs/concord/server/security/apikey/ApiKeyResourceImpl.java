@@ -13,6 +13,8 @@ import org.sonatype.siesta.Validate;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 import java.util.UUID;
 
 @Named
@@ -39,6 +41,10 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
     @Validate
     @RequiresPermissions(Permissions.APIKEY_DELETE_ANY)
     public DeleteApiKeyResponse delete(@PathParam("id") @ConcordId String id) {
+        if (!apiKeyDao.existsById(id)) {
+            throw new WebApplicationException("API key not found: " + id, Status.NOT_FOUND);
+        }
+
         apiKeyDao.delete(id);
         return new DeleteApiKeyResponse();
     }

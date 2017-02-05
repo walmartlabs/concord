@@ -2,12 +2,12 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,7 +40,7 @@ public class ArchivingProcessor implements PayloadProcessor {
             return payload.removeHeader(Payload.WORKSPACE_DIR)
                     .putHeader(ARCHIVE_FILE, dst);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while creating a payload archive", e);
+            throw new ProcessException("Error while creating a payload archive", e);
         }
     }
 }

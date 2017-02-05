@@ -15,6 +15,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -158,7 +159,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private Payload parseEntryPoint(Payload payload, String entryPoint) {
         String[] as = entryPoint.split(":");
         if (as.length < 1) {
-            throw new WebApplicationException("Invalid entry point format", Status.BAD_REQUEST);
+            throw new ValidationErrorsException("Invalid entry point format: " + entryPoint);
         }
 
         String projectId = resolveProjectId(as[0].trim());
@@ -177,7 +178,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private String resolveProjectId(String projectName) {
         String id = projectDao.getId(projectName);
         if (id == null) {
-            throw new WebApplicationException("Unknown project name: " + projectName, Status.BAD_REQUEST);
+            throw new ValidationErrorsException("Unknown project name: " + projectName);
         }
         return id;
     }

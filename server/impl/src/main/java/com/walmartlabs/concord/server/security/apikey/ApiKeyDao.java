@@ -80,6 +80,15 @@ public class ApiKeyDao extends AbstractDao {
         }
     }
 
+    public boolean existsById(String id) {
+        try (DSLContext create = DSL.using(cfg)) {
+            int cnt = create.fetchCount(create.selectFrom(API_KEYS)
+                    .where(API_KEYS.KEY_ID.eq(id)));
+
+            return cnt > 0;
+        }
+    }
+
     private static String hash(String s) {
         MessageDigest md;
         try {

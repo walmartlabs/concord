@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
 
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -26,14 +26,14 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
     public Payload process(Payload payload) {
         Path archive = payload.getAttachment(Payload.WORKSPACE_ARCHIVE);
         if (archive == null || !Files.exists(archive)) {
-            throw new WebApplicationException("No input archive found: " + archive, Status.BAD_REQUEST);
+            throw new ProcessException("No input archive found: " + archive, Status.BAD_REQUEST);
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         try (ZipInputStream zip = new ZipInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
             IOUtils.unzip(zip, workspace);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while unpacking an archive: " + archive, e);
+            throw new ProcessException("Error while unpacking an archive: " + archive, e);
         }
 
         Path requestFile = workspace.resolve(Constants.REQUEST_DATA_FILE_NAME);
@@ -43,7 +43,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
                 Map m = om.readValue(in, Map.class);
                 payload = payload.mergeValues(Payload.REQUEST_DATA_MAP, m);
             } catch (IOException e) {
-                throw new WebApplicationException("Error while reading a request JSON: " + requestFile, e);
+                throw new ProcessException("Error while reading a request JSON: " + requestFile, e);
             }
         }
 

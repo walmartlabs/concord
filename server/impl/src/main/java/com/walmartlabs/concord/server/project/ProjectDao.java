@@ -94,6 +94,15 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
+    public boolean exists(String name) {
+        try (DSLContext create = DSL.using(cfg)) {
+            int cnt = create.fetchCount(create.selectFrom(PROJECTS)
+                    .where(PROJECTS.PROJECT_NAME.eq(name)));
+
+            return cnt > 0;
+        }
+    }
+
     private static void insertTemplates(DSLContext create, String projectId, String... templateIds) {
         if (templateIds != null) {
             BatchBindStep b = create.batch(create.insertInto(PROJECT_TEMPLATES)

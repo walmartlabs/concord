@@ -133,4 +133,22 @@ public class TemplateDao extends AbstractDao {
                     .fetchOne(TEMPLATES.TEMPLATE_ID);
         }
     }
+
+    public boolean exists(String name) {
+        try (DSLContext create = DSL.using(cfg)) {
+            int cnt = create.fetchCount(create.selectFrom(TEMPLATES)
+                    .where(TEMPLATES.TEMPLATE_NAME.eq(name)));
+
+            return cnt > 0;
+        }
+    }
+
+    public boolean existsId(String id) {
+        try (DSLContext create = DSL.using(cfg)) {
+            int cnt = create.fetchCount(create.selectFrom(TEMPLATES)
+                    .where(TEMPLATES.TEMPLATE_ID.eq(id)));
+
+            return cnt > 0;
+        }
+    }
 }

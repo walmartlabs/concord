@@ -61,12 +61,12 @@ public class RepositoryDao extends AbstractDao {
         log.info("insert ['{}', '{}', '{}'] -> done", id, name, url);
     }
 
-    public void deleteAll(DSLContext create, String projectId) {
-        create.deleteFrom(REPOSITORIES)
-                .where(REPOSITORIES.REPO_ID.in(
-                        create.select(PROJECT_REPOS.REPO_ID)
-                                .from(PROJECT_REPOS)
-                                .where(PROJECT_REPOS.PROJECT_ID.eq(projectId))))
-                .execute();
+    public boolean exists(String repositoryName) {
+        try (DSLContext create = DSL.using(cfg)) {
+            int cnt = create.fetchCount(create.selectFrom(REPOSITORIES)
+                    .where(REPOSITORIES.REPO_NAME.eq(repositoryName)));
+
+            return cnt > 0;
+        }
     }
 }

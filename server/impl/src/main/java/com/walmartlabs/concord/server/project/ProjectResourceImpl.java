@@ -10,12 +10,11 @@ import org.apache.shiro.subject.Subject;
 import org.jooq.Field;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
@@ -42,9 +41,14 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     @Validate
     @RequiresPermissions(Permissions.PROJECT_CREATE_NEW)
     public CreateProjectResponse create(CreateProjectRequest request) {
+        if (projectDao.exists(request.getName())) {
+            throw new ValidationErrorsException("The project already exists: " + request.getName());
+        }
+
         String[] templateIds = getTemplateIds(request.getTemplates());
         String id = UUID.randomUUID().toString();
         projectDao.insert(id, request.getName(), templateIds);
+
         return new CreateProjectResponse(id);
     }
 
@@ -53,7 +57,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     public List<ProjectEntry> list(String sortBy, boolean asc) {
         Field<?> sortField = key2Field.get(sortBy);
         if (sortField == null) {
-            throw new WebApplicationException("Unknown sort field: " + sortBy, Status.BAD_REQUEST);
+            throw new ValidationErrorsException("Unknown sort field: " + sortBy);
         }
         return projectDao.list(sortField, asc);
     }
@@ -87,7 +91,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
 
                 String id = templateDao.getId(n);
                 if (id == null) {
-                    throw new WebApplicationException("Unknown template: " + n, Status.BAD_REQUEST);
+                    throw new ValidationErrorsException("Unknown template: " + n);
                 }
                 return id;
             }).toArray(String[]::new);
@@ -98,20 +102,20 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     private void assertPermissions(String projectId, String wildcard, String message) {
         String name = projectDao.getName(projectId);
         if (name == null) {
-            throw new WebApplicationException("Project not found: " + projectId, Status.NOT_FOUND);
+            throw new ValidationErrorsException("Project not found: " + projectId);
         }
 
         Subject subject = SecurityUtils.getSubject();
         String perm = String.format(wildcard, name);
         if (!subject.isPermitted(perm)) {
-            throw new WebApplicationException(message, Status.FORBIDDEN);
+            throw new SecurityException(message);
         }
     }
 
     private static void assertTemplatePermissions(String name) {
         Subject subject = SecurityUtils.getSubject();
         if (!subject.isPermitted(String.format(Permissions.TEMPLATE_USE_INSTANCE, name))) {
-            throw new WebApplicationException("The current user does not have permissions to use the template: " + name, Status.FORBIDDEN);
+            throw new SecurityException("The current user does not have permissions to use the template: " + name);
         }
     }
 }

@@ -1,14 +1,14 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,7 +40,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             Files.copy(src, dst);
         } catch (IOException e) {
             log.error("process ['{}'] -> error while copying dependencies", payload.getInstanceId(), e);
-            throw new WebApplicationException("Error while copying dependencies", e);
+            throw new ProcessException("Error while copying dependencies", e);
         }
 
         return payload.putHeader(ENTRY_POINT_NAME, runnerCfg.getTargetName());

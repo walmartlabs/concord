@@ -2,10 +2,10 @@ package com.walmartlabs.concord.server.inventory;
 
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
+import com.walmartlabs.concord.server.process.ProcessException;
 
-import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +33,7 @@ public class InventoryProcessor implements PayloadProcessor {
         try {
             Files.copy(p, dst);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while copying an inventory file: " + p, e);
+            throw new ProcessException("Error while copying an inventory file: " + p, e);
         }
 
         return payload.removeAttachment(INVENTORY_FILE);
