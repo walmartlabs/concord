@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.project;
 
-import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.template.TemplateDao;
@@ -14,7 +13,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.PathParam;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
@@ -64,9 +62,9 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
 
     @Override
     @Validate
-    public UpdateProjectResponse update(@PathParam("id") @ConcordId String id, UpdateProjectRequest request) {
+    public UpdateProjectResponse update(String id, UpdateProjectRequest request) {
         assertPermissions(id, Permissions.PROJECT_UPDATE_INSTANCE,
-                "The current user does not have permissions to update this project");
+                "The current user does not have permissions to update the specified project");
 
         String[] templateIds = getTemplateIds(request.getTemplates());
         projectDao.update(id, templateIds);
@@ -75,9 +73,9 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
 
     @Override
     @Validate
-    public DeleteProjectResponse delete(@PathParam("id") @ConcordId String id) {
+    public DeleteProjectResponse delete(String id) {
         assertPermissions(id, Permissions.PROJECT_DELETE_INSTANCE,
-                "The current user does not have permissions to delete this project");
+                "The current user does not have permissions to delete the specified project");
 
         projectDao.delete(id);
         return new DeleteProjectResponse();

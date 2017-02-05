@@ -20,12 +20,12 @@ public class LogServletConfigurer {
     public void configure(ServletContextHandler servletHandler) {
         String baseDir = logStoreCfg.getBaseDir().toAbsolutePath().toString();
 
-        ServletHolder logHolder = new ServletHolder("logs", DefaultServlet.class);
-        logHolder.setInitParameter("acceptRanges", "true");
-        logHolder.setInitParameter("resourceBase", baseDir);
-        logHolder.setInitParameter("pathInfoOnly", "true");
-        logHolder.setInitParameter("cacheControl", "max-age=0");
-        servletHandler.addServlet(logHolder, "/logs/*");
+        ServletHolder h = new ServletHolder("logs", DefaultServlet.class);
+        h.setInitParameter("acceptRanges", "true");
+        h.setInitParameter("resourceBase", baseDir);
+        h.setInitParameter("pathInfoOnly", "true");
+        h.setInitParameter("cacheControl", "max-age=0");
+        servletHandler.addServlet(h, "/logs/*");
 
         log.info("Serving log files from {}", baseDir);
     }

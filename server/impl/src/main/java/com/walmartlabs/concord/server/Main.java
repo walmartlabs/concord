@@ -16,6 +16,9 @@ public class Main {
             protected void configureServletContext(ServletContextHandler h, Injector i) {
                 LogServletConfigurer logCfg = new LogServletConfigurer(i.getInstance(LogStoreConfiguration.class));
                 logCfg.configure(h);
+
+                SwaggerServletConfigurer swaggerCfg = new SwaggerServletConfigurer();
+                swaggerCfg.configure(h);
             }
 
             @Override

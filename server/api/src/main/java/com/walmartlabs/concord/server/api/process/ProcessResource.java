@@ -1,5 +1,8 @@
 package com.walmartlabs.concord.server.api.process;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.ws.rs.*;
@@ -7,6 +10,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.util.Map;
 
+@Api("Process")
 @Path("/api/v1/process")
 public interface ProcessResource {
 
@@ -17,9 +21,10 @@ public interface ProcessResource {
      * @return
      */
     @POST
+    @ApiOperation("Starts a new process instance using a supplied payload archive")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
-    StartProcessResponse start(InputStream in);
+    StartProcessResponse start(@ApiParam InputStream in);
 
     /**
      * Starts a new process instance asynchronously using a specified project.
@@ -28,10 +33,12 @@ public interface ProcessResource {
      * @return
      */
     @POST
+    @ApiOperation("Start a new process using a specified project entry point")
     @Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    StartProcessResponse start(@PathParam("entryPoint") String entryPoint, Map<String, Object> req);
+    StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
+                               @ApiParam Map<String, Object> req);
 
     /**
      * Starts a new process instance asynchronously using a specified project.
@@ -41,10 +48,12 @@ public interface ProcessResource {
      * @return
      */
     @POST
+    @ApiOperation("Start a new process using a specified project entry point and multipart request data")
     @Path("/{entryPoint}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    StartProcessResponse start(@PathParam("entryPoint") String entryPoint, MultipartInput input);
+    StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
+                               @ApiParam MultipartInput input);
 
     /**
      * Waits for completion of a process.
@@ -54,9 +63,11 @@ public interface ProcessResource {
      * @return
      */
     @GET
+    @ApiOperation("Wait for a process to finish")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}/waitForCompletion")
-    ProcessStatusResponse waitForCompletion(@PathParam("id") String instanceId, @QueryParam("timeout") @DefaultValue("-1") long timeout);
+    ProcessStatusResponse waitForCompletion(@ApiParam @PathParam("id") String instanceId,
+                                            @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout);
 
     /**
      * Forcefully stops a process.
@@ -64,8 +75,9 @@ public interface ProcessResource {
      * @param instanceId
      */
     @DELETE
+    @ApiOperation("Forcefully stop a process")
     @Path("/{id}")
-    void kill(@PathParam("id") String instanceId);
+    void kill(@ApiParam @PathParam("id") String instanceId);
 
     /**
      * Returns a process instance details.
@@ -74,7 +86,8 @@ public interface ProcessResource {
      * @return
      */
     @GET
+    @ApiOperation("Get status of a process")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    ProcessStatusResponse get(@PathParam("id") String instanceId);
+    ProcessStatusResponse get(@ApiParam @PathParam("id") String instanceId);
 }

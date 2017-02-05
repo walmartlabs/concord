@@ -80,6 +80,7 @@
         <siesta.version>2.2.1</siesta.version>
         <sisu.version>0.3.3</sisu.version>
         <slf4j.version>1.7.21</slf4j.version>
+        <swagger.version>1.5.12</swagger.version>
         <tomcat.jdbc.version>8.5.5</tomcat.jdbc.version>
         <wiremock.version>2.1.10</wiremock.version>
 
@@ -172,6 +173,11 @@
                 <groupId>io.dropwizard.metrics</groupId>
                 <artifactId>metrics-jvm</artifactId>
                 <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.takari.bpm</groupId>
@@ -508,6 +514,11 @@
                         <maxmem>256m</maxmem>
                         <aggregate>true</aggregate>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.kongchen</groupId>
+                    <artifactId>swagger-maven-plugin</artifactId>
+                    <version>3.1.4</version>
                 </plugin>
             </plugins>
         </pluginManagement>

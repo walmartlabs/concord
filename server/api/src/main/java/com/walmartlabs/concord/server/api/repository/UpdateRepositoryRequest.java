@@ -10,20 +10,11 @@ import java.io.Serializable;
 public class UpdateRepositoryRequest implements Serializable {
 
     @NotNull
-    @ConcordId
-    private final String id;
-
-    @NotNull
     private final String url;
 
     @JsonCreator
-    public UpdateRepositoryRequest(@JsonProperty("id") String id, @JsonProperty("url") String url) {
-        this.id = id;
+    public UpdateRepositoryRequest(@JsonProperty("url") String url) {
         this.url = url;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public String getUrl() {
@@ -33,8 +24,7 @@ public class UpdateRepositoryRequest implements Serializable {
     @Override
     public String toString() {
         return "UpdateRepositoryRequest{" +
-                "id='" + id + '\'' +
-                ", url='" + url + '\'' +
+                "url='" + url + '\'' +
                 '}';
     }
 }

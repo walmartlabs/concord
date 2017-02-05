@@ -1,22 +1,24 @@
-package com.walmartlabs.concord.server.api.project;
+package com.walmartlabs.concord.server.api.repository;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
-public class ProjectEntry implements Serializable {
+public class RepositoryEntry implements Serializable {
 
     private final String id;
     private final String name;
-    private final String[] templates;
+    private final String url;
 
     @JsonCreator
-    public ProjectEntry(@JsonProperty("id") String id, @JsonProperty("name") String name, @JsonProperty("templates") String[] templates) {
+    public RepositoryEntry(@JsonProperty("id") String id,
+                           @JsonProperty("name") String name,
+                           @JsonProperty("url") String url) {
+
         this.id = id;
         this.name = name;
-        this.templates = templates;
+        this.url = url;
     }
 
     public String getId() {
@@ -27,16 +29,16 @@ public class ProjectEntry implements Serializable {
         return name;
     }
 
-    public String[] getTemplates() {
-        return templates;
+    public String getUrl() {
+        return url;
     }
 
     @Override
     public String toString() {
-        return "ProjectEntry{" +
+        return "RepositoryEntry{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", templates=" + Arrays.toString(templates) +
+                ", url='" + url + '\'' +
                 '}';
     }
 }

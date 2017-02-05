@@ -15,6 +15,8 @@ public final class Permissions {
     public static final String TEMPLATE_USE_INSTANCE = "template:use:%s";
     
     public static final String REPOSITORY_CREATE_NEW = "repository:create";
+    public static final String REPOSITORY_UPDATE_INSTANCE = "repository:update:%s";
+    public static final String REPOSITORY_DELETE_INSTANCE = "repository:delete:%s";
     
     public static final String USER_CREATE_NEW = "user:create";
     public static final String USER_UPDATE_ANY = "user:update";

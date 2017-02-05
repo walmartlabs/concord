@@ -12,8 +12,12 @@
 | `project:update:$project` | Update (modify) a project. E.g. add a repository to a project. | `project:update:ABC`                   |
 | `project:create`          | Create a new project.                                          |                                        |
 | `repository:create`       | Create a new repository.                                       |                                        |
+| `repository:delete:*`     | Delete specific repository.                                    |                                        |
+| `repository:update:*`     | Update specific repository.                                    |                                        |
 | `template:use:$template`  | Use a specific template.                                       | `template:use:ansible`                 |
 | `template:create`         | Create a new project template.                                 |                                        |
+| `template:delete:*`       | Delete specific template.                                      |                                        |
+| `template:update:*`       | Update specific template.                                      |                                        |
 | `user:create`             | Create a new user.                                             |                                        |
 | `user:delete`             | Delete any user.                                               |                                        |
 | `user:update`             | Update any user.                                               |                                        |
@@ -23,4 +27,4 @@
 | Wildcard                      | Description                                                    | Examples                    |
 |-------------------------------|----------------------------------------------------------------|-----------------------------|
 | `inventory:create`            | Create a new inventory file.                                   |                             |
-| `inventory:use:$inventory`    | Use a specified inventory file (e.g. in a process).            | `inventory:use:myInventory` |
+| `inventory:use:$inventory`    | Use specified inventory file (e.g. in a process).              | `inventory:use:myInventory` |

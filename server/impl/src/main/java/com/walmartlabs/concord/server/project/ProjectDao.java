@@ -65,6 +65,7 @@ public class ProjectDao extends AbstractDao {
             deleteTemplates(create, id);
             insertTemplates(create, id, templateIds);
         });
+        log.info("update ['{}', {}] -> done", id, templateIds);
     }
 
     public void delete(String id) {
@@ -74,6 +75,7 @@ public class ProjectDao extends AbstractDao {
                     .where(PROJECTS.PROJECT_ID.eq(id))
                     .execute();
         });
+        log.info("delete ['{}'] -> done", id);
     }
 
     public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
@@ -81,8 +83,8 @@ public class ProjectDao extends AbstractDao {
             SelectJoinStep<Record3<String, String, String>> query = create
                     .select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME, TEMPLATES.TEMPLATE_NAME)
                     .from(PROJECTS)
-                    .join(PROJECT_TEMPLATES).onKey()
-                    .join(TEMPLATES).onKey();
+                    .leftOuterJoin(PROJECT_TEMPLATES).on(PROJECT_TEMPLATES.PROJECT_ID.eq(PROJECTS.PROJECT_ID))
+                    .leftOuterJoin(TEMPLATES).on(PROJECT_TEMPLATES.TEMPLATE_ID.eq(TEMPLATES.TEMPLATE_ID));
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
@@ -104,17 +106,17 @@ public class ProjectDao extends AbstractDao {
     }
 
     private static void insertTemplates(DSLContext create, String projectId, String... templateIds) {
-        if (templateIds != null) {
-            BatchBindStep b = create.batch(create.insertInto(PROJECT_TEMPLATES)
-                    .columns(PROJECT_TEMPLATES.PROJECT_ID, PROJECT_TEMPLATES.TEMPLATE_ID)
-                    .values((String) null, null));
-
-            for (String tId : templateIds) {
-                b.bind(projectId, tId);
-            }
-
-            b.execute();
+        if (templateIds == null || templateIds.length == 0) {
+            return;
         }
+
+        BatchBindStep b = create.batch(create.insertInto(PROJECT_TEMPLATES)
+                .columns(PROJECT_TEMPLATES.PROJECT_ID, PROJECT_TEMPLATES.TEMPLATE_ID)
+                .values((String) null, null));
+        for (String tId : templateIds) {
+            b.bind(projectId, tId);
+        }
+        b.execute();
     }
 
     private static void deleteTemplates(DSLContext create, String projectId) {
@@ -149,7 +151,9 @@ public class ProjectDao extends AbstractDao {
                 lastTemplates = new ArrayList<>();
             }
 
-            lastTemplates.add(rTemplate);
+            if (rTemplate != null) {
+                lastTemplates.add(rTemplate);
+            }
         }
 
         add(result, lastId, lastName, lastTemplates);

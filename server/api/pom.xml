@@ -38,6 +38,12 @@
         </dependency>
 
         <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -54,6 +60,41 @@
             <plugin>
                 <groupId>io.takari.maven.plugins</groupId>
                 <artifactId>takari-lifecycle-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.github.kongchen</groupId>
+                <artifactId>swagger-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-docs</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <apiSources>
+                        <apiSource>
+                            <springmvc>false</springmvc>
+                            <locations>com.walmartlabs.concord.server.api</locations>
+                            <schemes>http</schemes>
+                            <host>localhost:8001</host>
+                            <basePath>/</basePath>
+                            <info>
+                                <title>Concord Server API</title>
+                                <version>v1</version>
+                            </info>
+                            <securityDefinitions>
+                                <securityDefinition>
+                                    <json>/security.json</json>
+                                </securityDefinition>
+                            </securityDefinitions>
+                            <swaggerDirectory>${project.build.directory}/classes/com/walmartlabs/concord/server/api/swagger</swaggerDirectory>
+                            <attachSwaggerArtifact>true</attachSwaggerArtifact>
+                        </apiSource>
+                    </apiSources>
+                </configuration>
             </plugin>
         </plugins>
     </build>
