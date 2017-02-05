@@ -18,6 +18,7 @@
         <module>agent</module>
         <module>runner</module>
         <module>server</module>
+        <module>console</module>
     </modules>
 
     <properties>

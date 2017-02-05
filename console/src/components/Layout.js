@@ -30,7 +30,7 @@ class Layout extends Component {
                 <Grid.Column width={2} className="maxHeight tight">
                     <Menu size="large" vertical inverted fluid className="mainMenu maxHeight">
                         <Menu.Item>
-                            <Header as="h2" inverted>Concord</Header>
+                            <Header id="logo" as="h2" inverted>Concord</Header>
                         </Menu.Item>
                         <Menu.Item active={this.isPathActive("/project")}>
                             <Icon name="lab"/>Projects
