@@ -11,9 +11,10 @@ class Layout extends Component {
     }
 
     render() {
-        const menuItemFn = (path, label) => <Menu.Item active={this.isPathActive(path)}>
-            <Link to={path}>{label}</Link>
-        </Menu.Item>;
+        const menuItemFn = (path, label) => {
+            const active = this.isPathActive(path);
+            return <Menu.Item active={active}>{active ? label : <Link to={path}>{label}</Link>}</Menu.Item>;
+        };
 
         const {children, loggedIn} = this.props;
         if (!loggedIn) {
@@ -30,6 +31,12 @@ class Layout extends Component {
                     <Menu size="large" vertical inverted fluid className="mainMenu maxHeight">
                         <Menu.Item>
                             <Header as="h2" inverted>Concord</Header>
+                        </Menu.Item>
+                        <Menu.Item active={this.isPathActive("/project")}>
+                            <Icon name="lab"/>Projects
+                            <Menu.Menu>
+                                {menuItemFn(routes.getProjectListPath(), "List")}
+                            </Menu.Menu>
                         </Menu.Item>
                         <Menu.Item active={this.isPathActive("/process")}>
                             <Icon name="tasks"/>Processes

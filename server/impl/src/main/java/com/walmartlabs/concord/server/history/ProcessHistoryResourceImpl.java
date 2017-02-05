@@ -7,6 +7,8 @@ import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +35,9 @@ public class ProcessHistoryResourceImpl implements ProcessHistoryResource, Resou
 
     @Override
     public List<ProcessHistoryEntry> list(String sortBy, boolean asc, int limit) {
-        Field<?> sortField = null;
-        if (sortBy != null) {
-            sortField = key2Field.get(sortBy);
+        Field<?> sortField = key2Field.get(sortBy);
+        if (sortField == null) {
+            throw new WebApplicationException("Unknown sort field: " + sortBy, Status.BAD_REQUEST);
         }
         return historyDao.list(limit, sortField, asc);
     }

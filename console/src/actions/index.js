@@ -13,6 +13,20 @@ export const killProc = (id) => ({
     id
 });
 
+
+// VisibleProjectTable
+
+export const fetchProjectList = (sortBy, sortDir) => ({
+    type: actionTypes.projectList.FETCH_PROJECT_LIST_REQUEST,
+    sortBy,
+    sortDir
+});
+
+export const deleteProject = (id) => ({
+    type: actionTypes.projectList.DELETE_PROJECT_REQUEST,
+    id
+});
+
 // VisibleLogViewer
 
 export const fetchLogData = (instanceId, fetchRange, fresh) => ({

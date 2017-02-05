@@ -32,15 +32,15 @@ const authHeader = {"Authorization": "auBy4eDWrKWsyhiDp3AQiw"};
 
 // api functions
 
-export const fetchHistory = (sortBy, sortDir) => {
-    console.debug("API: fetchHistory ['%s', '%s'] -> starting...", sortBy, sortDir);
+const apiListQuery = (name, path) => (sortBy, sortDir) => {
+    console.debug("API: %s ['%s', '%s'] -> starting...", name, sortBy, sortDir);
 
     const query = queryParams({
         sortBy,
         asc: sort.ASC === sortDir
     });
 
-    return fetch("/api/v1/history?" + query, {headers: authHeader})
+    return fetch(path + "?" + query, {headers: authHeader})
         .then(response => {
             if (!response.ok) {
                 throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
@@ -48,10 +48,13 @@ export const fetchHistory = (sortBy, sortDir) => {
             return response.json();
         })
         .then(json => {
-            console.debug("API: fetchHistory ['%s', '%s'] -> done, got %d row(s)", sortBy, sortDir, json.length);
+            console.debug("API: %s ['%s', '%s'] -> done, got %d row(s)", name, sortBy, sortDir, json.length);
             return json;
         });
 };
+
+export const fetchHistory = apiListQuery("fetchHistory", "/api/v1/history");
+export const fetchProjectList = apiListQuery("fetchProjects", "/api/v1/project");
 
 export const killProc = (id) => {
     console.debug("API: killProc ['%s'] -> starting...", id);
@@ -62,6 +65,19 @@ export const killProc = (id) => {
                 throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
             }
             console.debug("API: killProc ['%s'] -> done", id);
+            return true;
+        });
+};
+
+export const deleteProject = (id) => {
+    console.debug("API: deleteProject ['%s'] -> starting...", id);
+
+    return fetch("/api/v1/project/" + id, {headers: authHeader, method: "DELETE"})
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+            }
+            console.debug("API: deleteProject ['%s'] -> done", id);
             return true;
         });
 };

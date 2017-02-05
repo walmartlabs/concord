@@ -11,7 +11,7 @@ const data = (state = [], action) => {
                 return [];
             }
             return state;
-        case actionTypes.log.FETCH_LOG_DATA_FAILURE:
+        case actionTypes.log.FETCH_LOG_DATA_RESULT:
             return [...state, action.data];
         default:
             return state;
@@ -22,7 +22,7 @@ const loading = (state = false, action) => {
     switch (action.type) {
         case actionTypes.log.FETCH_LOG_DATA_REQUEST:
             return true;
-        case actionTypes.log.FETCH_LOG_DATA_FAILURE:
+        case actionTypes.log.FETCH_LOG_DATA_RESULT:
             return false;
         default:
             return state;
@@ -31,7 +31,7 @@ const loading = (state = false, action) => {
 
 const error = (state = null, action) => {
     switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_FAILURE:
+        case actionTypes.log.FETCH_LOG_DATA_RESULT:
             if (action.error) {
                 return action.message;
             }
@@ -48,7 +48,7 @@ const range = (state = {}, action) => {
                 return {};
             }
             return state;
-        case actionTypes.log.FETCH_LOG_DATA_FAILURE:
+        case actionTypes.log.FETCH_LOG_DATA_RESULT:
             const a = action.range.low;
             const b = state.min === undefined ? a : state.min;
             const min = Math.min(a, b);
@@ -60,7 +60,7 @@ const range = (state = {}, action) => {
 
 const status = (state = null, action) => {
     switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_FAILURE:
+        case actionTypes.log.FETCH_LOG_DATA_RESULT:
             return action.status;
         default:
             return state;

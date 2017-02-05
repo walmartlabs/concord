@@ -1,53 +1,27 @@
 import {combineReducers} from "redux";
-import actionTypes from "../actions/actionTypes";
+import {history as actionTypes} from "../actions/actionTypes";
+import * as common from "./common";
 
-const rows = (state = [], action) => {
+const rows = common.makeListRowsReducer(actionTypes.FETCH_HISTORY_DATA_RESULT);
+const loading = common.makeListLoadingReducer(actionTypes.FETCH_HISTORY_DATA_REQUEST, actionTypes.FETCH_HISTORY_DATA_RESULT);
+const error = common.makeListErrorReducer(actionTypes.FETCH_HISTORY_DATA_RESULT);
+const lastQuery = common.makeListLastQueryReducer(actionTypes.FETCH_HISTORY_DATA_REQUEST);
+
+const inFlightIds = (state = [], action) => {
     switch (action.type) {
-        case actionTypes.history.FETCH_HISTORY_DATA_RESULT:
-            if (action.error) {
-                return state;
-            }
-            return action.response;
+        case actionTypes.KILL_PROC_REQUEST:
+            return [...state, action.id];
+        case actionTypes.KILL_PROC_RESULT:
+            return state.filter((v) => v !== action.id);
         default:
             return state;
     }
 };
 
-const loading = (state = false, action) => {
-    switch (action.type) {
-        case actionTypes.history.FETCH_HISTORY_DATA_REQUEST:
-            return true;
-        case actionTypes.history.FETCH_HISTORY_DATA_RESULT:
-            return false;
-        default:
-            return state;
-    }
-};
-
-const error = (state = null, action) => {
-    switch (action.type) {
-        case actionTypes.history.FETCH_HISTORY_DATA_RESULT:
-            if (action.error) {
-                return action.message;
-            }
-            return null;
-        default:
-            return state;
-    }
-};
-
-const lastQuery = (state = null, action) => {
-    switch (action.type) {
-        case actionTypes.history.FETCH_HISTORY_DATA_REQUEST:
-            return { sortBy: action.sortBy, sortDir: action.sortDir };
-        default:
-            return state;
-    }
-};
-
-export default combineReducers({rows, loading, error, lastQuery});
+export default combineReducers({rows, loading, error, lastQuery, inFlightIds});
 
 export const getRows = (state) => state.rows;
 export const getIsLoading = (state) => state.loading;
 export const getError = (state) => state.error;
 export const getLastQuery = (state) => state.lastQuery;
+export const isInFlight = (state, id) => state.inFlightIds.includes(id);

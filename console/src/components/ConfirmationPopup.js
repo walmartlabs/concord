@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from "react";
 import {Icon, Button, Modal} from "semantic-ui-react";
 
-class KillConfirmation extends Component {
+class ConfirmationPopup extends Component {
     state = {open: false};
 
     handleOpen = () => {
@@ -13,32 +13,37 @@ class KillConfirmation extends Component {
     };
 
     handleConfirm = () => {
-        this.setState({open: false, blocked: true});
+        this.setState({open: false});
         this.props.onConfirmFn();
     };
 
     render = () => {
-        const {open, blocked} = this.state;
-        return <Modal open={open} trigger={<Button icon="delete" color="red"
-                                                   onClick={this.handleOpen}
-                                                   disabled={blocked}
-                                                   loading={blocked}/>}>
+        const {open} = this.state;
+        const {disabled, icon, message} = this.props;
 
-            <Modal.Header>Kill the selected process?</Modal.Header>
+        return <Modal open={open} trigger={<Button icon={icon || "delete"} color="red"
+                                                   onClick={this.handleOpen}
+                                                   disabled={disabled}
+                                                   loading={disabled}/>}>
+
+            <Modal.Header>{message}</Modal.Header>
             <Modal.Actions>
                 <Button basic onClick={this.handleClose}>
-                    <Icon name="remove"/> No
+                    <Icon name="remove"/> Cancel
                 </Button>
                 <Button color="red" onClick={this.handleConfirm}>
-                    <Icon name="checkmark"/> Yes
+                    <Icon name="checkmark"/> Ok
                 </Button>
             </Modal.Actions>
         </Modal>;
     };
 }
 
-KillConfirmation.propTypes = {
+ConfirmationPopup.propTypes = {
+    disabled: PropTypes.bool,
+    icon: PropTypes.string,
+    message: PropTypes.string.isRequired,
     onConfirmFn: PropTypes.func.isRequired
 };
 
-export default KillConfirmation;
+export default ConfirmationPopup;

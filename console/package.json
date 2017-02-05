@@ -19,6 +19,7 @@
     "redux-saga": "*",
     "redux-logger": "*",
     "http-range": "*",
+    "lodash": "*",
     "semantic-ui-react": "*",
     "moment": "*"
   },

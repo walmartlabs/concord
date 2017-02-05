@@ -1,4 +1,4 @@
-const history = {
+export const history = {
     FETCH_HISTORY_DATA_REQUEST: "FETCH_HISTORY_DATA_REQUEST",
     FETCH_HISTORY_DATA_RESULT: "FETCH_HISTORY_DATA_RESULT",
 
@@ -6,15 +6,17 @@ const history = {
     KILL_PROC_RESULT: "KILL_PROC_RESULT"
 };
 
-const log = {
+export const projectList = {
+    FETCH_PROJECT_LIST_REQUEST: "FETCH_PROJECT_LIST_REQUEST",
+    FETCH_PROJECT_LIST_RESULT: "FETCH_PROJECT_LIST_RESULT",
+
+    DELETE_PROJECT_REQUEST: "DELETE_PROJECT_REQUEST",
+    DELETE_PROJECT_RESULT: "DELETE_PROJECT_RESULT"
+};
+
+export const log = {
     FETCH_LOG_DATA_REQUEST: "FETCH_LOG_DATA_REQUEST",
-    FETCH_LOG_DATA_FAILURE: "FETCH_LOG_DATA_FAILURE"
+    FETCH_LOG_DATA_RESULT: "FETCH_LOG_DATA_RESULT"
 };
 
-const session = {
-    LOGIN_REQUEST: "LOGIN_REQUEST",
-    LOGIN_SUCCESS: "LOGIN_SUCCESS",
-    LOGIN_FAILURE: "LOGIN_FAILURE"
-};
-
-export default {history, process, log, session};
+export default {history, projectList, log};

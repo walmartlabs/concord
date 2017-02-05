@@ -19,7 +19,7 @@ export const history = {
         {key: "initiator", label: "Initiator"},
         {key: "lastUpdateDt", label: "Updated"},
         {key: "createdDt", label: "Created"},
-        {key: "buttons", label: "Actions", collapsing: true}
+        {key: "actions", label: "Actions", collapsing: true}
     ],
 
     statusToIcon: {
@@ -31,7 +31,7 @@ export const history = {
 
     idKey: "instanceId",
     sortableKeys: ["status", "initiator", "lastUpdateDt", "createdDt"],
-    buttonsKey: "buttons",
+    actionsKey: "actions",
     logFileNameKey: "logFileName",
     logLinkKey: "instanceId",
     dateKeys: ["lastUpdateDt", "createdDt"],
@@ -41,7 +41,23 @@ export const history = {
     failedStatuses: [process.failedStatus],
 
     defaultSortKey: "lastUpdateDt",
-    defaultSortDir: sort.DESC,
+    defaultSortDir: sort.DESC
+};
+
+export const projectList = {
+    columns: [
+        {key: "name", label: "Name", collapsing:true},
+        {key: "templates", label: "Templates"},
+        {key: "actions", label: "Actions", collapsing: true}
+    ],
+
+    idKey: "id",
+    templatesKey: "templates",
+    sortableKeys: ["name"],
+    actionsKey: "actions",
+
+    defaultSortKey: "name",
+    defaultSortDir: sort.ASC
 };
 
 export const log = {

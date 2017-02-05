@@ -51,8 +51,11 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     @Override
     @Validate
     public List<ProjectEntry> list(String sortBy, boolean asc) {
-        // TODO
-        return Collections.emptyList();
+        Field<?> sortField = key2Field.get(sortBy);
+        if (sortField == null) {
+            throw new WebApplicationException("Unknown sort field: " + sortBy, Status.BAD_REQUEST);
+        }
+        return projectDao.list(sortField, asc);
     }
 
     @Override
