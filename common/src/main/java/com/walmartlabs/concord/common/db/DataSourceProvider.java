@@ -42,6 +42,7 @@ public class DataSourceProvider implements Provider<DataSource> {
         props.setUsername(cfg.getUsername());
         props.setPassword(cfg.getPassword());
         props.setDefaultAutoCommit(false);
+        props.setRollbackOnReturn(true);
         props.setMinIdle(1);
         props.setMaxIdle(5);
         props.setMaxActive(10);

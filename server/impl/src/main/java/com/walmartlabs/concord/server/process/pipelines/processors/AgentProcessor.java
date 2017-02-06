@@ -32,26 +32,13 @@ public class AgentProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Payload payload) {
-        ProcessExecutorCallback callback = new ProcessExecutorCallback() {
-            @Override
-            public void onStart(String instanceId) {
-                String initiator = payload.getHeader(Payload.INITIATOR);
-                String logFileName = payload.getHeader(LogFileProcessor.LOG_FILE_NAME);
-                historyDao.insertInitial(instanceId, initiator, logFileName);
-            }
-
-            @Override
-            public void onStatusChange(String instanceId, ProcessStatus status) {
-                historyDao.update(instanceId, status);
-            }
-
-            @Override
-            public void onUpdate(String instanceId) {
-                historyDao.touch(instanceId);
-            }
-        };
+        // synchronously add an initial record to the process history
+        historyDao.insertInitial(payload.getInstanceId(),
+                payload.getHeader(Payload.INITIATOR),
+                payload.getHeader(LogFileProcessor.LOG_FILE_NAME));
 
         threadPool.execute(() -> {
+            ProcessExecutorCallback callback = new HistoryCallback(historyDao);
             executor.run(payload.getInstanceId(),
                     payload.getHeader(ArchivingProcessor.ARCHIVE_FILE),
                     payload.getHeader(DependenciesProcessor.ENTRY_POINT_NAME),
@@ -60,5 +47,24 @@ public class AgentProcessor implements PayloadProcessor {
         });
 
         return payload.removeHeader(ArchivingProcessor.ARCHIVE_FILE);
+    }
+
+    private static final class HistoryCallback implements ProcessExecutorCallback {
+
+        private final ProcessHistoryDao historyDao;
+
+        private HistoryCallback(ProcessHistoryDao historyDao) {
+            this.historyDao = historyDao;
+        }
+
+        @Override
+        public void onStatusChange(String instanceId, ProcessStatus status) {
+            historyDao.update(instanceId, status);
+        }
+
+        @Override
+        public void onUpdate(String instanceId) {
+            historyDao.touch(instanceId);
+        }
     }
 }

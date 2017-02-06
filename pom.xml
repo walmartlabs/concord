@@ -72,7 +72,7 @@
         <node.version>7.4.0</node.version>
         <npm.version>4.0.5</npm.version>
         <oneops.client.version>0.0.1</oneops.client.version>
-        <postgres.version>9.4.1209</postgres.version>
+        <postgres.version>9.4.1212</postgres.version>
         <provisio.version>0.1.32</provisio.version>
         <resteasy.version>3.0.13.Final</resteasy.version>
         <servlet.version>3.1.0</servlet.version>
@@ -397,6 +397,11 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgres.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

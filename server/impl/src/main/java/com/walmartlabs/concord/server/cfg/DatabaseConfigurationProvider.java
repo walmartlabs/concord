@@ -27,7 +27,7 @@ public class DatabaseConfigurationProvider implements Provider<DatabaseConfigura
     public static final String DB_USERNAME_KEY = "DB_USERNAME";
     public static final String DEFAULT_DB_USERNAME = "sa";
 
-    public static final String DB_PASSWORD_KEY = "DB_PASSWORD_KEY";
+    public static final String DB_PASSWORD_KEY = "DB_PASSWORD";
     public static final String DEFAULT_DB_PASSWORD = null;
 
     @Override

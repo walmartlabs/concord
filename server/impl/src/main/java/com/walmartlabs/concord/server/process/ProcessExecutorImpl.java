@@ -66,8 +66,6 @@ public class ProcessExecutorImpl {
         log.info("run ['{}'] -> starting (log file: {})...", instanceId, logFile.toAbsolutePath());
         log(logFile, "Starting %s...", instanceId);
 
-        callback.onStart(instanceId);
-
         try (Agent a = new Agent(agentCfg.getUri())) {
             log.info("run ['{}'] -> sending the payload: {}", instanceId, archive.toAbsolutePath());
             callback.onStatusChange(instanceId, ProcessStatus.RUNNING);
