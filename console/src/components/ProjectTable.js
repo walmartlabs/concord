@@ -24,10 +24,15 @@ const headerFn = (currentKey, currentDir) => (key, label) => {
 };
 
 const cellFn = (inFlightFn, onDeleteFn) => (row, key) => {
+    if (key === constants.projectList.nameKey) {
+        const id = row[constants.projectList.idKey];
+        return <Link to={routes.getProjectPath(id)}>{row[key]}</Link>;
+    }
+
     // column with buttons (actions)
     if (key === constants.projectList.actionsKey) {
         const id = row[constants.projectList.idKey];
-        return onDeleteFn && <ConfirmationPopup icon="trash" message="Delete the selected process?"
+        return onDeleteFn && <ConfirmationPopup icon="trash" message="Delete the selected project?"
                                                 onConfirmFn={() => onDeleteFn(id)}
                                                 disabled={inFlightFn(id)}/>;
     }

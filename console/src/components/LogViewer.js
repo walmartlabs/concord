@@ -42,13 +42,13 @@ class LogViewer extends Component {
     }
 
     render() {
-        const {status, onRefreshFn, onLoadWholeLogFn, fullSize, loading, fileName, data} = this.props;
+        const {status, onRefreshFn, onLoadWholeLogFn, fullSize, loading, instanceId, data} = this.props;
 
         return <div>
-            <Header as="h3">{onRefreshFn && <RefreshButton loading={loading} onClick={onRefreshFn}/>}{fileName}</Header>
+            <Header as="h3">{onRefreshFn && <RefreshButton loading={loading} onClick={onRefreshFn}/>}{instanceId}</Header>
             <Header as="h4">{status}</Header>
 
-            { onLoadWholeLogFn && <Button basic onClick={onLoadWholeLogFn}>Show whole log, {fullSize} byte(s)</Button> }
+            { onLoadWholeLogFn && <Button basic onClick={onLoadWholeLogFn}>Show the whole log, {fullSize} byte(s)</Button> }
 
             <Button className="sticky" onClick={() => this.setAutoScroll(!this.state.autoScroll)}>
                 {this.state.autoScroll ? "Auto-scroll ON" : "Auto-scroll OFF"}
@@ -68,7 +68,7 @@ class LogViewer extends Component {
 LogViewer.propTypes = {
     data: PropTypes.array,
     loading: PropTypes.bool,
-    fileName: PropTypes.string,
+    instanceId: PropTypes.string,
     onRefreshFn: PropTypes.func,
 
     onLoadWholeLogFn: PropTypes.func,

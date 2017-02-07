@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
+import java.util.List;
 
 @Api("Template")
 @Path("/api/v1/template")
@@ -21,6 +22,12 @@ public interface TemplateResource {
     @Produces(MediaType.APPLICATION_JSON)
     CreateTemplateResponse create(@ApiParam @QueryParam("name") @NotNull @ConcordKey String name,
                                   @ApiParam InputStream data);
+
+    @GET
+    @ApiOperation("List templates")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<TemplateEntry> list(@ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy,
+                             @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc);
 
     @PUT
     @ApiOperation("Update an existing template")

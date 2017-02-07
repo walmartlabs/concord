@@ -6,12 +6,17 @@ import VisibleHistoryTable from "./containers/VisibleHistoryTable";
 import VisibleProjectTable from "./containers/VisibleProjectTable";
 import VisibleLogViewer from "./containers/VisibleLogViewer";
 import VisibleLoginForm from "./containers/VisibleLoginForm";
+import VisibleProjectForm from "./containers/VisibleProjectForm";
 import {getIsLoggedIn} from "./reducers";
 
 export const getProcessHistoryPath = () => "/process/history";
 export const getProcessLogPath = (instanceId) => "/process/log/" + instanceId;
+export const getProcessStartPath = () => "/process/start";
 
 export const getProjectListPath = () => "/project/list";
+export const getProjectNewPath = () => "/project/new";
+export const getProjectTemplateListPath = () => "/project/templates";
+export const getProjectPath = (id) => "/project/" + id;
 
 export default (store, history) => {
     const h = syncHistoryWithStore(history, store);
@@ -29,11 +34,13 @@ export default (store, history) => {
             <Route path="process" onEnter={checkAuth}>
                 <IndexRedirect to="history"/>
                 <Route path="history" component={VisibleHistoryTable}/>
-                <Route path="log/:n" components={VisibleLogViewer}/>
+                <Route path="log/:id" components={VisibleLogViewer}/>
             </Route>
             <Route path="project" onEnter={checkAuth}>
                 <IndexRedirect to="list"/>
                 <Route path="list" component={VisibleProjectTable}/>
+                <Route path="new" component={VisibleProjectForm}/>
+                <Route path=":id" component={VisibleProjectForm}/>
             </Route>
         </Route>
     </Router>;

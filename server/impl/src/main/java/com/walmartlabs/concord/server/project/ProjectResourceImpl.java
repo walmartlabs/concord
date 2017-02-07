@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.project;
 
+import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.template.TemplateDao;
@@ -13,6 +14,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.PathParam;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
@@ -48,6 +50,14 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         projectDao.insert(id, request.getName(), templateIds);
 
         return new CreateProjectResponse(id);
+    }
+
+    @Override
+    @Validate
+    public ProjectEntry get(@PathParam("id") @ConcordId String id) {
+        assertPermissions(id, Permissions.PROJECT_READ_INSTANCE,
+                "The current user does not have permissions to read the specified project");
+        return projectDao.get(id);
     }
 
     @Override

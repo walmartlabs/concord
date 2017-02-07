@@ -12,8 +12,10 @@ class Layout extends Component {
 
     render() {
         const menuItemFn = (path, label) => {
-            const active = this.isPathActive(path);
-            return <Menu.Item active={active}>{active ? label : <Link to={path}>{label}</Link>}</Menu.Item>;
+            const active = path && this.isPathActive(path);
+            return <Menu.Item active={active}>
+                {active ? label : (path ? <Link to={path}>{label}</Link> : label)}
+            </Menu.Item>;
         };
 
         const {children, loggedIn} = this.props;
@@ -32,17 +34,30 @@ class Layout extends Component {
                         <Menu.Item>
                             <Header id="logo" as="h2" inverted>Concord</Header>
                         </Menu.Item>
+
                         <Menu.Item active={this.isPathActive("/project")}>
                             <Icon name="lab"/>Projects
                             <Menu.Menu>
                                 {menuItemFn(routes.getProjectListPath(), "List")}
+                                {menuItemFn(routes.getProjectNewPath(), "Create a project")}
+                                {menuItemFn(null, "Templates")}
                             </Menu.Menu>
                         </Menu.Item>
+
                         <Menu.Item active={this.isPathActive("/process")}>
                             <Icon name="tasks"/>Processes
                             <Menu.Menu>
                                 {menuItemFn(routes.getProcessHistoryPath(), "History")}
+                                {menuItemFn(null, "Start a process")}
                             </Menu.Menu>
+                        </Menu.Item>
+
+                        <Menu.Item>
+                            <Icon name="users"/>Users
+                        </Menu.Item>
+
+                        <Menu.Item>
+                            <Icon name="privacy"/>Credentials
                         </Menu.Item>
                     </Menu>
                 </Grid.Column>

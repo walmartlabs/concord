@@ -52,12 +52,18 @@ export const projectList = {
     ],
 
     idKey: "id",
+    nameKey: "name",
     templatesKey: "templates",
     sortableKeys: ["name"],
     actionsKey: "actions",
 
     defaultSortKey: "name",
     defaultSortDir: sort.ASC
+};
+
+export const templateList = {
+    idKey: "id",
+    nameKey: "name"
 };
 
 export const log = {

@@ -14,9 +14,23 @@ export const projectList = {
     DELETE_PROJECT_RESULT: "DELETE_PROJECT_RESULT"
 };
 
+export const project = {
+    FETCH_PROJECT_REQUEST: "FETCH_PROJECT_REQUEST",
+    FETCH_PROJECT_RESULT: "FETCH_PROJECT_RESULT",
+
+    UPDATE_PROJECT_REQUEST: "UPDATE_PROJECT_REQUEST",
+    CREATE_PROJECT_REQUEST: "CREATE_PROJECT_REQUEST",
+    MAKE_NEW_PROJECT: "MAKE_NEW_PROJECT"
+};
+
+export const templateList = {
+    FETCH_TEMPLATE_LIST_REQUEST: "FETCH_TEMPLATE_LIST_REQUEST",
+    FETCH_TEMPLATE_LIST_RESULT: "FETCH_TEMPLATE_LIST_RESULT"
+};
+
 export const log = {
     FETCH_LOG_DATA_REQUEST: "FETCH_LOG_DATA_REQUEST",
     FETCH_LOG_DATA_RESULT: "FETCH_LOG_DATA_RESULT"
 };
 
-export default {history, projectList, log};
+export default {history, projectList, project, templateList, log};

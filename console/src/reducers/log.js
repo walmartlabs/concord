@@ -1,54 +1,39 @@
 import {combineReducers} from "redux";
-import actionTypes from "../actions/actionTypes";
+import {log as actionTypes} from "../actions/actionTypes";
+import * as common from "./common";
 
 const data = (state = [], action) => {
     switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_REQUEST:
+        case actionTypes.FETCH_LOG_DATA_REQUEST:
             if (action.error) {
                 return state;
             }
-            if (action.fresh) {
+            if (action.reset) {
                 return [];
             }
             return state;
-        case actionTypes.log.FETCH_LOG_DATA_RESULT:
+        case actionTypes.FETCH_LOG_DATA_RESULT:
             return [...state, action.data];
         default:
             return state;
     }
 };
 
-const loading = (state = false, action) => {
-    switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_REQUEST:
-            return true;
-        case actionTypes.log.FETCH_LOG_DATA_RESULT:
-            return false;
-        default:
-            return state;
-    }
-};
-
-const error = (state = null, action) => {
-    switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_RESULT:
-            if (action.error) {
-                return action.message;
-            }
-            return null;
-        default:
-            return state;
-    }
-};
+const loading = common.makeIsLoadingReducer(actionTypes.FETCH_LOG_DATA_REQUEST, actionTypes.FETCH_LOG_DATA_RESULT);
+const error = common.makeErrorReducer(actionTypes.FETCH_LOG_DATA_REQUEST, actionTypes.FETCH_LOG_DATA_RESULT);
 
 const range = (state = {}, action) => {
     switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_REQUEST:
-            if (action.fresh) {
+        case actionTypes.FETCH_LOG_DATA_REQUEST:
+            if (action.reset) {
                 return {};
             }
             return state;
-        case actionTypes.log.FETCH_LOG_DATA_RESULT:
+        case actionTypes.FETCH_LOG_DATA_RESULT:
+            if (action.error) {
+                return state;
+            }
+
             const a = action.range.low;
             const b = state.min === undefined ? a : state.min;
             const min = Math.min(a, b);
@@ -60,7 +45,11 @@ const range = (state = {}, action) => {
 
 const status = (state = null, action) => {
     switch (action.type) {
-        case actionTypes.log.FETCH_LOG_DATA_RESULT:
+        case actionTypes.FETCH_LOG_DATA_RESULT:
+            if (action.error) {
+                return state;
+            }
+
             return action.status;
         default:
             return state;

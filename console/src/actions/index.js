@@ -27,12 +27,44 @@ export const deleteProject = (id) => ({
     id
 });
 
+// VisibleProjectForm
+
+export const fetchProject = (id) => ({
+    type: actionTypes.project.FETCH_PROJECT_REQUEST,
+    id
+});
+
+export const makeNewProject = () => ({
+    type: actionTypes.project.MAKE_NEW_PROJECT
+});
+
+export const createProject = (data, resolve, reject) => ({
+    type: actionTypes.project.CREATE_PROJECT_REQUEST,
+    data,
+    resolve,
+    reject
+});
+
+export const updateProject = (id, data, resolve, reject) => ({
+    type: actionTypes.project.UPDATE_PROJECT_REQUEST,
+    id,
+    data,
+    resolve,
+    reject
+});
+
+export const fetchTemplateList = (sortBy, sortDir) => ({
+    type: actionTypes.templateList.FETCH_TEMPLATE_LIST_REQUEST,
+    sortBy,
+    sortDir
+});
+
 // VisibleLogViewer
 
-export const fetchLogData = (instanceId, fetchRange, fresh) => ({
+export const fetchLogData = (instanceId, fetchRange, reset) => ({
     type: actionTypes.log.FETCH_LOG_DATA_REQUEST,
     instanceId,
     fetchRange,
-    fresh
+    reset
 });
 

@@ -45,6 +45,22 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
+    public ProjectEntry get(String id) {
+        try (DSLContext create = DSL.using(cfg)) {
+            SelectConditionStep<Record3<String, String, String>> query = selectProjectEntry(create)
+                    .where(PROJECTS.PROJECT_ID.eq(id));
+
+            List<ProjectEntry> l = fold(query.fetch());
+            if (l.isEmpty()) {
+                return null;
+            }
+            if (l.size() > 1) {
+                throw new IllegalStateException("Unexpected result, got " + l.size() + " records");
+            }
+            return l.get(0);
+        }
+    }
+
     public void insert(String id, String name, String... templateIds) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
@@ -84,11 +100,7 @@ public class ProjectDao extends AbstractDao {
 
     public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
         try (DSLContext create = DSL.using(cfg)) {
-            SelectJoinStep<Record3<String, String, String>> query = create
-                    .select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME, TEMPLATES.TEMPLATE_NAME)
-                    .from(PROJECTS)
-                    .leftOuterJoin(PROJECT_TEMPLATES).on(PROJECT_TEMPLATES.PROJECT_ID.eq(PROJECTS.PROJECT_ID))
-                    .leftOuterJoin(TEMPLATES).on(PROJECT_TEMPLATES.TEMPLATE_ID.eq(TEMPLATES.TEMPLATE_ID));
+            SelectOnConditionStep<Record3<String, String, String>> query = selectProjectEntry(create);
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
@@ -161,5 +173,12 @@ public class ProjectDao extends AbstractDao {
     private static void add(List<ProjectEntry> l, String id, String name, List<String> templates) {
         Collections.sort(templates);
         l.add(new ProjectEntry(id, name, templates.toArray(new String[templates.size()])));
+    }
+
+    private static SelectOnConditionStep<Record3<String, String, String>> selectProjectEntry(DSLContext create) {
+        return create.select(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME, TEMPLATES.TEMPLATE_NAME)
+                .from(PROJECTS)
+                .leftOuterJoin(PROJECT_TEMPLATES).on(PROJECT_TEMPLATES.PROJECT_ID.eq(PROJECTS.PROJECT_ID))
+                .leftOuterJoin(TEMPLATES).on(PROJECT_TEMPLATES.TEMPLATE_ID.eq(TEMPLATES.TEMPLATE_ID));
     }
 }

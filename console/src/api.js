@@ -55,6 +55,7 @@ const apiListQuery = (name, path) => (sortBy, sortDir) => {
 
 export const fetchHistory = apiListQuery("fetchHistory", "/api/v1/history");
 export const fetchProjectList = apiListQuery("fetchProjects", "/api/v1/project");
+export const fetchTemplateList = apiListQuery("fetchTemplateList", "/api/v1/template");
 
 export const killProc = (id) => {
     console.debug("API: killProc ['%s'] -> starting...", id);
@@ -66,6 +67,61 @@ export const killProc = (id) => {
             }
             console.debug("API: killProc ['%s'] -> done", id);
             return true;
+        });
+};
+
+export const fetchProject = (id) => {
+    console.debug("API: getProject ['%s'] -> starting...", id);
+
+    return fetch("/api/v1/project/" + id, {headers: authHeader})
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+            }
+            return response.json();
+        })
+        .then(json => {
+            console.debug("API: getProject ['%s'] -> done, got %o", id, json);
+            return json;
+        });
+};
+
+export const createProject = (data) => {
+    console.debug("API: createProject [%o] -> starting...", data);
+
+    const body = JSON.stringify(data);
+    const contentType = {"Content-Type": "application/json"};
+    const opts = {headers: Object.assign({}, authHeader, contentType), method: "POST", body: body};
+
+    return fetch("/api/v1/project", opts)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+            }
+            return response.json();
+        })
+        .then(json => {
+            console.debug("API: createProject [%o] -> done, got %o", data, json);
+            return json;
+        });
+};
+
+export const updateProject = (id, data) => {
+    console.debug("API: updateProject ['%s', %o] -> starting...", id, data);
+
+    const body = JSON.stringify(data);
+    const contentType = {"Content-Type": "application/json"};
+    const opts = {headers: Object.assign({}, authHeader, contentType), method: "PUT", body: body};
+
+    return fetch("/api/v1/project/" + id, opts)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+            }
+        })
+        .then(json => {
+            console.debug("API: updateProject ['%s', %o] -> done", id, data);
+            return json;
         });
 };
 

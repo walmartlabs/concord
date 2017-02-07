@@ -26,6 +26,12 @@ public interface ProjectResource {
     @Produces(MediaType.APPLICATION_JSON)
     CreateProjectResponse create(@ApiParam @Valid CreateProjectRequest request);
 
+    @GET
+    @ApiOperation("Get an existing project")
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    ProjectEntry get(@PathParam("id") @ConcordId String id);
+
     /**
      * List projects.
      *

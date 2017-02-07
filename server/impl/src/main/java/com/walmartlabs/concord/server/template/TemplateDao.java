@@ -2,8 +2,8 @@ package com.walmartlabs.concord.server.template;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.common.db.ResultSetInputStream;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
+import com.walmartlabs.concord.server.api.template.TemplateEntry;
+import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectTemplates.PROJECT_TEMPLATES;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPLATES;
@@ -70,6 +71,23 @@ public class TemplateDao extends AbstractDao {
             JDBCUtils.safeClose(ps);
             JDBCUtils.safeClose(conn);
             throw new DataAccessException("Error while opening a stream", e);
+        }
+    }
+
+    public List<TemplateEntry> list(Field<?> sortField, boolean asc) {
+        try (DSLContext create = DSL.using(cfg)) {
+            SelectJoinStep<Record2<String, String>> query = create
+                    .select(TEMPLATES.TEMPLATE_ID, TEMPLATES.TEMPLATE_NAME)
+                    .from(TEMPLATES);
+
+            if (sortField != null) {
+                query.orderBy(asc ? sortField.asc() : sortField.desc());
+            }
+
+            List<TemplateEntry> result = query.fetch(r ->
+                    new TemplateEntry(r.get(TEMPLATES.TEMPLATE_ID), r.get(TEMPLATES.TEMPLATE_NAME)));
+            log.info("list [{}, {}] -> got {} result(s)", sortField, asc, result.size());
+            return result;
         }
     }
 

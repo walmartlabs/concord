@@ -8,6 +8,7 @@ public final class Permissions {
     public static final String PROCESS_START_PROJECT = "process:start:%s";
 
     public static final String PROJECT_CREATE_NEW = "project:create";
+    public static final String PROJECT_READ_INSTANCE = "project:read:%s";
     public static final String PROJECT_UPDATE_INSTANCE = "project:update:%s";
     public static final String PROJECT_DELETE_INSTANCE = "project:delete:%s";
 

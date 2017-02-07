@@ -3,8 +3,8 @@ import {projectList as actionTypes} from "../actions/actionTypes";
 import * as common from "./common";
 
 const rows = common.makeListRowsReducer(actionTypes.FETCH_PROJECT_LIST_RESULT);
-const loading = common.makeListLoadingReducer(actionTypes.FETCH_PROJECT_LIST_REQUEST, actionTypes.FETCH_PROJECT_LIST_RESULT);
-const error = common.makeListErrorReducer(actionTypes.FETCH_PROJECT_LIST_RESULT);
+const loading = common.makeIsLoadingReducer(actionTypes.FETCH_PROJECT_LIST_REQUEST, actionTypes.FETCH_PROJECT_LIST_RESULT);
+const error = common.makeErrorReducer(actionTypes.FETCH_PROJECT_LIST_REQUEST, actionTypes.FETCH_PROJECT_LIST_RESULT);
 const lastQuery = common.makeListLastQueryReducer(actionTypes.FETCH_PROJECT_LIST_REQUEST);
 
 const inFlightIds = (state = [], action) => {

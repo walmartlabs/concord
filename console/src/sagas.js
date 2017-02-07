@@ -1,8 +1,11 @@
-import {call, put, takeLatest, select} from "redux-saga/effects";
+import {call, put, takeLatest, select, fork} from "redux-saga/effects";
 import {delay} from "redux-saga";
+import {push as pushHistory} from "react-router-redux";
+import {SubmissionError} from "redux-form";
 import * as api from "./api";
 import actionTypes from "./actions/actionTypes";
 import {getHistoryLastQuery, getProjectListLastQuery} from "./reducers";
+import * as routes from "./routes";
 
 // common
 
@@ -87,6 +90,51 @@ function* deleteProject(action) {
     }
 };
 
+// project - data
+
+function* fetchProjectData(action) {
+    try {
+        const response = yield call(api.fetchProject, action.id);
+        yield put({
+            type: actionTypes.project.FETCH_PROJECT_RESULT,
+            response
+        });
+    } catch (e) {
+        console.error("fetchProjectData -> error", e);
+        yield put({
+            type: actionTypes.project.FETCH_PROJECT_RESULT,
+            error: true,
+            message: e.message || "Error while loading a project"
+        });
+    }
+}
+
+function* updateProjectData(action) {
+    try {
+        const response = yield call(api.updateProject, action.id, action.data);
+        action.resolve(response);
+    } catch (e) {
+        console.error("updateProjectData -> error", e);
+        action.reject(new SubmissionError({_error: e.message}));
+    }
+}
+
+function* createProject(action) {
+    try {
+        const response = yield call(api.createProject, action.data);
+        action.resolve(response);
+        yield put(pushHistory(routes.getProjectPath(response.id)));
+    } catch (e) {
+        console.error("createProject -> error", e);
+        action.reject(new SubmissionError({_error: e.message}));
+    }
+}
+
+// templates - data
+
+const fetchTemplateList = makeListFetcher("fetchTemplateList", api.fetchTemplateList,
+    actionTypes.templateList.FETCH_TEMPLATE_LIST_RESULT);
+
 // log viewer
 
 function* fetchLogData(action) {
@@ -104,22 +152,30 @@ function* fetchLogData(action) {
         yield put({
             type: actionTypes.log.FETCH_LOG_DATA_RESULT,
             error: true,
-            message: e.message || "Error while loading a log data"
+            message: e.message || "Error while loading a log file"
         });
     }
 }
 
 function* saga() {
     // history
-    yield takeLatest(actionTypes.history.FETCH_HISTORY_DATA_REQUEST, fetchHistoryData);
-    yield takeLatest(actionTypes.history.KILL_PROC_REQUEST, killProc);
+    yield fork(takeLatest, actionTypes.history.FETCH_HISTORY_DATA_REQUEST, fetchHistoryData);
+    yield fork(takeLatest, actionTypes.history.KILL_PROC_REQUEST, killProc);
 
     // project list
-    yield takeLatest(actionTypes.projectList.FETCH_PROJECT_LIST_REQUEST, fetchProjectList);
-    yield takeLatest(actionTypes.projectList.DELETE_PROJECT_REQUEST, deleteProject);
+    yield fork(takeLatest, actionTypes.projectList.FETCH_PROJECT_LIST_REQUEST, fetchProjectList);
+    yield fork(takeLatest, actionTypes.projectList.DELETE_PROJECT_REQUEST, deleteProject);
+
+    // project
+    yield fork(takeLatest, actionTypes.project.FETCH_PROJECT_REQUEST, fetchProjectData);
+    yield fork(takeLatest, actionTypes.project.UPDATE_PROJECT_REQUEST, updateProjectData);
+    yield fork(takeLatest, actionTypes.project.CREATE_PROJECT_REQUEST, createProject);
+
+    // template list
+    yield fork(takeLatest, actionTypes.templateList.FETCH_TEMPLATE_LIST_REQUEST, fetchTemplateList);
 
     // log
-    yield takeLatest(actionTypes.log.FETCH_LOG_DATA_REQUEST, fetchLogData);
+    yield fork(takeLatest, actionTypes.log.FETCH_LOG_DATA_REQUEST, fetchLogData);
 }
 
 export default saga;

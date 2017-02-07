@@ -8,7 +8,6 @@ import * as constants from "../constants";
 
 const shiftRange = ({low, high, length}) => ({
     low: high,
-    // high: Math.max(length, high + constants.log.fetchIncrement)
     high: undefined
 });
 
@@ -28,29 +27,28 @@ class VisibleLogViewer extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        const {fileName} = this.props;
-        if (fileName !== prevProps.fileName) {
+        const {instanceId} = this.props;
+        if (instanceId !== prevProps.instanceId) {
             this.update(true);
         }
 
         this.handleTimer();
     }
 
-    update(resetRange) {
-        this._update(resetRange);
+    update(reset) {
+        this._update(reset);
         this.handleTimer();
     }
 
-    _update(resetRange) {
-        const {fileName, fetchData, range} = this.props;
+    _update(reset) {
+        const {instanceId, fetchData, range} = this.props;
 
         let nextRange;
-        if (!resetRange && range) {
+        if (!reset && range) {
             nextRange = shiftRange(range);
         }
 
-        const fresh = resetRange;
-        fetchData(fileName, nextRange, fresh);
+        fetchData(instanceId, nextRange, reset);
     }
 
     handleTimer() {
@@ -85,8 +83,8 @@ class VisibleLogViewer extends Component {
     loadWholeLog() {
         this.stopTimer();
 
-        const {fileName, fetchData} = this.props;
-        fetchData(fileName, {low: 0, high: undefined}, true);
+        const {instanceId, fetchData} = this.props;
+        fetchData(instanceId, {low: 0, high: undefined});
     }
 
     render() {
@@ -105,14 +103,14 @@ class VisibleLogViewer extends Component {
 const mapStateToProps = (state, {params}) => ({
     loading: getIsLogLoading(state),
     error: getLogLoadingError(state),
-    fileName: params.n,
+    instanceId: params.id,
     data: getLogData(state),
     range: getLoadedLogRange(state),
     status: getLoadedLogStatus(state)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    fetchData: (fileName, fetchRange, fresh) => dispatch(actions.fetchLogData(fileName, fetchRange, fresh))
+    fetchData: (instanceId, fetchRange, reset) => dispatch(actions.fetchLogData(instanceId, fetchRange, reset))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(VisibleLogViewer);

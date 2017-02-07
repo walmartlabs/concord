@@ -52,13 +52,16 @@ public class CrudIT extends AbstractServerIT {
 
         String id = cpr.getId();
 
+        ProjectEntry e1 = projectResource.get(id);
+        assertNotNull(e1);
+
         UpdateProjectResponse upr = projectResource.update(id, new UpdateProjectRequest(new String[0]));
         assertTrue(upr.isOk());
 
         List<ProjectEntry> l = projectResource.list(null, false);
-        ProjectEntry e = findProject(l, id);
-        assertNotNull(e);
-        assertEquals(0, e.getTemplates().length);
+        ProjectEntry e2 = findProject(l, id);
+        assertNotNull(e2);
+        assertEquals(0, e2.getTemplates().length);
 
         DeleteProjectResponse dpr = projectResource.delete(id);
         assertTrue(dpr.isOk());
