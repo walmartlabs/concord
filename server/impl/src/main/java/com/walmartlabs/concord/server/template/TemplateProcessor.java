@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.template;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.slf4j.Logger;
@@ -13,9 +14,11 @@ import javax.inject.Named;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
-import java.io.*;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -49,14 +52,14 @@ public class TemplateProcessor implements PayloadProcessor {
             return payload;
         }
         if (templateIds.size() > 1) {
-            throw new WebApplicationException("Multiple project templates are not yet supported", Status.BAD_REQUEST);
+            throw new ProcessException("Multiple project templates are not yet supported", Status.BAD_REQUEST);
         }
 
         try (InputStream in = templateDao.get(templateIds.iterator().next())) {
             return process(payload, in);
         } catch (IOException e) {
             log.error("process ['{}'] -> error", payload.getInstanceId(), e);
-            throw new WebApplicationException("Error while processing a template", e);
+            throw new ProcessException("Error while processing a template", e);
         }
     }
 
@@ -94,7 +97,7 @@ public class TemplateProcessor implements PayloadProcessor {
 
             result = scriptEngine.eval(r, b);
             if (result == null || !(result instanceof Map)) {
-                throw new WebApplicationException("Invalid template result. Expected a Java Map, got " + result);
+                throw new ProcessException("Invalid template result. Expected a Java Map, got " + result);
             }
         } catch (ScriptException e) {
             throw new IOException("Template script execution error", e);

@@ -1,8 +1,27 @@
 package com.walmartlabs.concord.server.security.apikey;
 
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.subject.Subject;
 
 public class ApiKey implements AuthenticationToken {
+
+    public static String getCurrentApiKey() {
+        Subject subject = SecurityUtils.getSubject();
+
+        ApiKey k = null;
+        for (Object p : subject.getPrincipals()) {
+            if (p instanceof ApiKey) {
+                k = (ApiKey) p;
+            }
+        }
+
+        if (k == null) {
+            throw new SecurityException("API token not found");
+        }
+
+        return k.getKey();
+    }
 
     private final String userId;
     private final String key;

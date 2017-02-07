@@ -13,6 +13,10 @@ public final class Permissions {
 
     public static final String TEMPLATE_CREATE_NEW = "template:create";
     public static final String TEMPLATE_USE_INSTANCE = "template:use:%s";
+
+    public static final String SECRET_CREATE_NEW = "secret:create";
+    public static final String SECRET_READ_INSTANCE = "secret:read:%s";
+    public static final String SECRET_DELETE_INSTANCE = "secret:delete:%s";
     
     public static final String REPOSITORY_CREATE_NEW = "repository:create";
     public static final String REPOSITORY_UPDATE_INSTANCE = "repository:update:%s";

@@ -9,8 +9,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
 import java.util.UUID;
 
 @Named
@@ -41,7 +39,7 @@ public class UserResourceImpl implements UserResource, Resource {
     @RequiresPermissions(Permissions.USER_DELETE_ANY)
     public DeleteUserResponse delete(String id) {
         if (!userDao.existsById(id)) {
-            throw new WebApplicationException("User not found: " + id, Status.NOT_FOUND);
+            throw new ValidationErrorsException("User not found: " + id);
         }
 
         userDao.delete(id);
@@ -52,7 +50,7 @@ public class UserResourceImpl implements UserResource, Resource {
     @RequiresPermissions(Permissions.USER_UPDATE_ANY)
     public UpdateUserResponse update(String id, UpdateUserRequest request) {
         if (!userDao.existsById(id)) {
-            throw new WebApplicationException("User not found: " + id, Status.NOT_FOUND);
+            throw new ValidationErrorsException("User not found: " + id);
         }
 
         userDao.update(id, request.getPermissions());

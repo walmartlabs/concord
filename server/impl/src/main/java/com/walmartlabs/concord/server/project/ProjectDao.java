@@ -62,7 +62,11 @@ public class ProjectDao extends AbstractDao {
     public void update(String id, String... templateIds) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
-            deleteTemplates(create, id);
+
+            create.deleteFrom(PROJECT_TEMPLATES)
+                    .where(PROJECT_TEMPLATES.PROJECT_ID.eq(id))
+                    .execute();
+
             insertTemplates(create, id, templateIds);
         });
         log.info("update ['{}', {}] -> done", id, templateIds);
@@ -117,12 +121,6 @@ public class ProjectDao extends AbstractDao {
             b.bind(projectId, tId);
         }
         b.execute();
-    }
-
-    private static void deleteTemplates(DSLContext create, String projectId) {
-        create.deleteFrom(PROJECT_TEMPLATES)
-                .where(PROJECT_TEMPLATES.PROJECT_ID.eq(projectId))
-                .execute();
     }
 
     private static List<ProjectEntry> fold(Result<Record3<String, String, String>> raw) {

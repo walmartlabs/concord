@@ -7,6 +7,7 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Set;
 
 public class CreateRepositoryRequest implements Serializable {
 
@@ -21,11 +22,22 @@ public class CreateRepositoryRequest implements Serializable {
     @NotNull
     private final String url;
 
+    @ConcordKey
+    private final String secret;
+
+    public CreateRepositoryRequest(String projectId, String name, String url) {
+        this(projectId, name, url, null);
+    }
+
     @JsonCreator
-    public CreateRepositoryRequest(@JsonProperty("projectId") String projectId, @JsonProperty("name") String name, @JsonProperty("url") String url) {
+    public CreateRepositoryRequest(@JsonProperty("projectId") String projectId,
+                                   @JsonProperty("name") String name,
+                                   @JsonProperty("url") String url,
+                                   @JsonProperty("secret") String secret) {
         this.projectId = projectId;
         this.name = name;
         this.url = url;
+        this.secret = secret;
     }
 
     public String getProjectId() {
@@ -40,12 +52,17 @@ public class CreateRepositoryRequest implements Serializable {
         return url;
     }
 
+    public String getSecret() {
+        return secret;
+    }
+
     @Override
     public String toString() {
         return "CreateRepositoryRequest{" +
                 "projectId='" + projectId + '\'' +
                 ", name='" + name + '\'' +
                 ", url='" + url + '\'' +
+                ", secret='" + secret + '\'' +
                 '}';
     }
 }

@@ -26,8 +26,14 @@ All parameters are optional.
 | DB_USERNAME | Username to connect to the database.                            | `sa`                                 |
 | DB_PASSWORD | Password to connect to the database.                            | _empty_                              |
 
-**Log file storage**
+**Log file store**
 
 | Variable      | Description                                                 | Default value               |
 |---------------|-------------------------------------------------------------|-----------------------------|
 | LOG_STORE_DIR | Path to a directory where agent's log files will be stored. | _a new temporary directory_ |
+
+**Secret store**
+
+| Variable          | Description                                                                       | Default value |
+|-------------------|-----------------------------------------------------------------------------------|---------------|
+| SECRET_STORE_SALT | Store's salt value. If changed, all previously created keys will be inaccessable. |               |

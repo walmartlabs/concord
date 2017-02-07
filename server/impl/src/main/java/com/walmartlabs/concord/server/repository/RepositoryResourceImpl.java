@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.repository;
 import com.walmartlabs.concord.server.api.repository.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.security.secret.SecretDao;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -26,13 +27,15 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
 
     private final RepositoryDao repositoryDao;
     private final ProjectDao projectDao;
+    private final SecretDao secretDao;
 
     private final Map<String, Field<?>> key2Field;
 
     @Inject
-    public RepositoryResourceImpl(RepositoryDao repositoryDao, ProjectDao projectDao) {
+    public RepositoryResourceImpl(RepositoryDao repositoryDao, ProjectDao projectDao, SecretDao secretDao) {
         this.repositoryDao = repositoryDao;
         this.projectDao = projectDao;
+        this.secretDao = secretDao;
 
         this.key2Field = new HashMap<>();
         key2Field.put("id", REPOSITORIES.REPO_ID);
@@ -59,7 +62,8 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
         }
 
         String id = UUID.randomUUID().toString();
-        repositoryDao.insert(request.getProjectId(), id, request.getName(), request.getUrl());
+        String secretId = resolveSecretId(request.getSecret());
+        repositoryDao.insert(request.getProjectId(), id, request.getName(), request.getUrl(), secretId);
         return new CreateRepositoryResponse(id);
     }
 
@@ -77,7 +81,9 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     public UpdateRepositoryResponse update(String id, UpdateRepositoryRequest request) {
         assertPermissions(id, Permissions.REPOSITORY_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified repository");
-        repositoryDao.update(id, request.getUrl());
+
+        String secretId = resolveSecretId(request.getSecret());
+        repositoryDao.update(id, request.getUrl(), secretId);
         return new UpdateRepositoryResponse();
     }
 
@@ -101,5 +107,17 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
         if (!subject.isPermitted(perm)) {
             throw new SecurityException(message);
         }
+    }
+
+    private String resolveSecretId(String secret) {
+        if (secret == null) {
+            return null;
+        }
+
+        String id = secretDao.getId(secret);
+        if (id == null) {
+            throw new ValidationErrorsException("Secret not found: " + secret);
+        }
+        return id;
     }
 }

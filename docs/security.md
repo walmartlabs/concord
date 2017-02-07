@@ -14,6 +14,9 @@
 | `repository:create`       | Create a new repository.                                       |                                        |
 | `repository:delete:*`     | Delete specific repository.                                    |                                        |
 | `repository:update:*`     | Update specific repository.                                    |                                        |
+| `secret:create`           | Create a new secret.                                           |                                        |
+| `secret:read:%s`          | Read an existing secret's data.                                |                                        |
+| `secret:delete:%s`        | Delete specific secret.                                        |                                        |
 | `template:use:$template`  | Use a specific template.                                       | `template:use:ansible`                 |
 | `template:create`         | Create a new project template.                                 |                                        |
 | `template:delete:*`       | Delete specific template.                                      |                                        |

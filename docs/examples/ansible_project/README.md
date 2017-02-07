@@ -24,8 +24,8 @@ The `hello.yml` playbook consists of a simple debug task:
 ```
 
 Commit and push the repository to a remote server (e.g. GitHub). If you are using HTTP(S), please
-allow anonymous access. If you are using SSH, please make sure that the current user's key can be used
-to access the repository.
+allow anonymous access. If you are using SSH, a new SSH key pair will created on the step 2 - you
+will need access to the repository settings to add a new public key.
 
 ## Concord project
 
@@ -38,7 +38,6 @@ We are going to use the `ansible` project template. It will automatically add th
 boilerplate - a workflow process definition to run our playbook and necessary runtime dependencies.
 
 Please refer to [the templates document](../templates.md) to find out how to upload a template.
-
 
 ```
 curl -v \
@@ -55,7 +54,30 @@ http://localhost:8001/api/v1/project
 }
 ```
 
-### 2. Add a repository
+### 2. Create a new repository key
+
+```
+curl -v \
+-X POST \
+-H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+'http://localhost:8001/api/v1/secret/keypair?name=mySecret'
+```
+
+The response should look like this:
+
+```json
+{
+  "id" : "ef61edeb-2455-444d-bafd-e369601cf26c",
+  "name" : "mySecret",
+  "publicKey" : "ssh-rsa AAAA... concord-server",
+  "ok" : true
+}
+```
+
+The `publicKey` value must be added to the git repository's settings.
+E.g. for GitHub: ![Deploy keys](./key.png)
+
+### 3. Add a repository
 
 The `projectId` value must be substituted with a real one, returned on the project creation step.
 
@@ -66,9 +88,11 @@ must be added to the repository's key list.
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "projectId": "6e5b34b0-db10-11e6-b477-eb56c9b52eaf", "name": "myRepo", "url": "git@github.com:my/repo.git" }' \
+-d '{ "projectId": "6e5b34b0-db10-11e6-b477-eb56c9b52eaf", "name": "myRepo", "url": "git@github.com:my/repo.git", "secret": "mySecret" }' \
 http://localhost:8001/api/v1/repository
 ```
+
+The `secret` parameters is the name of the key created on the step 2.
 
 ```json
 {
@@ -77,7 +101,7 @@ http://localhost:8001/api/v1/repository
 }
 ```
 
-### 3. Add a new user
+### 5. Add a new user (optional)
 
 ```
 curl -v \
@@ -96,7 +120,7 @@ Check [the permissions description](../security.md#permissions) in the documenta
 }
 ```
 
-### 4. Create an API key
+### 6. Create an API key (optional)
 
 Use the `id` value of the user created in the previous step.
 
@@ -115,7 +139,9 @@ http://localhost:8001/api/v1/apikey
 }
 ```
 
-### 5. Start a process
+The `key` value can be used for further access to the API, e.g. to start a process.
+
+### 7. Start a process
 
 Create the `inventory.ini` file:
 
@@ -156,7 +182,7 @@ http://localhost:8001/api/v1/process/myProject:myRepo
 }
 ```
 
-### 6. Check the logs
+### 7. Check the logs
 
 Use the `instanceId` value returned by the server in the previous step.
 

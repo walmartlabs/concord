@@ -2,7 +2,6 @@ package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
-import com.walmartlabs.concord.server.jooq.public_.tables.Projects;
 import com.walmartlabs.concord.server.repository.RepositoryDao;
 import com.walmartlabs.concord.server.template.TemplateDao;
 import org.junit.Before;
@@ -75,7 +74,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String repoId = UUID.randomUUID().toString();
         String repoName = "repo#" + System.currentTimeMillis();
         String repoUrl = "n/a";
-        repositoryDao.insert(projectId, repoId, repoName, repoUrl);
+        repositoryDao.insert(projectId, repoId, repoName, repoUrl, null);
 
         // ---
 
@@ -85,7 +84,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         assertNull(projectDao.getName(projectId));
         assertNotNull(templateDao.getId(templateName));
-        assertNull(repositoryDao.findUrl(projectId, repoName));
+        assertNull(repositoryDao.getByName(repoName));
     }
 
     @Test

@@ -13,7 +13,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -44,7 +44,15 @@ public class TemplateResourceImpl implements TemplateResource, Resource {
     @Validate
     public UpdateTemplateResponse update(String id, InputStream data) {
         if (!templateDao.existsId(id)) {
-            throw new WebApplicationException("Template not found: " + id, Status.NOT_FOUND);
+            throw new ValidationErrorsException("Template not found: " + id);
+        }
+
+        try {
+            if (data.available() <= 0) {
+                throw new ValidationErrorsException("Template is empty");
+            }
+        } catch (IOException e) {
+            throw new WebApplicationException(e);
         }
 
         templateDao.update(id, data);
@@ -55,7 +63,7 @@ public class TemplateResourceImpl implements TemplateResource, Resource {
     @Validate
     public DeleteTemplateResponse delete(String id) {
         if (!templateDao.existsId(id)) {
-            throw new WebApplicationException("Template not found: " + id, Status.NOT_FOUND);
+            throw new ValidationErrorsException("Template not found: " + id);
         }
 
         templateDao.delete(id);

@@ -6,31 +6,37 @@ import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.security.apikey.DeleteApiKeyResponse;
+import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
 import java.util.UUID;
 
 @Named
 public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
 
     private final ApiKeyDao apiKeyDao;
+    private final UserDao userDao;
 
     @Inject
-    public ApiKeyResourceImpl(ApiKeyDao apiKeyDao) {
+    public ApiKeyResourceImpl(ApiKeyDao apiKeyDao, UserDao userDao) {
         this.apiKeyDao = apiKeyDao;
+        this.userDao = userDao;
     }
 
     @Override
     @Validate
     @RequiresPermissions(Permissions.APIKEY_CREATE_NEW)
     public CreateApiKeyResponse create(CreateApiKeyRequest request) {
+        if (!userDao.existsById(request.getUserId())) {
+            throw new ValidationErrorsException("User not found: " + request.getUserId());
+        }
+
         String id = UUID.randomUUID().toString();
         String key = apiKeyDao.newApiKey();
         apiKeyDao.insert(id, request.getUserId(), key);
@@ -42,7 +48,7 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
     @RequiresPermissions(Permissions.APIKEY_DELETE_ANY)
     public DeleteApiKeyResponse delete(@PathParam("id") @ConcordId String id) {
         if (!apiKeyDao.existsById(id)) {
-            throw new WebApplicationException("API key not found: " + id, Status.NOT_FOUND);
+            throw new ValidationErrorsException("API key not found: " + id);
         }
 
         apiKeyDao.delete(id);

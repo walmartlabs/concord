@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Arrays;
 
 @Named
 public class ApiKeyRealm extends AuthorizingRealm {
@@ -43,7 +44,7 @@ public class ApiKeyRealm extends AuthorizingRealm {
 
         // TODO roles?
         log.debug("doGetAuthenticationInfo ['{}'] -> using {}", token, u);
-        return new SimpleAccount(u, t.getKey(), getName());
+        return new SimpleAccount(Arrays.asList(u, t), t.getKey(), getName());
     }
 
     @Override

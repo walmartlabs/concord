@@ -105,7 +105,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
             return parseEntryPoint(p, entryPoint);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while parsing a request", e);
+            throw new ProcessException("Error while parsing a request", e);
         }
     }
 
@@ -128,7 +128,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
             return parseEntryPoint(p, entryPoint);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while parsing a request", e);
+            throw new ProcessException("Error while parsing a request", e);
         }
     }
 
@@ -152,7 +152,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                     .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
                     .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while parsing a request", e);
+            throw new ProcessException("Error while parsing a request", e);
         }
     }
 

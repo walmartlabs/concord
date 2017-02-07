@@ -2,18 +2,20 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.repository.*;
+import com.walmartlabs.concord.server.api.security.secret.PublicKeyResponse;
+import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
+import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import com.walmartlabs.concord.server.api.template.CreateTemplateResponse;
 import com.walmartlabs.concord.server.api.template.DeleteTemplateResponse;
 import com.walmartlabs.concord.server.api.template.TemplateResource;
 import com.walmartlabs.concord.server.api.template.UpdateTemplateResponse;
 import org.junit.Test;
 
+import javax.ws.rs.BadRequestException;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class CrudIT extends AbstractServerIT {
 
@@ -91,11 +93,53 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(drr.isOk());
     }
 
+    @Test
+    public void testSecretKeyPair() throws Exception {
+        String keyName = "key#" + System.currentTimeMillis();
+        SecretResource secretResource = proxy(SecretResource.class);
+
+        // ---
+
+        PublicKeyResponse pkr = secretResource.createKeyPair(keyName);
+        assertTrue(pkr.isOk());
+        assertNotNull(pkr.getPublicKey());
+
+        String id = pkr.getId();
+
+        // ---
+
+        PublicKeyResponse pkr2 = secretResource.getPublicKey(id);
+        assertEquals(pkr.getPublicKey(), pkr2.getPublicKey());
+
+        // ---
+
+        List<SecretEntry> l = secretResource.list(null, true);
+        SecretEntry s = findSecret(l, id);
+        assertNotNull(s);
+        assertEquals(keyName, s.getName());
+
+        // ---
+
+        secretResource.delete(id);
+
+        // ---
+
+        try {
+            secretResource.getPublicKey(id);
+            fail("should fail");
+        } catch (BadRequestException e) {
+        }
+    }
+
     private static ProjectEntry findProject(List<ProjectEntry> l, String id) {
         return l.stream().filter(e -> id.equals(e.getId())).findAny().get();
     }
 
     private static RepositoryEntry findRepository(List<RepositoryEntry> l, String id) {
+        return l.stream().filter(e -> id.equals(e.getId())).findAny().get();
+    }
+
+    private static SecretEntry findSecret(List<SecretEntry> l, String id) {
         return l.stream().filter(e -> id.equals(e.getId())).findAny().get();
     }
 }

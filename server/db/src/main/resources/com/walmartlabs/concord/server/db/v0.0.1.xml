@@ -137,9 +137,34 @@
         </insert>
     </changeSet>
 
-    <!-- PROJECTS -->
+    <!-- SECRETS -->
 
     <changeSet id="1500" author="ibodrov@gmail.com">
+        <createTable tableName="SECRETS">
+            <column name="SECRET_ID" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="SECRET_NAME" type="varchar(128)" remarks="Name (key) of a secret">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="SECRET_TYPE" type="varchar(32)" remarks="Type: SSH_KEY, HTTP_BASIC">
+                <constraints checkConstraint="SECRET_TYPE in ('SSH_KEY', 'HTTP_BASIC')"/>
+            </column>
+            <column name="SECRET_DATA" type="blob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1510" author="ibodrov@gmail.com">
+        <createIndex tableName="SECRETS" indexName="IDX_SECRET_NAME">
+            <column name="SECRET_NAME"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- PROJECTS -->
+
+    <changeSet id="1600" author="ibodrov@gmail.com">
         <createTable tableName="PROJECTS">
             <column name="PROJECT_ID" type="varchar(36)" remarks="Unique project ID">
                 <constraints primaryKey="true" nullable="false"/>
@@ -150,7 +175,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="1510" author="ibodrov@gmail.com">
+    <changeSet id="1610" author="ibodrov@gmail.com">
         <createIndex tableName="PROJECTS" indexName="IDX_PROJECT_NAME">
             <column name="PROJECT_NAME"/>
         </createIndex>
@@ -158,7 +183,7 @@
 
     <!-- REPOSITORIES -->
 
-    <changeSet id="1600" author="ibodrov@gmail.com">
+    <changeSet id="1700" author="ibodrov@gmail.com">
         <createTable tableName="REPOSITORIES">
             <column name="REPO_ID" type="varchar(36)" remarks="Unique repository ID">
                 <constraints primaryKey="true" nullable="false"/>
@@ -169,18 +194,28 @@
             <column name="REPO_URL" type="varchar(2048)" remarks="URL of a repository">
                 <constraints nullable="false"/>
             </column>
+            <column name="SECRET_ID" type="varchar(36)" remarks="ID of a secret used to access this repository">
+                <constraints nullable="true"/>
+            </column>
         </createTable>
     </changeSet>
 
-    <changeSet id="1610" author="ibodrov@gmail.com">
+    <changeSet id="1710" author="ibodrov@gmail.com">
         <createIndex tableName="REPOSITORIES" indexName="IDX_REPO_NAME">
             <column name="REPO_NAME"/>
         </createIndex>
     </changeSet>
 
+    <changeSet id="1720" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_REPO_SECRET"
+                                 baseTableName="REPOSITORIES" baseColumnNames="SECRET_ID"
+                                 referencedTableName="SECRETS" referencedColumnNames="SECRET_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
     <!-- PROJECT_REPOS -->
 
-    <changeSet id="1700" author="ibodrov@gmail.com">
+    <changeSet id="1800" author="ibodrov@gmail.com">
         <createTable tableName="PROJECT_REPOS">
             <column name="PROJECT_ID" type="varchar(36)">
                 <constraints primaryKey="true" nullable="false"/>
@@ -191,7 +226,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="1710" author="ibodrov@gmail.com">
+    <changeSet id="1810" author="ibodrov@gmail.com">
         <addForeignKeyConstraint constraintName="FK_PROJ_REPO_PROJ"
                                  baseTableName="PROJECT_REPOS" baseColumnNames="PROJECT_ID"
                                  referencedTableName="PROJECTS"
@@ -199,7 +234,7 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
-    <changeSet id="1720" author="ibodrov@gmail.com">
+    <changeSet id="1820" author="ibodrov@gmail.com">
         <addForeignKeyConstraint constraintName="FK_PROJ_REPO_REPO"
                                  baseTableName="PROJECT_REPOS" baseColumnNames="REPO_ID"
                                  referencedTableName="REPOSITORIES"
@@ -209,7 +244,7 @@
 
     <!-- TEMPLATES -->
 
-    <changeSet id="1800" author="ibodrov@gmail.com">
+    <changeSet id="1900" author="ibodrov@gmail.com">
         <createTable tableName="TEMPLATES">
             <column name="TEMPLATE_ID" type="varchar(36)" remarks="Unique project template ID">
                 <constraints primaryKey="true" nullable="false"/>
@@ -223,7 +258,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="1810" author="ibodrov@gmail.com">
+    <changeSet id="1910" author="ibodrov@gmail.com">
         <createIndex tableName="TEMPLATES" indexName="IDX_TEMPLATE_NAME">
             <column name="TEMPLATE_NAME"/>
         </createIndex>
@@ -231,7 +266,7 @@
 
     <!-- PROJECT_TEMPLATES -->
 
-    <changeSet id="1900" author="ibodrov@gmail.com">
+    <changeSet id="2000" author="ibodrov@gmail.com">
         <createTable tableName="PROJECT_TEMPLATES">
             <column name="PROJECT_ID" type="varchar(36)">
                 <constraints primaryKey="true" nullable="false"/>
@@ -242,14 +277,14 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="1910" author="ibodrov@gmail.com">
+    <changeSet id="2010" author="ibodrov@gmail.com">
         <addForeignKeyConstraint constraintName="FK_PROJ_TEMPLATE_PROJ"
                                  baseTableName="PROJECT_TEMPLATES" baseColumnNames="PROJECT_ID"
                                  referencedTableName="PROJECTS" referencedColumnNames="PROJECT_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
 
-    <changeSet id="1920" author="ibodrov@gmail.com">
+    <changeSet id="2020" author="ibodrov@gmail.com">
         <addForeignKeyConstraint constraintName="FK_PROJ_TEMPLATE_TEMP"
                                  baseTableName="PROJECT_TEMPLATES" baseColumnNames="TEMPLATE_ID"
                                  referencedTableName="TEMPLATES" referencedColumnNames="TEMPLATE_ID"

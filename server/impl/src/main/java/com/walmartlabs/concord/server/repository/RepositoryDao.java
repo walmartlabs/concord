@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.repository;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.server.api.IdName;
 import com.walmartlabs.concord.server.api.repository.RepositoryEntry;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
@@ -13,8 +14,8 @@ import javax.inject.Named;
 import java.util.List;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectRepos.PROJECT_REPOS;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS;
 
 @Named
 public class RepositoryDao extends AbstractDao {
@@ -35,33 +36,30 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    public String findUrl(String projectId, String repositoryName) {
+    public RepositoryEntry getByName(String name) {
         try (DSLContext create = DSL.using(cfg)) {
-            String url = create.select(REPOSITORIES.REPO_URL)
-                    .from(REPOSITORIES, PROJECTS, PROJECT_REPOS)
-                    .where(REPOSITORIES.REPO_NAME.eq(repositoryName)
-                            .and(REPOSITORIES.REPO_ID.eq(PROJECT_REPOS.REPO_ID)
-                                    .and(PROJECT_REPOS.PROJECT_ID.eq(PROJECTS.PROJECT_ID)
-                                            .and(PROJECTS.PROJECT_ID.eq(projectId)))))
-                    .fetchOne(REPOSITORIES.REPO_URL);
+            RepositoryEntry e = selectRepositoryEntry(create)
+                    .where(REPOSITORIES.REPO_NAME.eq(name))
+                    .fetchOne(RepositoryDao::toEntry);
 
-            if (url == null) {
-                log.info("findUrl ['{}', '{}'] -> not found", projectId, repositoryName);
+            if (e == null) {
+                log.info("get ['{}'] -> not found", name);
                 return null;
             }
 
-            log.info("findUrl ['{}', '{}'] -> found: {}", projectId, repositoryName, url);
-            return url;
+            log.info("get ['{}'] -> found: {}", name, e.getId());
+            return e;
         }
     }
 
-    public void insert(String projectId, String id, String name, String url) {
+    public void insert(String projectId, String id, String name, String url, String secretId) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
 
             create.insertInto(REPOSITORIES)
-                    .columns(REPOSITORIES.REPO_ID, REPOSITORIES.REPO_NAME, REPOSITORIES.REPO_URL)
-                    .values(id, name, url)
+                    .columns(REPOSITORIES.REPO_ID, REPOSITORIES.REPO_NAME,
+                            REPOSITORIES.REPO_URL, REPOSITORIES.SECRET_ID)
+                    .values(id, name, url, secretId)
                     .execute();
 
             create.insertInto(PROJECT_REPOS)
@@ -69,15 +67,16 @@ public class RepositoryDao extends AbstractDao {
                     .values(projectId, id)
                     .execute();
         });
-        log.info("insert ['{}', '{}', '{}'] -> done", id, name, url);
+        log.info("insert ['{}', '{}', '{}', '{}', '{}'] -> done", projectId, id, name, url, secretId);
     }
 
-    public void update(String id, String url) {
+    public void update(String id, String url, String secretId) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
 
             int i = create.update(REPOSITORIES)
                     .set(REPOSITORIES.REPO_URL, url)
+                    .set(REPOSITORIES.SECRET_ID, secretId)
                     .where(REPOSITORIES.REPO_ID.eq(id))
                     .execute();
 
@@ -86,7 +85,7 @@ public class RepositoryDao extends AbstractDao {
                 throw new DataAccessException("Invalid number of rows updated: " + i);
             }
         });
-        log.info("update ['{}', '{}'] -> done", id, url);
+        log.info("update ['{}', '{}', '{}'] -> done", id, url, secretId);
     }
 
     public void delete(String id) {
@@ -102,29 +101,41 @@ public class RepositoryDao extends AbstractDao {
 
     public List<RepositoryEntry> list(Field<?> sortField, boolean asc) {
         try (DSLContext create = DSL.using(cfg)) {
-            SelectJoinStep<Record3<String, String, String>> query = create
-                    .select(REPOSITORIES.REPO_ID, REPOSITORIES.REPO_NAME, REPOSITORIES.REPO_URL)
-                    .from(REPOSITORIES);
+            SelectJoinStep<Record5<String, String, String, String, String>> query = selectRepositoryEntry(create);
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            List<RepositoryEntry> result = query.fetch(r ->
-                    new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
-                            r.get(REPOSITORIES.REPO_NAME),
-                            r.get(REPOSITORIES.REPO_URL)));
+            List<RepositoryEntry> result = query.fetch(RepositoryDao::toEntry);
             log.info("list [{}, {}] -> got {} result(s)", result.size());
             return result;
         }
     }
 
-    public boolean exists(String repositoryName) {
+    public boolean exists(String name) {
         try (DSLContext create = DSL.using(cfg)) {
             int cnt = create.fetchCount(create.selectFrom(REPOSITORIES)
-                    .where(REPOSITORIES.REPO_NAME.eq(repositoryName)));
+                    .where(REPOSITORIES.REPO_NAME.eq(name)));
 
             return cnt > 0;
         }
+    }
+
+    private static SelectJoinStep<Record5<String, String, String, String, String>> selectRepositoryEntry(DSLContext create) {
+        return create.select(REPOSITORIES.REPO_ID,
+                REPOSITORIES.REPO_NAME,
+                REPOSITORIES.REPO_URL,
+                SECRETS.SECRET_ID,
+                SECRETS.SECRET_NAME)
+                .from(REPOSITORIES)
+                .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
+    }
+
+    private static RepositoryEntry toEntry(Record5<String, String, String, String, String> r) {
+        return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
+                r.get(REPOSITORIES.REPO_NAME),
+                r.get(REPOSITORIES.REPO_URL),
+                new IdName(r.get(SECRETS.SECRET_ID), r.get(SECRETS.SECRET_NAME)));
     }
 }
