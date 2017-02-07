@@ -1,16 +1,17 @@
 package com.walmartlabs.concord.server.security.secret;
 
-import com.walmartlabs.concord.common.validation.ConcordId;
+import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.*;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.security.PasswordManager;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
-import io.swagger.annotations.ApiParam;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.subject.Subject;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jooq.Field;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -18,9 +19,9 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,28 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     @Override
-    public PublicKeyResponse getPublicKey(@PathParam("id") String id) {
+    @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
+    @Validate
+    public UploadKeyPairResponse uploadKeyPair(String name, MultipartInput input) {
+        KeyPair k;
+        try {
+            InputStream publicIn = assertStream(input, "public");
+            InputStream privateIn = assertStream(input, "private");
+            k = KeyPair.create(publicIn, privateIn);
+        } catch (IOException e) {
+            throw new WebApplicationException("Key pair processing error", e);
+        }
+
+        byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentApiKey());
+        byte[] ab = KeyPair.encrypt(k, password, secretCfg.getSalt());
+
+        String id = UUID.randomUUID().toString();
+        secretDao.insert(id, name, SecretType.KEY_PAIR, ab);
+        return new UploadKeyPairResponse(id);
+    }
+
+    @Override
+    public PublicKeyResponse getPublicKey(String id) {
         assertPermissions(id, Permissions.SECRET_READ_INSTANCE,
                 "The current user does not have permissions to access the specified secret");
 
@@ -87,7 +109,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     @Override
-    public List<SecretEntry> list(@ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy, @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc) {
+    public List<SecretEntry> list(String sortBy, boolean asc) {
         Field<?> sortField = key2Field.get(sortBy);
         if (sortField == null) {
             throw new ValidationErrorsException("Unknown sort field: " + sortBy);
@@ -96,7 +118,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     @Override
-    public DeleteSecretResponse delete(@PathParam("id") @ConcordId String id) {
+    @Validate
+    public DeleteSecretResponse delete(String id) {
         assertPermissions(id, Permissions.SECRET_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified secret");
 
@@ -121,4 +144,13 @@ public class SecretResourceImpl implements SecretResource, Resource {
         return new PublicKeyResponse(id, name, s);
     }
 
+    private static InputStream assertStream(MultipartInput input, String key) throws IOException {
+        for (InputPart p : input.getParts()) {
+            String name = MultipartUtils.extractName(p);
+            if (key.equals(name)) {
+                return p.getBody(InputStream.class, null);
+            }
+        }
+        throw new ValidationErrorsException("Value not found: " + key);
+    }
 }

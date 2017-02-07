@@ -188,6 +188,9 @@
             <column name="REPO_ID" type="varchar(36)" remarks="Unique repository ID">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="PROJECT_ID" type="varchar(36)" remarks="ID of a project that owns this repository">
+                <constraints nullable="false"/>
+            </column>
             <column name="REPO_NAME" type="varchar(128)" remarks="Name (key) of a repository">
                 <constraints unique="true" nullable="false"/>
             </column>
@@ -207,38 +210,9 @@
     </changeSet>
 
     <changeSet id="1720" author="ibodrov@gmail.com">
-        <addForeignKeyConstraint constraintName="FK_REPO_SECRET"
-                                 baseTableName="REPOSITORIES" baseColumnNames="SECRET_ID"
-                                 referencedTableName="SECRETS" referencedColumnNames="SECRET_ID"
-                                 onDelete="CASCADE"/>
-    </changeSet>
-
-    <!-- PROJECT_REPOS -->
-
-    <changeSet id="1800" author="ibodrov@gmail.com">
-        <createTable tableName="PROJECT_REPOS">
-            <column name="PROJECT_ID" type="varchar(36)">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="REPO_ID" type="varchar(36)">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="1810" author="ibodrov@gmail.com">
-        <addForeignKeyConstraint constraintName="FK_PROJ_REPO_PROJ"
-                                 baseTableName="PROJECT_REPOS" baseColumnNames="PROJECT_ID"
-                                 referencedTableName="PROJECTS"
-                                 referencedColumnNames="PROJECT_ID"
-                                 onDelete="CASCADE"/>
-    </changeSet>
-
-    <changeSet id="1820" author="ibodrov@gmail.com">
-        <addForeignKeyConstraint constraintName="FK_PROJ_REPO_REPO"
-                                 baseTableName="PROJECT_REPOS" baseColumnNames="REPO_ID"
-                                 referencedTableName="REPOSITORIES"
-                                 referencedColumnNames="REPO_ID"
+        <addForeignKeyConstraint constraintName="FK_REPOS_PROJECT"
+                                 baseTableName="REPOSITORIES" baseColumnNames="PROJECT_ID"
+                                 referencedTableName="PROJECTS" referencedColumnNames="PROJECT_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
 

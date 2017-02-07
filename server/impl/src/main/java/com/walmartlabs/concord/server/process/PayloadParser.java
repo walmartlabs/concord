@@ -1,11 +1,10 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.server.MultipartUtils;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,18 +12,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class PayloadParser {
-
-    private static final Pattern PART_NAME_PATTERN = Pattern.compile("name=\"(.*)\"");
 
     public static Payload parse(String instanceId, Path baseDir, MultipartInput input) throws IOException {
         Map<String, Path> m = new HashMap<>();
 
         for (InputPart p : input.getParts()) {
-            String name = extractName(p);
+            String name = MultipartUtils.extractName(p);
 
             Path dst = baseDir.resolve(name);
             try (InputStream in = p.getBody(InputStream.class, null);
@@ -38,27 +33,6 @@ public final class PayloadParser {
         return new Payload(instanceId).putAttachments(m);
     }
 
-    private static String extractName(InputPart p) {
-        MultivaluedMap<String, String> headers = p.getHeaders();
-        if (headers == null) {
-            return null;
-        }
-
-        String h = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
-        if (h == null) {
-            return null;
-        }
-
-        String[] as = h.split(";");
-        for (String s : as) {
-            Matcher m = PART_NAME_PATTERN.matcher(s.trim());
-            if (m.matches()) {
-                return m.group(1);
-            }
-        }
-
-        return null;
-    }
 
     private PayloadParser() {
     }

@@ -6,9 +6,7 @@ import com.google.common.io.ByteStreams;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.function.Consumer;
 
@@ -32,6 +30,13 @@ public class KeyPair implements Serializable {
 
         byte[] publicKey = array(out -> k.writePublicKey(out, DEFAULT_KEY_COMMENT));
         byte[] privateKey = array(out -> k.writePrivateKey(out));
+
+        return new KeyPair(publicKey, privateKey);
+    }
+
+    public static KeyPair create(InputStream publicIn, InputStream privateIn) throws IOException {
+        byte[] publicKey = ByteStreams.toByteArray(publicIn);
+        byte[] privateKey = ByteStreams.toByteArray(privateIn);
 
         return new KeyPair(publicKey, privateKey);
     }

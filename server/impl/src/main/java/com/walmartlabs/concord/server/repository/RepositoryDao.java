@@ -13,7 +13,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectRepos.PROJECT_REPOS;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS;
 
@@ -57,14 +56,9 @@ public class RepositoryDao extends AbstractDao {
             DSLContext create = DSL.using(cfg);
 
             create.insertInto(REPOSITORIES)
-                    .columns(REPOSITORIES.REPO_ID, REPOSITORIES.REPO_NAME,
+                    .columns(REPOSITORIES.REPO_ID, REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
                             REPOSITORIES.REPO_URL, REPOSITORIES.SECRET_ID)
-                    .values(id, name, url, secretId)
-                    .execute();
-
-            create.insertInto(PROJECT_REPOS)
-                    .columns(PROJECT_REPOS.PROJECT_ID, PROJECT_REPOS.REPO_ID)
-                    .values(projectId, id)
+                    .values(id, projectId, name, url, secretId)
                     .execute();
         });
         log.info("insert ['{}', '{}', '{}', '{}', '{}'] -> done", projectId, id, name, url, secretId);
@@ -133,9 +127,12 @@ public class RepositoryDao extends AbstractDao {
     }
 
     private static RepositoryEntry toEntry(Record5<String, String, String, String, String> r) {
+        String secretId = r.get(SECRETS.SECRET_ID);
+        IdName secret = secretId != null ? new IdName(secretId, r.get(SECRETS.SECRET_NAME)) : null;
+
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
                 r.get(REPOSITORIES.REPO_NAME),
                 r.get(REPOSITORIES.REPO_URL),
-                new IdName(r.get(SECRETS.SECRET_ID), r.get(SECRETS.SECRET_NAME)));
+                secret);
     }
 }

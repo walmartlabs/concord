@@ -3,6 +3,7 @@ package com.walmartlabs.concord.common.db;
 import org.jooq.Configuration;
 import org.jooq.SQLDialect;
 import org.jooq.conf.RenderNameStyle;
+import org.jooq.conf.Settings;
 import org.jooq.impl.DefaultConfiguration;
 
 import javax.inject.Inject;
@@ -24,11 +25,15 @@ public class JooqConfigurationProvider implements Provider<Configuration> {
 
     @Override
     public Configuration get() {
+        Settings settings = new Settings();
+        settings.setRenderSchema(false);
+        settings.setRenderCatalog(false);
+        settings.setRenderNameStyle(RenderNameStyle.AS_IS);
+
         Configuration jooq = new DefaultConfiguration()
+                .set(settings)
                 .set(dataSource)
                 .set(dialect);
-
-        jooq.settings().setRenderNameStyle(RenderNameStyle.AS_IS); // don't quote object names
 
         return jooq;
     }
