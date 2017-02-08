@@ -63,7 +63,7 @@ public class UserDao extends AbstractDao {
         log.info("update ['{}', {}] -> done", id, permissions);
     }
 
-    public User findById(String id) {
+    public User get(String id) {
         try (DSLContext create = DSL.using(cfg)) {
             Record2<String, String> r = create
                     .select(USERS.USER_ID,
@@ -73,7 +73,7 @@ public class UserDao extends AbstractDao {
                     .fetchOne();
 
             if (r == null) {
-                log.debug("findById ['{}'] -> not found", id);
+                log.debug("get ['{}'] -> not found", id);
                 return null;
             }
 
@@ -84,7 +84,7 @@ public class UserDao extends AbstractDao {
                     .fetchInto(String.class);
 
             User u = new User(r.get(USERS.USER_ID), r.get(USERS.USERNAME), new HashSet<>(perms));
-            log.debug("findById ['{}'] -> found: {}", id, u);
+            log.debug("get ['{}'] -> found: {}", id, u);
             return u;
         }
     }

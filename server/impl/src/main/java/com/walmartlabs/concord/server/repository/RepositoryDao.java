@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.repository;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.IdName;
 import com.walmartlabs.concord.server.api.repository.RepositoryEntry;
+import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -21,17 +22,17 @@ public class RepositoryDao extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryDao.class);
 
+    private final UserPermissionCleaner permissionCleaner;
+
     @Inject
-    public RepositoryDao(Configuration cfg) {
+    public RepositoryDao(Configuration cfg, UserPermissionCleaner permissionCleaner) {
         super(cfg);
+        this.permissionCleaner = permissionCleaner;
     }
 
     public String getName(String id) {
         try (DSLContext create = DSL.using(cfg)) {
-            return create.select(REPOSITORIES.REPO_NAME)
-                    .from(REPOSITORIES)
-                    .where(REPOSITORIES.REPO_ID.eq(id))
-                    .fetchOne(REPOSITORIES.REPO_NAME);
+            return getName(create, id);
         }
     }
 
@@ -86,6 +87,9 @@ public class RepositoryDao extends AbstractDao {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
 
+            String name = getName(create, id);
+            permissionCleaner.onRepositoryRemoval(create, name);
+
             create.deleteFrom(REPOSITORIES)
                     .where(REPOSITORIES.REPO_ID.eq(id))
                     .execute();
@@ -134,5 +138,12 @@ public class RepositoryDao extends AbstractDao {
                 r.get(REPOSITORIES.REPO_NAME),
                 r.get(REPOSITORIES.REPO_URL),
                 secret);
+    }
+
+    private static String getName(DSLContext create, String id) {
+        return create.select(REPOSITORIES.REPO_NAME)
+                .from(REPOSITORIES)
+                .where(REPOSITORIES.REPO_ID.eq(id))
+                .fetchOne(REPOSITORIES.REPO_NAME);
     }
 }

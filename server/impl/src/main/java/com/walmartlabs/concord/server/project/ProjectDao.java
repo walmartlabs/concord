@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -22,9 +23,12 @@ public class ProjectDao extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectDao.class);
 
+    private final UserPermissionCleaner permissionCleaner;
+
     @Inject
-    public ProjectDao(Configuration cfg) {
+    public ProjectDao(Configuration cfg, UserPermissionCleaner permissionCleaner) {
         super(cfg);
+        this.permissionCleaner = permissionCleaner;
     }
 
     public String getId(String name) {
@@ -38,10 +42,7 @@ public class ProjectDao extends AbstractDao {
 
     public String getName(String id) {
         try (DSLContext create = DSL.using(cfg)) {
-            return create.select(PROJECTS.PROJECT_NAME)
-                    .from(PROJECTS)
-                    .where(PROJECTS.PROJECT_ID.eq(id))
-                    .fetchOne(PROJECTS.PROJECT_NAME);
+            return getName(create, id);
         }
     }
 
@@ -91,6 +92,10 @@ public class ProjectDao extends AbstractDao {
     public void delete(String id) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
+
+            String name = getName(create, id);
+            permissionCleaner.onProjectRemoval(create, id, name);
+
             create.deleteFrom(PROJECTS)
                     .where(PROJECTS.PROJECT_ID.eq(id))
                     .execute();
@@ -119,6 +124,13 @@ public class ProjectDao extends AbstractDao {
 
             return cnt > 0;
         }
+    }
+
+    private static String getName(DSLContext create, String id) {
+        return create.select(PROJECTS.PROJECT_NAME)
+                .from(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(id))
+                .fetchOne(PROJECTS.PROJECT_NAME);
     }
 
     private static void insertTemplates(DSLContext create, String projectId, String... templateIds) {

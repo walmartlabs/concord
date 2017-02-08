@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.template;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.common.db.ResultSetInputStream;
 import com.walmartlabs.concord.server.api.template.TemplateEntry;
+import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -27,9 +28,12 @@ public class TemplateDao extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(TemplateDao.class);
 
+    private final UserPermissionCleaner permissionCleaner;
+
     @Inject
-    public TemplateDao(Configuration cfg) {
+    public TemplateDao(Configuration cfg, UserPermissionCleaner permissionCleaner) {
         super(cfg);
+        this.permissionCleaner = permissionCleaner;
     }
 
     public Collection<String> getProjectTemplateIds(String projectId) {
@@ -133,6 +137,10 @@ public class TemplateDao extends AbstractDao {
     public void delete(String id) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
+
+            String name = getName(create, id);
+            permissionCleaner.onTemplateRemoval(create, name);
+
             create.deleteFrom(TEMPLATES)
                     .where(TEMPLATES.TEMPLATE_ID.eq(id))
                     .execute();
@@ -146,6 +154,12 @@ public class TemplateDao extends AbstractDao {
                     .from(TEMPLATES)
                     .where(TEMPLATES.TEMPLATE_NAME.eq(name))
                     .fetchOne(TEMPLATES.TEMPLATE_ID);
+        }
+    }
+
+    public String getName(String id) {
+        try (DSLContext create = DSL.using(cfg)) {
+            return getName(create, id);
         }
     }
 
@@ -165,5 +179,12 @@ public class TemplateDao extends AbstractDao {
 
             return cnt > 0;
         }
+    }
+
+    private static String getName(DSLContext create, String id) {
+        return create.select(TEMPLATES.TEMPLATE_NAME)
+                .from(TEMPLATES)
+                .where(TEMPLATES.TEMPLATE_ID.eq(id))
+                .fetchOne(TEMPLATES.TEMPLATE_NAME);
     }
 }

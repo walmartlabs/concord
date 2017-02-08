@@ -42,7 +42,7 @@ public class UserDaoTest extends AbstractDaoTest {
 
         // ---
 
-        assertNull(userDao.findById(userId));
+        assertNull(userDao.get(userId));
         assertNull(apiKeyDao.findUserId(apiKey));
     }
 }

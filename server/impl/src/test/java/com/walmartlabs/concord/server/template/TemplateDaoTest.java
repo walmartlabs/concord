@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.template;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 public class TemplateDaoTest extends AbstractDaoTest {
 
@@ -19,8 +21,8 @@ public class TemplateDaoTest extends AbstractDaoTest {
 
     @Before
     public void setUp() throws Exception {
-        templateDao = new TemplateDao(getConfiguration());
-        projectDao = new ProjectDao(getConfiguration());
+        templateDao = new TemplateDao(getConfiguration(), mock(UserPermissionCleaner.class));
+        projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
     }
 
     @Test

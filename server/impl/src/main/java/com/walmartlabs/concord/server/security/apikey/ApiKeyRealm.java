@@ -37,7 +37,7 @@ public class ApiKeyRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         ApiKey t = (ApiKey) token;
-        User u = userDao.findById(t.getUserId());
+        User u = userDao.get(t.getUserId());
         if (u == null) {
             return null;
         }

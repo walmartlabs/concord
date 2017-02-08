@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.security.secret;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
+import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -19,9 +20,12 @@ public class SecretDao extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(SecretDao.class);
 
+    private final UserPermissionCleaner permissionCleaner;
+
     @Inject
-    public SecretDao(Configuration cfg) {
+    public SecretDao(Configuration cfg, UserPermissionCleaner permissionCleaner) {
         super(cfg);
+        this.permissionCleaner = permissionCleaner;
     }
 
     public void insert(String id, String name, SecretType type, byte[] data) {
@@ -57,10 +61,7 @@ public class SecretDao extends AbstractDao {
 
     public String getName(String id) {
         try (DSLContext create = DSL.using(cfg)) {
-            return create.select(SECRETS.SECRET_NAME)
-                    .from(SECRETS)
-                    .where(SECRETS.SECRET_ID.eq(id))
-                    .fetchOne(SECRETS.SECRET_NAME);
+            return getName(create, id);
         }
     }
 
@@ -96,6 +97,9 @@ public class SecretDao extends AbstractDao {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
 
+            String name = getName(create, id);
+            permissionCleaner.onSecretRemoval(create, name);
+
             create.deleteFrom(SECRETS)
                     .where(SECRETS.SECRET_ID.eq(id))
                     .execute();
@@ -110,6 +114,13 @@ public class SecretDao extends AbstractDao {
 
             return cnt > 0;
         }
+    }
+
+    private static String getName(DSLContext create, String id) {
+        return create.select(SECRETS.SECRET_NAME)
+                .from(SECRETS)
+                .where(SECRETS.SECRET_ID.eq(id))
+                .fetchOne(SECRETS.SECRET_NAME);
     }
 
     public static class SecretDataEntry extends SecretEntry {
