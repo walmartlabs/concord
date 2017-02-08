@@ -1,8 +1,15 @@
 import React, {Component, PropTypes} from "react";
 import {findDOMNode} from "react-dom";
 import {Header, Button} from "semantic-ui-react";
+import Ansi2Html from "ansi-to-html";
 import RefreshButton from "../components/RefreshButton";
 import "./LogViewer.css";
+
+const ansi2html = new Ansi2Html();
+const ansi = (s) => ansi2html.toHtml(s);
+const notEmpty = (s) => {
+    return s !== undefined && s !== null && s.trim().length > 0;
+};
 
 class LogViewer extends Component {
 
@@ -55,7 +62,8 @@ class LogViewer extends Component {
             </Button>
 
             <div className="logViewer">
-                {data && data.map((d, idx) => <div key={idx}>{d}</div>)}
+                {data && data.filter(notEmpty).map((d, idx) =>
+                    <div key={idx} dangerouslySetInnerHTML={{__html: ansi(d)}}/>)}
             </div>
 
             <div ref={(el) => {

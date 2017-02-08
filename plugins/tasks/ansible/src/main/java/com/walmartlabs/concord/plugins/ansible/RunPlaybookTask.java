@@ -62,11 +62,14 @@ public class RunPlaybookTask implements Task {
 
         log.info("Running the playbook: {}/{}", playbooksPath, playbook);
 
-        Process p = new ProcessBuilder()
+        ProcessBuilder b = new ProcessBuilder()
                 .command(cmd)
                 .directory(new File(playbooksPath))
-                .redirectErrorStream(true)
-                .start();
+                .redirectErrorStream(true);
+
+        b.environment().put("ANSIBLE_FORCE_COLOR", "true");
+
+        Process p = b.start();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;

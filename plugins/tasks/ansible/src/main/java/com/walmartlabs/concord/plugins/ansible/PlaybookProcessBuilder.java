@@ -49,7 +49,7 @@ public class PlaybookProcessBuilder {
         File pwd = new File(playbook);
         if (pwd.isFile()) {
             pwd = pwd.getParentFile();
-            log.info("build -> working directory: {}", pwd);
+            log.debug("build -> working directory: {}", pwd);
         }
 
         ProcessBuilder b = new ProcessBuilder()
@@ -57,8 +57,10 @@ public class PlaybookProcessBuilder {
                 .directory(pwd)
                 .redirectErrorStream(true);
 
+        Map<String, String> env = b.environment();
+        env.put("ANSIBLE_FORCE_COLOR", "true");
         if (cfgFile != null) {
-            b.environment().put("ANSIBLE_CONFIG", cfgFile);
+            env.put("ANSIBLE_CONFIG", cfgFile);
         }
 
         return b.start();
