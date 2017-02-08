@@ -1,10 +1,10 @@
 # Security
 
 - [Managing credentials](#managing-credentials)
-  - [GIT: SSH keys](#git--ssh-keys)
+  - [GIT: SSH keys](#git-ssh-keys)
     - [Generating a new key pair](#generating-a-new-key-pair)
     - [Uploading an existing key pair](#uploading-an-existing-key-pair)
-  - [GIT: username and password](#git--username-and-password)
+  - [GIT: username and password](#git-username-and-password)
 - [Permissions](#permissions)
 
 ## Managing credentials
