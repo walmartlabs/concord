@@ -23,9 +23,9 @@ The `hello.yml` playbook consists of a simple debug task:
       verbosity: 0
 ```
 
-Commit and push the repository to a remote server (e.g. GitHub). If you are using HTTP(S), please
-allow anonymous access. If you are using SSH, a new SSH key pair will created on the step 2 - you
-will need access to the repository settings to add a new public key.
+Commit and push the repository to a remote server (e.g. GitHub). If you are using SSH, a
+new SSH key pair will created on the step 2 - you will need access to the repository
+settings to add a new public key.
 
 ## Concord project
 
@@ -56,26 +56,8 @@ http://localhost:8001/api/v1/project
 
 ### 2. Create a new repository key
 
-```
-curl -v \
--X POST \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
-'http://localhost:8001/api/v1/secret/keypair?name=mySecret'
-```
-
-The response should look like this:
-
-```json
-{
-  "id" : "ef61edeb-2455-444d-bafd-e369601cf26c",
-  "name" : "mySecret",
-  "publicKey" : "ssh-rsa AAAA... concord-server",
-  "ok" : true
-}
-```
-
-The `publicKey` value must be added to the git repository's settings.
-E.g. for GitHub: ![Deploy keys](./key.png)
+Please refer to the [Generating a new key pair](../../security.md#generating-a-new-key-pair) document.
+Use `mySecret` as a name of the key pair, it will be used on the next step.
 
 ### 3. Add a repository
 

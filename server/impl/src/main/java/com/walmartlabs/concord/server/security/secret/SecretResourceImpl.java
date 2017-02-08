@@ -59,10 +59,10 @@ public class SecretResourceImpl implements SecretResource, Resource {
             throw new ValidationErrorsException("Key pair already exists: " + name);
         }
 
-        byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentApiKey());
+        byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentKey());
 
         KeyPair k = KeyPair.create();
-        byte[] ab = KeyPair.encrypt(k, password, secretCfg.getSalt());
+        byte[] ab = SecretUtils.encrypt(KeyPair::serialize, k, password, secretCfg.getSalt());
 
         String id = UUID.randomUUID().toString();
         secretDao.insert(id, name, SecretType.KEY_PAIR, ab);
@@ -72,7 +72,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @Override
     @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
     @Validate
-    public UploadKeyPairResponse uploadKeyPair(String name, MultipartInput input) {
+    public UploadSecretResponse uploadKeyPair(String name, MultipartInput input) {
         KeyPair k;
         try {
             InputStream publicIn = assertStream(input, "public");
@@ -82,12 +82,26 @@ public class SecretResourceImpl implements SecretResource, Resource {
             throw new WebApplicationException("Key pair processing error", e);
         }
 
-        byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentApiKey());
-        byte[] ab = KeyPair.encrypt(k, password, secretCfg.getSalt());
+        byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentKey());
+        byte[] ab = SecretUtils.encrypt(KeyPair::serialize, k, password, secretCfg.getSalt());
 
         String id = UUID.randomUUID().toString();
         secretDao.insert(id, name, SecretType.KEY_PAIR, ab);
-        return new UploadKeyPairResponse(id);
+        return new UploadSecretResponse(id);
+    }
+
+    @Override
+    @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
+    @Validate
+    public UploadSecretResponse addUsernamePassword(String name, UsernamePasswordRequest request) {
+        UsernamePassword k = new UsernamePassword(request.getUsername(), request.getPassword());
+
+        byte[] password = passwordManager.getPassword(request.getUsername(), ApiKey.getCurrentKey());
+        byte[] ab = SecretUtils.encrypt(UsernamePassword::serialize, k, password, secretCfg.getSalt());
+
+        String id = UUID.randomUUID().toString();
+        secretDao.insert(id, name, SecretType.USERNAME_PASSWORD, ab);
+        return new UploadSecretResponse(id);
     }
 
     @Override
@@ -103,8 +117,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
             throw new ValidationErrorsException("The specified secret is not a key pair");
         }
 
-        byte[] password = passwordManager.getPassword(s.getName(), ApiKey.getCurrentApiKey());
-        KeyPair k = KeyPair.decrypt(s.getData(), password, secretCfg.getSalt());
+        byte[] password = passwordManager.getPassword(s.getName(), ApiKey.getCurrentKey());
+        KeyPair k = SecretUtils.decrypt(KeyPair::deserialize, s.getData(), password, secretCfg.getSalt());
         return toPublicKey(s.getId(), s.getName(), k.getPublicKey());
     }
 

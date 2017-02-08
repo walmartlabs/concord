@@ -2,15 +2,13 @@ package com.walmartlabs.concord.server.repository;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.repository.RepositoryEntry;
-import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.security.PasswordManager;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
-import com.walmartlabs.concord.server.security.secret.KeyPair;
-import com.walmartlabs.concord.server.security.secret.SecretDao;
+import com.walmartlabs.concord.server.security.secret.*;
 import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
@@ -19,6 +17,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.function.Function;
 
 /**
  * Adds repository files to a payload.
@@ -59,20 +58,13 @@ public class RepositoryProcessor implements PayloadProcessor {
             return payload;
         }
 
-        KeyPair kp = null;
+        Secret secret = null;
         if (repo.getSecret() != null) {
-            SecretDataEntry s = secretDao.get(repo.getSecret().getId());
-            if (s.getType() != SecretType.KEY_PAIR) {
-                throw new ProcessException("Only key-based authentication is supported, got: " + s.getType());
-            }
-
-            // TODO move into security utils?
-            byte[] password = passwordManager.getPassword(s.getName(), ApiKey.getCurrentApiKey());
-            kp = KeyPair.decrypt(s.getData(), password, secretCfg.getSalt());
+            secret = getSecret(repo.getSecret().getId());
         }
 
         try {
-            Path src = GitRepository.checkout(repo.getUrl(), kp);
+            Path src = GitRepository.checkout(repo.getUrl(), secret);
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
             IOUtils.copy(src, dst);
         } catch (IOException | GitAPIException e) {
@@ -82,5 +74,27 @@ public class RepositoryProcessor implements PayloadProcessor {
         // TODO replace with a queue/stack/linkedlist?
         entryPoint = entryPoint.length > 1 ? Arrays.copyOfRange(entryPoint, 1, entryPoint.length) : new String[0];
         return payload.putHeader(Payload.ENTRY_POINT, entryPoint);
+    }
+
+    private Secret getSecret(String id) {
+        SecretDataEntry s = secretDao.get(id);
+        if (s == null) {
+            throw new ProcessException("Inconsistent data, can't find a secret: " + id);
+        }
+
+        Function<byte[], ? extends Secret> deserializer;
+        switch (s.getType()) {
+            case KEY_PAIR:
+                deserializer = KeyPair::deserialize;
+                break;
+            case USERNAME_PASSWORD:
+                deserializer = UsernamePassword::deserialize;
+                break;
+            default:
+                throw new ProcessException("Unknown secret type: " + s.getType());
+        }
+
+        byte[] password = passwordManager.getPassword(s.getName(), ApiKey.getCurrentKey());
+        return SecretUtils.decrypt(deserializer, s.getData(), password, secretCfg.getSalt());
     }
 }

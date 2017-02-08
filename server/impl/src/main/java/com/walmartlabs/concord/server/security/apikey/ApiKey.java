@@ -6,7 +6,7 @@ import org.apache.shiro.subject.Subject;
 
 public class ApiKey implements AuthenticationToken {
 
-    public static String getCurrentApiKey() {
+    public static String getCurrentKey() {
         Subject subject = SecurityUtils.getSubject();
 
         ApiKey k = null;

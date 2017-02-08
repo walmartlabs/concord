@@ -2,9 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.repository.*;
-import com.walmartlabs.concord.server.api.security.secret.PublicKeyResponse;
-import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
-import com.walmartlabs.concord.server.api.security.secret.SecretResource;
+import com.walmartlabs.concord.server.api.security.secret.*;
 import com.walmartlabs.concord.server.api.template.CreateTemplateResponse;
 import com.walmartlabs.concord.server.api.template.DeleteTemplateResponse;
 import com.walmartlabs.concord.server.api.template.TemplateResource;
@@ -132,6 +130,25 @@ public class CrudIT extends AbstractServerIT {
             fail("should fail");
         } catch (BadRequestException e) {
         }
+    }
+
+    @Test
+    public void testSecretUsernamePassword() throws Exception {
+        String keyName = "key#" + System.currentTimeMillis();
+        SecretResource secretResource = proxy(SecretResource.class);
+
+        // ---
+
+        UploadSecretResponse usr = secretResource.addUsernamePassword(keyName, new UsernamePasswordRequest("something", new char[] { 'a', 'b', 'c'}));
+        assertTrue(usr.isOk());
+
+        // ---
+
+        List<SecretEntry> l = secretResource.list(null, true);
+        SecretEntry s = findSecret(l, usr.getId());
+        assertNotNull(s);
+        assertEquals(SecretType.USERNAME_PASSWORD, s.getType());
+        assertEquals(keyName, s.getName());
     }
 
     private static ProjectEntry findProject(List<ProjectEntry> l, String id) {

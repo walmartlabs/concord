@@ -7,10 +7,9 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 
 import java.io.*;
-import java.security.GeneralSecurityException;
 import java.util.function.Consumer;
 
-public class KeyPair implements Serializable {
+public class KeyPair implements Secret {
 
     private static final int DEFAULT_KEY_SIZE = 2048;
     private static final int DEFAULT_KEY_TYPE = com.jcraft.jsch.KeyPair.RSA;
@@ -41,24 +40,7 @@ public class KeyPair implements Serializable {
         return new KeyPair(publicKey, privateKey);
     }
 
-    public static KeyPair decrypt(byte[] input, byte[] password, byte[] hash) throws SecurityException {
-        try {
-            byte[] ab = CryptoUtils.decrypt(input, password, hash);
-            return deserialize(ab);
-        } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error decrypting a key pair", e);
-        }
-    }
-
-    public static byte[] encrypt(KeyPair k, byte[] password, byte[] hash) throws SecurityException {
-        try {
-            return CryptoUtils.encrypt(serialize(k), password, hash);
-        } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error encrypting a key pair", e);
-        }
-    }
-
-    private static KeyPair deserialize(byte[] input) {
+    public static KeyPair deserialize(byte[] input) {
         ByteArrayDataInput in = ByteStreams.newDataInput(input);
 
         int n1 = assertKeyLength(in.readInt());
@@ -72,7 +54,7 @@ public class KeyPair implements Serializable {
         return new KeyPair(ab1, ab2);
     }
 
-    private static byte[] serialize(KeyPair k) {
+    public static byte[] serialize(KeyPair k) {
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
 
         out.writeInt(k.getPublicKey().length);
@@ -83,7 +65,6 @@ public class KeyPair implements Serializable {
 
         return out.toByteArray();
     }
-
 
     private static int assertKeyLength(int n) {
         if (n < 0 || n > 8192) {

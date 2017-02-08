@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 
-public class UploadKeyPairResponse implements Serializable {
+public class UploadSecretResponse implements Serializable {
 
     private final boolean ok = true;
     private final String id;
 
     @JsonCreator
-    public UploadKeyPairResponse(@JsonProperty("id") String id) {
+    public UploadSecretResponse(@JsonProperty("id") String id) {
         this.id = id;
     }
 
@@ -25,7 +25,7 @@ public class UploadKeyPairResponse implements Serializable {
 
     @Override
     public String toString() {
-        return "UploadKeyPairResponse{" +
+        return "UploadSecretResponse{" +
                 "ok=" + ok +
                 ", id='" + id + '\'' +
                 '}';

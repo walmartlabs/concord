@@ -148,7 +148,7 @@
                 <constraints unique="true" nullable="false"/>
             </column>
             <column name="SECRET_TYPE" type="varchar(32)" remarks="Type: SSH_KEY, HTTP_BASIC">
-                <constraints checkConstraint="SECRET_TYPE in ('SSH_KEY', 'HTTP_BASIC')"/>
+                <constraints nullable="false"/>
             </column>
             <column name="SECRET_DATA" type="blob">
                 <constraints nullable="false"/>

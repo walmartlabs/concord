@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -27,8 +28,16 @@ public interface SecretResource {
     @Path("/keypair")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    UploadKeyPairResponse uploadKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
-                                        @ApiParam MultipartInput input);
+    UploadSecretResponse uploadKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                       @ApiParam MultipartInput input);
+
+    @POST
+    @ApiOperation("Add an username and password secret")
+    @Path("/password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    UploadSecretResponse addUsernamePassword(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                             @ApiParam @Valid UsernamePasswordRequest request);
 
     @GET
     @ApiOperation("Get an existing public key")
