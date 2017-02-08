@@ -8,6 +8,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Executes a job in a separate JVM.
@@ -25,24 +27,24 @@ public class JarJobExecutor implements JobExecutor {
     }
 
     @Override
-    public void exec(String id, Path workDir, String entryPoint) throws ExecutionException {
+    public void exec(String id, Path workDir, String entryPoint, Collection<String> jvmArgs) throws ExecutionException {
         // TODO cfg
         String javaCmd = "java";
 
         String mainClass = Utils.getMainClass(workDir, entryPoint);
 
-        // TODO support for user-defined JVM opts
         // TODO pass through an original ID?
-        String[] cmd = {javaCmd, "-Xmx512m",
-                "-DinstanceId=" + id, "-Djavax.el.varArgs=true",
-                "-cp", Constants.LIBRARIES_DIR_NAME + "/*:" + entryPoint,
-                mainClass
-        };
-
+        Collection<String> cmd = new ArrayList<>();
+        cmd.add(javaCmd);
+        cmd.addAll(jvmArgs);
+        cmd.add("-DinstanceId=" + id);
+        cmd.add("-cp");
+        cmd.add(Constants.LIBRARIES_DIR_NAME + "/*:" + entryPoint);
+        cmd.add(mainClass);
 
         // start the process
 
-        Process proc = start(id, workDir, entryPoint, cmd);
+        Process proc = start(id, workDir, entryPoint, cmd.toArray(new String[cmd.size()]));
         log.info("exec ['{}', '{}', '{}'] -> running...", id, workDir, entryPoint);
 
         // redirect the logs

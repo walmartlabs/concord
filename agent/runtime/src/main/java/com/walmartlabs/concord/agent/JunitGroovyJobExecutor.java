@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
+import java.util.Collection;
 
 // TODO redo as a subclass of JarJobExecutor
 public class JunitGroovyJobExecutor implements JobExecutor {
@@ -19,7 +20,7 @@ public class JunitGroovyJobExecutor implements JobExecutor {
     private static final Logger log = LoggerFactory.getLogger(JunitGroovyJobExecutor.class);
 
     @Override
-    public void exec(String id, Path workDir, String entryPoint) throws ExecutionException {
+    public void exec(String id, Path workDir, String entryPoint, Collection<String> jvmArgs) throws ExecutionException {
         File tmpDir = workDir.toFile();
 
         ClassLoader deps;

@@ -1,9 +1,11 @@
 package com.walmartlabs.concord.agent;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
+import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ public class ExecutionManager {
 
     private static final Logger log = LoggerFactory.getLogger(ExecutionManager.class);
     private static final long STATUS_TTL = 8 * 60 * 60 * 1000; // 8 hours
+    private static final Collection<String> DEFAULT_JVM_ARGS = Arrays.asList("-Xmx512m", "-Djavax.el.varArgs=true");
 
     private final Map<JobType, JobExecutor> jobExecutors;
     private final ExecutorService executor;
@@ -64,14 +67,17 @@ public class ExecutionManager {
         String id = UUID.randomUUID().toString();
         logManager.log(id, "Job type: %s", type);
 
+        Map<String, Object> agentParams = getAgentParameters(tmpDir);
+        Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
+        log.info("start ['{}'] -> JVM args: {}", id, jvmArgs);
+
         synchronized (mutex) {
             statuses.put(id, JobStatus.RUNNING);
         }
 
         Future<?> f = executor.submit(() -> {
-            // TODO ugly
             try {
-                exec.exec(id, tmpDir, entryPoint);
+                exec.exec(id, tmpDir, entryPoint, jvmArgs);
                 synchronized (mutex) {
                     statuses.put(id, JobStatus.COMPLETED);
                 }
@@ -160,6 +166,20 @@ public class ExecutionManager {
             return tmpDir;
         } catch (IOException e) {
             throw new ExecutionException("Error while unpacking a payload", e);
+        }
+    }
+
+    private static Map<String, Object> getAgentParameters(Path payload) throws ExecutionException {
+        Path p = payload.resolve(Constants.AGENT_PARAMS_FILE_NAME);
+        if (!Files.exists(p)) {
+            return Collections.emptyMap();
+        }
+
+        try (InputStream in = Files.newInputStream(p)) {
+            ObjectMapper om = new ObjectMapper();
+            return om.readValue(in, Map.class);
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading an agent parameters file", e);
         }
     }
 }

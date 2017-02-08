@@ -28,9 +28,16 @@ public final class Constants {
     public static final String DEFINITIONS_DIR_NAME = "processes";
 
     /**
-     * File containing request data of a payload: process arguments, entry point name, etc.
+     * File, containing request data of a payload: process arguments, entry point name, etc.
      */
     public static final String REQUEST_DATA_FILE_NAME = "_main.json";
+
+    /**
+     * File, containing runtime parameters for agents: heap size, JVM arguments, etc.
+     */
+    public static final String AGENT_PARAMS_FILE_NAME = "_agent.json";
+
+    public static final String JVM_ARGS_KEY = "jvmArgs";
 
     /**
      * Process entry point.
