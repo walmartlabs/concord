@@ -16,3 +16,4 @@ node_modules/
 nb-configuration.xml
 pom.xml.bak
 console/build
+yarn.lock

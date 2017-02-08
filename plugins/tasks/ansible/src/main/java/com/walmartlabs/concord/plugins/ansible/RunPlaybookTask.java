@@ -67,7 +67,7 @@ public class RunPlaybookTask implements Task {
                 .directory(new File(playbooksPath))
                 .redirectErrorStream(true);
 
-        b.environment().put("ANSIBLE_FORCE_COLOR", "true");
+        // TODO b.environment().put("ANSIBLE_FORCE_COLOR", "true");
 
         Process p = b.start();
 

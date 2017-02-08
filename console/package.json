@@ -21,7 +21,6 @@
     "http-range": "*",
     "lodash": "*",
     "semantic-ui-react": "*",
-    "ansi-to-html": "*",
     "moment": "*"
   },
   "scripts": {
