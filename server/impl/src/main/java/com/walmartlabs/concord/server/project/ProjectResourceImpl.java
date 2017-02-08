@@ -42,7 +42,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     @RequiresPermissions(Permissions.PROJECT_CREATE_NEW)
     public CreateProjectResponse create(CreateProjectRequest request) {
         if (projectDao.exists(request.getName())) {
-            throw new ValidationErrorsException("The project already exists: " + request.getName());
+            throw new ValidationErrorsException("Project already exists: " + request.getName());
         }
 
         String[] templateIds = getTemplateIds(request.getTemplates());

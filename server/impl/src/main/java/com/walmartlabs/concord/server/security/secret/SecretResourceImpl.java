@@ -55,9 +55,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
     @Validate
     public PublicKeyResponse createKeyPair(String name) {
-        if (secretDao.exists(name)) {
-            throw new ValidationErrorsException("Key pair already exists: " + name);
-        }
+        assertUnique(name);
 
         byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentKey());
 
@@ -73,6 +71,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
     @Validate
     public UploadSecretResponse uploadKeyPair(String name, MultipartInput input) {
+        assertUnique(name);
+
         KeyPair k;
         try {
             InputStream publicIn = assertStream(input, "public");
@@ -94,6 +94,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
     @Validate
     public UploadSecretResponse addUsernamePassword(String name, UsernamePasswordRequest request) {
+        assertUnique(name);
+
         UsernamePassword k = new UsernamePassword(request.getUsername(), request.getPassword());
 
         byte[] password = passwordManager.getPassword(request.getUsername(), ApiKey.getCurrentKey());
@@ -139,6 +141,12 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
         secretDao.delete(id);
         return new DeleteSecretResponse();
+    }
+
+    private void assertUnique(String name) {
+        if (secretDao.getId(name) != null) {
+            throw new ValidationErrorsException("Secret already exists: " + name);
+        }
     }
 
     private void assertPermissions(String id, String wildcard, String message) {

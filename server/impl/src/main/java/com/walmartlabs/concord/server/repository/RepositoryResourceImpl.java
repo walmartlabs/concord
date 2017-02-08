@@ -47,6 +47,10 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     @Validate
     @RequiresPermissions(Permissions.REPOSITORY_CREATE_NEW)
     public CreateRepositoryResponse create(CreateRepositoryRequest request) {
+        if (repositoryDao.exists(request.getName())) {
+            throw new ValidationErrorsException("The repository already exists: " + request.getName());
+        }
+
         String projectName = projectDao.getName(request.getProjectId());
         if (projectName == null) {
             throw new ValidationErrorsException("Project not found: " + request.getProjectId());
@@ -57,9 +61,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
             throw new UnauthorizedException("The current user does not have permissions to update this project");
         }
 
-        if (repositoryDao.exists(request.getName())) {
-            throw new ValidationErrorsException("The repository already exists: " + request.getName());
-        }
+        assertSecret(request.getSecret());
 
         String id = UUID.randomUUID().toString();
         String secretId = resolveSecretId(request.getSecret());
@@ -82,6 +84,8 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
         assertPermissions(id, Permissions.REPOSITORY_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified repository");
 
+        assertSecret(request.getSecret());
+
         String secretId = resolveSecretId(request.getSecret());
         repositoryDao.update(id, request.getUrl(), secretId);
         return new UpdateRepositoryResponse();
@@ -92,6 +96,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     public DeleteRepositoryResponse delete(String id) {
         assertPermissions(id, Permissions.REPOSITORY_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified repository");
+
         repositoryDao.delete(id);
         return new DeleteRepositoryResponse();
     }
@@ -106,6 +111,15 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
         String perm = String.format(wildcard, name);
         if (!subject.isPermitted(perm)) {
             throw new SecurityException(message);
+        }
+    }
+
+    private void assertSecret(String name) {
+        if (name != null) {
+            Subject subject = SecurityUtils.getSubject();
+            if (!subject.isPermitted(String.format(Permissions.SECRET_READ_INSTANCE, name))) {
+                throw new UnauthorizedException("The current user does not have permissions to use the specified secret");
+            }
         }
     }
 
