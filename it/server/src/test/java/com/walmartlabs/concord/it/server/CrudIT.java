@@ -76,19 +76,21 @@ public class CrudIT extends AbstractServerIT {
         // ---
 
         String repoName = "repo#" + System.currentTimeMillis();
+        String branch = "branch#" + System.currentTimeMillis();
         RepositoryResource repositoryResource = proxy(RepositoryResource.class);
-        CreateRepositoryResponse crr = repositoryResource.create(new CreateRepositoryRequest(projectId, repoName, "n/a"));
+        CreateRepositoryResponse crr = repositoryResource.create(new CreateRepositoryRequest(projectId, repoName, "n/a", branch, null));
         assertTrue(crr.isOk());
 
         String repoId = crr.getId();
 
-        UpdateRepositoryResponse urr = repositoryResource.update(repoId, new UpdateRepositoryRequest("something"));
+        UpdateRepositoryResponse urr = repositoryResource.update(repoId, new UpdateRepositoryRequest("something", branch, null));
         assertTrue(urr.isOk());
 
         List<RepositoryEntry> l = repositoryResource.list(null, true);
         RepositoryEntry e = findRepository(l, repoId);
         assertNotNull(e);
         assertEquals("something", e.getUrl());
+        assertEquals(branch, e.getBranch());
 
         DeleteRepositoryResponse drr = repositoryResource.delete(repoId);
         assertTrue(drr.isOk());

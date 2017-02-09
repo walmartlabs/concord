@@ -25,6 +25,7 @@ public final class Permissions {
 
     public static final String REPOSITORY_PREFIX = "repository";
     public static final String REPOSITORY_CREATE_NEW = REPOSITORY_PREFIX + ":create";
+    public static final String REPOSITORY_READ_INSTANCE = REPOSITORY_PREFIX + ":read:%s";
     public static final String REPOSITORY_UPDATE_INSTANCE = REPOSITORY_PREFIX + ":update:%s";
     public static final String REPOSITORY_DELETE_INSTANCE = REPOSITORY_PREFIX + ":delete:%s";
     

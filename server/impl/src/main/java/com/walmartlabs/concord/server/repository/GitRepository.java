@@ -9,7 +9,9 @@ import com.walmartlabs.concord.server.security.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.UsernamePassword;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.CredentialItem.Password;
@@ -27,27 +29,36 @@ import java.util.Properties;
 public final class GitRepository {
 
     private static final Logger log = LoggerFactory.getLogger(GitRepository.class);
+    private static final String DEFAULT_BRANCH = "master";
 
-    public static Path checkout(String uri, Secret secret) throws IOException, GitAPIException {
+    public static Path checkout(String uri, String branch, Secret secret) throws IOException, GitAPIException {
+        if (branch == null || branch.trim().isEmpty()) {
+            branch = DEFAULT_BRANCH;
+        }
+
         Path localPath = Files.createTempDirectory("git");
-        log.info("checkout -> cloning '{}' into '{}'...", uri, localPath);
+        log.info("checkout -> cloning '{}' (branch: {}) into '{}'...", uri, branch, localPath);
 
-        CloneCommand cmd = Git.cloneRepository()
-                .setURI(uri)
-                .setDirectory(localPath.toFile())
-                .setCloneSubmodules(true);
-
-        cmd.setTransportConfigCallback(transport -> {
+        TransportConfigCallback transportCallback = transport -> {
             if (transport instanceof SshTransport) {
                 configureSshTransport((SshTransport) transport, secret);
             } else if (transport instanceof HttpTransport) {
                 configureHttpTransport((HttpTransport) transport, secret);
             }
-        });
+        };
 
-        cmd.call();
+        Git git = Git.cloneRepository()
+                .setURI(uri)
+                .setDirectory(localPath.toFile())
+                .setBranch(branch)
+                .setTransportConfigCallback(transportCallback)
+                .call();
 
-        // TODO remove .git directory?
+        String currentBranch = git.getRepository().getBranch();
+        if (!branch.equals(currentBranch)) {
+            log.error("checkout ['{}'] -> can't checkout the branch. Expected: '{}', got: '{}'", uri, branch, currentBranch);
+            throw new IllegalArgumentException("Can't checkout the branch: " + branch);
+        }
 
         log.info("checkout -> cloned '{}' into '{}'", uri, localPath);
         return localPath;

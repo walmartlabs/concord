@@ -11,17 +11,20 @@ public class RepositoryEntry implements Serializable {
     private final String id;
     private final String name;
     private final String url;
+    private final String branch;
     private final IdName secret;
 
     @JsonCreator
     public RepositoryEntry(@JsonProperty("id") String id,
                            @JsonProperty("name") String name,
                            @JsonProperty("url") String url,
+                           @JsonProperty("branch") String branch,
                            @JsonProperty("secret") IdName secret) {
 
         this.id = id;
         this.name = name;
         this.url = url;
+        this.branch = branch;
         this.secret = secret;
     }
 
@@ -37,6 +40,10 @@ public class RepositoryEntry implements Serializable {
         return url;
     }
 
+    public String getBranch() {
+        return branch;
+    }
+
     public IdName getSecret() {
         return secret;
     }
@@ -47,6 +54,7 @@ public class RepositoryEntry implements Serializable {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", url='" + url + '\'' +
+                ", branch='" + branch + '\'' +
                 ", secret=" + secret +
                 '}';
     }

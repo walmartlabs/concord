@@ -76,7 +76,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String repoId = UUID.randomUUID().toString();
         String repoName = "repo#" + System.currentTimeMillis();
         String repoUrl = "n/a";
-        repositoryDao.insert(projectId, repoId, repoName, repoUrl, null);
+        repositoryDao.insert(projectId, repoId, repoName, repoUrl, null, null);
 
         // ---
 

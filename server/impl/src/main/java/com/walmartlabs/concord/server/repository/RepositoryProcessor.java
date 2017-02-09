@@ -64,7 +64,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         }
 
         try {
-            Path src = GitRepository.checkout(repo.getUrl(), secret);
+            Path src = GitRepository.checkout(repo.getUrl(), repo.getBranch(), secret);
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
             IOUtils.copy(src, dst);
         } catch (IOException | GitAPIException e) {

@@ -41,6 +41,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
         key2Field.put("id", REPOSITORIES.REPO_ID);
         key2Field.put("name", REPOSITORIES.REPO_NAME);
         key2Field.put("url", REPOSITORIES.REPO_URL);
+        key2Field.put("branch", REPOSITORIES.REPO_BRANCH);
     }
 
     @Override
@@ -65,8 +66,19 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
 
         String id = UUID.randomUUID().toString();
         String secretId = resolveSecretId(request.getSecret());
-        repositoryDao.insert(request.getProjectId(), id, request.getName(), request.getUrl(), secretId);
+
+        repositoryDao.insert(request.getProjectId(), id, request.getName(), request.getUrl(),
+                request.getBranch(), secretId);
+
         return new CreateRepositoryResponse(id);
+    }
+
+    @Override
+    @Validate
+    public RepositoryEntry get(String id) {
+        assertPermissions(id, Permissions.REPOSITORY_READ_INSTANCE,
+                "The current user does not have permissions to read the specified repository");
+        return repositoryDao.get(id);
     }
 
     @Override
@@ -87,7 +99,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
         assertSecret(request.getSecret());
 
         String secretId = resolveSecretId(request.getSecret());
-        repositoryDao.update(id, request.getUrl(), secretId);
+        repositoryDao.update(id, request.getUrl(), request.getBranch(), secretId);
         return new UpdateRepositoryResponse();
     }
 

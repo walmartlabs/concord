@@ -13,6 +13,7 @@ import org.junit.Before;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -85,9 +86,13 @@ public abstract class AbstractServerIT {
         };
 
         Response resp = target.request().post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
+        if (resp.getStatus() != Status.OK.getStatusCode()) {
+            resp.close();
+            throw new WebApplicationException(resp);
+        }
+
         StartProcessResponse spr = resp.readEntity(StartProcessResponse.class);
         resp.close();
-
         return spr;
     }
 

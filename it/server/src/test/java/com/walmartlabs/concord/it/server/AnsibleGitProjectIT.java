@@ -28,6 +28,7 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
         String projectName = "project#" + System.currentTimeMillis();
         String repoName = "repo#" + System.currentTimeMillis();
         String repoUrl = "git@gecgithub01.walmart.com:devtools/concord-ansible-example.git";
+        String repoBranch = "it";
         String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
 
         // ---
@@ -43,7 +44,7 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
         // ---
 
         RepositoryResource repositoryResource = proxy(RepositoryResource.class);
-        repositoryResource.create(new CreateRepositoryRequest(cpr.getId(), repoName, repoUrl));
+        repositoryResource.create(new CreateRepositoryRequest(cpr.getId(), repoName, repoUrl, repoBranch, null));
 
         // ---
 
@@ -60,7 +61,7 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(psr);
-        assertLog(".*hey!.*", ab);
+        assertLog(".*Hello, world.*", ab);
     }
 
     private static InputStream resource(String path) {

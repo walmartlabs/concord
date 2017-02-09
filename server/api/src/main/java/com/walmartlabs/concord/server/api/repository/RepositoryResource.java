@@ -26,6 +26,12 @@ public interface RepositoryResource {
     @Produces(MediaType.APPLICATION_JSON)
     CreateRepositoryResponse create(@ApiParam @Valid CreateRepositoryRequest request);
 
+    @GET
+    @ApiOperation("Get an existing repository")
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    RepositoryEntry get(@ApiParam @PathParam("id") @ConcordId String id);
+
     /**
      * List repositories.
      *

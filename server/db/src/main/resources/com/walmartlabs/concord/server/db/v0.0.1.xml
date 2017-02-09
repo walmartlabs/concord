@@ -197,6 +197,7 @@
             <column name="REPO_URL" type="varchar(2048)" remarks="URL of a repository">
                 <constraints nullable="false"/>
             </column>
+            <column name="REPO_BRANCH" type="varchar(255)" remarks="Name of a repository's branch"/>
             <column name="SECRET_ID" type="varchar(36)" remarks="ID of a secret used to access this repository">
                 <constraints nullable="true"/>
             </column>

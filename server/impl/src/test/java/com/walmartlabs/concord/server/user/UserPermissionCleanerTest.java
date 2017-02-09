@@ -62,11 +62,11 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         String repoId1 = UUID.randomUUID().toString();
         String repoName1 = "repo1#" + System.currentTimeMillis();
-        repositoryDao.insert(projectId, repoId1, repoName1, "n/a", null);
+        repositoryDao.insert(projectId, repoId1, repoName1, "n/a", null, null);
 
         String repoId2 = UUID.randomUUID().toString();
         String repoName2 = "repo2#" + System.currentTimeMillis();
-        repositoryDao.insert(projectId, repoId2, repoName2, "n/a", null);
+        repositoryDao.insert(projectId, repoId2, repoName2, "n/a", null, null);
 
         // ---
 
