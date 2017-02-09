@@ -6,6 +6,12 @@ server {
 	location / {
 	}
 
+	location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
+        expires 30d;
+        add_header Pragma public;
+        add_header Cache-Control "public";
+    }
+
 	location ~ ^/(api|logs)/ {
 	    proxy_pass          http://SERVER_ADDR:SERVER_PORT;
 	    proxy_redirect      off;
