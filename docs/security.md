@@ -91,6 +91,7 @@ The response:
 | `project:update:*`        | Update (modify) a project. E.g. add a repository to a project. | `project:update:ABC`                   |
 | `repository:create`       | Create a new repository.                                       |                                        |
 | `repository:delete:*`     | Delete specific repository.                                    |                                        |
+| `repository:read:*`       | Read specific repository.                                      |                                        |
 | `repository:update:*`     | Update specific repository.                                    |                                        |
 | `secret:create`           | Create a new secret.                                           |                                        |
 | `secret:delete:*`         | Delete specific secret.                                        |                                        |

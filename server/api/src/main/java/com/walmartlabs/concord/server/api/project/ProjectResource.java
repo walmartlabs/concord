@@ -26,6 +26,11 @@ public interface ProjectResource {
     @Produces(MediaType.APPLICATION_JSON)
     CreateProjectResponse create(@ApiParam @Valid CreateProjectRequest request);
 
+    /**
+     * Returns an existing project.
+     * @param id
+     * @return
+     */
     @GET
     @ApiOperation("Get an existing project")
     @Path("/{id}")

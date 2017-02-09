@@ -26,6 +26,11 @@ public interface RepositoryResource {
     @Produces(MediaType.APPLICATION_JSON)
     CreateRepositoryResponse create(@ApiParam @Valid CreateRepositoryRequest request);
 
+    /**
+     * Returns an existing repository.
+     * @param id
+     * @return
+     */
     @GET
     @ApiOperation("Get an existing repository")
     @Path("/{id}")
