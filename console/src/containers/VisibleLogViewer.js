@@ -84,7 +84,7 @@ class VisibleLogViewer extends Component {
         this.stopTimer();
 
         const {instanceId, fetchData} = this.props;
-        fetchData(instanceId, {low: 0, high: undefined});
+        fetchData(instanceId, {low: 0, high: undefined}, true);
     }
 
     render() {
