@@ -5,8 +5,6 @@ import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -18,8 +16,6 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPL
 
 @Named
 public class ProjectDao extends AbstractDao {
-
-    private static final Logger log = LoggerFactory.getLogger(ProjectDao.class);
 
     private final UserPermissionCleaner permissionCleaner;
 
@@ -91,9 +87,7 @@ public class ProjectDao extends AbstractDao {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            List<ProjectEntry> result = fold(query.fetch());
-            log.info("list [{}, {}] -> got {} result(s)", sortField, asc, result.size());
-            return result;
+            return fold(query.fetch());
         }
     }
 

@@ -43,7 +43,7 @@ public class TemplateIT extends AbstractServerIT {
         // ---
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName)));
+        projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
 
         // ---
 

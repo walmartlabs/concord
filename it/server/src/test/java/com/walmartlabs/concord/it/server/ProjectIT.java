@@ -69,7 +69,7 @@ public class ProjectIT extends AbstractServerIT {
                                            String entryPoint, Map<String, Object> args) throws InterruptedException, IOException {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, projectTemplates));
+        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, projectTemplates, null));
         assertTrue(cpr.isOk());
 
         String projectId = cpr.getId();

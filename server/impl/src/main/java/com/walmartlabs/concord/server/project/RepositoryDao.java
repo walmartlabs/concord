@@ -5,8 +5,6 @@ import com.walmartlabs.concord.server.api.IdName;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import org.jooq.*;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,8 +15,6 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS
 
 @Named
 public class RepositoryDao extends AbstractDao {
-
-    private static final Logger log = LoggerFactory.getLogger(RepositoryDao.class);
 
     @Inject
     public RepositoryDao(Configuration cfg) {
@@ -71,6 +67,12 @@ public class RepositoryDao extends AbstractDao {
                 .execute();
     }
 
+    public void deleteAll(DSLContext create, String projectId) {
+        create.deleteFrom(REPOSITORIES)
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId))
+                .execute();
+    }
+
     public List<RepositoryEntry> list(String projectId, Field<?> sortField, boolean asc) {
         try (DSLContext create = DSL.using(cfg)) {
             SelectConditionStep<Record5<String, String, String, String, String>> query = selectRepositoryEntry(create)
@@ -80,9 +82,7 @@ public class RepositoryDao extends AbstractDao {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            List<RepositoryEntry> result = query.fetch(RepositoryDao::toEntry);
-            log.info("list [{}, {}] -> got {} result(s)", result.size());
-            return result;
+            return query.fetch(RepositoryDao::toEntry);
         }
     }
 

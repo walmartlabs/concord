@@ -6,6 +6,7 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 
 public class CreateProjectRequest implements Serializable {
@@ -16,11 +17,15 @@ public class CreateProjectRequest implements Serializable {
 
     private final Set<String> templates;
 
+    private final Map<String, UpdateRepositoryRequest> repositories;
+
     @JsonCreator
     public CreateProjectRequest(@JsonProperty("name") String name,
-                                @JsonProperty("templates") Set<String> templates) {
+                                @JsonProperty("templates") Set<String> templates,
+                                @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories) {
         this.name = name;
         this.templates = templates;
+        this.repositories = repositories;
     }
 
     public String getName() {
@@ -31,11 +36,16 @@ public class CreateProjectRequest implements Serializable {
         return templates;
     }
 
+    public Map<String, UpdateRepositoryRequest> getRepositories() {
+        return repositories;
+    }
+
     @Override
     public String toString() {
         return "CreateProjectRequest{" +
                 "name='" + name + '\'' +
                 ", templates=" + templates +
+                ", repositories=" + repositories +
                 '}';
     }
 }

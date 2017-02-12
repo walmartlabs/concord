@@ -6,8 +6,6 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -22,8 +20,6 @@ import static org.jooq.impl.DSL.value;
 @Named
 public class ProcessHistoryDao extends AbstractDao {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessHistoryDao.class);
-
     @Inject
     public ProcessHistoryDao(Configuration cfg) {
         super(cfg);
@@ -37,13 +33,10 @@ public class ProcessHistoryDao extends AbstractDao {
                     .fetchOne();
 
             if (r == null) {
-                log.warn("get ['{}'] -> not found", instanceId);
                 return null;
             }
 
-            ProcessHistoryEntry e = toEntry(r);
-            log.info("get ['{}'] -> got {}", instanceId, e);
-            return e;
+            return toEntry(r);
         }
     }
 
@@ -65,7 +58,6 @@ public class ProcessHistoryDao extends AbstractDao {
                             value(logFileName))
                     .execute();
         });
-        log.info("insertInitial ['{}', '{}', '{}'] -> done", instanceId, initiator, logFileName);
     }
 
     public void update(String instanceId, ProcessStatus processStatus) {
@@ -78,11 +70,9 @@ public class ProcessHistoryDao extends AbstractDao {
                     .execute();
 
             if (i != 1) {
-                log.error("update ['{}', {}] -> invalid number of rows updated: {}", instanceId, processStatus, i);
                 throw new DataAccessException("Invalid number of rows updated: " + i);
             }
         });
-        log.info("update ['{}', {}] -> done", instanceId, processStatus);
     }
 
     /**
@@ -98,7 +88,6 @@ public class ProcessHistoryDao extends AbstractDao {
                     .where(PROCESS_HISTORY.INSTANCE_ID.eq(instanceId))
                     .execute();
         });
-        log.info("touch ['{}'] -> done", instanceId);
     }
 
     public List<ProcessHistoryEntry> list(int limit, ProcessStatus... filters) {
@@ -123,9 +112,7 @@ public class ProcessHistoryDao extends AbstractDao {
                 query.limit(limit);
             }
 
-            List<ProcessHistoryEntry> result = query.fetch(new EntryMapper());
-            log.info("list [{}, {}, {}] -> done, got {} result(s)", sortField, asc, filters, result.size());
-            return result;
+            return query.fetch(new EntryMapper());
         }
     }
 

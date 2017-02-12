@@ -7,8 +7,6 @@ import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -21,8 +19,6 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.Users.USERS;
 
 @Named
 public class UserDao extends AbstractDao {
-
-    private static final Logger log = LoggerFactory.getLogger(UserDao.class);
 
     @Inject
     public UserDao(Configuration cfg) {
@@ -40,7 +36,6 @@ public class UserDao extends AbstractDao {
 
             insertPermissions(create, id, permissions);
         });
-        log.info("insert ['{}', '{}', {}] -> done", id, username, permissions);
     }
 
     public void delete(String id) {
@@ -51,7 +46,6 @@ public class UserDao extends AbstractDao {
                     .where(USERS.USER_ID.eq(id))
                     .execute();
         });
-        log.info("delete ['{}'] -> done", id);
     }
 
     public void update(String id, Set<String> permissions) {
@@ -60,7 +54,6 @@ public class UserDao extends AbstractDao {
             deletePermissions(create, id);
             insertPermissions(create, id, permissions);
         });
-        log.info("update ['{}', {}] -> done", id, permissions);
     }
 
     public User get(String id) {
@@ -73,7 +66,6 @@ public class UserDao extends AbstractDao {
                     .fetchOne();
 
             if (r == null) {
-                log.debug("get ['{}'] -> not found", id);
                 return null;
             }
 
@@ -83,9 +75,7 @@ public class UserDao extends AbstractDao {
                     .where(USER_PERMISSIONS.USER_ID.eq(id))
                     .fetchInto(String.class);
 
-            User u = new User(r.get(USERS.USER_ID), r.get(USERS.USERNAME), new HashSet<>(perms));
-            log.debug("get ['{}'] -> found: {}", id, u);
-            return u;
+            return new User(r.get(USERS.USER_ID), r.get(USERS.USERNAME), new HashSet<>(perms));
         }
     }
 

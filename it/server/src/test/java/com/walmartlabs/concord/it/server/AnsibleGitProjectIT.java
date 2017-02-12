@@ -42,7 +42,7 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
         // ---
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName)));
+        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
 
         // ---
 

@@ -8,8 +8,6 @@ import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -26,8 +24,6 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPL
 @Named
 public class TemplateDao extends AbstractDao {
 
-    private static final Logger log = LoggerFactory.getLogger(TemplateDao.class);
-
     private final UserPermissionCleaner permissionCleaner;
 
     @Inject
@@ -38,13 +34,10 @@ public class TemplateDao extends AbstractDao {
 
     public Collection<String> getProjectTemplateIds(String projectId) {
         try (DSLContext create = DSL.using(cfg)) {
-            Collection<String> r = create.select(PROJECT_TEMPLATES.TEMPLATE_ID)
+            return create.select(PROJECT_TEMPLATES.TEMPLATE_ID)
                     .from(PROJECT_TEMPLATES)
                     .where(PROJECT_TEMPLATES.PROJECT_ID.eq(projectId))
                     .fetch(PROJECT_TEMPLATES.TEMPLATE_ID);
-
-            log.info("getProjectTemplateIds ['{}'] -> found {} template(s)", projectId, r.size());
-            return r;
         }
     }
 
@@ -88,10 +81,7 @@ public class TemplateDao extends AbstractDao {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            List<TemplateEntry> result = query.fetch(r ->
-                    new TemplateEntry(r.get(TEMPLATES.TEMPLATE_ID), r.get(TEMPLATES.TEMPLATE_NAME)));
-            log.info("list [{}, {}] -> got {} result(s)", sortField, asc, result.size());
-            return result;
+            return query.fetch(r -> new TemplateEntry(r.get(TEMPLATES.TEMPLATE_ID), r.get(TEMPLATES.TEMPLATE_NAME)));
         }
     }
 
@@ -112,7 +102,6 @@ public class TemplateDao extends AbstractDao {
                 }
             });
         });
-        log.info("insert ['{}', '{}'] -> done", id, name);
     }
 
     public void update(String id, InputStream data) {
@@ -131,7 +120,6 @@ public class TemplateDao extends AbstractDao {
                 }
             });
         });
-        log.info("update ['{}'] -> done", id);
     }
 
     public void delete(String id) {
@@ -145,7 +133,6 @@ public class TemplateDao extends AbstractDao {
                     .where(TEMPLATES.TEMPLATE_ID.eq(id))
                     .execute();
         });
-        log.info("delete ['{}'] -> done", id);
     }
 
     public String getId(String name) {
@@ -154,12 +141,6 @@ public class TemplateDao extends AbstractDao {
                     .from(TEMPLATES)
                     .where(TEMPLATES.TEMPLATE_NAME.eq(name))
                     .fetchOne(TEMPLATES.TEMPLATE_ID);
-        }
-    }
-
-    public String getName(String id) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return getName(create, id);
         }
     }
 

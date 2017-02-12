@@ -45,13 +45,13 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project#" + System.currentTimeMillis();
-        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName)));
+        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
         assertTrue(cpr.isOk());
 
         ProjectEntry e1 = projectResource.get(projectName);
         assertNotNull(e1);
 
-        UpdateProjectResponse upr = projectResource.update(projectName, new UpdateProjectRequest(null));
+        UpdateProjectResponse upr = projectResource.update(projectName, new UpdateProjectRequest(null, null));
         assertTrue(upr.isOk());
 
         List<ProjectEntry> l = projectResource.list(null, false);
@@ -66,15 +66,13 @@ public class CrudIT extends AbstractServerIT {
     @Test
     public void testRepository() throws Exception {
         String projectName = "project#" + System.currentTimeMillis();
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, null));
-
-        // ---
-
         String repoName = "repo#" + System.currentTimeMillis();
         String branch = "branch#" + System.currentTimeMillis();
-        CreateRepositoryResponse crr = projectResource.createRepository(projectName, new CreateRepositoryRequest(repoName, "n/a", branch, null));
-        assertTrue(crr.isOk());
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.create(new CreateProjectRequest(projectName, null, Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null))));
+
+        // ---
 
         UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, null));
         assertTrue(urr.isOk());
@@ -97,8 +95,8 @@ public class CrudIT extends AbstractServerIT {
         String projectName2 = "project2#" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr1 = projectResource.create(new CreateProjectRequest(projectName1, null));
-        CreateProjectResponse cpr2 = projectResource.create(new CreateProjectRequest(projectName2, null));
+        CreateProjectResponse cpr1 = projectResource.create(new CreateProjectRequest(projectName1, null, null));
+        CreateProjectResponse cpr2 = projectResource.create(new CreateProjectRequest(projectName2, null, null));
 
         // ---
 

@@ -6,8 +6,6 @@ import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,8 +15,6 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS
 
 @Named
 public class SecretDao extends AbstractDao {
-
-    private static final Logger log = LoggerFactory.getLogger(SecretDao.class);
 
     private final UserPermissionCleaner permissionCleaner;
 
@@ -36,7 +32,6 @@ public class SecretDao extends AbstractDao {
                     .values(id, name, type.toString(), data)
                     .execute();
         });
-        log.info("insert ['{}', '{}', {}] -> done, {} byte(s)", id, name, type, data.length);
     }
 
     public SecretDataEntry get(String id) {
@@ -71,12 +66,9 @@ public class SecretDao extends AbstractDao {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            List<SecretEntry> result = query.fetch(r -> new SecretEntry(r.get(SECRETS.SECRET_ID),
+            return query.fetch(r -> new SecretEntry(r.get(SECRETS.SECRET_ID),
                     r.get(SECRETS.SECRET_NAME),
                     SecretType.valueOf(r.get(SECRETS.SECRET_TYPE))));
-
-            log.info("list [{}, {}] -> got {} result(s)", sortField, asc, result.size());
-            return result;
         }
     }
 
@@ -91,7 +83,6 @@ public class SecretDao extends AbstractDao {
                     .where(SECRETS.SECRET_ID.eq(id))
                     .execute();
         });
-        log.info("delete ['{}'] -> done", id);
     }
 
     private static String getName(DSLContext create, String id) {

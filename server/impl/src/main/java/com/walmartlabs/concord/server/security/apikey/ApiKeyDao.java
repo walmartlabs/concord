@@ -5,8 +5,6 @@ import com.walmartlabs.concord.common.db.AbstractDao;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -20,8 +18,6 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.ApiKeys.API_KEY
 
 @Named
 public class ApiKeyDao extends AbstractDao {
-
-    private static final Logger log = LoggerFactory.getLogger(ApiKeyDao.class);
 
     @Inject
     public ApiKeyDao(Configuration cfg) {
@@ -50,7 +46,6 @@ public class ApiKeyDao extends AbstractDao {
                     .values(id, userId, hash(key))
                     .execute();
         });
-        log.info("insert ['{}', '{}', '*******'] -> done", id, userId);
     }
 
     public void delete(String id) {
@@ -60,7 +55,6 @@ public class ApiKeyDao extends AbstractDao {
                     .where(API_KEYS.KEY_ID.eq(id))
                     .execute();
         });
-        log.info("delete ['{}'] -> done", id);
     }
 
     public String findUserId(String key) {
@@ -71,11 +65,9 @@ public class ApiKeyDao extends AbstractDao {
                     .fetchOne(API_KEYS.USER_ID);
 
             if (id == null) {
-                log.debug("findUserId ['{}'] -> not found", key);
                 return null;
             }
 
-            log.debug("findUserId ['{}'] -> found: {}", key, id);
             return id;
         }
     }

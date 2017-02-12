@@ -4,8 +4,6 @@ import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -14,8 +12,6 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.UserPermissions
 
 @Named
 public class UserPermissionCleaner extends AbstractDao {
-
-    private static final Logger log = LoggerFactory.getLogger(UserPermissionCleaner.class);
 
     private static final char ESC_CHAR = '\\';
 
@@ -42,11 +38,9 @@ public class UserPermissionCleaner extends AbstractDao {
         }
 
         String pattern = prefix + ":%:" + escape(name);
-        int i = create.deleteFrom(USER_PERMISSIONS)
+        create.deleteFrom(USER_PERMISSIONS)
                 .where(USER_PERMISSIONS.PERMISSION.like(pattern).escape(ESC_CHAR))
                 .execute();
-
-        log.debug("remove ['{}'] -> removed {} '{}' permission(s)", name, i, prefix);
     }
 
     private static String escape(String s) {

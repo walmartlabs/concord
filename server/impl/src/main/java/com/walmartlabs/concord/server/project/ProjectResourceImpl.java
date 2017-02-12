@@ -10,6 +10,7 @@ import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.subject.Subject;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -62,9 +63,16 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         Collection<String> templateIds = getTemplateIds(request.getTemplates());
         String projectId = UUID.randomUUID().toString();
+
         tx(tx -> {
             projectDao.insert(tx, projectId, request.getName(), templateIds);
+
+            Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
+            if (repos != null) {
+                insert(tx, projectId, repos);
+            }
         });
+
         return new CreateProjectResponse(projectId);
     }
 
@@ -134,7 +142,14 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         Collection<String> templateIds = getTemplateIds(request.getTemplates());
         tx(tx -> {
             projectDao.update(tx, projectId, templateIds);
+
+            Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
+            if (repos != null) {
+                repositoryDao.deleteAll(tx, projectId);
+                insert(tx, projectId, repos);
+            }
         });
+
         return new UpdateProjectResponse();
     }
 
@@ -230,6 +245,14 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         return id;
+    }
+
+    private void insert(DSLContext tx, String projectId, Map<String, UpdateRepositoryRequest> repos) {
+        for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
+            String name = r.getKey();
+            repositoryDao.insert(tx, projectId, name,
+                    r.getValue().getUrl(), r.getValue().getBranch(), r.getValue().getSecret());
+        }
     }
 
     private static void assertTemplatePermissions(String name) {
