@@ -3,7 +3,6 @@ package com.walmartlabs.concord.server.project;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.IdName;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -21,12 +20,9 @@ public class RepositoryDao extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryDao.class);
 
-    private final UserPermissionCleaner permissionCleaner;
-
     @Inject
-    public RepositoryDao(Configuration cfg, UserPermissionCleaner permissionCleaner) {
+    public RepositoryDao(Configuration cfg) {
         super(cfg);
-        this.permissionCleaner = permissionCleaner;
     }
 
     public boolean exists(String projectId, String repositoryName) {
@@ -70,7 +66,6 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public void delete(DSLContext create, String repositoryName) {
-        permissionCleaner.onRepositoryRemoval(create, repositoryName);
         create.deleteFrom(REPOSITORIES)
                 .where(REPOSITORIES.REPO_NAME.eq(repositoryName))
                 .execute();

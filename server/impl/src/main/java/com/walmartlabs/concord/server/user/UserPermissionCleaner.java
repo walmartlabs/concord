@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.public_.tables.UserPermissions.USER_PERMISSIONS;
 
 @Named
@@ -29,20 +28,11 @@ public class UserPermissionCleaner extends AbstractDao {
         remove(create, Permissions.SECRET_PREFIX, name);
     }
 
-    public void onRepositoryRemoval(DSLContext create, String name) {
-        remove(create, Permissions.REPOSITORY_PREFIX, name);
-    }
-
     public void onTemplateRemoval(DSLContext create, String name) {
         remove(create, Permissions.TEMPLATE_PREFIX, name);
     }
 
     public void onProjectRemoval(DSLContext create, String id, String name) {
-        create.select(REPOSITORIES.REPO_NAME)
-                .from(REPOSITORIES)
-                .where(REPOSITORIES.PROJECT_ID.eq(id))
-                .forEach(r -> onRepositoryRemoval(create, r.get(REPOSITORIES.REPO_NAME)));
-
         remove(create, Permissions.PROJECT_PREFIX, name);
     }
 

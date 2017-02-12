@@ -89,10 +89,7 @@ The response:
 | `project:create`          | Create a new project.                                          |                                        |
 | `project:read:*`          | Read an existing project.                                      |                                        |
 | `project:update:*`        | Update (modify) a project. E.g. add a repository to a project. | `project:update:ABC`                   |
-| `repository:create`       | Create a new repository.                                       |                                        |
-| `repository:delete:*`     | Delete specific repository.                                    |                                        |
-| `repository:read:*`       | Read specific repository.                                      |                                        |
-| `repository:update:*`     | Update specific repository.                                    |                                        |
+| `project:delete:*`        | Delete specific repository.                                    |                                        |
 | `secret:create`           | Create a new secret.                                           |                                        |
 | `secret:delete:*`         | Delete specific secret.                                        |                                        |
 | `secret:read:*`           | Read an existing secret's data.                                |                                        |

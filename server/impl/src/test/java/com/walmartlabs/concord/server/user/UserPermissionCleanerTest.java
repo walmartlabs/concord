@@ -48,7 +48,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         UserDao userDao = new UserDao(getConfiguration());
         UserPermissionCleaner permissionCleaner = new UserPermissionCleaner(getConfiguration());
         ProjectDao projectDao = new ProjectDao(getConfiguration(), permissionCleaner);
-        RepositoryDao repositoryDao = new RepositoryDao(getConfiguration(), permissionCleaner);
+        RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());
 
         // ---
 
@@ -70,8 +70,6 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         String username = "user#" + System.currentTimeMillis();
         Set<String> perms = new HashSet<>();
         perms.add(String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName));
-        perms.add(String.format(Permissions.REPOSITORY_UPDATE_INSTANCE, repoName1));
-        perms.add(String.format(Permissions.REPOSITORY_UPDATE_INSTANCE, repoName2));
         perms.add(Permissions.APIKEY_DELETE_ANY);
         userDao.insert(userId, username, perms);
 

@@ -47,7 +47,6 @@ public class ProjectIT extends AbstractServerIT {
         String userName = "myUser#" + System.currentTimeMillis();
         Set<String> permissions = Sets.newHashSet(
                 String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
-                Permissions.REPOSITORY_CREATE_NEW,
                 String.format(Permissions.PROCESS_START_PROJECT, projectName));
         String repoName = "myRepo#" + System.currentTimeMillis();
         String repoUrl = gitUrl;

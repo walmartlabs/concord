@@ -23,12 +23,6 @@ public final class Permissions {
     public static final String SECRET_READ_INSTANCE = SECRET_PREFIX + ":read:%s";
     public static final String SECRET_DELETE_INSTANCE = SECRET_PREFIX + ":delete:%s";
 
-    public static final String REPOSITORY_PREFIX = "repository";
-    public static final String REPOSITORY_CREATE_NEW = REPOSITORY_PREFIX + ":create";
-    public static final String REPOSITORY_READ_INSTANCE = REPOSITORY_PREFIX + ":read:%s";
-    public static final String REPOSITORY_UPDATE_INSTANCE = REPOSITORY_PREFIX + ":update:%s";
-    public static final String REPOSITORY_DELETE_INSTANCE = REPOSITORY_PREFIX + ":delete:%s";
-    
     public static final String USER_CREATE_NEW = "user:create";
     public static final String USER_UPDATE_ANY = "user:update";
     public static final String USER_DELETE_ANY = "user:delete";

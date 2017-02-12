@@ -23,7 +23,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
     @Before
     public void setUp() throws Exception {
-        repositoryDao = new RepositoryDao(getConfiguration(), mock(UserPermissionCleaner.class));
+        repositoryDao = new RepositoryDao(getConfiguration());
         projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
         templateDao = new TemplateDao(getConfiguration(), mock(UserPermissionCleaner.class));
     }
