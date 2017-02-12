@@ -19,10 +19,6 @@ public class UpdateRepositoryRequest implements Serializable {
     @ConcordKey
     private String secret;
 
-    public UpdateRepositoryRequest(String url) {
-        this(url, null, null);
-    }
-
     @JsonCreator
     public UpdateRepositoryRequest(@JsonProperty("url") String url,
                                    @JsonProperty("branch") String branch,
