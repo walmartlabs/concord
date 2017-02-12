@@ -35,10 +35,6 @@ public abstract class AbstractDaoTest {
         m.invoke(dataSource);
     }
 
-    protected DataSource getDataSource() {
-        return dataSource;
-    }
-
     protected Configuration getConfiguration() {
         return cfg;
     }

@@ -6,7 +6,10 @@ import com.google.common.io.ByteStreams;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.function.Consumer;
 
 public class KeyPair implements Secret {

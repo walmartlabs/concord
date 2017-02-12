@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.api.repository;
+package com.walmartlabs.concord.server.api.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,14 +12,11 @@ import java.io.Serializable;
 public class CreateRepositoryRequest implements Serializable {
 
     @NotNull
-    @ConcordId
-    private final String projectId;
-
-    @NotNull
     @ConcordKey
     private final String name;
 
     @NotNull
+    @Size(max = 2048)
     private final String url;
 
     @Size(max = 255)
@@ -28,26 +25,16 @@ public class CreateRepositoryRequest implements Serializable {
     @ConcordKey
     private final String secret;
 
-    public CreateRepositoryRequest(String projectId, String name, String url) {
-        this(projectId, name, url, null, null);
-    }
-
     @JsonCreator
-    public CreateRepositoryRequest(@JsonProperty("projectId") String projectId,
-                                   @JsonProperty("name") String name,
+    public CreateRepositoryRequest(@JsonProperty("name") String name,
                                    @JsonProperty("url") String url,
                                    @JsonProperty("branch") String branch,
                                    @JsonProperty("secret") String secret) {
 
-        this.projectId = projectId;
         this.name = name;
         this.url = url;
         this.branch = branch;
         this.secret = secret;
-    }
-
-    public String getProjectId() {
-        return projectId;
     }
 
     public String getName() {
@@ -69,8 +56,7 @@ public class CreateRepositoryRequest implements Serializable {
     @Override
     public String toString() {
         return "CreateRepositoryRequest{" +
-                "projectId='" + projectId + '\'' +
-                ", name='" + name + '\'' +
+                "name='" + name + '\'' +
                 ", url='" + url + '\'' +
                 ", branch='" + branch + '\'' +
                 ", secret='" + secret + '\'' +

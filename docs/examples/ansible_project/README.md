@@ -34,10 +34,11 @@ This example assumes that the `ansible` template is already uploaded to the serv
 
 ### 1. Create a new Concord project
 
-We are going to use the `ansible` project template. It will automatically add the
-boilerplate - a workflow process definition to run our playbook and necessary runtime dependencies.
+We are going to create a new project using the `ansible` project template. The `ansible` template
+will automatically add the necessary boilerplate - a workflow process definition to run our playbook
+and necessary runtime dependencies.
 
-Please refer to [the templates document](../templates.md) to find out how to upload a template.
+Please refer to [the templates document](../templates.md) to find out how to upload a custom template.
 
 ```
 curl -v \
@@ -61,17 +62,12 @@ Use `mySecret` as a name of the key pair, it will be used on the next step.
 
 ### 3. Add a repository
 
-The `projectId` value must be substituted with a real one, returned on the project creation step.
-
-Key-based authentication must be configured for the remote GIT server and the current user's key
-must be added to the repository's key list.
-
 ```
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "projectId": "6e5b34b0-db10-11e6-b477-eb56c9b52eaf", "name": "myRepo", "url": "git@github.com:my/repo.git", "secret": "mySecret" }' \
-http://localhost:8001/api/v1/repository
+-d '{ "name": "myRepo", "url": "git@github.com:my/repo.git", "secret": "mySecret" }' \
+http://localhost:8001/api/v1/project/myProject/repository
 ```
 
 The `secret` parameters is the name of the key created on the step 2.
@@ -83,7 +79,7 @@ The `secret` parameters is the name of the key created on the step 2.
 }
 ```
 
-### 5. Add a new user (optional)
+### 4. Add a new user (optional)
 
 ```
 curl -v \
@@ -102,7 +98,7 @@ Check [the permissions description](../security.md#permissions) in the documenta
 }
 ```
 
-### 6. Create an API key (optional)
+### 5. Create an API key (optional)
 
 Use the `id` value of the user created in the previous step.
 
@@ -123,7 +119,7 @@ http://localhost:8001/api/v1/apikey
 
 The `key` value can be used for further access to the API, e.g. to start a process.
 
-### 7. Start a process
+### 6. Start a process
 
 Create the `inventory.ini` file:
 

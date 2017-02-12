@@ -59,7 +59,7 @@ public class UserPermissionCleaner extends AbstractDao {
         log.debug("remove ['{}'] -> removed {} '{}' permission(s)", name, i, prefix);
     }
 
-    private static final String escape(String s) {
+    private static String escape(String s) {
         if (s == null) {
             return null;
         }

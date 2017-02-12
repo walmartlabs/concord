@@ -1,37 +1,41 @@
-package com.walmartlabs.concord.server.api.repository;
+package com.walmartlabs.concord.server.api.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.api.IdName;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RepositoryEntry implements Serializable {
 
-    private final String id;
+    @NotNull
+    @ConcordKey
     private final String name;
+
+    @NotNull
+    @Size(max = 2048)
     private final String url;
+
+    @Size(max = 255)
     private final String branch;
+
     private final IdName secret;
 
     @JsonCreator
-    public RepositoryEntry(@JsonProperty("id") String id,
-                           @JsonProperty("name") String name,
+    public RepositoryEntry(@JsonProperty("name") String name,
                            @JsonProperty("url") String url,
                            @JsonProperty("branch") String branch,
                            @JsonProperty("secret") IdName secret) {
 
-        this.id = id;
         this.name = name;
         this.url = url;
         this.branch = branch;
         this.secret = secret;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public String getName() {
@@ -53,7 +57,6 @@ public class RepositoryEntry implements Serializable {
     @Override
     public String toString() {
         return "RepositoryEntry{" +
-                "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", url='" + url + '\'' +
                 ", branch='" + branch + '\'' +

@@ -6,9 +6,8 @@ import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.repository.CreateRepositoryRequest;
-import com.walmartlabs.concord.server.api.repository.CreateRepositoryResponse;
-import com.walmartlabs.concord.server.api.repository.RepositoryResource;
+import com.walmartlabs.concord.server.api.project.CreateRepositoryRequest;
+import com.walmartlabs.concord.server.api.project.CreateRepositoryResponse;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
@@ -65,7 +64,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*" + greeting + ".*", ab);
     }
 
-    protected ProcessStatusResponse doTest(String projectName, String[] projectTemplates,
+    protected ProcessStatusResponse doTest(String projectName, Set<String> projectTemplates,
                                            String userName, Set<String> permissions,
                                            String repoName, String repoUrl,
                                            String entryPoint, Map<String, Object> args) throws InterruptedException, IOException {
@@ -92,8 +91,7 @@ public class ProjectIT extends AbstractServerIT {
 
         setApiKey(apiKey);
 
-        RepositoryResource repositoryResource = proxy(RepositoryResource.class);
-        CreateRepositoryResponse crr = repositoryResource.create(new CreateRepositoryRequest(projectId, repoName, repoUrl));
+        CreateRepositoryResponse crr = projectResource.createRepository(projectName, new CreateRepositoryRequest(repoName, repoUrl, null, null));
         assertTrue(crr.isOk());
 
         // ---

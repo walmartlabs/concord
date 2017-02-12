@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.repository;
+package com.walmartlabs.concord.server.project;
 
 import com.google.common.base.Throwables;
 import com.jcraft.jsch.JSch;
@@ -7,11 +7,9 @@ import com.jcraft.jsch.Session;
 import com.walmartlabs.concord.server.security.secret.KeyPair;
 import com.walmartlabs.concord.server.security.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.UsernamePassword;
-import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.CredentialItem.Password;

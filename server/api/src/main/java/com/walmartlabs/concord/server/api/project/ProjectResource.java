@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.api.project;
 
-import com.walmartlabs.concord.common.validation.ConcordId;
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -27,15 +27,44 @@ public interface ProjectResource {
     CreateProjectResponse create(@ApiParam @Valid CreateProjectRequest request);
 
     /**
+     * Add a new repository to a project.
+     *
+     * @param projectName
+     * @param request
+     * @return
+     */
+    @POST
+    @Path("/{projectName}/repository")
+    @ApiOperation("Create a new repository")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    CreateRepositoryResponse createRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                              @ApiParam @Valid CreateRepositoryRequest request);
+
+    /**
      * Returns an existing project.
-     * @param id
+     *
+     * @param projectName
      * @return
      */
     @GET
     @ApiOperation("Get an existing project")
-    @Path("/{id}")
+    @Path("/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
-    ProjectEntry get(@PathParam("id") @ConcordId String id);
+    ProjectEntry get(@ApiParam @PathParam("projectName") @ConcordKey String projectName);
+
+    /**
+     * Returns an existing repository.
+     *
+     * @param projectName
+     * @param repositoryName
+     * @return
+     */
+    @GET
+    @ApiOperation("Get an existing repository")
+    @Path("/{projectName}/repository/{repositoryName}")
+    RepositoryEntry getRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                  @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
 
     /**
      * List projects.
@@ -51,29 +80,75 @@ public interface ProjectResource {
                             @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc);
 
     /**
+     * List repositories.
+     *
+     * @param projectName
+     * @param sortBy
+     * @param asc
+     * @return
+     */
+    @GET
+    @ApiOperation("List repositories")
+    @Path("/{projectName}/repository")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<RepositoryEntry> listRepositories(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                           @ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy,
+                                           @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc);
+
+    /**
      * Updates an existing project.
      *
-     * @param id
+     * @param projectName
      * @param request
      * @return
      */
     @PUT
     @ApiOperation("Update an existing project")
-    @Path("/{id}")
+    @Path("/{projectName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    UpdateProjectResponse update(@ApiParam @PathParam("id") @ConcordId String id,
+    UpdateProjectResponse update(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                  @ApiParam @Valid UpdateProjectRequest request);
+
+    /**
+     * Updates an existing repository.
+     *
+     * @param projectName
+     * @param repositoryName
+     * @return
+     */
+    @PUT
+    @ApiOperation("Update an existing repository")
+    @Path("/{projectName}/repository/{repositoryName}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    UpdateRepositoryResponse updateRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                              @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName,
+                                              @ApiParam @Valid UpdateRepositoryRequest request);
 
     /**
      * Removes a project and all it's resources.
      *
-     * @param id
+     * @param projectName
      * @return
      */
     @DELETE
     @ApiOperation("Delete an existing project")
-    @Path("/{id}")
+    @Path("/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteProjectResponse delete(@ApiParam @PathParam("id") @ConcordId String id);
+    DeleteProjectResponse delete(@ApiParam @PathParam("projectName") @ConcordKey String projectName);
+
+    /**
+     * Removes a repository.
+     *
+     * @param projectName
+     * @param repositoryName
+     * @return
+     */
+    @DELETE
+    @ApiOperation("Delete an existing repository")
+    @Path("/{projectName}/repository/{repositoryName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    DeleteRepositoryResponse deleteRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                              @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
 }

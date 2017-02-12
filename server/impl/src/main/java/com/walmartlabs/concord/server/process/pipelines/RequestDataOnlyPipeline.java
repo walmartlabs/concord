@@ -4,7 +4,7 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.inventory.InventoryProcessor;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
-import com.walmartlabs.concord.server.repository.RepositoryProcessor;
+import com.walmartlabs.concord.server.project.RepositoryProcessor;
 import com.walmartlabs.concord.server.template.TemplateProcessor;
 
 import javax.inject.Inject;

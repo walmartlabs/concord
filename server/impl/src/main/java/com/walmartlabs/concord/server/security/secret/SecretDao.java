@@ -48,20 +48,7 @@ public class SecretDao extends AbstractDao {
                             r.get(SECRETS.SECRET_NAME),
                             SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
                             r.get(SECRETS.SECRET_DATA)));
-
-            if (e == null) {
-                log.info("get ['{}'] -> not found", id);
-                return null;
-            }
-
-            log.info("get ['{}'] -> found: {}", id, e.getName());
             return e;
-        }
-    }
-
-    public String getName(String id) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return getName(create, id);
         }
     }
 
@@ -105,15 +92,6 @@ public class SecretDao extends AbstractDao {
                     .execute();
         });
         log.info("delete ['{}'] -> done", id);
-    }
-
-    public boolean exists(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            int cnt = create.fetchCount(create.selectFrom(SECRETS)
-                    .where(SECRETS.SECRET_NAME.eq(name)));
-
-            return cnt > 0;
-        }
     }
 
     private static String getName(DSLContext create, String id) {

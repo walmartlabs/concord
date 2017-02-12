@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.project.*;
-import com.walmartlabs.concord.server.api.repository.*;
 import com.walmartlabs.concord.server.api.security.secret.*;
 import com.walmartlabs.concord.server.api.template.CreateTemplateResponse;
 import com.walmartlabs.concord.server.api.template.DeleteTemplateResponse;
@@ -11,6 +10,7 @@ import org.junit.Test;
 
 import javax.ws.rs.BadRequestException;
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -45,23 +45,21 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project#" + System.currentTimeMillis();
-        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, new String[]{templateName}));
+        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName)));
         assertTrue(cpr.isOk());
 
-        String id = cpr.getId();
-
-        ProjectEntry e1 = projectResource.get(id);
+        ProjectEntry e1 = projectResource.get(projectName);
         assertNotNull(e1);
 
-        UpdateProjectResponse upr = projectResource.update(id, new UpdateProjectRequest(new String[0]));
+        UpdateProjectResponse upr = projectResource.update(projectName, new UpdateProjectRequest(null));
         assertTrue(upr.isOk());
 
         List<ProjectEntry> l = projectResource.list(null, false);
-        ProjectEntry e2 = findProject(l, id);
+        ProjectEntry e2 = findProject(l, cpr.getId());
         assertNotNull(e2);
-        assertEquals(0, e2.getTemplates().length);
+        assertEquals(0, e2.getTemplates().size());
 
-        DeleteProjectResponse dpr = projectResource.delete(id);
+        DeleteProjectResponse dpr = projectResource.delete(projectName);
         assertTrue(dpr.isOk());
     }
 
@@ -69,31 +67,47 @@ public class CrudIT extends AbstractServerIT {
     public void testRepository() throws Exception {
         String projectName = "project#" + System.currentTimeMillis();
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName));
-
-        String projectId = cpr.getId();
+        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, null));
 
         // ---
 
         String repoName = "repo#" + System.currentTimeMillis();
         String branch = "branch#" + System.currentTimeMillis();
-        RepositoryResource repositoryResource = proxy(RepositoryResource.class);
-        CreateRepositoryResponse crr = repositoryResource.create(new CreateRepositoryRequest(projectId, repoName, "n/a", branch, null));
+        CreateRepositoryResponse crr = projectResource.createRepository(projectName, new CreateRepositoryRequest(repoName, "n/a", branch, null));
         assertTrue(crr.isOk());
 
-        String repoId = crr.getId();
-
-        UpdateRepositoryResponse urr = repositoryResource.update(repoId, new UpdateRepositoryRequest("something", branch, null));
+        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, null));
         assertTrue(urr.isOk());
 
-        List<RepositoryEntry> l = repositoryResource.list(null, true);
-        RepositoryEntry e = findRepository(l, repoId);
+        // ---
+
+        List<RepositoryEntry> l = projectResource.listRepositories(projectName, null, true);
+        RepositoryEntry e = findRepository(l, repoName);
         assertNotNull(e);
         assertEquals("something", e.getUrl());
         assertEquals(branch, e.getBranch());
 
-        DeleteRepositoryResponse drr = repositoryResource.delete(repoId);
+        DeleteRepositoryResponse drr = projectResource.deleteRepository(projectName, repoName);
         assertTrue(drr.isOk());
+    }
+
+    @Test
+    public void testNonUniqueRepositoryNames() throws Exception {
+        String projectName1 = "project1#" + System.currentTimeMillis();
+        String projectName2 = "project2#" + System.currentTimeMillis();
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        CreateProjectResponse cpr1 = projectResource.create(new CreateProjectRequest(projectName1, null));
+        CreateProjectResponse cpr2 = projectResource.create(new CreateProjectRequest(projectName2, null));
+
+        // ---
+
+        String repoName = "repo#" + System.currentTimeMillis();
+        CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1, new CreateRepositoryRequest(repoName, "n/a", null, null));
+        assertTrue(crr1.isOk());
+
+        CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2, new CreateRepositoryRequest(repoName, "n/a", null, null));
+        assertTrue(crr2.isOk());
     }
 
     @Test
@@ -111,7 +125,7 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        PublicKeyResponse pkr2 = secretResource.getPublicKey(id);
+        PublicKeyResponse pkr2 = secretResource.getPublicKey(keyName);
         assertEquals(pkr.getPublicKey(), pkr2.getPublicKey());
 
         // ---
@@ -123,12 +137,12 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        secretResource.delete(id);
+        secretResource.delete(keyName);
 
         // ---
 
         try {
-            secretResource.getPublicKey(id);
+            secretResource.getPublicKey(keyName);
             fail("should fail");
         } catch (BadRequestException e) {
         }
@@ -141,7 +155,7 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        UploadSecretResponse usr = secretResource.addUsernamePassword(keyName, new UsernamePasswordRequest("something", new char[] { 'a', 'b', 'c'}));
+        UploadSecretResponse usr = secretResource.addUsernamePassword(keyName, new UsernamePasswordRequest("something", new char[]{'a', 'b', 'c'}));
         assertTrue(usr.isOk());
 
         // ---
@@ -157,8 +171,8 @@ public class CrudIT extends AbstractServerIT {
         return l.stream().filter(e -> id.equals(e.getId())).findAny().get();
     }
 
-    private static RepositoryEntry findRepository(List<RepositoryEntry> l, String id) {
-        return l.stream().filter(e -> id.equals(e.getId())).findAny().get();
+    private static RepositoryEntry findRepository(List<RepositoryEntry> l, String name) {
+        return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
 
     private static SecretEntry findSecret(List<SecretEntry> l, String id) {

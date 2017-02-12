@@ -41,9 +41,9 @@ public interface SecretResource {
 
     @GET
     @ApiOperation("Get an existing public key")
-    @Path("/{id}/public")
+    @Path("/{secretName}/public")
     @Produces(MediaType.APPLICATION_JSON)
-    PublicKeyResponse getPublicKey(@PathParam("id") String id);
+    PublicKeyResponse getPublicKey(@ApiParam @PathParam("secretName") @ConcordKey String secretName);
 
     @GET
     @ApiOperation("List secrets")
@@ -53,7 +53,7 @@ public interface SecretResource {
 
     @DELETE
     @ApiOperation("Delete an existing secret")
-    @Path("/{id}")
+    @Path("/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteSecretResponse delete(@PathParam("id") @ConcordId String id);
+    DeleteSecretResponse delete(@ApiParam @PathParam("secretName") @ConcordKey String secretName);
 }

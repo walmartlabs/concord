@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.security.apikey;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
 
 public class ApiKey implements AuthenticationToken {
@@ -17,7 +18,7 @@ public class ApiKey implements AuthenticationToken {
         }
 
         if (k == null) {
-            throw new SecurityException("API token not found");
+            throw new UnauthorizedException("API token not found");
         }
 
         return k.getKey();

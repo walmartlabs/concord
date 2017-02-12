@@ -185,14 +185,11 @@
 
     <changeSet id="1700" author="ibodrov@gmail.com">
         <createTable tableName="REPOSITORIES">
-            <column name="REPO_ID" type="varchar(36)" remarks="Unique repository ID">
+            <column name="PROJECT_ID" type="varchar(36)" remarks="ID of a project that owns this repository">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="PROJECT_ID" type="varchar(36)" remarks="ID of a project that owns this repository">
-                <constraints nullable="false"/>
-            </column>
             <column name="REPO_NAME" type="varchar(128)" remarks="Name (key) of a repository">
-                <constraints unique="true" nullable="false"/>
+                <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="REPO_URL" type="varchar(2048)" remarks="URL of a repository">
                 <constraints nullable="false"/>
@@ -202,12 +199,6 @@
                 <constraints nullable="true"/>
             </column>
         </createTable>
-    </changeSet>
-
-    <changeSet id="1710" author="ibodrov@gmail.com">
-        <createIndex tableName="REPOSITORIES" indexName="IDX_REPO_NAME">
-            <column name="REPO_NAME"/>
-        </createIndex>
     </changeSet>
 
     <changeSet id="1720" author="ibodrov@gmail.com">

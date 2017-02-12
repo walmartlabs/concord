@@ -8,6 +8,7 @@ import com.walmartlabs.concord.server.security.PasswordManager;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -107,14 +108,13 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     @Override
-    public PublicKeyResponse getPublicKey(String id) {
-        assertPermissions(id, Permissions.SECRET_READ_INSTANCE,
+    public PublicKeyResponse getPublicKey(String secretName) {
+        assertPermissions(secretName, Permissions.SECRET_READ_INSTANCE,
                 "The current user does not have permissions to access the specified secret");
 
+        String id = assertSecretId(secretName);
+
         SecretDataEntry s = secretDao.get(id);
-        if (s == null) {
-            throw new ValidationErrorsException("Key pair not found: " + id);
-        }
         if (s.getType() != SecretType.KEY_PAIR) {
             throw new ValidationErrorsException("The specified secret is not a key pair");
         }
@@ -135,10 +135,11 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
     @Override
     @Validate
-    public DeleteSecretResponse delete(String id) {
-        assertPermissions(id, Permissions.SECRET_DELETE_INSTANCE,
+    public DeleteSecretResponse delete(String secretName) {
+        assertPermissions(secretName, Permissions.SECRET_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified secret");
 
+        String id = assertSecretId(secretName);
         secretDao.delete(id);
         return new DeleteSecretResponse();
     }
@@ -149,15 +150,18 @@ public class SecretResourceImpl implements SecretResource, Resource {
         }
     }
 
-    private void assertPermissions(String id, String wildcard, String message) {
-        String name = secretDao.getName(id);
-        if (name == null) {
-            throw new ValidationErrorsException("Secret not found: " + id);
+    private String assertSecretId(String name) {
+        String id = secretDao.getId(name);
+        if (id == null) {
+            throw new ValidationErrorsException("Secret not found: " + name);
         }
+        return id;
+    }
 
+    private void assertPermissions(String name, String wildcard, String message) {
         Subject subject = SecurityUtils.getSubject();
         if (!subject.isPermitted(String.format(wildcard, name))) {
-            throw new SecurityException(message);
+            throw new UnauthorizedException(message);
         }
     }
 

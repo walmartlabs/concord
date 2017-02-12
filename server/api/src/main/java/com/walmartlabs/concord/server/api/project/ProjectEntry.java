@@ -1,19 +1,30 @@
 package com.walmartlabs.concord.server.api.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.common.validation.ConcordKey;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.Set;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProjectEntry implements Serializable {
 
     private final String id;
+
+    @NotNull
+    @ConcordKey
     private final String name;
-    private final String[] templates;
+
+    private final Set<String> templates;
 
     @JsonCreator
-    public ProjectEntry(@JsonProperty("id") String id, @JsonProperty("name") String name, @JsonProperty("templates") String[] templates) {
+    public ProjectEntry(@JsonProperty("id") String id,
+                        @JsonProperty("name") String name,
+                        @JsonProperty("templates") Set<String> templates) {
+
         this.id = id;
         this.name = name;
         this.templates = templates;
@@ -27,7 +38,7 @@ public class ProjectEntry implements Serializable {
         return name;
     }
 
-    public String[] getTemplates() {
+    public Set<String> getTemplates() {
         return templates;
     }
 
@@ -36,7 +47,7 @@ public class ProjectEntry implements Serializable {
         return "ProjectEntry{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", templates=" + Arrays.toString(templates) +
+                ", templates=" + templates +
                 '}';
     }
 }

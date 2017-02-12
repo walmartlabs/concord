@@ -25,13 +25,13 @@ public class ValidationIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         try {
-            CreateProjectRequest req = new CreateProjectRequest("#123_123");
+            CreateProjectRequest req = new CreateProjectRequest("#123_123", null);
             projectResource.create(req);
             fail("Should fail");
         } catch (BadRequestException e) {
         }
 
-        CreateProjectRequest req = new CreateProjectRequest("aProperName#" + System.currentTimeMillis());
+        CreateProjectRequest req = new CreateProjectRequest("aProperName#" + System.currentTimeMillis(), null);
         projectResource.create(req);
     }
 }

@@ -43,6 +43,7 @@ public class Payload {
         return key.cast(headers.get(key.name()));
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getHeader(String key) {
         return (T) headers.get(key);
     }

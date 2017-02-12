@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectTemplates.PROJECT_TEMPLATES;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
@@ -40,67 +38,49 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    public String getName(String id) {
+    public ProjectEntry getByName(String name) {
         try (DSLContext create = DSL.using(cfg)) {
-            return getName(create, id);
+            return foldOne(selectProjectEntry(create)
+                    .where(PROJECTS.PROJECT_NAME.eq(name)).fetch());
         }
     }
 
-    public ProjectEntry get(String id) {
-        try (DSLContext create = DSL.using(cfg)) {
-            SelectConditionStep<Record3<String, String, String>> query = selectProjectEntry(create)
-                    .where(PROJECTS.PROJECT_ID.eq(id));
-
-            List<ProjectEntry> l = fold(query.fetch());
-            if (l.isEmpty()) {
-                return null;
-            }
-            if (l.size() > 1) {
-                throw new IllegalStateException("Unexpected result, got " + l.size() + " records");
-            }
-            return l.get(0);
-        }
+    public void insert(String id, String name, Collection<String> templateIds) {
+        tx(tx -> {
+            insert(tx, id, name, templateIds);
+        });
     }
 
-    public void insert(String id, String name, String... templateIds) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
+    public void insert(DSLContext create, String id, String name, Collection<String> templateIds) {
+        create.insertInto(PROJECTS)
+                .columns(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME)
+                .values(id, name)
+                .execute();
 
-            create.insertInto(PROJECTS)
-                    .columns(PROJECTS.PROJECT_ID, PROJECTS.PROJECT_NAME)
-                    .values(id, name)
-                    .execute();
-
-            insertTemplates(create, id, templateIds);
-        });
-        log.info("insert ['{}', '{}', {}] -> done", id, name, templateIds);
+        insertTemplates(create, id, templateIds);
     }
 
-    public void update(String id, String... templateIds) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
+    public void update(DSLContext create, String id, Collection<String> templateIds) {
+        create.deleteFrom(PROJECT_TEMPLATES)
+                .where(PROJECT_TEMPLATES.PROJECT_ID.eq(id))
+                .execute();
 
-            create.deleteFrom(PROJECT_TEMPLATES)
-                    .where(PROJECT_TEMPLATES.PROJECT_ID.eq(id))
-                    .execute();
-
-            insertTemplates(create, id, templateIds);
-        });
-        log.info("update ['{}', {}] -> done", id, templateIds);
+        insertTemplates(create, id, templateIds);
     }
 
     public void delete(String id) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-
-            String name = getName(create, id);
-            permissionCleaner.onProjectRemoval(create, id, name);
-
-            create.deleteFrom(PROJECTS)
-                    .where(PROJECTS.PROJECT_ID.eq(id))
-                    .execute();
+        tx(tx -> {
+            delete(tx, id);
         });
-        log.info("delete ['{}'] -> done", id);
+    }
+
+    public void delete(DSLContext create, String id) {
+        String name = getName(create, id);
+        permissionCleaner.onProjectRemoval(create, id, name);
+
+        create.deleteFrom(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(id))
+                .execute();
     }
 
     public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
@@ -133,17 +113,19 @@ public class ProjectDao extends AbstractDao {
                 .fetchOne(PROJECTS.PROJECT_NAME);
     }
 
-    private static void insertTemplates(DSLContext create, String projectId, String... templateIds) {
-        if (templateIds == null || templateIds.length == 0) {
+    private static void insertTemplates(DSLContext create, String projectId, Collection<String> templateIds) {
+        if (templateIds == null || templateIds.size() == 0) {
             return;
         }
 
         BatchBindStep b = create.batch(create.insertInto(PROJECT_TEMPLATES)
                 .columns(PROJECT_TEMPLATES.PROJECT_ID, PROJECT_TEMPLATES.TEMPLATE_ID)
                 .values((String) null, null));
+
         for (String tId : templateIds) {
             b.bind(projectId, tId);
         }
+
         b.execute();
     }
 
@@ -156,7 +138,7 @@ public class ProjectDao extends AbstractDao {
 
         String lastId = null;
         String lastName = null;
-        List<String> lastTemplates = null;
+        Set<String> lastTemplates = null;
 
         for (Record3<String, String, String> r : raw) {
             String rId = r.get(PROJECTS.PROJECT_ID);
@@ -170,7 +152,7 @@ public class ProjectDao extends AbstractDao {
 
                 lastId = rId;
                 lastName = rName;
-                lastTemplates = new ArrayList<>();
+                lastTemplates = new HashSet<>();
             }
 
             if (rTemplate != null) {
@@ -182,9 +164,33 @@ public class ProjectDao extends AbstractDao {
         return result;
     }
 
-    private static void add(List<ProjectEntry> l, String id, String name, List<String> templates) {
-        Collections.sort(templates);
-        l.add(new ProjectEntry(id, name, templates.toArray(new String[templates.size()])));
+    private static ProjectEntry foldOne(Result<Record3<String, String, String>> raw) {
+        if (raw.isEmpty()) {
+            return null;
+        }
+
+        String id = null;
+        String name = null;
+        Set<String> templates = null;
+
+        for (Record3<String, String, String> r : raw) {
+            id = r.get(PROJECTS.PROJECT_ID);
+            name = r.get(PROJECTS.PROJECT_NAME);
+            String template = r.get(TEMPLATES.TEMPLATE_NAME);
+
+            if (template != null) {
+                if (templates == null) {
+                    templates = new HashSet<>();
+                }
+                templates.add(template);
+            }
+        }
+
+        return new ProjectEntry(id, name, templates);
+    }
+
+    private static void add(List<ProjectEntry> l, String id, String name, Set<String> templates) {
+        l.add(new ProjectEntry(id, name, templates));
     }
 
     private static SelectOnConditionStep<Record3<String, String, String>> selectProjectEntry(DSLContext create) {

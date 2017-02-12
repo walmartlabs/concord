@@ -4,7 +4,7 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.repository.RepositoryDao;
+import com.walmartlabs.concord.server.project.RepositoryDao;
 import com.walmartlabs.concord.server.security.User;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
 import org.junit.Test;
@@ -14,9 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class UserPermissionCleanerTest extends AbstractDaoTest {
 
@@ -56,17 +54,15 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         String projectId = UUID.randomUUID().toString();
         String projectName = "project#" + System.currentTimeMillis();
-        projectDao.insert(projectId, projectName);
+        projectDao.insert(projectId, projectName, null);
 
         // ---
 
-        String repoId1 = UUID.randomUUID().toString();
         String repoName1 = "repo1#" + System.currentTimeMillis();
-        repositoryDao.insert(projectId, repoId1, repoName1, "n/a", null, null);
+        repositoryDao.insert(projectId, repoName1, "n/a", null, null);
 
-        String repoId2 = UUID.randomUUID().toString();
         String repoName2 = "repo2#" + System.currentTimeMillis();
-        repositoryDao.insert(projectId, repoId2, repoName2, "n/a", null, null);
+        repositoryDao.insert(projectId, repoName2, "n/a", null, null);
 
         // ---
 

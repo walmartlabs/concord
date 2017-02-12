@@ -1,8 +1,8 @@
-package com.walmartlabs.concord.server.api.repository;
+package com.walmartlabs.concord.server.api.project;
 
 import java.io.Serializable;
 
-public class DeleteRepositoryResponse implements Serializable {
+public class UpdateRepositoryResponse implements Serializable {
 
     private final boolean ok = true;
 
@@ -12,7 +12,7 @@ public class DeleteRepositoryResponse implements Serializable {
 
     @Override
     public String toString() {
-        return "DeleteRepositoryResponse{" +
+        return "UpdateRepositoryResponse{" +
                 "ok=" + ok +
                 '}';
     }

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.api.repository;
+package com.walmartlabs.concord.server.api.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

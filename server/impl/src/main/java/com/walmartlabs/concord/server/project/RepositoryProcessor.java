@@ -1,7 +1,7 @@
-package com.walmartlabs.concord.server.repository;
+package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.api.repository.RepositoryEntry;
+import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -53,7 +53,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         // TODO remove when the support for default repositories will be implemented?
         String repoName = entryPoint[0];
 
-        RepositoryEntry repo = repositoryDao.getByName(repoName);
+        RepositoryEntry repo = repositoryDao.getByNameInProject(projectId, repoName);
         if (repo == null) {
             return payload;
         }

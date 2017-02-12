@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -59,14 +60,14 @@ public class TemplateDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
         String[] projectTemplateIds = {templateId};
 
-        projectDao.insert(projectId, projectName, projectTemplateIds);
+        projectDao.insert(projectId, projectName, Arrays.asList(projectTemplateIds));
 
         // ---
 
         templateDao.delete(templateId);
 
         assertNull(templateDao.get(templateId));
-        assertEquals(projectName, projectDao.getName(projectId));
+        assertEquals(projectId, projectDao.getId(projectName));
         Collection<String> ids = templateDao.getProjectTemplateIds(projectId);
         assertTrue(ids.isEmpty());
     }
