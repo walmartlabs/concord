@@ -34,6 +34,7 @@ Creates a new project with specified parameters.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "ok": true
@@ -75,6 +76,7 @@ Updates parameters of an existing project.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "ok": true
@@ -95,6 +97,7 @@ Removes a project and its resources.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "ok": true
@@ -117,6 +120,7 @@ Lists existing projects.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     [
       { "id": "...", "name": "...", "templates": ["..."] },
@@ -148,6 +152,7 @@ Adds a new repository for a project.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "ok": true
@@ -177,6 +182,7 @@ Updates parameters of an existing repository.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "ok": true
@@ -197,6 +203,7 @@ Removes a repository.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "ok": true
@@ -219,6 +226,7 @@ Lists existing repositories in a project.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     [
       { "name": "...", "url": "...", "branch": "...", "secret": { "id": "...", "name": "..."} },

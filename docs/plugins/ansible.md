@@ -4,6 +4,20 @@
 
 TBD.
 
+## Using dynamic inventories
+
+To use a dynamic inventory script, upload it as a `dynamicInventory` value in the process call:
+
+```
+curl -v \
+-H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+-F request=@request.json \
+-F dynamicInventory=@inventory.py \
+http://localhost:8001/api/v1/process/myProject:myRepo
+```
+
+It will be marked as executable and passed directly to `ansible-playbook` command.
+
 ## Using SSH keys
 
 The Ansible plugin supports calling a playbook with a specific SSH key.

@@ -13,6 +13,7 @@ Generates a new SSH key pair. A public key will be returned in the response.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "id": "...",
@@ -38,6 +39,7 @@ Upload an existing SSH key pair.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "id": "...",
@@ -59,6 +61,7 @@ Returns a public key from an existing key pair.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "id": "...",
@@ -87,6 +90,7 @@ Adds a new secret containing username and password.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "id": "...",
@@ -108,6 +112,7 @@ Removes an existing secret.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     {
       "ok": true
@@ -130,6 +135,7 @@ Lists existing secrets.
     ```
     Content-Type: application/json
     ```
+    
     ```json
     [
       { "id": "...", "name": "...", "type": "..." },
