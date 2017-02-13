@@ -30,7 +30,6 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
         String templateName = "template#" + System.currentTimeMillis();
         String projectName = "project#" + System.currentTimeMillis();
         String repoSecretName = "repoSecret#" + System.currentTimeMillis();
-        String machineSecretName = "machineSecret#" + System.currentTimeMillis();
         String repoName = "repo#" + System.currentTimeMillis();
         String repoUrl = "https://gecgithub01.walmart.com/devtools/concord-ansible-example.git";
         String repoBranch = "it";
@@ -44,7 +43,7 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
         // ---
 
         SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.addUsernamePassword(secretName, new UsernamePasswordRequest("username", "password".toCharArray()));
+        secretResource.addUsernamePassword(repoSecretName, new UsernamePasswordRequest("username", "password".toCharArray()));
 
         // ---
 
