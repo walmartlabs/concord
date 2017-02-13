@@ -60,19 +60,31 @@ public class RunPlaybookTask2 implements Task {
         }
 
         int code = p.waitFor();
-        if (code == SUCCESS_EXIT_CODE) {
-            log.debug("execution -> done");
-        } else {
+        log.debug("execution -> done, code {}", code);
+
+        if (code != SUCCESS_EXIT_CODE) {
             log.warn("Playbook is finished with code {}", code);
-            log.debug("execution -> finished with exit code {}", code);
             throw new BpmnError("ansibleError", new IllegalStateException("Process finished with with exit code " + code));
         }
     }
 
     private static String getInventoryPath(String payloadPath) throws IOException {
+        // try a static inventory file first
         Path p = Paths.get(payloadPath, AnsibleConstants.INVENTORY_FILE_NAME);
         if (!Files.exists(p)) {
-            throw new IOException("Inventory file not found: " + p.toAbsolutePath());
+            // try a dynamic inventory script
+            p = Paths.get(payloadPath, AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME);
+            if (!Files.exists(p)) {
+                // we can't continue without an inventory
+                throw new IOException("Inventory file not found: " + p.toAbsolutePath());
+            }
+
+            // ensure that a dynamic inventory script has the executable bit set
+            Set<PosixFilePermission> perms = new HashSet<>();
+            perms.add(PosixFilePermission.OWNER_READ);
+            perms.add(PosixFilePermission.OWNER_EXECUTE);
+            Files.setPosixFilePermissions(p, perms);
+            log.debug("getInventoryPath ['{}'] -> dynamic inventory", payloadPath);
         }
         return p.toAbsolutePath().toString();
     }
@@ -91,7 +103,7 @@ public class RunPlaybookTask2 implements Task {
             out.write(template.getBytes());
         }
 
-        log.debug("createCfgFile ['{}'] -> done, created {}", tmpFile);
+        log.debug("createCfgFile -> done, created {}", tmpFile);
         return tmpFile.toAbsolutePath().toString();
     }
 
