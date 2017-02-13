@@ -10,8 +10,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -62,15 +60,6 @@ public class TemplateResourceImpl implements TemplateResource, Resource {
         if (!templateDao.existsId(id)) {
             throw new ValidationErrorsException("Template not found: " + id);
         }
-
-        try {
-            if (data.available() <= 0) {
-                throw new ValidationErrorsException("Template is empty");
-            }
-        } catch (IOException e) {
-            throw new WebApplicationException(e);
-        }
-
         templateDao.update(id, data);
         return new UpdateTemplateResponse();
     }
