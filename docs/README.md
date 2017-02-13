@@ -2,7 +2,7 @@
 
 - [Quick start](./quickstart.md)
 - [Examples](examples)
-- [API](./api.md)
+- [API](./api)
 - [Configuration](./configuration.md)
 - [Processes](./processes.md)
 - [Process templates](./templates.md)

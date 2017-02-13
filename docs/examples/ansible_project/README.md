@@ -57,7 +57,7 @@ http://localhost:8001/api/v1/project
 
 ### 2. Create a new repository key
 
-Please refer to the [Generating a new key pair](../../security.md#generating-a-new-key-pair) document.
+Please refer to the [Generate a new key pair](../../api/secret.md#generate-a-new-key-pair) document.
 Use `mySecret` as a name of the key pair, it will be used on the next step.
 
 ### 3. Add a repository
@@ -85,7 +85,7 @@ The `secret` parameters is the name of the key created on the step 2.
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "username": "myUser", "permissions": [ "process:*:myProject", "inventory:use:myInventory" ] }' \
+-d '{ "username": "myUser", "permissions": [ "process:*:myProject" ] }' \
 http://localhost:8001/api/v1/user
 ```
 

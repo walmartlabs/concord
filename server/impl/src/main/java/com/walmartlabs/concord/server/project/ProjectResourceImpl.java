@@ -197,6 +197,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     }
 
     @Override
+    @Validate
     public DeleteRepositoryResponse deleteRepository(String projectName, String repositoryName) {
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");

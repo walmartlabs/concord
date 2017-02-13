@@ -1,81 +1,11 @@
 # Security
 
 - [Managing credentials](#managing-credentials)
-  - [GIT: SSH keys](#git-ssh-keys)
-    - [Generating a new key pair](#generating-a-new-key-pair)
-    - [Uploading an existing key pair](#uploading-an-existing-key-pair)
-  - [GIT: username and password](#git-username-and-password)
 - [Permissions](#permissions)
 
 ## Managing credentials
 
-### GIT: SSH keys
-
-#### Generating a new key pair
-
-To generate a new SSH key pair:
-
-```
-curl -v \
--X POST \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
-'http://localhost:8001/api/v1/secret/keypair?name=mySecret'
-```
-
-The response will look like this:
-
-```json
-{
-  "id" : "ef61edeb-2455-444d-bafd-e369601cf26c",
-  "name" : "mySecret",
-  "publicKey" : "ssh-rsa AAAA... concord-server",
-  "ok" : true
-}
-```
-
-The `publicKey` value must be added to the git repository's settings.
-E.g. for GitHub: ![Deploy keys](./images/github_sshkey.png)
-
-#### Uploading an existing key pair
-
-The request:
-
-```
-curl -v \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--F public=@/path/to/public_key \
--F private=@/path/to/private_key \
-'http://localhost:8001/api/v1/secret/keypair?name=mySecret'
-```
-
-The response:
-
-```json
-{
-  "id" : "f746dd64-58da-4384-9b80-ce355d5ba881",
-  "ok" : true
-}
-```
-
-### GIT: username and password
-
-To add username/password credentials:
-
-```
-curl -v \
--H "Content-Type: application/json" \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "username": "luigi", "password": "imnotagreenmario" }' \
-http://localhost:8001/api/v1/secret/password?name=mySecret
-```
-
-The response:
-```json
-{
-  "id" : "f71c27f9-60e9-4d46-8437-bd5cfcec9ff6",
-  "ok" : true
-}
-```
+Credentials (secrets) are managed using the [secret](./api/secret.md) API endpoint.
 
 ## Permissions
 
