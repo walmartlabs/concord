@@ -3,11 +3,16 @@ package com.walmartlabs.concord.common.db;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.TransactionalRunnable;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
+import org.jooq.tools.jdbc.JDBCUtils;
 
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,15 +46,49 @@ public abstract class AbstractDao {
         return elements.stream().map(f).collect(Collectors.toList());
     }
 
-    protected <T> void forEach(Collection<T> elements, Consumer<T> consumer) {
-        if (elements == null || elements.isEmpty()) {
-            return;
+    protected InputStream getData(Function<DSLContext, String> sqlFn, PreparedStatementHandler h, int columnIndex) {
+        String sql;
+        try (DSLContext create = DSL.using(cfg)) {
+            sql = sqlFn.apply(create);
         }
-        elements.stream().forEach(consumer);
+
+        Connection conn = cfg.connectionProvider().acquire();
+        PreparedStatement ps = null;
+        try {
+            ps = conn.prepareStatement(sql);
+            h.apply(ps);
+
+            InputStream in = ResultSetInputStream.open(conn, ps, columnIndex);
+            if (in == null) {
+                JDBCUtils.safeClose(ps);
+                JDBCUtils.safeClose(conn);
+                return null;
+            }
+            return in;
+        } catch (SQLException e) {
+            JDBCUtils.safeClose(ps);
+            JDBCUtils.safeClose(conn);
+            throw new DataAccessException("Error while opening a stream", e);
+        }
+    }
+
+    public void executeUpdate(DSLContext create, Function<DSLContext, String> sqlFn, PreparedStatementHandler h) {
+        String sql = sqlFn.apply(create);
+        create.connection(conn -> {
+            try (PreparedStatement ps = conn.prepareCall(sql)) {
+                h.apply(ps);
+                ps.executeUpdate();
+            }
+        });
     }
 
     public interface Tx {
 
         void run(DSLContext tx) throws Exception;
+    }
+
+    public interface PreparedStatementHandler {
+
+        void apply(PreparedStatement ps) throws SQLException;
     }
 }

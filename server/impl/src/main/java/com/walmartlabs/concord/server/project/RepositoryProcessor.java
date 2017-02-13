@@ -2,22 +2,20 @@ package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
-import com.walmartlabs.concord.server.security.PasswordManager;
-import com.walmartlabs.concord.server.security.apikey.ApiKey;
-import com.walmartlabs.concord.server.security.secret.*;
-import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
+import com.walmartlabs.concord.server.security.secret.Secret;
+import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.function.Function;
 
 /**
  * Adds repository files to a payload.
@@ -25,19 +23,20 @@ import java.util.function.Function;
 @Named
 public class RepositoryProcessor implements PayloadProcessor {
 
+    /**
+     * Repository effective parameters.
+     */
+    public static final HeaderKey<RepositoryInfo> REPOSITORY_INFO_KEY = HeaderKey.register("_repositoryInfo", RepositoryInfo.class);
+
+    private static final String DEFAULT_BRANCH = "master";
+
     private final RepositoryDao repositoryDao;
-    private final SecretDao secretDao;
-    private final SecretStoreConfiguration secretCfg;
-    private final PasswordManager passwordManager;
+    private final SecretManager secretManager;
 
     @Inject
-    public RepositoryProcessor(RepositoryDao repositoryDao, SecretDao secretDao,
-                               SecretStoreConfiguration secretCfg, PasswordManager passwordManager) {
-
+    public RepositoryProcessor(RepositoryDao repositoryDao, SecretManager secretManager) {
         this.repositoryDao = repositoryDao;
-        this.secretDao = secretDao;
-        this.secretCfg = secretCfg;
-        this.passwordManager = passwordManager;
+        this.secretManager = secretManager;
     }
 
     @Override
@@ -58,13 +57,18 @@ public class RepositoryProcessor implements PayloadProcessor {
             return payload;
         }
 
+        String branch = repo.getBranch();
+        if (branch == null || branch.trim().isEmpty()) {
+            branch = DEFAULT_BRANCH;
+        }
+
         Secret secret = null;
         if (repo.getSecret() != null) {
-            secret = getSecret(repo.getSecret().getId());
+            secret = secretManager.getSecret(repo.getSecret().getName());
         }
 
         try {
-            Path src = GitRepository.checkout(repo.getUrl(), repo.getBranch(), secret);
+            Path src = GitRepository.checkout(repo.getUrl(), branch, secret);
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
             IOUtils.copy(src, dst);
         } catch (IOException | GitAPIException e) {
@@ -73,28 +77,42 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         // TODO replace with a queue/stack/linkedlist?
         entryPoint = entryPoint.length > 1 ? Arrays.copyOfRange(entryPoint, 1, entryPoint.length) : new String[0];
-        return payload.putHeader(Payload.ENTRY_POINT, entryPoint);
+
+        return payload.putHeader(Payload.ENTRY_POINT, entryPoint)
+                .putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch));
     }
 
-    private Secret getSecret(String id) {
-        SecretDataEntry s = secretDao.get(id);
-        if (s == null) {
-            throw new ProcessException("Inconsistent data, can't find a secret: " + id);
+    public static final class RepositoryInfo implements Serializable {
+
+        private final String name;
+        private final String url;
+        private final String branch;
+
+        public RepositoryInfo(String name, String url, String branch) {
+            this.name = name;
+            this.url = url;
+            this.branch = branch;
         }
 
-        Function<byte[], ? extends Secret> deserializer;
-        switch (s.getType()) {
-            case KEY_PAIR:
-                deserializer = KeyPair::deserialize;
-                break;
-            case USERNAME_PASSWORD:
-                deserializer = UsernamePassword::deserialize;
-                break;
-            default:
-                throw new ProcessException("Unknown secret type: " + s.getType());
+        public String getName() {
+            return name;
         }
 
-        byte[] password = passwordManager.getPassword(s.getName(), ApiKey.getCurrentKey());
-        return SecretUtils.decrypt(deserializer, s.getData(), password, secretCfg.getSalt());
+        public String getUrl() {
+            return url;
+        }
+
+        public String getBranch() {
+            return branch;
+        }
+
+        @Override
+        public String toString() {
+            return "RepositoryInfo{" +
+                    "name='" + name + '\'' +
+                    ", url='" + url + '\'' +
+                    ", branch='" + branch + '\'' +
+                    '}';
+        }
     }
 }

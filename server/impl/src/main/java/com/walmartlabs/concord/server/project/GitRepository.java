@@ -27,13 +27,8 @@ import java.util.Properties;
 public final class GitRepository {
 
     private static final Logger log = LoggerFactory.getLogger(GitRepository.class);
-    private static final String DEFAULT_BRANCH = "master";
 
     public static Path checkout(String uri, String branch, Secret secret) throws IOException, GitAPIException {
-        if (branch == null || branch.trim().isEmpty()) {
-            branch = DEFAULT_BRANCH;
-        }
-
         Path localPath = Files.createTempDirectory("git");
         log.info("checkout -> cloning '{}' (branch: {}) into '{}'...", uri, branch, localPath);
 

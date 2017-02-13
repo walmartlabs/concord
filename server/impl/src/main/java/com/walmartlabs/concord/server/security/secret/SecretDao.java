@@ -36,14 +36,17 @@ public class SecretDao extends AbstractDao {
 
     public SecretDataEntry get(String id) {
         try (DSLContext create = DSL.using(cfg)) {
-            SecretDataEntry e = create.select(SECRETS.SECRET_ID, SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
-                    .from(SECRETS)
+            return selectSecretDataEntry(create)
                     .where(SECRETS.SECRET_ID.eq(id))
-                    .fetchOne(r -> new SecretDataEntry(r.get(SECRETS.SECRET_ID),
-                            r.get(SECRETS.SECRET_NAME),
-                            SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
-                            r.get(SECRETS.SECRET_DATA)));
-            return e;
+                    .fetchOne(SecretDao::toDataEntry);
+        }
+    }
+
+    public SecretDataEntry getByName(String name) {
+        try (DSLContext create = DSL.using(cfg)) {
+            return selectSecretDataEntry(create)
+                    .where(SECRETS.SECRET_NAME.eq(name))
+                    .fetchOne(SecretDao::toDataEntry);
         }
     }
 
@@ -90,6 +93,16 @@ public class SecretDao extends AbstractDao {
                 .from(SECRETS)
                 .where(SECRETS.SECRET_ID.eq(id))
                 .fetchOne(SECRETS.SECRET_NAME);
+    }
+
+    private static SelectJoinStep<Record4<String, String, String, byte[]>> selectSecretDataEntry(DSLContext create) {
+        return create.select(SECRETS.SECRET_ID, SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
+                .from(SECRETS);
+    }
+
+    private static SecretDataEntry toDataEntry(Record4<String, String, String, byte[]> r) {
+        return new SecretDataEntry(r.get(SECRETS.SECRET_ID), r.get(SECRETS.SECRET_NAME),
+                SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)), r.get(SECRETS.SECRET_DATA));
     }
 
     public static class SecretDataEntry extends SecretEntry {

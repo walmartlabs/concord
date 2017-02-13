@@ -19,13 +19,29 @@ public class CreateProjectRequest implements Serializable {
 
     private final Map<String, UpdateRepositoryRequest> repositories;
 
+    private final Map<String, Object> cfg;
+
+    public CreateProjectRequest(String name) {
+        this(name, null, null, null);
+    }
+
+    public CreateProjectRequest(String name, Set<String> templates) {
+        this(name, templates, null, null);
+    }
+
+    public CreateProjectRequest(String name, Set<String> templates, Map<String, UpdateRepositoryRequest> repositories) {
+        this(name, templates, repositories, null);
+    }
+
     @JsonCreator
     public CreateProjectRequest(@JsonProperty("name") String name,
                                 @JsonProperty("templates") Set<String> templates,
-                                @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories) {
+                                @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
+                                @JsonProperty("cfg") Map<String, Object> cfg) {
         this.name = name;
         this.templates = templates;
         this.repositories = repositories;
+        this.cfg = cfg;
     }
 
     public String getName() {
@@ -40,12 +56,17 @@ public class CreateProjectRequest implements Serializable {
         return repositories;
     }
 
+    public Map<String, Object> getCfg() {
+        return cfg;
+    }
+
     @Override
     public String toString() {
         return "CreateProjectRequest{" +
                 "name='" + name + '\'' +
                 ", templates=" + templates +
                 ", repositories=" + repositories +
+                ", cfg=" + cfg +
                 '}';
     }
 }

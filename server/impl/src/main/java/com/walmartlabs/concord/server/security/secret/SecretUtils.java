@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.server.security.secret;
 
+import com.walmartlabs.concord.server.api.security.secret.SecretType;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.GeneralSecurityException;
@@ -16,6 +18,21 @@ public final class SecretUtils {
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error decrypting a key pair", e);
         }
+    }
+
+    public static Secret decrypt(SecretType type, byte[] input, byte[] password, byte[] salt) {
+        Function<byte[], ? extends Secret> deserializer;
+        switch (type) {
+            case KEY_PAIR:
+                deserializer = KeyPair::deserialize;
+                break;
+            case USERNAME_PASSWORD:
+                deserializer = UsernamePassword::deserialize;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown secret type: " + type);
+        }
+        return decrypt(deserializer, input, password, salt);
     }
 
     public static <T extends Secret> byte[] encrypt(Function<T, byte[]> serializer, T k, byte[] password, byte[] hash) throws SecurityException {

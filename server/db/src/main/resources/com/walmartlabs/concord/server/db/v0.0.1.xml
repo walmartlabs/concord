@@ -256,4 +256,27 @@
                                  referencedTableName="TEMPLATES" referencedColumnNames="TEMPLATE_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
+
+    <!-- PROJECT_ATTACHMENTS -->
+
+    <changeSet id="2100" author="ibodrov@gmail.com">
+        <createTable tableName="PROJECT_ATTACHMENTS">
+            <column name="PROJECT_ID" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ATTACHMENT_NAME" type="varchar(128)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ATTACHMENT_DATA" type="blob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2110" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_ATTCH_PROJ_ID"
+                                 baseTableName="PROJECT_ATTACHMENTS" baseColumnNames="PROJECT_ID"
+                                 referencedTableName="PROJECTS" referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
 </databaseChangeLog>

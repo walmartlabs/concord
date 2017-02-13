@@ -4,9 +4,8 @@ import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
-import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.CreateRepositoryRequest;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import com.walmartlabs.concord.server.api.security.secret.UsernamePasswordRequest;
 import com.walmartlabs.concord.server.api.template.TemplateResource;
@@ -21,6 +20,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Collections.singletonMap;
+
 @Ignore
 public class AnsibleGitProjectIT extends AbstractServerIT {
 
@@ -28,7 +29,8 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
     public void test() throws Exception {
         String templateName = "template#" + System.currentTimeMillis();
         String projectName = "project#" + System.currentTimeMillis();
-        String secretName = "secret#" + System.currentTimeMillis();
+        String repoSecretName = "repoSecret#" + System.currentTimeMillis();
+        String machineSecretName = "machineSecret#" + System.currentTimeMillis();
         String repoName = "repo#" + System.currentTimeMillis();
         String repoUrl = "https://gecgithub01.walmart.com/devtools/concord-ansible-example.git";
         String repoBranch = "it";
@@ -41,17 +43,14 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
-
-        // ---
-
         SecretResource secretResource = proxy(SecretResource.class);
         secretResource.addUsernamePassword(secretName, new UsernamePasswordRequest("username", "password".toCharArray()));
 
         // ---
 
-        projectResource.createRepository(projectName, new CreateRepositoryRequest(repoName, repoUrl, repoBranch, secretName));
+        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, repoBranch, repoSecretName);
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName), singletonMap(repoName, repo)));
 
         // ---
 

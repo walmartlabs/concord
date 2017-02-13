@@ -19,6 +19,7 @@ public class PlaybookProcessBuilder {
     private Map<String, String> extraVars = Collections.emptyMap();
     private String user;
     private String tags;
+    private String privateKey;
 
     public PlaybookProcessBuilder(String playbook, String inventory) {
         this.playbook = playbook;
@@ -45,6 +46,11 @@ public class PlaybookProcessBuilder {
         return this;
     }
 
+    public PlaybookProcessBuilder withPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+        return this;
+    }
+
     public Process build() throws IOException {
         File pwd = new File(playbook);
         if (pwd.isFile()) {
@@ -52,8 +58,11 @@ public class PlaybookProcessBuilder {
             log.debug("build -> working directory: {}", pwd);
         }
 
+        String[] cmd = formatCmd();
+        log.debug("build -> cmd: {}", String.join(" ", cmd));
+
         ProcessBuilder b = new ProcessBuilder()
-                .command(formatCmd())
+                .command(cmd)
                 .directory(pwd)
                 .redirectErrorStream(true);
 
@@ -79,6 +88,11 @@ public class PlaybookProcessBuilder {
         if (tags != null) {
             l.add("-t");
             l.add(tags);
+        }
+
+        if (privateKey != null) {
+            l.add("--private-key");
+            l.add(privateKey);
         }
 
         return l.toArray(new String[l.size()]);

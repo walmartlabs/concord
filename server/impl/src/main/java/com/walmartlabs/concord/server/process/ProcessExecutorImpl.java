@@ -67,7 +67,7 @@ public class ProcessExecutorImpl {
         log(logFile, "Starting %s...", instanceId);
 
         try (Agent a = new Agent(agentCfg.getUri())) {
-            log.info("run ['{}'] -> sending the payload: {}", instanceId, archive.toAbsolutePath());
+            log.debug("run ['{}'] -> sending the payload: {}", instanceId, archive.toAbsolutePath());
             callback.onStatusChange(instanceId, ProcessStatus.RUNNING);
 
             String jobId;
@@ -75,10 +75,11 @@ public class ProcessExecutorImpl {
                 jobId = a.jobResource.start(in, JobType.JAR, entryPoint);
                 instanceIdMap.put(instanceId, jobId);
 
-                log.info("run ['{}'] -> started", instanceId);
+                log.debug("run ['{}'] -> started", instanceId);
                 log(logFile, "Payload sent");
             } catch (Exception e) {
                 // TODO stacktrace
+                log.warn("run ['{}'] -> failed: {}", instanceId, e.getMessage());
                 log(logFile, "Error while starting a process: %s", e.getMessage());
                 throw new ProcessException("Error while starting a process", e);
             }
@@ -91,11 +92,14 @@ public class ProcessExecutorImpl {
                 throw new ProcessException("Error while streaming an agent's log", e);
             }
 
+            log.info("run ['{}'] -> done", instanceId);
             log(logFile, "...done");
 
             JobStatus s = a.jobResource.getStatus(jobId);
             if (s == JobStatus.FAILED || s == JobStatus.CANCELLED) {
                 callback.onStatusChange(instanceId, ProcessStatus.FAILED);
+            } else if (s == JobStatus.RUNNING) {
+                log.warn("run ['{}'] -> job is still running: {}", instanceId, jobId);
             } else {
                 callback.onStatusChange(instanceId, ProcessStatus.FINISHED);
             }

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.inventory;
+package com.walmartlabs.concord.server.ansible;
 
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
 import com.walmartlabs.concord.server.process.Payload;
@@ -29,7 +29,7 @@ public class InventoryProcessor implements PayloadProcessor {
             return payload;
         }
 
-        Path dst = workspace.resolve(AnsibleConstants.GENERATED_INVENTORY_FILE_NAME);
+        Path dst = workspace.resolve(AnsibleConstants.INVENTORY_FILE_NAME);
         try {
             Files.copy(p, dst);
         } catch (IOException e) {

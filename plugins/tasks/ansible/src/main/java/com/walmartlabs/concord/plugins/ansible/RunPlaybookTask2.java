@@ -13,8 +13,10 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Named
 public class RunPlaybookTask2 implements Task {
@@ -32,13 +34,12 @@ public class RunPlaybookTask2 implements Task {
         String cfgFile = createCfgFile();
 
         // TODO constants
-        // TODO refactor
         String playbook = (String) args.get("playbook");
         if (playbook == null || playbook.trim().isEmpty()) {
             throw new IllegalArgumentException("The 'playbook' parameter is missing");
         }
 
-        String inventory = createInventory(payloadPath);
+        String inventory = getInventoryPath(payloadPath);
         Map<String, String> extraVars = (Map<String, String>) args.get("extraVars");
 
         String playbookPath = Paths.get(payloadPath, playbook).toAbsolutePath().toString();
@@ -46,17 +47,10 @@ public class RunPlaybookTask2 implements Task {
 
         PlaybookProcessBuilder b = new PlaybookProcessBuilder(playbookPath, inventory)
                 .withCfgFile(cfgFile)
+                .withPrivateKey(getPrivateKeyPath(payloadPath))
+                .withUser(trim((String) args.get("user")))
+                .withTags(trim((String) args.get("tags")))
                 .withExtraVars(extraVars);
-
-        String user = (String) args.get("user");
-        if (user != null && !user.trim().isEmpty()) {
-            b.withUser(user);
-        }
-
-        String tags = (String) args.get("tags");
-        if (tags != null && !tags.trim().isEmpty()) {
-            b.withTags(tags);
-        }
 
         Process p = b.build();
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -75,15 +69,12 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    private static String createInventory(String payloadPath) throws IOException {
-        Path p = Paths.get(payloadPath, AnsibleConstants.GENERATED_INVENTORY_FILE_NAME);
+    private static String getInventoryPath(String payloadPath) throws IOException {
+        Path p = Paths.get(payloadPath, AnsibleConstants.INVENTORY_FILE_NAME);
         if (!Files.exists(p)) {
             throw new IOException("Inventory file not found: " + p.toAbsolutePath());
         }
-
-        Path tmpFile = Files.createTempFile("inventory", ".ini");
-        Files.copy(p, tmpFile, StandardCopyOption.REPLACE_EXISTING);
-        return tmpFile.toAbsolutePath().toString();
+        return p.toAbsolutePath().toString();
     }
 
     private static String createCfgFile() throws IOException {
@@ -102,5 +93,24 @@ public class RunPlaybookTask2 implements Task {
 
         log.debug("createCfgFile ['{}'] -> done, created {}", tmpFile);
         return tmpFile.toAbsolutePath().toString();
+    }
+
+    private static String getPrivateKeyPath(String payloadPath) throws IOException {
+        Path p = Paths.get(payloadPath, AnsibleConstants.PRIVATE_KEY_FILE_NAME);
+        if (!Files.exists(p)) {
+            return null;
+        }
+
+        // ensure that the key has proper permissions (chmod 600)
+        Set<PosixFilePermission> perms = new HashSet<>();
+        perms.add(PosixFilePermission.OWNER_READ);
+        perms.add(PosixFilePermission.OWNER_WRITE);
+        Files.setPosixFilePermissions(p, perms);
+
+        return p.toAbsolutePath().toString();
+    }
+
+    private static String trim(String s) {
+        return s != null ? s.trim() : null;
     }
 }

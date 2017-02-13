@@ -1,8 +1,9 @@
 package com.walmartlabs.concord.server.process.pipelines;
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.server.inventory.InventoryProcessor;
-import com.walmartlabs.concord.server.process.*;
+import com.walmartlabs.concord.server.ansible.InventoryProcessor;
+import com.walmartlabs.concord.server.ansible.PrivateKeyProcessor;
+import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 import com.walmartlabs.concord.server.project.RepositoryProcessor;
 import com.walmartlabs.concord.server.template.TemplateProcessor;
@@ -22,6 +23,7 @@ public class RequestDataOnlyPipeline {
                 injector.getInstance(RepositoryProcessor.class),
                 injector.getInstance(TemplateProcessor.class),
                 injector.getInstance(InventoryProcessor.class),
+                injector.getInstance(PrivateKeyProcessor.class),
                 injector.getInstance(RequestDataStoringProcessor.class),
                 injector.getInstance(DependenciesProcessor.class),
                 injector.getInstance(LogFileProcessor.class),

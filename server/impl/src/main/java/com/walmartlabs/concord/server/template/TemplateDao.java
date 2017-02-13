@@ -1,22 +1,17 @@
 package com.walmartlabs.concord.server.template;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
-import com.walmartlabs.concord.common.db.ResultSetInputStream;
 import com.walmartlabs.concord.server.api.template.TemplateEntry;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
-import org.jooq.tools.jdbc.JDBCUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectTemplates.PROJECT_TEMPLATES;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPLATES;
@@ -42,33 +37,12 @@ public class TemplateDao extends AbstractDao {
     }
 
     public InputStream get(String id) {
-        String sql;
-        try (DSLContext create = DSL.using(cfg)) {
-            sql = create.select(TEMPLATES.TEMPLATE_DATA)
-                    .from(TEMPLATES)
-                    .where(TEMPLATES.TEMPLATE_ID.eq(id))
-                    .getSQL();
-        }
+        Function<DSLContext, String> sql = create -> create.select(TEMPLATES.TEMPLATE_DATA)
+                .from(TEMPLATES)
+                .where(TEMPLATES.TEMPLATE_ID.eq(id))
+                .getSQL();
 
-        Connection conn = cfg.connectionProvider().acquire();
-
-        PreparedStatement ps = null;
-        try {
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, id);
-
-            InputStream in = ResultSetInputStream.open(conn, ps, 1);
-            if (in == null) {
-                JDBCUtils.safeClose(ps);
-                JDBCUtils.safeClose(conn);
-                return null;
-            }
-            return in;
-        } catch (SQLException e) {
-            JDBCUtils.safeClose(ps);
-            JDBCUtils.safeClose(conn);
-            throw new DataAccessException("Error while opening a stream", e);
-        }
+        return getData(sql, ps -> ps.setString(1, id), 1);
     }
 
     public List<TemplateEntry> list(Field<?> sortField, boolean asc) {
@@ -86,38 +60,30 @@ public class TemplateDao extends AbstractDao {
     }
 
     public void insert(String id, String name, InputStream data) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            String sql = create.insertInto(TEMPLATES)
-                    .columns(TEMPLATES.TEMPLATE_ID, TEMPLATES.TEMPLATE_NAME, TEMPLATES.TEMPLATE_DATA)
-                    .values((String) null, null, null)
-                    .getSQL();
+        Function<DSLContext, String> sqlFn = create -> create.insertInto(TEMPLATES)
+                .columns(TEMPLATES.TEMPLATE_ID, TEMPLATES.TEMPLATE_NAME, TEMPLATES.TEMPLATE_DATA)
+                .values((String) null, null, null)
+                .getSQL();
 
-            create.connection(conn -> {
-                try (PreparedStatement ps = conn.prepareCall(sql)) {
-                    ps.setString(1, id);
-                    ps.setString(2, name);
-                    ps.setBinaryStream(3, data);
-                    ps.executeUpdate();
-                }
+        tx(tx -> {
+            executeUpdate(tx, sqlFn, ps -> {
+                ps.setString(1, id);
+                ps.setString(2, name);
+                ps.setBinaryStream(3, data);
             });
         });
     }
 
     public void update(String id, InputStream data) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            String sql = create.update(TEMPLATES)
-                    .set(TEMPLATES.TEMPLATE_DATA, (byte[]) null)
-                    .where(TEMPLATES.TEMPLATE_ID.eq(id))
-                    .getSQL();
+        Function<DSLContext, String> sqlFn = create -> create.update(TEMPLATES)
+                .set(TEMPLATES.TEMPLATE_DATA, (byte[]) null)
+                .where(TEMPLATES.TEMPLATE_ID.eq(id))
+                .getSQL();
 
-            create.connection(conn -> {
-                try (PreparedStatement ps = conn.prepareCall(sql)) {
-                    ps.setBinaryStream(1, data);
-                    ps.setString(2, id);
-                    ps.executeUpdate();
-                }
+        tx(tx -> {
+            executeUpdate(tx, sqlFn, ps -> {
+                ps.setBinaryStream(1, data);
+                ps.setString(2, id);
             });
         });
     }

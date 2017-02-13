@@ -1,0 +1,32 @@
+{
+  "name": "myProject",
+  "templates": ["ansible"],
+
+  "repositories": {
+    "myProdRepo": {
+      "url": "git@github.com:my/repo.git",
+      "branch": "prod",
+      "secret": "myRepoSecret"
+    },
+    "myQARepo": {
+      "url": "git@github.com:my/repo.git",
+      "branch": "qa",
+      "secret": "myRepoSecret"
+    }
+  },
+
+  "cfg": {
+    "ansible": {
+      "privateKeys": [
+        {
+          "repository": "myProdRepo",
+          "secret": "myProdPrivateKey"
+        },
+        {
+          "repository": ".*",
+          "secret": "myQAPrivateKey"
+        }
+      ]
+    }
+  }
+}
