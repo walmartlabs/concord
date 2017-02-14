@@ -29,7 +29,7 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    public RepositoryEntry getByNameInProject(String projectId, String repositoryName) {
+    public RepositoryEntry get(String projectId, String repositoryName) {
         try (DSLContext create = DSL.using(cfg)) {
             return selectRepositoryEntry(create)
                     .where(REPOSITORIES.PROJECT_ID.eq(projectId)

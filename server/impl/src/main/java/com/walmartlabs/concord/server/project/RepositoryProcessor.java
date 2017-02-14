@@ -52,7 +52,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         // TODO remove when the support for default repositories will be implemented?
         String repoName = entryPoint[0];
 
-        RepositoryEntry repo = repositoryDao.getByNameInProject(projectId, repoName);
+        RepositoryEntry repo = repositoryDao.get(projectId, repoName);
         if (repo == null) {
             return payload;
         }

@@ -114,7 +114,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 "The current user does not have permissions to read the specified project");
 
         String projectId = resolveProjectId(projectName);
-        return repositoryDao.getByNameInProject(projectId, repositoryName);
+        return repositoryDao.get(projectId, repositoryName);
     }
 
     @Override

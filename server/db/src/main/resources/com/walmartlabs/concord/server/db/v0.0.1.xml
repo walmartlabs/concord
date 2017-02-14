@@ -208,6 +208,13 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <changeSet id="1730" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_REPOS_SECRET"
+                                 baseTableName="REPOSITORIES" baseColumnNames="SECRET_ID"
+                                 referencedTableName="SECRETS" referencedColumnNames="SECRET_ID"
+                                 onDelete="SET NULL"/>
+    </changeSet>
+
     <!-- TEMPLATES -->
 
     <changeSet id="1900" author="ibodrov@gmail.com">
