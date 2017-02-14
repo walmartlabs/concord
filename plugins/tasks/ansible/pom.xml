@@ -25,11 +25,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.plugins.ansible.inventory</groupId>
-            <artifactId>ansible-inventory-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>io.takari.bpm</groupId>
             <artifactId>bpm-engine-api</artifactId>
         </dependency>
