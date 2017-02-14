@@ -6,12 +6,20 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URL;
+
 public class SwaggerServletConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(SwaggerServletConfigurer.class);
 
     public void configure(ServletContextHandler servletHandler) {
-        String baseDir = ClassLoader.getSystemResource("com/walmartlabs/concord/server/api/swagger/").toExternalForm();
+        URL url = ClassLoader.getSystemResource("com/walmartlabs/concord/server/api/swagger/");
+        if (url == null) {
+            log.warn("No Swagger definitions found.");
+            return;
+        }
+
+        String baseDir = url.toExternalForm();
 
         ServletHolder h = new ServletHolder("swagger", DefaultServlet.class);
         h.setInitParameter("resourceBase", baseDir);

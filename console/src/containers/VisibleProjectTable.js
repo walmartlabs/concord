@@ -2,7 +2,12 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import ProjectTable from "../components/ProjectTable";
 import ErrorMessage from "../components/ErrorMessage";
-import {getProjectListRows, getIsProjectListLoading, getProjectListLoadingError, getIsProjectInFlight} from "../reducers";
+import {
+    getProjectListRows,
+    getIsProjectListLoading,
+    getProjectListLoadingError,
+    getIsProjectInFlight
+} from "../reducers";
 import * as constants from "../constants";
 import * as actions from "../actions";
 
@@ -41,7 +46,7 @@ const mapStateToProps = (state, {location}) => {
         rows: getProjectListRows(state),
         loading: getIsProjectListLoading(state),
         error: getProjectListLoadingError(state),
-        inFlightFn: (id) => getIsProjectInFlight(state, id),
+        inFlightFn: (name) => getIsProjectInFlight(state, name),
         sortBy,
         sortDir
     }
@@ -49,7 +54,7 @@ const mapStateToProps = (state, {location}) => {
 
 const mapDispatchToProps = (dispatch) => ({
     fetchData: (sortBy, sortDir) => dispatch(actions.fetchProjectList(sortBy, sortDir)),
-    onDeleteFn: (id) => dispatch(actions.deleteProject(id))
+    onDeleteFn: (name) => dispatch(actions.deleteProject(name))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(VisibleProjectTable);

@@ -52,7 +52,7 @@ public interface SecretResource {
 
     @DELETE
     @ApiOperation("Delete an existing secret")
-    @Path("/{secretName}")
+    @Path("/{name}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteSecretResponse delete(@ApiParam @PathParam("secretName") @ConcordKey String secretName);
+    DeleteSecretResponse delete(@ApiParam @PathParam("name") @ConcordKey String name);
 }

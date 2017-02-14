@@ -51,7 +51,6 @@ export const projectList = {
         {key: "actions", label: "Actions", collapsing: true}
     ],
 
-    idKey: "id",
     nameKey: "name",
     templatesKey: "templates",
     sortableKeys: ["name"],
@@ -62,7 +61,6 @@ export const projectList = {
 };
 
 export const templateList = {
-    idKey: "id",
     nameKey: "name"
 };
 

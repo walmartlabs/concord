@@ -28,7 +28,7 @@ public class UserPermissionCleaner extends AbstractDao {
         remove(create, Permissions.TEMPLATE_PREFIX, name);
     }
 
-    public void onProjectRemoval(DSLContext create, String id, String name) {
+    public void onProjectRemoval(DSLContext create, String name) {
         remove(create, Permissions.PROJECT_PREFIX, name);
     }
 

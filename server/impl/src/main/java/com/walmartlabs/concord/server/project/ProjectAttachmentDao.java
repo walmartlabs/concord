@@ -19,36 +19,36 @@ public class ProjectAttachmentDao extends AbstractDao {
         super(cfg);
     }
 
-    public void insert(DSLContext tx, String projectId, String name, InputStream data) {
+    public void insert(DSLContext tx, String projectName, String name, InputStream data) {
 
         Function<DSLContext, String> sqlFn = ctx -> ctx.insertInto(PROJECT_ATTACHMENTS)
-                .columns(PROJECT_ATTACHMENTS.PROJECT_ID, PROJECT_ATTACHMENTS.ATTACHMENT_NAME, PROJECT_ATTACHMENTS.ATTACHMENT_DATA)
+                .columns(PROJECT_ATTACHMENTS.PROJECT_NAME, PROJECT_ATTACHMENTS.ATTACHMENT_NAME, PROJECT_ATTACHMENTS.ATTACHMENT_DATA)
                 .values((String) null, null, null)
                 .getSQL();
 
         executeUpdate(tx, sqlFn, ps -> {
-            ps.setString(1, projectId);
+            ps.setString(1, projectName);
             ps.setString(2, name);
             ps.setBinaryStream(3, data);
         });
     }
 
-    public void delete(DSLContext tx, String projectId, String name) {
+    public void delete(DSLContext tx, String projectName, String name) {
         tx.deleteFrom(PROJECT_ATTACHMENTS)
-                .where(PROJECT_ATTACHMENTS.PROJECT_ID.eq(projectId)
+                .where(PROJECT_ATTACHMENTS.PROJECT_NAME.eq(projectName)
                         .and(PROJECT_ATTACHMENTS.ATTACHMENT_NAME.eq(name)))
                 .execute();
     }
 
-    public InputStream get(String projectId, String name) {
+    public InputStream get(String projectName, String name) {
         Function<DSLContext, String> sql = create -> create.select(PROJECT_ATTACHMENTS.ATTACHMENT_DATA)
                 .from(PROJECT_ATTACHMENTS)
-                .where(PROJECT_ATTACHMENTS.PROJECT_ID.eq(projectId)
+                .where(PROJECT_ATTACHMENTS.PROJECT_NAME.eq(projectName)
                         .and(PROJECT_ATTACHMENTS.ATTACHMENT_NAME.eq(name)))
                 .getSQL();
 
         return getData(sql, ps -> {
-            ps.setString(1, projectId);
+            ps.setString(1, projectName);
             ps.setString(2, name);
         }, 1);
     }

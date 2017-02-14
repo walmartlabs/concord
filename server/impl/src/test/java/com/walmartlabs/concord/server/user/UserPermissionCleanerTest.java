@@ -26,9 +26,8 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         // ---
 
-        String secretId = UUID.randomUUID().toString();
         String secretName = "secret#" + System.currentTimeMillis();
-        secretDao.insert(secretId, secretName, SecretType.KEY_PAIR, new byte[]{0, 1, 2});
+        secretDao.insert(secretName, SecretType.KEY_PAIR, new byte[]{0, 1, 2});
 
         String userId = UUID.randomUUID().toString();
         String username = "user#" + System.currentTimeMillis();
@@ -37,7 +36,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         // ---
 
-        secretDao.delete(secretId);
+        secretDao.delete(secretName);
         User u = userDao.get(userId);
         assertNotNull(u);
         assertTrue(u.getPermissions().isEmpty());
@@ -52,17 +51,16 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         // ---
 
-        String projectId = UUID.randomUUID().toString();
         String projectName = "project#" + System.currentTimeMillis();
-        projectDao.insert(projectId, projectName, null);
+        projectDao.insert(projectName, null);
 
         // ---
 
         String repoName1 = "repo1#" + System.currentTimeMillis();
-        repositoryDao.insert(projectId, repoName1, "n/a", null, null);
+        repositoryDao.insert(projectName, repoName1, "n/a", null, null);
 
         String repoName2 = "repo2#" + System.currentTimeMillis();
-        repositoryDao.insert(projectId, repoName2, "n/a", null, null);
+        repositoryDao.insert(projectName, repoName2, "n/a", null, null);
 
         // ---
 
@@ -75,7 +73,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         // ---
 
-        projectDao.delete(projectId);
+        projectDao.delete(projectName);
 
         // ---
 

@@ -162,7 +162,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new ValidationErrorsException("Invalid entry point format: " + entryPoint);
         }
 
-        String projectId = resolveProjectId(as[0].trim());
+        String projectName = as[0].trim();
+        assertProject(projectName);
 
         // TODO replace with a queue/stack/linkedlist?
         String[] rest = as.length > 1 ? Arrays.copyOfRange(as, 1, as.length) : new String[0];
@@ -170,17 +171,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         // TODO check permissions
 
-        return payload.putHeader(Payload.PROJECT_ID, projectId)
+        return payload.putHeader(Payload.PROJECT_NAME, projectName)
                 .putHeader(Payload.ENTRY_POINT, rest)
                 .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(Constants.ENTRY_POINT_KEY, realEntryPoint));
     }
 
-    private String resolveProjectId(String projectName) {
-        String id = projectDao.getId(projectName);
-        if (id == null) {
+    private void assertProject(String projectName) {
+        if (!projectDao.exists(projectName)) {
             throw new ValidationErrorsException("Unknown project name: " + projectName);
         }
-        return id;
     }
 
     @Override

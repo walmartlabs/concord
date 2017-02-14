@@ -12,7 +12,6 @@ http://localhost:8001/api/v1/template?name=myTemplate
 
 ```json
 {
-  "id": "4ba10d05-3087-4ee2-b903-c95414597a1d",
   "ok": true
 }
 ```

@@ -27,87 +27,74 @@ public class TemplateDao extends AbstractDao {
         this.permissionCleaner = permissionCleaner;
     }
 
-    public Collection<String> getProjectTemplateIds(String projectId) {
+    public Collection<String> getProjectTemplates(String projectName) {
         try (DSLContext create = DSL.using(cfg)) {
-            return create.select(PROJECT_TEMPLATES.TEMPLATE_ID)
+            return create.select(PROJECT_TEMPLATES.TEMPLATE_NAME)
                     .from(PROJECT_TEMPLATES)
-                    .where(PROJECT_TEMPLATES.PROJECT_ID.eq(projectId))
-                    .fetch(PROJECT_TEMPLATES.TEMPLATE_ID);
+                    .where(PROJECT_TEMPLATES.PROJECT_NAME.eq(projectName))
+                    .fetch(PROJECT_TEMPLATES.TEMPLATE_NAME);
         }
     }
 
-    public InputStream get(String id) {
+    public InputStream getData(String name) {
         Function<DSLContext, String> sql = create -> create.select(TEMPLATES.TEMPLATE_DATA)
                 .from(TEMPLATES)
-                .where(TEMPLATES.TEMPLATE_ID.eq(id))
+                .where(TEMPLATES.TEMPLATE_NAME.eq(name))
                 .getSQL();
 
-        return getData(sql, ps -> ps.setString(1, id), 1);
+        return getData(sql, ps -> ps.setString(1, name), 1);
     }
 
     public List<TemplateEntry> list(Field<?> sortField, boolean asc) {
         try (DSLContext create = DSL.using(cfg)) {
-            SelectJoinStep<Record2<String, String>> query = create
-                    .select(TEMPLATES.TEMPLATE_ID, TEMPLATES.TEMPLATE_NAME)
+            SelectJoinStep<Record2<String, Integer>> query = create
+                    .select(TEMPLATES.TEMPLATE_NAME, TEMPLATES.TEMPLATE_DATA.length().as("SIZE"))
                     .from(TEMPLATES);
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            return query.fetch(r -> new TemplateEntry(r.get(TEMPLATES.TEMPLATE_ID), r.get(TEMPLATES.TEMPLATE_NAME)));
+            return query.fetch(r -> new TemplateEntry(r.get(TEMPLATES.TEMPLATE_NAME), (Integer) r.get("SIZE")));
         }
     }
 
-    public void insert(String id, String name, InputStream data) {
+    public void insert(String name, InputStream data) {
         Function<DSLContext, String> sqlFn = create -> create.insertInto(TEMPLATES)
-                .columns(TEMPLATES.TEMPLATE_ID, TEMPLATES.TEMPLATE_NAME, TEMPLATES.TEMPLATE_DATA)
-                .values((String) null, null, null)
+                .columns(TEMPLATES.TEMPLATE_NAME, TEMPLATES.TEMPLATE_DATA)
+                .values((String) null, null)
                 .getSQL();
 
         tx(tx -> {
             executeUpdate(tx, sqlFn, ps -> {
-                ps.setString(1, id);
-                ps.setString(2, name);
-                ps.setBinaryStream(3, data);
+                ps.setString(1, name);
+                ps.setBinaryStream(2, data);
             });
         });
     }
 
-    public void update(String id, InputStream data) {
+    public void update(String name, InputStream data) {
         Function<DSLContext, String> sqlFn = create -> create.update(TEMPLATES)
                 .set(TEMPLATES.TEMPLATE_DATA, (byte[]) null)
-                .where(TEMPLATES.TEMPLATE_ID.eq(id))
+                .where(TEMPLATES.TEMPLATE_NAME.eq(name))
                 .getSQL();
 
         tx(tx -> {
             executeUpdate(tx, sqlFn, ps -> {
                 ps.setBinaryStream(1, data);
-                ps.setString(2, id);
+                ps.setString(2, name);
             });
         });
     }
 
-    public void delete(String id) {
+    public void delete(String name) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
-
-            String name = getName(create, id);
             permissionCleaner.onTemplateRemoval(create, name);
-
             create.deleteFrom(TEMPLATES)
-                    .where(TEMPLATES.TEMPLATE_ID.eq(id))
+                    .where(TEMPLATES.TEMPLATE_NAME.eq(name))
                     .execute();
         });
-    }
-
-    public String getId(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.select(TEMPLATES.TEMPLATE_ID)
-                    .from(TEMPLATES)
-                    .where(TEMPLATES.TEMPLATE_NAME.eq(name))
-                    .fetchOne(TEMPLATES.TEMPLATE_ID);
-        }
     }
 
     public boolean exists(String name) {
@@ -117,21 +104,5 @@ public class TemplateDao extends AbstractDao {
 
             return cnt > 0;
         }
-    }
-
-    public boolean existsId(String id) {
-        try (DSLContext create = DSL.using(cfg)) {
-            int cnt = create.fetchCount(create.selectFrom(TEMPLATES)
-                    .where(TEMPLATES.TEMPLATE_ID.eq(id)));
-
-            return cnt > 0;
-        }
-    }
-
-    private static String getName(DSLContext create, String id) {
-        return create.select(TEMPLATES.TEMPLATE_NAME)
-                .from(TEMPLATES)
-                .where(TEMPLATES.TEMPLATE_ID.eq(id))
-                .fetchOne(TEMPLATES.TEMPLATE_NAME);
     }
 }

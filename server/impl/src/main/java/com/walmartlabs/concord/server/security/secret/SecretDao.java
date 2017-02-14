@@ -24,93 +24,71 @@ public class SecretDao extends AbstractDao {
         this.permissionCleaner = permissionCleaner;
     }
 
-    public void insert(String id, String name, SecretType type, byte[] data) {
+    public void insert(String name, SecretType type, byte[] data) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
             create.insertInto(SECRETS)
-                    .columns(SECRETS.SECRET_ID, SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
-                    .values(id, name, type.toString(), data)
+                    .columns(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
+                    .values(name, type.toString(), data)
                     .execute();
         });
     }
 
-    public SecretDataEntry get(String id) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return selectSecretDataEntry(create)
-                    .where(SECRETS.SECRET_ID.eq(id))
-                    .fetchOne(SecretDao::toDataEntry);
-        }
-    }
-
-    public SecretDataEntry getByName(String name) {
+    public SecretDataEntry get(String name) {
         try (DSLContext create = DSL.using(cfg)) {
             return selectSecretDataEntry(create)
                     .where(SECRETS.SECRET_NAME.eq(name))
                     .fetchOne(SecretDao::toDataEntry);
-        }
-    }
-
-    public String getId(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.select(SECRETS.SECRET_ID)
-                    .from(SECRETS)
-                    .where(SECRETS.SECRET_NAME.eq(name))
-                    .fetchOne(SECRETS.SECRET_ID);
         }
     }
 
     public List<SecretEntry> list(Field<?> sortField, boolean asc) {
         try (DSLContext create = DSL.using(cfg)) {
-            SelectJoinStep<Record3<String, String, String>> query = create
-                    .select(SECRETS.SECRET_ID, SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE)
+            SelectJoinStep<Record2<String, String>> query = create
+                    .select(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE)
                     .from(SECRETS);
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            return query.fetch(r -> new SecretEntry(r.get(SECRETS.SECRET_ID),
-                    r.get(SECRETS.SECRET_NAME),
+            return query.fetch(r -> new SecretEntry(r.get(SECRETS.SECRET_NAME),
                     SecretType.valueOf(r.get(SECRETS.SECRET_TYPE))));
         }
     }
 
-    public void delete(String id) {
+    public void delete(String name) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
-
-            String name = getName(create, id);
             permissionCleaner.onSecretRemoval(create, name);
-
             create.deleteFrom(SECRETS)
-                    .where(SECRETS.SECRET_ID.eq(id))
+                    .where(SECRETS.SECRET_NAME.eq(name))
                     .execute();
         });
     }
 
-    private static String getName(DSLContext create, String id) {
-        return create.select(SECRETS.SECRET_NAME)
-                .from(SECRETS)
-                .where(SECRETS.SECRET_ID.eq(id))
-                .fetchOne(SECRETS.SECRET_NAME);
+    public boolean exists(String name) {
+        try (DSLContext create = DSL.using(cfg)) {
+            return create.fetchExists(create.selectFrom(SECRETS)
+                    .where(SECRETS.SECRET_NAME.eq(name)));
+        }
     }
 
-    private static SelectJoinStep<Record4<String, String, String, byte[]>> selectSecretDataEntry(DSLContext create) {
-        return create.select(SECRETS.SECRET_ID, SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
+    private static SelectJoinStep<Record3<String, String, byte[]>> selectSecretDataEntry(DSLContext create) {
+        return create.select(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
                 .from(SECRETS);
     }
 
-    private static SecretDataEntry toDataEntry(Record4<String, String, String, byte[]> r) {
-        return new SecretDataEntry(r.get(SECRETS.SECRET_ID), r.get(SECRETS.SECRET_NAME),
-                SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)), r.get(SECRETS.SECRET_DATA));
+    private static SecretDataEntry toDataEntry(Record3<String, String, byte[]> r) {
+        return new SecretDataEntry(r.get(SECRETS.SECRET_NAME), SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)), r.get(SECRETS.SECRET_DATA));
     }
 
     public static class SecretDataEntry extends SecretEntry {
 
         private final byte[] data;
 
-        public SecretDataEntry(String id, String name, SecretType type, byte[] data) {
-            super(id, name, type);
+        public SecretDataEntry(String name, SecretType type, byte[] data) {
+            super(name, type);
             this.data = data;
         }
 

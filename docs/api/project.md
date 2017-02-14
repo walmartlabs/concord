@@ -123,8 +123,8 @@ Lists existing projects.
     
     ```json
     [
-      { "id": "...", "name": "...", "templates": ["..."] },
-      { "id": "...", "name": "..." }
+      { "name": "...", "templates": ["..."] },
+      { "name": "..." }
     ]
     ```
 
@@ -229,7 +229,7 @@ Lists existing repositories in a project.
     
     ```json
     [
-      { "name": "...", "url": "...", "branch": "...", "secret": { "id": "...", "name": "..."} },
+      { "name": "...", "url": "...", "branch": "...", "secret": "..." },
       { "name": "...", "url": "..." }
     ]
     ```

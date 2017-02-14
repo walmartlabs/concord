@@ -50,8 +50,7 @@ http://localhost:8001/api/v1/project
 
 ```json
 {
-  "ok": true,
-  "id": "6e5b34b0-db10-11e6-b477-eb56c9b52eaf"
+  "ok": true
 }
 ```
 
@@ -74,8 +73,7 @@ The `secret` parameters is the name of the key created on the step 2.
 
 ```json
 {
-    "ok": true,
-    "id": "f2a5cd28-db12-11e6-ada7-d797a1a3f3c8"
+    "ok": true
 }
 ```
 

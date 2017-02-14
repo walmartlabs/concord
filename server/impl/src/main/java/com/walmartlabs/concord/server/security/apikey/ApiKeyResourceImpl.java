@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.security.apikey;
 
-import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
@@ -14,7 +13,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.PathParam;
 import java.util.UUID;
 
 @Named
@@ -46,7 +44,7 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
     @Override
     @Validate
     @RequiresPermissions(Permissions.APIKEY_DELETE_ANY)
-    public DeleteApiKeyResponse delete(@PathParam("id") @ConcordId String id) {
+    public DeleteApiKeyResponse delete(String id) {
         if (!apiKeyDao.existsById(id)) {
             throw new ValidationErrorsException("API key not found: " + id);
         }

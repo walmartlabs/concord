@@ -22,16 +22,16 @@ export const fetchProjectList = (sortBy, sortDir) => ({
     sortDir
 });
 
-export const deleteProject = (id) => ({
+export const deleteProject = (name) => ({
     type: actionTypes.projectList.DELETE_PROJECT_REQUEST,
-    id
+    name
 });
 
 // VisibleProjectForm
 
-export const fetchProject = (id) => ({
+export const fetchProject = (name) => ({
     type: actionTypes.project.FETCH_PROJECT_REQUEST,
-    id
+    name
 });
 
 export const makeNewProject = () => ({
@@ -45,9 +45,9 @@ export const createProject = (data, resolve, reject) => ({
     reject
 });
 
-export const updateProject = (id, data, resolve, reject) => ({
+export const updateProject = (name, data, resolve, reject) => ({
     type: actionTypes.project.UPDATE_PROJECT_REQUEST,
-    id,
+    name,
     data,
     resolve,
     reject

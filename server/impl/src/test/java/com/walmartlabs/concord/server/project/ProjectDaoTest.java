@@ -30,72 +30,66 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
     @Test
     public void testInsertWithTemplates() throws Exception {
-        String templateId = UUID.randomUUID().toString();
         String templateName = "template#" + System.currentTimeMillis();
         InputStream templateData = new ByteArrayInputStream(new byte[]{1, 2, 3});
 
-        templateDao.insert(templateId, templateName, templateData);
+        templateDao.insert(templateName, templateData);
 
         // ---
 
-        String projectId = UUID.randomUUID().toString();
         String projectName = "project#" + System.currentTimeMillis();
-        String[] projectTemplateIds = {templateId};
+        String[] projectTemplates = {templateName};
 
-        projectDao.insert(projectId, projectName, Arrays.asList(projectTemplateIds));
+        projectDao.insert(projectName, Arrays.asList(projectTemplates));
 
         // ---
 
-        Collection<String> ids = templateDao.getProjectTemplateIds(projectId);
+        Collection<String> ids = templateDao.getProjectTemplates(projectName);
         assertNotNull(ids);
         assertEquals(1, ids.size());
-        assertEquals(templateId, ids.iterator().next());
+        assertEquals(templateName, ids.iterator().next());
     }
 
     @Test
     public void testInsertDelete() throws Exception {
-        String templateId = UUID.randomUUID().toString();
         String templateName = "template#" + System.currentTimeMillis();
         InputStream templateData = new ByteArrayInputStream(new byte[]{1, 2, 3});
 
-        templateDao.insert(templateId, templateName, templateData);
+        templateDao.insert(templateName, templateData);
 
         // ---
 
-        String projectId = UUID.randomUUID().toString();
         String projectName = "project#" + System.currentTimeMillis();
-        String[] projectTemplateIds = {templateId};
+        String[] projectTemplates = {templateName};
 
-        projectDao.insert(projectId, projectName, Arrays.asList(projectTemplateIds));
+        projectDao.insert(projectName, Arrays.asList(projectTemplates));
 
         // ---
 
         String repoName = "repo#" + System.currentTimeMillis();
         String repoUrl = "n/a";
-        repositoryDao.insert(projectId, repoName, repoUrl, null, null);
+        repositoryDao.insert(projectName, repoName, repoUrl, null, null);
 
         // ---
 
-        projectDao.delete(projectId);
+        projectDao.delete(projectName);
 
         // ---
 
-        assertNull(projectDao.getId(projectName));
-        assertNotNull(templateDao.getId(templateName));
-        assertNull(repositoryDao.get(projectId, repoName));
+        assertFalse(projectDao.exists(projectName));
+        assertTrue(templateDao.exists(templateName));
+        assertFalse(repositoryDao.exists(projectName, repoName));
     }
 
     @Test
     public void testList() throws Exception {
-        String aTemplateId = UUID.randomUUID().toString();
         String aTemplateName = "aTemplate#" + System.currentTimeMillis();
-        String bTemplateId = UUID.randomUUID().toString();
         String bTemplateName = "bTemplate#" + System.currentTimeMillis();
 
         InputStream templateData = new ByteArrayInputStream(new byte[]{1, 2, 3});
 
-        templateDao.insert(aTemplateId, aTemplateName, templateData);
-        templateDao.insert(bTemplateId, bTemplateName, templateData);
+        templateDao.insert(aTemplateName, templateData);
+        templateDao.insert(bTemplateName, templateData);
 
         // ---
 
@@ -103,22 +97,20 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
 
-        String aId = UUID.randomUUID().toString();
         String aName = "aProject#" + System.currentTimeMillis();
-        String[] aTemplateIds = {aTemplateId, bTemplateId};
+        String[] aTemplates = {aTemplateName, bTemplateName};
         Set<String> aTemplateNames = new HashSet<>();
         aTemplateNames.add(aTemplateName);
         aTemplateNames.add(bTemplateName);
 
-        String bId = UUID.randomUUID().toString();
         String bName = "bProject#" + System.currentTimeMillis();
-        String[] bTemplateIds = {aTemplateId, bTemplateId};
+        String[] bTemplates = {aTemplateName, bTemplateName};
         Set<String> bTemplateNames = new HashSet<>();
         bTemplateNames.add(aTemplateName);
         bTemplateNames.add(bTemplateName);
 
-        projectDao.insert(aId, aName, Arrays.asList(aTemplateIds));
-        projectDao.insert(bId, bName, Arrays.asList(bTemplateIds));
+        projectDao.insert(aName, Arrays.asList(aTemplates));
+        projectDao.insert(bName, Arrays.asList(bTemplates));
 
         // ---
 
@@ -126,11 +118,11 @@ public class ProjectDaoTest extends AbstractDaoTest {
         assertEquals(2, l.size());
 
         ProjectEntry a = l.get(1);
-        assertEquals(aId, a.getId());
+        assertEquals(aName, a.getName());
         assertSetEquals(aTemplateNames, a.getTemplates());
 
         ProjectEntry b = l.get(0);
-        assertEquals(bId, b.getId());
+        assertEquals(bName, b.getName());
         assertSetEquals(bTemplateNames, b.getTemplates());
     }
 

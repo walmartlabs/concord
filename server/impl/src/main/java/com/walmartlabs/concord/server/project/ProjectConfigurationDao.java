@@ -32,27 +32,27 @@ public class ProjectConfigurationDao extends AbstractDao {
         this.objectMapper = new ObjectMapper();
     }
 
-    public void insert(String projectId, Map<String, Object> cfg) {
-        tx(tx -> insert(tx, projectId, cfg));
+    public void insert(String projectName, Map<String, Object> cfg) {
+        tx(tx -> insert(tx, projectName, cfg));
     }
 
-    public void insert(DSLContext tx, String projectId, Map<String, Object> cfg) {
+    public void insert(DSLContext tx, String projectName, Map<String, Object> cfg) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             objectMapper.writeValue(out, cfg);
 
             InputStream in = new ByteArrayInputStream(out.toByteArray());
-            attachmentDao.insert(tx, projectId, PROJECT_CFG_ATTACHMENT_KEY, in);
+            attachmentDao.insert(tx, projectName, PROJECT_CFG_ATTACHMENT_KEY, in);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
 
-    public void delete(DSLContext tx, String projectId) {
-        attachmentDao.delete(tx, projectId, PROJECT_CFG_ATTACHMENT_KEY);
+    public void delete(DSLContext tx, String projectName) {
+        attachmentDao.delete(tx, projectName, PROJECT_CFG_ATTACHMENT_KEY);
     }
 
-    public Map<String, Object> get(String projectId) {
-        try (InputStream in = attachmentDao.get(projectId, PROJECT_CFG_ATTACHMENT_KEY)) {
+    public Map<String, Object> get(String projectName) {
+        try (InputStream in = attachmentDao.get(projectName, PROJECT_CFG_ATTACHMENT_KEY)) {
             if (in == null) {
                 return null;
             }
@@ -62,13 +62,13 @@ public class ProjectConfigurationDao extends AbstractDao {
         }
     }
 
-    public Object getValue(String projectId, String... path) {
-        Map<String, Object> cfg = get(projectId);
+    public Object getValue(String projectName, String... path) {
+        Map<String, Object> cfg = get(projectName);
         return get(cfg, path);
     }
 
-    public List<Map<String, Object>> getList(String projectId, String... path) {
-        Object v = getValue(projectId, path);
+    public List<Map<String, Object>> getList(String projectName, String... path) {
+        Object v = getValue(projectName, path);
         if (v == null) {
             return null;
         }

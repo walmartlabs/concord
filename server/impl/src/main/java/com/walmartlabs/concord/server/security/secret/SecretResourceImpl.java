@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS;
 
@@ -63,9 +62,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
         KeyPair k = KeyPair.create();
         byte[] ab = SecretUtils.encrypt(KeyPair::serialize, k, password, secretCfg.getSalt());
 
-        String id = UUID.randomUUID().toString();
-        secretDao.insert(id, name, SecretType.KEY_PAIR, ab);
-        return toPublicKey(id, name, k.getPublicKey());
+        secretDao.insert(name, SecretType.KEY_PAIR, ab);
+        return toPublicKey(name, k.getPublicKey());
     }
 
     @Override
@@ -86,9 +84,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
         byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentKey());
         byte[] ab = SecretUtils.encrypt(KeyPair::serialize, k, password, secretCfg.getSalt());
 
-        String id = UUID.randomUUID().toString();
-        secretDao.insert(id, name, SecretType.KEY_PAIR, ab);
-        return new UploadSecretResponse(id);
+        secretDao.insert(name, SecretType.KEY_PAIR, ab);
+        return new UploadSecretResponse();
     }
 
     @Override
@@ -102,9 +99,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
         byte[] password = passwordManager.getPassword(request.getUsername(), ApiKey.getCurrentKey());
         byte[] ab = SecretUtils.encrypt(UsernamePassword::serialize, k, password, secretCfg.getSalt());
 
-        String id = UUID.randomUUID().toString();
-        secretDao.insert(id, name, SecretType.USERNAME_PASSWORD, ab);
-        return new UploadSecretResponse(id);
+        secretDao.insert(name, SecretType.USERNAME_PASSWORD, ab);
+        return new UploadSecretResponse();
     }
 
     @Override
@@ -112,16 +108,16 @@ public class SecretResourceImpl implements SecretResource, Resource {
         assertPermissions(secretName, Permissions.SECRET_READ_INSTANCE,
                 "The current user does not have permissions to access the specified secret");
 
-        String id = assertSecretId(secretName);
+        assertSecret(secretName);
 
-        SecretDataEntry s = secretDao.get(id);
+        SecretDataEntry s = secretDao.get(secretName);
         if (s.getType() != SecretType.KEY_PAIR) {
             throw new ValidationErrorsException("The specified secret is not a key pair");
         }
 
         byte[] password = passwordManager.getPassword(s.getName(), ApiKey.getCurrentKey());
         KeyPair k = SecretUtils.decrypt(KeyPair::deserialize, s.getData(), password, secretCfg.getSalt());
-        return toPublicKey(s.getId(), s.getName(), k.getPublicKey());
+        return toPublicKey(s.getName(), k.getPublicKey());
     }
 
     @Override
@@ -135,27 +131,26 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
     @Override
     @Validate
-    public DeleteSecretResponse delete(String secretName) {
-        assertPermissions(secretName, Permissions.SECRET_DELETE_INSTANCE,
+    public DeleteSecretResponse delete(String name) {
+        assertPermissions(name, Permissions.SECRET_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified secret");
 
-        String id = assertSecretId(secretName);
-        secretDao.delete(id);
+        assertSecret(name);
+
+        secretDao.delete(name);
         return new DeleteSecretResponse();
     }
 
     private void assertUnique(String name) {
-        if (secretDao.getId(name) != null) {
+        if (secretDao.exists(name)) {
             throw new ValidationErrorsException("Secret already exists: " + name);
         }
     }
 
-    private String assertSecretId(String name) {
-        String id = secretDao.getId(name);
-        if (id == null) {
+    private void assertSecret(String name) {
+        if (!secretDao.exists(name)) {
             throw new ValidationErrorsException("Secret not found: " + name);
         }
-        return id;
     }
 
     private void assertPermissions(String name, String wildcard, String message) {
@@ -165,9 +160,9 @@ public class SecretResourceImpl implements SecretResource, Resource {
         }
     }
 
-    private static PublicKeyResponse toPublicKey(String id, String name, byte[] ab) {
+    private static PublicKeyResponse toPublicKey(String name, byte[] ab) {
         String s = new String(ab).trim();
-        return new PublicKeyResponse(id, name, s);
+        return new PublicKeyResponse(name, s);
     }
 
     private static InputStream assertStream(MultipartInput input, String key) throws IOException {

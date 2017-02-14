@@ -24,7 +24,7 @@ public class SecretManager {
     }
 
     public Secret getSecret(String name) {
-        SecretDataEntry s = secretDao.getByName(name);
+        SecretDataEntry s = secretDao.get(name);
         if (s == null) {
             throw new ProcessException("Secret not found: " + name);
         }

@@ -25,12 +25,10 @@ public class CrudIT extends AbstractServerIT {
         CreateTemplateResponse ctr = templateResource.create(name, new ByteArrayInputStream(new byte[]{0, 1, 2}));
         assertTrue(ctr.isOk());
 
-        String id = ctr.getId();
-
-        UpdateTemplateResponse utr = templateResource.update(id, new ByteArrayInputStream(new byte[]{0, 1}));
+        UpdateTemplateResponse utr = templateResource.update(name, new ByteArrayInputStream(new byte[]{0, 1}));
         assertTrue(utr.isOk());
 
-        DeleteTemplateResponse dtr = templateResource.delete(id);
+        DeleteTemplateResponse dtr = templateResource.delete(name);
         assertTrue(dtr.isOk());
     }
 
@@ -55,7 +53,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(upr.isOk());
 
         List<ProjectEntry> l = projectResource.list(null, false);
-        ProjectEntry e2 = findProject(l, cpr.getId());
+        ProjectEntry e2 = findProject(l, projectName);
         assertNotNull(e2);
         assertEquals(0, e2.getTemplates().size());
 
@@ -119,8 +117,6 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(pkr.isOk());
         assertNotNull(pkr.getPublicKey());
 
-        String id = pkr.getId();
-
         // ---
 
         PublicKeyResponse pkr2 = secretResource.getPublicKey(keyName);
@@ -129,7 +125,7 @@ public class CrudIT extends AbstractServerIT {
         // ---
 
         List<SecretEntry> l = secretResource.list(null, true);
-        SecretEntry s = findSecret(l, id);
+        SecretEntry s = findSecret(l, keyName);
         assertNotNull(s);
         assertEquals(keyName, s.getName());
 
@@ -159,21 +155,21 @@ public class CrudIT extends AbstractServerIT {
         // ---
 
         List<SecretEntry> l = secretResource.list(null, true);
-        SecretEntry s = findSecret(l, usr.getId());
+        SecretEntry s = findSecret(l, keyName);
         assertNotNull(s);
         assertEquals(SecretType.USERNAME_PASSWORD, s.getType());
         assertEquals(keyName, s.getName());
     }
 
-    private static ProjectEntry findProject(List<ProjectEntry> l, String id) {
-        return l.stream().filter(e -> id.equals(e.getId())).findAny().get();
+    private static ProjectEntry findProject(List<ProjectEntry> l, String name) {
+        return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
 
     private static RepositoryEntry findRepository(List<RepositoryEntry> l, String name) {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
 
-    private static SecretEntry findSecret(List<SecretEntry> l, String id) {
-        return l.stream().filter(e -> id.equals(e.getId())).findAny().get();
+    private static SecretEntry findSecret(List<SecretEntry> l, String name) {
+        return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
 }

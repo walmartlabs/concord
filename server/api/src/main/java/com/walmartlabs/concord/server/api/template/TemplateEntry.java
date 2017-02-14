@@ -7,28 +7,30 @@ import java.io.Serializable;
 
 public class TemplateEntry implements Serializable {
 
-    private final String id;
     private final String name;
+    private final int size;
 
     @JsonCreator
-    public TemplateEntry(@JsonProperty("id") String id, @JsonProperty("name") String name) {
-        this.id = id;
-        this.name = name;
-    }
+    public TemplateEntry(@JsonProperty("name") String name,
+                         @JsonProperty("size") int size) {
 
-    public String getId() {
-        return id;
+        this.name = name;
+        this.size = size;
     }
 
     public String getName() {
         return name;
     }
 
+    public int getSize() {
+        return size;
+    }
+
     @Override
     public String toString() {
         return "TemplateEntry{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
+                "name='" + name + '\'' +
+                ", size=" + size +
                 '}';
     }
 }

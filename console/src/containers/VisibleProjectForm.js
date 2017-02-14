@@ -16,7 +16,7 @@ class VisibleProjectForm extends Component {
 
     componentDidMount() {
         const {project} = this.props;
-        if (project.id) {
+        if (project.name) {
             this.load();
         } else {
             this.create();
@@ -26,9 +26,9 @@ class VisibleProjectForm extends Component {
     componentDidUpdate(prevProps) {
         const {project} = this.props;
 
-        if (project.id && project.id !== prevProps.project.id) {
+        if (project.name && project.name !== prevProps.project.name) {
             this.load();
-        } else if (!project.id && prevProps.project.id) {
+        } else if (!project.name && prevProps.project.name) {
             this.create();
         }
     }
@@ -42,12 +42,12 @@ class VisibleProjectForm extends Component {
     load() {
         const {fetchTemplates, fetchData, project} = this.props;
         fetchTemplates();
-        fetchData(project.id);
+        fetchData(project.name);
     }
 
     render() {
         const {project, templates, onCreateFn, onUpdateFn} = this.props;
-        const isNew = project.id === undefined || project.id === null;
+        const isNew = project.name === undefined || project.name === null;
 
         if (project.error) {
             return <ErrorMessage message={project.error} retryFn={() => this.load()}/>;
@@ -70,7 +70,7 @@ const toOptions = (rows, labelField) =>
 const mapStateToProps = (state, {params}) => {
     return {
         project: {
-            id: params.id,
+            name: params.name,
             data: selectors.getProjectData(state),
             loading: selectors.getIsProjectDataLoading(state),
             error: selectors.getProjectLoadingError(state)
@@ -92,8 +92,8 @@ const mapDispatchToProps = (dispatch) => ({
     onCreateFn: (data) => new Promise((resolve, reject) =>
         dispatch(actions.createProject(data, resolve, reject))),
 
-    onUpdateFn: ({id, ...rest}) => new Promise((resolve, reject) =>
-        dispatch(actions.updateProject(id, rest, resolve, reject)))
+    onUpdateFn: ({name, ...rest}) => new Promise((resolve, reject) =>
+        dispatch(actions.updateProject(name, rest, resolve, reject)))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(VisibleProjectForm);

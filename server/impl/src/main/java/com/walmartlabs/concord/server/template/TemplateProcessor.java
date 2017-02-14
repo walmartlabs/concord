@@ -42,12 +42,12 @@ public class TemplateProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Payload payload) {
-        String projectId = payload.getHeader(Payload.PROJECT_ID);
-        if (projectId == null) {
+        String projectName = payload.getHeader(Payload.PROJECT_NAME);
+        if (projectName == null) {
             return payload;
         }
 
-        Collection<String> templateIds = templateDao.getProjectTemplateIds(projectId);
+        Collection<String> templateIds = templateDao.getProjectTemplates(projectName);
         if (templateIds.isEmpty()) {
             return payload;
         }
@@ -55,7 +55,7 @@ public class TemplateProcessor implements PayloadProcessor {
             throw new ProcessException("Multiple project templates are not yet supported", Status.BAD_REQUEST);
         }
 
-        try (InputStream in = templateDao.get(templateIds.iterator().next())) {
+        try (InputStream in = templateDao.getData(templateIds.iterator().next())) {
             return process(payload, in);
         } catch (IOException e) {
             log.error("process ['{}'] -> error", payload.getInstanceId(), e);

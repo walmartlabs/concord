@@ -12,8 +12,6 @@ import java.util.Set;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProjectEntry implements Serializable {
 
-    private final String id;
-
     @NotNull
     @ConcordKey
     private final String name;
@@ -21,17 +19,11 @@ public class ProjectEntry implements Serializable {
     private final Set<String> templates;
 
     @JsonCreator
-    public ProjectEntry(@JsonProperty("id") String id,
-                        @JsonProperty("name") String name,
+    public ProjectEntry(@JsonProperty("name") String name,
                         @JsonProperty("templates") Set<String> templates) {
 
-        this.id = id;
         this.name = name;
         this.templates = templates;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public String getName() {
@@ -45,8 +37,7 @@ public class ProjectEntry implements Serializable {
     @Override
     public String toString() {
         return "ProjectEntry{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
+                "name='" + name + '\'' +
                 ", templates=" + templates +
                 '}';
     }

@@ -10,7 +10,6 @@ import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Test;
 
 import java.util.Collections;
-import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -20,28 +19,26 @@ public class SecretDaoTest extends AbstractDaoTest {
 
     @Test
     public void testOnCascade() {
-        String projectId = UUID.randomUUID().toString();
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        projectDao.insert(projectId, projectName, Collections.emptySet());
+        projectDao.insert(projectName, Collections.emptySet());
 
-        String secretId = UUID.randomUUID().toString();
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        secretDao.insert(secretId, secretName, SecretType.KEY_PAIR, new byte[]{0, 1, 2});
+        secretDao.insert(secretName, SecretType.KEY_PAIR, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());
-        repositoryDao.insert(projectId, repoName, "n/a", null, secretId);
+        repositoryDao.insert(projectName, repoName, "n/a", null, secretName);
 
         // ---
 
-        secretDao.delete(secretId);
+        secretDao.delete(secretName);
 
         // ---
 
-        RepositoryEntry r = repositoryDao.get(projectId, repoName);
+        RepositoryEntry r = repositoryDao.get(projectName, repoName);
         assertNotNull(r);
         assertNull(r.getSecret());
     }

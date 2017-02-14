@@ -10,7 +10,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -28,17 +27,16 @@ public class TemplateDaoTest extends AbstractDaoTest {
 
     @Test
     public void testInsert() throws Exception {
-        String id = UUID.randomUUID().toString();
         String name = "test#" + System.currentTimeMillis();
         InputStream data = new ByteArrayInputStream(new byte[]{1, 2, 3});
 
         // ---
 
-        templateDao.insert(id, name, data);
+        templateDao.insert(name, data);
 
         // ---
 
-        try (InputStream in = templateDao.get(id)) {
+        try (InputStream in = templateDao.getData(name)) {
             assertNotNull(in);
             assertEquals(1, in.read());
             assertEquals(2, in.read());
@@ -48,27 +46,25 @@ public class TemplateDaoTest extends AbstractDaoTest {
 
     @Test
     public void testInsertDelete() throws Exception {
-        String templateId = UUID.randomUUID().toString();
         String templateName = "template#" + System.currentTimeMillis();
         InputStream templateData = new ByteArrayInputStream(new byte[]{1, 2, 3});
 
-        templateDao.insert(templateId, templateName, templateData);
+        templateDao.insert(templateName, templateData);
 
         // ---
 
-        String projectId = UUID.randomUUID().toString();
         String projectName = "project#" + System.currentTimeMillis();
-        String[] projectTemplateIds = {templateId};
+        String[] projectTemplates = {templateName};
 
-        projectDao.insert(projectId, projectName, Arrays.asList(projectTemplateIds));
+        projectDao.insert(projectName, Arrays.asList(projectTemplates));
 
         // ---
 
-        templateDao.delete(templateId);
+        templateDao.delete(templateName);
 
-        assertNull(templateDao.get(templateId));
-        assertEquals(projectId, projectDao.getId(projectName));
-        Collection<String> ids = templateDao.getProjectTemplateIds(projectId);
+        assertNull(templateDao.getData(templateName));
+        assertTrue(projectDao.exists(projectName));
+        Collection<String> ids = templateDao.getProjectTemplates(projectName);
         assertTrue(ids.isEmpty());
     }
 }

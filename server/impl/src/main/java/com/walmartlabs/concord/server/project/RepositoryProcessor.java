@@ -41,9 +41,9 @@ public class RepositoryProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Payload payload) {
-        String projectId = payload.getHeader(Payload.PROJECT_ID);
+        String projectName = payload.getHeader(Payload.PROJECT_NAME);
         String[] entryPoint = payload.getHeader(Payload.ENTRY_POINT);
-        if (projectId == null || entryPoint == null || entryPoint.length < 1) {
+        if (projectName == null || entryPoint == null || entryPoint.length < 1) {
             return payload;
         }
 
@@ -52,7 +52,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         // TODO remove when the support for default repositories will be implemented?
         String repoName = entryPoint[0];
 
-        RepositoryEntry repo = repositoryDao.get(projectId, repoName);
+        RepositoryEntry repo = repositoryDao.get(projectName, repoName);
         if (repo == null) {
             return payload;
         }
@@ -64,7 +64,7 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         Secret secret = null;
         if (repo.getSecret() != null) {
-            secret = secretManager.getSecret(repo.getSecret().getName());
+            secret = secretManager.getSecret(repo.getSecret());
         }
 
         try {

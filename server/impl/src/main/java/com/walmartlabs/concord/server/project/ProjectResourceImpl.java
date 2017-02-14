@@ -18,7 +18,10 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
@@ -48,7 +51,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         this.secretDao = secretDao;
 
         this.key2ProjectField = new HashMap<>();
-        key2ProjectField.put("projectId", PROJECTS.PROJECT_ID);
         key2ProjectField.put("name", PROJECTS.PROJECT_NAME);
 
         this.key2RepositoryField = new HashMap<>();
@@ -61,28 +63,28 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Validate
     @RequiresPermissions(Permissions.PROJECT_CREATE_NEW)
     public CreateProjectResponse create(CreateProjectRequest request) {
-        if (projectDao.exists(request.getName())) {
+        String projectName = request.getName();
+        if (projectDao.exists(projectName)) {
             throw new ValidationErrorsException("Project already exists: " + request.getName());
         }
 
-        Collection<String> templateIds = getTemplateIds(request.getTemplates());
-        String projectId = UUID.randomUUID().toString();
+        assertTemplates(request.getTemplates());
 
         tx(tx -> {
-            projectDao.insert(tx, projectId, request.getName(), templateIds);
+            projectDao.insert(tx, projectName, request.getTemplates());
 
             Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
             if (repos != null) {
-                insert(tx, projectId, repos);
+                insert(tx, projectName, repos);
             }
 
             Map<String, Object> cfg = request.getCfg();
             if (cfg != null) {
-                configurationDao.insert(tx, projectId, cfg);
+                configurationDao.insert(tx, projectName, cfg);
             }
         });
 
-        return new CreateProjectResponse(projectId);
+        return new CreateProjectResponse();
     }
 
     @Override
@@ -91,10 +93,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        String projectId = resolveProjectId(projectName);
-        String secretId = resolveSecretId(request.getSecret());
+        assertSecret(request.getSecret());
+
         tx(tx -> {
-            repositoryDao.insert(tx, projectId, request.getName(), request.getUrl(), request.getBranch(), secretId);
+            repositoryDao.insert(tx, projectName, request.getName(), request.getUrl(), request.getBranch(), request.getSecret());
         });
         return new CreateRepositoryResponse();
     }
@@ -104,7 +106,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     public ProjectEntry get(String projectName) {
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
-        return projectDao.getByName(projectName);
+        return projectDao.get(projectName);
     }
 
     @Override
@@ -113,8 +115,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
-        String projectId = resolveProjectId(projectName);
-        return repositoryDao.get(projectId, repositoryName);
+        return repositoryDao.get(projectName, repositoryName);
     }
 
     @Override
@@ -133,12 +134,11 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
-        String projectId = resolveProjectId(projectName);
         Field<?> sortField = key2RepositoryField.get(sortBy);
         if (sortField == null) {
             throw new ValidationErrorsException("Unknown sort field: " + sortBy);
         }
-        return repositoryDao.list(projectId, sortField, asc);
+        return repositoryDao.list(projectName, sortField, asc);
     }
 
     @Override
@@ -147,21 +147,21 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        String projectId = resolveProjectId(projectName);
-        Collection<String> templateIds = getTemplateIds(request.getTemplates());
+        assertTemplates(request.getTemplates());
+
         tx(tx -> {
-            projectDao.update(tx, projectId, templateIds);
+            projectDao.update(tx, projectName, request.getTemplates());
 
             Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
             if (repos != null) {
-                repositoryDao.deleteAll(tx, projectId);
-                insert(tx, projectId, repos);
+                repositoryDao.deleteAll(tx, projectName);
+                insert(tx, projectName, repos);
             }
 
             Map<String, Object> cfg = request.getCfg();
             if (cfg != null) {
-                configurationDao.delete(tx, projectId);
-                configurationDao.insert(tx, projectId, cfg);
+                configurationDao.delete(tx, projectName);
+                configurationDao.insert(tx, projectName, cfg);
             }
         });
 
@@ -173,12 +173,11 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        String projectId = resolveProjectId(projectName);
-        assertRepository(projectId, repositoryName);
+        assertRepository(projectName, repositoryName);
+        assertSecret(request.getSecret());
 
-        String secretId = resolveSecretId(request.getSecret());
         tx(tx -> {
-            repositoryDao.update(tx, repositoryName, request.getUrl(), request.getBranch(), secretId);
+            repositoryDao.update(tx, repositoryName, request.getUrl(), request.getBranch(), request.getSecret());
         });
         return new UpdateRepositoryResponse();
     }
@@ -189,9 +188,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified project");
 
-        String projectId = resolveProjectId(projectName);
         tx(tx -> {
-            projectDao.delete(tx, projectId);
+            projectDao.delete(tx, projectName);
         });
         return new DeleteProjectResponse();
     }
@@ -202,8 +200,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        String projectId = resolveProjectId(projectName);
-        assertRepository(projectId, repositoryName);
+        assertRepository(projectName, repositoryName);
 
         tx(tx -> {
             repositoryDao.delete(tx, repositoryName);
@@ -211,15 +208,16 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         return new DeleteRepositoryResponse();
     }
 
-    private Collection<String> getTemplateIds(Collection<String> templateNames) {
-        return mapToList(templateNames, n -> {
-            assertTemplatePermissions(n);
+    private void assertTemplates(Collection<String> templateNames) {
+        if (templateNames == null || templateNames.isEmpty()) {
+            return;
+        }
 
-            String id = templateDao.getId(n);
-            if (id == null) {
-                throw new ValidationErrorsException("Unknown template: " + n);
+        templateNames.forEach(t -> {
+            assertTemplatePermissions(t);
+            if (!templateDao.exists(t)) {
+                throw new ValidationErrorsException("Unknown template: " + t);
             }
-            return id;
         });
     }
 
@@ -231,17 +229,9 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
     }
 
-    private String resolveProjectId(String projectName) {
-        String id = projectDao.getId(projectName);
-        if (id == null) {
-            throw new ValidationErrorsException("Project not found: " + projectName);
-        }
-        return id;
-    }
-
-    private String resolveSecretId(String name) {
+    private void assertSecret(String name) {
         if (name == null) {
-            return null;
+            return;
         }
 
         Subject subject = SecurityUtils.getSubject();
@@ -249,26 +239,21 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             throw new UnauthorizedException("The current user does not have permissions to use the specified secret");
         }
 
-        String id = secretDao.getId(name);
-        if (id == null) {
-            throw new ValidationErrorsException("Secret not found: " + id);
+        if (!secretDao.exists(name)) {
+            throw new ValidationErrorsException("Secret not found: " + name);
         }
-
-        return id;
     }
 
-    private void assertRepository(String projectId, String repositoryName) {
-        if (!repositoryDao.exists(projectId, repositoryName)) {
+    private void assertRepository(String projectName, String repositoryName) {
+        if (!repositoryDao.exists(projectName, repositoryName)) {
             throw new ValidationErrorsException("Repository not found: " + repositoryName);
         }
     }
 
-    private void insert(DSLContext tx, String projectId, Map<String, UpdateRepositoryRequest> repos) {
+    private void insert(DSLContext tx, String projectName, Map<String, UpdateRepositoryRequest> repos) {
         for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
             String name = r.getKey();
-            String secretId = resolveSecretId(r.getValue().getSecret());
-            repositoryDao.insert(tx, projectId, name,
-                    r.getValue().getUrl(), r.getValue().getBranch(), secretId);
+            repositoryDao.insert(tx, projectName, name, r.getValue().getUrl(), r.getValue().getBranch(), r.getValue().getSecret());
         }
     }
 

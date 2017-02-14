@@ -36,10 +36,10 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Payload payload) {
-        String projectId = payload.getHeader(Payload.PROJECT_ID);
+        String projectName = payload.getHeader(Payload.PROJECT_NAME);
 
         // TODO constants
-        Collection<Map<String, Object>> cfg = cfgDao.getList(projectId, "ansible", "privateKeys");
+        Collection<Map<String, Object>> cfg = cfgDao.getList(projectName, "ansible", "privateKeys");
         if (cfg == null) {
             log.debug("process ['{}'] -> configuration not found, nothing to do", payload.getInstanceId());
             return payload;

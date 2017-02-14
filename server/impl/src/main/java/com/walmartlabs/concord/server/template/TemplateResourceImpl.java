@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPLATES;
 
@@ -40,9 +39,8 @@ public class TemplateResourceImpl implements TemplateResource, Resource {
             throw new ValidationErrorsException("The template already exists: " + name);
         }
 
-        String id = UUID.randomUUID().toString();
-        templateDao.insert(id, name, data);
-        return new CreateTemplateResponse(id);
+        templateDao.insert(name, data);
+        return new CreateTemplateResponse();
     }
 
     @Override
@@ -56,22 +54,22 @@ public class TemplateResourceImpl implements TemplateResource, Resource {
 
     @Override
     @Validate
-    public UpdateTemplateResponse update(String id, InputStream data) {
-        if (!templateDao.existsId(id)) {
-            throw new ValidationErrorsException("Template not found: " + id);
+    public UpdateTemplateResponse update(String name, InputStream data) {
+        if (!templateDao.exists(name)) {
+            throw new ValidationErrorsException("Template not found: " + name);
         }
-        templateDao.update(id, data);
+        templateDao.update(name, data);
         return new UpdateTemplateResponse();
     }
 
     @Override
     @Validate
-    public DeleteTemplateResponse delete(String id) {
-        if (!templateDao.existsId(id)) {
-            throw new ValidationErrorsException("Template not found: " + id);
+    public DeleteTemplateResponse delete(String name) {
+        if (!templateDao.exists(name)) {
+            throw new ValidationErrorsException("Template not found: " + name);
         }
 
-        templateDao.delete(id);
+        templateDao.delete(name);
         return new DeleteTemplateResponse();
     }
 }

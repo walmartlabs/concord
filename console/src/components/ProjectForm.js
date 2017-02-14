@@ -51,7 +51,7 @@ class ProjectForm extends Component {
 
 ProjectForm.propTypes = {
     Field: PropTypes.any.isRequired,
-    onUpdateFn: PropTypes.func.isRequired,
+    onSubmitFn: PropTypes.func.isRequired,
     isNew: PropTypes.bool,
     loading: PropTypes.bool,
     templates: PropTypes.object.isRequired

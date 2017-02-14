@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.api.template;
 
-import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,15 +30,15 @@ public interface TemplateResource {
 
     @PUT
     @ApiOperation("Update an existing template")
-    @Path("/{id}")
+    @Path("/{name}")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
-    UpdateTemplateResponse update(@ApiParam @PathParam("id") @ConcordId String id,
+    UpdateTemplateResponse update(@ApiParam @PathParam("name") @ConcordKey String name,
                                   @ApiParam InputStream data);
 
     @DELETE
     @ApiOperation("Delete an existing template")
-    @Path("/{id}")
+    @Path("/{name}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteTemplateResponse delete(@ApiParam @PathParam("id") @ConcordId String id);
+    DeleteTemplateResponse delete(@ApiParam @PathParam("name") @ConcordKey String name);
 }

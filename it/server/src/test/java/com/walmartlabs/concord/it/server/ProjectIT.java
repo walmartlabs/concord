@@ -2,12 +2,11 @@ package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.Sets;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
-import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.project.CreateRepositoryRequest;
-import com.walmartlabs.concord.server.api.project.CreateRepositoryResponse;
+import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
@@ -71,8 +70,6 @@ public class ProjectIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
         CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, projectTemplates, null));
         assertTrue(cpr.isOk());
-
-        String projectId = cpr.getId();
 
         UserResource userResource = proxy(UserResource.class);
         CreateUserResponse cur = userResource.create(new CreateUserRequest(userName, permissions));

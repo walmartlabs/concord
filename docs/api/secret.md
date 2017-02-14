@@ -16,7 +16,6 @@ Generates a new SSH key pair. A public key will be returned in the response.
     
     ```json
     {
-      "id": "...",
       "name": "secretName",
       "publicKey": "ssh-rsa AAAA... concord-server",
       "ok": true
@@ -42,7 +41,6 @@ Upload an existing SSH key pair.
     
     ```json
     {
-      "id": "...",
       "ok": true
     }
     ```
@@ -64,7 +62,6 @@ Returns a public key from an existing key pair.
     
     ```json
     {
-      "id": "...",
       "name": "secretName",
       "publicKey": "ssh-rsa AAAA... concord-server",
       "ok": true
@@ -93,7 +90,6 @@ Adds a new secret containing username and password.
     
     ```json
     {
-      "id": "...",
       "ok": true
     }
     ```
@@ -138,7 +134,7 @@ Lists existing secrets.
     
     ```json
     [
-      { "id": "...", "name": "...", "type": "..." },
-      { "id": "...", "name": "...", "type": "..." }
+      { "name": "...", "type": "..." },
+      { "name": "...", "type": "..." }
     ]
     ```

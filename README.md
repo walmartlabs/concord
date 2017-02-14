@@ -18,6 +18,11 @@ You can build docker images using this commands:
 
 ## Integration tests
 
+Prerequisites:
+- Ansible must be installed and available in `$PATH`.
+  See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
+- Java must be available in `$PATH` as `java`.
+
 Integration tests are disabled by default. Use the `it` profile to enable them:
 
 ```

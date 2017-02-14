@@ -16,7 +16,7 @@ export const getProcessStartPath = () => "/process/start";
 export const getProjectListPath = () => "/project/list";
 export const getProjectNewPath = () => "/project/new";
 export const getProjectTemplateListPath = () => "/project/templates";
-export const getProjectPath = (id) => "/project/" + id;
+export const getProjectPath = (name) => "/project/" + name;
 
 export default (store, history) => {
     const h = syncHistoryWithStore(history, store);
@@ -40,7 +40,7 @@ export default (store, history) => {
                 <IndexRedirect to="list"/>
                 <Route path="list" component={VisibleProjectTable}/>
                 <Route path="new" component={VisibleProjectForm}/>
-                <Route path=":id" component={VisibleProjectForm}/>
+                <Route path=":name" component={VisibleProjectForm}/>
             </Route>
         </Route>
     </Router>;

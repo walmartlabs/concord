@@ -68,10 +68,10 @@ const fetchProjectList = makeListFetcher("fetchProjectList", api.fetchProjectLis
 
 function* deleteProject(action) {
     try {
-        yield call(api.deleteProject, action.id);
+        yield call(api.deleteProject, action.name);
         yield put({
             type: actionTypes.projectList.DELETE_PROJECT_RESULT,
-            id: action.id
+            name: action.name
         });
 
         const query = yield select(getProjectListLastQuery);
@@ -83,7 +83,7 @@ function* deleteProject(action) {
         console.error("deleteProject -> error", e);
         yield put({
             type: actionTypes.history.DELETE_PROJECT_RESULT,
-            id: action.id,
+            name: action.name,
             error: true,
             message: e.message || "Error while removing a project"
         });
@@ -94,7 +94,7 @@ function* deleteProject(action) {
 
 function* fetchProjectData(action) {
     try {
-        const response = yield call(api.fetchProject, action.id);
+        const response = yield call(api.fetchProject, action.name);
         yield put({
             type: actionTypes.project.FETCH_PROJECT_RESULT,
             response
@@ -111,7 +111,7 @@ function* fetchProjectData(action) {
 
 function* updateProjectData(action) {
     try {
-        const response = yield call(api.updateProject, action.id, action.data);
+        const response = yield call(api.updateProject, action.name, action.data);
         action.resolve(response);
     } catch (e) {
         console.error("updateProjectData -> error", e);
@@ -123,7 +123,7 @@ function* createProject(action) {
     try {
         const response = yield call(api.createProject, action.data);
         action.resolve(response);
-        yield put(pushHistory(routes.getProjectPath(response.id)));
+        yield put(pushHistory(routes.getProjectPath(action.data.name)));
     } catch (e) {
         console.error("createProject -> error", e);
         action.reject(new SubmissionError({_error: e.message}));
