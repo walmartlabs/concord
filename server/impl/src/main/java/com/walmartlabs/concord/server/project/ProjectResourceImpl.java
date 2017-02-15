@@ -18,10 +18,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
@@ -34,13 +31,15 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     private final RepositoryDao repositoryDao;
     private final TemplateDao templateDao;
     private final SecretDao secretDao;
+    private final Set<ConfigurationValidator> cfgValidators;
 
     private final Map<String, Field<?>> key2ProjectField;
     private final Map<String, Field<?>> key2RepositoryField;
 
     @Inject
     public ProjectResourceImpl(Configuration cfg, ProjectDao projectDao, ProjectConfigurationDao configurationDao,
-                               RepositoryDao repositoryDao, TemplateDao templateDao, SecretDao secretDao) {
+                               RepositoryDao repositoryDao, TemplateDao templateDao, SecretDao secretDao,
+                               Set<ConfigurationValidator> cfgValidators) {
 
         super(cfg);
 
@@ -49,6 +48,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         this.repositoryDao = repositoryDao;
         this.templateDao = templateDao;
         this.secretDao = secretDao;
+        this.cfgValidators = cfgValidators;
 
         this.key2ProjectField = new HashMap<>();
         key2ProjectField.put("name", PROJECTS.PROJECT_NAME);
@@ -70,6 +70,13 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         assertTemplates(request.getTemplates());
 
+        Map<String, Object> cfg = request.getCfg();
+        if (cfg != null) {
+            for (ConfigurationValidator v : cfgValidators) {
+                v.validate(cfg);
+            }
+        }
+
         tx(tx -> {
             projectDao.insert(tx, projectName, request.getTemplates());
 
@@ -78,7 +85,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 insert(tx, projectName, repos);
             }
 
-            Map<String, Object> cfg = request.getCfg();
             if (cfg != null) {
                 configurationDao.insert(tx, projectName, cfg);
             }
@@ -234,13 +240,13 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             return;
         }
 
+        if (!secretDao.exists(name)) {
+            throw new ValidationErrorsException("Secret not found: " + name);
+        }
+
         Subject subject = SecurityUtils.getSubject();
         if (!subject.isPermitted(String.format(Permissions.SECRET_READ_INSTANCE, name))) {
             throw new UnauthorizedException("The current user does not have permissions to use the specified secret");
-        }
-
-        if (!secretDao.exists(name)) {
-            throw new ValidationErrorsException("Secret not found: " + name);
         }
     }
 
