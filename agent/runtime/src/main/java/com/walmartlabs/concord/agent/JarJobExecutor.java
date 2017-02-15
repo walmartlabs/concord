@@ -20,16 +20,17 @@ public class JarJobExecutor implements JobExecutor {
     private static final Logger log = LoggerFactory.getLogger(JarJobExecutor.class);
 
     private final LogManager logManager;
+    private final Configuration cfg;
 
     @Inject
-    public JarJobExecutor(LogManager logManager) {
+    public JarJobExecutor(LogManager logManager, Configuration cfg) {
         this.logManager = logManager;
+        this.cfg = cfg;
     }
 
     @Override
     public void exec(String id, Path workDir, String entryPoint, Collection<String> jvmArgs) throws ExecutionException {
-        // TODO cfg
-        String javaCmd = "java";
+        String javaCmd = cfg.getAgentJavaCmd();
 
         String mainClass = Utils.getMainClass(workDir, entryPoint);
 

@@ -16,10 +16,6 @@ import java.util.Map;
 @Named
 public class AnsibleConfigurationValidator implements ConfigurationValidator {
 
-    private static final String GROUP_KEY = "ansible";
-    private static final String PRIVATE_KEYS = "privateKeys";
-    private static final String SECRET_KEY = "secret";
-
     private final SecretDao secretDao;
 
     @Inject
@@ -29,12 +25,12 @@ public class AnsibleConfigurationValidator implements ConfigurationValidator {
 
     @Override
     public void validate(Map<String, Object> m) {
-        Map<String, Object> ansibleCfg = (Map<String, Object>) m.get(GROUP_KEY);
+        Map<String, Object> ansibleCfg = (Map<String, Object>) m.get(AnsibleConfigurationConstants.GROUP_KEY);
         if (ansibleCfg == null) {
             return;
         }
 
-        Collection<Map<String, Object>> privateKeys = (Collection<Map<String, Object>>) ansibleCfg.get(PRIVATE_KEYS);
+        Collection<Map<String, Object>> privateKeys = (Collection<Map<String, Object>>) ansibleCfg.get(AnsibleConfigurationConstants.PRIVATE_KEYS);
         if (privateKeys == null) {
             return;
         }
@@ -42,7 +38,7 @@ public class AnsibleConfigurationValidator implements ConfigurationValidator {
         Subject subject = SecurityUtils.getSubject();
 
         for (Map<String, Object> pk : privateKeys) {
-            String secret = (String) pk.get(SECRET_KEY);
+            String secret = (String) pk.get(AnsibleConfigurationConstants.SECRET_KEY);
             if (secret == null) {
                 continue;
             }

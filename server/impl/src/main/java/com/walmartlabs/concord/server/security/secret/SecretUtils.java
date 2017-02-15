@@ -60,7 +60,6 @@ public final class SecretUtils {
     }
 
     private static Cipher init(byte[] password, byte[] salt, int mode) throws GeneralSecurityException {
-        // TODO we probably want AES-256, but that requires JCE extensions
         Cipher c = Cipher.getInstance("AES");
 
         byte[] key = hash(password, salt);

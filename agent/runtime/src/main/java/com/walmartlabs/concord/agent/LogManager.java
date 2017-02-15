@@ -65,15 +65,7 @@ public class LogManager {
     }
 
     private File logFile(String id) {
-        Path baseDir = cfg.getLogStore();
-
-        File f = baseDir.toFile();
-        if (!f.exists()) {
-            if (!f.mkdirs()) {
-                throw new RuntimeException("Can't create a log directory: " + f.getAbsolutePath());
-            }
-        }
-
+        Path baseDir = cfg.getLogDir();
         return baseDir.resolve(id + ".log").toFile();
     }
 }

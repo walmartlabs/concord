@@ -37,3 +37,15 @@ All parameters are optional.
 | Variable          | Description                                                                       | Default value |
 |-------------------|-----------------------------------------------------------------------------------|---------------|
 | SECRET_STORE_SALT | Store's salt value. If changed, all previously created keys will be inaccessable. |               |
+
+## Agent
+
+### Environment variables
+
+All parameters are optional.
+
+| Variable          | Description                                     | Default value               |
+|-------------------|-------------------------------------------------|-----------------------------|
+| AGENT_LOG_DIR     | Directory to store payload execution log files. | _a new temporary directory_ |
+| AGENT_PAYLOAD_DIR | Directory to store unpacked payload files.      | _a new temporart directory_ |
+| AGENT_JAVA_CMD    | Path to `java` executable.                      | `java`                      |

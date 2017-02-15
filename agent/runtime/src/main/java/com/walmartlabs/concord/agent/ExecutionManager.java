@@ -35,6 +35,7 @@ public class ExecutionManager {
     private final Map<JobType, JobExecutor> jobExecutors;
     private final ExecutorService executor;
     private final LogManager logManager;
+    private final Configuration cfg;
 
     private final Map<String, Future<?>> executions = new HashMap<>();
     private final Cache<String, JobStatus> statuses = CacheBuilder.newBuilder()
@@ -46,11 +47,13 @@ public class ExecutionManager {
     @Inject
     public ExecutionManager(@Named("executionPool") ExecutorService executor,
                             JarJobExecutor jarJobExecutor,
-                            LogManager logManager) {
+                            LogManager logManager,
+                            Configuration cfg) {
 
         this.executor = executor;
 
         this.logManager = logManager;
+        this.cfg = cfg;
         this.jobExecutors = new HashMap<>();
 
         jobExecutors.put(JobType.JAR, jarJobExecutor);
@@ -63,10 +66,10 @@ public class ExecutionManager {
             throw new IllegalArgumentException("Unknown job type: " + type);
         }
 
-        Path tmpDir = extract(payload);
-
         String id = UUID.randomUUID().toString();
         logManager.log(id, "Job type: %s", type);
+
+        Path tmpDir = extract(id, payload);
 
         Map<String, Object> agentParams = getAgentParameters(tmpDir);
         Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
@@ -159,12 +162,16 @@ public class ExecutionManager {
         }
     }
 
-    private static Path extract(InputStream in) throws ExecutionException {
-        try (ZipInputStream zip = new ZipInputStream(in)) {
-            // TODO cfg?
-            Path tmpDir = Files.createTempDirectory("runner");
-            IOUtils.unzip(zip, tmpDir);
-            return tmpDir;
+    private Path extract(String id, InputStream in) throws ExecutionException {
+        Path baseDir = cfg.getPayloadDir();
+        try {
+            Path dst = baseDir.resolve(id);
+            Files.createDirectories(dst);
+
+            try (ZipInputStream zip = new ZipInputStream(in)) {
+                IOUtils.unzip(zip, dst);
+                return dst;
+            }
         } catch (IOException e) {
             throw new ExecutionException("Error while unpacking a payload", e);
         }

@@ -38,8 +38,8 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     public Payload process(Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
 
-        // TODO constants
-        Collection<Map<String, Object>> cfg = cfgDao.getList(projectName, "ansible", "privateKeys");
+        Collection<Map<String, Object>> cfg = cfgDao.getList(projectName,
+                AnsibleConfigurationConstants.GROUP_KEY, AnsibleConfigurationConstants.PRIVATE_KEYS);
         if (cfg == null) {
             log.debug("process ['{}'] -> configuration not found, nothing to do", payload.getInstanceId());
             return payload;
@@ -72,20 +72,17 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
     private static String findMatchingSecret(Payload payload, Collection<Map<String, Object>> items) {
         RepositoryInfo info = payload.getHeader(RepositoryProcessor.REPOSITORY_INFO_KEY);
-
-        // TODO constants
         for (Map<String, Object> i : items) {
-            String secret = (String) i.get("secret");
+            String secret = (String) i.get(AnsibleConfigurationConstants.SECRET_KEY);
             if (secret == null || secret.trim().isEmpty()) {
                 continue;
             }
 
-            String repo = (String) i.get("repository");
+            String repo = (String) i.get(AnsibleConfigurationConstants.REPOSITORY_KEY);
             if (repo != null && info.getName().matches(repo)) {
                 return secret;
             }
         }
-
         return null;
     }
 }

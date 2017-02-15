@@ -21,6 +21,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.io.*;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -152,8 +153,7 @@ public class ProcessExecutorImpl {
 
     private static void log(Path p, String s, Object... args) {
         try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(p, StandardOpenOption.APPEND))) {
-            // TODO force utf-8?
-            out.write(String.format(s, args).getBytes());
+            out.write(String.format(s, args).getBytes(StandardCharsets.UTF_8));
             out.write('\n');
         } catch (IOException e) {
             log.warn("log ['{}'] -> error writing to a log file", p, e);
