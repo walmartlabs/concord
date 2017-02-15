@@ -19,20 +19,17 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.ApiKeys.API_KEY
 @Named
 public class ApiKeyDao extends AbstractDao {
 
+    private final SecureRandom rnd;
+
     @Inject
-    public ApiKeyDao(Configuration cfg) {
+    public ApiKeyDao(Configuration cfg, SecureRandom rnd) {
         super(cfg);
+        this.rnd = rnd;
     }
 
     public String newApiKey() {
         byte[] ab = new byte[16];
-
-        try {
-            SecureRandom r = SecureRandom.getInstanceStrong();
-            r.nextBytes(ab);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error while creating a new API token", e);
-        }
+        rnd.nextBytes(ab);
 
         Encoder e = Base64.getEncoder().withoutPadding();
         return e.encodeToString(ab);

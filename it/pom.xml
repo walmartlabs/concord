@@ -23,7 +23,6 @@
 
     <properties>
         <skip.it.tests>true</skip.it.tests>
-        <skip.haveged>true</skip.haveged>
     </properties>
 
     <profiles>
@@ -34,15 +33,6 @@
             </activation>
             <properties>
                 <skip.it.tests>false</skip.it.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>lowEntropy</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <skip.haveged>false</skip.haveged>
             </properties>
         </profile>
     </profiles>

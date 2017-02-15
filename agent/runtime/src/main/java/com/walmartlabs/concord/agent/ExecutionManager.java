@@ -29,7 +29,8 @@ public class ExecutionManager {
 
     private static final Logger log = LoggerFactory.getLogger(ExecutionManager.class);
     private static final long STATUS_TTL = 8 * 60 * 60 * 1000; // 8 hours
-    private static final Collection<String> DEFAULT_JVM_ARGS = Arrays.asList("-Xmx512m", "-Djavax.el.varArgs=true");
+    private static final Collection<String> DEFAULT_JVM_ARGS = Arrays.asList("-Xmx512m",
+            "-Djavax.el.varArgs=true", "-Djava.security.egd=file:/dev/./urandom");
 
     private final Map<JobType, JobExecutor> jobExecutors;
     private final ExecutorService executor;

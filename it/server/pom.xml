@@ -192,14 +192,6 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>harbur/haveged</name>
-                                    <alias>haveged</alias>
-                                    <run>
-                                        <skip>${skip.haveged}</skip>
-                                        <privileged>true</privileged>
-                                    </run>
-                                </image>
-                                <image>
                                     <name>walmartlabs/concord-agent</name>
                                     <alias>agent</alias>
                                     <run>

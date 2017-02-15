@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.SecureRandomProvider;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +21,7 @@ public class UserDaoTest extends AbstractDaoTest {
     @Before
     public void setUp() throws Exception {
         userDao = new UserDao(getConfiguration());
-        apiKeyDao = new ApiKeyDao(getConfiguration());
+        apiKeyDao = new ApiKeyDao(getConfiguration(), new SecureRandomProvider().get());
     }
 
     @Test
