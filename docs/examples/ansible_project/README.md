@@ -134,7 +134,6 @@ Create the `request.json` file:
 ```json
 {
   "playbook": "playbook/hello.yml",
-  "inventory": "myInventory",
   "extraVars": {
     "greeting": "Hello, world"
   }

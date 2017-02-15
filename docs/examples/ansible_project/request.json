@@ -1,6 +1,5 @@
 {
   "playbook": "playbook/hello.yml",
-  "inventory": "myInventory",
   "extraVars": {
     "greeting": "Hello, world"
   }
