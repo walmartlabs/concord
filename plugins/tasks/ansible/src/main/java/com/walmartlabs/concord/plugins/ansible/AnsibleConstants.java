@@ -8,6 +8,8 @@ public final class AnsibleConstants {
 
     public static final String PRIVATE_KEY_FILE_NAME = "_privateKey";
 
+    public static final String DEFAULT_OPTS_KEY = "defaults";
+
     private AnsibleConstants() {
     }
 }

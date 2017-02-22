@@ -121,6 +121,10 @@ public abstract class AbstractServerIT {
         assertEquals(1, grep(pattern, ab).size());
     }
 
+    protected static void assertLog(String pattern, int times, byte[] ab) throws IOException {
+        assertEquals(times, grep(pattern, ab).size());
+    }
+
     protected byte[] getLog(ProcessStatusResponse pir) {
         WebTarget t = client.target(ITConstants.SERVER_URL + "/logs/" + pir.getLogFileName());
         Response resp = t.request().get();

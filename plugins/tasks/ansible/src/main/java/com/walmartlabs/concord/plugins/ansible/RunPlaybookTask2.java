@@ -9,11 +9,12 @@ import javax.inject.Named;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +32,8 @@ public class RunPlaybookTask2 implements Task {
     }
 
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
-        String cfgFile = createCfgFile();
+        Map<String, Object> defOpts = (Map<String, Object>) args.get(AnsibleConstants.DEFAULT_OPTS_KEY);
+        String cfgFile = createCfgFile(addDefaults(defOpts));
 
         // TODO constants
         String playbook = (String) args.get("playbook");
@@ -89,19 +91,44 @@ public class RunPlaybookTask2 implements Task {
         return p.toAbsolutePath().toString();
     }
 
-    private static String createCfgFile() throws IOException {
-        Path tmpFile = Files.createTempFile("ansible", ".cfg");
-
-        String template = "[defaults]\n" +
-                "host_key_checking = False\n" +
-                "remote_tmp = /tmp/ansible/$USER\n" +
-                "[ssh_connection]\n" +
-                "control_path = %(directory)s/%%h-%%p-%%r\n" +
-                "pipelining=true";
-
-        try (OutputStream out = Files.newOutputStream(tmpFile)) {
-            out.write(template.getBytes());
+    private static Map<String, Object> addDefaults(Map<String, Object> m) {
+        if (m == null) {
+            m = new HashMap<>();
         }
+
+        if (!m.containsKey("host_key_checking")) {
+            m.put("host_key_checking", false);
+        }
+
+        m.put("remote_tmp", "/tmp/ansible/$USER");
+        return m;
+    }
+
+    private static String createCfgFile(Map<String, Object> defOpts) throws IOException {
+        StringBuilder b = new StringBuilder();
+
+        if (defOpts != null) {
+            b.append("[defaults]\n");
+            for (Map.Entry<String, Object> e : defOpts.entrySet()) {
+                Object v = e.getValue();
+                if (v == null) {
+                    continue;
+                }
+
+                if (v instanceof String) {
+                    v = "\"" + v + "\"";
+                }
+
+                b.append(e.getKey()).append(" = ").append(v).append("\n");
+            }
+        }
+
+        b.append("[ssh_connection]\n" +
+                "control_path = %(directory)s/%%h-%%p-%%r\n" +
+                "pipelining=true");
+
+        Path tmpFile = Files.createTempFile("ansible", ".cfg");
+        Files.write(tmpFile, b.toString().getBytes(StandardCharsets.UTF_8));
 
         log.debug("createCfgFile -> done, created {}", tmpFile);
         return tmpFile.toAbsolutePath().toString();

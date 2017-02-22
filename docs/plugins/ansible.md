@@ -4,6 +4,21 @@
 
 TBD.
 
+## Configuring Ansible
+
+Ansible's [[defaults]](http://docs.ansible.com/ansible/intro_configuration.html#general-defaults)
+can be specified under `defaults` key in `request.json`:
+
+```json
+{
+  "playbook": "playbook/hello.yml",
+  ...
+  "defaults": {
+    "forks": 50
+  }
+}
+```
+
 ## Using dynamic inventories
 
 To use a dynamic inventory script, upload it as a `dynamicInventory` value in the process call:

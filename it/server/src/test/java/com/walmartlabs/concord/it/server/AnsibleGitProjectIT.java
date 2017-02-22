@@ -67,6 +67,9 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
 
         byte[] ab = getLog(psr);
         assertLog(".*Hello, world.*", ab);
+
+        // check if `force_color` is working
+        assertLog(".*\\[0;32m.*", 3, ab);
     }
 
     private static InputStream resource(String path) {
