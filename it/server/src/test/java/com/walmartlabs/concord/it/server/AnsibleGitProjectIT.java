@@ -27,10 +27,10 @@ public class AnsibleGitProjectIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        String templateName = "template#" + System.currentTimeMillis();
-        String projectName = "project#" + System.currentTimeMillis();
-        String repoSecretName = "repoSecret#" + System.currentTimeMillis();
-        String repoName = "repo#" + System.currentTimeMillis();
+        String templateName = "template@" + System.currentTimeMillis();
+        String projectName = "project@" + System.currentTimeMillis();
+        String repoSecretName = "repoSecret@" + System.currentTimeMillis();
+        String repoName = "repo@" + System.currentTimeMillis();
         String repoUrl = "https://gecgithub01.walmart.com/devtools/concord-ansible-example.git";
         String repoBranch = "it";
         String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");

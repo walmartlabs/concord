@@ -11,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({FIELD, PARAMETER, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@Pattern(regexp = "^[0-9a-zA-Z][0-9a-zA-Z_#.]{2,128}$")
+@Pattern(regexp = "^[0-9a-zA-Z][0-9a-zA-Z_@.]{2,128}$")
 @Constraint(validatedBy = {})
 public @interface ConcordKey {
 

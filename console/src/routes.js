@@ -16,7 +16,10 @@ export const getProcessStartPath = () => "/process/start";
 export const getProjectListPath = () => "/project/list";
 export const getProjectNewPath = () => "/project/new";
 export const getProjectTemplateListPath = () => "/project/templates";
-export const getProjectPath = (name) => "/project/" + name;
+export const getProjectPath = (name) => {
+    const n = encodeURIComponent(name);
+    return "/project/" + n;
+};
 
 export default (store, history) => {
     const h = syncHistoryWithStore(history, store);

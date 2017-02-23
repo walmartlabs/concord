@@ -28,9 +28,9 @@ public class TemplateIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        String templateName = "template#" + System.currentTimeMillis();
-        String projectName = "project#" + System.currentTimeMillis();
-        String myName = "myName#" + System.currentTimeMillis();
+        String templateName = "template@" + System.currentTimeMillis();
+        String projectName = "project@" + System.currentTimeMillis();
+        String myName = "myName@" + System.currentTimeMillis();
         Path templatePath = createTemplate();
 
         // ---

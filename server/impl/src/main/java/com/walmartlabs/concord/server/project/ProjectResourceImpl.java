@@ -18,6 +18,8 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
@@ -112,7 +114,12 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     public ProjectEntry get(String projectName) {
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
-        return projectDao.get(projectName);
+
+        ProjectEntry e = projectDao.get(projectName);
+        if (e == null) {
+            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+        }
+        return e;
     }
 
     @Override
