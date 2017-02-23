@@ -1,9 +1,10 @@
-export const sort = {
-    ASC: "ASC",
-    DESC: "DESC"
-};
+// @flow
+import type {SortDirection, FetchRange} from "./types";
+import {sort as sortConstants} from "./types";
 
-export const reverseSort = (dir) => dir === sort.ASC ? sort.DESC : sort.ASC;
+export const sort = sortConstants;
+
+export const reverseSort = (dir: SortDirection): SortDirection => dir === sort.ASC ? sort.DESC : sort.ASC;
 
 export const process = {
     runningStatus: "RUNNING",
@@ -46,7 +47,7 @@ export const history = {
 
 export const projectList = {
     columns: [
-        {key: "name", label: "Name", collapsing:true},
+        {key: "name", label: "Name", collapsing: true},
         {key: "templates", label: "Templates"},
         {key: "actions", label: "Actions", collapsing: true}
     ],
@@ -67,5 +68,5 @@ export const templateList = {
 export const log = {
     fetchIncrement: 2048,
     fetchDelay: 5000,
-    defaultFetchRange: { low: undefined, high: 2048 }
+    defaultFetchRange: ({low: undefined, high: 2048}: FetchRange)
 };

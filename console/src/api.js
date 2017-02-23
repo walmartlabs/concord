@@ -1,22 +1,21 @@
+// @flow
 import ContentRange from "http-range/lib/content-range";
 import {sort, log as logConstants} from "./constants";
+import type { ConcordId, FetchRange } from "./types";
 
 // utils
 
-const queryParams = (params) => {
+const queryParams = (params: {[id: mixed]: string}) => {
     const esc = encodeURIComponent;
     return Object.keys(params).map(k => esc(k) + "=" + esc(params[k])).join("&");
 };
 
-const str = (s) => s === undefined ? "" : s;
+const str = (s: mixed) => s === undefined ? "" : String(s);
 
-const formatRangeHeader = (range) =>
+const formatRangeHeader = (range: FetchRange) =>
     ({"Range": `bytes=${str(range.low)}-${str(range.high)}`});
 
-const parseRange = (s) => {
-    if (!s) {
-        return null;
-    }
+const parseRange = (s: string): FetchRange => {
     const range = ContentRange.prototype.parse(s);
     return {
         unit: range.unit,
@@ -32,12 +31,12 @@ const authHeader = {"Authorization": "auBy4eDWrKWsyhiDp3AQiw"};
 
 // api functions
 
-const apiListQuery = (name, path) => (sortBy, sortDir) => {
+const apiListQuery = (name, path) => (sortBy: string, sortDir: string) => {
     console.debug("API: %s ['%s', '%s'] -> starting...", name, sortBy, sortDir);
 
     const query = queryParams({
         sortBy,
-        asc: sort.ASC === sortDir
+        asc: String(sort.ASC === sortDir)
     });
 
     return fetch(path + "?" + query, {headers: authHeader})
@@ -57,7 +56,7 @@ export const fetchHistory = apiListQuery("fetchHistory", "/api/v1/history");
 export const fetchProjectList = apiListQuery("fetchProjects", "/api/v1/project");
 export const fetchTemplateList = apiListQuery("fetchTemplateList", "/api/v1/template");
 
-export const killProc = (id) => {
+export const killProc = (id: ConcordId) => {
     console.debug("API: killProc ['%s'] -> starting...", id);
 
     return fetch("/api/v1/process/" + id, {headers: authHeader, method: "DELETE"})
@@ -70,7 +69,7 @@ export const killProc = (id) => {
         });
 };
 
-export const fetchProject = (id) => {
+export const fetchProject = (id: ConcordId) => {
     console.debug("API: getProject ['%s'] -> starting...", id);
 
     return fetch("/api/v1/project/" + id, {headers: authHeader})
@@ -86,7 +85,7 @@ export const fetchProject = (id) => {
         });
 };
 
-export const createProject = (data) => {
+export const createProject = (data: Object) => {
     console.debug("API: createProject [%o] -> starting...", data);
 
     const body = JSON.stringify(data);
@@ -106,7 +105,7 @@ export const createProject = (data) => {
         });
 };
 
-export const updateProject = (id, data) => {
+export const updateProject = (id: ConcordId, data: Object) => {
     console.debug("API: updateProject ['%s', %o] -> starting...", id, data);
 
     const body = JSON.stringify(data);
@@ -125,7 +124,7 @@ export const updateProject = (id, data) => {
         });
 };
 
-export const deleteProject = (id) => {
+export const deleteProject = (id: ConcordId) => {
     console.debug("API: deleteProject ['%s'] -> starting...", id);
 
     return fetch("/api/v1/project/" + id, {headers: authHeader, method: "DELETE"})
@@ -138,9 +137,10 @@ export const deleteProject = (id) => {
         });
 };
 
-const offsetRange = (data, range) => {
+
+const offsetRange = (data: string, range: FetchRange) => {
     // if our data starts from the beginning, do nothing
-    if (range.low <= 0) {
+    if (range.low && range.low <= 0) {
         return {data, range};
     }
 
@@ -159,7 +159,7 @@ const offsetRange = (data, range) => {
     };
 };
 
-export const fetchLog = (fileName, fetchRange = logConstants.defaultFetchRange) => {
+export const fetchLog = (fileName: string, fetchRange: FetchRange = logConstants.defaultFetchRange) => {
     const rangeHeader = formatRangeHeader(fetchRange);
     console.debug("API: fetchLog ['%s', %o] -> starting...", fileName, rangeHeader);
     return fetch("/logs/" + fileName, {headers: Object.assign({}, authHeader, rangeHeader)})
@@ -176,7 +176,7 @@ export const fetchLog = (fileName, fetchRange = logConstants.defaultFetchRange) 
         });
 };
 
-export const fetchProcessStatus = (id) => {
+export const fetchProcessStatus = (id: ConcordId) => {
     console.debug("API: fetchProcessStatus ['%s'] -> starting...", id);
     return fetch("/api/v1/process/" + id, {headers: authHeader})
         .then(response => {

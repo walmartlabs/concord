@@ -1,3 +1,4 @@
+// @flow
 import {call, put, takeLatest, select, fork} from "redux-saga/effects";
 import {delay} from "redux-saga";
 import {push as pushHistory} from "react-router-redux";
@@ -82,13 +83,13 @@ function* deleteProject(action) {
     } catch (e) {
         console.error("deleteProject -> error", e);
         yield put({
-            type: actionTypes.history.DELETE_PROJECT_RESULT,
+            type: actionTypes.projectList.DELETE_PROJECT_RESULT,
             name: action.name,
             error: true,
             message: e.message || "Error while removing a project"
         });
     }
-};
+}
 
 // project - data
 
@@ -157,7 +158,7 @@ function* fetchLogData(action) {
     }
 }
 
-function* saga() {
+function* saga(): Generator<*, *, *> {
     // history
     yield fork(takeLatest, actionTypes.history.FETCH_HISTORY_DATA_REQUEST, fetchHistoryData);
     yield fork(takeLatest, actionTypes.history.KILL_PROC_REQUEST, killProc);

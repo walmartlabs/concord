@@ -1,11 +1,27 @@
 # Concord Console
 
-### Development mode
+## Development mode
 
 ```
 npm install
 npm start
 ```
+
+### Type checking
+
+The project uses [Facebook's Flow](https://flowtype.org/).
+
+1. install flow:
+   ```
+   npm install -g flow flow-typed
+   ```
+2. install type definitions (in the module's directory):
+   ```
+   flow-typed install
+   ```
+
+There is a helper script to run `flow server` using the modules's
+directory as a root directory: `./flow-server.sh`.
 
 ## Production
 

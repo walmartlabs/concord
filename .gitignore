@@ -17,3 +17,4 @@ nb-configuration.xml
 pom.xml.bak
 console/build
 yarn.lock
+flow-typed/
