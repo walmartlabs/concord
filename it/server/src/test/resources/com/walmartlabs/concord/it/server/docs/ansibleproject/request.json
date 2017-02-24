@@ -1,7 +1,7 @@
 {
   "playbook": "playbook/hello.yml",
   "extraVars": {
-    "greeting": "world"
+    "greeting": "Hello, world"
   },
   "defaults": {
     "force_color": 1

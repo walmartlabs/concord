@@ -8,6 +8,8 @@ public final class ITConstants {
     public static final String SERVER_URL;
     public static final String DEPENDENCIES_DIR;
     public static final String TEMPLATES_DIR;
+    public static final int GIT_SERVER_PORT;
+    public static final String GIT_SERVER_URL;
 
     static {
         Properties props = new Properties();
@@ -26,6 +28,20 @@ public final class ITConstants {
         SERVER_URL = "http://localhost:" + port;
         DEPENDENCIES_DIR = props.getProperty("deps.dir");
         TEMPLATES_DIR = props.getProperty("templates.dir");
+
+        port = 8022;
+        try {
+            port = Integer.parseInt(System.getenv("IT_GIT_SERVER_PORT"));
+        } catch (NumberFormatException e) {
+        }
+
+        String host = props.getProperty("docker.host.addr");
+        if (host == null || host.trim().isEmpty()) {
+            host = "localhost";
+        }
+
+        GIT_SERVER_PORT = port;
+        GIT_SERVER_URL = "ssh://git@" + host + ":" + GIT_SERVER_PORT + "/";
     }
 
     private ITConstants() {

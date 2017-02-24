@@ -13,7 +13,7 @@ The project uses [Facebook's Flow](https://flowtype.org/).
 
 1. install flow:
    ```
-   npm install -g flow flow-typed
+   npm install -g flow-bin flow-typed
    ```
 2. install type definitions (in the module's directory):
    ```
