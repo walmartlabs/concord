@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.server.docs.ansibleproject;
+package com.walmartlabs.concord.it.server.docs;
 
 import com.walmartlabs.concord.it.server.AbstractServerIT;
 import com.walmartlabs.concord.it.server.GitUtils;
@@ -37,7 +37,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     @Before
     public void setUp() throws Exception {
-        Path data = Paths.get(AnsibleProjectIT.class.getResource("git").toURI());
+        Path data = Paths.get(AnsibleProjectIT.class.getResource("ansibleproject/git").toURI());
         Path repo = GitUtils.createBareRepository(data);
 
         gitServer = new MockGitSshServer(ITConstants.GIT_SERVER_PORT, repo.toAbsolutePath().toString());
@@ -77,8 +77,8 @@ public class AnsibleProjectIT extends AbstractServerIT {
         // ---
 
         Map<String, InputStream> input = new HashMap<>();
-        input.put("request", resource("request.json"));
-        input.put("inventory", resource("inventory.ini"));
+        input.put("request", resource("ansibleproject/request.json"));
+        input.put("inventory", resource("ansibleproject/inventory.ini"));
         StartProcessResponse spr = start(entryPoint, input);
 
         // ---
