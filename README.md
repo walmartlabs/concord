@@ -1,4 +1,4 @@
-TLDR: `mvn clean install -Pit -Pdocker`
+TLDR: `mvn clean install -Pdocker -DskipTests`
 
 # Building
 
@@ -19,6 +19,8 @@ You can build docker images using this commands:
 ## Integration tests
 
 Prerequisites:
+- Linux, if you want to use docker-based ITs. Tests currently assume
+that `localhost` and `docker0` are on the same machine;
 - Ansible must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
 - Java must be available in `$PATH` as `java`.
@@ -34,8 +36,10 @@ To automatically start and stop the server and the agent using docker, use the
 `docker` profile:
 
 ```
-./mvnw verify -Pit -Pdocker
+./mvnw verify -Pit -Pdocker -Ddocker.host.addr=172.17.0.1
 ```
+
+The `docker.host.addr` value must be set to the IP address of `docker0` interface.
 
 # Development
 

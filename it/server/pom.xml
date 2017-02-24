@@ -154,11 +154,6 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
-                    <!--suppress MavenModelInspection -->
-                    <environmentVariables>
-                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
-                        <IT_GIT_SERVER_PORT>${it.git.server.port}</IT_GIT_SERVER_PORT>
-                    </environmentVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -202,10 +197,6 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
-            <properties>
-                <!-- TODO resolve automatically -->
-                <docker.host.addr>172.17.0.1</docker.host.addr>
-            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -215,7 +206,7 @@
                         <executions>
                             <execution>
                                 <id>start</id>
-                                <phase>pre-integration-test</phase>
+                                <phase>process-resources</phase>
                                 <goals>
                                     <goal>start</goal>
                                 </goals>

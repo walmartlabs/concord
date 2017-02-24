@@ -19,29 +19,31 @@ public final class ITConstants {
             throw new RuntimeException(e);
         }
 
-        int port = 8001;
-        try {
-            port = Integer.parseInt(System.getenv("IT_SERVER_PORT"));
-        } catch (NumberFormatException e) {
-        }
+        SERVER_URL = "http://localhost:" + parseInt(props, "server.port", 8001);
 
-        SERVER_URL = "http://localhost:" + port;
         DEPENDENCIES_DIR = props.getProperty("deps.dir");
         TEMPLATES_DIR = props.getProperty("templates.dir");
 
-        port = 8022;
+        String dockerAddr = nil(props.getProperty("docker.host.addr"));
+
+        String gitHost = dockerAddr != null ? dockerAddr : "localhost";
+        GIT_SERVER_PORT = parseInt(props, "git.server.port", 8022);
+        GIT_SERVER_URL = "ssh://git@" + gitHost + ":" + GIT_SERVER_PORT + "/";
+    }
+
+    private static int parseInt(Properties props, String key, int defaultValue) {
         try {
-            port = Integer.parseInt(System.getenv("IT_GIT_SERVER_PORT"));
+            return Integer.parseInt(props.getProperty("server.port"));
         } catch (NumberFormatException e) {
+            return defaultValue;
         }
+    }
 
-        String host = props.getProperty("docker.host.addr");
-        if (host == null || host.trim().isEmpty()) {
-            host = "localhost";
+    private static String nil(String s) {
+        if (s == null || s.trim().isEmpty()) {
+            return null;
         }
-
-        GIT_SERVER_PORT = port;
-        GIT_SERVER_URL = "ssh://git@" + host + ":" + GIT_SERVER_PORT + "/";
+        return s;
     }
 
     private ITConstants() {
