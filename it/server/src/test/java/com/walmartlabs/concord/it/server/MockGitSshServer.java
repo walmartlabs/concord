@@ -3,14 +3,19 @@ package com.walmartlabs.concord.it.server;
 import org.apache.sshd.git.pack.GitPackCommandFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class MockGitSshServer {
 
+    private static final Logger log = LoggerFactory.getLogger(MockGitSshServer.class);
+
     private final SshServer server;
 
     public MockGitSshServer(int port, String repository) {
+        log.info("Creating a mock git+ssh server on port {}, using {}...", port, repository);
         this.server = createServer(port, repository);
     }
 
@@ -20,6 +25,10 @@ public class MockGitSshServer {
 
     public void stop() throws IOException {
         this.server.stop();
+    }
+
+    public int getPort() {
+        return server.getPort();
     }
 
     private static SshServer createServer(int port, String repository) {

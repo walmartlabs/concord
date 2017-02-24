@@ -9,5 +9,7 @@ public class SimpleIT extends AbstractIT {
     public void test() throws Exception {
         start();
         waitFor("Logo should be visible", By.id("logo"));
+        waitForPage();
+        assertNoErrors();
     }
 }

@@ -15,7 +15,7 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <selenium.version>3.0.1</selenium.version>
+        <selenium.version>3.2.0</selenium.version>
         <webdriver.version>0.9.7376</webdriver.version>
         <webdriver.type>local</webdriver.type>
     </properties>
@@ -54,6 +54,12 @@
             <groupId>org.seleniumhq.webdriver</groupId>
             <artifactId>webdriver-chrome</artifactId>
             <version>${webdriver.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>21.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -116,8 +122,6 @@
                                 </goals>
                                 <configuration>
                                     <portNames>
-                                        <portName>it.server.port</portName>
-                                        <portName>it.console.port</portName>
                                         <portName>it.selenium.port</portName>
                                     </portNames>
                                 </configuration>
@@ -147,18 +151,32 @@
                         <configuration>
                             <images>
                                 <image>
+                                    <name>walmartlabs/concord-server</name>
+                                    <alias>server</alias>
+                                    <run>
+                                        <ports>
+                                            <port>it.server.port:8001</port>
+                                        </ports>
+                                        <wait>
+                                            <!--suppress MavenModelInspection -->
+                                            <http>
+                                                <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
+                                            </http>
+                                        </wait>
+                                    </run>
+                                </image>
+                                <image>
                                     <name>walmartlabs/concord-console</name>
                                     <alias>console</alias>
                                     <!--suppress MavenModelInspection -->
                                     <run>
                                         <ports>
-                                            <port>${it.console.port}:8080</port>
+                                            <port>it.console.port:8080</port>
                                             <port>${it.selenium.port}:4444</port>
                                         </ports>
-                                        <env>
-                                            <SERVER_PORT_8001_TCP_ADDR>localhost</SERVER_PORT_8001_TCP_ADDR>
-                                            <SERVER_PORT_8001_TCP_PORT>${it.server.port}</SERVER_PORT_8001_TCP_PORT>
-                                        </env>
+                                        <links>
+                                            <link>server</link>
+                                        </links>
                                         <wait>
                                             <http>
                                                 <url>http://localhost:${it.console.port}/index.html</url>

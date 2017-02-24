@@ -7,13 +7,13 @@ import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.remote.Augmenter;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.LocalFileDetector;
-import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.remote.*;
 
 import java.io.File;
 import java.net.URL;
+import java.util.logging.Level;
 
 public class WebDriverRule implements TestRule {
 
@@ -24,16 +24,22 @@ public class WebDriverRule implements TestRule {
     }
 
     public boolean isRemote() {
-       return "remote".equals(ITConstants.WEBDRIVER_TYPE);
+        return "remote".equals(ITConstants.WEBDRIVER_TYPE);
     }
 
     private void setUp() throws Exception {
+        DesiredCapabilities caps = DesiredCapabilities.chrome();
+        LoggingPreferences logPrefs = new LoggingPreferences();
+        logPrefs.enable(LogType.BROWSER, Level.ALL);
+        caps.setCapability(CapabilityType.LOGGING_PREFS, logPrefs);
+
         if (isRemote()) {
             URL url = new URL("http://localhost:" + ITConstants.SELENIUM_PORT + "/wd/hub");
-            RemoteWebDriver d = new RemoteWebDriver(url, DesiredCapabilities.chrome());
+            RemoteWebDriver d = new RemoteWebDriver(url, caps);
             d.setFileDetector(new LocalFileDetector());
             driver = new Augmenter().augment(d);
         } else {
+            // TODO caps
             driver = new ChromeDriver();
         }
     }

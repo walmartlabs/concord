@@ -4,8 +4,14 @@ import org.junit.Rule;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.Logs;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.logging.Level;
 
 import static org.junit.Assert.*;
 
@@ -26,6 +32,10 @@ public abstract class AbstractIT {
             port = ITConstants.REMOTE_CONSOLE_PORT;
         }
         getDriver().get("http://localhost:" + port);
+    }
+
+    protected void waitForPage() {
+        getDriver().manage().timeouts().pageLoadTimeout(10, TimeUnit.SECONDS);
     }
 
     protected WebElement waitFor(String message, By selector) {
@@ -67,5 +77,10 @@ public abstract class AbstractIT {
 
     protected void assertNoElements(String message, By selector) {
         assertTrue(message, getDriver().findElements(selector).isEmpty());
+    }
+
+    protected void assertNoErrors() {
+        Logs logs = getDriver().manage().logs();
+        assertTrue(logs.get(LogType.BROWSER).filter(Level.SEVERE).isEmpty());
     }
 }

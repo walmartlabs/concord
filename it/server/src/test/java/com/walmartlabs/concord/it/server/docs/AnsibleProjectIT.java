@@ -34,14 +34,17 @@ import static java.util.Collections.singletonMap;
 public class AnsibleProjectIT extends AbstractServerIT {
 
     private MockGitSshServer gitServer;
+    private int gitPort;
 
     @Before
     public void setUp() throws Exception {
         Path data = Paths.get(AnsibleProjectIT.class.getResource("ansibleproject/git").toURI());
         Path repo = GitUtils.createBareRepository(data);
 
-        gitServer = new MockGitSshServer(ITConstants.GIT_SERVER_PORT, repo.toAbsolutePath().toString());
+        gitServer = new MockGitSshServer(0, repo.toAbsolutePath().toString());
         gitServer.start();
+
+        gitPort = gitServer.getPort();
     }
 
     @After
@@ -55,7 +58,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         String projectName = "project@" + System.currentTimeMillis();
         String repoSecretName = "repoSecret@" + System.currentTimeMillis();
         String repoName = "repo@" + System.currentTimeMillis();
-        String repoUrl = ITConstants.GIT_SERVER_URL;
+        String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
         String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
 
         // ---

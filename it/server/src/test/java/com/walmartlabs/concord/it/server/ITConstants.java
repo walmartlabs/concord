@@ -8,8 +8,7 @@ public final class ITConstants {
     public static final String SERVER_URL;
     public static final String DEPENDENCIES_DIR;
     public static final String TEMPLATES_DIR;
-    public static final int GIT_SERVER_PORT;
-    public static final String GIT_SERVER_URL;
+    public static final String GIT_SERVER_URL_PATTERN;
 
     static {
         Properties props = new Properties();
@@ -27,8 +26,7 @@ public final class ITConstants {
         String dockerAddr = nil(props.getProperty("docker.host.addr"));
 
         String gitHost = dockerAddr != null ? dockerAddr : "localhost";
-        GIT_SERVER_PORT = parseInt(props, "git.server.port", 8022);
-        GIT_SERVER_URL = "ssh://git@" + gitHost + ":" + GIT_SERVER_PORT + "/";
+        GIT_SERVER_URL_PATTERN = "ssh://git@" + gitHost + ":%d/";
     }
 
     private static int parseInt(Properties props, String key, int defaultValue) {
