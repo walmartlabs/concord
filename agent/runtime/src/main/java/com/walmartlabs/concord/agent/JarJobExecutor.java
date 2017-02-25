@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Executes a job in a separate JVM.
@@ -81,11 +82,16 @@ public class JarJobExecutor implements JobExecutor {
             log.info("exec ['{}', '{}', '{}'] -> executing: {}", id, workDir, entryPoint, fullCmd);
             logManager.log(id, "Starting: %s", fullCmd);
 
-            return new ProcessBuilder()
+            ProcessBuilder b = new ProcessBuilder()
                     .directory(workDir.toFile())
                     .command(cmd)
-                    .redirectErrorStream(true)
-                    .start();
+                    .redirectErrorStream(true);
+
+            Map<String, String> env = b.environment();
+            env.put("_CONCORD_ATTACHMENTS_DIR", workDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
+                    .toAbsolutePath().toString());
+
+            return b.start();
         } catch (IOException e) {
             log.error("exec ['{}', '{}', '{}'] -> error while starting for a process", id, workDir, entryPoint);
             logManager.log(id, "Error: %s", e);

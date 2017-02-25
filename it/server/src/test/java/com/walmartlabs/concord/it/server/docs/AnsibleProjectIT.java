@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.it.server.docs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.it.server.AbstractServerIT;
 import com.walmartlabs.concord.it.server.GitUtils;
 import com.walmartlabs.concord.it.server.ITConstants;
@@ -16,17 +17,22 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @see "docs/examples/ansible_project"
@@ -96,6 +102,20 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // check if `force_color` is working
         assertLog(".*\\[0;32m.*", 3, ab);
+
+        // ---
+
+        Response resp = processResource.downloadAttachment(spr.getInstanceId(), "ansible_stats.json");
+        assertEquals(Status.OK.getStatusCode(), resp.getStatus());
+
+        ObjectMapper om = new ObjectMapper();
+        Map<String, Object> stats = om.readValue(resp.readEntity(InputStream.class), Map.class);
+        resp.close();
+
+        Collection<String> oks = (Collection<String>) stats.get("ok");
+        assertNotNull(oks);
+        assertEquals(1, oks.size());
+        assertEquals("127.0.0.1", oks.iterator().next());
     }
 
     private static InputStream resource(String path) {

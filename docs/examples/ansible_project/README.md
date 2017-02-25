@@ -157,10 +157,34 @@ http://localhost:8001/api/v1/process/myProject:myRepo
 }
 ```
 
-### 7. Check the logs
+### 7. Check the logs (optional)
 
 Use the `instanceId` value returned by the server in the previous step.
 
 ```
 curl -v http://localhost:8001/logs/33c8f91e-db14-11e6-8d94-a3efec7ccd7b.log
+```
+
+### 8. Get Ansible's statistics (optional)
+
+You can download Ansible play's statistics with this request:
+
+```
+curl -v \
+-H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+http://localhost:8001/api/v1/process/33c8f91e-db14-11e6-8d94-a3efec7ccd7b/attachment/ansible_stats.json
+```
+
+Example of response:
+
+```json
+{
+  "failures": [], 
+  "skipped": [], 
+  "changed": [], 
+  "ok": [
+    "127.0.0.1"
+  ], 
+  "unreachable": []
+}
 ```

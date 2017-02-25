@@ -3,6 +3,7 @@ package com.walmartlabs.concord.agent.api;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.InputStream;
 
 @Path("/api/v1/job")
@@ -41,8 +42,9 @@ public interface JobResource {
 
     /**
      * Interrupts a job.
-     * @param id ID of a job
-     * @param waitToFinish
+     *
+     * @param id           ID of a job
+     * @param waitToFinish blocks until job is finished
      */
     @DELETE
     @Path("/{id}")
@@ -56,4 +58,15 @@ public interface JobResource {
     @Path("/count")
     @Produces(MediaType.TEXT_PLAIN)
     int count();
+
+    /**
+     * Downloads an archive with job's attachments.
+     *
+     * @param id ID of a job
+     * @return
+     */
+    @GET
+    @Path("/{id}/attachment/archive")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    Response downloadAttachments(@PathParam("id") String id);
 }

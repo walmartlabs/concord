@@ -37,12 +37,20 @@ public final class Constants {
      */
     public static final String AGENT_PARAMS_FILE_NAME = "_agent.json";
 
+    /**
+     * JVM parameters for an agent's job.
+     */
     public static final String JVM_ARGS_KEY = "jvmArgs";
 
     /**
      * Process entry point.
      */
     public static final String ENTRY_POINT_KEY = "entryPoint";
+
+    /**
+     * Directory, containing job "attachments": reports, stats, etc.
+     */
+    public static final String JOB_ATTACHMENTS_DIR_NAME = "_attachments";
 
     private Constants() {
     }

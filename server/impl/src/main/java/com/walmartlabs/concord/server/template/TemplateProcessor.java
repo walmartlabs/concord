@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.template;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -69,6 +68,9 @@ public class TemplateProcessor implements PayloadProcessor {
 
         unpack(template, templatePath);
 
+        // copy template's files to the payload
+        IOUtils.copy(templatePath, workspacePath);
+
         // process _main.json
         Path templateMeta = templatePath.resolve(TemplateConstants.REQUEST_DATA_TEMPLATE_FILE_NAME);
         if (Files.exists(templateMeta)) {
@@ -78,12 +80,6 @@ public class TemplateProcessor implements PayloadProcessor {
         } else {
             log.debug("apply ['{}'] -> no template metadata file found, skipping", workspacePath);
         }
-
-        // copy libraries from the template to the payload
-        copyResources(templatePath, Constants.LIBRARIES_DIR_NAME, workspacePath);
-
-        // copy process definitions from the template to the payload
-        copyResources(templatePath, Constants.DEFINITIONS_DIR_NAME, workspacePath);
 
         return payload;
     }
@@ -108,17 +104,6 @@ public class TemplateProcessor implements PayloadProcessor {
     private static void unpack(InputStream in, Path dir) throws IOException {
         try (ZipInputStream zip = new ZipInputStream(in)) {
             IOUtils.unzip(zip, dir);
-        }
-    }
-
-    private static void copyResources(Path templatePath, String dir, Path payloadPath) throws IOException {
-        Path src = templatePath.resolve(dir);
-        if (Files.exists(src)) {
-            Path dst = payloadPath.resolve(dir);
-            IOUtils.copy(src, dst);
-            log.debug("copyResources ['{}', '{}', '{}'] -> done", templatePath, dir, payloadPath);
-        } else {
-            log.debug("copyResources ['{}', '{}', '{}'] -> not found, skipping", templatePath, dir, payloadPath);
         }
     }
 }

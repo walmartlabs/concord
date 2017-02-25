@@ -44,19 +44,23 @@ public class Main {
     }
 
     public void run() throws Exception {
-        Path baseDir = Paths.get(System.getProperty("user.dir"));
-
         String instanceId = System.getProperty("instanceId");
         if (instanceId == null) {
             throw new IllegalArgumentException("Instance ID must be specified");
         }
 
+        // determine current working directory, it should contain the payload
+        Path baseDir = Paths.get(System.getProperty("user.dir"));
+
+        // load process definitions
         ProcessDefinitionProvider definitions = createDefinitionProvider(baseDir);
 
+        // read the metadata
         Map<String, Object> cfg = readCfg(baseDir);
         String entryPoint = (String) cfg.get(Constants.ENTRY_POINT_KEY);
         Map<String, Object> args = createArgs(instanceId, cfg);
 
+        // start the process
         Engine e = engineFactory.create(definitions);
         e.start(instanceId, entryPoint, args);
 

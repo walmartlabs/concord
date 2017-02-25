@@ -9,6 +9,7 @@ Must start with a character or a digit. Minumum length: 2, maximum: 128.
 ## The Server API
 
 - [Project](./project.md)
+- [Process](./process.md)
 - [User](./user.md)
 - [Secret](./secret.md)
 - [Template](./template.md)

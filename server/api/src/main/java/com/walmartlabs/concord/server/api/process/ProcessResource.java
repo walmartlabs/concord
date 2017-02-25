@@ -1,12 +1,16 @@
 package com.walmartlabs.concord.server.api.process;
 
+import com.walmartlabs.concord.common.validation.ConcordId;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -66,7 +70,7 @@ public interface ProcessResource {
     @ApiOperation("Wait for a process to finish")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}/waitForCompletion")
-    ProcessStatusResponse waitForCompletion(@ApiParam @PathParam("id") String instanceId,
+    ProcessStatusResponse waitForCompletion(@ApiParam @ConcordId @PathParam("id") String instanceId,
                                             @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout);
 
     /**
@@ -89,5 +93,19 @@ public interface ProcessResource {
     @ApiOperation("Get status of a process")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    ProcessStatusResponse get(@ApiParam @PathParam("id") String instanceId);
+    ProcessStatusResponse get(@ApiParam @ConcordId @PathParam("id") String instanceId);
+
+    /**
+     * Returns a process' attachment file.
+     *
+     * @param instanceId
+     * @param attachmentName
+     * @return
+     */
+    @GET
+    @ApiOperation("Download a process' attachment")
+    @Path("/{id}/attachment/{name}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    Response downloadAttachment(@ApiParam @ConcordId @PathParam("id") String instanceId,
+                                @PathParam("name") @NotNull @Size(min = 1) String attachmentName);
 }

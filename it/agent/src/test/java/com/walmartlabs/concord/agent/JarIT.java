@@ -5,10 +5,7 @@ import com.walmartlabs.concord.agent.api.JobResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
 import com.walmartlabs.concord.agent.api.LogResource;
-import com.walmartlabs.concord.agent.test.ErrorTest;
-import com.walmartlabs.concord.agent.test.ForAFewSecondsTest;
-import com.walmartlabs.concord.agent.test.LongRunningTest;
-import com.walmartlabs.concord.agent.test.ResourceTest;
+import com.walmartlabs.concord.agent.test.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.HttpClientConnectionManager;
@@ -36,9 +33,12 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class JarIT {
 
@@ -103,6 +103,41 @@ public class JarIT {
 
         assertEquals(1, grep(".*first line.*", ab).size());
         assertEquals(1, grep(".*second line.*", ab).size());
+    }
+
+    @Test(timeout = 60000)
+    public void testAttachments() throws Exception {
+        String id;
+        try (InputStream in = new FileInputStream(makePayload(AttachmentTest.class))) {
+            id = jobResource.start(in, JobType.JAR, "test.jar");
+        }
+
+        // ---
+
+        JobStatus s;
+        while (true) {
+            s = jobResource.getStatus(id);
+            if (s != JobStatus.RUNNING) {
+                break;
+            }
+            Thread.sleep(500);
+        }
+
+        assertEquals(s, JobStatus.COMPLETED);
+
+        // ---
+
+        Path tmpDir = Files.createTempDirectory("test");
+        Response resp = jobResource.downloadAttachments(id);
+        try (ZipInputStream zip = new ZipInputStream(resp.readEntity(InputStream.class))) {
+            IOUtils.unzip(zip, tmpDir);
+        }
+
+        Path p = tmpDir.resolve("test.txt");
+        assertTrue(Files.exists(p));
+
+        byte[] ab = Files.readAllBytes(p);
+        assertArrayEquals("hi".getBytes(), ab);
     }
 
     @Test(timeout = 60000)

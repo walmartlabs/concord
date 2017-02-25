@@ -28,8 +28,7 @@ public class LogStoreConfigurationProvider implements Provider<LogStoreConfigura
             log.info("get -> using '{}' as log storage", p);
             return new LogStoreConfiguration(p);
         } catch (IOException e) {
-            Throwables.propagate(e);
+            throw Throwables.propagate(e);
         }
-        return null;
     }
 }

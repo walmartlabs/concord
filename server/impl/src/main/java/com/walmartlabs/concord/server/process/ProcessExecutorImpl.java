@@ -19,6 +19,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -49,11 +50,11 @@ public class ProcessExecutorImpl {
         this.agentCfg = agentCfg;
     }
 
-    public void run(String instanceId, Path archive, String entryPoint, Path logFile,
+    public void run(String instanceId, Path archive, String entryPoint, Path logFile, Path attachmentsFile,
                     ProcessExecutorCallback callback) {
 
         try {
-            _run(instanceId, archive, entryPoint, logFile, callback);
+            _run(instanceId, archive, entryPoint, logFile, attachmentsFile, callback);
         } catch (Exception e) {
             log.error("run ['{}'] -> process error", instanceId, e);
             callback.onStatusChange(instanceId, ProcessStatus.FAILED);
@@ -61,7 +62,7 @@ public class ProcessExecutorImpl {
         }
     }
 
-    private void _run(String instanceId, Path archive, String entryPoint, Path logFile,
+    private void _run(String instanceId, Path archive, String entryPoint, Path logFile, Path attachmentsFile,
                       ProcessExecutorCallback callback) {
 
         log.info("run ['{}'] -> starting (log file: {})...", instanceId, logFile.toAbsolutePath());
@@ -96,6 +97,12 @@ public class ProcessExecutorImpl {
             log.info("run ['{}'] -> done", instanceId);
             log(logFile, "...done");
 
+            try {
+                saveAttachments(a, jobId, attachmentsFile);
+            } catch (IOException e) {
+                log.warn("run ['{}'] -> error while saving attachments", instanceId, e);
+            }
+
             JobStatus s = a.jobResource.getStatus(jobId);
             if (s == JobStatus.FAILED || s == JobStatus.CANCELLED) {
                 callback.onStatusChange(instanceId, ProcessStatus.FAILED);
@@ -107,6 +114,31 @@ public class ProcessExecutorImpl {
 
             instanceIdMap.remove(instanceId);
         }
+    }
+
+    private void saveAttachments(Agent a, String jobId, Path dst) throws IOException {
+        Response resp = null;
+        try {
+            resp = a.jobResource.downloadAttachments(jobId);
+
+            int status = resp.getStatus();
+            if (status != Status.OK.getStatusCode()) {
+                if (status != Status.NOT_FOUND.getStatusCode()) {
+                    log.warn("saveAttachment ['{}'] -> got error: {}", jobId, status);
+                }
+                return;
+            }
+
+            try (InputStream in = resp.readEntity(InputStream.class);
+                 OutputStream out = Files.newOutputStream(dst)) {
+                IOUtils.copy(in, out);
+            }
+        } finally {
+            if (resp != null) {
+                resp.close();
+            }
+        }
+        log.debug("saveAttachments ['{}'] -> stored to {}", jobId, dst);
     }
 
     public void cancel(String instanceId) {

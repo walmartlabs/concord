@@ -12,6 +12,8 @@ public class PlaybookProcessBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(PlaybookProcessBuilder.class);
 
+    private String attachmentsDir;
+
     private final String playbook;
     private final String inventory;
 
@@ -51,6 +53,11 @@ public class PlaybookProcessBuilder {
         return this;
     }
 
+    public PlaybookProcessBuilder withAttachmentsDir(String attachmentsDir) {
+        this.attachmentsDir = attachmentsDir;
+        return this;
+    }
+
     public Process build() throws IOException {
         File pwd = new File(playbook);
         if (pwd.isFile()) {
@@ -70,6 +77,9 @@ public class PlaybookProcessBuilder {
         // TODO env.put("ANSIBLE_FORCE_COLOR", "true");
         if (cfgFile != null) {
             env.put("ANSIBLE_CONFIG", cfgFile);
+        }
+        if (attachmentsDir != null) {
+            env.put("_CONCORD_ATTACHMENTS_DIR", attachmentsDir);
         }
 
         return b.start();

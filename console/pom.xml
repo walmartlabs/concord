@@ -15,6 +15,7 @@
 
     <properties>
         <skipNpmInstall>false</skipNpmInstall>
+        <skipNpmBuild>false</skipNpmBuild>
     </properties>
 
     <build>
@@ -47,6 +48,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
+                            <skip>${skipNpmBuild}</skip>
                             <arguments>run build</arguments>
                         </configuration>
                     </execution>

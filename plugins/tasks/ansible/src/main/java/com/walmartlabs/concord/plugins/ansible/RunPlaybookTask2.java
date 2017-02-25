@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.plugins.ansible;
 
+import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.Task;
 import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ public class RunPlaybookTask2 implements Task {
 
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
         Map<String, Object> defOpts = (Map<String, Object>) args.get(AnsibleConstants.DEFAULT_OPTS_KEY);
-        String cfgFile = createCfgFile(addDefaults(defOpts));
+        String cfgFile = createCfgFile(addDefaults(defOpts, payloadPath));
 
         // TODO constants
         String playbook = (String) args.get("playbook");
@@ -47,7 +48,10 @@ public class RunPlaybookTask2 implements Task {
         String playbookPath = Paths.get(payloadPath, playbook).toAbsolutePath().toString();
         log.info("Using the playbook: {}", playbookPath);
 
+        String attachmentsDir = payloadPath + "/" + Constants.JOB_ATTACHMENTS_DIR_NAME;
+
         PlaybookProcessBuilder b = new PlaybookProcessBuilder(playbookPath, inventory)
+                .withAttachmentsDir(attachmentsDir)
                 .withCfgFile(cfgFile)
                 .withPrivateKey(getPrivateKeyPath(payloadPath))
                 .withUser(trim((String) args.get("user")))
@@ -91,16 +95,23 @@ public class RunPlaybookTask2 implements Task {
         return p.toAbsolutePath().toString();
     }
 
-    private static Map<String, Object> addDefaults(Map<String, Object> m) {
+    private static Map<String, Object> addDefaults(Map<String, Object> m, String baseDir) {
         if (m == null) {
             m = new HashMap<>();
         }
 
+        // disable ssl host key checking if it's not enabled explicitly
         if (!m.containsKey("host_key_checking")) {
             m.put("host_key_checking", false);
         }
 
+        // use a shorter path to store temporary files
         m.put("remote_tmp", "/tmp/ansible/$USER");
+
+
+        // add plugins path
+        m.put("callback_plugins", baseDir + "/_callbacks");
+
         return m;
     }
 
@@ -113,10 +124,6 @@ public class RunPlaybookTask2 implements Task {
                 Object v = e.getValue();
                 if (v == null) {
                     continue;
-                }
-
-                if (v instanceof String) {
-                    v = "\"" + v + "\"";
                 }
 
                 b.append(e.getKey()).append(" = ").append(v).append("\n");

@@ -22,13 +22,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 @Named
 @Singleton
 public class ExecutionManager {
 
     private static final Logger log = LoggerFactory.getLogger(ExecutionManager.class);
-    private static final long STATUS_TTL = 8 * 60 * 60 * 1000; // 8 hours
+    private static final long JOB_ENTRY_TTL = 8 * 60 * 60 * 1000; // 8 hours
     private static final Collection<String> DEFAULT_JVM_ARGS = Arrays.asList("-Xmx512m",
             "-Djavax.el.varArgs=true", "-Djava.security.egd=file:/dev/./urandom");
 
@@ -39,7 +40,10 @@ public class ExecutionManager {
 
     private final Map<String, Future<?>> executions = new HashMap<>();
     private final Cache<String, JobStatus> statuses = CacheBuilder.newBuilder()
-            .expireAfterAccess(STATUS_TTL, TimeUnit.MILLISECONDS)
+            .expireAfterAccess(JOB_ENTRY_TTL, TimeUnit.MILLISECONDS)
+            .build();
+    private final Cache<String, Path> attachments = CacheBuilder.newBuilder()
+            .expireAfterAccess(JOB_ENTRY_TTL, TimeUnit.MILLISECONDS)
             .build();
 
     private final Object mutex = new Object();
@@ -96,6 +100,13 @@ public class ExecutionManager {
             } finally {
                 synchronized (ExecutionManager.this) {
                     executions.remove(id);
+                }
+            }
+
+            synchronized (mutex) {
+                Path attachmentsDir = tmpDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME);
+                if (Files.exists(attachmentsDir)) {
+                    attachments.put(id, attachmentsDir);
                 }
             }
         });
@@ -160,6 +171,24 @@ public class ExecutionManager {
         synchronized (mutex) {
             return executions.size();
         }
+    }
+
+    public Path zipAttachments(String id) throws IOException {
+        Path src;
+        synchronized (mutex) {
+            src = attachments.getIfPresent(id);
+        }
+
+        if (src == null || !Files.exists(src)) {
+            return null;
+        }
+
+        Path tmpFile = Files.createTempFile("attachments", ".zip");
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmpFile))) {
+            IOUtils.zip(zip, src);
+        }
+
+        return tmpFile;
     }
 
     private Path extract(String id, InputStream in) throws ExecutionException {

@@ -1,11 +1,13 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.cfg.AttachmentStoreConfiguration;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.RequestDataOnlyPipeline;
@@ -15,24 +17,27 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Named
 public class ProcessResourceImpl implements ProcessResource, Resource {
@@ -45,6 +50,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final SelfContainedArchivePipeline archivePipeline;
     private final RequestDataOnlyPipeline requestPipeline;
     private final ProcessExecutorImpl processExecutor;
+    private final AttachmentStoreConfiguration attachmentCfg;
 
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
@@ -52,7 +58,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProjectPipeline projectPipeline,
                                SelfContainedArchivePipeline archivePipeline,
                                RequestDataOnlyPipeline requestPipeline,
-                               ProcessExecutorImpl processExecutor) {
+                               ProcessExecutorImpl processExecutor,
+                               AttachmentStoreConfiguration attachmentCfg) {
 
         this.projectDao = projectDao;
         this.historyDao = historyDao;
@@ -60,6 +67,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.archivePipeline = archivePipeline;
         this.requestPipeline = requestPipeline;
         this.processExecutor = processExecutor;
+        this.attachmentCfg = attachmentCfg;
     }
 
     @Override
@@ -183,7 +191,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    public ProcessStatusResponse waitForCompletion(@PathParam("id") String instanceId, @QueryParam("timeout") @DefaultValue("-1") long timeout) {
+    @Validate
+    public ProcessStatusResponse waitForCompletion(String instanceId, long timeout) {
         log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId, timeout);
 
         long t1 = System.currentTimeMillis();
@@ -213,11 +222,13 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    @Validate
     public void kill(String agentId) {
         processExecutor.cancel(agentId);
     }
 
     @Override
+    @Validate
     public ProcessStatusResponse get(String instanceId) {
         ProcessHistoryEntry r = historyDao.get(instanceId);
         if (r == null) {
@@ -225,5 +236,38 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException(Status.NOT_FOUND);
         }
         return new ProcessStatusResponse(r.getlastUpdateDt(), r.getStatus(), r.getLogFileName());
+    }
+
+    @Override
+    @Validate
+    public Response downloadAttachment(String instanceId, String attachmentName) {
+        if (attachmentName.endsWith("/")) {
+            throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
+        }
+
+        Path p = attachmentCfg.getBaseDir().resolve(instanceId + ".zip");
+        if (!Files.exists(p)) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+
+        try (ZipInputStream zip = new ZipInputStream(Files.newInputStream(p))) {
+            ZipEntry e = zip.getNextEntry();
+            if (attachmentName.equals(e.getName())) {
+                Path tmpFile = Files.createTempFile("attachment", ".data");
+                try (OutputStream out = Files.newOutputStream(tmpFile)) {
+                    IOUtils.copy(zip, out);
+                }
+
+                return Response.ok((StreamingOutput) out -> {
+                    try (InputStream in = Files.newInputStream(tmpFile)) {
+                        IOUtils.copy(in, out);
+                    }
+                }).build();
+            }
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while reading an attachment archive", e);
+        }
+
+        return Response.status(Status.NOT_FOUND).build();
     }
 }
