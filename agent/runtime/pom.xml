@@ -102,4 +102,13 @@
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

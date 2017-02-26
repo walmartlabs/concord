@@ -7,10 +7,16 @@ import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
 import com.walmartlabs.concord.server.security.SecurityModule;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) throws Exception {
+        long t1 = System.currentTimeMillis();
+
         Server server = new Server(8001) {
             @Override
             protected void configureServletContext(ServletContextHandler h, Injector i) {
@@ -30,5 +36,8 @@ public class Main {
         };
 
         server.start();
+
+        long t2 = System.currentTimeMillis();
+        log.info("main -> started in {}ms", (t2 - t1));
     }
 }
