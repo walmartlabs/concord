@@ -1,7 +1,8 @@
 // @flow
 import ContentRange from "http-range/lib/content-range";
-import {sort, log as logConstants} from "./constants";
-import type { ConcordId, FetchRange } from "./types";
+import {sort} from "./constants";
+import * as logConstants from "./containers/VisibleLogViewer/constants";
+import type {ConcordId, FetchRange} from "./types";
 
 // utils
 
@@ -140,7 +141,8 @@ export const deleteProject = (id: ConcordId) => {
 
 const offsetRange = (data: string, range: FetchRange) => {
     // if our data starts from the beginning, do nothing
-    if (range.low && range.low <= 0) {
+    if (range.low !== undefined && range.low <= 0) {
+        console.log("1");
         return {data, range};
     }
 
