@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.plugins.nexus.perf2;
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.agent.api.JobResource;
+import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
 import com.walmartlabs.concord.agent.pool.AgentPool;
@@ -34,10 +34,10 @@ public class PerfTaskTest {
                 "test.duration", "1 MINUTES"
         ));
 
-        JobResource jobResource = prepareJobResource();
+        AgentResource agentResource = prepareJobResource();
 
         AgentPool agentPool = mock(AgentPool.class);
-        when(agentPool.acquire(anyLong())).thenReturn(jobResource);
+        when(agentPool.acquire(anyLong())).thenReturn(agentResource);
 
         AgentPoolFactory agentPoolFactory = mock(AgentPoolFactory.class);
         when(agentPoolFactory.create(anyCollection())).thenReturn(agentPool);
@@ -56,7 +56,7 @@ public class PerfTaskTest {
 
         // ---
 
-        verify(jobResource, times(1)).start(any(InputStream.class), eq(JobType.JUNIT_GROOVY), eq("maven01/scenario.groovy"));
+        verify(agentResource, times(1)).start(any(InputStream.class), eq(JobType.JUNIT_GROOVY), eq("maven01/scenario.groovy"));
     }
 
     private static Path preparePayload() throws IOException {
@@ -82,8 +82,8 @@ public class PerfTaskTest {
         return tmpDir;
     }
 
-    private static JobResource prepareJobResource() throws Exception {
-        JobResource r = mock(JobResource.class);
+    private static AgentResource prepareJobResource() throws Exception {
+        AgentResource r = mock(AgentResource.class);
         when(r.start(any(InputStream.class), any(JobType.class), anyString()))
                 .thenAnswer(invocation -> UUID.randomUUID().toString());
         when(r.getStatus(any(String.class)))

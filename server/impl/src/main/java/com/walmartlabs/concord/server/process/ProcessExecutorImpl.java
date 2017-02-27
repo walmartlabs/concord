@@ -1,12 +1,11 @@
 package com.walmartlabs.concord.server.process;
 
-import com.walmartlabs.concord.agent.api.JobResource;
+import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.AgentConfiguration;
-import com.walmartlabs.concord.server.cfg.RunnerConfiguration;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.ZipOutputStream;
 
 @Named
 @Singleton
@@ -39,9 +37,9 @@ public class ProcessExecutorImpl {
      * Minimal period of time (in ms) between updating the status of a process on the server.
      */
     private static final long PROCESS_UPDATE_PERIOD = 5000;
+    private static final int LOG_BUFFER_SIZE = 256;
 
     private final AgentConfiguration agentCfg;
-
     private final Map<String, String> instanceIdMap = new ConcurrentHashMap<>();
 
     @Inject
@@ -73,7 +71,7 @@ public class ProcessExecutorImpl {
 
             String jobId;
             try (InputStream in = new BufferedInputStream(Files.newInputStream(archive))) {
-                jobId = a.jobResource.start(in, JobType.JAR, entryPoint);
+                jobId = a.agentResource.start(in, JobType.JAR, entryPoint);
                 instanceIdMap.put(instanceId, jobId);
 
                 log.debug("run ['{}'] -> started", instanceId);
@@ -102,7 +100,7 @@ public class ProcessExecutorImpl {
                 log.warn("run ['{}'] -> error while saving attachments", instanceId, e);
             }
 
-            JobStatus s = a.jobResource.getStatus(jobId);
+            JobStatus s = a.agentResource.getStatus(jobId);
             if (s == JobStatus.FAILED || s == JobStatus.CANCELLED) {
                 callback.onStatusChange(instanceId, ProcessStatus.FAILED);
             } else if (s == JobStatus.RUNNING) {
@@ -118,7 +116,7 @@ public class ProcessExecutorImpl {
     private void saveAttachments(Agent a, String jobId, Path dst) throws IOException {
         Response resp = null;
         try {
-            resp = a.jobResource.downloadAttachments(jobId);
+            resp = a.agentResource.downloadAttachments(jobId);
 
             int status = resp.getStatus();
             if (status != Status.OK.getStatusCode()) {
@@ -147,39 +145,8 @@ public class ProcessExecutorImpl {
         }
 
         try (Agent a = new Agent(agentCfg.getUri())) {
-            a.jobResource.cancel(jobId, true);
+            a.agentResource.cancel(jobId, true);
         }
-    }
-
-    private static void addRunner(Path src, RunnerConfiguration cfg) {
-        Path runnerPath = cfg.getPath();
-        Path dst = src.resolve(cfg.getTargetName());
-        try {
-            Files.copy(runnerPath, dst);
-        } catch (IOException e) {
-            throw new ProcessException("Error while adding the runner's runtime", e);
-        }
-    }
-
-    private static Path pack(Path src) {
-        try {
-            // TODO cfg?
-            Path dst = Files.createTempFile("payload", ".zip");
-            try (ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(dst.toFile())))) {
-                IOUtils.zip(out, src);
-            }
-            return dst;
-        } catch (IOException e) {
-            throw new ProcessException("Error while processing a payload", e);
-        }
-    }
-
-    private static File createLogFile(Path p, String logFileName) {
-        File dir = p.toFile();
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new ProcessException("Can't create the log directory: " + dir.getAbsolutePath());
-        }
-        return new File(dir, logFileName);
     }
 
     private static void log(Path p, String s, Object... args) {
@@ -194,22 +161,22 @@ public class ProcessExecutorImpl {
     private static class Agent implements AutoCloseable {
 
         private final Client client;
-        private final JobResource jobResource;
+        private final AgentResource agentResource;
 
         private Agent(URI uri) {
             this.client = ClientBuilder.newClient();
 
             WebTarget t = client.target(uri);
-            this.jobResource = ((ResteasyWebTarget) t).proxy(JobResource.class);
+            this.agentResource = ((ResteasyWebTarget) t).proxy(AgentResource.class);
         }
 
         public void stream(String jobIb, OutputStream out, Runnable progressUpdater) throws IOException {
             // TODO constants
             progressUpdater = new ThrottledRunnable(progressUpdater, PROCESS_UPDATE_PERIOD);
 
-            Response r = jobResource.streamLog(jobIb);
+            Response r = agentResource.streamLog(jobIb);
             try (InputStream in = r.readEntity(InputStream.class)) {
-                byte[] ab = new byte[256];
+                byte[] ab = new byte[LOG_BUFFER_SIZE];
                 int read;
                 while ((read = in.read(ab)) > 0) {
                     out.write(ab, 0, read);

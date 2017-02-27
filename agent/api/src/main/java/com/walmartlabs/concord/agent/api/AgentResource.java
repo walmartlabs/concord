@@ -7,7 +7,7 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 
 @Path("/api/v1/job")
-public interface JobResource {
+public interface AgentResource {
 
     /**
      * Starts new job asynchronously.

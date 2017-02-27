@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.agent;
 
 import com.google.common.io.ByteStreams;
-import com.walmartlabs.concord.agent.api.JobResource;
+import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
 import com.walmartlabs.concord.agent.test.*;
@@ -41,7 +41,7 @@ public class JarIT {
 
     private Main main;
     private Client client;
-    private JobResource jobResource;
+    private AgentResource agentResource;
 
     @Before
     public void setUp() throws Exception {
@@ -62,7 +62,7 @@ public class JarIT {
                 .build();
 
         WebTarget t = client.target("http://localhost:" + main.getLocalPort());
-        jobResource = ((ResteasyWebTarget) t).proxy(JobResource.class);
+        agentResource = ((ResteasyWebTarget) t).proxy(AgentResource.class);
     }
 
     @After
@@ -75,14 +75,14 @@ public class JarIT {
     public void testNormal() throws Exception {
         String id;
         try (InputStream in = new FileInputStream(makePayload(ResourceTest.class))) {
-            id = jobResource.start(in, JobType.JAR, "test.jar");
+            id = agentResource.start(in, JobType.JAR, "test.jar");
         }
 
         // ---
 
         JobStatus s;
         while (true) {
-            s = jobResource.getStatus(id);
+            s = agentResource.getStatus(id);
             if (s != JobStatus.RUNNING) {
                 break;
             }
@@ -93,7 +93,7 @@ public class JarIT {
 
         // ---
 
-        Response resp = jobResource.streamLog(id/*, "bytes=0-"*/);
+        Response resp = agentResource.streamLog(id/*, "bytes=0-"*/);
         byte[] ab = resp.readEntity(byte[].class);
 
         assertEquals(1, grep(".*first line.*", ab).size());
@@ -104,14 +104,14 @@ public class JarIT {
     public void testAttachments() throws Exception {
         String id;
         try (InputStream in = new FileInputStream(makePayload(AttachmentTest.class))) {
-            id = jobResource.start(in, JobType.JAR, "test.jar");
+            id = agentResource.start(in, JobType.JAR, "test.jar");
         }
 
         // ---
 
         JobStatus s;
         while (true) {
-            s = jobResource.getStatus(id);
+            s = agentResource.getStatus(id);
             if (s != JobStatus.RUNNING) {
                 break;
             }
@@ -123,7 +123,7 @@ public class JarIT {
         // ---
 
         Path tmpDir = Files.createTempDirectory("test");
-        Response resp = jobResource.downloadAttachments(id);
+        Response resp = agentResource.downloadAttachments(id);
         try (ZipInputStream zip = new ZipInputStream(resp.readEntity(InputStream.class))) {
             IOUtils.unzip(zip, tmpDir);
         }
@@ -139,14 +139,14 @@ public class JarIT {
     public void testAsyncLog() throws Exception {
         String id;
         try (InputStream in = new FileInputStream(makePayload(ForAFewSecondsTest.class))) {
-            id = jobResource.start(in, JobType.JAR, "test.jar");
+            id = agentResource.start(in, JobType.JAR, "test.jar");
         }
 
         // ---
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Thread logThread = new Thread(() -> {
-            Response resp = jobResource.streamLog(id);
+            Response resp = agentResource.streamLog(id);
             try (InputStream in = resp.readEntity(InputStream.class)) {
                 ByteStreams.copy(in, baos);
             } catch (IOException e) {
@@ -159,7 +159,7 @@ public class JarIT {
 
         JobStatus s;
         while (true) {
-            s = jobResource.getStatus(id);
+            s = agentResource.getStatus(id);
             if (s != JobStatus.RUNNING) {
                 break;
             }
@@ -184,13 +184,13 @@ public class JarIT {
     public void testInterrupted() throws Exception {
         String id;
         try (InputStream in = new FileInputStream(makePayload(LongRunningTest.class))) {
-            id = jobResource.start(in, JobType.JAR, "test.jar");
+            id = agentResource.start(in, JobType.JAR, "test.jar");
         }
 
         // ---
 
         while (true) {
-            JobStatus s = jobResource.getStatus(id);
+            JobStatus s = agentResource.getStatus(id);
             if (s == JobStatus.RUNNING) {
                 break;
             }
@@ -203,16 +203,16 @@ public class JarIT {
 
         // ---
 
-        jobResource.cancelAll();
+        agentResource.cancelAll();
 
         // ---
 
-        JobStatus s = jobResource.getStatus(id);
+        JobStatus s = agentResource.getStatus(id);
         assertEquals(s, JobStatus.CANCELLED);
 
         // ---
 
-        Response resp = jobResource.streamLog(id/*, null*/);
+        Response resp = agentResource.streamLog(id/*, null*/);
         byte[] ab = resp.readEntity(byte[].class);
 
         assertEquals(1, grep(".*working.*", ab).size());
@@ -222,13 +222,13 @@ public class JarIT {
     public void testError() throws Exception {
         String id;
         try (InputStream in = new FileInputStream(makePayload(ErrorTest.class))) {
-            id = jobResource.start(in, JobType.JAR, "test.jar");
+            id = agentResource.start(in, JobType.JAR, "test.jar");
         }
 
         // ---
 
         while (true) {
-            JobStatus s = jobResource.getStatus(id);
+            JobStatus s = agentResource.getStatus(id);
             if (s == JobStatus.FAILED) {
                 break;
             }
@@ -237,7 +237,7 @@ public class JarIT {
 
         // ---
 
-        Response resp = jobResource.streamLog(id/*, null*/);
+        Response resp = agentResource.streamLog(id/*, null*/);
         byte[] ab = resp.readEntity(byte[].class);
 
         assertEquals(1, grep(".*Kaboom.*", ab).size());

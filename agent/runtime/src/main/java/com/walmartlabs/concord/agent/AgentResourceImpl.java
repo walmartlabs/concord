@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.agent;
 
-import com.walmartlabs.concord.agent.api.JobResource;
+import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
 import com.walmartlabs.concord.common.IOUtils;
@@ -21,13 +21,13 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 
 @Named
-public class JobResourceImpl implements JobResource, Resource {
+public class AgentResourceImpl implements AgentResource, Resource {
 
     private final ExecutionManager executionManager;
     private final LogManager logManager;
 
     @Inject
-    public JobResourceImpl(ExecutionManager executionManager, LogManager logManager) {
+    public AgentResourceImpl(ExecutionManager executionManager, LogManager logManager) {
         this.executionManager = executionManager;
         this.logManager = logManager;
     }

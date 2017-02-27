@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.agent.pool;
 
-import com.walmartlabs.concord.agent.api.JobResource;
+import com.walmartlabs.concord.agent.api.AgentResource;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
@@ -23,7 +23,7 @@ public class AgentPool implements AutoCloseable {
 
     private final Collection<URI> hosts;
     private final Client client = ClientBuilder.newClient();
-    private final GenericObjectPool<JobResource> pool;
+    private final GenericObjectPool<AgentResource> pool;
 
     public AgentPool(Collection<URI> hosts) {
         this.hosts = new HashSet<>(hosts);
@@ -31,11 +31,11 @@ public class AgentPool implements AutoCloseable {
     }
 
     // TODO less generic exception
-    public JobResource acquire(long timeout) throws Exception {
+    public AgentResource acquire(long timeout) throws Exception {
         return pool.borrowObject(timeout);
     }
 
-    public void release(JobResource r) {
+    public void release(AgentResource r) {
         pool.returnObject(r);
     }
 
@@ -45,13 +45,13 @@ public class AgentPool implements AutoCloseable {
         client.close();
     }
 
-    private JobResource connect(URI host) throws InterruptedException {
-        JobResource proxy;
+    private AgentResource connect(URI host) throws InterruptedException {
+        AgentResource proxy;
 
         // TODO constants
         for (int attempt = 0; attempt < 3; attempt++) {
             ResteasyWebTarget t = (ResteasyWebTarget) client.target(host);
-            proxy = t.proxy(JobResource.class);
+            proxy = t.proxy(AgentResource.class);
 
             try {
                 if (proxy.count() > 0) {
@@ -69,10 +69,10 @@ public class AgentPool implements AutoCloseable {
         return null;
     }
 
-    private final class AgentFactory implements PooledObjectFactory<JobResource> {
+    private final class AgentFactory implements PooledObjectFactory<AgentResource> {
 
         @Override
-        public PooledObject<JobResource> makeObject() throws Exception {
+        public PooledObject<AgentResource> makeObject() throws Exception {
             synchronized (hosts) {
                 Queue<URI> available = new LinkedList<>(hosts);
                 while (true) {
@@ -82,7 +82,7 @@ public class AgentPool implements AutoCloseable {
                         throw new Exception("No available hosts left");
                     }
 
-                    JobResource proxy = connect(host);
+                    AgentResource proxy = connect(host);
                     if (proxy == null) {
                         continue;
                     }
@@ -94,8 +94,8 @@ public class AgentPool implements AutoCloseable {
         }
 
         @Override
-        public void destroyObject(PooledObject<JobResource> p) throws Exception {
-            JobResource r = p.getObject();
+        public void destroyObject(PooledObject<AgentResource> p) throws Exception {
+            AgentResource r = p.getObject();
             try {
                 r.cancelAll();
             } catch (Exception e) {
@@ -104,17 +104,17 @@ public class AgentPool implements AutoCloseable {
         }
 
         @Override
-        public boolean validateObject(PooledObject<JobResource> p) {
+        public boolean validateObject(PooledObject<AgentResource> p) {
             // TODO reset an agent?
             return true;
         }
 
         @Override
-        public void activateObject(PooledObject<JobResource> p) throws Exception {
+        public void activateObject(PooledObject<AgentResource> p) throws Exception {
         }
 
         @Override
-        public void passivateObject(PooledObject<JobResource> p) throws Exception {
+        public void passivateObject(PooledObject<AgentResource> p) throws Exception {
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.agent;
 
-import com.walmartlabs.concord.agent.api.JobResource;
+import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.pool.AgentPool;
 import org.junit.After;
 import org.junit.Before;
@@ -32,7 +32,7 @@ public class AgentPoolIT {
         URI host = URI.create("http://localhost:" + main.getLocalPort());
         AgentPool pool = new AgentPool(Collections.singleton(host));
 
-        JobResource a = pool.acquire(5000);
+        AgentResource a = pool.acquire(5000);
         assertEquals(0, a.count());
 
         pool.close();

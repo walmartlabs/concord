@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.agent;
 
 import com.google.common.io.ByteStreams;
-import com.walmartlabs.concord.agent.api.JobResource;
+import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
@@ -43,7 +43,7 @@ public class GroovyIT {
     @Test(timeout = 15000)
     public void test() throws Exception {
         ResteasyWebTarget target = (ResteasyWebTarget) client.target("http://localhost:" + main.getLocalPort());
-        JobResource proxy = target.proxy(JobResource.class);
+        AgentResource proxy = target.proxy(AgentResource.class);
 
         String resource = "test.groovy";
         InputStream payload = makePayload(resource);
