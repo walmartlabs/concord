@@ -4,7 +4,6 @@ import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.agent.api.JobResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
-import com.walmartlabs.concord.agent.api.LogResource;
 import com.walmartlabs.concord.agent.test.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.apache.http.client.HttpClient;
@@ -36,16 +35,13 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class JarIT {
 
     private Main main;
     private Client client;
     private JobResource jobResource;
-    private LogResource logResource;
 
     @Before
     public void setUp() throws Exception {
@@ -67,7 +63,6 @@ public class JarIT {
 
         WebTarget t = client.target("http://localhost:" + main.getLocalPort());
         jobResource = ((ResteasyWebTarget) t).proxy(JobResource.class);
-        logResource = ((ResteasyWebTarget) t).proxy(LogResource.class);
     }
 
     @After
@@ -98,7 +93,7 @@ public class JarIT {
 
         // ---
 
-        Response resp = logResource.stream(id/*, "bytes=0-"*/);
+        Response resp = jobResource.streamLog(id/*, "bytes=0-"*/);
         byte[] ab = resp.readEntity(byte[].class);
 
         assertEquals(1, grep(".*first line.*", ab).size());
@@ -151,7 +146,7 @@ public class JarIT {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Thread logThread = new Thread(() -> {
-            Response resp = logResource.stream(id);
+            Response resp = jobResource.streamLog(id);
             try (InputStream in = resp.readEntity(InputStream.class)) {
                 ByteStreams.copy(in, baos);
             } catch (IOException e) {
@@ -217,7 +212,7 @@ public class JarIT {
 
         // ---
 
-        Response resp = logResource.stream(id/*, null*/);
+        Response resp = jobResource.streamLog(id/*, null*/);
         byte[] ab = resp.readEntity(byte[].class);
 
         assertEquals(1, grep(".*working.*", ab).size());
@@ -242,7 +237,7 @@ public class JarIT {
 
         // ---
 
-        Response resp = logResource.stream(id/*, null*/);
+        Response resp = jobResource.streamLog(id/*, null*/);
         byte[] ab = resp.readEntity(byte[].class);
 
         assertEquals(1, grep(".*Kaboom.*", ab).size());

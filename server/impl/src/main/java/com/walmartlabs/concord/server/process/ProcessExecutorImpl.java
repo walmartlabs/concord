@@ -3,7 +3,6 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.agent.api.JobResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
-import com.walmartlabs.concord.agent.api.LogResource;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.AgentConfiguration;
@@ -196,21 +195,19 @@ public class ProcessExecutorImpl {
 
         private final Client client;
         private final JobResource jobResource;
-        private final LogResource logResource;
 
         private Agent(URI uri) {
             this.client = ClientBuilder.newClient();
 
             WebTarget t = client.target(uri);
             this.jobResource = ((ResteasyWebTarget) t).proxy(JobResource.class);
-            this.logResource = ((ResteasyWebTarget) t).proxy(LogResource.class);
         }
 
         public void stream(String jobIb, OutputStream out, Runnable progressUpdater) throws IOException {
             // TODO constants
             progressUpdater = new ThrottledRunnable(progressUpdater, PROCESS_UPDATE_PERIOD);
 
-            Response r = logResource.stream(jobIb);
+            Response r = jobResource.streamLog(jobIb);
             try (InputStream in = r.readEntity(InputStream.class)) {
                 byte[] ab = new byte[256];
                 int read;
