@@ -3,6 +3,16 @@
 - [Managing credentials](#managing-credentials)
 - [Permissions](#permissions)
 
+## Authentication
+
+Depending on the configuration of the server, you may need an API key.
+The key must be passed in the `Authorization` header on every API request. For example:
+```
+curl -v -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" ...
+```
+
+API keys are managed using the [API key](./api/apikey.md) endpoint.
+
 ## Managing credentials
 
 Credentials (secrets) are managed using the [secret](./api/secret.md) API endpoint.
