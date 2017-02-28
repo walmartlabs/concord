@@ -1,12 +1,12 @@
 // @flow
-import {call, put} from "redux-saga/effects";
+import {call, put, fork, takeLatest} from "redux-saga/effects";
 import {SubmissionError} from "redux-form";
 import {push as pushHistory} from "react-router-redux";
 import * as projectApi from "../../api/project";
 import {actionTypes} from "./actions";
 import * as routes from "../../routes";
 
-export function* fetchProjectData(action: any): Generator<*, *, *> {
+function* fetchProjectData(action: any): Generator<*, *, *> {
     try {
         const response = yield call(projectApi.fetchProject, action.name);
         yield put({
@@ -23,7 +23,7 @@ export function* fetchProjectData(action: any): Generator<*, *, *> {
     }
 }
 
-export function* updateProjectData(action: any): Generator<*, *, *> {
+function* updateProjectData(action: any): Generator<*, *, *> {
     try {
         const response = yield call(projectApi.updateProject, action.name, action.data);
         action.resolve(response);
@@ -33,7 +33,7 @@ export function* updateProjectData(action: any): Generator<*, *, *> {
     }
 }
 
-export function* createProject(action: any): Generator<*, *, *> {
+function* createProject(action: any): Generator<*, *, *> {
     try {
         const response = yield call(projectApi.createProject, action.data);
         action.resolve(response);
@@ -42,4 +42,12 @@ export function* createProject(action: any): Generator<*, *, *> {
         console.error("createProject -> error", e);
         action.reject(new SubmissionError({_error: e.message}));
     }
+}
+
+export default function* (): Generator<*, *, *> {
+    yield [
+        fork(takeLatest, actionTypes.FETCH_PROJECT_REQUEST, fetchProjectData),
+        fork(takeLatest, actionTypes.UPDATE_PROJECT_REQUEST, updateProjectData),
+        fork(takeLatest, actionTypes.CREATE_PROJECT_REQUEST, createProject),
+    ];
 }

@@ -1,15 +1,15 @@
 // @flow
-import {call, put, select} from "redux-saga/effects";
+import {call, put, select, fork, takeLatest} from "redux-saga/effects";
 import {makeListFetcher} from "../../sagas/common";
 import * as projectApi from "../../api/project";
 import {getProjectListState as getState} from "../../reducers";
 import {getLastQuery} from "./reducers";
 import {actionTypes} from "./actions";
 
-export const fetchProjectList = makeListFetcher("fetchProjectList", projectApi.fetchProjectList,
+const fetchProjectList = makeListFetcher("fetchProjectList", projectApi.fetchProjectList,
     actionTypes.FETCH_PROJECT_LIST_RESULT);
 
-export function* deleteProject(action: any): any {
+function* deleteProject(action: any): any {
     try {
         yield call(projectApi.deleteProject, action.name);
         yield put({
@@ -31,4 +31,11 @@ export function* deleteProject(action: any): any {
             message: e.message || "Error while removing a project"
         });
     }
+}
+
+export default function* (): Generator<*, *, *> {
+    yield [
+        fork(takeLatest, actionTypes.FETCH_PROJECT_LIST_REQUEST, fetchProjectList),
+        fork(takeLatest, actionTypes.DELETE_PROJECT_REQUEST, deleteProject),
+    ];
 }

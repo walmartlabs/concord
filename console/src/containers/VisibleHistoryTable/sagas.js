@@ -1,5 +1,5 @@
 // @flow
-import {call, put, select} from "redux-saga/effects";
+import {call, put, select, fork, takeLatest} from "redux-saga/effects";
 import {delay} from "redux-saga";
 import {makeListFetcher} from "../../sagas/common";
 import {actionTypes} from "./actions";
@@ -8,10 +8,10 @@ import {getLastQuery} from "./reducers";
 import * as historyApi from "../../api/history";
 import * as processApi from "../../api/process";
 
-export const fetchHistoryData = makeListFetcher("fetchHistoryData", historyApi.fetchRows,
+const fetchHistoryData = makeListFetcher("fetchHistoryData", historyApi.fetchRows,
     actionTypes.FETCH_HISTORY_DATA_RESULT);
 
-export function* killProc(action: any): Generator<*, *, *> {
+function* killProc(action: any): Generator<*, *, *> {
     try {
         const query = yield select((state) => getLastQuery(getState(state)));
 
@@ -39,3 +39,9 @@ export function* killProc(action: any): Generator<*, *, *> {
     }
 }
 
+export default function* (): Generator<*, *, *> {
+    yield [
+        fork(takeLatest, actionTypes.FETCH_HISTORY_DATA_REQUEST, fetchHistoryData),
+        fork(takeLatest, actionTypes.KILL_PROC_REQUEST, killProc),
+    ];
+}
