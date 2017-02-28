@@ -1,12 +1,13 @@
 // @flow
 import {call, put} from "redux-saga/effects";
-import * as api from "../../api";
+import * as processApi from "../../api/process";
+import * as logApi from "../../api/log";
 import {actionTypes} from "./actions";
 
 export function* fetchLogData(action: any): Generator<*, *, *> {
     try {
-        const status = yield call(api.fetchProcessStatus, action.instanceId);
-        const response = yield call(api.fetchLog, status.logFileName, action.fetchRange);
+        const status = yield call(processApi.fetchProcessStatus, action.instanceId);
+        const response = yield call(logApi.fetchLog, status.logFileName, action.fetchRange);
 
         yield put({
             type: actionTypes.FETCH_LOG_DATA_RESULT,

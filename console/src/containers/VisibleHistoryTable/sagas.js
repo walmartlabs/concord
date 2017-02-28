@@ -2,19 +2,20 @@
 import {call, put, select} from "redux-saga/effects";
 import {delay} from "redux-saga";
 import {makeListFetcher} from "../../sagas/common";
-import * as api from "../../api";
 import {actionTypes} from "./actions";
 import {getHistoryState as getState} from "../../reducers";
 import {getLastQuery} from "./reducers";
+import * as historyApi from "../../api/history";
+import * as processApi from "../../api/process";
 
-export const fetchHistoryData = makeListFetcher("fetchHistoryData", api.fetchHistory,
+export const fetchHistoryData = makeListFetcher("fetchHistoryData", historyApi.fetchRows,
     actionTypes.FETCH_HISTORY_DATA_RESULT);
 
 export function* killProc(action: any): Generator<*, *, *> {
     try {
         const query = yield select((state) => getLastQuery(getState(state)));
 
-        yield call(api.killProc, action.id);
+        yield call(processApi.killProc, action.id);
 
         // TODO make this operation sync instead?
         yield call(delay, 2000);

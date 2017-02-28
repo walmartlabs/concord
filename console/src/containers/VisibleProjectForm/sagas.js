@@ -2,13 +2,13 @@
 import {call, put} from "redux-saga/effects";
 import {SubmissionError} from "redux-form";
 import {push as pushHistory} from "react-router-redux";
-import * as api from "../../api";
+import * as projectApi from "../../api/project";
 import {actionTypes} from "./actions";
 import * as routes from "../../routes";
 
 export function* fetchProjectData(action: any): Generator<*, *, *> {
     try {
-        const response = yield call(api.fetchProject, action.name);
+        const response = yield call(projectApi.fetchProject, action.name);
         yield put({
             type: actionTypes.FETCH_PROJECT_RESULT,
             response
@@ -25,7 +25,7 @@ export function* fetchProjectData(action: any): Generator<*, *, *> {
 
 export function* updateProjectData(action: any): Generator<*, *, *> {
     try {
-        const response = yield call(api.updateProject, action.name, action.data);
+        const response = yield call(projectApi.updateProject, action.name, action.data);
         action.resolve(response);
     } catch (e) {
         console.error("updateProjectData -> error", e);
@@ -35,7 +35,7 @@ export function* updateProjectData(action: any): Generator<*, *, *> {
 
 export function* createProject(action: any): Generator<*, *, *> {
     try {
-        const response = yield call(api.createProject, action.data);
+        const response = yield call(projectApi.createProject, action.data);
         action.resolve(response);
         yield put(pushHistory(routes.getProjectPath(action.data.name)));
     } catch (e) {
