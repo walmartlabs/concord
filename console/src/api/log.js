@@ -1,6 +1,6 @@
 // @flow
 import type {FetchRange} from "../types";
-import {formatRangeHeader, parseRange, authHeader} from "./common";
+import {formatRangeHeader, parseRange, authHeader, defaultError} from "./common";
 
 const offsetRange = (data: string, range: FetchRange) => {
     // if our data starts from the beginning, do nothing
@@ -29,10 +29,10 @@ const defaultFetchRange: FetchRange = {low: undefined, high: 2048};
 export const fetchLog = (fileName: string, fetchRange: FetchRange = defaultFetchRange) => {
     const rangeHeader = formatRangeHeader(fetchRange);
     console.debug("API: fetchLog ['%s', %o] -> starting...", fileName, rangeHeader);
-    return fetch("/logs/" + fileName, {headers: Object.assign({}, authHeader, rangeHeader)})
+    return fetch(`/logs/${fileName}`, {headers: Object.assign({}, authHeader, rangeHeader)})
         .then(response => {
             if (!response.ok) {
-                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+                throw new defaultError(response);
             }
 
             const rangeHeader = response.headers.get("Content-Range");

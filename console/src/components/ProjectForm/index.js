@@ -1,18 +1,6 @@
 import React, {Component, PropTypes} from "react";
 import {Form, Header, Message, Dimmer, Loader} from "semantic-ui-react";
-
-const CustomInput = ({input, meta: {error, touched}, label, ...rest}) => (
-    <Form.Input {...input} label={label} error={error && touched} {...rest}/>
-);
-
-const CustomSelect = ({input: {name, value, onChange}, type, meta: {error, touched}, label, ...rest}) => {
-    const onChangeFn = (ev, data) => {
-        ev.target.value = data.value;
-        return onChange(ev);
-    };
-    return <Form.Select name={name} value={value} onChange={onChangeFn} label={label}
-                        error={error && touched} {...rest}/>;
-};
+import {CustomInput, CustomSelect} from "../../forms";
 
 const notEmpty = (v) => {
     return v !== undefined && v !== null;

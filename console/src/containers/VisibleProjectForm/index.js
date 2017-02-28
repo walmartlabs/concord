@@ -1,8 +1,8 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
+import {reduxForm, Field} from "redux-form";
 import ProjectForm from "../../components/ProjectForm";
 import ErrorMessage from "../../components/ErrorMessage";
-import {reduxForm, Field} from "redux-form";
 import {getProjectState, getTemplateListState} from "../../reducers";
 import * as projectSelectors from "./reducers";
 import * as templateListSelectors from "../VisibleTemplateList/reducers";

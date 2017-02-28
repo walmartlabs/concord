@@ -25,6 +25,10 @@ export const parseRange = (s: string): FetchRange => {
     };
 };
 
+export const defaultError = (resp: any) => {
+    return new Error(`ERROR: ${resp.statusText} (${resp.status}`);
+};
+
 export const apiListQuery = (name: string, path: string) => (sortBy: string, sortDir: string) => {
     console.debug("API: %s ['%s', '%s'] -> starting...", name, sortBy, sortDir);
 
@@ -36,7 +40,7 @@ export const apiListQuery = (name: string, path: string) => (sortBy: string, sor
     return fetch(path + "?" + query, {headers: authHeader})
         .then(response => {
             if (!response.ok) {
-                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+                throw defaultError(response);
             }
             return response.json();
         })
@@ -45,3 +49,4 @@ export const apiListQuery = (name: string, path: string) => (sortBy: string, sor
             return json;
         });
 };
+

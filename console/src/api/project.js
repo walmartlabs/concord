@@ -1,16 +1,16 @@
 // @flow
 import type {ConcordId} from "../types";
-import {authHeader, apiListQuery} from "./common";
+import {authHeader, apiListQuery, defaultError} from "./common";
 
 export const fetchProjectList = apiListQuery("fetchProjectRows", "/api/v1/project");
 
 export const fetchProject = (id: ConcordId) => {
     console.debug("API: getProject ['%s'] -> starting...", id);
 
-    return fetch("/api/v1/project/" + id, {headers: authHeader})
+    return fetch(`/api/v1/project/${id}`, {headers: authHeader})
         .then(response => {
             if (!response.ok) {
-                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+                throw new defaultError(response);
             }
             return response.json();
         })
@@ -30,7 +30,7 @@ export const createProject = (data: Object) => {
     return fetch("/api/v1/project", opts)
         .then(response => {
             if (!response.ok) {
-                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+                throw new defaultError(response);
             }
             return response.json();
         })
@@ -47,10 +47,10 @@ export const updateProject = (id: ConcordId, data: Object) => {
     const contentType = {"Content-Type": "application/json"};
     const opts = {headers: Object.assign({}, authHeader, contentType), method: "PUT", body: body};
 
-    return fetch("/api/v1/project/" + id, opts)
+    return fetch(`/api/v1/project/${id}`, opts)
         .then(response => {
             if (!response.ok) {
-                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+                throw new defaultError(response);
             }
         })
         .then(json => {
@@ -62,7 +62,7 @@ export const updateProject = (id: ConcordId, data: Object) => {
 export const deleteProject = (id: ConcordId) => {
     console.debug("API: deleteProject ['%s'] -> starting...", id);
 
-    return fetch("/api/v1/project/" + id, {headers: authHeader, method: "DELETE"})
+    return fetch(`/api/v1/project/${id}`, {headers: authHeader, method: "DELETE"})
         .then(response => {
             if (!response.ok) {
                 throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
