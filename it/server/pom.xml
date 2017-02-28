@@ -17,6 +17,7 @@
     <properties>
         <deps.dir>${project.build.directory}/deps</deps.dir>
         <templates.dir>${project.build.directory}/templates</templates.dir>
+        <docker.host.addr>127.0.0.1</docker.host.addr>
     </properties>
 
     <dependencies>
