@@ -1,0 +1,10 @@
+{
+  "files": [
+    "playbook",
+    "processes",
+    "_main.json"
+  ],
+  "deps": [
+    "com.walmartlabs.concord.plugins:ansible-tasks:0.0.1-SNAPSHOT"
+  ]
+}

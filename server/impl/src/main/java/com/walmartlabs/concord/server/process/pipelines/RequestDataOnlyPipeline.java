@@ -21,11 +21,12 @@ public class RequestDataOnlyPipeline {
         // TODO move to a cfg file
         this.processors = new PayloadProcessor[]{
                 injector.getInstance(RepositoryProcessor.class),
-                injector.getInstance(TemplateProcessor.class),
                 injector.getInstance(InventoryProcessor.class),
                 injector.getInstance(PrivateKeyProcessor.class),
-                injector.getInstance(RequestDataStoringProcessor.class),
+                injector.getInstance(TemplateProcessor.class),
                 injector.getInstance(DependenciesProcessor.class),
+                injector.getInstance(RequestDataStoringProcessor.class),
+                injector.getInstance(RunnerProcessor.class),
                 injector.getInstance(LogFileProcessor.class),
                 injector.getInstance(ValidatingProcessor.class),
                 injector.getInstance(ArchivingProcessor.class),

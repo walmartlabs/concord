@@ -172,6 +172,12 @@
         <dependency>
             <groupId>com.jcabi</groupId>
             <artifactId>jcabi-aether</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.kuali.maven.wagons</groupId>
+                    <artifactId>maven-s3-wagon</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>

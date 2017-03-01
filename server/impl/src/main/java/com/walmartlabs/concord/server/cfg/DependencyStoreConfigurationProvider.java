@@ -14,18 +14,18 @@ import java.util.Properties;
 
 @Named
 @Singleton
-public class TemplateConfigurationProvider implements Provider<TemplateConfiguration> {
+public class DependencyStoreConfigurationProvider implements Provider<DependencyStoreConfiguration> {
 
-    private static final Logger log = LoggerFactory.getLogger(TemplateConfigurationProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(DependencyStoreConfigurationProvider.class);
 
-    public static final String TEMPLATE_DEPS_DIR_KEY = "TEMPLATE_DEPS_DIR";
+    public static final String DEPS_STORE_DIR_KEY = "DEPS_STORE_DIR";
 
     private static final Path DEFAULT_REPO;
 
     static {
         Properties props = new Properties();
         try {
-            props.load(TemplateConfigurationProvider.class.getResourceAsStream("maven.properties"));
+            props.load(DependencyStoreConfigurationProvider.class.getResourceAsStream("maven.properties"));
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -39,10 +39,10 @@ public class TemplateConfigurationProvider implements Provider<TemplateConfigura
     }
 
     @Override
-    public TemplateConfiguration get() {
-        String s = System.getenv(TEMPLATE_DEPS_DIR_KEY);
+    public DependencyStoreConfiguration get() {
+        String s = System.getenv(DEPS_STORE_DIR_KEY);
         Path p = s != null ? Paths.get(s).toAbsolutePath() : DEFAULT_REPO;
         log.info("get -> using '{}' as the source of template dependencies", p);
-        return new TemplateConfiguration(p);
+        return new DependencyStoreConfiguration(p);
     }
 }

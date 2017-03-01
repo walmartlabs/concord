@@ -1,8 +1,6 @@
 package com.walmartlabs.concord.server.template;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
-import com.walmartlabs.concord.server.cfg.TemplateConfiguration;
-import com.walmartlabs.concord.server.cfg.TemplateConfigurationProvider;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Test;
 
@@ -16,8 +14,7 @@ public class TemplateResolverTest extends AbstractDaoTest {
     @Test
     public void test() throws Exception {
         TemplateDao templateDao = new TemplateDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        TemplateConfiguration cfg = new TemplateConfigurationProvider().get();
-        TemplateResolver resolver = new TemplateResolver(cfg, templateDao);
+        TemplateResolver resolver = new TemplateResolver(templateDao);
 
         Path p = resolver.get("ansible");
         assertNotNull(p);

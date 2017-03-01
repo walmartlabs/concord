@@ -3,11 +3,11 @@ package com.walmartlabs.concord.server.cfg;
 import java.io.Serializable;
 import java.nio.file.Path;
 
-public class TemplateConfiguration implements Serializable {
+public class DependencyStoreConfiguration implements Serializable {
 
     private final Path depsDir;
 
-    public TemplateConfiguration(Path depsDir) {
+    public DependencyStoreConfiguration(Path depsDir) {
         this.depsDir = depsDir;
     }
 

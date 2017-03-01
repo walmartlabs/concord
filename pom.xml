@@ -22,6 +22,7 @@
         <module>runner</module>
         <module>server</module>
         <module>console</module>
+        <module>cli</module>
         <module>docker-images</module>
         <module>it</module>
     </modules>
@@ -46,7 +47,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aether.version>1.13.1</aether.version>
-        <bpm.version>0.11.0</bpm.version>
+        <bpm.version>0.12.0</bpm.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.pool.version>2.4.2</commons.pool.version>
         <docker.plugin.version>0.19.0</docker.plugin.version>
@@ -60,6 +61,7 @@
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.0.Final</javax.ws.rs.version>
         <jcabi.aether.version>0.10.1</jcabi.aether.version>
+        <jcommander.version>1.58</jcommander.version>
         <jetty.version>9.2.11.v20150529</jetty.version>
         <jgit.version>4.6.0.201612231935-r</jgit.version>
         <jooq.version>3.9.0</jooq.version>
@@ -448,6 +450,11 @@
                 <artifactId>jcabi-aether</artifactId>
                 <version>${jcabi.aether.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.beust</groupId>
+                <artifactId>jcommander</artifactId>
+                <version>${jcommander.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -583,6 +590,16 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.8</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.0.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>

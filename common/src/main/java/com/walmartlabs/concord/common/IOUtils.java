@@ -24,6 +24,13 @@ public final class IOUtils {
         return false;
     }
 
+    public static void zipFile(ZipOutputStream zip, Path src, String name) throws IOException {
+        zip.putNextEntry(new ZipEntry(name));
+        try (InputStream in = Files.newInputStream(src)) {
+            copy(in, zip);
+        }
+    }
+
     public static void zip(ZipOutputStream zip, Path srcDir, String... filters) throws IOException {
         zip(zip, null, srcDir, filters);
     }
@@ -36,24 +43,25 @@ public final class IOUtils {
                     return FileVisitResult.CONTINUE;
                 }
 
-                if (IOUtils.matches(dir, filters)) {
+                if (matches(dir, filters)) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
+
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (matches(file, filters)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+
                 String n = srcDir.relativize(file).toString();
                 if (dstPrefix != null) {
                     n = dstPrefix + n;
                 }
 
-                File f = file.toFile();
-                zip.putNextEntry(new ZipEntry(n));
-                try (InputStream src = new BufferedInputStream(new FileInputStream(f))) {
-                    copy(src, zip);
-                }
+                zipFile(zip, file, n);
 
                 return FileVisitResult.CONTINUE;
             }

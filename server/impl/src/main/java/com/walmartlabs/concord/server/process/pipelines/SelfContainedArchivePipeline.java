@@ -19,8 +19,9 @@ public class SelfContainedArchivePipeline {
         this.processors = new PayloadProcessor[]{
                 injector.getInstance(WorkspaceArchiveProcessor.class),
                 injector.getInstance(TemplateProcessor.class),
-                injector.getInstance(RequestDataStoringProcessor.class),
                 injector.getInstance(DependenciesProcessor.class),
+                injector.getInstance(RequestDataStoringProcessor.class),
+                injector.getInstance(RunnerProcessor.class),
                 injector.getInstance(LogFileProcessor.class),
                 injector.getInstance(ValidatingProcessor.class),
                 injector.getInstance(ArchivingProcessor.class),
