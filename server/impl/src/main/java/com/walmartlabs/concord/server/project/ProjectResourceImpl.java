@@ -4,7 +4,7 @@ import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
-import com.walmartlabs.concord.server.template.TemplateDao;
+import com.walmartlabs.concord.server.template.TemplateResolver;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -31,7 +31,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     private final ProjectDao projectDao;
     private final ProjectConfigurationDao configurationDao;
     private final RepositoryDao repositoryDao;
-    private final TemplateDao templateDao;
+    private final TemplateResolver templateResolver;
     private final SecretDao secretDao;
     private final Set<ConfigurationValidator> cfgValidators;
 
@@ -40,7 +40,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Inject
     public ProjectResourceImpl(Configuration cfg, ProjectDao projectDao, ProjectConfigurationDao configurationDao,
-                               RepositoryDao repositoryDao, TemplateDao templateDao, SecretDao secretDao,
+                               RepositoryDao repositoryDao, TemplateResolver templateResolver, SecretDao secretDao,
                                Set<ConfigurationValidator> cfgValidators) {
 
         super(cfg);
@@ -48,7 +48,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         this.projectDao = projectDao;
         this.configurationDao = configurationDao;
         this.repositoryDao = repositoryDao;
-        this.templateDao = templateDao;
+        this.templateResolver = templateResolver;
         this.secretDao = secretDao;
         this.cfgValidators = cfgValidators;
 
@@ -228,7 +228,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         templateNames.forEach(t -> {
             assertTemplatePermissions(t);
-            if (!templateDao.exists(t)) {
+            if (!templateResolver.exists(t)) {
                 throw new ValidationErrorsException("Unknown template: " + t);
             }
         });

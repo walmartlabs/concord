@@ -7,7 +7,6 @@ public final class ITConstants {
 
     public static final String SERVER_URL;
     public static final String DEPENDENCIES_DIR;
-    public static final String TEMPLATES_DIR;
     public static final String GIT_SERVER_URL_PATTERN;
 
     static {
@@ -21,17 +20,15 @@ public final class ITConstants {
         SERVER_URL = "http://localhost:" + parseInt(props, "server.port", 8001);
 
         DEPENDENCIES_DIR = props.getProperty("deps.dir");
-        TEMPLATES_DIR = props.getProperty("templates.dir");
 
         String dockerAddr = nil(props.getProperty("docker.host.addr"));
-
         String gitHost = dockerAddr != null ? dockerAddr : "localhost";
         GIT_SERVER_URL_PATTERN = "ssh://git@" + gitHost + ":%d/";
     }
 
     private static int parseInt(Properties props, String key, int defaultValue) {
         try {
-            return Integer.parseInt(props.getProperty("server.port"));
+            return Integer.parseInt(props.getProperty(key));
         } catch (NumberFormatException e) {
             return defaultValue;
         }

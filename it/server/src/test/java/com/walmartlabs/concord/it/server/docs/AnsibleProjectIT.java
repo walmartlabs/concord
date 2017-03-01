@@ -60,17 +60,12 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        String templateName = "template@" + System.currentTimeMillis();
+        String templateName = "ansible";
         String projectName = "project@" + System.currentTimeMillis();
         String repoSecretName = "repoSecret@" + System.currentTimeMillis();
         String repoName = "repo@" + System.currentTimeMillis();
         String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
         String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
-
-        // ---
-
-        TemplateResource templateResource = proxy(TemplateResource.class);
-        templateResource.create(templateName, fsResource(ITConstants.TEMPLATES_DIR + "/ansible-template.zip"));
 
         // ---
 

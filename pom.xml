@@ -45,6 +45,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+        <aether.version>1.13.1</aether.version>
         <bpm.version>0.11.0</bpm.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.pool.version>2.4.2</commons.pool.version>
@@ -58,6 +59,7 @@
         <javax.inject.version>1</javax.inject.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.0.Final</javax.ws.rs.version>
+        <jcabi.aether.version>0.10.1</jcabi.aether.version>
         <jetty.version>9.2.11.v20150529</jetty.version>
         <jgit.version>4.6.0.201612231935-r</jgit.version>
         <jooq.version>3.9.0</jooq.version>
@@ -66,6 +68,8 @@
         <launcher.version>0.128</launcher.version>
         <liquibase.version>3.5.1</liquibase.version>
         <logback.version>1.0.9</logback.version>
+        <maven.api.version>3.0.5</maven.api.version>
+        <maven.prj.version>2.2.1</maven.prj.version>
         <metrics.version>3.1.2</metrics.version>
         <mockito.version>2.0.70-beta</mockito.version>
         <nexus.perf.version>1.0.20</nexus.perf.version>
@@ -83,7 +87,7 @@
         <slf4j.version>1.7.21</slf4j.version>
         <swagger.version>1.5.12</swagger.version>
         <tomcat.jdbc.version>8.5.5</tomcat.jdbc.version>
-        <wiremock.version>2.1.10</wiremock.version>
+        <wiremock.version>2.5.1</wiremock.version>
 
         <public.serverId>walmart-gec</public.serverId>
         <public.nexusUrl>http://gec-nexus.prod.glb.prod.walmart.com/nexus</public.nexusUrl>
@@ -413,6 +417,36 @@
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgres.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.sonatype.aether</groupId>
+                <artifactId>aether-api</artifactId>
+                <version>${aether.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.sonatype.aether</groupId>
+                <artifactId>aether-util</artifactId>
+                <version>${aether.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-settings-builder</artifactId>
+                <version>${maven.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-model</artifactId>
+                <version>${maven.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-project</artifactId>
+                <version>${maven.prj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jcabi</groupId>
+                <artifactId>jcabi-aether</artifactId>
+                <version>${jcabi.aether.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -230,13 +230,6 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
-    <changeSet id="2020" author="ibodrov@gmail.com">
-        <addForeignKeyConstraint constraintName="FK_PROJ_TEMPLATE_TEMP"
-                                 baseTableName="PROJECT_TEMPLATES" baseColumnNames="TEMPLATE_NAME"
-                                 referencedTableName="TEMPLATES" referencedColumnNames="TEMPLATE_NAME"
-                                 onDelete="CASCADE"/>
-    </changeSet>
-
     <!-- PROJECT_ATTACHMENTS -->
 
     <changeSet id="2100" author="ibodrov@gmail.com">

@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.template;
 
+import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -16,14 +17,12 @@ import javax.script.ScriptException;
 import javax.ws.rs.core.Response.Status;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.zip.ZipInputStream;
 
 @Named
 public class TemplateProcessor implements PayloadProcessor {
@@ -31,42 +30,67 @@ public class TemplateProcessor implements PayloadProcessor {
     private static final Logger log = LoggerFactory.getLogger(TemplateProcessor.class);
 
     private final TemplateDao templateDao;
+    private final TemplateResolver templateResolver;
     private final ScriptEngine scriptEngine;
 
     @Inject
-    public TemplateProcessor(TemplateDao templateDao) {
+    public TemplateProcessor(TemplateDao templateDao, TemplateResolver templateResolver) {
         this.templateDao = templateDao;
+        this.templateResolver = templateResolver;
         this.scriptEngine = new NashornScriptEngineFactory().getScriptEngine("--no-java");
     }
 
     @Override
     public Payload process(Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
-        if (projectName == null) {
+        if (projectName != null) {
+            return processProject(payload, projectName);
+        }
+
+        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        if (req == null) {
             return payload;
         }
 
-        Collection<String> templateIds = templateDao.getProjectTemplates(projectName);
-        if (templateIds.isEmpty()) {
+        String templateName = (String) req.get(Constants.TEMPLATE_KEY);
+        if (templateName == null) {
             return payload;
         }
-        if (templateIds.size() > 1) {
-            throw new ProcessException("Multiple project templates are not yet supported", Status.BAD_REQUEST);
-        }
 
-        try (InputStream in = templateDao.getData(templateIds.iterator().next())) {
-            return process(payload, in);
+        try {
+            Path templatePath = templateResolver.get(templateName);
+            return process(payload, templatePath);
         } catch (IOException e) {
             log.error("process ['{}'] -> error", payload.getInstanceId(), e);
             throw new ProcessException("Error while processing a template", e);
         }
     }
 
-    private Payload process(Payload payload, InputStream template) throws IOException {
-        Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path templatePath = Files.createTempDirectory("template");
+    private Payload processProject(Payload payload, String projectName) {
+        Collection<String> templateNames = templateDao.getProjectTemplates(projectName);
+        if (templateNames.isEmpty()) {
+            return payload;
+        }
+        if (templateNames.size() > 1) {
+            throw new ProcessException("Multiple project templates are not yet supported", Status.BAD_REQUEST);
+        }
 
-        unpack(template, templatePath);
+        try {
+            String templateName = templateNames.iterator().next();
+            Path templatePath = templateResolver.get(templateName);
+            return process(payload, templatePath);
+        } catch (IOException e) {
+            log.error("process ['{}'] -> error", payload.getInstanceId(), e);
+            throw new ProcessException("Error while processing a template", e);
+        }
+    }
+
+    private Payload process(Payload payload, Path templatePath) throws IOException {
+        if (templatePath == null) {
+            throw new ProcessException("Template not found: " + templatePath);
+        }
+
+        Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload
         IOUtils.copy(templatePath, workspacePath);
@@ -81,6 +105,7 @@ public class TemplateProcessor implements PayloadProcessor {
             log.debug("apply ['{}'] -> no template metadata file found, skipping", workspacePath);
         }
 
+        log.debug("process ['{}', '{}'] -> done", payload.getInstanceId(), templatePath);
         return payload;
     }
 
@@ -99,11 +124,5 @@ public class TemplateProcessor implements PayloadProcessor {
             throw new IOException("Template script execution error", e);
         }
         return (Map<String, Object>) result;
-    }
-
-    private static void unpack(InputStream in, Path dir) throws IOException {
-        try (ZipInputStream zip = new ZipInputStream(in)) {
-            IOUtils.unzip(zip, dir);
-        }
     }
 }

@@ -38,6 +38,12 @@ All parameters are optional.
 |-------------------|-----------------------------------------------------------------------------------|---------------|
 | SECRET_STORE_SALT | Store's salt value. If changed, all previously created keys will be inaccessable. |               |
 
+**Templates**
+
+| Variable           | Description                                                      | Default value          |
+|--------------------|------------------------------------------------------------------|------------------------|
+| TEMPLATES_DEPS_DIR | Local Maven repository, used to resolve template's dependencies. | `$HOME/.m2/repository` |
+
 ## Agent
 
 ### Environment variables

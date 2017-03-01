@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
+import com.walmartlabs.concord.server.template.TemplateProcessor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,6 +18,7 @@ public class SelfContainedArchivePipeline {
         // TODO move to a cfg file
         this.processors = new PayloadProcessor[]{
                 injector.getInstance(WorkspaceArchiveProcessor.class),
+                injector.getInstance(TemplateProcessor.class),
                 injector.getInstance(RequestDataStoringProcessor.class),
                 injector.getInstance(DependenciesProcessor.class),
                 injector.getInstance(LogFileProcessor.class),

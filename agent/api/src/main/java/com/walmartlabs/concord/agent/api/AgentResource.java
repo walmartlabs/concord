@@ -80,4 +80,9 @@ public interface AgentResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Path("/{id}")
     Response streamLog(@PathParam("id") @NotNull String id);
+
+    @GET
+    @Path("/ping")
+    @Produces(MediaType.APPLICATION_JSON)
+    PingResponse ping();
 }

@@ -21,7 +21,3 @@ from a local directory;
 - `tasks/nexus` - [nexus-perf](https://github.com/takari/nexus-perf) integration;
 - `tasks/oneops` - [oneops](http://www.oneops.com/) integration;
 - `tasks/smtp` - simple SMTP client as a task.
-
-### Project templates
-
-- `templates/ansible` - project template for running Ansible playbooks.

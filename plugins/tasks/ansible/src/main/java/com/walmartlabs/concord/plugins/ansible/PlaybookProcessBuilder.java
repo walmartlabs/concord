@@ -87,8 +87,12 @@ public class PlaybookProcessBuilder {
 
     private String[] formatCmd() throws IOException {
         List<String> l = new ArrayList<>(Arrays.asList(
-                "ansible-playbook", "-T", "30", "-i", inventory, playbook,
-                "-e", toJson(extraVars)));
+                "ansible-playbook", "-T", "30", "-i", inventory, playbook));
+
+        if (extraVars != null && !extraVars.isEmpty()) {
+            l.add("-e");
+            l.add(toJson(extraVars));
+        }
 
         if (user != null) {
             l.add("-u");

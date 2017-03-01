@@ -24,6 +24,5 @@
         <module>formats/bpmn</module>
         <module>formats/yaml</module>
         <module>definition-providers/fs</module>
-        <module>templates/ansible</module>
     </modules>
 </project>

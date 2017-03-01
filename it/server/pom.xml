@@ -16,7 +16,6 @@
 
     <properties>
         <deps.dir>${project.build.directory}/deps</deps.dir>
-        <templates.dir>${project.build.directory}/templates</templates.dir>
         <docker.host.addr>127.0.0.1</docker.host.addr>
     </properties>
 
@@ -160,15 +159,6 @@
                                     <version>${project.version}</version>
                                     <outputDirectory>${deps.dir}</outputDirectory>
                                 </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins</groupId>
-                                    <artifactId>ansible-project-template</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>template</classifier>
-                                    <type>zip</type>
-                                    <destFileName>ansible-template.zip</destFileName>
-                                    <outputDirectory>${templates.dir}</outputDirectory>
-                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -217,7 +207,7 @@
                                         <wait>
                                             <!--suppress MavenModelInspection -->
                                             <http>
-                                                <url>http://localhost:${it.agent.port}/api/v1/agent/ping</url>
+                                                <url>http://localhost:${it.agent.port}/api/v1/job/ping</url>
                                             </http>
                                         </wait>
                                     </run>

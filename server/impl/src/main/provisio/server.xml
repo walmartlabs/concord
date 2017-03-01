@@ -28,4 +28,8 @@
             <exclusion id="*:*"/>
         </artifact>
     </artifactSet>
+
+    <artifactSet to="/templates/deps">
+        <artifact id="com.walmartlabs.concord.plugins:ansible-tasks:jar:${project.version}"/>
+    </artifactSet>
 </runtime>

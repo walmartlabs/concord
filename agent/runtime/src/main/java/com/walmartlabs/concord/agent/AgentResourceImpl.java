@@ -3,6 +3,7 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
+import com.walmartlabs.concord.agent.api.PingResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -124,5 +125,10 @@ public class AgentResourceImpl implements AgentResource, Resource {
         };
 
         return Response.ok(stream).build();
+    }
+
+    @Override
+    public PingResponse ping() {
+        return new PingResponse(true);
     }
 }

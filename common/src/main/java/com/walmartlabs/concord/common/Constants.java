@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.common;
 
+import io.takari.bpm.model.ProcessDefinition;
+
 public final class Constants {
 
     /**
@@ -10,7 +12,7 @@ public final class Constants {
     /**
      * Execution context variable: path to a local directory, containing agent's payload.
      */
-    public static final String LOCAL_PATH_KEY = "__attr_localPath";
+    public static final String LOCAL_PATH_KEY = ProcessDefinition.ATTRIBUTE_KEY_PREFIX + LOCAL_PATH_ATTR;
 
     /**
      * ID of the current process instance.
@@ -38,6 +40,11 @@ public final class Constants {
     public static final String AGENT_PARAMS_FILE_NAME = "_agent.json";
 
     /**
+     * File, containing list of GAVs of runtime dependencies required by a template.
+     */
+    public static final String DEPENDENCIES_FILE_NAME = "_deps";
+
+    /**
      * JVM parameters for an agent's job.
      */
     public static final String JVM_ARGS_KEY = "jvmArgs";
@@ -46,6 +53,11 @@ public final class Constants {
      * Process entry point.
      */
     public static final String ENTRY_POINT_KEY = "entryPoint";
+
+    /**
+     * Template name.
+     */
+    public static final String TEMPLATE_KEY = "template";
 
     /**
      * Directory, containing job "attachments": reports, stats, etc.

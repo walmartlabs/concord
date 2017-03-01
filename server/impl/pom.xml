@@ -75,10 +75,6 @@
         </dependency>
         <dependency>
             <groupId>io.takari.bpm</groupId>
-            <artifactId>activiti-compat</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
             <artifactId>bpm-engine-api</artifactId>
         </dependency>
         <dependency>
@@ -173,6 +169,30 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.jcabi</groupId>
+            <artifactId>jcabi-aether</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-project</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-settings-builder</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-util</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
@@ -199,6 +219,16 @@
                 <directory>${project.basedir}/src/main/filtered-resources</directory>
                 <includes>
                     <include>**/*</include>
+                </includes>
+                <excludes>
+                    <exclude>**/processes/*.yml</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <filtering>false</filtering>
+                <directory>${project.basedir}/src/main/filtered-resources</directory>
+                <includes>
+                    <include>**/processes/*.yml</include>
                 </includes>
             </resource>
         </resources>
