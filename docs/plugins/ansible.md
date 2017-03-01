@@ -1,9 +1,5 @@
 # Ansible
 
-## Working with playbooks
-
-TBD.
-
 ## Configuring Ansible
 
 Ansible's [[defaults]](http://docs.ansible.com/ansible/intro_configuration.html#general-defaults)
@@ -19,9 +15,19 @@ can be specified under `defaults` key in `request.json`:
 }
 ```
 
-## Using dynamic inventories
+## Raw payload
 
-To use a dynamic inventory script, upload it as a `dynamicInventory` value in the process call:
+### Vault password files
+
+A file named `_vaultPassword` must be added the root directory of a
+payload.
+
+## Ansible projects
+
+### Using dynamic inventories
+
+To use a dynamic inventory script, upload it as a `dynamicInventory`
+value in the process call:
 
 ```
 curl -v \
@@ -31,9 +37,10 @@ curl -v \
 http://localhost:8001/api/v1/process/myProject:myRepo
 ```
 
-It will be marked as executable and passed directly to `ansible-playbook` command.
+It will be marked as executable and passed directly
+to `ansible-playbook` command.
 
-## Using SSH keys
+### Using SSH keys
 
 The Ansible plugin supports calling a playbook with a specific SSH key.
 
@@ -55,5 +62,5 @@ document.
      }
     }
     ```
-    Where `repository` is the pattern matching the name of a project's repository and
-    `secret` is the name of the uploaded SSH key pair.
+    Where `repository` is the pattern matching the name of a project's
+    repository and `secret` is the name of the uploaded SSH key pair.

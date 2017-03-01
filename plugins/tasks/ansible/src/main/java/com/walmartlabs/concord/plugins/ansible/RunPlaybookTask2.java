@@ -42,7 +42,7 @@ public class RunPlaybookTask2 implements Task {
             throw new IllegalArgumentException("The 'playbook' parameter is missing");
         }
 
-        String inventory = getInventoryPath(payloadPath);
+        String inventoryPath = getInventoryPath(payloadPath);
         Map<String, String> extraVars = (Map<String, String>) args.get("extraVars");
 
         String playbookPath = Paths.get(payloadPath, playbook).toAbsolutePath().toString();
@@ -50,12 +50,15 @@ public class RunPlaybookTask2 implements Task {
 
         String attachmentsDir = payloadPath + "/" + Constants.JOB_ATTACHMENTS_DIR_NAME;
 
-        PlaybookProcessBuilder b = new PlaybookProcessBuilder(playbookPath, inventory)
+        String vaultPasswordFile = getVaultPasswordFilePath(payloadPath);
+
+        PlaybookProcessBuilder b = new PlaybookProcessBuilder(playbookPath, inventoryPath)
                 .withAttachmentsDir(attachmentsDir)
                 .withCfgFile(cfgFile)
                 .withPrivateKey(getPrivateKeyPath(payloadPath))
                 .withUser(trim((String) args.get("user")))
                 .withTags(trim((String) args.get("tags")))
+                .withVaultPasswordFile(vaultPasswordFile)
                 .withExtraVars(extraVars);
 
         Process p = b.build();
@@ -153,6 +156,14 @@ public class RunPlaybookTask2 implements Task {
         perms.add(PosixFilePermission.OWNER_WRITE);
         Files.setPosixFilePermissions(p, perms);
 
+        return p.toAbsolutePath().toString();
+    }
+
+    private static String getVaultPasswordFilePath(String payloadPath) throws IOException {
+        Path p = Paths.get(payloadPath, AnsibleConstants.VAULT_PASSWORD_FILE_PATH);
+        if (!Files.exists(p)) {
+            return null;
+        }
         return p.toAbsolutePath().toString();
     }
 

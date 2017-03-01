@@ -22,6 +22,7 @@ public class PlaybookProcessBuilder {
     private String user;
     private String tags;
     private String privateKey;
+    private String vaultPasswordFile;
 
     public PlaybookProcessBuilder(String playbook, String inventory) {
         this.playbook = playbook;
@@ -55,6 +56,11 @@ public class PlaybookProcessBuilder {
 
     public PlaybookProcessBuilder withAttachmentsDir(String attachmentsDir) {
         this.attachmentsDir = attachmentsDir;
+        return this;
+    }
+
+    public PlaybookProcessBuilder withVaultPasswordFile(String vaultPasswordFile) {
+        this.vaultPasswordFile = vaultPasswordFile;
         return this;
     }
 
@@ -107,6 +113,11 @@ public class PlaybookProcessBuilder {
         if (privateKey != null) {
             l.add("--private-key");
             l.add(privateKey);
+        }
+
+        if (vaultPasswordFile != null) {
+            l.add("--vault-password-file");
+            l.add(vaultPasswordFile);
         }
 
         return l.toArray(new String[l.size()]);
