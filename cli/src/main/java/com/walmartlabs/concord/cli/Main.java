@@ -67,7 +67,7 @@ public class Main {
         BuildDescriptor b = readBuildDescriptor(buildFile);
 
         System.out.print("Creating a payload archive... ");
-        Path payloadFile = createPayloadArchive(baseDir, b);
+        Path payloadFile = createPayloadArchive(buildFile.getParent(), b);
         System.out.println(payloadFile + " (" + Files.size(payloadFile) + " bytes)");
 
         Client client = null;

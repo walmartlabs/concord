@@ -15,10 +15,10 @@
     <packaging>takari-jar</packaging>
 
     <properties>
+        <payload.name>${project.artifactId}</payload.name>
         <target.script>${project.build.directory}/concord.sh</target.script>
         <script.header>${project.basedir}/src/main/bin/header.sh</script.header>
-        <script.body>${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar
-        </script.body>
+        <script.body>${project.build.directory}/${payload.name}.jar</script.body>
     </properties>
 
     <dependencies>
@@ -43,6 +43,12 @@
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-api</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.sun.istack</groupId>
+                    <artifactId>istack-commons-runtime</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
@@ -65,24 +71,34 @@
                 <artifactId>takari-lifecycle-plugin</artifactId>
             </plugin>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <archive>
-                                <manifest>
+                            <finalName>${payload.name}</finalName>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.walmartlabs.concord.cli.Main</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <attach>false</attach>
+                                </transformer>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
