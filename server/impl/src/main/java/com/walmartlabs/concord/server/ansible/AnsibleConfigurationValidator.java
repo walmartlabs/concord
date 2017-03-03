@@ -24,6 +24,7 @@ public class AnsibleConfigurationValidator implements ConfigurationValidator {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void validate(Map<String, Object> m) {
         Map<String, Object> ansibleCfg = (Map<String, Object>) m.get(AnsibleConfigurationConstants.GROUP_KEY);
         if (ansibleCfg == null) {

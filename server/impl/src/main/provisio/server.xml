@@ -1,19 +1,12 @@
 <runtime>
-    <archive name="${project.artifactId}-${project.version}.tar.gz" />
+    <archive name="${project.artifactId}-${project.version}.tar.gz"/>
 
-    <fileSet to="/">
-        <directory path="${basedir}">
-            <include>NOTICE</include>
-            <include>README.txt</include>
-        </directory>
-    </fileSet>
-
-    <artifactSet to="bin">
+    <artifactSet to="/bin">
         <artifact id="io.airlift:launcher:tar.gz:bin:${launcher.version}">
-            <unpack />
+            <unpack/>
         </artifact>
         <artifact id="io.airlift:launcher:tar.gz:properties:${launcher.version}">
-            <unpack filter="true" />
+            <unpack filter="true"/>
         </artifact>
     </artifactSet>
 
@@ -27,9 +20,5 @@
         <artifact id="com.walmartlabs.concord:concord-runner:jar:jar-with-dependencies:${project.version}">
             <exclusion id="*:*"/>
         </artifact>
-    </artifactSet>
-
-    <artifactSet to="/templates/deps">
-        <artifact id="com.walmartlabs.concord.plugins:ansible-tasks:jar:${project.version}"/>
     </artifactSet>
 </runtime>

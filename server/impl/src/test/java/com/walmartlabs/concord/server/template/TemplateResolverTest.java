@@ -4,9 +4,11 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Test;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class TemplateResolverTest extends AbstractDaoTest {
@@ -18,5 +20,6 @@ public class TemplateResolverTest extends AbstractDaoTest {
 
         Path p = resolver.get("ansible");
         assertNotNull(p);
+        assertTrue(Files.exists(p.resolve("_main.js")));
     }
 }

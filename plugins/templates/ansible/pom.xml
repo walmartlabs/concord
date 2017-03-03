@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.walmartlabs.concord.plugins</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>ansible-template</artifactId>
+    <packaging>takari-jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins</groupId>
+            <artifactId>ansible-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <filtering>false</filtering>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>${project.basedir}/src/main/filtered-resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <excludes>
+                    <exclude>**/processes/*.yml</exclude>
+                    <exclude>**/*.py</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <filtering>false</filtering>
+                <directory>${project.basedir}/src/main/filtered-resources</directory>
+                <includes>
+                    <include>**/processes/*.yml</include>
+                    <include>**/*.py</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+</project>

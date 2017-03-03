@@ -10,6 +10,8 @@ import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.junit.After;
 import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
@@ -34,6 +36,8 @@ import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractServerIT {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractServerIT.class);
+
     /**
      * As defined in db/src/main/resources/com/walmartlabs/concord/server/db/v0.0.1.xml
      */
@@ -46,6 +50,8 @@ public abstract class AbstractServerIT {
     @Before
     public void _init() throws Exception {
         client = createClient(this::getApiKey);
+
+        log.info("_init -> using {}", ITConstants.SERVER_URL);
         target = client.target(ITConstants.SERVER_URL);
     }
 

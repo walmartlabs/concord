@@ -1,26 +1,18 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.google.common.collect.Sets;
-import com.jcabi.aether.Aether;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.server.cfg.DependencyStoreConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.aether.artifact.Artifact;
-import org.sonatype.aether.resolution.DependencyResolutionException;
-import org.sonatype.aether.util.artifact.DefaultArtifact;
-import org.sonatype.aether.util.artifact.JavaScopes;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -31,14 +23,14 @@ public class DependenciesProcessor implements PayloadProcessor {
 
     // TODO externalize
     private static final Set<String> BLACKLISTED_ARTIFACTS = Sets.newHashSet(
-            "bpm-engine-api",
-            "bpm-engine-impl",
-            "jackson-databind",
-            "jackson-annotations",
-            "jackson-core",
-            "concord-common",
-            "javax.inject",
-            "slf4j-api"
+            "bpm-engine-api.*",
+            "bpm-engine-impl.*",
+            "jackson-databind.*",
+            "jackson-annotations.*",
+            "jackson-core.*",
+            "concord-common.*",
+            "javax.inject.*",
+            "slf4j-api.*"
     );
 
     private final DependencyStoreConfiguration cfg;
@@ -50,10 +42,10 @@ public class DependenciesProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Payload payload) {
-        Path src = payload.getHeader(Payload.WORKSPACE_DIR);
+        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         try {
-            resolveDependencies(src);
+            resolveDependencies(workspace);
         } catch (IOException e) {
             throw new ProcessException("Error while processing payload's dependencies", e);
         }
@@ -61,50 +53,41 @@ public class DependenciesProcessor implements PayloadProcessor {
         return payload;
     }
 
-    private void resolveDependencies(Path src) throws IOException {
-        Path deps = src.resolve(Constants.DEPENDENCIES_FILE_NAME);
+    private void resolveDependencies(Path workspace) throws IOException {
+        Path deps = workspace.resolve(Constants.DEPENDENCIES_FILE_NAME);
         if (!Files.exists(deps)) {
             return;
         }
 
-        List<String> gavs = Files.readAllLines(deps);
-        if (gavs.isEmpty()) {
+        List<String> artifacts = Files.readAllLines(deps);
+        if (artifacts.isEmpty()) {
             return;
         }
 
-        File local = cfg.getDepsDir().toFile();
-        Aether aether = new Aether(Collections.emptyList(), local);
+        Path srcDir = cfg.getDepsDir();
 
-        Path dstDir = src.resolve(Constants.LIBRARIES_DIR_NAME);
+        Path dstDir = workspace.resolve(Constants.LIBRARIES_DIR_NAME);
         if (!Files.exists(dstDir)) {
             Files.createDirectories(dstDir);
         }
 
-        for (String gav : gavs) {
-            try {
-                Collection<Artifact> as = aether.resolve(new DefaultArtifact(gav), JavaScopes.RUNTIME);
-                if (as.isEmpty()) {
-                    throw new IOException("Can't resolve dependencies: " + gav);
-                }
-
-                for (Artifact a : as) {
-                    if (!valid(a)) {
-                        log.debug("resolveDependencies -> skipping '{}'", a);
-                        continue;
-                    }
-
-                    Path dst = dstDir.resolve(a.getFile().getName());
-                    Files.copy(a.getFile().toPath(), dst);
-                    log.info("resolveDependencies -> added {}", a.getFile(), dst);
-                }
-            } catch (DependencyResolutionException e) {
-                throw new IOException(e);
+        for (String a : artifacts) {
+            if (!valid(a)) {
+                log.warn("resolveDependencies -> skipping '{}'", a);
+                continue;
             }
+
+            Path src = srcDir.resolve(a);
+            if (!Files.exists(src)) {
+                throw new IOException("File not found: " + src);
+            }
+
+            Path dst = dstDir.resolve(a);
+            Files.copy(src, dst);
         }
     }
 
-    private static boolean valid(Artifact a) {
-        String aId = a.getArtifactId();
-        return !BLACKLISTED_ARTIFACTS.contains(aId);
+    private static boolean valid(String a) {
+        return !BLACKLISTED_ARTIFACTS.stream().anyMatch(p -> a.matches(p));
     }
 }

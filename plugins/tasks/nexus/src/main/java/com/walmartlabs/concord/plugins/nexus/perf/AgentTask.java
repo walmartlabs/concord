@@ -38,17 +38,7 @@ public class AgentTask implements Task {
         log.debug("create ['{}', {}] -> done", txId, urls);
     }
 
-    public void loadAndStart(String txId, Map<String, Object> args) {
-        String scenarioDirTemplate = (String) args.get("perfDirTemplate");
-        Collection<Map<String, Object>> scenarios = (Collection<Map<String, Object>>) args.get("perfScenarios");
-        String nexusUrl = (String) args.get("perfUrl");
-        Collection<String> memberUrls = (Collection<String>) args.get("perfMemberUrls");
-        String nexusUsername = (String) args.get("perfUsername");
-        String nexusPassword = (String) args.get("perfPassword");
-        loadAndStart(txId, scenarioDirTemplate, scenarios, nexusUrl, memberUrls, nexusUsername, nexusPassword);
-    }
-
-    public void loadAndStart(String txId, String scenarioDirTemplate, Collection<Map<String, Object>> scenarios, String nexusUrl, Collection<String> memberUrls, String nexusUsername, String nexusPassword) {
+    public void loadAndStart(String txId, String scenarioDirTemplate, Map<String, Object> globals, Collection<Map<String, Object>> scenarios, String nexusUrl, Collection<String> memberUrls, String nexusUsername, String nexusPassword) {
         log.info("Loading nexus-perf scenarios: {}", scenarios);
         log.info("Target URL: {}", nexusUrl);
         log.info("Nexus cluster members: {}", memberUrls);
@@ -56,8 +46,10 @@ public class AgentTask implements Task {
         try {
             AgentPoolManager m = poolHolder.get(txId);
 
-            Map<String, String> globals = new HashMap<>();
             // TODO constants
+            if (globals == null) {
+                globals = new HashMap<>();
+            }
             globals.put("nexus.baseurl", nexusUrl);
             if (memberUrls != null && !memberUrls.isEmpty()) {
                 globals.put("nexus.memberurls", String.join(",", memberUrls));
@@ -71,7 +63,9 @@ public class AgentTask implements Task {
                 int agents = (int) s.getOrDefault("agents", DEFAULT_AGENTS_COUNT);
 
                 // copy overridable values
-                Map<String, String> overrides = new HashMap<>(globals);
+                Map<String, String> overrides = new HashMap<>();
+                globals.forEach((k, v) -> overrides.put(k, v.toString()));
+
                 for (Map.Entry<String, Object> e : s.entrySet()) {
                     String k = e.getKey();
                     if (k.startsWith("template.") || k.startsWith("test.") || k.startsWith("perftest.")) {

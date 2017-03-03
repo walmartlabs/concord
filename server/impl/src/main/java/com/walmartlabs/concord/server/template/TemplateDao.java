@@ -91,6 +91,11 @@ public class TemplateDao extends AbstractDao {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
             permissionCleaner.onTemplateRemoval(create, name);
+
+            create.deleteFrom(PROJECT_TEMPLATES)
+                    .where(PROJECT_TEMPLATES.TEMPLATE_NAME.eq(name))
+                    .execute();
+
             create.deleteFrom(TEMPLATES)
                     .where(TEMPLATES.TEMPLATE_NAME.eq(name))
                     .execute();

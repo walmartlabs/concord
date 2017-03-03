@@ -81,7 +81,7 @@ public class AgentPoolManager {
                 Thread.currentThread().interrupt();
             }
 
-            int failures = 0;
+            long failures = 0;
 
             // TODO refactor as a conditional
             for (Iterator<Agent> i = agents.iterator(); i.hasNext(); ) {
@@ -90,7 +90,7 @@ public class AgentPoolManager {
                     i.remove();
                 }
 
-                int fs = countFailures(a);
+                long fs = countFailures(a);
                 failures += fs;
 
                 if (stopOnFailure && fs > 0) {
@@ -161,8 +161,8 @@ public class AgentPoolManager {
         return result;
     }
 
-    private static int countFailures(Agent a) {
-        int cnt = 0;
+    private static long countFailures(Agent a) {
+        long cnt = 0;
         for (Swarm s : a.getSwarms()) {
             cnt += s.getControl().getFailuresCount();
         }

@@ -42,7 +42,7 @@ All parameters are optional.
 
 | Variable           | Description                                                      | Default value          |
 |--------------------|------------------------------------------------------------------|------------------------|
-| TEMPLATES_DEPS_DIR | Local Maven repository, used to resolve template's dependencies. | `$HOME/.m2/repository` |
+| DEPS_STORE_DIR     | Local Maven repository, used to resolve template's dependencies. | `$HOME/.m2/repository` |
 
 ## Agent
 

@@ -20,9 +20,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.nio.file.Paths;
+import java.util.*;
 
 @Named
 public class TemplateProcessor implements PayloadProcessor {
@@ -92,8 +91,17 @@ public class TemplateProcessor implements PayloadProcessor {
 
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
+        Path templateDeps = templatePath.resolve(Constants.DEPENDENCIES_FILE_NAME);
+        Path workspaceDeps = workspacePath.resolve(Constants.DEPENDENCIES_FILE_NAME);
+
+        // gather all dependencies
+        Set<String> deps = mergeDeps(templateDeps, workspaceDeps);
+
         // copy template's files to the payload
         IOUtils.copy(templatePath, workspacePath);
+
+        // create merged list of dependencies
+        Files.write(workspaceDeps, deps);
 
         // process _main.json
         Path templateMeta = templatePath.resolve(TemplateConstants.REQUEST_DATA_TEMPLATE_FILE_NAME);
@@ -107,6 +115,15 @@ public class TemplateProcessor implements PayloadProcessor {
 
         log.debug("process ['{}', '{}'] -> done", payload.getInstanceId(), templatePath);
         return payload;
+    }
+
+    private static Set<String> mergeDeps(Path a, Path b) throws IOException {
+        List<String> aDeps = Files.exists(a) ? Files.readAllLines(a) : Collections.emptyList();
+        List<String> bDeps = Files.exists(b) ? Files.readAllLines(b) : Collections.emptyList();
+        Set<String> s = new HashSet<>();
+        s.addAll(aDeps);
+        s.addAll(bDeps);
+        return s;
     }
 
     @SuppressWarnings("unchecked")

@@ -14,6 +14,6 @@ if [ "$DB" == "postgresql" ]; then
     export DB_USERNAME="postgres"
 fi;
 
-export DEPS_STORE_DIR="$APP_DIR/templates/deps";
+export DEPS_STORE_DIR="$APP_DIR/lib";
 
 python2 $APP_DIR/bin/launcher.py run
