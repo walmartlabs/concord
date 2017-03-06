@@ -1,5 +1,6 @@
 # Documentation
 
+- [Introduction](./intro.md)
 - [Quick start](./quickstart.md)
 - [Examples](examples)
 - [API](./api)

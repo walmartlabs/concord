@@ -7,7 +7,7 @@ classes:
 - concord-server: `com.walmartlabs.concord.server.Main`
 - concord-agent: `com.walmartlabs.concord.agent.Main`
 
-To start the UI, please refer to the Concord Console [readme file](../console/README.md).
+To start the UI, please refer to the console's [readme file](../console/README.md).
 
 ## Debugging
 

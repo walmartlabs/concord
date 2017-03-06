@@ -6,7 +6,9 @@ The server expects a ZIP archive of the following structure:
 - `_main.json` - request data in JSON format (see below);
 - `processes` - directory containing `.yml` process definitions.
 
-Anything else will be unpacked as is and will be available for running processes.
+Anything else will be unpacked as is and will be available for running
+processes. The plugins may require other files to be present in a
+payload.
 
 The request's JSON format:
 ```json

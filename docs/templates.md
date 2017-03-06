@@ -16,7 +16,7 @@ http://localhost:8001/api/v1/template?name=myTemplate
 }
 ```
 
-## Payload format
+## Template format
 
 A ZIP archive of the following structure:
 - `_main.js` - a request data javascript file (see below);
