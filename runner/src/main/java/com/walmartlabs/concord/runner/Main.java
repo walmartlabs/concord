@@ -106,7 +106,8 @@ public class Main {
             Main main = injector.getInstance(Main.class);
             main.run();
 
-            // TODO force exit?
+            // force exit
+            System.exit(0);
         } catch (Throwable e) {
             log.error("main -> unhandled exception", e);
             System.exit(1);
