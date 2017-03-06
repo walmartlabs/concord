@@ -33,7 +33,7 @@ public class RunnerConfigurationProvider implements Provider<RunnerConfiguration
         }
 
         Path p = Paths.get(Utils.getEnv(RUNNER_PATH_KEY, defaultPath)).toAbsolutePath();
-        log.info("Runner's path: {}", p);
+        log.info("get -> runner's path: {}", p);
 
         return new RunnerConfiguration(p, DEFAULT_TARGET_NAME);
     }

@@ -8,12 +8,10 @@ Most of the configuration done via environment variables (e.g. passed with a `do
 
 All parameters are optional.
 
-**General**
+**Agent**
 
 | Variable               | Description                                                     | Default value           |
 |------------------------|-----------------------------------------------------------------|-------------------------|
-| SERVER_PORT            | Listening port of the API endpoint.                             | `8001`                  |
-| SERVER_EXPOSED_ADDRESS | Address of the API endpoint, which will be used by the agents.  | `http://127.0.0.1:8001` |
 | AGENT_URL              | URL of an agent instance                                        | `http://localhost:8002` |
 
 **Database**

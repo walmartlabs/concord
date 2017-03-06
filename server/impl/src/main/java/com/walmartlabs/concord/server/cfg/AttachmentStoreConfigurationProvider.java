@@ -25,7 +25,7 @@ public class AttachmentStoreConfigurationProvider implements Provider<Attachment
         try {
             String s = System.getenv(ATTACHMENT_STORE_DIR_KEY);
             Path p = s != null ? Paths.get(s).toAbsolutePath() : Files.createTempDirectory("attachments");
-            log.info("get -> using '{}' as attachment storage", p);
+            log.info("get -> using '{}' as the attachment storage", p);
             return new AttachmentStoreConfiguration(p);
         } catch (IOException e) {
             throw Throwables.propagate(e);

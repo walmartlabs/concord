@@ -19,7 +19,7 @@ public class AgentConfigurationProvider implements Provider<AgentConfiguration> 
     @Override
     public AgentConfiguration get() {
         String s = Utils.getEnv(AGENT_URL_KEY, "http://localhost:8002");
-        log.info("Agent's URL: {}", s);
+        log.info("get -> agent's URL: {}", s);
         return new AgentConfiguration(URI.create(s));
     }
 }
