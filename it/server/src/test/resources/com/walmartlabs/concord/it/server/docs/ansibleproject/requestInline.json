@@ -1,0 +1,17 @@
+{
+  "playbook": "playbook/hello.yml",
+  "inventory": {
+    "local": {
+      "hosts": ["127.0.0.1"],
+      "vars": {
+        "ansible_connection": "local"
+      }
+    }
+  },
+  "extraVars": {
+    "greeting": "Hello, world"
+  },
+  "defaults": {
+    "force_color": 1
+  }
+}

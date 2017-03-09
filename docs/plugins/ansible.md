@@ -40,6 +40,28 @@ http://localhost:8001/api/v1/process/myProject:myRepo
 It will be marked as executable and passed directly
 to `ansible-playbook` command.
 
+### Using inline inventories
+
+An inventory file can be inlined with the request JSON. For example:
+
+```json
+{
+  "playbook": "playbook/hello.yml",
+  ...
+  "inventory": {
+    "local": {
+      "hosts": ["127.0.0.1"],
+        "vars": {
+          "ansible_connection": "local"
+      }
+    }
+  }
+}
+```
+
+Concord creates a "fake" dynamic inventory script that returns the
+content of `inventory` field.
+
 ### Using SSH keys
 
 The Ansible plugin supports calling a playbook with a specific SSH key.

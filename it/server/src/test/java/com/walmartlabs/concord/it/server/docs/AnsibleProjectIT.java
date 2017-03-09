@@ -60,6 +60,20 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
+        Map<String, InputStream> input = new HashMap<>();
+        input.put("request", resource("ansibleproject/request.json"));
+        input.put("inventory", resource("ansibleproject/inventory.ini"));
+        test(input);
+    }
+
+    @Test
+    public void testInlineInventory() throws Exception {
+        Map<String, InputStream> input = new HashMap<>();
+        input.put("request", resource("ansibleproject/requestInline.json"));
+        test(input);
+    }
+
+    public void test(Map<String, InputStream> input) throws Exception {
         String templateName = "ansible";
         String projectName = "project@" + System.currentTimeMillis();
         String repoSecretName = "repoSecret@" + System.currentTimeMillis();
@@ -80,9 +94,6 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        Map<String, InputStream> input = new HashMap<>();
-        input.put("request", resource("ansibleproject/request.json"));
-        input.put("inventory", resource("ansibleproject/inventory.ini"));
         StartProcessResponse spr = start(entryPoint, input);
 
         // ---

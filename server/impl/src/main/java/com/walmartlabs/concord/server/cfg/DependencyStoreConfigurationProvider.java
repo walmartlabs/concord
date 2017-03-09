@@ -20,7 +20,7 @@ public class DependencyStoreConfigurationProvider implements Provider<Dependency
 
     public static final String DEPS_STORE_DIR_KEY = "DEPS_STORE_DIR";
 
-    private static final Path DEFAULT_REPO;
+    private static final Path DEFAULT_DIRECTORY;
 
     static {
         Properties props = new Properties();
@@ -30,18 +30,18 @@ public class DependencyStoreConfigurationProvider implements Provider<Dependency
             throw Throwables.propagate(e);
         }
 
-        String s = props.getProperty("localRepository");
+        String s = props.getProperty("depsDir");
         if (s == null || s.trim().isEmpty()) {
-            s = System.getProperty("user.home") + "/.m2/repository";
+            s = System.getProperty("user.dir");
         }
 
-        DEFAULT_REPO = Paths.get(s);
+        DEFAULT_DIRECTORY = Paths.get(s);
     }
 
     @Override
     public DependencyStoreConfiguration get() {
         String s = System.getenv(DEPS_STORE_DIR_KEY);
-        Path p = s != null ? Paths.get(s).toAbsolutePath() : DEFAULT_REPO;
+        Path p = s != null ? Paths.get(s).toAbsolutePath() : DEFAULT_DIRECTORY;
         log.info("get -> using '{}' as the source of template dependencies", p);
         return new DependencyStoreConfiguration(p);
     }
