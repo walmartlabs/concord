@@ -3,7 +3,7 @@
 (using the pre-build Docker images)
 
 If you are using a private docker registry, add its name to an image
-name, e.g. `docker.walmart.com/walmartlabs/concord-agent`.
+name, e.g. `docker.prod.walmart.com/walmartlabs/concord-agent`.
 
 - Start the agent:
 
@@ -22,9 +22,7 @@ name, e.g. `docker.walmart.com/walmartlabs/concord-agent`.
   [Configuration](./configuration.md) description to configure a more
   permanent storage.
 
-- See if everything is okay by opening
-  [http://localhost:8080](http://localhost:8080) and checking the
-  server logs:
+- See if everything is okay by checking the server logs:
   
   ```
   docker logs server
@@ -33,7 +31,7 @@ name, e.g. `docker.walmart.com/walmartlabs/concord-agent`.
 - Start the console:
 
   ```
-  docker run -d -p 8080:8080 --name server --link server walmartlabs/concord-console
+  docker run -d -p 8080:8080 --name console --link server walmartlabs/concord-console
   ```
 
 - Create a zip archive of the following structure:
@@ -60,7 +58,7 @@ name, e.g. `docker.walmart.com/walmartlabs/concord-agent`.
 
 - Start a new process instance:
   ```
-  curl -v -H "Content-Type: application/octet-stream" --data-binary @archive.zip http://localhost:8001/api/v1/process
+  curl -v -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" -H "Content-Type: application/octet-stream" --data-binary @archive.zip http://localhost:8001/api/v1/process
   ```
 
 - Check the server logs:
@@ -74,7 +72,7 @@ name, e.g. `docker.walmart.com/walmartlabs/concord-agent`.
   ```
 
   You can also check the log by opening it in
-  [the Concord console](http://localhost:8080/#/history).
+  [the Concord console](http://localhost:8080/).
 
   - (Optional) Stop and remove the containers
   ```
