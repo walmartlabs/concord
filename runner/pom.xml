@@ -40,7 +40,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins</groupId>
-            <artifactId>yaml-format</artifactId>
+            <artifactId>yaml2-format</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

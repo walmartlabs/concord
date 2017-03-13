@@ -7,6 +7,9 @@ classes:
 - concord-server: `com.walmartlabs.concord.server.Main`
 - concord-agent: `com.walmartlabs.concord.agent.Main`
 
+To use predefined project templates, the server must be started with `DEPS_STORE_DIR`
+environment variable pointing to the `server/impl/target/deps` directory.
+
 To start the UI, please refer to the console's [readme file](../console/README.md).
 
 ## Debugging
