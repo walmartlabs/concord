@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.it.server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.secret.*;
 import com.walmartlabs.concord.server.api.template.CreateTemplateResponse;
@@ -12,6 +13,7 @@ import javax.ws.rs.BadRequestException;
 import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -62,6 +64,42 @@ public class CrudIT extends AbstractServerIT {
     }
 
     @Test
+    public void testProjectCfg() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+
+        String json1 = "{ \"smtp\": { \"host\": \"localhost\", \"port\": 25 }, \"ssl\": true }";
+        Map<String, Object> cfg = om.readValue(json1, Map.class);
+
+        // ---
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+
+        String projectName = "project@" + System.currentTimeMillis();
+        projectResource.create(new CreateProjectRequest(projectName, null, null, cfg));
+
+        // ---
+
+        Map<String, Object> m1 = projectResource.getConfiguration(projectName, "smtp");
+        assertNotNull(m1);
+        assertEquals(25, m1.get("port"));
+
+        assertNull(projectResource.getConfiguration(projectName, "somethingElse"));
+
+        // ---
+
+        String json2 = "{ \"port\": 2525 }";
+        Map<String, Object> partial = om.readValue(json2, Map.class);
+
+        projectResource.updateConfiguration(projectName, "smtp", partial);
+
+        // ---
+
+        Map<String, Object> m2 = projectResource.getConfiguration(projectName, "smtp");
+        assertNotNull(m2);
+        assertEquals(2525, m2.get("port"));
+    }
+
+    @Test
     public void testRepository() throws Exception {
         String projectName = "project@" + System.currentTimeMillis();
         String repoName = "repo@" + System.currentTimeMillis();
@@ -93,8 +131,8 @@ public class CrudIT extends AbstractServerIT {
         String projectName2 = "project2@" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr1 = projectResource.create(new CreateProjectRequest(projectName1, null, null));
-        CreateProjectResponse cpr2 = projectResource.create(new CreateProjectRequest(projectName2, null, null));
+        projectResource.create(new CreateProjectRequest(projectName1, null, null));
+        projectResource.create(new CreateProjectRequest(projectName2, null, null));
 
         // ---
 

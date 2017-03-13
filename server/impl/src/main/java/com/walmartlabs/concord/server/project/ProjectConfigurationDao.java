@@ -67,6 +67,15 @@ public class ProjectConfigurationDao extends AbstractDao {
         cache.invalidate(projectName);
     }
 
+    public void update(String projectName, Map<String, Object> value) {
+        tx(tx -> update(tx, projectName, value));
+    }
+
+    public void update(DSLContext tx, String projectName, Map<String, Object> cfg) {
+        delete(tx, projectName);
+        insert(tx, projectName, cfg);
+    }
+
     public Map<String, Object> get(String projectName) {
         return cache.getUnchecked(projectName).orElse(null);
     }
@@ -84,7 +93,7 @@ public class ProjectConfigurationDao extends AbstractDao {
 
     public Object getValue(String projectName, String... path) {
         Map<String, Object> cfg = get(projectName);
-        return get(cfg, path);
+        return ConfigurationUtils.get(cfg, path);
     }
 
     public List<Map<String, Object>> getList(String projectName, String... path) {
@@ -96,27 +105,6 @@ public class ProjectConfigurationDao extends AbstractDao {
             throw new IllegalArgumentException("Invalid data type, expected list, got: " + v.getClass());
         }
         return (List) v;
-    }
-
-    private Object get(Map<String, Object> m, String... path) {
-        if (m == null) {
-            return null;
-        }
-
-        for (int i = 0; i < path.length - 1; i++) {
-            Object v = m.get(path[i]);
-            if (v == null) {
-                return null;
-            }
-
-            if (!(v instanceof Map)) {
-                throw new IllegalArgumentException("Invalid data type, expected map, got: " + v.getClass());
-            }
-
-            m = (Map<String, Object>) v;
-        }
-
-        return m.get(path[path.length - 1]);
     }
 
     private class Loader extends CacheLoader<String, Optional<Map<String, Object>>> {

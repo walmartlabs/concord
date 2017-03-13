@@ -29,7 +29,23 @@ Creates a new project with specified parameters.
     ```
     All parameters except `name` are optional.
     
-    See also: [create a new repository](#create-a-new-repository), [project configuration](#project-configuration)
+    The project configuration is a JSON object of the following structure:
+    ```json
+    {
+      "group1": {
+        "subgroup": {
+          "key": "value"
+        }
+      },
+      "group2": {
+        ...
+      }
+    }
+    ```
+
+    Most of the parameter groups are defined by used plugins.
+    
+    See also: [create a new repository](#create-a-new-repository)
 * **Success response**
     ```
     Content-Type: application/json
@@ -220,6 +236,7 @@ Lists existing repositories in a project.
     - `sortBy`: `name`, `url`, `branch`;
     - `asc`: direction of sorting, `true` - ascending, `false` - descending
 * **Method** `GET`
+* **Headers** `Authorization`
 * **Body**
     none
 * **Success response**
@@ -234,24 +251,58 @@ Lists existing repositories in a project.
     ]
     ```
 
-## Project configuration
+## Get project configuration
 
-The project configuration is a JSON object of the following structure:
-```json
-{
-  "cfg": {
-    "group1": {
-      "subgroup": {
-        "key": "value"
-      }
-    },
-    "group2": {
-    ...
+Returns project's configuration JSON or its part.
+
+* **Permissions** `project:read:${projectName}`
+* **URI** `/api/v1/project/${projectName}/cfg/${path}`
+* **Query parameters**
+    - `path`: path to a sub-object in the configuration, can be empty
+* **Method** `GET`
+* **Headers** `Authorization`
+* **Body**
+    none
+* **Success response**
+    ```
+    Content-Type: application/json
+    ```
+    
+    ```json
+    {
+      ...
     }
-  }
-}
-```
+    ```
+    
+## Update an existing project configuration
 
-Most of the parameter groups are defined by used plugins.
-The list of available parameter groups:
-- [Ansible](../plugins/ansible.md)
+Updates project's configuration or its part.
+
+* **Permissions** `project:read:${projectName}`
+* **URI** `/api/v1/project/${projectName}/cfg/${path}`
+* **Query parameters**
+    - `path`: path to a sub-object in the configuration, can be empty
+* **Method** `PUT`
+* **Headers** `Authorization`, `Content-Type: application/json`
+* **Body**
+    ```
+    Content-Type: application/json
+    ```
+    
+    ```json
+    {
+      "group1": {
+        "param1": 123
+      }
+    }
+    ```
+* **Success response**
+    ```
+    Content-Type: application/json
+    ```
+    
+    ```json
+    {
+      "ok": true
+    }
+    ```

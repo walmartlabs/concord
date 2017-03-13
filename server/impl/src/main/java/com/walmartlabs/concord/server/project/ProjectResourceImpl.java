@@ -73,11 +73,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertTemplates(request.getTemplates());
 
         Map<String, Object> cfg = request.getCfg();
-        if (cfg != null) {
-            for (ConfigurationValidator v : cfgValidators) {
-                v.validate(cfg);
-            }
-        }
+        validateCfg(cfg);
 
         tx(tx -> {
             projectDao.insert(tx, projectName, request.getTemplates());
@@ -133,6 +129,22 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
+    public Map<String, Object> getConfiguration(String projectName, String path) {
+        assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
+                "The current user does not have permissions to read the specified project");
+
+        String[] ps = path != null ? path.split("/") : null;
+        Object v = configurationDao.getValue(projectName, ps);
+
+        if (v != null && !(v instanceof Map)) {
+            throw new WebApplicationException("Path should point to a JSON object, got: " + v.getClass(), Status.BAD_REQUEST);
+        }
+
+        return (Map<String, Object>) v;
+    }
+
+    @Override
+    @Validate
     public List<ProjectEntry> list(String sortBy, boolean asc) {
         Field<?> sortField = key2ProjectField.get(sortBy);
         if (sortField == null) {
@@ -163,11 +175,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertTemplates(request.getTemplates());
 
         Map<String, Object> cfg = request.getCfg();
-        if (cfg != null) {
-            for (ConfigurationValidator v : cfgValidators) {
-                v.validate(cfg);
-            }
-        }
+        validateCfg(cfg);
 
         tx(tx -> {
             projectDao.update(tx, projectName, request.getTemplates());
@@ -179,8 +187,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             }
 
             if (cfg != null) {
-                configurationDao.delete(tx, projectName);
-                configurationDao.insert(tx, projectName, cfg);
+                configurationDao.update(tx, projectName, cfg);
             }
         });
 
@@ -188,6 +195,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     }
 
     @Override
+    @Validate
     public UpdateRepositoryResponse updateRepository(String projectName, String repositoryName, UpdateRepositoryRequest request) {
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
@@ -199,6 +207,29 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             repositoryDao.update(tx, repositoryName, request.getUrl(), request.getBranch(), request.getSecret());
         });
         return new UpdateRepositoryResponse();
+    }
+
+    @Override
+    @Validate
+    public UpdateProjectConfigurationResponse updateConfiguration(String projectName, String path, Map<String, Object> data) {
+        assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
+                "The current user does not have permissions to update the specified project");
+
+        Map<String, Object> cfg = configurationDao.get(projectName);
+        if (cfg == null) {
+            cfg = new HashMap<>();
+        }
+
+        String[] ps = path != null ? path.split("/") : null;
+        ConfigurationUtils.merge(cfg, data, ps);
+
+        validateCfg(cfg);
+
+        Map<String, Object> newCfg = cfg;
+        tx(tx -> {
+            configurationDao.update(tx, projectName, newCfg);
+        });
+        return new UpdateProjectConfigurationResponse();
     }
 
     @Override
@@ -273,6 +304,16 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
             String name = r.getKey();
             repositoryDao.insert(tx, projectName, name, r.getValue().getUrl(), r.getValue().getBranch(), r.getValue().getSecret());
+        }
+    }
+
+    private void validateCfg(Map<String, Object> cfg) {
+        if (cfg == null) {
+            return;
+        }
+
+        for (ConfigurationValidator v : cfgValidators) {
+            v.validate(cfg);
         }
     }
 

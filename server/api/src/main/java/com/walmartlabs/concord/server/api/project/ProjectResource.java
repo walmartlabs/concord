@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.Map;
 
 @Api("Project")
 @Path("/api/v1/project")
@@ -65,6 +66,13 @@ public interface ProjectResource {
     @Path("/{projectName}/repository/{repositoryName}")
     RepositoryEntry getRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                   @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
+
+    @GET
+    @ApiOperation("Get project configuration")
+    @Path("/{projectName}/cfg/{path}")
+    @Produces(MediaType.APPLICATION_JSON)
+    Map<String, Object> getConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                         @ApiParam @PathParam("path") String path);
 
     /**
      * List projects.
@@ -125,6 +133,15 @@ public interface ProjectResource {
     UpdateRepositoryResponse updateRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                               @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName,
                                               @ApiParam @Valid UpdateRepositoryRequest request);
+
+    @PUT
+    @ApiOperation("Update project's configuration parameter")
+    @Path("/{projectName}/cfg/{path}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    UpdateProjectConfigurationResponse updateConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                                           @ApiParam @PathParam("path") String path,
+                                                           @ApiParam Map<String, Object> data);
 
     /**
      * Removes a project and all it's resources.
