@@ -1,0 +1,123 @@
+# reserved keywords
+# expr, task, in, out, if, then, else, return, form, : (colon), form
+# while technically we can have tasks with those names, it's a good idea to forbid those
+
+# entry point, any string
+myProc:
+  # EL
+  - ${log.info("hi")}
+
+  # EL, storing eval result in a variable
+  - expr: ${1 + 2}
+    out: myVar
+
+  # java delegate
+  - task: log
+
+  # java bean, short form, single argument
+  # will be transformed into bean.call("hi!")
+  - log: hi!
+
+  # java bean, short form, multiple arguments
+  # will be transformed into bean.call("info", "hi!")
+  - log: [info, hi!]
+
+  # java bean, using JSON objects in arguments
+  # will be transformed into bean.call(obj)
+  - log: { message: "hello!", testArray: [1, 2, 3] }
+
+  # TODO: EL in task arguments
+
+  # java delegate, in/out parameters mapping
+  - task: someDelegate
+    in:
+      inVarA: myValue
+      inVarB: ${10 * 100}
+    out:
+      outVarA: someValue
+      outVarB: ${inVarB + 5}
+
+  # conditionals, JUEL
+  - if: ${myVar > 0}
+    then:
+      - expr: ${log.info("it's true!")}
+      - otherProc
+    else:
+      - log: it's false :-(
+
+  # TODO: if-elseif conditionals
+
+  # return from a (sub)process
+  - return
+
+  # group of steps
+  - ::
+    - log: first in the group
+    - log: second in the group
+
+  # catching errors, EL
+  - expr: ${someTask.doSomethingDangerous("boom")}
+    error:
+    - log: oh no, ${getError}
+    - return
+
+  # catching errors, java delegate
+  - task: someDangerousDelegate
+    error:
+    - log: pff, it's an error again
+    - otherProc
+
+  # catching errors, groups
+  - ::
+    - log: we'll do something dangerous now
+    - ${someTask.doSomethingDangerous("zzap")}
+    error:
+    - log: as expected
+
+  # starting a form, input variables mapping
+  - form: myForm
+    in:
+      firstName: ${user.firstName}
+
+otherProc:
+ - log: wot in tarnation, where are we
+
+# forms
+form (myForm):
+  # TODO layout
+
+  # string field
+  - lastName: { label: "Last Name", required, type: string, matches: "\\S{0, 100}" }
+
+  # numbers
+  - age: { label: "Age", required, type: number, min: 18, max: 100 }
+
+  # choice, full form, default value
+  - city: {
+      label: "City",
+      required: true,
+      type: "string",
+      value: "Paris",
+      options: [
+        "New York",
+        "Paris",
+        "Moscow",
+        "Tokyo",
+      ]
+    }
+
+  # choice, inline
+  - country: { label: "Country", required, type: string, options: [ "USA", "France", "Russia", "Japan" ] }
+
+  # choice, multiple, external source
+  - preferredColor: {
+      label: "Preferred color",
+      type: "string*",
+      options: "${someTask.listOfColors()}"
+    }
+
+  # additional meta (e.g. for visualization)
+  - myField: {
+      label: "Something extra",
+      meta: { variant: checkbox, valueFromProc: "${myVar}" }
+    }

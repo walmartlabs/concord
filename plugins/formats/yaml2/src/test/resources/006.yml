@@ -1,0 +1,7 @@
+main:
+  - task: testTask
+    in:
+      bStr: ${aStr}
+    out:
+      dStr: ${cStr}
+  - ${testBean.toString(dStr)}

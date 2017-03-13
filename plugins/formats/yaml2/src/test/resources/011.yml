@@ -1,0 +1,6 @@
+main:
+  - task: testErrorTask
+    error:
+      - ${testBean.toString("a")}
+
+  - ${testBean.toString("b")}

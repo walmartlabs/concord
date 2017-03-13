@@ -26,7 +26,7 @@ public class YamlParser implements MultipleDefinitionParser {
         try {
             data = m.readValue(in, Map.class);
         } catch (IOException e) {
-            throw new ParserException("Error while parsing the data", e);
+            throw new ParserException("Error while parsing the document", e);
         }
 
         if (data == null || data.isEmpty()) {

@@ -1,0 +1,9 @@
+main:
+  - ${testBean.toString("a")}
+
+  - expr: ${testBean.throwBpmnError("boom")}
+    error:
+      - ${testBean.toString("b")}
+
+  - ${testBean.toString("c")}
+

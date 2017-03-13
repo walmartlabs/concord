@@ -129,6 +129,14 @@ public final class IOUtils {
         return result;
     }
 
+    public static void closeQuietly(Closeable c) {
+        try {
+            c.close();
+        } catch (IOException e) {
+            // ignore
+        }
+    }
+
     private IOUtils() {
     }
 }

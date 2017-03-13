@@ -1,0 +1,4 @@
+main:
+  - expr: ${testBean.toString(aStr)}
+    out: myVar
+  - ${testBean.checkString(myVar)}

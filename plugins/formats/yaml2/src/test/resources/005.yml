@@ -1,0 +1,6 @@
+main:
+  - testTask: hello
+  - testTask: ${aStr}
+  - testTask: [1, 2]
+  - testTask: { a: 123 }
+
