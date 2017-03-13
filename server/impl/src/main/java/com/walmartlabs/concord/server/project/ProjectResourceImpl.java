@@ -162,6 +162,13 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         assertTemplates(request.getTemplates());
 
+        Map<String, Object> cfg = request.getCfg();
+        if (cfg != null) {
+            for (ConfigurationValidator v : cfgValidators) {
+                v.validate(cfg);
+            }
+        }
+
         tx(tx -> {
             projectDao.update(tx, projectName, request.getTemplates());
 
@@ -171,7 +178,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 insert(tx, projectName, repos);
             }
 
-            Map<String, Object> cfg = request.getCfg();
             if (cfg != null) {
                 configurationDao.delete(tx, projectName);
                 configurationDao.insert(tx, projectName, cfg);
