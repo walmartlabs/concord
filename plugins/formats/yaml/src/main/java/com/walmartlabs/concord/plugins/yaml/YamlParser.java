@@ -14,12 +14,15 @@ import java.util.Collection;
 import java.util.Map;
 
 @Named
+@Deprecated
 public class YamlParser implements MultipleDefinitionParser {
 
     private static final Logger log = LoggerFactory.getLogger(YamlParser.class);
 
     @Override
     public Collection<ProcessDefinition> parse(InputStream in) throws ParserException {
+        log.warn("parse -> this format is deprecated");
+
         YAMLMapper m = new YAMLMapper();
 
         Map<String, Object> data;
