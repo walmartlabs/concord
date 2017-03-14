@@ -130,6 +130,11 @@ main:
   # calling a method with a single argument
   # the value will be converted into Map<String, Object>
   - log: { level: "warn", message: "hello" }
+  
+  # multiline strings and string interpolation is also supported
+  - log: |
+      those line breaks will be
+      preserved. Here will be a ${result} of EL evaluation.
 ```
 
 Alternatively, `JavaDelegate` instances can be used. While the support

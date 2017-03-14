@@ -5,7 +5,6 @@ import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.*;
 import io.takari.bpm.model.ProcessDefinition;
-import io.takari.bpm.model.ProcessDefinitionHelper;
 import io.takari.bpm.task.ServiceTaskRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -299,6 +298,25 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
+    @Test
+    public void test015() throws Exception {
+        String testValue = "test#" + System.currentTimeMillis();
+
+        TestTask testTask = spy(new TestTask());
+        taskRegistry.register("testTask", testTask);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("interpolation", testValue);
+        engine.start(key, "015/main", args);
+
+        // ---
+
+        String s = "multiline test with\nstring " + testValue;
+        verify(testTask, times(1)).call(eq(s));
+    }
+
     @Test(expected = RuntimeException.class)
     public void testOld() throws Exception {
         String key = UUID.randomUUID().toString();
@@ -379,7 +397,6 @@ public class YamlParserTest {
                     YamlParser p = new YamlParser();
                     for (ProcessDefinition pd : p.parse(in)) {
                         if (entryPoint.equals(pd.getId())) {
-                            System.out.println(ProcessDefinitionHelper.dump(pd));
                             return pd;
                         }
                     }

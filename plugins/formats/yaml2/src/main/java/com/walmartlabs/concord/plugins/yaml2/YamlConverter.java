@@ -74,6 +74,7 @@ public class YamlConverter {
             return proc.joinAll(joinName);
         } else if (s instanceof YamlReturn) {
             proc.end();
+            sourceMap(proc, s, "RETURN statement");
             return proc;
         } else if (s instanceof YamlGroup) {
             YamlGroup g = (YamlGroup) s;
@@ -212,7 +213,8 @@ public class YamlConverter {
             } else {
                 String k = "__0";
                 if (isExpression(args)) {
-                    maps.add(new VariableMapping(null, args.toString(), null, k));
+                    String s = args.toString().trim();
+                    maps.add(new VariableMapping(null, s, null, k));
                 } else {
                     maps.add(new VariableMapping(null, null, args, k));
                 }
@@ -235,7 +237,8 @@ public class YamlConverter {
         }
 
         String s = (String) o;
-        return s.startsWith("${") && s.endsWith("}");
+        int i = s.indexOf("${");
+        return i >= 0 && s.indexOf("}") > i;
     }
 
     private static Object deepConvert(Object o) {
