@@ -115,6 +115,16 @@
             <artifactId>slf4j-api</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.icegreen</groupId>
+            <artifactId>greenmail</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -164,9 +174,26 @@
                                     <groupId>com.walmartlabs.concord.plugins</groupId>
                                     <artifactId>ansible-tasks</artifactId>
                                     <version>${project.version}</version>
-                                    <outputDirectory>${deps.dir}</outputDirectory>
+                                </artifactItem>
+
+                                <!-- TODO this should be automated -->
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.plugins</groupId>
+                                    <artifactId>smtp-tasks</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.commons</groupId>
+                                    <artifactId>commons-email</artifactId>
+                                    <version>${commons.email.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.sun.mail</groupId>
+                                    <artifactId>javax.mail</artifactId>
+                                    <version>${javax.mail.version}</version>
                                 </artifactItem>
                             </artifactItems>
+                            <outputDirectory>${deps.dir}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>

@@ -21,6 +21,10 @@ public class CreateProjectRequest implements Serializable {
 
     private final Map<String, Object> cfg;
 
+    public CreateProjectRequest(String name, Map<String, Object> cfg) {
+        this(name, null, null, cfg);
+    }
+
     public CreateProjectRequest(String name, Set<String> templates, Map<String, UpdateRepositoryRequest> repositories) {
         this(name, templates, repositories, null);
     }

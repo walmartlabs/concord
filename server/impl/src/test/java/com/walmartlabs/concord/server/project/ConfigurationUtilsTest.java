@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.project;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.server.project.ConfigurationUtils;
 import org.junit.Test;
 
@@ -39,5 +40,22 @@ public class ConfigurationUtilsTest {
 
         assertEquals("10.11.12.13", ConfigurationUtils.get(m, "smtp", "host"));
         assertEquals(false, ConfigurationUtils.get(m, "ssl"));
+    }
+
+    @Test
+    public void testDeepMerge() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+
+        String cfgJson = "{ \"arguments\": { \"smtpParams\": { \"host\": \"localhost\" } } }";
+        Map<String, Object> cfg = om.readValue(cfgJson, Map.class);
+
+        String requestJson = "{ \"arguments\": { \"mail\": \"hello\" } }";
+        Map<String, Object> request = om.readValue(requestJson, Map.class);
+
+        // ---
+
+        Map<String, Object> m = ConfigurationUtils.deepMerge(cfg, request);
+        assertEquals("localhost", ConfigurationUtils.get(m, "arguments", "smtpParams", "host"));
+        assertEquals("hello", ConfigurationUtils.get(m, "arguments", "mail"));
     }
 }

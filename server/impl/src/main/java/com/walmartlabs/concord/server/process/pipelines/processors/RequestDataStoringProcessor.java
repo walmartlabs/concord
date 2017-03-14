@@ -19,13 +19,13 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Payload payload) {
-        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path dst = workspace.resolve(Constants.REQUEST_DATA_FILE_NAME);
-
         Map<?, ?> meta = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (meta == null) {
-            meta = Collections.emptyMap();
+            return payload;
         }
+
+        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
+        Path dst = workspace.resolve(Constants.REQUEST_DATA_FILE_NAME);
 
         ObjectMapper om = new ObjectMapper();
         try (Writer writer = Files.newBufferedWriter(dst)) {

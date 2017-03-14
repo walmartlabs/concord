@@ -11,11 +11,11 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -317,6 +317,56 @@ public class YamlParserTest {
         verify(testTask, times(1)).call(eq(s));
     }
 
+    @Test
+    public void test016() throws Exception {
+        int inputNumber = ThreadLocalRandom.current().nextInt();
+        boolean inputBoolean = ThreadLocalRandom.current().nextBoolean();
+        String inputString = "test#" + System.currentTimeMillis();
+
+        TestInterface testTask1 = mock(TestInterface.class);
+        taskRegistry.register("testTask1", testTask1);
+
+        TestInterface testTask2 = spy(new TestInterface() {
+            @Override
+            public void call(Object arg1) {
+                List<Object> l = (List<Object>) arg1;
+                assertEquals(inputNumber, l.get(0));
+            }
+        });
+        taskRegistry.register("testTask2", testTask2);
+
+        TestInterface testTask3 = spy(new TestInterface() {
+            @Override
+            public void call(Object arg1) {
+                assertNotNull(arg1);
+
+                Map<String, Object> m = (Map<String, Object>) arg1;
+                assertEquals(123, m.get("a"));
+                assertEquals(inputNumber, m.get("b"));
+
+                List<Object> l = (List<Object>) m.get("c");
+                assertEquals(inputBoolean, l.get(0));
+                assertEquals(inputString, l.get(1));
+            }
+        });
+        taskRegistry.register("testTask3", testTask3);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("inputNumber", inputNumber);
+        args.put("inputBoolean", inputBoolean);
+        args.put("inputString", inputString);
+        engine.start(key, "016/main", args);
+
+        // ---
+
+        verify(testTask1, times(1)).call(eq(inputNumber));
+        verify(testTask2, times(1)).call(anyObject());
+        verify(testTask3, times(1)).call(anyObject());
+    }
+
     @Test(expected = RuntimeException.class)
     public void testOld() throws Exception {
         String key = UUID.randomUUID().toString();
@@ -370,6 +420,11 @@ public class YamlParserTest {
 
         public void call(Object arg1, Object arg2) {
         }
+    }
+
+    private interface TestInterface {
+
+        void call(Object arg1);
     }
 
     private static class TestErrorTask implements JavaDelegate {

@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.api.process;
 
 import com.walmartlabs.concord.common.validation.ConcordId;
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -58,6 +59,21 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam MultipartInput input);
+
+    /**
+     * Starts a new process instance asynchronously using a specified project and a payload archive.
+     *
+     * @param projectName
+     * @param in
+     * @return
+     */
+    @POST
+    @ApiOperation("Start a new process using a project name and a payload archive")
+    @Path("/{projectName}")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces(MediaType.APPLICATION_JSON)
+    StartProcessResponse start(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                               @ApiParam InputStream in);
 
     /**
      * Waits for completion of a process.

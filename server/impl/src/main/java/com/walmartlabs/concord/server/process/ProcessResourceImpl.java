@@ -9,6 +9,7 @@ import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.cfg.AttachmentStoreConfiguration;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
+import com.walmartlabs.concord.server.process.pipelines.ProjectArchivePipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.RequestDataOnlyPipeline;
 import com.walmartlabs.concord.server.process.pipelines.SelfContainedArchivePipeline;
@@ -22,7 +23,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -47,6 +47,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final ProjectDao projectDao;
     private final ProcessHistoryDao historyDao;
     private final ProjectPipeline projectPipeline;
+    private final ProjectArchivePipeline projectArchivePipeline;
     private final SelfContainedArchivePipeline archivePipeline;
     private final RequestDataOnlyPipeline requestPipeline;
     private final ProcessExecutorImpl processExecutor;
@@ -56,6 +57,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     public ProcessResourceImpl(ProjectDao projectDao,
                                ProcessHistoryDao historyDao,
                                ProjectPipeline projectPipeline,
+                               ProjectArchivePipeline projectArchivePipeline,
                                SelfContainedArchivePipeline archivePipeline,
                                RequestDataOnlyPipeline requestPipeline,
                                ProcessExecutorImpl processExecutor,
@@ -64,6 +66,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.projectDao = projectDao;
         this.historyDao = historyDao;
         this.projectPipeline = projectPipeline;
+        this.projectArchivePipeline = projectArchivePipeline;
         this.archivePipeline = archivePipeline;
         this.requestPipeline = requestPipeline;
         this.processExecutor = processExecutor;
@@ -79,7 +82,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    public StartProcessResponse start(@PathParam("entryPoint") String entryPoint, Map<String, Object> req) {
+    public StartProcessResponse start(String entryPoint, Map<String, Object> req) {
         String instanceId = UUID.randomUUID().toString();
         Payload payload = createPayload(instanceId, entryPoint, req);
         requestPipeline.process(payload);
@@ -94,9 +97,18 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return new StartProcessResponse(instanceId);
     }
 
+    @Override
+    @Validate
+    public StartProcessResponse start(String projectName, InputStream in) {
+        String instanceId = UUID.randomUUID().toString();
+        Payload payload = createPayload(instanceId, projectName, in);
+        projectArchivePipeline.process(payload);
+        return new StartProcessResponse(instanceId);
+    }
+
     /**
      * Creates a payload. It is implied that all necessary resources to start a process are
-     * supplied in the multipart data.
+     * supplied in the multipart data and/or provided by the project's repository or template.
      *
      * @param instanceId
      * @param input
@@ -162,6 +174,19 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         } catch (IOException e) {
             throw new ProcessException("Error while parsing a request", e);
         }
+    }
+
+    /**
+     * Creates a payload from an archive, containing all necessary resources and the
+     * specified project name.
+     *
+     * @param instanceId
+     * @param in
+     * @return
+     */
+    private Payload createPayload(String instanceId, String projectName, InputStream in) {
+        Payload payload = createPayload(instanceId, in);
+        return payload.putHeader(Payload.PROJECT_NAME, projectName);
     }
 
     private Payload parseEntryPoint(Payload payload, String entryPoint) {

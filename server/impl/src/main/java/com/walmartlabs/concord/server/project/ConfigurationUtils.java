@@ -45,6 +45,20 @@ public final class ConfigurationUtils {
         m.putAll(b);
     }
 
+    public static Map<String, Object> deepMerge(Map<String, Object> a, Map<String, Object> b) {
+        for (String k : b.keySet()) {
+            Object av = a.get(k);
+            Object bv = b.get(k);
+
+            if (av instanceof Map && bv instanceof Map) {
+                a.put(k, deepMerge((Map<String, Object>) av, (Map<String, Object>) bv));
+            } else {
+                a.put(k, bv);
+            }
+        }
+        return a;
+    }
+
     private ConfigurationUtils() {
     }
 }

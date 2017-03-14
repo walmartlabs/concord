@@ -203,7 +203,7 @@ public class YamlConverter {
                 for (Iterator<Object> i = ((List) args).iterator(); i.hasNext(); ) {
                     String k = "__" + idx++;
                     Object v = i.next();
-                    maps.add(new VariableMapping(null, null, v, k));
+                    maps.add(new VariableMapping(null, null, v, k, true));
 
                     b.append(k);
                     if (i.hasNext()) {
@@ -216,7 +216,7 @@ public class YamlConverter {
                     String s = args.toString().trim();
                     maps.add(new VariableMapping(null, s, null, k));
                 } else {
-                    maps.add(new VariableMapping(null, null, args, k));
+                    maps.add(new VariableMapping(null, null, args, k, true));
                 }
                 b.append(k);
             }

@@ -1,0 +1,12 @@
+{
+  "entryPoint": "main",
+  "arguments": {
+
+    "mailParams": {
+      "from": "me@localhost",
+      "to": "you@localhost",
+      "subject": "test",
+      "message": "hi!"
+    }
+  }
+}

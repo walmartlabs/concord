@@ -1,9 +1,9 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,33 +16,32 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * Parses request's data and stores it as header values.
+ * Parses workspace's request JSON file and stores it as header values.
  */
 @Named
-public class RequestDataParsingProcessor implements PayloadProcessor {
+public class WorkspaceRequestDataParsingProcessor implements PayloadProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(RequestDataParsingProcessor.class);
-
-    public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");
+    private static final Logger log = LoggerFactory.getLogger(WorkspaceRequestDataParsingProcessor.class);
 
     @SuppressWarnings("unchecked")
     @Override
     public Payload process(Payload payload) {
-        Path p = payload.getAttachment(REQUEST_ATTACHMENT_KEY);
-        if (p == null) {
+        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
+
+        Path src = workspace.resolve(Constants.REQUEST_DATA_FILE_NAME);
+        if (!Files.exists(src)) {
             return payload;
         }
 
         Map<String, Object> data;
-        try (InputStream in = Files.newInputStream(p)) {
+        try (InputStream in = Files.newInputStream(src)) {
             ObjectMapper om = new ObjectMapper();
             data = om.readValue(in, Map.class);
         } catch (IOException e) {
-            log.error("process ['{}'] -> error while parsing a request data attachment", payload);
+            log.error("process ['{}'] -> error while parsing a request data file", payload);
             throw new ProcessException("Invalid request data format", e, Status.BAD_REQUEST);
         }
 
-        return payload.removeAttachment(REQUEST_ATTACHMENT_KEY)
-                .putHeader(Payload.REQUEST_DATA_MAP, data);
+        return payload.putHeader(Payload.REQUEST_DATA_MAP, data);
     }
 }

@@ -16,7 +16,9 @@
 
     <properties>
         <main-class>com.walmartlabs.concord.server.Main</main-class>
-        <runner.path>${project.basedir}/../../runner/target/concord-runner-${project.version}-jar-with-dependencies.jar</runner.path>
+        <runner.path>
+            ${project.basedir}/../../runner/target/concord-runner-${project.version}-jar-with-dependencies.jar
+        </runner.path>
     </properties>
 
     <dependencies>
@@ -76,6 +78,11 @@
         <dependency>
             <groupId>com.walmartlabs.concord.plugins</groupId>
             <artifactId>ansible-template</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins</groupId>
+            <artifactId>smtp-tasks</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -221,29 +228,6 @@
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-template-deps</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins</groupId>
-                                    <artifactId>ansible-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.directory}/deps</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

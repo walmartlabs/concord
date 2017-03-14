@@ -13,15 +13,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named
-public class ProjectPipeline {
+public class ProjectArchivePipeline {
 
     private final PayloadProcessor[] processors;
 
     @Inject
-    public ProjectPipeline(Injector injector) {
+    public ProjectArchivePipeline(Injector injector) {
         // TODO move to a cfg file
         this.processors = new PayloadProcessor[]{
-                injector.getInstance(RequestDataParsingProcessor.class),
+                injector.getInstance(WorkspaceArchiveProcessor.class),
+                injector.getInstance(WorkspaceRequestDataParsingProcessor.class),
                 injector.getInstance(ProjectConfigurationProcessor.class),
                 injector.getInstance(RepositoryProcessor.class),
                 injector.getInstance(InventoryProcessor.class),

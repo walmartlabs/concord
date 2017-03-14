@@ -47,10 +47,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aether.version>1.13.1</aether.version>
-        <bpm.version>0.14.1</bpm.version>
+        <bpm.version>0.14.2</bpm.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.pool.version>2.4.2</commons.pool.version>
         <docker.plugin.version>0.19.0</docker.plugin.version>
+        <greenmail.version>1.5.3</greenmail.version>
         <groovy.version>2.4.7</groovy.version>
         <guava.version>19.0</guava.version>
         <guice.version>4.1.0</guice.version>
@@ -58,6 +59,7 @@
         <httpclient.version>4.5.3</httpclient.version>
         <jackson.version>2.8.2</jackson.version>
         <javax.inject.version>1</javax.inject.version>
+        <javax.mail.version>1.5.6</javax.mail.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.0.Final</javax.ws.rs.version>
         <jcabi.aether.version>0.10.1</jcabi.aether.version>
@@ -465,6 +467,16 @@
                 <groupId>org.apache.maven.plugin-tools</groupId>
                 <artifactId>maven-plugin-annotations</artifactId>
                 <version>${maven.annotation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.icegreen</groupId>
+                <artifactId>greenmail</artifactId>
+                <version>${greenmail.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.mail</groupId>
+                <artifactId>javax.mail</artifactId>
+                <version>${javax.mail.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
