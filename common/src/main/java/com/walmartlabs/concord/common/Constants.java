@@ -20,6 +20,11 @@ public final class Constants {
     public static final String TX_ID_KEY = "txId";
 
     /**
+     * Key of process arguments object in a request data JSON.
+     */
+    public static final String ARGUMENTS_KEY = "arguments";
+
+    /**
      * Directory containing libraries (dependencies) of a payload.
      */
     public static final String LIBRARIES_DIR_NAME = "lib";

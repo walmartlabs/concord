@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -49,7 +50,8 @@ public class GroovyIT {
         InputStream payload = makePayload(resource);
 
         // start a job
-        String id = proxy.start(payload, JobType.JUNIT_GROOVY, resource);
+        String id = UUID.randomUUID().toString();
+        proxy.start(id, JobType.JUNIT_GROOVY, resource, payload);
 
         // check the job's status
         JobStatus s = proxy.getStatus(id);

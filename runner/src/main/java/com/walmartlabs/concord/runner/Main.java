@@ -11,6 +11,8 @@ import com.walmartlabs.concord.plugins.fs.FSDefinitionProvider;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
+import io.takari.bpm.api.Event;
+import io.takari.bpm.api.EventService;
 import io.takari.bpm.api.ExecutionException;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
@@ -21,18 +23,18 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Named
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static final String ARGUMENTS_KEY = "arguments";
 
     private final AutoParser parser;
     private final EngineFactory engineFactory;
@@ -52,17 +54,49 @@ public class Main {
         // determine current working directory, it should contain the payload
         Path baseDir = Paths.get(System.getProperty("user.dir"));
 
+        // TODO cleanup
+        Path stateDir = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME).resolve("_state");
+        Path eventFile = stateDir.resolve("_event");
+        String eventName = null;
+
+        boolean resumeMode = Files.exists(eventFile);
+        if (resumeMode) {
+            eventName = new String(Files.readAllBytes(eventFile));
+            eventName = eventName.trim();
+
+            Files.delete(eventFile);
+            log.info("run -> resuming '{}'...", eventName);
+        }
+
         // load process definitions
-        ProcessDefinitionProvider definitions = createDefinitionProvider(baseDir);
+        ProcessDefinitionProvider definitions = resumeMode ? id -> null : createDefinitionProvider(baseDir);
 
         // read the metadata
-        Map<String, Object> cfg = readCfg(baseDir);
+        Map<String, Object> cfg = resumeMode ? Collections.emptyMap() : readCfg(baseDir);
         String entryPoint = (String) cfg.get(Constants.ENTRY_POINT_KEY);
-        Map<String, Object> args = createArgs(instanceId, cfg);
+        Map<String, Object> args = resumeMode ? Collections.emptyMap() : createArgs(instanceId, cfg);
 
         // start the process
-        Engine e = engineFactory.create(definitions);
-        e.start(instanceId, entryPoint, args);
+        Engine e = engineFactory.create(baseDir, definitions);
+        if (resumeMode) {
+            e.resume(instanceId, eventName, null);
+        } else {
+            e.start(instanceId, entryPoint, args);
+        }
+
+        EventService es = e.getEventService();
+        Collection<Event> events = es.getEvents(instanceId);
+        if (events.isEmpty()) {
+            log.info("run -> no events waiting, removing the state...");
+            if (Files.exists(stateDir)) {
+                Files.walk(stateDir)
+                        .sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            }
+        } else {
+            log.info("run -> {} event(s) left, preserving the state...", events.size());
+        }
 
         // TODO handle suspend
     }
@@ -80,15 +114,19 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> readCfg(Path baseDir) throws IOException {
-        ObjectMapper om = new ObjectMapper();
-        return om.readValue(baseDir.resolve(Constants.REQUEST_DATA_FILE_NAME).toFile(), Map.class);
+        Path p = baseDir.resolve(Constants.REQUEST_DATA_FILE_NAME);
+
+        try (InputStream in = Files.newInputStream(p)) {
+            ObjectMapper om = new ObjectMapper();
+            return om.readValue(in, Map.class);
+        }
     }
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> createArgs(String instanceId, Map<String, Object> cfg) {
         Map<String, Object> m = new HashMap<>();
 
-        Map<String, Object> args = (Map<String, Object>) cfg.get(ARGUMENTS_KEY);
+        Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.ARGUMENTS_KEY);
         if (args != null) {
             m.putAll(args);
         }

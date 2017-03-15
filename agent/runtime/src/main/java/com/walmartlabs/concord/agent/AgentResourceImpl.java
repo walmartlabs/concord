@@ -15,11 +15,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 @Named
 public class AgentResourceImpl implements AgentResource, Resource {
@@ -35,8 +35,8 @@ public class AgentResourceImpl implements AgentResource, Resource {
 
     @Override
     @Validate
-    public String start(InputStream in, JobType type, String entryPoint) throws Exception {
-        return executionManager.start(in, type, entryPoint);
+    public void start(String instanceId, JobType type, String entryPoint, InputStream in) throws Exception {
+        executionManager.start(instanceId, type, entryPoint, in);
     }
 
     @Override
@@ -84,24 +84,20 @@ public class AgentResourceImpl implements AgentResource, Resource {
     @Override
     @Validate
     public Response streamLog(@PathParam("id") String id) {
-        File f = logManager.open(id);
-        if (!f.exists()) {
+        Path f = logManager.open(id);
+        if (!Files.exists(f)) {
             return Response.status(Status.NOT_FOUND)
                     .entity("Instance: " + id + ": log file not found")
                     .build();
         }
 
         StreamingOutput stream = out -> {
-            int pos = 0;
             byte[] ab = new byte[1024];
 
-            while (true) {
-                try (RandomAccessFile raf = new RandomAccessFile(f, "r")) {
-                    raf.seek(pos);
-
-                    int read = raf.read(ab, 0, ab.length);
+            try (InputStream in = Files.newInputStream(f, StandardOpenOption.READ)) {
+                while (true) {
+                    int read = in.read(ab, 0, ab.length);
                     if (read > 0) {
-                        pos += read;
                         out.write(ab, 0, read);
                         out.flush();
                     }

@@ -151,9 +151,11 @@ public class PerfSession implements AutoCloseable {
     }
 
     private static String run(String name, AgentResource r, File payload) {
+        String id = UUID.randomUUID().toString();
         try (InputStream in = new BufferedInputStream(new FileInputStream(payload))) {
             String entryPoint = name + "/" + DEFAULT_ENTRY_POINT;
-            return r.start(in, DEFAULT_JOB_TYPE, entryPoint);
+            r.start(id, DEFAULT_JOB_TYPE, entryPoint, in);
+            return id;
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }

@@ -86,6 +86,9 @@ public class YamlConverter {
             proc = sourceMap(proc, s, "Group");
 
             return applyErrorBlock(proc, g.getOptions(), joinName(s));
+        } else if (s instanceof YamlEvent) {
+            YamlEvent e = (YamlEvent) s;
+            return sourceMap(proc.catchEvent(e.getName()), s, "Event");
         } else if (s instanceof YamlFormCall) {
             // TODO
             return proc;

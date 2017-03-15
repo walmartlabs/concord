@@ -16,6 +16,7 @@ public class Payload {
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
     public static final HeaderKey<Map> REQUEST_DATA_MAP = HeaderKey.register("_meta", Map.class);
+    public static final HeaderKey<Boolean> RESUME_MODE = HeaderKey.register("_resumeMode", Boolean.class);
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("_workspaceArchive");
 
@@ -41,6 +42,14 @@ public class Payload {
 
     public <T> T getHeader(HeaderKey<T> key) {
         return key.cast(headers.get(key.name()));
+    }
+
+    public <T> T getHeader(HeaderKey<T> key, T defaultValue) {
+        Object v = headers.get(key.name());
+        if (v == null) {
+            return defaultValue;
+        }
+        return key.cast(v);
     }
 
     @SuppressWarnings("unchecked")

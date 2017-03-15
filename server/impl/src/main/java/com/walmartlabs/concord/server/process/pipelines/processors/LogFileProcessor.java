@@ -43,7 +43,10 @@ public class LogFileProcessor implements PayloadProcessor {
 
             String name = payload.getInstanceId() + ".log";
             Path path = baseDir.resolve(name);
-            Files.createFile(path);
+
+            if (!Files.exists(path)) {
+                Files.createFile(path);
+            }
 
             return payload.putHeader(LOG_FILE_NAME, name)
                     .putHeader(LOG_FILE_PATH, path);

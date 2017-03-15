@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -73,9 +74,9 @@ public class JarIT {
 
     @Test(timeout = 60000)
     public void testNormal() throws Exception {
-        String id;
+        String id = UUID.randomUUID().toString();
         try (InputStream in = new FileInputStream(makePayload(ResourceTest.class))) {
-            id = agentResource.start(in, JobType.JAR, "test.jar");
+            agentResource.start(id, JobType.JAR, "test.jar", in);
         }
 
         // ---
@@ -102,9 +103,9 @@ public class JarIT {
 
     @Test(timeout = 60000)
     public void testAttachments() throws Exception {
-        String id;
+        String id = UUID.randomUUID().toString();
         try (InputStream in = new FileInputStream(makePayload(AttachmentTest.class))) {
-            id = agentResource.start(in, JobType.JAR, "test.jar");
+            agentResource.start(id, JobType.JAR, "test.jar", in);
         }
 
         // ---
@@ -137,9 +138,9 @@ public class JarIT {
 
     @Test(timeout = 60000)
     public void testAsyncLog() throws Exception {
-        String id;
+        String id = UUID.randomUUID().toString();
         try (InputStream in = new FileInputStream(makePayload(ForAFewSecondsTest.class))) {
-            id = agentResource.start(in, JobType.JAR, "test.jar");
+            agentResource.start(id, JobType.JAR, "test.jar", in);
         }
 
         // ---
@@ -182,9 +183,9 @@ public class JarIT {
 
     @Test(timeout = 60000)
     public void testInterrupted() throws Exception {
-        String id;
+        String id = UUID.randomUUID().toString();
         try (InputStream in = new FileInputStream(makePayload(LongRunningTest.class))) {
-            id = agentResource.start(in, JobType.JAR, "test.jar");
+            agentResource.start(id, JobType.JAR, "test.jar", in);
         }
 
         // ---
@@ -220,9 +221,9 @@ public class JarIT {
 
     @Test(timeout = 60000)
     public void testError() throws Exception {
-        String id;
+        String id = UUID.randomUUID().toString();
         try (InputStream in = new FileInputStream(makePayload(ErrorTest.class))) {
-            id = agentResource.start(in, JobType.JAR, "test.jar");
+            agentResource.start(id, JobType.JAR, "test.jar", in);
         }
 
         // ---

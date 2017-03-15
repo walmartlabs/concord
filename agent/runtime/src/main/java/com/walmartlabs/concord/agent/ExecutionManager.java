@@ -67,58 +67,59 @@ public class ExecutionManager {
         jobExecutors.put(JobType.JUNIT_GROOVY, new JunitGroovyJobExecutor());
     }
 
-    public String start(InputStream payload, JobType type, String entryPoint) throws ExecutionException {
+    public void start(String instanceId, JobType type, String entryPoint, InputStream payload) throws ExecutionException {
         JobExecutor exec = jobExecutors.get(type);
         if (exec == null) {
             throw new IllegalArgumentException("Unknown job type: " + type);
         }
 
-        String id = UUID.randomUUID().toString();
-        logManager.log(id, "Job type: %s", type);
+        // remove the previous log file
+        // e.g. left after the execution was suspended
+        logManager.delete(instanceId);
 
-        Path tmpDir = extract(id, payload);
+        logManager.log(instanceId, "Job type: %s", type);
+
+        Path tmpDir = extract(instanceId, payload);
 
         Map<String, Object> agentParams = getAgentParameters(tmpDir);
         Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
-        log.info("start ['{}'] -> JVM args: {}", id, jvmArgs);
+        log.info("start ['{}'] -> JVM args: {}", instanceId, jvmArgs);
 
         synchronized (mutex) {
-            statuses.put(id, JobStatus.RUNNING);
+            statuses.put(instanceId, JobStatus.RUNNING);
         }
 
         Future<?> f = executor.submit(() -> {
             try {
-                exec.exec(id, tmpDir, entryPoint, jvmArgs);
+                exec.exec(instanceId, tmpDir, entryPoint, jvmArgs);
                 synchronized (mutex) {
-                    statuses.put(id, JobStatus.COMPLETED);
+                    statuses.put(instanceId, JobStatus.COMPLETED);
                 }
             } catch (Exception e) {
-                log.error("start ['{}', {}, '{}'] -> failed", id, type, entryPoint, e);
+                log.error("start ['{}', {}, '{}'] -> failed", instanceId, type, entryPoint, e);
                 synchronized (mutex) {
-                    JobStatus s = statuses.getIfPresent(id);
+                    JobStatus s = statuses.getIfPresent(instanceId);
                     if (s != JobStatus.CANCELLED) {
-                        statuses.put(id, JobStatus.FAILED);
+                        statuses.put(instanceId, JobStatus.FAILED);
                     }
                 }
             } finally {
                 synchronized (ExecutionManager.this) {
-                    executions.remove(id);
+                    executions.remove(instanceId);
                 }
             }
 
             synchronized (mutex) {
                 Path attachmentsDir = tmpDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME);
                 if (Files.exists(attachmentsDir)) {
-                    attachments.put(id, attachmentsDir);
+                    attachments.put(instanceId, attachmentsDir);
                 }
             }
         });
 
         synchronized (mutex) {
-            executions.put(id, f);
+            executions.put(instanceId, f);
         }
-
-        return id;
     }
 
     public void cancel() {

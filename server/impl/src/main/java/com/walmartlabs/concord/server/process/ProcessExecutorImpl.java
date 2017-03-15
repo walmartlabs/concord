@@ -3,7 +3,6 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.AgentConfiguration;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
@@ -24,8 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Named
 @Singleton
@@ -40,18 +37,18 @@ public class ProcessExecutorImpl {
     private static final int LOG_BUFFER_SIZE = 256;
 
     private final AgentConfiguration agentCfg;
-    private final Map<String, String> instanceIdMap = new ConcurrentHashMap<>();
+    private final ProcessAttachmentManager attachmentManager;
 
     @Inject
-    public ProcessExecutorImpl(AgentConfiguration agentCfg) {
+    public ProcessExecutorImpl(AgentConfiguration agentCfg, ProcessAttachmentManager attachmentManager) {
         this.agentCfg = agentCfg;
+        this.attachmentManager = attachmentManager;
     }
 
-    public void run(String instanceId, Path archive, String entryPoint, Path logFile, Path attachmentsFile,
-                    ProcessExecutorCallback callback) {
+    public void run(String instanceId, Path archive, String entryPoint, Path logFile, ProcessExecutorCallback callback) {
 
         try {
-            _run(instanceId, archive, entryPoint, logFile, attachmentsFile, callback);
+            _run(instanceId, archive, entryPoint, logFile, callback);
         } catch (Exception e) {
             log.error("run ['{}'] -> process error", instanceId, e);
             callback.onStatusChange(instanceId, ProcessStatus.FAILED);
@@ -59,20 +56,16 @@ public class ProcessExecutorImpl {
         }
     }
 
-    private void _run(String instanceId, Path archive, String entryPoint, Path logFile, Path attachmentsFile,
-                      ProcessExecutorCallback callback) {
-
-        log.info("run ['{}'] -> starting (log file: {})...", instanceId, logFile.toAbsolutePath());
+    private void _run(String instanceId, Path archive, String entryPoint, Path logFile, ProcessExecutorCallback callback) {
+        log.info("run ['{}'] -> starting (log file: {})...", instanceId, logFile);
         log(logFile, "Starting %s...", instanceId);
 
         try (Agent a = new Agent(agentCfg.getUri())) {
             log.debug("run ['{}'] -> sending the payload: {}", instanceId, archive.toAbsolutePath());
             callback.onStatusChange(instanceId, ProcessStatus.RUNNING);
 
-            String jobId;
             try (InputStream in = new BufferedInputStream(Files.newInputStream(archive))) {
-                jobId = a.agentResource.start(in, JobType.JAR, entryPoint);
-                instanceIdMap.put(instanceId, jobId);
+                a.agentResource.start(instanceId, JobType.JAR, entryPoint, in);
 
                 log.debug("run ['{}'] -> started", instanceId);
                 log(logFile, "Payload sent");
@@ -86,7 +79,7 @@ public class ProcessExecutorImpl {
             // stream back the job's log
 
             try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(logFile, StandardOpenOption.APPEND))) {
-                a.stream(jobId, out, () -> callback.onUpdate(instanceId));
+                a.stream(instanceId, out, () -> callback.onUpdate(instanceId));
             } catch (IOException e) {
                 throw new ProcessException("Error while streaming an agent's log", e);
             }
@@ -95,57 +88,48 @@ public class ProcessExecutorImpl {
             log(logFile, "...done");
 
             try {
-                saveAttachments(a, jobId, attachmentsFile);
+                saveAttachments(a, instanceId);
             } catch (IOException e) {
                 log.warn("run ['{}'] -> error while saving attachments", instanceId, e);
             }
 
-            JobStatus s = a.agentResource.getStatus(jobId);
+            JobStatus s = a.agentResource.getStatus(instanceId);
             if (s == JobStatus.FAILED || s == JobStatus.CANCELLED) {
                 callback.onStatusChange(instanceId, ProcessStatus.FAILED);
             } else if (s == JobStatus.RUNNING) {
-                log.warn("run ['{}'] -> job is still running: {}", instanceId, jobId);
+                log.warn("run ['{}'] -> job is still running", instanceId);
             } else {
                 callback.onStatusChange(instanceId, ProcessStatus.FINISHED);
             }
-
-            instanceIdMap.remove(instanceId);
         }
     }
 
-    private void saveAttachments(Agent a, String jobId, Path dst) throws IOException {
+    private void saveAttachments(Agent a, String instanceId) throws IOException {
         Response resp = null;
         try {
-            resp = a.agentResource.downloadAttachments(jobId);
+            resp = a.agentResource.downloadAttachments(instanceId);
 
             int status = resp.getStatus();
             if (status != Status.OK.getStatusCode()) {
                 if (status != Status.NOT_FOUND.getStatusCode()) {
-                    log.warn("saveAttachment ['{}'] -> got error: {}", jobId, status);
+                    log.warn("saveAttachment ['{}'] -> got error: {}", instanceId, status);
                 }
                 return;
             }
 
-            try (InputStream in = resp.readEntity(InputStream.class);
-                 OutputStream out = Files.newOutputStream(dst)) {
-                IOUtils.copy(in, out);
+            try (InputStream in = resp.readEntity(InputStream.class)) {
+                attachmentManager.store(instanceId, in);
             }
         } finally {
             if (resp != null) {
                 resp.close();
             }
         }
-        log.debug("saveAttachments ['{}'] -> stored to {}", jobId, dst);
     }
 
     public void cancel(String instanceId) {
-        String jobId = instanceIdMap.get(instanceId);
-        if (jobId == null) {
-            return;
-        }
-
         try (Agent a = new Agent(agentCfg.getUri())) {
-            a.agentResource.cancel(jobId, true);
+            a.agentResource.cancel(instanceId, true);
         }
     }
 

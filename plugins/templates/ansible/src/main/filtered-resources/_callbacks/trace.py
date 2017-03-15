@@ -1,11 +1,22 @@
-import os
 import json
+import os
+import errno
 from ansible.plugins.callback import CallbackBase
 
 try:
     from __main__ import cli
 except ImportError:
     cli = None
+
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 
 class CallbackModule(CallbackBase):
@@ -20,7 +31,7 @@ class CallbackModule(CallbackBase):
 
     def log(self, data):
         target_dir = self.base_dir;
-        os.makedirs(target_dir)
+        mkdir_p(target_dir)
 
         target_filename = target_dir + "/ansible_stats.json";
         target_file = open(target_filename, "w")

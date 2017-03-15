@@ -12,18 +12,19 @@ public interface AgentResource {
     /**
      * Starts new job asynchronously.
      *
-     * @param in         job's payload
+     * @param instanceId
      * @param type       type of the job
      * @param entryPoint
+     * @param in         job's payload
      * @return ID of the job
      * @throws Exception
      */
     @POST
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    @Produces(MediaType.TEXT_PLAIN)
-    String start(InputStream in,
-                 @QueryParam("type") @NotNull JobType type,
-                 @QueryParam("entryPoint") @NotNull String entryPoint) throws Exception;
+    void start(@QueryParam("instanceId") @NotNull String instanceId,
+               @QueryParam("type") @NotNull JobType type,
+               @QueryParam("entryPoint") @NotNull String entryPoint,
+               InputStream in) throws Exception;
 
     /**
      * @param id ID of a job

@@ -35,7 +35,7 @@ public class JarJobExecutor implements JobExecutor {
 
         String mainClass = Utils.getMainClass(workDir, entryPoint);
 
-        // TODO pass through an original ID?
+        // TODO pass an original ID?
         Collection<String> cmd = new ArrayList<>();
         cmd.add(javaCmd);
         cmd.addAll(jvmArgs);

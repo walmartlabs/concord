@@ -1,0 +1,4 @@
+main:
+  - ${log.info("test", "aaaa")}
+  - event: ev1
+  - ${log.info("test", "bbbb")}

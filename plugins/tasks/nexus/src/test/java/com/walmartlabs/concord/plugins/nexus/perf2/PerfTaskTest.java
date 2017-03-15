@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
@@ -56,7 +55,7 @@ public class PerfTaskTest {
 
         // ---
 
-        verify(agentResource, times(1)).start(any(InputStream.class), eq(JobType.JUNIT_GROOVY), eq("maven01/scenario.groovy"));
+        verify(agentResource, times(1)).start(anyString(), eq(JobType.JUNIT_GROOVY), eq("maven01/scenario.groovy"), any(InputStream.class));
     }
 
     private static Path preparePayload() throws IOException {
@@ -84,8 +83,6 @@ public class PerfTaskTest {
 
     private static AgentResource prepareJobResource() throws Exception {
         AgentResource r = mock(AgentResource.class);
-        when(r.start(any(InputStream.class), any(JobType.class), anyString()))
-                .thenAnswer(invocation -> UUID.randomUUID().toString());
         when(r.getStatus(any(String.class)))
                 .thenReturn(JobStatus.RUNNING)
                 .thenReturn(JobStatus.COMPLETED);

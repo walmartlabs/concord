@@ -7,7 +7,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 @Named
 @Singleton
@@ -22,6 +24,17 @@ public class LogManager {
         this.cfg = cfg;
     }
 
+    public void delete(String id) {
+        Path f = logFile(id);
+        if (Files.exists(f)) {
+            try {
+                Files.delete(f);
+            } catch (IOException e) {
+                throw new RuntimeException("Error removing a log file: " + f, e);
+            }
+        }
+    }
+
     public void log(String id, String log, Object... args) {
         if (args != null && args.length > 0) {
             int last = args.length - 1;
@@ -34,8 +47,8 @@ public class LogManager {
             }
         }
 
-        File f = logFile(id);
-        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(f, true))) {
+        Path f = logFile(id);
+        try (OutputStream out = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
             String s = String.format(log + "\n", args);
             out.write(s.getBytes());
         } catch (IOException e) {
@@ -44,9 +57,9 @@ public class LogManager {
     }
 
     public void store(String id, InputStream src) {
-        File f = logFile(id);
-        log.info("store ['{}'] -> storing into {}", id, f.getAbsolutePath());
-        try (OutputStream dst = new BufferedOutputStream(new FileOutputStream(f, true));
+        Path f = logFile(id);
+        log.info("store ['{}'] -> storing into {}", id, f);
+        try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
              BufferedReader reader = new BufferedReader(new InputStreamReader(src))) {
 
             String line;
@@ -60,12 +73,12 @@ public class LogManager {
         }
     }
 
-    public File open(String id) {
+    public Path open(String id) {
         return logFile(id);
     }
 
-    private File logFile(String id) {
+    private Path logFile(String id) {
         Path baseDir = cfg.getLogDir();
-        return baseDir.resolve(id + ".log").toFile();
+        return baseDir.resolve(id + ".log");
     }
 }

@@ -8,7 +8,8 @@ import io.takari.bpm.model.ProcessDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,11 +29,10 @@ public class FSDefinitionProvider implements ProcessDefinitionProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FSDefinitionProvider.class);
 
-    private final Map<String, String> attributes;
     private final Map<String, ProcessDefinition> entryPoints;
 
-    public FSDefinitionProvider(MultipleDefinitionParser parser, Map<String, String> attributes, Path baseDir, String... fileTypes) throws ExecutionException {
-        this.attributes = attributes;
+    public FSDefinitionProvider(MultipleDefinitionParser parser, Map<String, String> attributes,
+                                Path baseDir, String... fileTypes) throws ExecutionException {
 
         Map<String, ProcessDefinition> m = new HashMap<>();
         try {
@@ -40,10 +40,9 @@ public class FSDefinitionProvider implements ProcessDefinitionProvider {
 
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    File f = dir.toFile();
-
                     // skip "hidden" directories
-                    if (f.getName().startsWith(".")) {
+                    String n = dir.getFileName().toString();
+                    if (n.startsWith(".")) {
                         return FileVisitResult.SKIP_SUBTREE;
                     }
 
@@ -52,15 +51,14 @@ public class FSDefinitionProvider implements ProcessDefinitionProvider {
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    File f = file.toFile();
-
                     // skip "hidden" files
-                    if (f.getName().startsWith(".")) {
+                    String n = file.getFileName().toString();
+                    if (n.startsWith(".")) {
                         return FileVisitResult.SKIP_SUBTREE;
                     }
 
-                    if (f.isFile() && matches(f, fileTypes)) {
-                        parseAndStore(parser, attributes, m, f);
+                    if (matches(n, fileTypes)) {
+                        parseAndStore(parser, attributes, m, file);
                     }
 
                     return FileVisitResult.CONTINUE;
@@ -82,9 +80,7 @@ public class FSDefinitionProvider implements ProcessDefinitionProvider {
         return pd;
     }
 
-    private static boolean matches(File f, String[] fileTypes) {
-        String n = f.getName();
-
+    private static boolean matches(String n, String[] fileTypes) {
         for (String t : fileTypes) {
             if (n.matches(t)) {
                 return true;
@@ -94,15 +90,17 @@ public class FSDefinitionProvider implements ProcessDefinitionProvider {
         return false;
     }
 
-    private static void parseAndStore(MultipleDefinitionParser parser, Map<String, String> attrs, Map<String, ProcessDefinition> m, File f) throws IOException {
-        try (InputStream in = new BufferedInputStream(new FileInputStream(f))) {
+    private static void parseAndStore(MultipleDefinitionParser parser, Map<String, String> attrs,
+                                      Map<String, ProcessDefinition> m, Path f) throws IOException {
+
+        try (InputStream in = Files.newInputStream(f)) {
             Collection<ProcessDefinition> pds = parser.parse(in);
             for (ProcessDefinition pd : pds) {
                 m.put(pd.getId(), mergeAttrs(pd, attrs));
-                log.info("parseAndStore ['{}'] -> got '{}'", f.getAbsolutePath(), pd.getId());
+                log.info("parseAndStore ['{}'] -> got '{}'", f, pd.getId());
             }
         } catch (ParserException e) {
-            log.warn("parseAndStore ['{}'] -> skipping, {}", f.getAbsolutePath(), e.getMessage());
+            log.warn("parseAndStore ['{}'] -> skipping, {}", f, e.getMessage());
         }
     }
 

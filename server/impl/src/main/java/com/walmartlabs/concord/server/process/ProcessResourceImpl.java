@@ -3,16 +3,9 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.cfg.AttachmentStoreConfiguration;
+import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
-import com.walmartlabs.concord.server.process.pipelines.ProjectArchivePipeline;
-import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
-import com.walmartlabs.concord.server.process.pipelines.RequestDataOnlyPipeline;
-import com.walmartlabs.concord.server.process.pipelines.SelfContainedArchivePipeline;
+import com.walmartlabs.concord.server.process.pipelines.*;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -29,15 +22,12 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 @Named
 public class ProcessResourceImpl implements ProcessResource, Resource {
@@ -50,8 +40,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final ProjectArchivePipeline projectArchivePipeline;
     private final SelfContainedArchivePipeline archivePipeline;
     private final RequestDataOnlyPipeline requestPipeline;
+    private final ResumePipeline resumePipeline;
     private final ProcessExecutorImpl processExecutor;
-    private final AttachmentStoreConfiguration attachmentCfg;
+    private final ProcessAttachmentManager attachmentManager;
 
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
@@ -60,8 +51,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProjectArchivePipeline projectArchivePipeline,
                                SelfContainedArchivePipeline archivePipeline,
                                RequestDataOnlyPipeline requestPipeline,
-                               ProcessExecutorImpl processExecutor,
-                               AttachmentStoreConfiguration attachmentCfg) {
+                               ResumePipeline resumePipeline, ProcessExecutorImpl processExecutor,
+                               ProcessAttachmentManager attachmentManager) {
 
         this.projectDao = projectDao;
         this.historyDao = historyDao;
@@ -69,8 +60,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.projectArchivePipeline = projectArchivePipeline;
         this.archivePipeline = archivePipeline;
         this.requestPipeline = requestPipeline;
+        this.resumePipeline = resumePipeline;
         this.processExecutor = processExecutor;
-        this.attachmentCfg = attachmentCfg;
+        this.attachmentManager = attachmentManager;
     }
 
     @Override
@@ -104,6 +96,14 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         Payload payload = createPayload(instanceId, projectName, in);
         projectArchivePipeline.process(payload);
         return new StartProcessResponse(instanceId);
+    }
+
+    @Override
+    @Validate
+    public ResumeProcessResponse resume(String instanceId, String eventName) {
+        Payload payload = createResumePayload(instanceId, eventName);
+        resumePipeline.process(payload);
+        return new ResumeProcessResponse();
     }
 
     /**
@@ -189,6 +189,35 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return payload.putHeader(Payload.PROJECT_NAME, projectName);
     }
 
+    private Payload createResumePayload(String instanceId, String eventName) {
+        try {
+            // TODO constants
+            // TODO specify dest dir
+            Path prevStateDir = attachmentManager.extract(instanceId, "_state/");
+            if (prevStateDir == null) {
+                throw new WebApplicationException("No existing state found to resume the process");
+            }
+
+            // TODO do we really need nested directories here?
+            Path baseDir = Files.createTempDirectory("request");
+            Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
+            log.debug("createResumePayload ['{}', '{}'] -> baseDir: {}", instanceId, eventName, baseDir);
+
+            // TODO constants
+            Path stateDir = workspaceDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME).resolve("_state");
+            IOUtils.copy(prevStateDir, stateDir);
+
+            Path evFile = stateDir.resolve("_event");
+            Files.write(evFile, eventName.getBytes());
+
+            return new Payload(instanceId)
+                    .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
+                    .putHeader(Payload.RESUME_MODE, true);
+        } catch (IOException e) {
+            throw new ProcessException("Error while creating a payload", e);
+        }
+    }
+
     private Payload parseEntryPoint(Payload payload, String entryPoint) {
         String[] as = entryPoint.split(":");
         if (as.length < 1) {
@@ -270,29 +299,19 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
         }
 
-        Path p = attachmentCfg.getBaseDir().resolve(instanceId + ".zip");
-        if (!Files.exists(p)) {
-            return Response.status(Status.NOT_FOUND).build();
-        }
-
-        try (ZipInputStream zip = new ZipInputStream(Files.newInputStream(p))) {
-            ZipEntry e = zip.getNextEntry();
-            if (attachmentName.equals(e.getName())) {
-                Path tmpFile = Files.createTempFile("attachment", ".data");
-                try (OutputStream out = Files.newOutputStream(tmpFile)) {
-                    IOUtils.copy(zip, out);
-                }
-
-                return Response.ok((StreamingOutput) out -> {
-                    try (InputStream in = Files.newInputStream(tmpFile)) {
-                        IOUtils.copy(in, out);
-                    }
-                }).build();
+        try {
+            Path p = attachmentManager.extract(instanceId, attachmentName);
+            if (p == null) {
+                return Response.status(Status.NOT_FOUND).build();
             }
+
+            return Response.ok((StreamingOutput) out -> {
+                try (InputStream in = Files.newInputStream(p)) {
+                    IOUtils.copy(in, out);
+                }
+            }).build();
         } catch (IOException e) {
             throw new WebApplicationException("Error while reading an attachment archive", e);
         }
-
-        return Response.status(Status.NOT_FOUND).build();
     }
 }

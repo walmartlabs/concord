@@ -75,6 +75,13 @@ public interface ProcessResource {
     StartProcessResponse start(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                @ApiParam InputStream in);
 
+    @POST
+    @ApiOperation("Resume a process")
+    @Path("/{id}/resume/{eventName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    ResumeProcessResponse resume(@ApiParam @PathParam("id") @ConcordId String instanceId,
+                                 @ApiParam @PathParam("eventName") @NotNull String eventName);
+
     /**
      * Waits for completion of a process.
      *
@@ -86,7 +93,7 @@ public interface ProcessResource {
     @ApiOperation("Wait for a process to finish")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}/waitForCompletion")
-    ProcessStatusResponse waitForCompletion(@ApiParam @ConcordId @PathParam("id") String instanceId,
+    ProcessStatusResponse waitForCompletion(@ApiParam @PathParam("id") @ConcordId String instanceId,
                                             @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout);
 
     /**

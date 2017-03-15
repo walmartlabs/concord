@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +29,10 @@ public class NamedTaskRegistry implements ServiceTaskRegistry {
         }
 
         this.tasks = m;
+    }
+
+    public NamedTaskRegistry(Task... tasks) {
+        this(Arrays.asList(tasks));
     }
 
     @Override

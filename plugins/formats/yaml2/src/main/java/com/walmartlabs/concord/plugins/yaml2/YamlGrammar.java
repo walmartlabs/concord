@@ -218,15 +218,20 @@ public class YamlGrammar {
     private static final Parser<Atom, YamlStep> callProc = label("Process call",
             satisfyToken(JsonToken.VALUE_STRING).map(a -> new YamlCall(a.location, (String) a.value)));
 
+    // event := FIELD_NAME "event" VALUE_STRING
+    private static final Parser<Atom, YamlStep> event = label("Event (debug only)",
+            satisfyField("event").then(satisfyToken(JsonToken.VALUE_STRING))
+                    .map(a -> new YamlEvent(a.location, (String) a.value)));
+
     // formCall := FIELD_NAME "form" VALUE_STRING formCallOptions
     private static final Parser<Atom, YamlStep> formCall = label("Form call",
             satisfyField("form").then(satisfyToken(JsonToken.VALUE_STRING)).bind(a ->
                     formCallOptions.map(options -> new YamlFormCall(a.location, (String) a.value, options))));
 
-    // stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | taskShort END_OBJECT
+    // stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | event | taskShort END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(group, ifExpr, exprFull, formCall, taskFull, taskShort)));
+                    choice(group, ifExpr, exprFull, formCall, taskFull, event, taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
     private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, callProc, stepObject);

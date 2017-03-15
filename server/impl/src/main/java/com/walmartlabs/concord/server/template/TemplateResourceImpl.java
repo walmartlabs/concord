@@ -21,11 +21,13 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPL
 public class TemplateResourceImpl implements TemplateResource, Resource {
 
     private final TemplateDao templateDao;
+    private final TemplateResolver templateResolver;
     private final Map<String, Field<?>> key2Field;
 
     @Inject
-    public TemplateResourceImpl(TemplateDao templateDao) {
+    public TemplateResourceImpl(TemplateDao templateDao, TemplateResolver templateResolver) {
         this.templateDao = templateDao;
+        this.templateResolver = templateResolver;
 
         this.key2Field = new HashMap<>();
         key2Field.put("name", TEMPLATES.TEMPLATE_NAME);
@@ -35,7 +37,7 @@ public class TemplateResourceImpl implements TemplateResource, Resource {
     @Validate
     @RequiresPermissions(Permissions.TEMPLATE_CREATE_NEW)
     public CreateTemplateResponse create(String name, InputStream data) {
-        if (templateDao.exists(name)) {
+        if (templateResolver.exists(name)) {
             throw new ValidationErrorsException("The template already exists: " + name);
         }
 
@@ -55,7 +57,7 @@ public class TemplateResourceImpl implements TemplateResource, Resource {
     @Override
     @Validate
     public UpdateTemplateResponse update(String name, InputStream data) {
-        if (!templateDao.exists(name)) {
+        if (!templateResolver.exists(name)) {
             throw new ValidationErrorsException("Template not found: " + name);
         }
         templateDao.update(name, data);
@@ -65,7 +67,7 @@ public class TemplateResourceImpl implements TemplateResource, Resource {
     @Override
     @Validate
     public DeleteTemplateResponse delete(String name) {
-        if (!templateDao.exists(name)) {
+        if (!templateResolver.exists(name)) {
             throw new ValidationErrorsException("Template not found: " + name);
         }
 

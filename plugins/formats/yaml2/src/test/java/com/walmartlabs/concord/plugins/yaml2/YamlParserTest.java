@@ -367,6 +367,28 @@ public class YamlParserTest {
         verify(testTask3, times(1)).call(anyObject());
     }
 
+    @Test
+    public void test017() throws Exception {
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "017/main", null);
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verifyNoMoreInteractions(testBean);
+        reset(testBean);
+
+        // ---
+
+        engine.resume(key, "ev1", null);
+
+        verify(testBean, times(1)).toString(eq("b"));
+        verifyNoMoreInteractions(testBean);
+    }
+
     @Test(expected = RuntimeException.class)
     public void testOld() throws Exception {
         String key = UUID.randomUUID().toString();
