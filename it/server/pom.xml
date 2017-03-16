@@ -128,24 +128,6 @@
     </dependencies>
 
     <build>
-        <testResources>
-            <testResource>
-                <filtering>false</filtering>
-                <directory>${project.basedir}/src/test/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </testResource>
-
-            <testResource>
-                <filtering>true</filtering>
-                <directory>${project.basedir}/src/test/filtered-resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </testResource>
-        </testResources>
-
         <plugins>
             <plugin>
                 <groupId>io.takari.maven.plugins</groupId>
@@ -156,6 +138,11 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
+                    <environmentVariables>
+                        <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
+                        <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
+                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
+                    </environmentVariables>
                 </configuration>
             </plugin>
             <plugin>

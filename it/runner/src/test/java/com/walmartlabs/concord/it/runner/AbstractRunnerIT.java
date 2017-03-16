@@ -5,7 +5,6 @@ import com.walmartlabs.concord.common.IOUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
 
 public abstract class AbstractRunnerIT {
 
@@ -27,12 +26,6 @@ public abstract class AbstractRunnerIT {
     }
 
     private static String getRunnerPath() {
-        Properties props = new Properties();
-        try {
-            props.load(AbstractRunnerIT.class.getResourceAsStream("test.properties"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return props.getProperty("runner.path");
+        return System.getenv("IT_RUNNER_PATH");
     }
 }

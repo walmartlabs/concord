@@ -1,7 +1,5 @@
 package com.walmartlabs.concord.it.console;
 
-import java.util.Properties;
-
 public final class ITConstants {
 
     public static final int LOCAL_CONSOLE_PORT = 3000;
@@ -13,27 +11,20 @@ public final class ITConstants {
     public static final String SCREENSHOTS_DIR;
 
     static {
-        try {
-            Properties props = new Properties();
-            props.load(ClassLoader.getSystemResourceAsStream("test.properties"));
-
-            SERVER_PORT = parseInt(props.getProperty("server.port"), 8001);
-            SELENIUM_PORT = parseInt(props.getProperty("selenium.port"), 4444);
-            WEBDRIVER_TYPE = props.getProperty("webdriver.type", "local");
-            SCREENSHOTS_DIR = props.getProperty("screenshots.dir", "target/screenshots");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        SERVER_PORT = Integer.parseInt(env("IT_SERVER_PORT", "8001"));
+        SELENIUM_PORT = Integer.parseInt(env("IT_SELENIUM_PORT", "4444"));
+        WEBDRIVER_TYPE = env("IT_WEBDRIVER_TYPE", "local");
+        SCREENSHOTS_DIR = env("IT_SCREENSHOTS_DIR", "target/screenshots");
     }
 
     private ITConstants() {
     }
 
-    private static int parseInt(String s, int def) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException e) {
+    private static String env(String k, String def) {
+        String v = System.getenv(k);
+        if (v == null) {
             return def;
         }
+        return v;
     }
 }
