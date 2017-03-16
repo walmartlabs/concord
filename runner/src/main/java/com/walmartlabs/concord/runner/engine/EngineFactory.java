@@ -24,8 +24,8 @@ public class EngineFactory {
     }
 
     public Engine create(Path baseDir, ProcessDefinitionProvider definitionProvider) {
-        Path attachmentsDir = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME);
-        Path stateDir = attachmentsDir.resolve("_state");
+        Path stateDir = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.JOB_STATE_DIR_NAME);
 
         Path eventsDir = stateDir.resolve("events");
         Path instancesDir = stateDir.resolve("instances");

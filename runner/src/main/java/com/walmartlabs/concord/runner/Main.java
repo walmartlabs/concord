@@ -11,7 +11,6 @@ import com.walmartlabs.concord.plugins.fs.FSDefinitionProvider;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
-import io.takari.bpm.api.Event;
 import io.takari.bpm.api.EventService;
 import io.takari.bpm.api.ExecutionException;
 import org.eclipse.sisu.space.BeanScanning;
@@ -23,13 +22,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Named
 public class Main {
@@ -54,51 +54,42 @@ public class Main {
         // determine current working directory, it should contain the payload
         Path baseDir = Paths.get(System.getProperty("user.dir"));
 
-        // TODO cleanup
-        Path stateDir = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME).resolve("_state");
-        Path eventFile = stateDir.resolve("_event");
-        String eventName = null;
+        String eventName = readResumeEvent(baseDir);
 
-        boolean resumeMode = Files.exists(eventFile);
-        if (resumeMode) {
-            eventName = new String(Files.readAllBytes(eventFile));
-            eventName = eventName.trim();
-
-            Files.delete(eventFile);
-            log.info("run -> resuming '{}'...", eventName);
+        if (eventName == null) {
+            start(instanceId, baseDir);
+        } else {
+            resume(instanceId, baseDir, eventName);
         }
+    }
 
+    private void start(String instanceId, Path baseDir) throws ExecutionException, IOException {
         // load process definitions
-        ProcessDefinitionProvider definitions = resumeMode ? id -> null : createDefinitionProvider(baseDir);
+        ProcessDefinitionProvider definitions = createDefinitionProvider(baseDir);
 
         // read the metadata
-        Map<String, Object> cfg = resumeMode ? Collections.emptyMap() : readCfg(baseDir);
+        Map<String, Object> cfg = readCfg(baseDir);
         String entryPoint = (String) cfg.get(Constants.ENTRY_POINT_KEY);
-        Map<String, Object> args = resumeMode ? Collections.emptyMap() : createArgs(instanceId, cfg);
+        Map<String, Object> args = createArgs(instanceId, cfg);
+
+        log.info("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
 
         // start the process
         Engine e = engineFactory.create(baseDir, definitions);
-        if (resumeMode) {
-            e.resume(instanceId, eventName, null);
-        } else {
-            e.start(instanceId, entryPoint, args);
-        }
+        e.start(instanceId, entryPoint, args);
+    }
+
+    private void resume(String instanceId, Path baseDir, String eventName) throws ExecutionException {
+        // we don't need a real definitions provider, everything should be available from the state
+        ProcessDefinitionProvider definitions = id -> null;
+
+        log.info("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
+
+        // start the process
+        Engine e = engineFactory.create(baseDir, definitions);
+        e.resume(instanceId, eventName, null);
 
         EventService es = e.getEventService();
-        Collection<Event> events = es.getEvents(instanceId);
-        if (events.isEmpty()) {
-            log.info("run -> no events waiting, removing the state...");
-            if (Files.exists(stateDir)) {
-                Files.walk(stateDir)
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
-            }
-        } else {
-            log.info("run -> {} event(s) left, preserving the state...", events.size());
-        }
-
-        // TODO handle suspend
     }
 
     private ProcessDefinitionProvider createDefinitionProvider(Path baseDir) throws ExecutionException {
@@ -110,6 +101,16 @@ public class Main {
 
         return new FSDefinitionProvider(parser, attrs, scenariosDir,
                 DefinitionType.CONCORD_YAML.getMask());
+    }
+
+    private static String readResumeEvent(Path baseDir) throws IOException {
+        Path p = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.JOB_STATE_DIR_NAME).resolve("_event");
+
+        if (!Files.exists(p)) {
+            return null;
+        }
+        return new String(Files.readAllBytes(p));
     }
 
     @SuppressWarnings("unchecked")

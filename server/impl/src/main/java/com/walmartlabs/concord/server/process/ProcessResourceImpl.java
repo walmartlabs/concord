@@ -193,7 +193,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         try {
             // TODO constants
             // TODO specify dest dir
-            Path prevStateDir = attachmentManager.extract(instanceId, "_state/");
+            Path prevStateDir = attachmentManager.extract(instanceId, Constants.JOB_STATE_DIR_NAME + "/");
             if (prevStateDir == null) {
                 throw new WebApplicationException("No existing state found to resume the process");
             }

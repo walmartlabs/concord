@@ -69,6 +69,11 @@ public final class Constants {
      */
     public static final String JOB_ATTACHMENTS_DIR_NAME = "_attachments";
 
+    /**
+     * Directory, containing process' state.
+     */
+    public static final String JOB_STATE_DIR_NAME = "_state";
+
     private Constants() {
     }
 }
