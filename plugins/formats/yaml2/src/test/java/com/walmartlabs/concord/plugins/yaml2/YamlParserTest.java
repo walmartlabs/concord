@@ -389,6 +389,20 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
+    @Test
+    public void test018() throws Exception {
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("input", 10);
+        engine.start(key, "018/main", args);
+
+        verify(testBean, times(1)).toString(eq(20.0));
+    }
+
     @Test(expected = RuntimeException.class)
     public void testOld() throws Exception {
         String key = UUID.randomUUID().toString();
