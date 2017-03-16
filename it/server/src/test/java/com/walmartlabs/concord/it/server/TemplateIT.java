@@ -57,7 +57,7 @@ public class TemplateIT extends AbstractServerIT {
 
         // ---
 
-        byte[] ab = getLog(pir);
+        byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Hello, " + myName + ".*", ab);
     }
 

@@ -59,7 +59,7 @@ public class ProjectIT extends AbstractServerIT {
 
         ProcessStatusResponse psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args);
 
-        byte[] ab = getLog(psr);
+        byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*" + greeting + ".*", ab);
     }
 

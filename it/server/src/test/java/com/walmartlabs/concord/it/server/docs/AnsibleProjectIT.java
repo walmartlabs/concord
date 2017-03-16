@@ -103,7 +103,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        byte[] ab = getLog(psr);
+        byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*\"msg\":.*Hello, world.*", ab);
 
         // check if `force_color` is working

@@ -33,6 +33,7 @@ import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public abstract class AbstractServerIT {
 
@@ -114,7 +115,7 @@ public abstract class AbstractServerIT {
                 }
             } catch (NotFoundException e) {
                 System.out.println(String.format("waitForCompletion ['%s'] -> not found, retrying... (%s)", instanceId, retries));
-                if (retries-- < 0) {
+                if (--retries < 0) {
                     throw e;
                 }
             }
@@ -131,8 +132,25 @@ public abstract class AbstractServerIT {
         assertEquals(times, grep(pattern, ab).size());
     }
 
-    protected byte[] getLog(ProcessStatusResponse pir) {
-        WebTarget t = client.target(ITConstants.SERVER_URL + "/logs/" + pir.getLogFileName());
+    protected void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException {
+        int retries = 5;
+
+        while (true) {
+            byte[] ab = getLog(logFileName);
+            if (!grep(pattern, ab).isEmpty()) {
+                break;
+            }
+
+            if (--retries < 0) {
+                fail("waitForLog: " + pattern);
+            }
+
+            Thread.sleep(1000);
+        }
+    }
+
+    protected byte[] getLog(String logFileName) {
+        WebTarget t = client.target(ITConstants.SERVER_URL + "/logs/" + logFileName);
         Response resp = t.request().get();
         assertEquals(Status.OK.getStatusCode(), resp.getStatus());
         byte[] ab = resp.readEntity(byte[].class);

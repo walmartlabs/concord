@@ -32,7 +32,7 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        byte[] ab = getLog(pir);
+        byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*\"msg\":.*Hello, world.*", ab);
     }
 }

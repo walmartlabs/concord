@@ -28,7 +28,7 @@ public class SuspendIT extends AbstractServerIT {
         ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, pir.getStatus());
 
-        byte[] ab = getLog(pir);
+        byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*aaaa.*", ab);
 
         // ---
@@ -37,7 +37,6 @@ public class SuspendIT extends AbstractServerIT {
         pir = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, pir.getStatus());
 
-        ab = getLog(pir);
-        assertLog(".*bbbb.*", ab);
+        waitForLog(pir.getLogFileName(), ".*bbbb.*");
     }
 }

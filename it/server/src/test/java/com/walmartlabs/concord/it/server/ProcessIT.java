@@ -36,7 +36,7 @@ public class ProcessIT extends AbstractServerIT {
 
         // check the logs
 
-        byte[] ab = getLog(pir);
+        byte[] ab = getLog(pir.getLogFileName());
 
         assertLog(".*Hello, world.*", ab);
         assertLog(".*Hello, local files!.*", ab);
