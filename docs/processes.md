@@ -4,6 +4,11 @@
 
 The server expects a ZIP archive of the following structure:
 - `_main.json` - request data in JSON format (see below);
+- `_defaults.json` - request's default in the same format as `_main.json`.
+  Before sending the payload to an agent, the values from `_default.json` and
+  `_main.json` will be merged. This allows users to set some default values
+  for every request by, for example, storing `_defaults.json` in a GIT repository
+  or in a project template;
 - `processes` - directory containing `.yml` process definitions.
 
 Anything else will be unpacked as is and will be available for running
