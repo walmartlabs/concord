@@ -40,6 +40,11 @@ public final class Constants {
     public static final String REQUEST_DATA_FILE_NAME = "_main.json";
 
     /**
+     * Default request data. File that will be merged with {@link #REQUEST_DEFAULTS_FILE_NAME}'s JSON.
+     */
+    public static final String REQUEST_DEFAULTS_FILE_NAME = "_defaults.json";
+
+    /**
      * File, containing runtime parameters for agents: heap size, JVM arguments, etc.
      */
     public static final String AGENT_PARAMS_FILE_NAME = "_agent.json";

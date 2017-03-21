@@ -30,6 +30,7 @@ public class ProjectArchivePipeline {
                 injector.getInstance(PrivateKeyProcessor.class),
                 injector.getInstance(TemplateProcessor.class),
                 injector.getInstance(DependenciesProcessor.class),
+                injector.getInstance(RequestDefaultsParstingProcessor.class),
                 injector.getInstance(RequestDataStoringProcessor.class),
                 injector.getInstance(RunnerProcessor.class),
                 injector.getInstance(LogFileProcessor.class),

@@ -63,6 +63,9 @@ public class SmtpIT extends AbstractServerIT {
         MimeMessage[] messages = mail.getReceivedMessages();
         assertNotNull(messages);
         assertEquals(1, messages.length);
-        assertEquals("hi!\r\n", messages[0].getContent());
+
+        MimeMessage msg = messages[0];
+        assertEquals("hi!\r\n", msg.getContent());
+        assertEquals("me@localhost", msg.getFrom()[0].toString());
     }
 }
