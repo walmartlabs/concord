@@ -77,12 +77,17 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins</groupId>
-            <artifactId>ansible-template</artifactId>
+            <artifactId>smtp-tasks</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins</groupId>
-            <artifactId>smtp-tasks</artifactId>
+            <artifactId>boo-task</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins</groupId>
+            <artifactId>ansible-template</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -251,6 +256,16 @@
                                     <groupId>com.walmartlabs.concord.plugins</groupId>
                                     <artifactId>smtp-tasks</artifactId>
                                     <version>${project.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.plugins</groupId>
+                                    <artifactId>boo-task</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.oneops.boo</groupId>
+                                    <artifactId>boo</artifactId>
+                                    <classifier>executable</classifier>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}/deps</outputDirectory>
