@@ -266,7 +266,6 @@
                                     <groupId>com.oneops.boo</groupId>
                                     <artifactId>boo</artifactId>
                                     <classifier>executable</classifier>
-                                    <version>1.0.1-SNAPSHOT</version>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}/deps</outputDirectory>

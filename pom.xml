@@ -48,6 +48,7 @@
 
         <aether.version>1.13.1</aether.version>
         <bpm.version>0.14.2</bpm.version>
+        <boo.version>1.0.1</boo.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.pool.version>2.4.2</commons.pool.version>
         <docker.plugin.version>0.19.0</docker.plugin.version>
@@ -164,6 +165,11 @@
                 <groupId>com.jcraft</groupId>
                 <artifactId>jsch</artifactId>
                 <version>${jsch.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oneops.boo</groupId>
+                <artifactId>boo</artifactId>
+                <version>${boo.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oneops.client</groupId>
