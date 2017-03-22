@@ -30,6 +30,7 @@
                 <artifactId>docker-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <skipRun>true</skipRun>
                     <images>
                         <image>
                             <name>walmartlabs/concord-console-base:%v</name>
