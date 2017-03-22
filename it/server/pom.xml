@@ -217,6 +217,7 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <skipRun>${skip.it.tests}</skipRun>
                             <images>
                                 <image>
                                     <name>walmartlabs/concord-agent</name>
