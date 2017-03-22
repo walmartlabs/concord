@@ -4,9 +4,12 @@ import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
 import com.walmartlabs.concord.server.api.process.*;
+import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.pipelines.*;
 import com.walmartlabs.concord.server.project.ProjectDao;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,6 +126,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             Payload p = PayloadParser.parse(instanceId, baseDir, input)
                     .putHeader(Payload.WORKSPACE_DIR, workspaceDir);
 
+            p = addInitiator(p);
+
             return parseEntryPoint(p, entryPoint);
         } catch (IOException e) {
             throw new ProcessException("Error while parsing a request", e);
@@ -146,6 +151,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                     .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
                     .mergeValues(Payload.REQUEST_DATA_MAP, request);
 
+            p = addInitiator(p);
+
             return parseEntryPoint(p, entryPoint);
         } catch (IOException e) {
             throw new ProcessException("Error while parsing a request", e);
@@ -168,8 +175,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             Path archive = baseDir.resolve("_input.zip");
             Files.copy(in, archive);
 
-            return new Payload(instanceId)
-                    .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
+            Payload p = new Payload(instanceId);
+            p = addInitiator(p);
+            return p.putHeader(Payload.WORKSPACE_DIR, workspaceDir)
                     .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
         } catch (IOException e) {
             throw new ProcessException("Error while parsing a request", e);
@@ -185,8 +193,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
      * @return
      */
     private Payload createPayload(String instanceId, String projectName, InputStream in) {
-        Payload payload = createPayload(instanceId, in);
-        return payload.putHeader(Payload.PROJECT_NAME, projectName);
+        Payload p = createPayload(instanceId, in);
+        p = addInitiator(p);
+        return p.putHeader(Payload.PROJECT_NAME, projectName);
     }
 
     private Payload createResumePayload(String instanceId, String eventName) {
@@ -313,5 +322,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         } catch (IOException e) {
             throw new WebApplicationException("Error while reading an attachment archive", e);
         }
+    }
+
+    private static Payload addInitiator(Payload p) {
+        Subject subject = SecurityUtils.getSubject();
+        if (subject == null || !subject.isAuthenticated()) {
+            return null;
+        }
+
+        UserEntry u = (UserEntry) subject.getPrincipal();
+        return p.putHeader(Payload.INITIATOR, u.getName());
     }
 }

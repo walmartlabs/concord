@@ -9,16 +9,22 @@ public class CreateUserResponse implements Serializable {
 
     private final boolean ok = true;
     private final String id;
+    private final boolean created;
 
     @JsonCreator
-    public CreateUserResponse(@JsonProperty("id") String id) {
+    public CreateUserResponse(@JsonProperty("id") String id,
+                              @JsonProperty("created") boolean created) {
         this.id = id;
+        this.created = created;
     }
 
     public String getId() {
         return id;
     }
 
+    public boolean isCreated() {
+        return created;
+    }
 
     public boolean isOk() {
         return ok;
@@ -29,6 +35,7 @@ public class CreateUserResponse implements Serializable {
         return "CreateUserResponse{" +
                 "ok=" + ok +
                 ", id='" + id + '\'' +
+                ", created=" + created +
                 '}';
     }
 }

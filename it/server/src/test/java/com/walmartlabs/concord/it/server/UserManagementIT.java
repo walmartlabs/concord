@@ -22,7 +22,7 @@ public class UserManagementIT extends AbstractServerIT {
         String username = "user@" + System.currentTimeMillis();
         Set<String> permissions = Collections.singleton("user:delete");
 
-        CreateUserResponse cur = userResource.create(new CreateUserRequest(username, permissions));
+        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, permissions));
         assertTrue(cur.isOk());
 
         // ---

@@ -1,13 +1,13 @@
 package com.walmartlabs.concord.server.security.apikey;
 
-import com.walmartlabs.concord.server.security.User;
+import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
 import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
@@ -23,10 +23,12 @@ public class ApiKeyRealm extends AuthorizingRealm {
     private static final Logger log = LoggerFactory.getLogger(ApiKeyRealm.class);
 
     private final UserDao userDao;
+    private final ConcordShiroAuthorizer authorizer;
 
     @Inject
-    public ApiKeyRealm(UserDao userDao) {
+    public ApiKeyRealm(UserDao userDao, ConcordShiroAuthorizer authorizer) {
         this.userDao = userDao;
+        this.authorizer = authorizer;
     }
 
     @Override
@@ -37,7 +39,7 @@ public class ApiKeyRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         ApiKey t = (ApiKey) token;
-        User u = userDao.get(t.getUserId());
+        UserEntry u = userDao.get(t.getUserId());
         if (u == null) {
             return null;
         }
@@ -49,17 +51,7 @@ public class ApiKeyRealm extends AuthorizingRealm {
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        SimpleAuthorizationInfo i = new SimpleAuthorizationInfo();
-
-        User u = (User) principals.getPrimaryPrincipal();
-        log.debug("doGetAuthorizationInfo -> using {}", u);
-
-        if (u.getPermissions() != null) {
-            for (String p : u.getPermissions()) {
-                i.addStringPermission(p);
-            }
-        }
-
-        return i;
+        UserEntry u = (UserEntry) principals.getPrimaryPrincipal();
+        return authorizer.getAuthorizationInfo(u);
     }
 }

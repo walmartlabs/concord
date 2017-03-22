@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
-import com.walmartlabs.concord.server.security.User;
+import com.walmartlabs.concord.server.api.user.UserEntry;
 import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -56,7 +56,7 @@ public class UserDao extends AbstractDao {
         });
     }
 
-    public User get(String id) {
+    public UserEntry get(String id) {
         try (DSLContext create = DSL.using(cfg)) {
             Record2<String, String> r = create
                     .select(USERS.USER_ID,
@@ -75,7 +75,16 @@ public class UserDao extends AbstractDao {
                     .where(USER_PERMISSIONS.USER_ID.eq(id))
                     .fetchInto(String.class);
 
-            return new User(r.get(USERS.USER_ID), r.get(USERS.USERNAME), new HashSet<>(perms));
+            return new UserEntry(r.get(USERS.USER_ID), r.get(USERS.USERNAME), new HashSet<>(perms));
+        }
+    }
+
+    public String getId(String username) {
+        try (DSLContext create = DSL.using(cfg)) {
+            return create.select(USERS.USER_ID)
+                    .from(USERS)
+                    .where(USERS.USERNAME.eq(username))
+                    .fetchOne(USERS.USER_ID);
         }
     }
 
@@ -98,17 +107,19 @@ public class UserDao extends AbstractDao {
     }
 
     private static void insertPermissions(DSLContext create, String userId, Set<String> permissions) {
-        if (permissions != null && !permissions.isEmpty()) {
-            BatchBindStep b = create.batch(create.insertInto(USER_PERMISSIONS)
-                    .columns(USER_PERMISSIONS.USER_ID, USER_PERMISSIONS.PERMISSION)
-                    .values((String) null, null));
-
-            for (String p : permissions) {
-                b.bind(userId, p);
-            }
-
-            b.execute();
+        if (permissions == null || permissions.isEmpty()) {
+            return;
         }
+
+        BatchBindStep b = create.batch(create.insertInto(USER_PERMISSIONS)
+                .columns(USER_PERMISSIONS.USER_ID, USER_PERMISSIONS.PERMISSION)
+                .values((String) null, null));
+
+        for (String p : permissions) {
+            b.bind(userId, p);
+        }
+
+        b.execute();
     }
 
     private static void deletePermissions(DSLContext create, String userId) {

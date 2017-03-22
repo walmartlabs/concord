@@ -5,13 +5,24 @@
 
 ## Authentication
 
-Depending on the configuration of the server, you may need an API key.
+### Using API keys
+
 The key must be passed in the `Authorization` header on every API request. For example:
 ```
 curl -v -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" ...
 ```
 
 API keys are managed using the [API key](./api/apikey.md) endpoint.
+
+### Using Active Directory
+
+For example:
+```
+curl -v -u myuser:mypwd ...
+```
+
+The actual user record will be created on the first successful authentication attempt.
+After that, it can be managed as usual, by using the [User](./api/user.md) API endpoint.
 
 ## Managing credentials
 
