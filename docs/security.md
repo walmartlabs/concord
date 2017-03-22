@@ -14,7 +14,7 @@ curl -v -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" ...
 
 API keys are managed using the [API key](./api/apikey.md) endpoint.
 
-### Using Active Directory
+### Using username and password
 
 For example:
 ```
@@ -23,6 +23,9 @@ curl -v -u myuser:mypwd ...
 
 The actual user record will be created on the first successful authentication attempt.
 After that, it can be managed as usual, by using the [User](./api/user.md) API endpoint.
+
+Username/password authentication uses LDAP/Active Directory realm, check
+[Configuration](./configuration.md#ldap) document for details.
 
 ## Managing credentials
 
