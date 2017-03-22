@@ -23,7 +23,6 @@ public class BooTask implements Task {
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Inside boo task impl. Input: " + args.get("input"));
         BooCli boo = new BooCli();
-//        boo.init(new File("/Users/jpise/test.yaml"), null, null);
         String booTemplatePath = payloadPath + "/" + args.get("booTemplateLocation");
         log.info("boo template path: " + booTemplatePath);
         boo.init(new File(booTemplatePath), null, null);
