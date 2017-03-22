@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.plugins.boo;
 
+import com.oneops.boo.BooCli;
 import com.walmartlabs.concord.common.Task;
-import com.wm.bfd.oo.BooCli;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +24,10 @@ public class BooTask implements Task {
         log.info("Inside boo task impl. Input: " + args.get("input"));
         BooCli boo = new BooCli();
         String booTemplatePath = payloadPath + "/" + args.get("booTemplateLocation");
+        Map<String, String> booTemplateVariables = (Map<String, String>) args.get("booTemplateVariables");
+        log.info("boo Variables: " + booTemplateVariables);
         log.info("boo template path: " + booTemplatePath);
-        boo.init(new File(booTemplatePath), null, null);
+        boo.init(new File(booTemplatePath), null, booTemplateVariables , null);
         boo.createPacks(false, false);
     }
 }
