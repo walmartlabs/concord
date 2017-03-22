@@ -6,6 +6,7 @@ systems together using scenarios and plugins created by users.
 ## Overview
 
 Concord consists of the following major components:
+
 1. [server](#server) - provides a REST API for managing projects,
    templates and repositories. It receives and processes user requests
    to call workflow scenarios;
@@ -27,12 +28,13 @@ Workflow process definitions, its dependencies and supporting files
 collected in a single archive file called "payload".
 
 There are several ways to start a process:
-1. send a complete, self-contained ZIP archive to the server. Its
+
+- send a complete, self-contained ZIP archive to the server. Its
 format is described in a
 [separate document](./processes.md#payload-format);
-2. send a JSON request, containing only request parameters and a
+- send a JSON request, containing only request parameters and a
 reference to a [project](#project) or a [template](#template);
-3. same as **2**, but sending additional files with the request.
+- same as **2**, but sending additional files with the request.
 
 For methods **2** and **3**, the server will build a payload archive
 itself. Those methods are particularly useful when used with projects
