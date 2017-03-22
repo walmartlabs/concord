@@ -19,13 +19,6 @@
         <dependency>
             <groupId>com.oneops.boo</groupId>
             <artifactId>boo</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
