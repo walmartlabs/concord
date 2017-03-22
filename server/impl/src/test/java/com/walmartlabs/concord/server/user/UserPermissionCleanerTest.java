@@ -3,9 +3,9 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
+import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
-import com.walmartlabs.concord.server.security.User;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
 import org.junit.Test;
 
@@ -37,7 +37,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         secretDao.delete(secretName);
-        User u = userDao.get(userId);
+        UserEntry u = userDao.get(userId);
         assertNotNull(u);
         assertTrue(u.getPermissions().isEmpty());
     }
@@ -77,7 +77,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         // ---
 
-        User u = userDao.get(userId);
+        UserEntry u = userDao.get(userId);
         assertNotNull(u);
         assertEquals(1, u.getPermissions().size());
         assertEquals(Permissions.APIKEY_DELETE_ANY, u.getPermissions().iterator().next());

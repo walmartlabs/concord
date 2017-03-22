@@ -73,7 +73,7 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(cpr.isOk());
 
         UserResource userResource = proxy(UserResource.class);
-        CreateUserResponse cur = userResource.create(new CreateUserRequest(userName, permissions));
+        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(userName, permissions));
         assertTrue(cur.isOk());
 
         String userId = cur.getId();

@@ -42,6 +42,27 @@ All parameters are optional.
 |--------------------|------------------------------------------------------------------|------------------------|
 | DEPS_STORE_DIR     | Local Maven repository, used to resolve template's dependencies. | `$HOME/.m2/repository` |
 
+**Security**
+
+| Variable | Description                      | Default value          |
+|----------|----------------------------------|------------------------|
+| LDAP_CFG | Path to LDAP configuration file. | _empty_                |
+
+### LDAP
+
+Create `ldap.properties` file, containing the following parameters
+(substitute values with the values for your environment):
+
+```
+url=ldap://host:389
+searchBase=DC=unit,DC=org,DC=com
+principalSuffix=@unit.org.com
+systemUsername=user
+systemPassword=pwd
+```
+
+Set `LDAP_CFG` enviroment variable to the path of the created file.
+
 ## Agent
 
 ### Environment variables
