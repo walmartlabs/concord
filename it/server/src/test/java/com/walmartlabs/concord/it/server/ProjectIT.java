@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ProjectIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = 30000)
     public void test() throws Exception {
         File tmpDir = Files.createTempDirectory("test").toFile();
         File src = new File(ProjectIT.class.getResource("project").toURI());

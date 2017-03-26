@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 
 public class SuspendIT extends AbstractServerIT {
 
-    @Test
+    @Test(timeout = 30000)
     public void test() throws Exception {
         URI dir = SuspendIT.class.getResource("suspend").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -41,7 +41,6 @@ public class SuspendIT extends AbstractServerIT {
         Map<String, Object> req = Collections.singletonMap(Constants.ARGUMENTS_KEY, args);
 
         processResource.resume(spr.getInstanceId(), "ev1", req);
-        waitForLog(pir.getLogFileName(), ".*resuming.*");
 
         pir = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, pir.getStatus());

@@ -26,7 +26,7 @@ public class SmtpIT extends AbstractServerIT {
     @Rule
     public final GreenMailRule mail = new GreenMailRule(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP));
 
-    @Test
+    @Test(timeout = 30000)
     public void testSimple() throws Exception {
         URI dir = SmtpIT.class.getResource("smtp").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);

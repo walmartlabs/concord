@@ -8,4 +8,5 @@
 
 * [hello-world](hello_world) - a simple example demostrating how to pass a variable to a process;
 * [conditionals](conditionals) - an example of usage of more advanced YAML syntax;
-* [ansible](ansible) - running an Ansible playbook from a workflow process.
+* [ansible](ansible) - running an Ansible playbook from a workflow process;
+* [forms](forms) - using forms.

@@ -215,7 +215,76 @@ mySubFlow:
 
 ## Form Syntax
 
-TBD.
+### Declaring a new form
+
+Forms are declared at the top level of a YAML document, just like the
+processes. Form label format: `form ($FORM_NAME)`.
+
+```yaml
+form (myForm):
+  - ...
+```
+
+The name of a form (in this example it's `myForm`) can be used to
+[call a form](#calling-a-form) from a process. Also, it will be used
+as a name of a map object which stores the values of the fields.
+
+### Form fields
+
+Forms must contain one or more fields:
+
+```yaml
+form (myForm):
+  - myField: { label: "My Field", type: "string", pattern: "Hello, .*" }
+```
+
+Field declaration consists of the name (`myField`), the type
+(`string`) and additional options.
+
+The name of a field will be used to store a field's value in the
+form's results. E.g. if the form's name is `myForm` and the field's
+name is `myField`, then the value of the field will be stored in
+`myForm.myField` variable.
+
+The `label` value is optional.
+
+Supported types of fields and their options:
+- `string`: a string value
+  - `pattern`: (optional) a regular expression to check the value.
+- `int`: an integer value
+  - `min`, `max`: (optional) value bounds.
+  
+Cardinality of the field can be specified by adding a cardinality
+quantifier to the type:
+- a single non-optional value: `string`;
+- optional value: `string?`.
+
+Additional field types and cardinality quantifiers will be added in
+the next versions.
+
+### Calling a form
+
+To call a form from a process, use `form` command:
+
+```yaml
+main:
+  - form: myForm
+  - ${log.info("test", myForm.myField)}
+```
+
+Forms will be pre-populated with values if the current context contains
+a map object, stored under the form's name. E.g. if the context has
+a map object
+
+```json
+{
+  "myForm": {
+    "myField": "my string value"
+  }
+}
+```
+
+then the form's `myField` will be populated with `my string value`.
 
 ## Grammar
 
