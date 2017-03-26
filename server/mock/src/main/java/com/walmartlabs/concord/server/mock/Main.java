@@ -35,6 +35,6 @@ public class Main {
 
     private static ProcessHistoryEntry randomHistoryEntry() {
         return new ProcessHistoryEntry(UUID.randomUUID().toString(),
-                new Date(), "aUser", ProcessStatus.FINISHED, new Date(), "test.log");
+                new Date(), "aUser", ProcessStatus.RUNNING, new Date(), "test.log");
     }
 }

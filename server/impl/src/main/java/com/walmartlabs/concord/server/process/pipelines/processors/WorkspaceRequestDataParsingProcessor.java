@@ -25,12 +25,12 @@ public class WorkspaceRequestDataParsingProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         Path src = workspace.resolve(Constants.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(src)) {
-            return payload;
+            return chain.process(payload);
         }
 
         Map<String, Object> data;
@@ -42,6 +42,8 @@ public class WorkspaceRequestDataParsingProcessor implements PayloadProcessor {
             throw new ProcessException("Invalid request data format", e, Status.BAD_REQUEST);
         }
 
-        return payload.putHeader(Payload.REQUEST_DATA_MAP, data);
+        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, data);
+
+        return chain.process(payload);
     }
 }

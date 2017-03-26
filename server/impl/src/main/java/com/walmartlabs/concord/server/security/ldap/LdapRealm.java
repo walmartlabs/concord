@@ -24,21 +24,19 @@ import java.util.UUID;
 @Named
 public class LdapRealm extends AbstractLdapRealm {
 
-    private final LdapConfiguration cfg;
     private final UserDao userDao;
     private final ConcordShiroAuthorizer authorizer;
 
     @Inject
     public LdapRealm(LdapConfiguration cfg, UserDao userDao, ConcordShiroAuthorizer authorizer) {
-        this.cfg = cfg;
         this.userDao = userDao;
         this.authorizer = authorizer;
 
-        this.url = cfg.getUrl(); // "ldap://honts0102.homeoffice.wal-mart.com:389";
-        this.searchBase = cfg.getSearchBase(); //"DC=homeoffice,DC=Wal-Mart,DC=com";
-        this.principalSuffix = cfg.getPrincipalSuffix(); // "@homeoffice.wal-mart.com";
-        this.systemUsername = cfg.getSystemUsername(); // "gec-svcmaven";
-        this.systemPassword = cfg.getSystemPassword(); // "Maven123";
+        this.url = cfg.getUrl();
+        this.searchBase = cfg.getSearchBase();
+        this.principalSuffix = cfg.getPrincipalSuffix();
+        this.systemUsername = cfg.getSystemUsername();
+        this.systemPassword = cfg.getSystemPassword();
 
         setCachingEnabled(false);
 
@@ -56,11 +54,16 @@ public class LdapRealm extends AbstractLdapRealm {
     @Override
     protected AuthenticationInfo queryForAuthenticationInfo(AuthenticationToken token, LdapContextFactory ldapContextFactory) throws NamingException {
         UsernamePasswordToken t = (UsernamePasswordToken) token;
+
         String username = t.getUsername();
+        char[] password = t.getPassword();
+        if (username == null || password == null) {
+            return null;
+        }
 
         LdapContext ctx = null;
         try {
-            ctx = ldapContextFactory.getLdapContext(username, new String(t.getPassword()));
+            ctx = ldapContextFactory.getLdapContext(username, new String(password));
         } finally {
             LdapUtils.closeContext(ctx);
         }

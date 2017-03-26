@@ -68,11 +68,11 @@ public class JarJobExecutor implements JobExecutor {
         }
 
         if (code != 0) {
-            log.warn("exec ['{}', '{}', '{}'] -> finished with {}", id, workDir, entryPoint, code);
+            log.warn("exec ['{}'] -> finished with {}", id, code);
             throw new ExecutionException("Process returned an error (" + code + "): " + String.join(" ", cmd));
         }
 
-        log.info("exec ['{}', '{}', '{}'] -> finished with {}", id, workDir, entryPoint, code);
+        log.info("exec ['{}'] -> finished with {}", id, code);
     }
 
     private Process start(String id, Path workDir, String entryPoint, String[] cmd) throws ExecutionException {

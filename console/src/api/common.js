@@ -5,7 +5,7 @@ import {sort} from "../constants";
 
 export const authHeader = {"Authorization": "auBy4eDWrKWsyhiDp3AQiw"};
 
-export const queryParams = (params: {[id: mixed]: string}) => {
+export const queryParams = (params: { [id: mixed]: string }) => {
     const esc = encodeURIComponent;
     return Object.keys(params).map(k => esc(k) + "=" + esc(params[k])).join("&");
 };
@@ -26,7 +26,7 @@ export const parseRange = (s: string): FetchRange => {
 };
 
 export const defaultError = (resp: any) => {
-    return new Error(`ERROR: ${resp.statusText} (${resp.status}`);
+    return new Error(`ERROR: ${resp.statusText} (${resp.status})`);
 };
 
 export const apiListQuery = (name: string, path: string) => (sortBy: string, sortDir: string) => {
@@ -49,4 +49,7 @@ export const apiListQuery = (name: string, path: string) => (sortBy: string, sor
             return json;
         });
 };
+
+export const delay = (ms: number, data: any) => new Promise((resolve, reject) =>
+    setTimeout(() => resolve(data), ms));
 

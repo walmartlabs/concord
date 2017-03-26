@@ -3,9 +3,9 @@
 main:
   - if: ${cnt < loops}
     then:
-      - 014/myProc
+      - myProc
 
 myProc:
   - expr: ${testBean.inc(cnt)}
     out: cnt
-  - 014/main
+  - main

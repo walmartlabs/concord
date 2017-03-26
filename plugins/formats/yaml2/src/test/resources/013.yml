@@ -1,6 +1,6 @@
 main:
   - ${testBean.toString("a")}
-  - 013/myProc
+  - myProc
 
 myProc:
   - ${testBean.toString("b")}

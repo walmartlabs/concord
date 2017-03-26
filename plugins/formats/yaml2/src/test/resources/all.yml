@@ -87,15 +87,14 @@ form (myForm):
   # TODO layout
 
   # string field
-  - lastName: { label: "Last Name", required, type: string, matches: "\\S{0, 100}" }
+  - lastName: { label: "Last Name", type: "string", matches: "\\S{0, 100}" }
 
-  # numbers
-  - age: { label: "Age", required, type: number, min: 18, max: 100 }
+  # numbers, optional
+  - age: { label: "Age", type: "number?", min: 18, max: 100 }
 
-  # choice, full form, default value
+  # choice, single value, full form, default value
   - city: {
       label: "City",
-      required: true,
       type: "string",
       value: "Paris",
       options: [
@@ -112,7 +111,7 @@ form (myForm):
   # choice, multiple, external source
   - preferredColor: {
       label: "Preferred color",
-      type: "string*",
+      type: "string+",
       options: "${someTask.listOfColors()}"
     }
 

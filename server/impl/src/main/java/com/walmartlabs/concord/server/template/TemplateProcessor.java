@@ -4,6 +4,7 @@ import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.slf4j.Logger;
@@ -40,25 +41,27 @@ public class TemplateProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         if (projectName != null) {
-            return processProject(payload, projectName);
+            payload = processProject(payload, projectName);
+            return chain.process(payload);
         }
 
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (req == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         String templateName = (String) req.get(Constants.TEMPLATE_KEY);
         if (templateName == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         try {
             Path templatePath = templateResolver.get(templateName);
-            return process(payload, templatePath);
+            payload = process(payload, templatePath);
+            return chain.process(payload);
         } catch (IOException e) {
             log.error("process ['{}'] -> error", payload.getInstanceId(), e);
             throw new ProcessException("Error while processing a template", e);

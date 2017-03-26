@@ -5,7 +5,7 @@ import {authHeader, apiListQuery, defaultError} from "./common";
 export const fetchProjectList = apiListQuery("fetchProjectRows", "/api/v1/project");
 
 export const fetchProject = (id: ConcordId) => {
-    console.debug("API: getProject ['%s'] -> starting...", id);
+    console.debug("API: fetchProject ['%s'] -> starting...", id);
 
     return fetch(`/api/v1/project/${id}`, {headers: authHeader})
         .then(response => {
@@ -15,7 +15,7 @@ export const fetchProject = (id: ConcordId) => {
             return response.json();
         })
         .then(json => {
-            console.debug("API: getProject ['%s'] -> done, got %o", id, json);
+            console.debug("API: fetchProject ['%s'] -> done, got %o", id, json);
             return json;
         });
 };
@@ -52,6 +52,7 @@ export const updateProject = (id: ConcordId, data: Object) => {
             if (!response.ok) {
                 throw new defaultError(response);
             }
+            return response.json();
         })
         .then(json => {
             console.debug("API: updateProject ['%s', %o] -> done", id, data);

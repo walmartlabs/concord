@@ -4,5 +4,5 @@ import com.walmartlabs.concord.server.process.Payload;
 
 public interface PayloadProcessor {
 
-    Payload process(Payload payload);
+    Payload process(Chain chain, Payload payload);
 }

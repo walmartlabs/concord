@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.plugins.yaml;
 
+import com.walmartlabs.concord.common.format.WorkflowDefinition;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.api.interceptors.ExecutionInterceptor;
@@ -26,7 +27,8 @@ public class YamlParserTest {
         public void handle(InputStream in, TestProcessDefinitionProvider provider) throws ParserException {
             YamlParser p = new YamlParser();
             try {
-                for (ProcessDefinition pd : p.parse(in)) {
+                WorkflowDefinition wd = p.parse("n/a", in);
+                for (ProcessDefinition pd : wd.getProcesses().values()) {
                     provider.add(pd);
                 }
             } catch (com.walmartlabs.concord.common.format.ParserException e) {

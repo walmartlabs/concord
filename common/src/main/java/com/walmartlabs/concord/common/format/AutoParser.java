@@ -1,16 +1,20 @@
 package com.walmartlabs.concord.common.format;
 
-import io.takari.bpm.model.ProcessDefinition;
+import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 @Named
-public class AutoParser implements MultipleDefinitionParser {
+public class AutoParser implements WorkflowDefinitionParser {
 
     private static final Logger log = LoggerFactory.getLogger(AutoParser.class);
 
@@ -26,12 +30,14 @@ public class AutoParser implements MultipleDefinitionParser {
     }
 
     @Override
-    public Collection<ProcessDefinition> parse(InputStream in) throws ParserException {
+    public WorkflowDefinition parse(String source, InputStream in) throws ParserException {
         if (in == null) {
             throw new IllegalArgumentException("Input can't be null");
         }
 
-        File tmp = null;
+        Throwable lastError = null;
+
+        Path tmp = null;
         try {
             try {
                 tmp = makeTmpFile(in);
@@ -43,37 +49,34 @@ public class AutoParser implements MultipleDefinitionParser {
             ps.sort(Comparator.comparingInt(PriorityBasedParser::getPriority));
 
             for (PriorityBasedParser p : ps) {
-                try (InputStream tmpIn = new BufferedInputStream(new FileInputStream(tmp))) {
-                    Collection<ProcessDefinition> pds = p.parse(tmpIn);
-                    log.debug("parse -> parsed by '{}', got '{}'", p, pds.stream().map(ProcessDefinition::getId).toArray());
-                    return pds;
+                try (InputStream tmpIn = Files.newInputStream(tmp)) {
+                    return p.parse(source, tmpIn);
                 } catch (IOException e) {
+                    lastError = e;
                     throw new ParserException("parse -> error while trying to parse the data with '" + p + "'", e);
                 } catch (ParserException e) {
+                    lastError = e;
                     log.debug("parse -> not parseable by '{}', skipping", p, e);
                 }
             }
         } finally {
             if (tmp != null) {
-                tmp.delete();
+                try {
+                    Files.delete(tmp);
+                } catch (IOException e) {
+                    log.warn("parse -> error removing a temporary file", e);
+                }
             }
         }
 
-        throw new ParserException("Can't find a suitable parser for the specified data");
+        throw new ParserException("Can't find a suitable parser for the specified data", lastError);
     }
 
-    private static File makeTmpFile(InputStream in) throws IOException {
-        File f = File.createTempFile("auto", "stream");
-        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(f))) {
-            int read;
-            byte[] ab = new byte[1024];
-
-            while ((read = in.read(ab)) > 0) {
-                out.write(ab, 0, read);
-            }
-
-            out.flush();
+    private static Path makeTmpFile(InputStream in) throws IOException {
+        Path p = Files.createTempFile("auto", ".stream");
+        try (OutputStream out = Files.newOutputStream(p)) {
+            IOUtils.copy(in, out);
         }
-        return f;
+        return p;
     }
 }

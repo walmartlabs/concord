@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.ansible;
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.project.ProjectConfigurationDao;
 import com.walmartlabs.concord.server.project.RepositoryProcessor;
@@ -35,14 +36,14 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
 
         Collection<Map<String, Object>> cfg = cfgDao.getList(projectName,
                 AnsibleConfigurationConstants.GROUP_KEY, AnsibleConfigurationConstants.PRIVATE_KEYS);
         if (cfg == null) {
             log.debug("process ['{}'] -> configuration not found, nothing to do", payload.getInstanceId());
-            return payload;
+            return chain.process(payload);
         }
 
         String secret = findMatchingSecret(payload, cfg);
@@ -67,7 +68,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
             throw new ProcessException("Error while copying a private key: " + dst, e);
         }
 
-        return payload;
+        return chain.process(payload);
     }
 
     private static String findMatchingSecret(Payload payload, Collection<Map<String, Object>> items) {

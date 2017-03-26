@@ -57,5 +57,7 @@ public class ProcessIT extends AbstractServerIT {
             ProcessStatusResponse pir = r.readEntity(ProcessStatusResponse.class);
             assertEquals(ProcessStatus.RUNNING, pir.getStatus());
         }
+
+        processResource.kill(spr.getInstanceId());
     }
 }

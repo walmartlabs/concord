@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.ansible.InlineInventoryProcessor;
 import com.walmartlabs.concord.server.ansible.InventoryProcessor;
 import com.walmartlabs.concord.server.ansible.PrivateKeyProcessor;
-import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
 import com.walmartlabs.concord.server.project.RepositoryProcessor;
 import com.walmartlabs.concord.server.template.TemplateProcessor;
@@ -13,15 +12,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named
-public class RequestDataOnlyPipeline {
-
-    private final PayloadProcessor[] processors;
+public class RequestDataOnlyPipeline extends Chain {
 
     @Inject
     public RequestDataOnlyPipeline(Injector injector) {
-        // TODO move to a cfg file
-        this.processors = new PayloadProcessor[]{
-                injector.getInstance(RepositoryProcessor.class),
+        super(injector.getInstance(RepositoryProcessor.class),
                 injector.getInstance(InventoryProcessor.class),
                 injector.getInstance(InlineInventoryProcessor.class),
                 injector.getInstance(PrivateKeyProcessor.class),
@@ -33,13 +28,8 @@ public class RequestDataOnlyPipeline {
                 injector.getInstance(LogFileProcessor.class),
                 injector.getInstance(ValidatingProcessor.class),
                 injector.getInstance(ArchivingProcessor.class),
-                injector.getInstance(AgentProcessor.class)
-        };
-    }
-
-    public void process(Payload payload) {
-        for (PayloadProcessor p : processors) {
-            payload = p.process(payload);
-        }
+                injector.getInstance(AgentProcessor.class),
+                injector.getInstance(AttachmentsSavingProcessor.class),
+                injector.getInstance(StatusFinalizingProcessor.class));
     }
 }

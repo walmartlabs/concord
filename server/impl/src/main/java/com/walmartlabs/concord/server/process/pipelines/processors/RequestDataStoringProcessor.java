@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -18,10 +17,10 @@ import java.util.Map;
 public class RequestDataStoringProcessor implements PayloadProcessor {
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Map<?, ?> meta = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (meta == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
@@ -34,6 +33,6 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
             throw new ProcessException("Error while saving a metadata file: " + dst, e);
         }
 
-        return payload;
+        return chain.process(payload);
     }
 }

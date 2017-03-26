@@ -35,7 +35,7 @@ public class LogFileProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Path baseDir = storeCfg.getBaseDir();
 
         try {
@@ -48,8 +48,10 @@ public class LogFileProcessor implements PayloadProcessor {
                 Files.createFile(path);
             }
 
-            return payload.putHeader(LOG_FILE_NAME, name)
+            payload = payload.putHeader(LOG_FILE_NAME, name)
                     .putHeader(LOG_FILE_PATH, path);
+
+            return chain.process(payload);
         } catch (IOException e) {
             throw new ProcessException("Error while creating a process log file", e);
         }

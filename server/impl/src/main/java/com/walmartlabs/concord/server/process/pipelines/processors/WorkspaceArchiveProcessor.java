@@ -23,7 +23,7 @@ import java.util.zip.ZipInputStream;
 public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Path archive = payload.getAttachment(Payload.WORKSPACE_ARCHIVE);
         if (archive == null || !Files.exists(archive)) {
             throw new ProcessException("No input archive found: " + archive, Status.BAD_REQUEST);
@@ -36,6 +36,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
             throw new ProcessException("Error while unpacking an archive: " + archive, e);
         }
 
+        // TODO duplicate with WorkspaceRequestDataParsingProcessor
         Path requestFile = workspace.resolve(Constants.REQUEST_DATA_FILE_NAME);
         if (Files.exists(requestFile)) {
             ObjectMapper om = new ObjectMapper();
@@ -47,6 +48,8 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
             }
         }
 
-        return payload.removeAttachment(Payload.WORKSPACE_ARCHIVE);
+        payload = payload.removeAttachment(Payload.WORKSPACE_ARCHIVE);
+
+        return chain.process(payload);
     }
 }

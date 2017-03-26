@@ -5,12 +5,15 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.format.AutoParser;
 import com.walmartlabs.concord.common.format.DefinitionType;
+import com.walmartlabs.concord.common.format.WorkflowDefinitionProvider;
 import com.walmartlabs.concord.plugins.fs.FSDefinitionProvider;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
+import io.takari.bpm.api.Event;
 import io.takari.bpm.api.EventService;
 import io.takari.bpm.api.ExecutionException;
 import org.eclipse.sisu.space.BeanScanning;
@@ -27,9 +30,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Named
 public class Main {
@@ -55,7 +57,6 @@ public class Main {
         Path baseDir = Paths.get(System.getProperty("user.dir"));
 
         String eventName = readResumeEvent(baseDir);
-
         if (eventName == null) {
             start(instanceId, baseDir);
         } else {
@@ -63,36 +64,44 @@ public class Main {
         }
     }
 
-    private void start(String instanceId, Path baseDir) throws ExecutionException, IOException {
+    private void start(String instanceId, Path baseDir) throws ExecutionException {
         // load process definitions
-        ProcessDefinitionProvider definitions = createDefinitionProvider(baseDir);
+        WorkflowDefinitionProvider workflows = createWorkflowProvider(baseDir);
 
-        // read the metadata
-        Map<String, Object> cfg = readCfg(baseDir);
+        // read the request data
+        Map<String, Object> cfg = readRequest(baseDir);
         String entryPoint = (String) cfg.get(Constants.ENTRY_POINT_KEY);
         Map<String, Object> args = createArgs(instanceId, cfg);
 
-        log.info("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
+        log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
 
         // start the process
-        Engine e = engineFactory.create(baseDir, definitions);
+        Engine e = engineFactory.create(baseDir, workflows);
         e.start(instanceId, entryPoint, args);
+
+        // save the suspended state marker if needed
+        finalizeState(e, instanceId, baseDir);
     }
 
     private void resume(String instanceId, Path baseDir, String eventName) throws ExecutionException {
         // we don't need a real definitions provider, everything should be available from the state
-        ProcessDefinitionProvider definitions = id -> null;
+        WorkflowDefinitionProvider workflows = createWorkflowProvider(baseDir);
 
-        log.info("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
+        // read the request data
+        Map<String, Object> cfg = readRequest(baseDir);
+        Map<String, Object> args = createArgs(instanceId, cfg);
+
+        log.debug("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
 
         // start the process
-        Engine e = engineFactory.create(baseDir, definitions);
-        e.resume(instanceId, eventName, null);
+        Engine e = engineFactory.create(baseDir, workflows);
+        e.resume(instanceId, eventName, args);
 
-        EventService es = e.getEventService();
+        // save the suspended state marker if needed
+        finalizeState(e, instanceId, baseDir);
     }
 
-    private ProcessDefinitionProvider createDefinitionProvider(Path baseDir) throws ExecutionException {
+    private WorkflowDefinitionProvider createWorkflowProvider(Path baseDir) throws ExecutionException {
         Map<String, String> attrs = Collections.singletonMap(
                 Constants.LOCAL_PATH_ATTR, baseDir.toAbsolutePath().toString());
 
@@ -105,21 +114,25 @@ public class Main {
 
     private static String readResumeEvent(Path baseDir) throws IOException {
         Path p = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.JOB_STATE_DIR_NAME).resolve("_event");
+                .resolve(Constants.JOB_STATE_DIR_NAME)
+                .resolve(Constants.RESUME_MARKER_FILE_NAME);
 
         if (!Files.exists(p)) {
             return null;
         }
+
         return new String(Files.readAllBytes(p));
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> readCfg(Path baseDir) throws IOException {
+    private static Map<String, Object> readRequest(Path baseDir) throws ExecutionException {
         Path p = baseDir.resolve(Constants.REQUEST_DATA_FILE_NAME);
 
         try (InputStream in = Files.newInputStream(p)) {
             ObjectMapper om = new ObjectMapper();
             return om.readValue(in, Map.class);
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading request data", e);
         }
     }
 
@@ -134,6 +147,33 @@ public class Main {
 
         m.put(Constants.TX_ID_KEY, instanceId);
         return m;
+    }
+
+    private static void finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {
+        Path stateDir = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.JOB_STATE_DIR_NAME);
+
+        EventService es = engine.getEventService();
+        Collection<Event> events = es.getEvents(instanceId);
+
+        try {
+            if (events.isEmpty()) {
+                IOUtils.deleteRecursively(stateDir);
+                log.debug("finalizeState ['{}'] -> removed the state", instanceId);
+            } else {
+                if (!Files.exists(stateDir)) {
+                    Files.createDirectories(stateDir);
+                }
+
+                Set<String> eventNames = events.stream().map(Event::getName).collect(Collectors.toSet());
+
+                Path marker = stateDir.resolve(Constants.SUSPEND_MARKER_FILE_NAME);
+                Files.write(marker, eventNames);
+                log.debug("finalizeState ['{}'] -> created the suspended marker", instanceId);
+            }
+        } catch (IOException e) {
+            throw new ExecutionException("State saving error", e);
+        }
     }
 
     public static void main(String[] args) throws Exception {

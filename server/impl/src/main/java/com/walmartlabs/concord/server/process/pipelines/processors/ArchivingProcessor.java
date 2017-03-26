@@ -26,7 +26,7 @@ public class ArchivingProcessor implements PayloadProcessor {
     public static final HeaderKey<Path> ARCHIVE_FILE = HeaderKey.register("_archive", Path.class);
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         try {
@@ -37,8 +37,10 @@ public class ArchivingProcessor implements PayloadProcessor {
                 log.info("process ['{}'] -> archive: {}", payload.getInstanceId(), dst);
             }
 
-            return payload.removeHeader(Payload.WORKSPACE_DIR)
+            payload = payload.removeHeader(Payload.WORKSPACE_DIR)
                     .putHeader(ARCHIVE_FILE, dst);
+
+            return chain.process(payload);
         } catch (IOException e) {
             throw new ProcessException("Error while creating a payload archive", e);
         }

@@ -15,6 +15,14 @@ public class YamlFormCall extends YamlStep {
         this.options = options;
     }
 
+    public String getKey() {
+        return key;
+    }
+
+    public Map<String, Object> getOptions() {
+        return options;
+    }
+
     @Override
     public String toString() {
         return "YamlFormCall{" +

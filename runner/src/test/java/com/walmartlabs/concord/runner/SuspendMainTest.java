@@ -1,15 +1,9 @@
 package com.walmartlabs.concord.runner;
 
 import com.walmartlabs.concord.common.Constants;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Task;
-import com.walmartlabs.concord.common.format.AutoParser;
-import com.walmartlabs.concord.plugins.yaml2.YamlParserProvider;
-import com.walmartlabs.concord.runner.engine.EngineFactory;
-import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
 import org.junit.Test;
 
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,29 +12,14 @@ import java.util.UUID;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
-public class SuspendMainTest {
+public class SuspendMainTest extends AbstractMainTest {
 
     @Test
     public void test() throws Exception {
         TestBean testBean = spy(new TestBean());
 
-        // ---
-
-        AutoParser autoParser = new AutoParser(new YamlParserProvider().get());
-        NamedTaskRegistry taskRegistry = new NamedTaskRegistry(testBean);
-        EngineFactory engineFactory = new EngineFactory(taskRegistry);
-
-        // ---
-
         String instanceId = UUID.randomUUID().toString();
-        System.setProperty("instanceId", instanceId);
-
-        URI baseDir = SuspendMainTest.class.getResource("suspend").toURI();
-        Path tmpDir = Files.createTempDirectory("test");
-        IOUtils.copy(Paths.get(baseDir), tmpDir);
-        System.setProperty("user.dir", tmpDir.toString());
-
-        Main main = new Main(autoParser, engineFactory);
+        Main main = createMain(instanceId, "suspend", testBean);
         main.run();
 
         // ---
@@ -50,8 +29,10 @@ public class SuspendMainTest {
 
         // ---
 
-        // TODO constants
-        Path evFile = tmpDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME).resolve("_state").resolve("_event");
+        Path baseDir = Paths.get(System.getProperty("user.dir"));
+        Path evFile = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.JOB_STATE_DIR_NAME)
+                .resolve(Constants.RESUME_MARKER_FILE_NAME);
         Files.write(evFile, "ev1".getBytes());
 
         main.run();

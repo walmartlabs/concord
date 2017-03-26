@@ -19,13 +19,17 @@ class ConfirmationPopup extends Component {
 
     render = () => {
         const {open} = this.state;
-        const {disabled, icon, message} = this.props;
+        const {disabled, icon, buttonLabel, message} = this.props;
 
-        return <Modal open={open} trigger={<Button icon={icon || "delete"} color="red"
-                                                   onClick={this.handleOpen}
-                                                   disabled={disabled}
-                                                   loading={disabled}/>}>
+        const trigger = <Button icon={buttonLabel ? undefined : (icon || "delete")}
+                                color="red"
+                                onClick={this.handleOpen}
+                                disabled={disabled}
+                                loading={disabled}>
+            {buttonLabel}
+        </Button>;
 
+        return <Modal size="small" open={open} trigger={trigger}>
             <Modal.Header>{message}</Modal.Header>
             <Modal.Actions>
                 <Button basic onClick={this.handleClose}>
@@ -42,6 +46,7 @@ class ConfirmationPopup extends Component {
 ConfirmationPopup.propTypes = {
     disabled: PropTypes.bool,
     icon: PropTypes.string,
+    buttonLabel: PropTypes.string,
     message: PropTypes.string.isRequired,
     onConfirmFn: PropTypes.func.isRequired
 };

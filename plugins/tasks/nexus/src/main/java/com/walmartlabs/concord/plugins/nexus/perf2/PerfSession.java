@@ -1,9 +1,9 @@
 package com.walmartlabs.concord.plugins.nexus.perf2;
 
 import com.google.common.base.Throwables;
-import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
+import com.walmartlabs.concord.agent.pool.AgentConnection;
 import com.walmartlabs.concord.agent.pool.AgentPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +37,8 @@ public class PerfSession implements AutoCloseable {
     private final UUID id;
     private final AgentPool pool;
 
-    private final Collection<AgentResource> connections = new ArrayList<>();
-    private final Map<AgentResource, String> jobs = new HashMap<>();
+    private final Collection<AgentConnection> connections = new ArrayList<>();
+    private final Map<AgentConnection, String> jobs = new HashMap<>();
     private final Object lock = new Object();
 
     private PerfSession(UUID id, AgentPool pool) {
@@ -52,8 +52,8 @@ public class PerfSession implements AutoCloseable {
 
     @Override
     public void close() {
-        Collection<AgentResource> connections;
-        Map<AgentResource, String> jobs;
+        Collection<AgentConnection> connections;
+        Map<AgentConnection, String> jobs;
 
         synchronized (lock) {
             connections = new ArrayList<>(this.connections);
@@ -77,12 +77,12 @@ public class PerfSession implements AutoCloseable {
             String name = getString(scenario, "name", "Scenario name is required");
             int agentCount = getInt(scenario, "agents", "Agent count must be specified");
 
-            List<AgentResource> conns = range(0, agentCount).parallel()
+            List<AgentConnection> conns = range(0, agentCount).parallel()
                     .mapToObj(this::acquire)
                     .collect(Collectors.toList());
 
             try {
-                Map<AgentResource, String> scenarioJobs = new ConcurrentHashMap<>();
+                Map<AgentConnection, String> scenarioJobs = new ConcurrentHashMap<>();
                 conns.parallelStream().forEach(a -> {
                     String jobId = run(name, a, payload);
                     scenarioJobs.put(a, jobId);
@@ -93,14 +93,14 @@ public class PerfSession implements AutoCloseable {
                     jobs.putAll(scenarioJobs);
                 }
             } catch (Exception e) {
-                conns.parallelStream().forEach(AgentResource::cancelAll);
+                conns.parallelStream().forEach(AgentConnection::cancelAll);
                 throw e;
             }
         }
     }
 
     public void waitToFinish(long timeout) throws TimeoutException {
-        Collection<AgentResource> agents;
+        Collection<AgentConnection> agents;
         synchronized (lock) {
             agents = new ArrayList<>(connections);
         }
@@ -114,7 +114,7 @@ public class PerfSession implements AutoCloseable {
                 Thread.currentThread().interrupt();
             }
 
-            for (Iterator<AgentResource> i = agents.iterator(); i.hasNext(); ) {
+            for (Iterator<AgentConnection> i = agents.iterator(); i.hasNext(); ) {
                 JobStatus s = status(i.next());
                 if (s != JobStatus.RUNNING) {
                     i.remove();
@@ -130,16 +130,11 @@ public class PerfSession implements AutoCloseable {
         log.info("All agents are finished");
     }
 
-    private AgentResource acquire(int i) {
-        try {
-            return pool.acquire(ACQUIRE_TIMEOUT);
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
+    private AgentConnection acquire(int i) {
+        return pool.getConnection(ACQUIRE_TIMEOUT);
     }
 
-
-    private JobStatus status(AgentResource r) {
+    private JobStatus status(AgentConnection r) {
         String jobId;
         synchronized (lock) {
             jobId = jobs.get(r);
@@ -150,7 +145,7 @@ public class PerfSession implements AutoCloseable {
         return s;
     }
 
-    private static String run(String name, AgentResource r, File payload) {
+    private static String run(String name, AgentConnection r, File payload) {
         String id = UUID.randomUUID().toString();
         try (InputStream in = new BufferedInputStream(new FileInputStream(payload))) {
             String entryPoint = name + "/" + DEFAULT_ENTRY_POINT;

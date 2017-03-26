@@ -17,6 +17,12 @@
         <dependency>
             <groupId>com.oneops.boo</groupId>
             <artifactId>boo</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>

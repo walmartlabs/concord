@@ -2,12 +2,11 @@ package com.walmartlabs.concord.plugins.yaml2;
 
 import com.walmartlabs.concord.common.format.ParserException;
 import com.walmartlabs.concord.common.format.PriorityBasedParser;
-import io.takari.bpm.model.ProcessDefinition;
+import com.walmartlabs.concord.common.format.WorkflowDefinition;
 
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.InputStream;
-import java.util.Collection;
 
 @Named
 public class YamlParserProvider implements Provider<PriorityBasedParser> {
@@ -23,8 +22,8 @@ public class YamlParserProvider implements Provider<PriorityBasedParser> {
             }
 
             @Override
-            public Collection<ProcessDefinition> parse(InputStream in) throws ParserException {
-                return delegate.parse(in);
+            public WorkflowDefinition parse(String source, InputStream in) throws ParserException {
+                return delegate.parse(source, in);
             }
 
             @Override

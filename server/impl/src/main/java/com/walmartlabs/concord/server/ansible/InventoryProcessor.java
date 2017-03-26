@@ -4,6 +4,7 @@ import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 
 import java.io.IOException;
@@ -22,15 +23,17 @@ public class InventoryProcessor implements PayloadProcessor {
     public static final AttachmentKey DYNAMIC_INVENTORY_FILE = AttachmentKey.register("dynamicInventory");
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         if (!copy(payload, INVENTORY_FILE, AnsibleConstants.INVENTORY_FILE_NAME)) {
             if (!copy(payload, DYNAMIC_INVENTORY_FILE, AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME)) {
-                return payload;
+                return chain.process(payload);
             }
         }
 
-        return payload.removeAttachment(INVENTORY_FILE)
+        payload = payload.removeAttachment(INVENTORY_FILE)
                 .removeAttachment(DYNAMIC_INVENTORY_FILE);
+
+        return chain.process(payload);
     }
 
     private static boolean copy(Payload payload, AttachmentKey src, String dstName) {

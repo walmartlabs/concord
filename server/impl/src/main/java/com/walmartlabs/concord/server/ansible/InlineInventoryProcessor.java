@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 
 import javax.inject.Named;
@@ -26,15 +27,15 @@ public class InlineInventoryProcessor implements PayloadProcessor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (req == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         Object o = req.get(INLINE_INVENTORY_KEY);
         if (o == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         if (!(o instanceof Map)) {
@@ -50,7 +51,7 @@ public class InlineInventoryProcessor implements PayloadProcessor {
         // copy the dynamic inventory script to the workspace
         copyScript(workspace.resolve(AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME));
 
-        return payload;
+        return chain.process(payload);
     }
 
     private void saveInventory(Path dst, Map<String, Object> m) {

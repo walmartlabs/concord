@@ -15,13 +15,13 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 @Named
 public class ValidatingProcessor implements PayloadProcessor {
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Map<String, Path> attachments = payload.getAttachments();
         if (!attachments.isEmpty()) {
             String msg = "Validation error, unprocessed payload attachments: " + String.join(", ", attachments.keySet());
             throw new ProcessException(msg, BAD_REQUEST);
         }
 
-        return payload;
+        return chain.process(payload);
     }
 }

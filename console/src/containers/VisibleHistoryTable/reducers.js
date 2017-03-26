@@ -3,7 +3,7 @@ import {actionTypes} from "./actions";
 import * as common from "../../reducers/common";
 
 const rows = common.makeListRowsReducer(actionTypes.FETCH_HISTORY_DATA_RESULT);
-const loading = common.makeIsLoadingReducer(actionTypes.FETCH_HISTORY_DATA_REQUEST, actionTypes.FETCH_HISTORY_DATA_RESULT);
+const loading = common.makeBooleanTriggerReducer(actionTypes.FETCH_HISTORY_DATA_REQUEST, actionTypes.FETCH_HISTORY_DATA_RESULT);
 const error = common.makeErrorReducer(actionTypes.FETCH_HISTORY_DATA_REQUEST, actionTypes.FETCH_HISTORY_DATA_RESULT);
 const lastQuery = common.makeListLastQueryReducer(actionTypes.FETCH_HISTORY_DATA_REQUEST);
 

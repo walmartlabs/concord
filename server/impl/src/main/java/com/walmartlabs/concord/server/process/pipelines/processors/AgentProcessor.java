@@ -31,11 +31,11 @@ public class AgentProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
-        boolean resumeMode = payload.getHeader(Payload.RESUME_MODE, false);
+    public Payload process(Chain chain, Payload payload) {
+        boolean resumeMode = payload.getHeader(Payload.RESUME_EVENT_NAME) != null;
 
         if (resumeMode) {
-            // TODO set status to RESUMING
+            historyDao.update(payload.getInstanceId(), ProcessStatus.RESUMING);
         } else {
             // synchronously add an initial record to the process history
             historyDao.insertInitial(payload.getInstanceId(),
@@ -43,6 +43,7 @@ public class AgentProcessor implements PayloadProcessor {
                     payload.getHeader(LogFileProcessor.LOG_FILE_NAME));
         }
 
+        // run the payload asynchronously
         threadPool.execute(() -> {
             ProcessExecutorCallback callback = new HistoryCallback(historyDao);
             executor.run(payload.getInstanceId(),
@@ -50,9 +51,12 @@ public class AgentProcessor implements PayloadProcessor {
                     payload.getHeader(RunnerProcessor.ENTRY_POINT_NAME),
                     payload.getHeader(LogFileProcessor.LOG_FILE_PATH),
                     callback);
+
+            // continue the chain asynchronously
+            chain.process(payload);
         });
 
-        return payload.removeHeader(ArchivingProcessor.ARCHIVE_FILE);
+        return payload;
     }
 
     private static final class HistoryCallback implements ProcessExecutorCallback {
