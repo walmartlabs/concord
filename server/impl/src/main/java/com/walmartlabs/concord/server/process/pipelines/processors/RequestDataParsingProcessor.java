@@ -27,10 +27,10 @@ public class RequestDataParsingProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Path p = payload.getAttachment(REQUEST_ATTACHMENT_KEY);
         if (p == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         Map<String, Object> data;
@@ -42,7 +42,9 @@ public class RequestDataParsingProcessor implements PayloadProcessor {
             throw new ProcessException("Invalid request data format", e, Status.BAD_REQUEST);
         }
 
-        return payload.removeAttachment(REQUEST_ATTACHMENT_KEY)
+        payload = payload.removeAttachment(REQUEST_ATTACHMENT_KEY)
                 .putHeader(Payload.REQUEST_DATA_MAP, data);
+
+        return chain.process(payload);
     }
 }

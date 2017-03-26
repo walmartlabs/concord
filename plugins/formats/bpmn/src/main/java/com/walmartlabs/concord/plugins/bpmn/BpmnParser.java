@@ -1,9 +1,13 @@
 package com.walmartlabs.concord.plugins.bpmn;
 
+import com.walmartlabs.concord.common.format.WorkflowDefinition;
+import com.walmartlabs.concord.common.format.WorkflowDefinitionParser;
 import com.walmartlabs.concord.plugins.bpmn.model.*;
 import io.takari.bpm.model.*;
 import io.takari.bpm.xml.Parser;
 import io.takari.bpm.xml.ParserException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -13,9 +17,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-public class BpmnParser implements Parser {
+@Deprecated
+public class BpmnParser implements Parser, WorkflowDefinitionParser {
 
     public static final String TYPE = "concord/bpmn";
+
+    private static final Logger log = LoggerFactory.getLogger(BpmnParser.class);
     private static final String TARGET_NAMESPACE = "http://bpmn.io/schema/bpmn";
 
     private final JAXBContext ctx;
@@ -30,6 +37,8 @@ public class BpmnParser implements Parser {
 
     @Override
     public ProcessDefinition parse(InputStream in) throws ParserException {
+        log.warn("parse -> this format is deprecated");
+
         try {
             Unmarshaller m = ctx.createUnmarshaller();
             Object src = m.unmarshal(in);
@@ -42,6 +51,16 @@ public class BpmnParser implements Parser {
             return convert(defs);
         } catch (JAXBException e) {
             throw new ParserException("JAXB error", e);
+        }
+    }
+
+    @Override
+    public WorkflowDefinition parse(String source, InputStream in) throws com.walmartlabs.concord.common.format.ParserException {
+        try {
+            ProcessDefinition pd = parse(in);
+            return new WorkflowDefinition(source, Collections.singletonMap(pd.getId(), pd), Collections.emptyMap());
+        } catch (ParserException e) {
+            throw new com.walmartlabs.concord.common.format.ParserException("Error while parsing a workflow definition", e);
         }
     }
 

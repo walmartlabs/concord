@@ -77,8 +77,6 @@ public class ExecutionManager {
         // e.g. left after the execution was suspended
         logManager.delete(instanceId);
 
-        logManager.log(instanceId, "Job type: %s", type);
-
         Path tmpDir = extract(instanceId, payload);
 
         Map<String, Object> agentParams = getAgentParameters(tmpDir);
@@ -193,6 +191,19 @@ public class ExecutionManager {
         }
 
         return tmpFile;
+    }
+
+    public void removeAttachments(String id) throws IOException {
+        Path p;
+        synchronized (mutex) {
+            p = attachments.getIfPresent(id);
+        }
+
+        if (p == null || !Files.exists(p)) {
+            return;
+        }
+
+        IOUtils.deleteRecursively(p);
     }
 
     private Path extract(String id, InputStream in) throws ExecutionException {

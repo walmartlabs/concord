@@ -4,10 +4,20 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.plugins.yaml2.model.*;
 import io.takari.bpm.model.*;
 import io.takari.bpm.model.ProcessDefinitionBuilder.Fork;
+import io.takari.bpm.model.form.DefaultFormFields.DecimalField;
+import io.takari.bpm.model.form.DefaultFormFields.IntegerField;
+import io.takari.bpm.model.form.DefaultFormFields.StringField;
+import io.takari.bpm.model.form.FormDefinition;
+import io.takari.bpm.model.form.FormExtension;
+import io.takari.bpm.model.form.FormField;
+import io.takari.bpm.model.form.FormField.Cardinality;
+import io.takari.bpm.model.form.FormField.Option;
 import io.takari.parc.Seq;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class YamlConverter {
 
@@ -15,6 +25,59 @@ public class YamlConverter {
         ProcessDefinitionBuilder.Process proc = ProcessDefinitionBuilder.newProcess(def.getName());
         apply(proc, def.getSteps());
         return proc.end();
+    }
+
+    public static FormDefinition convert(YamlFormDefinition def) throws YamlConverterException {
+        List<FormField> fields = new ArrayList<>();
+        for (YamlFormField f : def.getFields().toList()) {
+            fields.add(convert(f));
+        }
+        return new FormDefinition(def.getName(), fields);
+    }
+
+    private static FormField convert(YamlFormField f) throws YamlConverterException {
+        Map<String, Object> opts = f.getOptions();
+
+        String label;
+        Map<Option<?>, Object> options = new HashMap<>();
+
+        TypeInfo tInfo = getFieldType(f);
+        switch (tInfo.type) {
+            case StringField.TYPE: {
+                label = (String) opts.get("label");
+                options.put(StringField.PATTERN, opts.get("pattern"));
+                break;
+            }
+            case IntegerField.TYPE: {
+                label = (String) opts.get("label");
+                options.put(IntegerField.MIN, coerceToLong(opts.get("min")));
+                options.put(IntegerField.MAX, coerceToLong(opts.get("max")));
+                break;
+            }
+            case DecimalField.TYPE: {
+                label = (String) opts.get("label");
+                options.put(DecimalField.MIN, coerceToDouble(opts.get("min")));
+                options.put(DecimalField.MAX, coerceToDouble(opts.get("max")));
+                break;
+            }
+            default:
+                throw new YamlConverterException("Unknown field type: " + tInfo.type + " @ " + f.getLocation());
+        }
+
+        return new FormField.Builder(f.getName(), tInfo.type)
+                .label(label)
+                .cardinality(tInfo.cardinality)
+                .options(options)
+                .build();
+    }
+
+    private static TypeInfo getFieldType(YamlFormField f) throws YamlConverterException {
+        Object v = f.getOption("type");
+        if (!(v instanceof String)) {
+            JsonLocation loc = f.getLocation();
+            throw new YamlConverterException("Expected a field type @ " + loc);
+        }
+        return TypeInfo.parse((String) v);
     }
 
     private static ProcessDefinitionBuilder.Seq apply(ProcessDefinitionBuilder.Seq proc, Seq<YamlStep> steps) throws YamlConverterException {
@@ -90,8 +153,8 @@ public class YamlConverter {
             YamlEvent e = (YamlEvent) s;
             return sourceMap(proc.catchEvent(e.getName()), s, "Event");
         } else if (s instanceof YamlFormCall) {
-            // TODO
-            return proc;
+            YamlFormCall c = (YamlFormCall) s;
+            return proc.userTask(Arrays.asList(new FormExtension(c.getKey())));
         } else if (s instanceof YamlCall) {
             YamlCall c = (YamlCall) s;
             return sourceMap(proc.call(c.getProc(), true), s, "Call");
@@ -268,6 +331,46 @@ public class YamlConverter {
         return o;
     }
 
+    private static Long coerceToLong(Object v) {
+        if (v == null) {
+            return null;
+        }
+
+        if (v instanceof Long) {
+            return (Long) v;
+        }
+
+        if (v instanceof Integer) {
+            return ((Integer) v).longValue();
+        }
+
+        throw new IllegalArgumentException("Can't coerce '" + v + "' to long");
+    }
+
+    private static Double coerceToDouble(Object v) {
+        if (v == null) {
+            return null;
+        }
+
+        if (v instanceof Double) {
+            return (Double) v;
+        }
+
+        if (v instanceof Float) {
+            return ((Float) v).doubleValue();
+        }
+
+        if (v instanceof Integer) {
+            return ((Integer) v).doubleValue();
+        }
+
+        if (v instanceof Long) {
+            return ((Long) v).doubleValue();
+        }
+
+        throw new IllegalArgumentException("Can't coerce '" + v + "' to double");
+    }
+
     private static class ELCall implements Serializable {
 
         private final String expression;
@@ -278,6 +381,35 @@ public class YamlConverter {
             this.args = args;
         }
 
+    }
+
+    private static class TypeInfo implements Serializable {
+
+        public static TypeInfo parse(String s) {
+            String type = s;
+            Cardinality cardinality = Cardinality.ONE_AND_ONLY_ONE;
+
+            if (s.endsWith("?")) {
+                type = type.substring(0, type.length() - 1);
+                cardinality = Cardinality.ONE_OR_NONE;
+            } else if (s.endsWith("+")) {
+                type = type.substring(0, type.length() - 1);
+                cardinality = Cardinality.AT_LEAST_ONE;
+            } else if (s.endsWith("*")) {
+                type = type.substring(0, type.length() - 1);
+                cardinality = Cardinality.ANY;
+            }
+
+            return new TypeInfo(type, cardinality);
+        }
+
+        private final String type;
+        private final Cardinality cardinality;
+
+        private TypeInfo(String type, Cardinality cardinality) {
+            this.type = type;
+            this.cardinality = cardinality;
+        }
     }
 
     private YamlConverter() {

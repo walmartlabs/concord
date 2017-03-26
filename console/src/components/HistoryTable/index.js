@@ -7,6 +7,7 @@ import RefreshButton from "../RefreshButton";
 import ConfirmationPopup from "../ConfirmationPopup";
 import {sort, reverseSort} from "../../constants";
 import * as constants from "./constants";
+import * as global from "../../constants";
 import * as routes from "../../routes";
 
 const headerFn = (currentKey, currentDir) => (key, label) => {
@@ -36,7 +37,7 @@ const cellFn = (inFlightFn, onKillFn) => (row, key) => {
     if (key === constants.statusKey) {
         const status = row[key];
         const failed = constants.failedStatuses.includes(status);
-        const icon = constants.statusToIcon[status];
+        const icon = global.process.statusIcons[status];
         return <div><Icon name={icon} color={failed ? "red" : undefined}/> {status}</div>;
     }
 
@@ -50,12 +51,12 @@ const cellFn = (inFlightFn, onKillFn) => (row, key) => {
                                                              disabled={inFlightFn(id)}/>;
     }
 
-    // link to a process' log file
+    // link to a process' page
     if (key === constants.logLinkKey) {
         const n = row[constants.logFileNameKey];
         const instanceId = row[constants.idKey];
         if (n) {
-            return <Link to={routes.getProcessLogPath(instanceId)}>{row[key]}</Link>;
+            return <Link to={routes.getProcessPath(instanceId)}>{row[key]}</Link>;
         }
     }
 

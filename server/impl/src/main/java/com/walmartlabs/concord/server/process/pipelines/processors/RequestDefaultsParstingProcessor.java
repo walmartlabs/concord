@@ -22,15 +22,15 @@ public class RequestDefaultsParstingProcessor implements PayloadProcessor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         if (workspace == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         Path p = workspace.resolve(Constants.REQUEST_DEFAULTS_FILE_NAME);
         if (!Files.exists(p)) {
-            return payload;
+            return chain.process(payload);
         }
 
         Map<String, Object> a;
@@ -46,6 +46,8 @@ public class RequestDefaultsParstingProcessor implements PayloadProcessor {
         }
 
         Map<String, Object> result = ConfigurationUtils.deepMerge(a, b);
-        return payload.putHeader(Payload.REQUEST_DATA_MAP, result);
+        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, result);
+
+        return chain.process(payload);
     }
 }

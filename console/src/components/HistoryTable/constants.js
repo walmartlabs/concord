@@ -11,13 +11,6 @@ export const columns = [
     {key: "actions", label: "Actions", collapsing: true}
 ];
 
-export const statusToIcon = {
-    "STARTING": "hourglass start",
-    "RUNNING": "hourglass half",
-    "FINISHED": "checkmark",
-    "FAILED": "remove"
-};
-
 export const idKey = "instanceId";
 export const sortableKeys = ["status", "initiator", "lastUpdateDt", "createdDt"];
 export const actionsKey = "actions";
@@ -26,8 +19,8 @@ export const logLinkKey = "instanceId";
 export const dateKeys = ["lastUpdateDt", "createdDt"];
 export const statusKey = "status";
 
-export const canBeKilledStatuses = [global.process.runningStatus];
-export const failedStatuses = [global.process.failedStatus];
+export const canBeKilledStatuses = [global.process.status.runningStatus, global.process.status.suspendedStatus];
+export const failedStatuses = [global.process.status.failedStatus];
 
 export const defaultSortKey = "lastUpdateDt";
 export const defaultSortDir = sort.DESC;

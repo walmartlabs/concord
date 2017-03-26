@@ -1,0 +1,8 @@
+simple:
+  - ${testBean.call("start")}
+  - form: myForm
+  - ${testBean.call(myForm.field1)}
+  - ${testBean.call("end")}
+
+form (myForm):
+  - field1: { type: "string" }

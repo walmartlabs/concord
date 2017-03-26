@@ -1,11 +1,12 @@
 package com.walmartlabs.concord.runner;
 
 import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.common.format.WorkflowDefinitionProvider;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
-import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.model.*;
+import io.takari.bpm.model.form.FormDefinition;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -23,14 +24,14 @@ public class SuspendTest {
         Path baseDir = Files.createTempDirectory("test");
 
         NamedTaskRegistry taskRegistry = new NamedTaskRegistry(Collections.emptyList());
-        ProcessDefinitionProvider pdp = id -> new ProcessDefinition(id,
+        ProcessProvider wdp = id -> new ProcessDefinition(id,
                 new StartEvent("start"),
                 new SequenceFlow("f1", "start", "ev1"),
                 new IntermediateCatchEvent("ev1"),
                 new SequenceFlow("f2", "ev1", "end"),
                 new EndEvent("end"));
 
-        Engine engine = new EngineFactory(taskRegistry).create(baseDir, pdp);
+        Engine engine = new EngineFactory(taskRegistry).create(baseDir, wdp);
 
         // ---
 
@@ -54,6 +55,14 @@ public class SuspendTest {
             return Files.size(p);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private interface ProcessProvider extends WorkflowDefinitionProvider {
+
+        @Override
+        default FormDefinition getForm(String id) {
+            return null;
         }
     }
 }

@@ -6,7 +6,7 @@ import {actionTypes} from "./actions";
 
 function* fetchLogData(action: any): Generator<*, *, *> {
     try {
-        const status = yield call(processApi.fetchProcessStatus, action.instanceId);
+        const status = yield call(processApi.fetchStatus, action.instanceId);
         const response = yield call(logApi.fetchLog, status.logFileName, action.fetchRange);
 
         yield put({

@@ -20,7 +20,7 @@ const data = (state = [], action) => {
     }
 };
 
-const loading = common.makeIsLoadingReducer(actionTypes.FETCH_LOG_DATA_REQUEST, actionTypes.FETCH_LOG_DATA_RESULT);
+const loading = common.makeBooleanTriggerReducer(actionTypes.FETCH_LOG_DATA_REQUEST, actionTypes.FETCH_LOG_DATA_RESULT);
 const error = common.makeErrorReducer(actionTypes.FETCH_LOG_DATA_REQUEST, actionTypes.FETCH_LOG_DATA_RESULT);
 
 const range = (state = {}, action) => {

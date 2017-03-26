@@ -1,9 +1,9 @@
 package com.walmartlabs.concord.plugins.nexus.perf2;
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.agent.api.AgentResource;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
+import com.walmartlabs.concord.agent.pool.AgentConnection;
 import com.walmartlabs.concord.agent.pool.AgentPool;
 import com.walmartlabs.concord.common.Constants;
 import io.takari.bpm.api.ExecutionContext;
@@ -33,10 +33,10 @@ public class PerfTaskTest {
                 "test.duration", "1 MINUTES"
         ));
 
-        AgentResource agentResource = prepareJobResource();
+        AgentConnection agentResource = prepareJobResource();
 
         AgentPool agentPool = mock(AgentPool.class);
-        when(agentPool.acquire(anyLong())).thenReturn(agentResource);
+        when(agentPool.getConnection(anyLong())).thenReturn(agentResource);
 
         AgentPoolFactory agentPoolFactory = mock(AgentPoolFactory.class);
         when(agentPoolFactory.create(anyCollection())).thenReturn(agentPool);
@@ -81,8 +81,8 @@ public class PerfTaskTest {
         return tmpDir;
     }
 
-    private static AgentResource prepareJobResource() throws Exception {
-        AgentResource r = mock(AgentResource.class);
+    private static AgentConnection prepareJobResource() throws Exception {
+        AgentConnection r = mock(AgentConnection.class);
         when(r.getStatus(any(String.class)))
                 .thenReturn(JobStatus.RUNNING)
                 .thenReturn(JobStatus.COMPLETED);

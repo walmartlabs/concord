@@ -1,6 +1,13 @@
 {
   "api_key": {
+    "description": "API key",
     "type": "apiKey",
+    "name": "Authorization",
+    "in": "header"
+  },
+  "pwd": {
+    "description": "Username/password",
+    "type": "basic",
     "name": "Authorization",
     "in": "header"
   }

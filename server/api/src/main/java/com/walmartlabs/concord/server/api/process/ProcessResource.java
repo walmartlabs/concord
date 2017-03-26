@@ -78,9 +78,11 @@ public interface ProcessResource {
     @POST
     @ApiOperation("Resume a process")
     @Path("/{id}/resume/{eventName}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     ResumeProcessResponse resume(@ApiParam @PathParam("id") @ConcordId String instanceId,
-                                 @ApiParam @PathParam("eventName") @NotNull String eventName);
+                                 @ApiParam @PathParam("eventName") @NotNull String eventName,
+                                 @ApiParam Map<String, Object> req);
 
     /**
      * Waits for completion of a process.

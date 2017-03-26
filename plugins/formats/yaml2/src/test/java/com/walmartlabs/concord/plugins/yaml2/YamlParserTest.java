@@ -1,10 +1,16 @@
 package com.walmartlabs.concord.plugins.yaml2;
 
 import com.walmartlabs.concord.common.format.ParserException;
+import com.walmartlabs.concord.common.format.WorkflowDefinition;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.*;
+import io.takari.bpm.el.DefaultExpressionManager;
+import io.takari.bpm.el.ExpressionManager;
+import io.takari.bpm.form.*;
+import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.model.ProcessDefinition;
+import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.task.ServiceTaskRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,40 +20,65 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class YamlParserTest {
 
+    private TestWorkflowProvider workflowProvider = new TestWorkflowProvider();
     private TestServiceTaskRegistry taskRegistry;
     private Engine engine;
+    private Map<UUID, Form> forms;
+    private FormService formService;
 
     @Before
     public void setUp() throws Exception {
         taskRegistry = new TestServiceTaskRegistry();
+
+        forms = new HashMap<>();
+        FormStorage fs = new TestFormStorage(forms);
+
+        ExpressionManager expressionManager = new DefaultExpressionManager();
+        ResumeHandler rs = (form, args) -> getEngine().resume(form.getProcessBusinessKey(), form.getEventName(), args);
+        formService = new DefaultFormService(rs, fs, expressionManager);
+
         engine = new EngineBuilder()
-                .withDefinitionProvider(new TestDefinitionProvider())
+                .withDefinitionProvider(workflowProvider.processes())
                 .withTaskRegistry(taskRegistry)
+                .withUserTaskHandler(new FormTaskHandler(workflowProvider.forms(), formService))
                 .build();
     }
 
+    private Engine getEngine() {
+        return engine;
+    }
+
+    private void deploy(String resource) {
+        workflowProvider.deploy(resource);
+    }
+
+    // PROCESSES (000 - 099)
+
     @Test(expected = RuntimeException.class)
     public void test000() throws Exception {
+        deploy("000.yml");
+
         String key = UUID.randomUUID().toString();
-        engine.start(key, "000/main", null);
+        engine.start(key, "main", null);
     }
 
     @Test
     public void test001() throws Exception {
+        deploy("001.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "001/main", null);
+        engine.start(key, "main", null);
 
         // ---
 
@@ -56,13 +87,15 @@ public class YamlParserTest {
 
     @Test
     public void test002() throws Exception {
+        deploy("002.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "002/main", null);
+        engine.start(key, "main", null);
 
         // ---
 
@@ -71,6 +104,8 @@ public class YamlParserTest {
 
     @Test
     public void test003() throws Exception {
+        deploy("003.yml");
+
         String testValue = "test#" + System.currentTimeMillis();
 
         TestBean testBean = spy(new TestBean());
@@ -80,7 +115,7 @@ public class YamlParserTest {
 
         String key = UUID.randomUUID().toString();
         Map<String, Object> args = Collections.singletonMap("aStr", testValue);
-        engine.start(key, "003/main", args);
+        engine.start(key, "main", args);
 
         // ---
 
@@ -90,13 +125,15 @@ public class YamlParserTest {
 
     @Test
     public void test004() throws Exception {
+        deploy("004.yml");
+
         TestTask testTask = spy(new TestTask());
         taskRegistry.register("testTask", testTask);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "004/main", null);
+        engine.start(key, "main", null);
 
         // ---
 
@@ -105,6 +142,8 @@ public class YamlParserTest {
 
     @Test
     public void test005() throws Exception {
+        deploy("005.yml");
+
         String testValue = "test#" + System.currentTimeMillis();
 
         TestTask testTask = spy(new TestTask());
@@ -114,7 +153,7 @@ public class YamlParserTest {
 
         String key = UUID.randomUUID().toString();
         Map<String, Object> args = Collections.singletonMap("aStr", testValue);
-        engine.start(key, "005/main", args);
+        engine.start(key, "main", args);
 
         // ---
 
@@ -126,6 +165,8 @@ public class YamlParserTest {
 
     @Test
     public void test006() throws Exception {
+        deploy("006.yml");
+
         String testValue = "test#" + System.currentTimeMillis();
 
         TestBean testBean = spy(new TestBean());
@@ -138,7 +179,7 @@ public class YamlParserTest {
 
         String key = UUID.randomUUID().toString();
         Map<String, Object> args = Collections.singletonMap("aStr", testValue);
-        engine.start(key, "006/main", args);
+        engine.start(key, "main", args);
 
         // ---
 
@@ -148,6 +189,8 @@ public class YamlParserTest {
 
     @Test
     public void test007() throws Exception {
+        deploy("007.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -155,7 +198,7 @@ public class YamlParserTest {
 
         String key = UUID.randomUUID().toString();
         Map<String, Object> args = Collections.singletonMap("aInt", 100);
-        engine.start(key, "007/main", args);
+        engine.start(key, "main", args);
 
         // ---
 
@@ -166,6 +209,8 @@ public class YamlParserTest {
 
     @Test
     public void test008() throws Exception {
+        deploy("008.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -173,7 +218,7 @@ public class YamlParserTest {
 
         String key = UUID.randomUUID().toString();
         Map<String, Object> args = Collections.singletonMap("aInt", 100);
-        engine.start(key, "008/main", args);
+        engine.start(key, "main", args);
 
         // ---
 
@@ -183,13 +228,15 @@ public class YamlParserTest {
 
     @Test
     public void test009() throws Exception {
+        deploy("009.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "009/main", null);
+        engine.start(key, "main", null);
 
         // ---
 
@@ -202,13 +249,15 @@ public class YamlParserTest {
 
     @Test
     public void test010() throws Exception {
+        deploy("010.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "010/main", null);
+        engine.start(key, "main", null);
 
         // ---
 
@@ -221,6 +270,8 @@ public class YamlParserTest {
 
     @Test
     public void test011() throws Exception {
+        deploy("011.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -230,7 +281,7 @@ public class YamlParserTest {
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "011/main", null);
+        engine.start(key, "main", null);
 
         // ---
 
@@ -244,13 +295,15 @@ public class YamlParserTest {
 
     @Test
     public void test012() throws Exception {
+        deploy("012.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "012/main", null);
+        engine.start(key, "main", null);
 
         // ---
 
@@ -262,13 +315,15 @@ public class YamlParserTest {
 
     @Test
     public void test013() throws Exception {
+        deploy("013.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "013/main", null);
+        engine.start(key, "main", null);
 
         // ---
 
@@ -279,6 +334,8 @@ public class YamlParserTest {
 
     @Test
     public void test014() throws Exception {
+        deploy("014.yml");
+
         int loops = 100;
 
         TestBean testBean = spy(new TestBean());
@@ -290,7 +347,7 @@ public class YamlParserTest {
         Map<String, Object> args = new HashMap<>();
         args.put("cnt", 0);
         args.put("loops", loops);
-        engine.start(key, "014/main", args);
+        engine.start(key, "main", args);
 
         // ---
 
@@ -300,6 +357,8 @@ public class YamlParserTest {
 
     @Test
     public void test015() throws Exception {
+        deploy("015.yml");
+
         String testValue = "test#" + System.currentTimeMillis();
 
         TestTask testTask = spy(new TestTask());
@@ -309,7 +368,7 @@ public class YamlParserTest {
 
         String key = UUID.randomUUID().toString();
         Map<String, Object> args = Collections.singletonMap("interpolation", testValue);
-        engine.start(key, "015/main", args);
+        engine.start(key, "main", args);
 
         // ---
 
@@ -319,6 +378,8 @@ public class YamlParserTest {
 
     @Test
     public void test016() throws Exception {
+        deploy("016.yml");
+
         int inputNumber = ThreadLocalRandom.current().nextInt();
         boolean inputBoolean = ThreadLocalRandom.current().nextBoolean();
         String inputString = "test#" + System.currentTimeMillis();
@@ -358,7 +419,7 @@ public class YamlParserTest {
         args.put("inputNumber", inputNumber);
         args.put("inputBoolean", inputBoolean);
         args.put("inputString", inputString);
-        engine.start(key, "016/main", args);
+        engine.start(key, "main", args);
 
         // ---
 
@@ -369,13 +430,15 @@ public class YamlParserTest {
 
     @Test
     public void test017() throws Exception {
+        deploy("017.yml");
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "017/main", null);
+        engine.start(key, "main", null);
 
         verify(testBean, times(1)).toString(eq("a"));
         verifyNoMoreInteractions(testBean);
@@ -389,10 +452,113 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
+    // FORMS (100 - 199)
+
+    @Test
+    public void test100() throws Exception {
+        deploy("100.yml");
+
+        String formValue = "test#" + System.currentTimeMillis();
+
+        // ---
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        verify(testBean, times(1)).toString(eq("aaa"));
+
+        // ---
+
+        UUID formId = getFirstFormId();
+        Map<String, Object> data = Collections.singletonMap("name", formValue);
+        formService.submit(formId, data);
+
+        verify(testBean, times(1)).toString(eq(formValue));
+    }
+
+    @Test
+    public void test101() throws Exception {
+        deploy("101.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        UUID formId = getFirstFormId();
+
+        FormSubmitResult result = formService.submit(formId, Collections.singletonMap("age", 256));
+        assertFalse(result.isValid());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("age", 64);
+        data.put("percent", -1.0);
+
+        result = formService.submit(formId, data);
+        assertFalse(result.isValid());
+
+        result = formService.submit(formId, Collections.singletonMap("age", 64));
+        assertTrue(result.isValid());
+
+        verify(testBean, times(1)).toString(eq(64));
+    }
+
+    @Test
+    public void test102() throws Exception {
+        deploy("102.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        UUID formId = getFirstFormId();
+
+        int[] numbers = new int[] { -1, 5, 98 };
+
+        FormSubmitResult result = formService.submit(formId, Collections.singletonMap("favouriteNumbers", numbers));
+        assertFalse(result.isValid());
+
+        numbers = new int[] { 0, 5, 98 };
+
+        result = formService.submit(formId, Collections.singletonMap("favouriteNumbers", numbers));
+        assertTrue(result.isValid());
+
+        verify(testBean, times(1)).toString(eq(numbers));
+    }
+
+    @Test
+    public void testJunk() throws Exception {
+        deploy("junk.yml");
+    }
+
+    // MISC
+
     @Test(expected = RuntimeException.class)
     public void testOld() throws Exception {
-        String key = UUID.randomUUID().toString();
-        engine.start(key, "old/simple1", null);
+        deploy("old.yml");
+    }
+
+    private UUID getFirstFormId() {
+        if (forms == null || forms.isEmpty()) {
+            return null;
+        }
+        return forms.keySet().iterator().next();
     }
 
     private static class TestBean {
@@ -401,6 +567,9 @@ public class YamlParserTest {
         }
 
         public String toString(Object s) {
+            if (s == null) {
+                return null;
+            }
             return s.toString();
         }
 
@@ -457,32 +626,32 @@ public class YamlParserTest {
         }
     }
 
-    private static class TestDefinitionProvider implements ProcessDefinitionProvider {
+    private static class TestWorkflowProvider {
 
-        private final Map<String, ProcessDefinition> cache = new HashMap<>();
+        private final Map<String, ProcessDefinition> processes = new HashMap<>();
+        private final Map<String, FormDefinition> forms = new HashMap<>();
 
-        @Override
-        public ProcessDefinition getById(String id) throws ExecutionException {
-            return cache.computeIfAbsent(id, k -> {
+        public void deploy(String resource) {
+            WorkflowDefinition wd = loadWorkflow(resource);
+            processes.putAll(wd.getProcesses());
+            forms.putAll(wd.getForms());
+        }
 
-                String[] as = k.split("/");
+        public ProcessDefinitionProvider processes() {
+            return id -> processes.get(id);
+        }
 
-                String resource = as[0] + ".yml";
-                String entryPoint = as[1];
+        public FormDefinitionProvider forms() {
+            return id -> forms.get(id);
+        }
 
-                try (InputStream in = ClassLoader.getSystemResourceAsStream(resource)) {
-                    YamlParser p = new YamlParser();
-                    for (ProcessDefinition pd : p.parse(in)) {
-                        if (entryPoint.equals(pd.getId())) {
-                            return pd;
-                        }
-                    }
-                } catch (ParserException | IOException e) {
-                    throw new RuntimeException("Error while loading a definition", e);
-                }
-
-                throw new RuntimeException("Definition not found: " + k);
-            });
+        private static WorkflowDefinition loadWorkflow(String resource) {
+            try (InputStream in = ClassLoader.getSystemResourceAsStream(resource)) {
+                YamlParser p = new YamlParser();
+                return p.parse(resource, in);
+            } catch (IOException | ParserException e) {
+                throw new RuntimeException("Error while loading a definition", e);
+            }
         }
     }
 
@@ -497,6 +666,30 @@ public class YamlParserTest {
         @Override
         public Object getByKey(String k) {
             return entries.get(k);
+        }
+    }
+
+    private static class TestFormStorage implements FormStorage {
+
+        private final Map<UUID, Form> forms;
+
+        private TestFormStorage(Map<UUID, Form> forms) {
+            this.forms = forms;
+        }
+
+        @Override
+        public void save(Form form) {
+            forms.put(form.getFormInstanceId(), form);
+        }
+
+        @Override
+        public void complete(UUID formInstanceId) throws ExecutionException {
+            forms.remove(formInstanceId);
+        }
+
+        @Override
+        public Form get(UUID formId) {
+            return forms.get(formId);
         }
     }
 }

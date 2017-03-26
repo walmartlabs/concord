@@ -37,25 +37,25 @@ public class ProcessAttachmentManagerTest {
 
         // ---
 
-        Path t0 = m.extract(instanceId, "test0.txt");
+        Path t0 = m.get(instanceId, "test0.txt");
         assertNotNull(t0);
         assertEquals("0", new String(Files.readAllBytes(t0)));
 
         // ---
 
-        Path dir1 = m.extract(instanceId, "dir1/");
+        Path dir1 = m.get(instanceId, "dir1/");
         assertNotNull(dir1);
         assertTrue(Files.exists(dir1.resolve("test1.txt")));
 
         // ---
 
-        Path dir2 = m.extract(instanceId, "/dir2/");
+        Path dir2 = m.get(instanceId, "/dir2/");
         assertNotNull(dir2);
         assertTrue(Files.exists(dir2.resolve("test2.txt")));
 
         // ---
 
-        Path tNa = m.extract(instanceId, "somethingElse.txt");
+        Path tNa = m.get(instanceId, "somethingElse.txt");
         assertNull(tNa);
     }
 }

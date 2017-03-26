@@ -29,10 +29,4 @@ public final class KeyIndex<K extends Key<?>> implements Serializable {
             return k;
         }
     }
-
-    public K get(String name) {
-        synchronized (keys) {
-            return keys.get(name);
-        }
-    }
 }

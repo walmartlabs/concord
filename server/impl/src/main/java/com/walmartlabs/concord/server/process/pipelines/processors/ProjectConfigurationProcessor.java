@@ -19,23 +19,25 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         if (projectName == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         Map<String, Object> cfg = cfgDao.get(projectName);
         if (cfg == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         Map<String, Object> request = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (request == null) {
-            return payload;
+            return chain.process(payload);
         }
 
-        return payload.putHeader(Payload.REQUEST_DATA_MAP,
+        payload = payload.putHeader(Payload.REQUEST_DATA_MAP,
                 ConfigurationUtils.deepMerge(cfg, request));
+
+        return chain.process(payload);
     }
 }

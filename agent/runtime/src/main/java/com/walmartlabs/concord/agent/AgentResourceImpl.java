@@ -78,6 +78,8 @@ public class AgentResourceImpl implements AgentResource, Resource {
             try (InputStream in = Files.newInputStream(p)) {
                 IOUtils.copy(in, out);
             }
+
+            executionManager.removeAttachments(id);
         }).build();
     }
 

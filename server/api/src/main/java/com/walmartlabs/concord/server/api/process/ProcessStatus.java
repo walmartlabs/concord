@@ -4,6 +4,8 @@ public enum ProcessStatus {
 
     STARTING,
     RUNNING,
+    SUSPENDED,
+    RESUMING,
     FINISHED,
     FAILED
 }

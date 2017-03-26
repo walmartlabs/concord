@@ -10,7 +10,7 @@ export const makeListRowsReducer = (resultActionType) => (state = [], action) =>
     }
 };
 
-export const makeIsLoadingReducer = (requestActionType, resultActionType) => (state = false, action) => {
+export const makeBooleanTriggerReducer = (requestActionType, resultActionType) => (state = false, action) => {
     switch (action.type) {
         case requestActionType:
             return true;

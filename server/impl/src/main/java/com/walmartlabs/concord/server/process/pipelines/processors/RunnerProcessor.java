@@ -30,7 +30,7 @@ public class RunnerProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         Path src = runnerCfg.getPath();
@@ -43,6 +43,8 @@ public class RunnerProcessor implements PayloadProcessor {
             throw new ProcessException("Error while copying dependencies", e);
         }
 
-        return payload.putHeader(ENTRY_POINT_NAME, runnerCfg.getTargetName());
+        payload = payload.putHeader(ENTRY_POINT_NAME, runnerCfg.getTargetName());
+
+        return chain.process(payload);
     }
 }

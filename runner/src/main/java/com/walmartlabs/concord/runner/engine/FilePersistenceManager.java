@@ -30,7 +30,7 @@ public class FilePersistenceManager implements PersistenceManager {
         try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(p))) {
             out.writeObject(state);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ExecutionException("Error while saving state", e);
         }
 
         log.debug("save ['{}', '{}'] -> done, {}", state.getBusinessKey(), state.getId(), p);

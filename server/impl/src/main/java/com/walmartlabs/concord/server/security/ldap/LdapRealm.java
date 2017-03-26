@@ -56,11 +56,16 @@ public class LdapRealm extends AbstractLdapRealm {
     @Override
     protected AuthenticationInfo queryForAuthenticationInfo(AuthenticationToken token, LdapContextFactory ldapContextFactory) throws NamingException {
         UsernamePasswordToken t = (UsernamePasswordToken) token;
+
         String username = t.getUsername();
+        char[] password = t.getPassword();
+        if (username == null || password == null) {
+            return null;
+        }
 
         LdapContext ctx = null;
         try {
-            ctx = ldapContextFactory.getLdapContext(username, new String(t.getPassword()));
+            ctx = ldapContextFactory.getLdapContext(username, new String(password));
         } finally {
             LdapUtils.closeContext(ctx);
         }

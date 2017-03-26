@@ -55,7 +55,7 @@ class VisibleLogViewer extends Component {
 
     handleTimer() {
         const {status} = this.props;
-        if (status === global.process.runningStatus) {
+        if (status === global.process.status.runningStatus) {
             if (!this.isTimerRunning()) {
                 this.startTimer();
             }

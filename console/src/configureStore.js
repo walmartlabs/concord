@@ -1,7 +1,7 @@
 import {createStore, applyMiddleware, combineReducers} from "redux";
 import createLogger from "redux-logger";
 import {routerReducer, routerMiddleware} from "react-router-redux";
-import {reducer as formReducer} from "redux-form";
+// import {reducer as formReducer} from "redux-form";
 import createSagaMiddleware from "redux-saga";
 import consoleApp from "./reducers";
 import saga from "./sagas";
@@ -18,7 +18,7 @@ const configureStore = (history) => {
     const reducers = combineReducers({
         ...consoleApp,
         routing: routerReducer,
-        form: formReducer
+        // form: formReducer
     });
 
     const store = createStore(reducers, applyMiddleware(...middleware));

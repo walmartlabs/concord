@@ -32,13 +32,13 @@ public class AgentPoolIT {
         URI host = URI.create("http://localhost:" + main.getLocalPort());
         AgentPool pool = new AgentPool(Collections.singleton(host));
 
-        AgentResource a = pool.acquire(5000);
+        AgentResource a = pool.getConnection();
         assertEquals(0, a.count());
 
         pool.close();
 
         try {
-            pool.acquire(5000);
+            pool.getConnection(5000);
             fail("Should fail");
         } catch (Exception e) {
         }
@@ -49,7 +49,7 @@ public class AgentPoolIT {
         URI host = URI.create("http://localhost:65432");
         AgentPool pool = new AgentPool(Collections.singleton(host));
         try {
-            pool.acquire(5000);
+            pool.getConnection(5000);
             fail("Should fail");
         } catch (Exception e) {
         }

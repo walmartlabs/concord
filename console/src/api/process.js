@@ -15,8 +15,8 @@ export const killProc = (id: ConcordId) => {
         });
 };
 
-export const fetchProcessStatus = (id: ConcordId) => {
-    console.debug("API: fetchProcessStatus ['%s'] -> starting...", id);
+export const fetchStatus = (id: ConcordId) => {
+    console.debug("API: fetchStatus ['%s'] -> starting...", id);
     return fetch(`/api/v1/process/${id}`, {headers: authHeader})
         .then(response => {
             if (!response.ok) {
@@ -26,7 +26,7 @@ export const fetchProcessStatus = (id: ConcordId) => {
             return response.json();
         })
         .then(json => {
-            console.debug("API: fetchProcessStatus ['%s'] -> done: %o", id, json);
+            console.debug("API: fetchStatus ['%s'] -> done: %o", id, json);
             return json;
         });
 };

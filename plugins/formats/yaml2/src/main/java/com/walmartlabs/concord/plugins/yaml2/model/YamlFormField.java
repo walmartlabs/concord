@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.plugins.yaml2.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonLocation;
 
 import java.io.Serializable;
@@ -15,6 +16,26 @@ public class YamlFormField implements Serializable {
         this.location = location;
         this.name = name;
         this.options = options;
+    }
+
+    public JsonLocation getLocation() {
+        return location;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Map<String, Object> getOptions() {
+        return options;
+    }
+
+    @JsonIgnore
+    public Object getOption(String k) {
+        if (options == null) {
+            return null;
+        }
+        return options.get(k);
     }
 
     @Override

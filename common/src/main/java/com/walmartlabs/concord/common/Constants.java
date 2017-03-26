@@ -79,6 +79,23 @@ public final class Constants {
      */
     public static final String JOB_STATE_DIR_NAME = "_state";
 
+    /**
+     * Directory, containing process' forms.
+     */
+    public static final String JOB_FORMS_DIR_NAME = "forms";
+
+    /**
+     * Marker file, indicating that a process was suspended.
+     * It contains the list of waiting events.
+     */
+    public static final String SUSPEND_MARKER_FILE_NAME = "_suspend";
+
+    /**
+     * Marker file, indicating that a process should be resumed.
+     * It contains the name of a resuming event.
+     */
+    public static final String RESUME_MARKER_FILE_NAME = "_resume";
+
     private Constants() {
     }
 }

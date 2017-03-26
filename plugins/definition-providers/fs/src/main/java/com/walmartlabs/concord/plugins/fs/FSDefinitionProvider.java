@@ -1,10 +1,12 @@
 package com.walmartlabs.concord.plugins.fs;
 
-import com.walmartlabs.concord.common.format.MultipleDefinitionParser;
 import com.walmartlabs.concord.common.format.ParserException;
-import io.takari.bpm.ProcessDefinitionProvider;
+import com.walmartlabs.concord.common.format.WorkflowDefinition;
+import com.walmartlabs.concord.common.format.WorkflowDefinitionParser;
+import com.walmartlabs.concord.common.format.WorkflowDefinitionProvider;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.model.ProcessDefinition;
+import io.takari.bpm.model.form.FormDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,26 +17,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Filesystem based definition provider uses relative baseDir as a definition ID. It will scan, parse and cache
- * all process definition files in the specified directory.
+ * Filesystem based definition provider. It will scan, parse and cache all process definition files in the
+ * specified directory.
  * <p>
- * <i>Limitations:</i> entry point names must be unique.
+ * <i>Limitations:</i> entry point names and form IDs must be unique.
  */
-public class FSDefinitionProvider implements ProcessDefinitionProvider {
+public class FSDefinitionProvider implements WorkflowDefinitionProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FSDefinitionProvider.class);
 
-    private final Map<String, ProcessDefinition> entryPoints;
+    private final Map<String, ProcessDefinition> processes;
+    private final Map<String, FormDefinition> forms;
 
-    public FSDefinitionProvider(MultipleDefinitionParser parser, Map<String, String> attributes,
+    public FSDefinitionProvider(WorkflowDefinitionParser parser, Map<String, String> attributes,
                                 Path baseDir, String... fileTypes) throws ExecutionException {
 
-        Map<String, ProcessDefinition> m = new HashMap<>();
+        Map<String, ProcessDefinition> mp = new HashMap<>();
+        Map<String, FormDefinition> mf = new HashMap<>();
+
         try {
             Files.walkFileTree(baseDir, new SimpleFileVisitor<Path>() {
 
@@ -58,7 +62,7 @@ public class FSDefinitionProvider implements ProcessDefinitionProvider {
                     }
 
                     if (matches(n, fileTypes)) {
-                        parseAndStore(parser, attributes, m, file);
+                        parseAndStore(parser, attributes, file, mp, mf);
                     }
 
                     return FileVisitResult.CONTINUE;
@@ -68,16 +72,18 @@ public class FSDefinitionProvider implements ProcessDefinitionProvider {
             throw new ExecutionException("Error scanning the path '" + baseDir + "'", e);
         }
 
-        this.entryPoints = m;
+        this.processes = mp;
+        this.forms = mf;
     }
 
     @Override
-    public ProcessDefinition getById(String entryPoint) throws ExecutionException {
-        ProcessDefinition pd = entryPoints.get(entryPoint);
-        if (pd == null) {
-            throw new ExecutionException("Can't find the entry point '%s'", entryPoint);
-        }
-        return pd;
+    public ProcessDefinition getProcess(String id) {
+        return processes.get(id);
+    }
+
+    @Override
+    public FormDefinition getForm(String id) {
+        return forms.get(id);
     }
 
     private static boolean matches(String n, String[] fileTypes) {
@@ -90,15 +96,24 @@ public class FSDefinitionProvider implements ProcessDefinitionProvider {
         return false;
     }
 
-    private static void parseAndStore(MultipleDefinitionParser parser, Map<String, String> attrs,
-                                      Map<String, ProcessDefinition> m, Path f) throws IOException {
+    private static void parseAndStore(WorkflowDefinitionParser parser, Map<String, String> attrs, Path f,
+                                      Map<String, ProcessDefinition> processes,
+                                      Map<String, FormDefinition> forms) throws IOException {
 
         try (InputStream in = Files.newInputStream(f)) {
-            Collection<ProcessDefinition> pds = parser.parse(in);
-            for (ProcessDefinition pd : pds) {
-                m.put(pd.getId(), mergeAttrs(pd, attrs));
-                log.info("parseAndStore ['{}'] -> got '{}'", f, pd.getId());
+            WorkflowDefinition wd = parser.parse(f.getFileName().toString(), in);
+
+            Map<String, ProcessDefinition> pds = wd.getProcesses();
+            if (pds != null) {
+                for (Map.Entry<String, ProcessDefinition> e : pds.entrySet()) {
+                    String id = e.getKey();
+                    ProcessDefinition pd = e.getValue();
+                    processes.put(id, mergeAttrs(pd, attrs));
+                    log.info("parseAndStore ['{}'] -> got process '{}'", f, id);
+                }
             }
+
+            forms.putAll(wd.getForms());
         } catch (ParserException e) {
             log.warn("parseAndStore ['{}'] -> skipping, {}", f, e.getMessage());
         }

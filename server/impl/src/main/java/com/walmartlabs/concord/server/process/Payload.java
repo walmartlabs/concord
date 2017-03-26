@@ -16,7 +16,7 @@ public class Payload {
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
     public static final HeaderKey<Map> REQUEST_DATA_MAP = HeaderKey.register("_meta", Map.class);
-    public static final HeaderKey<Boolean> RESUME_MODE = HeaderKey.register("_resumeMode", Boolean.class);
+    public static final HeaderKey<String> RESUME_EVENT_NAME = HeaderKey.register("_resumeEventName", String.class);
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("_workspaceArchive");
 

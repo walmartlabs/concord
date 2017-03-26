@@ -41,7 +41,7 @@ public class DependenciesProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         try {
@@ -50,7 +50,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             throw new ProcessException("Error while processing payload's dependencies", e);
         }
 
-        return payload;
+        return chain.process(payload);
     }
 
     private void resolveDependencies(Path workspace) throws IOException {

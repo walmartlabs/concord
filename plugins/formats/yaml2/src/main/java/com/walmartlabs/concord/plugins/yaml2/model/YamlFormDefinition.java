@@ -12,6 +12,14 @@ public class YamlFormDefinition implements YamlDefinition {
         this.fields = fields;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public Seq<YamlFormField> getFields() {
+        return fields;
+    }
+
     @Override
     public String toString() {
         return "YamlFormDefinition{" +

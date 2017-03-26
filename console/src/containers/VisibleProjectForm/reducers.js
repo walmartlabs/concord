@@ -17,7 +17,7 @@ const data = (state = null, action) => {
     }
 };
 
-const loading = common.makeIsLoadingReducer(actionTypes.FETCH_PROJECT_REQUEST, actionTypes.FETCH_PROJECT_RESULT);
+const loading = common.makeBooleanTriggerReducer(actionTypes.FETCH_PROJECT_REQUEST, actionTypes.FETCH_PROJECT_RESULT);
 const error = common.makeErrorReducer(actionTypes.FETCH_PROJECT_REQUEST, actionTypes.FETCH_PROJECT_RESULT);
 
 export default combineReducers({data, loading, error});

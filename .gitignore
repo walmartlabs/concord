@@ -18,3 +18,4 @@ pom.xml.bak
 console/build
 yarn.lock
 flow-typed/
+npm-debug.log

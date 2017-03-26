@@ -52,7 +52,7 @@ public abstract class AbstractServerIT {
     public void _init() throws Exception {
         client = createClient(this::getApiKey);
 
-        log.info("_init -> using {}", ITConstants.SERVER_URL);
+        log.debug("_init -> using {}", ITConstants.SERVER_URL);
         target = client.target(ITConstants.SERVER_URL);
     }
 
@@ -103,15 +103,22 @@ public abstract class AbstractServerIT {
         return spr;
     }
 
-    protected static ProcessStatusResponse waitForCompletion(ProcessResource processResource, String instanceId) throws InterruptedException {
+    protected static ProcessStatusResponse waitForStatus(ProcessResource processResource, String instanceId,
+                                                         ProcessStatus status, ProcessStatus... more) throws InterruptedException {
         int retries = 5;
 
         ProcessStatusResponse pir;
         while (true) {
             try {
                 pir = processResource.get(instanceId);
-                if (pir.getStatus() != ProcessStatus.RUNNING && pir.getStatus() != ProcessStatus.STARTING) {
-                    break;
+                if (status == pir.getStatus()) {
+                    return pir;
+                }
+
+                for (ProcessStatus s : more) {
+                    if (pir.getStatus() == s) {
+                        return pir;
+                    }
                 }
             } catch (NotFoundException e) {
                 System.out.println(String.format("waitForCompletion ['%s'] -> not found, retrying... (%s)", instanceId, retries));
@@ -119,9 +126,14 @@ public abstract class AbstractServerIT {
                     throw e;
                 }
             }
+
             Thread.sleep(1000);
         }
-        return pir;
+    }
+
+
+    protected static ProcessStatusResponse waitForCompletion(ProcessResource processResource, String instanceId) throws InterruptedException {
+        return waitForStatus(processResource, instanceId, ProcessStatus.FAILED, ProcessStatus.FINISHED);
     }
 
     protected static void assertLog(String pattern, byte[] ab) throws IOException {

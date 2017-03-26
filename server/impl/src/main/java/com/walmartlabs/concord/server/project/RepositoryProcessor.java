@@ -5,6 +5,7 @@ import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
+import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.security.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
@@ -40,11 +41,11 @@ public class RepositoryProcessor implements PayloadProcessor {
     }
 
     @Override
-    public Payload process(Payload payload) {
+    public Payload process(Chain chain, Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         String[] entryPoint = payload.getHeader(Payload.ENTRY_POINT);
         if (projectName == null || entryPoint == null || entryPoint.length < 1) {
-            return payload;
+            return chain.process(payload);
         }
 
         // the name of a repository is always a second part in an entry point, but
@@ -54,7 +55,7 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         RepositoryEntry repo = repositoryDao.get(projectName, repoName);
         if (repo == null) {
-            return payload;
+            return chain.process(payload);
         }
 
         String branch = repo.getBranch();
@@ -78,8 +79,10 @@ public class RepositoryProcessor implements PayloadProcessor {
         // TODO replace with a queue/stack/linkedlist?
         entryPoint = entryPoint.length > 1 ? Arrays.copyOfRange(entryPoint, 1, entryPoint.length) : new String[0];
 
-        return payload.putHeader(Payload.ENTRY_POINT, entryPoint)
+        payload = payload.putHeader(Payload.ENTRY_POINT, entryPoint)
                 .putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch));
+
+        return chain.process(payload);
     }
 
     public static final class RepositoryInfo implements Serializable {
