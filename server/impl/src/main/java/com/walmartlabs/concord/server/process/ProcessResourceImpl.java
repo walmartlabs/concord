@@ -127,86 +127,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     public StartProcessResponse start(String projectName, InputStream in) {
         String instanceId = UUID.randomUUID().toString();
 
-<<<<<<< HEAD
-            p = addInitiator(p);
-
-            return parseEntryPoint(p, entryPoint);
-        } catch (IOException e) {
-            throw new ProcessException("Error while parsing a request", e);
-        }
-    }
-
-    /**
-     * Creates a payload from the supplied map of parameters.
-     *
-     * @param instanceId
-     * @param request
-     * @return
-     */
-    private Payload createPayload(String instanceId, String entryPoint, Map<String, Object> request) {
-        try {
-            Path baseDir = Files.createTempDirectory("request");
-            Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
-            log.debug("createPayload ['{}'] -> baseDir: {}", instanceId, baseDir);
-
-            Payload p = new Payload(instanceId)
-                    .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
-                    .mergeValues(Payload.REQUEST_DATA_MAP, request);
-
-            p = addInitiator(p);
-
-            return parseEntryPoint(p, entryPoint);
-=======
         Payload payload;
         try {
             payload = payloadManager.createPayload(instanceId, getInitiator(), projectName, in);
->>>>>>> forms
         } catch (IOException e) {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-<<<<<<< HEAD
-    /**
-     * Creates a payload from an archive, containing all necessary resources.
-     *
-     * @param instanceId
-     * @param in
-     * @return
-     */
-    private Payload createPayload(String instanceId, InputStream in) {
-        try {
-            Path baseDir = Files.createTempDirectory("request");
-            Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
-            log.debug("createPayload ['{}'] -> baseDir: {}", instanceId, baseDir);
-
-            Path archive = baseDir.resolve("_input.zip");
-            Files.copy(in, archive);
-
-            Payload p = new Payload(instanceId);
-            p = addInitiator(p);
-            return p.putHeader(Payload.WORKSPACE_DIR, workspaceDir)
-                    .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
-        } catch (IOException e) {
-            throw new ProcessException("Error while parsing a request", e);
-        }
-    }
-
-    /**
-     * Creates a payload from an archive, containing all necessary resources and the
-     * specified project name.
-     *
-     * @param instanceId
-     * @param in
-     * @return
-     */
-    private Payload createPayload(String instanceId, String projectName, InputStream in) {
-        Payload p = createPayload(instanceId, in);
-        p = addInitiator(p);
-        return p.putHeader(Payload.PROJECT_NAME, projectName);
-=======
         projectArchivePipeline.process(payload);
         return new StartProcessResponse(instanceId);
->>>>>>> forms
     }
 
     @Override
@@ -316,15 +245,5 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UserEntry u = (UserEntry) subject.getPrincipal();
         return u.getName();
-    }
-
-    private static Payload addInitiator(Payload p) {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject == null || !subject.isAuthenticated()) {
-            return null;
-        }
-
-        UserEntry u = (UserEntry) subject.getPrincipal();
-        return p.putHeader(Payload.INITIATOR, u.getName());
     }
 }
