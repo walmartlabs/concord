@@ -25,7 +25,7 @@ public interface ProjectResource {
     @ApiOperation("Create a new project")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    CreateProjectResponse create(@ApiParam @Valid CreateProjectRequest request);
+    CreateProjectResponse createOrUpdate(@ApiParam @Valid CreateProjectRequest request);
 
     /**
      * Add a new repository to a project.

@@ -26,12 +26,12 @@ public class ValidationIT extends AbstractServerIT {
 
         try {
             CreateProjectRequest req = new CreateProjectRequest("@123_123", null, null);
-            projectResource.create(req);
+            projectResource.createOrUpdate(req);
             fail("Should fail");
         } catch (BadRequestException e) {
         }
 
         CreateProjectRequest req = new CreateProjectRequest("aProperName@" + System.currentTimeMillis(), null, null);
-        projectResource.create(req);
+        projectResource.createOrUpdate(req);
     }
 }

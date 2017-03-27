@@ -7,7 +7,6 @@ import com.walmartlabs.concord.server.security.secret.SecretDao;
 import com.walmartlabs.concord.server.template.TemplateResolver;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.subject.Subject;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -63,32 +62,35 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
-    @RequiresPermissions(Permissions.PROJECT_CREATE_NEW)
-    public CreateProjectResponse create(CreateProjectRequest request) {
-        String projectName = request.getName();
-        if (projectDao.exists(projectName)) {
-            throw new ValidationErrorsException("Project already exists: " + request.getName());
-        }
-
+    public CreateProjectResponse createOrUpdate(CreateProjectRequest request) {
         assertTemplates(request.getTemplates());
 
         Map<String, Object> cfg = request.getCfg();
         validateCfg(cfg);
 
-        tx(tx -> {
-            projectDao.insert(tx, projectName, request.getTemplates());
+        String projectName = request.getName();
+        if (projectDao.exists(projectName)) {
+            UpdateProjectRequest req = new UpdateProjectRequest(request.getTemplates(), request.getRepositories(), request.getCfg());
+            update(projectName, req);
+            return new CreateProjectResponse(false);
+        } else {
+            assertPermissions(projectName, Permissions.PROJECT_CREATE_NEW,
+                    "The current user does not have permissions to create a new project");
 
-            Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
-            if (repos != null) {
-                insert(tx, projectName, repos);
-            }
+            tx(tx -> {
+                projectDao.insert(tx, projectName, request.getTemplates());
 
-            if (cfg != null) {
-                configurationDao.insert(tx, projectName, cfg);
-            }
-        });
+                Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
+                if (repos != null) {
+                    insert(tx, projectName, repos);
+                }
 
-        return new CreateProjectResponse();
+                if (cfg != null) {
+                    configurationDao.insert(tx, projectName, cfg);
+                }
+            });
+            return new CreateProjectResponse(true);
+        }
     }
 
     @Override
