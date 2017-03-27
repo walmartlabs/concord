@@ -45,8 +45,13 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project@" + System.currentTimeMillis();
-        CreateProjectResponse cpr = projectResource.create(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
         assertTrue(cpr.isOk());
+
+        cpr = projectResource.createOrUpdate(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
+        assertTrue(cpr.isOk());
+
+        // ---
 
         ProjectEntry e1 = projectResource.get(projectName);
         assertNotNull(e1);
@@ -75,7 +80,7 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project@" + System.currentTimeMillis();
-        projectResource.create(new CreateProjectRequest(projectName, null, null, cfg));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, null, cfg));
 
         // ---
 
@@ -106,7 +111,7 @@ public class CrudIT extends AbstractServerIT {
         String branch = "branch@" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.create(new CreateProjectRequest(projectName, null, Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null))));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null))));
 
         // ---
 
@@ -131,8 +136,8 @@ public class CrudIT extends AbstractServerIT {
         String projectName2 = "project2@" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.create(new CreateProjectRequest(projectName1, null, null));
-        projectResource.create(new CreateProjectRequest(projectName2, null, null));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName1, null, null));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName2, null, null));
 
         // ---
 

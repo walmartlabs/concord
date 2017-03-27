@@ -8,8 +8,8 @@ public class SimpleIT extends AbstractIT {
     @Test(timeout = 30000)
     public void test() throws Exception {
         start();
-        waitFor("Logo should be visible", By.id("logo"));
         waitForPage();
+        waitFor("Logo should be visible", By.id("logo"));
         assertNoErrors();
     }
 }

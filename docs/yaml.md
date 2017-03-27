@@ -213,6 +213,29 @@ mySubFlow:
   - log: a message from the sub flow
 ```
 
+### Scripting
+
+Most of the JSR-223 compatible script engines are supported:
+
+```yaml
+main:
+  - script: js
+    body: |
+      function doSomething(i) {
+        return i * 2;
+      }
+
+      var x = execution.getVariable("input");
+      execution.setVariable("output", doSomething(x));
+```
+
+See [the expressions](#expressions) section for the list of provided
+global variables.
+
+JavaScript content is executed using Java's Nashorn engine. All other
+engines require additional dependencies to be included with the process
+definition.
+
 ## Form Syntax
 
 ### Declaring a new form
@@ -236,6 +259,7 @@ Forms must contain one or more fields:
 ```yaml
 form (myForm):
   - myField: { label: "My Field", type: "string", pattern: "Hello, .*" }
+  - anotherOne: { label: "My Other Field", type: "int", expr: "${inputValue + 100}"}
 ```
 
 Field declaration consists of the name (`myField`), the type
@@ -246,7 +270,10 @@ form's results. E.g. if the form's name is `myForm` and the field's
 name is `myField`, then the value of the field will be stored in
 `myForm.myField` variable.
 
-The `label` value is optional.
+Common options:
+- `label`: the field's label, usually human-readable;
+- `expr`: default value [expression](#expressions), evaluated when
+the form is called.
 
 Supported types of fields and their options:
 - `string`: a string value
@@ -318,9 +345,10 @@ ifExpr := FIELD_NAME "if" expression FIELD_NAME "then" steps (FIELD_NAME "else" 
 returnExpr := VALUE_STRING "return"
 group := FIELD_NAME ":" steps groupOptions
 callProc := VALUE_STRING
+inlineScript := FIELD_NAME "script" VALUE_STRING FIELD_NAME "body" VALUE_STRING
 formCall := FIELD_NAME "form" VALUE_STRING formCallOptions
 
-stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | taskShort END_OBJECT
+stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | inlineScript | taskShort END_OBJECT
 step := returnExpr | exprShort | callProc | stepObject
 steps := START_ARRAY step+ END_ARRAY
 

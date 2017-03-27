@@ -1,10 +1,10 @@
 # Project
 
-## Create a new project
+## Create a new project or update an existing one
 
-Creates a new project with specified parameters.
+Creates a new project with specified parameters or updates an existing one.
 
-* **Permissions** `project:create`, `secret:read:${secretName}` (optional)
+* **Permissions** `project:create`, `project:update:${projectName}`, `secret:read:${secretName}` (optional)
 * **URI** `/api/v1/project`
 * **Method** `POST`
 * **Headers** `Authorization`, `Content-Type: application/json`

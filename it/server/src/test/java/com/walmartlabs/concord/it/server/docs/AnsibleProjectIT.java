@@ -12,7 +12,6 @@ import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
-import com.walmartlabs.concord.server.api.template.TemplateResource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,7 +89,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.create(new CreateProjectRequest(projectName, singleton(templateName), singletonMap(repoName, repo)));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName, singleton(templateName), singletonMap(repoName, repo)));
 
         // ---
 

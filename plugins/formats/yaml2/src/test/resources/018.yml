@@ -1,0 +1,12 @@
+main:
+  # inline script
+  - script: js
+    body: |
+      function doSomething(i) {
+        return i * 2;
+      }
+
+      var x = execution.getVariable("input");
+      execution.setVariable("output", doSomething(x));
+
+  - ${testBean.toString(output)}
