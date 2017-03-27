@@ -1,9 +1,26 @@
 # Quick start
 
-(using the pre-build Docker images)
+The fastest way to get a Concord instance up and running is to use the
+pre-built Docker images to run all three components of Concord: the
+Concord Agent, the Concord Server, and the Concord Console.
 
-If you are using a private docker registry, add its name to an image
-name, e.g. `docker.prod.walmart.com/walmartlabs/concord-agent`.
+- Referencing a private Docker registry
+
+  If you are using a private Docker registry, add its name to an image
+  name in the examples below.  For example, if your private docker
+  registry is running on docker.prod.walmart.com this command:
+ 
+  ```
+  docker run -d -p 8002:8002 -name agent walmartlabs/concord-agent
+  ```
+
+  would be run as:
+
+  ```
+  docker run -d -p 8002:8002 -name agent \
+       docker.prod.walmart.com/walmartlabs/concord-agent
+  ```
+
 
 - Start the agent:
 
@@ -14,7 +31,8 @@ name, e.g. `docker.prod.walmart.com/walmartlabs/concord-agent`.
 - Start the server:
 
   ```
-  docker run -d -p 8001:8001 --name server --link agent walmartlabs/concord-server
+  docker run -d -p 8001:8001 --name server --link agent \
+  	 walmartlabs/concord-server
   ```
 
   This will start the server with an in-memory database and temporary
