@@ -259,6 +259,7 @@ Forms must contain one or more fields:
 ```yaml
 form (myForm):
   - myField: { label: "My Field", type: "string", pattern: "Hello, .*" }
+  - anotherOne: { label: "My Other Field", type: "int", expr: "${inputValue + 100}"}
 ```
 
 Field declaration consists of the name (`myField`), the type
@@ -269,7 +270,10 @@ form's results. E.g. if the form's name is `myForm` and the field's
 name is `myField`, then the value of the field will be stored in
 `myForm.myField` variable.
 
-The `label` value is optional.
+Common options:
+- `label`: the field's label, usually human-readable;
+- `expr`: default value [expression](#expressions), evaluated when
+the form is called.
 
 Supported types of fields and their options:
 - `string`: a string value

@@ -39,7 +39,7 @@ public class YamlParserTest {
         forms = new HashMap<>();
         FormStorage fs = new TestFormStorage(forms);
 
-        ExpressionManager expressionManager = new DefaultExpressionManager();
+        ExpressionManager expressionManager = new DefaultExpressionManager(taskRegistry);
         ResumeHandler rs = (form, args) -> getEngine().resume(form.getProcessBusinessKey(), form.getEventName(), args);
         formService = new DefaultFormService(rs, fs, expressionManager);
 
@@ -557,6 +557,34 @@ public class YamlParserTest {
         assertTrue(result.isValid());
 
         verify(testBean, times(1)).toString(eq(numbers));
+    }
+
+    @Test
+    public void test103() throws Exception {
+        deploy("103.yml");
+
+        String inputValue = "test#" + System.currentTimeMillis();
+
+        // ---
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", Collections.singletonMap("inputValue", inputValue));
+
+        // ---
+
+        UUID formId = getFirstFormId();
+        Form f = formService.get(formId);
+
+        Map<String, Object> data = (Map<String, Object>) f.getEnv().get("myForm");
+        FormSubmitResult result = formService.submit(formId, data);
+        assertTrue(result.isValid());
+
+        verify(testBean, times(1)).toString(eq("Hello, " + inputValue));
     }
 
     @Test

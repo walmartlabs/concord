@@ -16,8 +16,6 @@ import io.takari.parc.Seq;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class YamlConverter {
 
@@ -38,24 +36,25 @@ public class YamlConverter {
     private static FormField convert(YamlFormField f) throws YamlConverterException {
         Map<String, Object> opts = f.getOptions();
 
-        String label;
-        Map<Option<?>, Object> options = new HashMap<>();
+        // common parameters
+        String label = (String) opts.get("label");
+        String valueExpr = (String) opts.get("expr");
+        assertExpression(valueExpr, f.getLocation());
 
+        // type-specific options
+        Map<Option<?>, Object> options = new HashMap<>();
         TypeInfo tInfo = getFieldType(f);
         switch (tInfo.type) {
             case StringField.TYPE: {
-                label = (String) opts.get("label");
                 options.put(StringField.PATTERN, opts.get("pattern"));
                 break;
             }
             case IntegerField.TYPE: {
-                label = (String) opts.get("label");
                 options.put(IntegerField.MIN, coerceToLong(opts.get("min")));
                 options.put(IntegerField.MAX, coerceToLong(opts.get("max")));
                 break;
             }
             case DecimalField.TYPE: {
-                label = (String) opts.get("label");
                 options.put(DecimalField.MIN, coerceToDouble(opts.get("min")));
                 options.put(DecimalField.MAX, coerceToDouble(opts.get("max")));
                 break;
@@ -66,6 +65,7 @@ public class YamlConverter {
 
         return new FormField.Builder(f.getName(), tInfo.type)
                 .label(label)
+                .valueExpr(valueExpr)
                 .cardinality(tInfo.cardinality)
                 .options(options)
                 .build();
@@ -378,6 +378,14 @@ public class YamlConverter {
         }
 
         throw new IllegalArgumentException("Can't coerce '" + v + "' to double");
+    }
+
+    private static void assertExpression(String s, JsonLocation loc) throws YamlConverterException {
+        if (s != null && s.startsWith("${") && s.endsWith("}")) {
+            return;
+        }
+
+        throw new YamlConverterException("Invalid expression @ " + loc);
     }
 
     private static class ELCall implements Serializable {
