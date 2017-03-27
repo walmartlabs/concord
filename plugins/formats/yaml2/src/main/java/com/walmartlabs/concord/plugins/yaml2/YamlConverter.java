@@ -157,7 +157,16 @@ public class YamlConverter {
             return proc.userTask(Arrays.asList(new FormExtension(c.getKey())));
         } else if (s instanceof YamlCall) {
             YamlCall c = (YamlCall) s;
-            return sourceMap(proc.call(c.getProc(), true), s, "Call");
+
+            String target = c.getProc();
+            if (target.startsWith("${")) {
+                throw new YamlConverterException("Invalid call: " + target + ". It looks like an expression. @ " + c.getLocation());
+            }
+
+            return sourceMap(proc.call(target, true), s, "Call");
+        } else if (s instanceof YamlScript) {
+            YamlScript c = (YamlScript) s;
+            return sourceMap(proc.script(c.getType(), c.getLanguage(), c.getBody()), s, "Script");
         } else {
             throw new YamlConverterException("Unknown step type: " + s.getClass());
         }

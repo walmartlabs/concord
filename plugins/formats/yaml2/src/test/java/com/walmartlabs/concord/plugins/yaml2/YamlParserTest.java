@@ -452,6 +452,23 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
+
+    @Test
+    public void test018() throws Exception {
+        deploy("018.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("input", 10);
+        engine.start(key, "main", args);
+
+        verify(testBean, times(1)).toString(eq(20.0));
+    }
+
     // FORMS (100 - 199)
 
     @Test
@@ -529,12 +546,12 @@ public class YamlParserTest {
 
         UUID formId = getFirstFormId();
 
-        int[] numbers = new int[] { -1, 5, 98 };
+        int[] numbers = new int[]{-1, 5, 98};
 
         FormSubmitResult result = formService.submit(formId, Collections.singletonMap("favouriteNumbers", numbers));
         assertFalse(result.isValid());
 
-        numbers = new int[] { 0, 5, 98 };
+        numbers = new int[]{0, 5, 98};
 
         result = formService.submit(formId, Collections.singletonMap("favouriteNumbers", numbers));
         assertTrue(result.isValid());
