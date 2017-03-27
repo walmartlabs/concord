@@ -39,7 +39,9 @@ public class YamlConverter {
         // common parameters
         String label = (String) opts.get("label");
         String valueExpr = (String) opts.get("expr");
-        assertExpression(valueExpr, f.getLocation());
+        if (valueExpr != null && !valueExpr.isEmpty()) {
+            assertExpression(valueExpr, f.getLocation());
+        }
 
         // type-specific options
         Map<Option<?>, Object> options = new HashMap<>();
