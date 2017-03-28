@@ -33,8 +33,9 @@ public interface UserResource {
      */
     @GET
     @ApiOperation("Find an user")
+    @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
-    UserEntry findByUsername(@QueryParam("username") @NotNull String username);
+    UserEntry findByUsername(@PathParam("username") @NotNull String username);
 
     /**
      * Removes an existing user.

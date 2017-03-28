@@ -2,12 +2,13 @@ package com.walmartlabs.concord.server.api.user;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Set;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(Include.NON_NULL)
 public class UserEntry implements Serializable {
 
     private final String id;
@@ -24,6 +25,10 @@ public class UserEntry implements Serializable {
         this.permissions = permissions;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }
@@ -32,11 +37,5 @@ public class UserEntry implements Serializable {
         return permissions;
     }
 
-    @Override
-    public String toString() {
-        return "UserEntry{" +
-                "name='" + name + '\'' +
-                ", permissions=" + permissions +
-                '}';
-    }
+
 }

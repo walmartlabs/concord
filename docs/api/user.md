@@ -16,7 +16,7 @@ using the specified username.
       "permissions": [
         "project:create",
         "process:start:*",
-        ...
+        "..."
       ]
     }
     ```
@@ -38,4 +38,28 @@ using the specified username.
     
     The `created` paratemer indicates whether the user was created or updated.
 
-TBD.
+## Find a user
+
+Find an existing user by name.
+
+* **Permissions** none
+* **URI** `/api/v1/user/${username}`
+* **Method** `GET`
+* **Headers** `Authorization`
+* **Body**
+    none
+* **Success response**
+    ```
+    Content-Type: application/json
+    ```
+    
+    ```json
+    {
+      "id" : "...",
+      "name" : "myUser",
+      "permissions" : [ "*:*:*" ]
+    
+    }
+    ```
+    
+    The `created` paratemer indicates whether the user was created or updated.
