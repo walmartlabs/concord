@@ -4,10 +4,7 @@ import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.user.UserDao;
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.SimpleAccount;
-import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.ldap.AbstractLdapRealm;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
@@ -26,6 +23,7 @@ public class LdapRealm extends AbstractLdapRealm {
 
     private final UserDao userDao;
     private final ConcordShiroAuthorizer authorizer;
+    private final String usernameSuffix;
 
     @Inject
     public LdapRealm(LdapConfiguration cfg, UserDao userDao, ConcordShiroAuthorizer authorizer) {
@@ -34,7 +32,7 @@ public class LdapRealm extends AbstractLdapRealm {
 
         this.url = cfg.getUrl();
         this.searchBase = cfg.getSearchBase();
-        this.principalSuffix = cfg.getPrincipalSuffix();
+        this.usernameSuffix = cfg.getPrincipalSuffix();
         this.systemUsername = cfg.getSystemUsername();
         this.systemPassword = cfg.getSystemPassword();
 
@@ -59,6 +57,14 @@ public class LdapRealm extends AbstractLdapRealm {
         char[] password = t.getPassword();
         if (username == null || password == null) {
             return null;
+        }
+
+        if (username.contains("\\")) {
+            throw new AuthenticationException("User's domain should be specified as username@domain");
+        }
+
+        if (!username.contains("@")) {
+            username = username + usernameSuffix;
         }
 
         LdapContext ctx = null;

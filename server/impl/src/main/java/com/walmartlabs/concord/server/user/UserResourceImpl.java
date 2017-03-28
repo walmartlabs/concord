@@ -68,17 +68,6 @@ public class UserResourceImpl implements UserResource, Resource {
         return new DeleteUserResponse();
     }
 
-    @Override
-    @RequiresPermissions(Permissions.USER_UPDATE_ANY)
-    public UpdateUserResponse update(String id, UpdateUserRequest request) {
-        if (!userDao.existsById(id)) {
-            throw new ValidationErrorsException("User not found: " + id);
-        }
-
-        userDao.update(id, request.getPermissions());
-        return new UpdateUserResponse();
-    }
-
     private void assertPermissions(String wildcard, String perm) {
         Subject subject = SecurityUtils.getSubject();
         if (!subject.isPermitted(wildcard)) {

@@ -48,18 +48,4 @@ public interface UserResource {
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     DeleteUserResponse delete(@ApiParam @PathParam("id") String id);
-
-    /**
-     * Updates an existing user.
-     *
-     * @param id
-     * @param request
-     * @return
-     */
-    @PUT
-    @ApiOperation("Update an existing user")
-    @Path("/{id}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    UpdateUserResponse update(@ApiParam @PathParam("id") String id, UpdateUserRequest request);
 }
