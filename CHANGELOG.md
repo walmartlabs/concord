@@ -1,5 +1,13 @@
 # Change log
 
+## Unreleased
+
+### Changed
+
+- some logging fixes for nexus-perf tasks.
+
+
+
 ## [0.2.1] - 2017-03-29
 
 ### Changed

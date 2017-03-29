@@ -101,7 +101,7 @@ public class AgentTask implements Task {
             m.waitToFinish(timeout, stopOnFailure);
             log.debug("waitToFinish ['{}', {}] -> done", txId, timeout);
         } catch (Exception e) {
-            log.error("waitToFinish ['{}', {}] -> error", txId, timeout);
+            log.error("waitToFinish ['{}', {}] -> error", txId, timeout, e);
             throw new BpmnError("waitToFinishError", e);
         }
     }
