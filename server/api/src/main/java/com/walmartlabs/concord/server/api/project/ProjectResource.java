@@ -16,13 +16,13 @@ import java.util.Map;
 public interface ProjectResource {
 
     /**
-     * Creates a new project.
+     * Creates a new project or updates an existing one.
      *
      * @param request project's data
      * @return
      */
     @POST
-    @ApiOperation("Create a new project")
+    @ApiOperation("Create or update a project")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     CreateProjectResponse createOrUpdate(@ApiParam @Valid CreateProjectRequest request);
@@ -67,6 +67,13 @@ public interface ProjectResource {
     RepositoryEntry getRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                   @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
 
+    /**
+     * Returns a project configuration entry for the specified path.
+     *
+     * @param projectName
+     * @param path
+     * @return
+     */
     @GET
     @ApiOperation("Get project configuration")
     @Path("/{projectName}/cfg/{path}")

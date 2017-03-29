@@ -43,15 +43,15 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        String projectName = "myProject@" + System.currentTimeMillis();
-        String userName = "myUser@" + System.currentTimeMillis();
+        String projectName = "myProject_" + System.currentTimeMillis();
+        String userName = "myUser_" + System.currentTimeMillis();
         Set<String> permissions = Sets.newHashSet(
                 String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
                 String.format(Permissions.PROCESS_START_PROJECT, projectName));
-        String repoName = "myRepo@" + System.currentTimeMillis();
+        String repoName = "myRepo_" + System.currentTimeMillis();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
-        String greeting = "Hello, @" + System.currentTimeMillis();
+        String greeting = "Hello, _" + System.currentTimeMillis();
         Map<String, Object> args = Collections.singletonMap(Constants.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 

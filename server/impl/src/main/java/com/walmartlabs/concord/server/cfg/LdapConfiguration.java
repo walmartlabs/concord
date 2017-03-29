@@ -18,6 +18,7 @@ public class LdapConfiguration implements Serializable {
     private final String url;
     private final String searchBase;
     private final String principalSuffix;
+    private final String principalSearchFilter;
     private final String systemUsername;
     private final String systemPassword;
 
@@ -38,14 +39,16 @@ public class LdapConfiguration implements Serializable {
         this.url = props.getProperty("url");
         this.searchBase = props.getProperty("searchBase");
         this.principalSuffix = props.getProperty("principalSuffix");
+        this.principalSearchFilter = props.getProperty("principalSearchFilter");
         this.systemUsername = props.getProperty("systemUsername");
         this.systemPassword = props.getProperty("systemPassword");
     }
 
-    public LdapConfiguration(String url, String searchBase, String principalSuffix, String systemUsername, String systemPassword) {
+    public LdapConfiguration(String url, String searchBase, String principalSuffix, String principalSearchFilter, String systemUsername, String systemPassword) {
         this.url = url;
         this.searchBase = searchBase;
         this.principalSuffix = principalSuffix;
+        this.principalSearchFilter = principalSearchFilter;
         this.systemUsername = systemUsername;
         this.systemPassword = systemPassword;
     }
@@ -60,6 +63,10 @@ public class LdapConfiguration implements Serializable {
 
     public String getPrincipalSuffix() {
         return principalSuffix;
+    }
+
+    public String getPrincipalSearchFilter() {
+        return principalSearchFilter;
     }
 
     public String getSystemUsername() {

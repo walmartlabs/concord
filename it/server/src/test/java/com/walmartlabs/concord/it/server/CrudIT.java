@@ -23,7 +23,7 @@ public class CrudIT extends AbstractServerIT {
     public void testTemplates() {
         TemplateResource templateResource = proxy(TemplateResource.class);
 
-        String name = "template@" + System.currentTimeMillis();
+        String name = "template_" + System.currentTimeMillis();
         CreateTemplateResponse ctr = templateResource.create(name, new ByteArrayInputStream(new byte[]{0, 1, 2}));
         assertTrue(ctr.isOk());
 
@@ -36,7 +36,7 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testProject() {
-        String templateName = "template@" + System.currentTimeMillis();
+        String templateName = "template_" + System.currentTimeMillis();
         TemplateResource templateResource = proxy(TemplateResource.class);
         templateResource.create(templateName, new ByteArrayInputStream(new byte[]{0, 1, 2}));
 
@@ -44,7 +44,7 @@ public class CrudIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
 
-        String projectName = "project@" + System.currentTimeMillis();
+        String projectName = "project_" + System.currentTimeMillis();
         CreateProjectResponse cpr = projectResource.createOrUpdate(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
         assertTrue(cpr.isOk());
 
@@ -79,7 +79,7 @@ public class CrudIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
 
-        String projectName = "project@" + System.currentTimeMillis();
+        String projectName = "project_" + System.currentTimeMillis();
         projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, null, cfg));
 
         // ---
@@ -106,9 +106,9 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testRepository() throws Exception {
-        String projectName = "project@" + System.currentTimeMillis();
-        String repoName = "repo@" + System.currentTimeMillis();
-        String branch = "branch@" + System.currentTimeMillis();
+        String projectName = "project_" + System.currentTimeMillis();
+        String repoName = "repo_" + System.currentTimeMillis();
+        String branch = "branch_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null))));
@@ -132,8 +132,8 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testNonUniqueRepositoryNames() throws Exception {
-        String projectName1 = "project1@" + System.currentTimeMillis();
-        String projectName2 = "project2@" + System.currentTimeMillis();
+        String projectName1 = "project1_" + System.currentTimeMillis();
+        String projectName2 = "project2_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new CreateProjectRequest(projectName1, null, null));
@@ -141,7 +141,7 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        String repoName = "repo@" + System.currentTimeMillis();
+        String repoName = "repo_" + System.currentTimeMillis();
         CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1, new CreateRepositoryRequest(repoName, "n/a", null, null));
         assertTrue(crr1.isOk());
 
@@ -151,7 +151,7 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testSecretKeyPair() throws Exception {
-        String keyName = "key@" + System.currentTimeMillis();
+        String keyName = "key_" + System.currentTimeMillis();
         SecretResource secretResource = proxy(SecretResource.class);
 
         // ---
@@ -187,7 +187,7 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testSecretUsernamePassword() throws Exception {
-        String keyName = "key@" + System.currentTimeMillis();
+        String keyName = "key_" + System.currentTimeMillis();
         SecretResource secretResource = proxy(SecretResource.class);
 
         // ---

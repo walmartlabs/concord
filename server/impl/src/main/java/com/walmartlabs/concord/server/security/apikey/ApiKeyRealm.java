@@ -52,6 +52,6 @@ public class ApiKeyRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         UserEntry u = (UserEntry) principals.getPrimaryPrincipal();
-        return authorizer.getAuthorizationInfo(u);
+        return authorizer.getAuthorizationInfo(u, null);
     }
 }

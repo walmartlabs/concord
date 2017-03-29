@@ -31,21 +31,58 @@
     </changeSet>
 
     <changeSet id="3110" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_ROLE_PERM_ROLE"
+                                 baseTableName="ROLE_PERMISSIONS"
+                                 baseColumnNames="ROLE_NAME"
+                                 referencedTableName="ROLES"
+                                 referencedColumnNames="ROLE_NAME"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="3120" author="ibodrov@gmail.com">
         <createIndex tableName="ROLE_PERMISSIONS" indexName="IDX_ROLE_PERMS">
             <column name="ROLE_NAME"/>
         </createIndex>
     </changeSet>
 
-    <!-- LDAP_ROLES -->
+    <!-- LDAP_GROUP_MAPPINGS -->
 
     <changeSet id="3200" author="ibodrov@gmail.com">
-        <createTable tableName="LDAP_ROLES" remarks="Mapping between LDAP groups and Concord roles">
-            <column name="LDAP_GROUP" type="varchar(1024)">
+        <createTable tableName="LDAP_GROUP_MAPPINGS" remarks="LDAP groups used for mapping to permissions">
+            <column name="MAPPING_ID" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="LDAP_DN" type="varchar(1024)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3210" author="ibodrov@gmail.com">
+        <createIndex tableName="LDAP_GROUP_MAPPINGS" indexName="IDX_LDAP_G_M_GR" unique="true">
+            <column name="LDAP_DN"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- LDAP_GROUP_ROLES -->
+
+    <changeSet id="3300" author="ibodrov">
+        <createTable tableName="LDAP_GROUP_ROLES" remarks="Roles, associated with group mappings">
+            <column name="MAPPING_ID" type="varchar(36)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="ROLE_NAME" type="varchar(128)">
-                <constraints nullable="false"/>
+                <constraints primaryKey="true" nullable="false"/>
             </column>
         </createTable>
+    </changeSet>
+
+    <changeSet id="3310" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_LDAP_G_R_ROLE"
+                                 baseTableName="LDAP_GROUP_ROLES"
+                                 baseColumnNames="ROLE_NAME"
+                                 referencedTableName="ROLES"
+                                 referencedColumnNames="ROLE_NAME"
+                                 onDelete="CASCADE"/>
     </changeSet>
 </databaseChangeLog>

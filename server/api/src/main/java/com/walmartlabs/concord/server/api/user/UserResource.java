@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.api.user;
 
+import com.walmartlabs.concord.common.validation.ConcordUsername;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -35,7 +36,7 @@ public interface UserResource {
     @ApiOperation("Find an user")
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
-    UserEntry findByUsername(@PathParam("username") @NotNull String username);
+    UserEntry findByUsername(@PathParam("username") @ConcordUsername @NotNull String username);
 
     /**
      * Removes an existing user.

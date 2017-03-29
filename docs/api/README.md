@@ -11,6 +11,8 @@ Must start with a character or a digit. Minumum length: 2, maximum: 128.
 - [Project](./project.md)
 - [Process](./process.md)
 - [User](./user.md)
+- [Role](./role.md)
+- [LDAP](./ldap.md)
 - [Secret](./secret.md)
 - [Template](./template.md)
 - [API key](./apikey.md)

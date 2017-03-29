@@ -27,6 +27,14 @@ public final class Permissions {
     public static final String USER_UPDATE_ANY = "user:update";
     public static final String USER_DELETE_ANY = "user:delete";
 
+    public static final String ROLE_CREATE_NEW = "role:create";
+    public static final String ROLE_UPDATE_ANY = "role:update";
+    public static final String ROLE_DELETE_ANY = "role:delete";
+
+    public static final String LDAP_MAPPING_CREATE_NEW = "ldapMapping:create";
+    public static final String LDAP_MAPPING_UPDATE_ANY = "ldapMapping:update";
+    public static final String LDAP_MAPPING_DELETE_ANY = "ldapMapping:delete";
+
     private Permissions() {
     }
 }

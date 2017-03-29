@@ -13,26 +13,36 @@ import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
-import java.util.UUID;
+import java.util.Collection;
+import java.util.HashSet;
 
 @Named
 public class LdapRealm extends AbstractLdapRealm {
 
     private final UserDao userDao;
+    private final LdapDao ldapDao;
     private final ConcordShiroAuthorizer authorizer;
     private final String usernameSuffix;
+    private final String userFilter;
 
     @Inject
-    public LdapRealm(LdapConfiguration cfg, UserDao userDao, ConcordShiroAuthorizer authorizer) {
+    public LdapRealm(LdapConfiguration cfg, UserDao userDao, LdapDao ldapDao, ConcordShiroAuthorizer authorizer) {
         this.userDao = userDao;
+        this.ldapDao = ldapDao;
         this.authorizer = authorizer;
 
         this.url = cfg.getUrl();
         this.searchBase = cfg.getSearchBase();
         this.usernameSuffix = cfg.getPrincipalSuffix();
+        this.userFilter = cfg.getPrincipalSearchFilter();
         this.systemUsername = cfg.getSystemUsername();
         this.systemPassword = cfg.getSystemPassword();
 
@@ -63,41 +73,65 @@ public class LdapRealm extends AbstractLdapRealm {
             throw new AuthenticationException("User's domain should be specified as username@domain");
         }
 
-        if (!username.contains("@")) {
-            username = username + usernameSuffix;
+        String principalName = username;
+        if (!principalName.contains("@")) {
+            principalName = principalName + usernameSuffix;
         }
 
         LdapContext ctx = null;
         try {
-            ctx = ldapContextFactory.getLdapContext(username, new String(password));
+            ctx = ldapContextFactory.getLdapContext(principalName, new String(password));
         } finally {
             LdapUtils.closeContext(ctx);
         }
 
         UserEntry u;
+
         String id = userDao.getId(username);
         if (id == null) {
-            // TODO move into UserManager
-            id = UUID.randomUUID().toString();
-            userDao.insert(id, username, null);
-
-            u = new UserEntry(id, username, null);
+            u = new UserEntry("ldap", username, null);
         } else {
             u = userDao.get(id);
         }
 
-        // TODO group to roles?
         return new SimpleAccount(Arrays.asList(u, t), t, getName());
     }
 
     @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+    protected AuthorizationInfo queryForAuthorizationInfo(PrincipalCollection principals, LdapContextFactory ldapContextFactory) throws NamingException {
         UserEntry u = (UserEntry) principals.getPrimaryPrincipal();
-        return authorizer.getAuthorizationInfo(u);
-    }
+        Collection<String> roles = new HashSet<>();
 
-    @Override
-    protected AuthorizationInfo queryForAuthorizationInfo(PrincipalCollection principal, LdapContextFactory ldapContextFactory) throws NamingException {
-        throw new IllegalStateException("Not supported");
+        LdapContext ctx = null;
+        try {
+            ctx = ldapContextFactory.getSystemLdapContext();
+
+            SearchControls searchCtls = new SearchControls();
+            searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+            Object[] args = new Object[]{u.getName()};
+
+            NamingEnumeration answer = ctx.search(searchBase, userFilter, args, searchCtls);
+
+            while (answer.hasMoreElements()) {
+                SearchResult sr = (SearchResult) answer.next();
+                Attributes attrs = sr.getAttributes();
+
+                if (attrs != null) {
+                    NamingEnumeration ae = attrs.getAll();
+                    while (ae.hasMore()) {
+                        Attribute attr = (Attribute) ae.next();
+
+                        if (attr.getID().equals("memberOf")) {
+                            Collection<String> groupNames = LdapUtils.getAllAttributeValues(attr);
+                            roles.addAll(ldapDao.getRoles(groupNames));
+                        }
+                    }
+                }
+            }
+
+            return authorizer.getAuthorizationInfo(u, roles);
+        } finally {
+            LdapUtils.closeContext(ctx);
+        }
     }
 }

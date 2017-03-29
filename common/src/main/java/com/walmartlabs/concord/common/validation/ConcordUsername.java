@@ -11,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({FIELD, PARAMETER, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@Pattern(regexp = "[^\\\\]*")
+@Pattern(regexp = "^[^\\\\@]*$")
 @Constraint(validatedBy = {})
 public @interface ConcordUsername {
 

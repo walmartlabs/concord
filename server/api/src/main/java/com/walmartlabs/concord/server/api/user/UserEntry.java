@@ -36,6 +36,4 @@ public class UserEntry implements Serializable {
     public Set<String> getPermissions() {
         return permissions;
     }
-
-
 }

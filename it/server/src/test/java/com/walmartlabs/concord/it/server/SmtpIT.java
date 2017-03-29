@@ -33,7 +33,7 @@ public class SmtpIT extends AbstractServerIT {
 
         // --
 
-        String projectName = "project@" + System.currentTimeMillis();
+        String projectName = "project_" + System.currentTimeMillis();
 
         Map<String, Object> smtpParams = new HashMap<>();
         smtpParams.put("host", ITConstants.SMTP_SERVER_HOST);

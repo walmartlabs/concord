@@ -57,6 +57,7 @@ Create `ldap.properties` file, containing the following parameters
 url=ldap://host:389
 searchBase=DC=unit,DC=org,DC=com
 principalSuffix=@unit.org.com
+principalSearchFilter=(&(objectCategory=Person)(sAMAccountName={0}))
 systemUsername=user
 systemPassword=pwd
 ```

@@ -54,3 +54,9 @@ Credentials (secrets) are managed using the [secret](./api/secret.md) API endpoi
 | `user:create`             | Create a new user.                                             |                                        |
 | `user:delete`             | Delete any user.                                               |                                        |
 | `user:update`             | Update any user.                                               |                                        |
+| `role:create`             | Create a new role.                                             |
+| `role:delete`             | Delete an existing role.                                       |
+| `role:update`             | Update an existing role.                                       |
+| `ldapMapping:create`      | Create a new LDAP group mapping.                               |
+| `ldapMapping:delete`      | Delete an existing LDAP group mapping.                         |
+| `ldapMapping:update`      | Update an existing LDAP group mapping.                         |

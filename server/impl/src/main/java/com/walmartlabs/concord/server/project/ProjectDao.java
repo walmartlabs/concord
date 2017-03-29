@@ -82,10 +82,8 @@ public class ProjectDao extends AbstractDao {
 
     public boolean exists(String name) {
         try (DSLContext create = DSL.using(cfg)) {
-            int cnt = create.fetchCount(create.selectFrom(PROJECTS)
+            return create.fetchExists(create.selectFrom(PROJECTS)
                     .where(PROJECTS.PROJECT_NAME.eq(name)));
-
-            return cnt > 0;
         }
     }
 
@@ -119,7 +117,7 @@ public class ProjectDao extends AbstractDao {
             String rName = r.get(PROJECTS.PROJECT_NAME);
             String rTemplate = r.get(TEMPLATES.TEMPLATE_NAME);
 
-            if (lastName != rName) {
+            if (!rName.equals(lastName)) {
                 if (lastName != null) {
                     add(result, lastName, lastTemplates);
                 }
