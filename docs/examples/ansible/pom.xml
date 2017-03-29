@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <concord.plugins.version>0.0.1-SNAPSHOT</concord.plugins.version>
+        <concord.plugins.version>0.2.0</concord.plugins.version>
     </properties>
 
     <dependencies>

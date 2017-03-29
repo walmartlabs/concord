@@ -1,5 +1,14 @@
 # Change log
 
+## [0.2.1] - 2017-03-29
+
+### Changed
+
+- boo upgraded to 1.0.3;
+- minor fixes in examples.
+
+
+
 ## [0.2.0] - 2017-03-28
 
 ### Added
