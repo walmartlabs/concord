@@ -56,12 +56,20 @@ public class FormResourceImpl implements FormResource, Resource {
             data = Collections.emptyMap();
         }
 
+        Map<String, Object> allowedValues = form.getAllowedValues();
+        if (allowedValues == null) {
+            allowedValues = Collections.emptyMap();
+        }
+
         List<FormInstanceEntry.Field> fields = new ArrayList<>();
         for (FormField f : fd.getFields()) {
-            FormInstanceEntry.Cardinatity c = map(f.getCardinality());
+            String fieldName = f.getName();
+
+            FormInstanceEntry.Cardinality c = map(f.getCardinality());
             String type = f.getType();
-            Object value = data.get(f.getName());
-            fields.add(new FormInstanceEntry.Field(f.getName(), f.getLabel(), type, c, value));
+            Object value = data.get(fieldName);
+            Object allowedValue = allowedValues.get(fieldName);
+            fields.add(new FormInstanceEntry.Field(fieldName, f.getLabel(), type, c, value, allowedValue));
         }
 
         String pbk = form.getProcessBusinessKey();
@@ -70,20 +78,20 @@ public class FormResourceImpl implements FormResource, Resource {
         return new FormInstanceEntry(pbk, fiid, name, fields);
     }
 
-    private static FormInstanceEntry.Cardinatity map(FormField.Cardinality c) {
+    private static FormInstanceEntry.Cardinality map(FormField.Cardinality c) {
         if (c == null) {
             return null;
         }
 
         switch (c) {
             case ANY:
-                return FormInstanceEntry.Cardinatity.ANY;
+                return FormInstanceEntry.Cardinality.ANY;
             case AT_LEAST_ONE:
-                return FormInstanceEntry.Cardinatity.AT_LEAST_ONE;
+                return FormInstanceEntry.Cardinality.AT_LEAST_ONE;
             case ONE_AND_ONLY_ONE:
-                return FormInstanceEntry.Cardinatity.ONE_AND_ONLY_ONE;
+                return FormInstanceEntry.Cardinality.ONE_AND_ONLY_ONE;
             case ONE_OR_NONE:
-                return FormInstanceEntry.Cardinatity.ONE_OR_NONE;
+                return FormInstanceEntry.Cardinality.ONE_OR_NONE;
             default:
                 throw new IllegalArgumentException("Unsupported cardinality type: " + c);
         }

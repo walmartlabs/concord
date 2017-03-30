@@ -52,7 +52,6 @@ public class AutoParser implements WorkflowDefinitionParser {
                 try (InputStream tmpIn = Files.newInputStream(tmp)) {
                     return p.parse(source, tmpIn);
                 } catch (IOException e) {
-                    lastError = e;
                     throw new ParserException("parse -> error while trying to parse the data with '" + p + "'", e);
                 } catch (ParserException e) {
                     lastError = e;

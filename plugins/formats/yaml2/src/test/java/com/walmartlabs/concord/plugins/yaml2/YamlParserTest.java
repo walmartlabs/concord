@@ -588,6 +588,88 @@ public class YamlParserTest {
     }
 
     @Test
+    public void test104() throws Exception {
+        deploy("104.yml");
+
+        String valueA = "a_" + System.currentTimeMillis();
+        String valueB = "b_" + System.currentTimeMillis();
+        String valueC = "c_" + System.currentTimeMillis();
+
+        // ---
+
+        TestBean testBean = spy(new TestBean(new String[]{valueA, valueB, valueC}));
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        UUID formId = getFirstFormId();
+
+        Map<String, Object> data = Collections.singletonMap("testValue", valueB);
+        FormSubmitResult result = formService.submit(formId, data);
+        assertTrue(result.isValid());
+
+        verify(testBean, times(1)).toString(eq(valueB));
+    }
+
+    @Test
+    public void test105() throws Exception {
+        deploy("105.yml");
+
+        String valueA = "a_" + System.currentTimeMillis();
+        String valueB = "b_" + System.currentTimeMillis();
+        String valueC = "c_" + System.currentTimeMillis();
+
+        // ---
+
+        TestBean testBean = spy(new TestBean(new String[]{valueA, valueB, valueC}));
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        UUID formId = getFirstFormId();
+
+        FormSubmitResult result = formService.submit(formId, Collections.emptyMap());
+        assertFalse(result.isValid());
+
+        verify(testBean, never()).toString(anyObject());
+    }
+
+    @Test
+    public void test106() throws Exception {
+        deploy("106.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        UUID formId = getFirstFormId();
+
+        FormSubmitResult result = formService.submit(formId, Collections.singletonMap("testValue", "d"));
+        assertFalse(result.isValid());
+
+        result = formService.submit(formId, Collections.singletonMap("testValue", "a"));
+        assertTrue(result.isValid());
+
+        verify(testBean, times(1)).toString(eq("a"));
+    }
+
+    @Test
     public void testJunk() throws Exception {
         deploy("junk.yml");
     }
@@ -608,6 +690,16 @@ public class YamlParserTest {
 
     private static class TestBean {
 
+        private final String[] items;
+
+        public TestBean() {
+            this(null);
+        }
+
+        public TestBean(String[] items) {
+            this.items = items;
+        }
+
         public void hello() {
         }
 
@@ -627,6 +719,10 @@ public class YamlParserTest {
 
         public int inc(int i) {
             return i + 1;
+        }
+
+        public String[] getItems() {
+            return items;
         }
     }
 

@@ -4,8 +4,8 @@
 
 ### Changed
 
-- some logging fixes for nexus-perf tasks.
-
+- fix error logging in nexus-perf tasks.
+- support for single or multiple selection fields
 
 
 ## [0.2.1] - 2017-03-29

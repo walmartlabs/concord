@@ -3,4 +3,4 @@ main:
   - ${testBean.toString(myForm.testValue)}
 
 form (myForm):
-  - testValue: { type: "string", value: "${'Hello, '.concat(inputValue)}" }
+  - testValue: { type: "string", value: "${testBean.items}" }

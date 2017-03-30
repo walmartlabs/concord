@@ -37,49 +37,51 @@ public class YamlConverter {
         Map<String, Object> opts = f.getOptions();
 
         // common parameters
-        String label = (String) opts.get("label");
-        String valueExpr = (String) opts.get("expr");
-        if (valueExpr != null && !valueExpr.isEmpty()) {
-            assertExpression(valueExpr, f.getLocation());
-        }
+        String label = (String) opts.remove("label");
+        Object defaultValue = box(opts.remove("value"));
+        Object allowedValue = box(opts.remove("allow"));
 
         // type-specific options
         Map<Option<?>, Object> options = new HashMap<>();
-        TypeInfo tInfo = getFieldType(f);
+
+        TypeInfo tInfo = parseType(opts.remove("type"), f.getLocation());
         switch (tInfo.type) {
             case StringField.TYPE: {
-                options.put(StringField.PATTERN, opts.get("pattern"));
+                options.put(StringField.PATTERN, opts.remove("pattern"));
                 break;
             }
             case IntegerField.TYPE: {
-                options.put(IntegerField.MIN, coerceToLong(opts.get("min")));
-                options.put(IntegerField.MAX, coerceToLong(opts.get("max")));
+                options.put(IntegerField.MIN, coerceToLong(opts.remove("min")));
+                options.put(IntegerField.MAX, coerceToLong(opts.remove("max")));
                 break;
             }
             case DecimalField.TYPE: {
-                options.put(DecimalField.MIN, coerceToDouble(opts.get("min")));
-                options.put(DecimalField.MAX, coerceToDouble(opts.get("max")));
+                options.put(DecimalField.MIN, coerceToDouble(opts.remove("min")));
+                options.put(DecimalField.MAX, coerceToDouble(opts.remove("max")));
                 break;
             }
             default:
                 throw new YamlConverterException("Unknown field type: " + tInfo.type + " @ " + f.getLocation());
         }
 
+        if (!opts.isEmpty()) {
+            throw new YamlConverterException("Unknown field options: " + opts.keySet() + " @ " + f.getLocation());
+        }
+
         return new FormField.Builder(f.getName(), tInfo.type)
                 .label(label)
-                .valueExpr(valueExpr)
+                .defaultValue(defaultValue)
+                .allowedValue(allowedValue)
                 .cardinality(tInfo.cardinality)
                 .options(options)
                 .build();
     }
 
-    private static TypeInfo getFieldType(YamlFormField f) throws YamlConverterException {
-        Object v = f.getOption("type");
-        if (!(v instanceof String)) {
-            JsonLocation loc = f.getLocation();
+    private static TypeInfo parseType(Object t, JsonLocation loc) throws YamlConverterException {
+        if (!(t instanceof String)) {
             throw new YamlConverterException("Expected a field type @ " + loc);
         }
-        return TypeInfo.parse((String) v);
+        return TypeInfo.parse((String) t);
     }
 
     private static ProcessDefinitionBuilder.Seq apply(ProcessDefinitionBuilder.Seq proc, Seq<YamlStep> steps) throws YamlConverterException {
@@ -382,12 +384,11 @@ public class YamlConverter {
         throw new IllegalArgumentException("Can't coerce '" + v + "' to double");
     }
 
-    private static void assertExpression(String s, JsonLocation loc) throws YamlConverterException {
-        if (s != null && s.startsWith("${") && s.endsWith("}")) {
-            return;
+    private static Object box(Object v) {
+        if (v instanceof Seq) {
+            return ((Seq) v).toList();
         }
-
-        throw new YamlConverterException("Invalid expression @ " + loc);
+        return v;
     }
 
     private static class ELCall implements Serializable {

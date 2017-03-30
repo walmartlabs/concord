@@ -115,7 +115,7 @@ public class FSDefinitionProvider implements WorkflowDefinitionProvider {
 
             forms.putAll(wd.getForms());
         } catch (ParserException e) {
-            log.warn("parseAndStore ['{}'] -> skipping, {}", f, e.getMessage());
+            log.warn("parseAndStore ['{}'] -> skipping", f, e);
         }
     }
 

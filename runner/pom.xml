@@ -37,11 +37,11 @@
             <artifactId>fs-definition-provider</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.plugins</groupId>
-            <artifactId>yaml-format</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.walmartlabs.concord.plugins</groupId>-->
+            <!--<artifactId>yaml-format</artifactId>-->
+            <!--<version>${project.version}</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>com.walmartlabs.concord.plugins</groupId>
             <artifactId>yaml2-format</artifactId>
