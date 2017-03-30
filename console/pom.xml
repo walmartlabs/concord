@@ -61,7 +61,6 @@
                     <installDirectory>target</installDirectory>
                     <nodeDownloadRoot>https://nodejs.org/dist/</nodeDownloadRoot>
                     <nodeVersion>v${node.version}</nodeVersion>
-                    <npmVersion>${npm.version}</npmVersion>
                     <workingDirectory>${basedir}</workingDirectory>
                 </configuration>
             </plugin>
@@ -111,7 +110,6 @@
                             <nodeDownloadRoot>http://nexus.prod.walmart.com/nexus/content/repositories/nodejs/
                             </nodeDownloadRoot>
                             <nodeVersion>v7.7.2</nodeVersion>
-                            <npmVersion>4.1.2</npmVersion>
                         </configuration>
                     </plugin>
                 </plugins>
