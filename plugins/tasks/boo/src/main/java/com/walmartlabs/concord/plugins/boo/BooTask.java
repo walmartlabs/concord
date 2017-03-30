@@ -35,6 +35,6 @@ public class BooTask implements Task {
         log.info("boo Variables: " + booTemplateVariables);
         log.info("boo template path: " + booTemplatePath.toAbsolutePath());
         boo.init(booTemplatePath.toFile(), null, booTemplateVariables , null);
-        boo.createPacks(false, false);
+        boo.createOrUpdatePlatforms();
     }
 }

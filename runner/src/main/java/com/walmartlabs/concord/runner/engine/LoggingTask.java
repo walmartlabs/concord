@@ -20,4 +20,8 @@ public class LoggingTask implements Task {
     public void warn(String log, String s) {
         LoggerFactory.getLogger(log).warn(s);
     }
+
+    public void call(String s) {
+        LoggerFactory.getLogger(LoggingTask.class).info(s);
+    }
 }

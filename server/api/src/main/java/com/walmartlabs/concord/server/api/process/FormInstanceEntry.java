@@ -49,16 +49,18 @@ public class FormInstanceEntry implements Serializable {
         private final String name;
         private final String label;
         private final String type;
-        private final Cardinatity cardinatity;
+        private final Cardinality cardinality;
         private final Object value;
+        private final Object allowedValue;
 
         @JsonCreator
-        public Field(String name, String label, String type, Cardinatity cardinatity, Object value) {
+        public Field(String name, String label, String type, Cardinality cardinality, Object value, Object allowedValue) {
             this.name = name;
             this.label = label;
             this.type = type;
-            this.cardinatity = cardinatity;
+            this.cardinality = cardinality;
             this.value = value;
+            this.allowedValue = allowedValue;
         }
 
         public String getName() {
@@ -73,16 +75,20 @@ public class FormInstanceEntry implements Serializable {
             return type;
         }
 
-        public Cardinatity getCardinatity() {
-            return cardinatity;
+        public Cardinality getCardinality() {
+            return cardinality;
         }
 
         public Object getValue() {
             return value;
         }
+
+        public Object getAllowedValue() {
+            return allowedValue;
+        }
     }
 
-    public enum Cardinatity {
+    public enum Cardinality {
 
         ONE_OR_NONE,
         ONE_AND_ONLY_ONE,

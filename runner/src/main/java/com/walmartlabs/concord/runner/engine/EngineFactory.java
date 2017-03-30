@@ -58,6 +58,7 @@ public class EngineFactory {
         UserTaskHandler uth = new FormTaskHandler(wpa.forms(), formService);
 
         Engine e = new EngineBuilder()
+                .withExpressionManager(expressionManager)
                 .withDefinitionProvider(wpa.processes())
                 .withTaskRegistry(taskRegistry)
                 .withEventStorage(eventStorage)
