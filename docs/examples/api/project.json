@@ -4,12 +4,12 @@
 
   "repositories": {
     "myProdRepo": {
-      "url": "git@github.com:my/repo.git",
+      "url": "ssh://git@github.com:my/repo.git",
       "branch": "prod",
       "secret": "myRepoSecret"
     },
     "myQARepo": {
-      "url": "git@github.com:my/repo.git",
+      "url": "ssh://git@github.com:my/repo.git",
       "branch": "qa",
       "secret": "myRepoSecret"
     }
