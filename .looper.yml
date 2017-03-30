@@ -1,7 +1,13 @@
 tools:
   jdk:
   - 8
+  maven:
+  - 3.3.9
 
 flows:
   master:
-    - ./mvnw clean install
+    - mvn clean install -Plooper
+
+  pr:
+    - echo "Running build for $GITHUB_PR_URL"
+    - call: master
