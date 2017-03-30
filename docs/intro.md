@@ -1,21 +1,31 @@
 # Introduction
 
-Concord is a workflow server. It is a "glue", connecting different
+Concord is a workflow server. It is the "glue" that connects different
 systems together using scenarios and plugins created by users.
+
+Concord can be customized to execute any workflow, but here are a few
+specific examples of how Concord is used:
+
+* To provision infrastructure in a public or private cloud
+
+* To execute Ansible playbooks and deploy applications
 
 ## Overview
 
-Concord consists of the following major components:
+Concord consists of three components:
 
-1. [server](#server) - provides a REST API for managing projects,
-   templates and repositories. It receives and processes user requests
-   to call workflow scenarios;
-2. [agent](#agent) - a (remote) workflow executor. Receives scenarios
-   from the server and executes them in an isolated environment;
-3. [console](#console) - web UI for managing and monitoring the server
-   and its processes.
+1. [Concord Server](#server) provides a REST API for managing
+   projects, templates and repositories. It receives and processes
+   user requests to call workflow scenarios.
+
+2. [Concord Agent](#agent) is a (remote) workflow executor. Receives
+   scenarios from the server and executes them in an isolated
+   environment.
+
+3. [Concord Console](#console) is a web UI for managing and monitoring
+   the server and its processes.
    
-### Server
+### Concord Server
 
 The server provides several REST API endpoints for managing it's data,
 they are described in a [separate document](./api).
@@ -42,7 +52,28 @@ and templates.
 
 *TBD*
 
-### Project
+### Concord Agent
+
+The agent is a standalone Java application that receives and executes
+a [payload](#payload) sent by the server.
+
+*TBD*
+
+### Concord Console 
+
+The console is a web application for managing and monitoring the
+server.
+
+*TBD*
+
+## Concord Concepts
+
+Concord contains projects that reference repositories and which are
+associated with templates that define processes.  Concord also can
+associate credentials with resources and repositories referenced by a
+project.  The following sections briefly introduce these concepts.
+
+### Projects
 
 Projects allow users to automatically create payloads by pulling files
 from remote GIT repositories and applying templates.
@@ -51,37 +82,51 @@ Projects are created using the REST API or (in the near future) the UI.
 
 *TBD*
 
-### Template
+### Templates
+
+A Concord template is a ZIP file that contains a template for creating
+new processes for a project. A template combines a set of default
+properties and configuration variables that users can override, one or
+more processes, a collection of forms that can be used to configure
+processes, and an arbitrary collection of files that contain
+references to properties.
 
 [See also](./templates.md).
 
 *TBD*
 
-### Agent
+### Processes
 
-The agent is a standalone Java application that receives and executes
-a [payload](#payload) sent by the server.
+A process is an execution of a task specified in a project's template.
+An example of a process can be the provisioning of cloud
+infrastructure from a Boo template or the execution of an Ansible
+playbook.  A simple example of a process can be the execution of a
+simple logging task to print "Hello World" as shown in the [Concord
+Quickstart](quickstart.md).
 
-*TBD*
+### Credentials
 
-### Console
+As a workflow server Concord often needs to access protected resources
+such as public/private clouds and source control systems.  Concord
+maintains a set of credentials that can be associated with a project's
+resources.
 
-The console is a web application for managing and monitoring the
-server.
-
-*TBD*
-
-### How it all works together
+## How it all works together
 
 ![Overview](images/runtime-overview.png)
 
 Here is the simplified version of how Concord and its processes work:
 
-1. user publishes an archive containing process definitions, dependencies and
-other files using **concord-server** HTTP API;
-2. **concord-runner** is added to the archive. It's an executable that contains
-the BPM engine and its supporting dependencies;
-3. the updated archive is published to one of the available instances of **concord-agent**;
+1. user publishes an archive containing process definitions,
+   dependencies and other files using **concord-server** HTTP API;
+
+2. **concord-runner** is added to the archive. It's an executable that
+   contains the BPM engine and its supporting dependencies;
+
+3. the updated archive is published to one of the available instances
+   of **concord-agent**;
+
 4. **concord-agent** spawns a new JVM and executes the archive;
+
 5. logs are streamed back to **concord-server**.
 

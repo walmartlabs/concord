@@ -4,6 +4,9 @@ The fastest way to get a Concord instance up and running is to use the
 pre-built Docker images to run all three components of Concord: the
 Concord Agent, the Concord Server, and the Concord Console.
 
+After finishing these steps you can read the [Introduction to
+Concord](intro.md) to understand the basic concepts of Concord.
+
 ## Prerequisites
 
 ### Docker
