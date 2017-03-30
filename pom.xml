@@ -81,7 +81,7 @@
         <node.version>7.4.0</node.version>
         <npm.version>4.0.5</npm.version>
         <oneops.client.version>0.0.1</oneops.client.version>
-        <parc.version>0.1.1</parc.version>
+        <parc.version>0.1.2</parc.version>
         <postgres.version>9.4.1212</postgres.version>
         <provisio.version>0.1.32</provisio.version>
         <resteasy.version>3.0.13.Final</resteasy.version>
