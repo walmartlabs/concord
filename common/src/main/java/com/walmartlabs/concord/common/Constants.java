@@ -20,9 +20,14 @@ public final class Constants {
     public static final String TX_ID_KEY = "txId";
 
     /**
-     * Key of process arguments object in a request data JSON.
+     * Key of a process arguments object in a request data JSON.
      */
     public static final String ARGUMENTS_KEY = "arguments";
+
+    /**
+     * Key of a process dependencies list in a request data JSON.
+     */
+    public static final String DEPENDENCIES_KEY = "dependencies";
 
     /**
      * Directory containing libraries (dependencies) of a payload.
@@ -48,11 +53,6 @@ public final class Constants {
      * File, containing runtime parameters for agents: heap size, JVM arguments, etc.
      */
     public static final String AGENT_PARAMS_FILE_NAME = "_agent.json";
-
-    /**
-     * File, containing list of GAVs of runtime dependencies required by a template.
-     */
-    public static final String DEPENDENCIES_FILE_NAME = "_deps";
 
     /**
      * JVM parameters for an agent's job.

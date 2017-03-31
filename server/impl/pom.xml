@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -190,6 +191,10 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
@@ -252,6 +257,12 @@
                             <!-- TODO this should be automated somehow -->
                             <artifactItems>
                                 <artifactItem>
+                                    <groupId>com.walmartlabs.concord</groupId>
+                                    <artifactId>concord-runner</artifactId>
+                                    <version>${project.version}</version>
+                                    <classifier>jar-with-dependencies</classifier>
+                                </artifactItem>
+                                <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins</groupId>
                                     <artifactId>ansible-tasks</artifactId>
                                     <version>${project.version}</version>
@@ -265,11 +276,6 @@
                                     <groupId>com.walmartlabs.concord.plugins</groupId>
                                     <artifactId>boo-task</artifactId>
                                     <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.oneops.boo</groupId>
-                                    <artifactId>boo</artifactId>
-                                    <classifier>executable</classifier>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}/deps</outputDirectory>

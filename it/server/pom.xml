@@ -183,6 +183,14 @@
                                     <artifactId>javax.mail</artifactId>
                                     <version>${javax.mail.version}</version>
                                 </artifactItem>
+
+                                <!-- used by DependenciesIT as an example dependency -->
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.plugins</groupId>
+                                    <artifactId>example-tasks</artifactId>
+                                    <version>${project.version}</version>
+                                    <destFileName>example.jar</destFileName>
+                                </artifactItem>
                             </artifactItems>
                             <outputDirectory>${deps.dir}</outputDirectory>
                         </configuration>
@@ -236,6 +244,12 @@
                                                 <url>http://localhost:${it.agent.port}/api/v1/job/ping</url>
                                             </http>
                                         </wait>
+                                        <volumes>
+                                            <bind>
+                                                <!-- allows the agent to pick up local dependencies -->
+                                                <volume>${deps.dir}:${deps.dir}</volume>
+                                            </bind>
+                                        </volumes>
                                     </run>
                                 </image>
                                 <image>

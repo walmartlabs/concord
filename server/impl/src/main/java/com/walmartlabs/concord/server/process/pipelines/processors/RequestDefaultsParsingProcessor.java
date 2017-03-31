@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Named
 @Singleton
-public class RequestDefaultsParstingProcessor implements PayloadProcessor {
+public class RequestDefaultsParsingProcessor implements PayloadProcessor {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

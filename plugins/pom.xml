@@ -21,6 +21,7 @@
         <module>tasks/smtp</module>
         <module>tasks/nexus</module>
         <module>tasks/boo</module>
+        <module>tasks/example</module>
         <module>formats/bpmn</module>
         <module>formats/yaml</module>
         <module>formats/yaml2</module>

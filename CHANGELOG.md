@@ -7,6 +7,12 @@
 - fix error logging in nexus-perf tasks.
 - support for single or multiple selection fields
 
+### Breaking
+
+- `_deps` file is replaced with `dependencies` array in a project configuration,
+template, `_defaults.json` or user's request.
+
+
 
 ## [0.2.1] - 2017-03-29
 

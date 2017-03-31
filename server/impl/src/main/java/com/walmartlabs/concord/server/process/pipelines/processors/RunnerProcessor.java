@@ -31,6 +31,8 @@ public class RunnerProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
+        // TODO this probably should be replaced with a concord://concord-runner-${project.version}.jar
+
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         Path src = runnerCfg.getPath();

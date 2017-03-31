@@ -36,11 +36,11 @@ All parameters are optional.
 |-------------------|-----------------------------------------------------------------------------------|---------------|
 | SECRET_STORE_SALT | Store's salt value. If changed, all previously created keys will be inaccessable. |               |
 
-**Templates**
+**Dependencies**
 
-| Variable           | Description                                                      | Default value          |
-|--------------------|------------------------------------------------------------------|------------------------|
-| DEPS_STORE_DIR     | Local Maven repository, used to resolve template's dependencies. | `$HOME/.m2/repository` |
+| Variable           | Description                           | Default value                  |
+|--------------------|---------------------------------------|--------------------------------|
+| DEPS_STORE_DIR     | Directory with `system` dependencies. | `lib` directory of the server. |
 
 **Security**
 

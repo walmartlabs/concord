@@ -8,30 +8,15 @@
         <version>0.2.3-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>boo-task</artifactId>
+
+    <artifactId>example-tasks</artifactId>
     <packaging>takari-jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>com.oneops.boo</groupId>
-            <artifactId>boo</artifactId>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
-            <artifactId>bpm-engine-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -54,5 +39,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

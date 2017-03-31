@@ -50,6 +50,7 @@
         <boo.version>1.0.3</boo.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.pool.version>2.4.2</commons.pool.version>
+        <commons.lang.version>3.5</commons.lang.version>
         <docker.plugin.version>0.19.0</docker.plugin.version>
         <greenmail.version>1.5.3</greenmail.version>
         <groovy.version>2.4.7</groovy.version>
@@ -482,6 +483,11 @@
                 <groupId>io.takari</groupId>
                 <artifactId>parc</artifactId>
                 <version>${parc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons.lang.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
