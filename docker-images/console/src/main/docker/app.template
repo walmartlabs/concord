@@ -1,15 +1,20 @@
 server {
-	listen      8080;
-	server_name _;
-	root        /opt/concord/console/concord-console-${project.version};
+	listen                  8080;
+	server_name             _;
+	root                    /opt/concord/console/concord-console-${project.version};
 
-	location / {
+	location ~ ^/landing/(.*)$ {
+	    alias               /opt/concord/console/landing/$1;
 	}
 
+	location ~* \.(?:manifest|appcache|html?|xml|json)$ {
+        expires             -1;
+    }
+
 	location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
-        expires 30d;
-        add_header Pragma public;
-        add_header Cache-Control "public";
+        expires             30d;
+        add_header          Pragma public;
+        add_header          Cache-Control "public";
     }
 
 	location ~ ^/(api|logs)/ {
