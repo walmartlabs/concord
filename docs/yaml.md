@@ -103,6 +103,14 @@ Concord's plugins and arguments passed on a process' start.
 See also the document on
 [how to create custom tasks](./extensions.md#tasks).
 
+Literal values (e.g. arguments or [form](#forms) field values) can
+contain expressions:
+```yaml
+main:
+  - log: ["red", "green", "${colors.blue}"]
+  - myTask: { nested: { literals: "${myOtherTask.doSomething()}"} }
+```
+
 #### Tasks
 
 There are other ways to call Java code: by using dynamic method
@@ -258,8 +266,10 @@ Forms must contain one or more fields:
 
 ```yaml
 form (myForm):
-  - myField: { label: "My Field", type: "string", pattern: "Hello, .*" }
-  - anotherOne: { label: "My Other Field", type: "int", expr: "${inputValue + 100}"}
+  - fullName: { label: "Name", type: "string", pattern: ".* .*" }
+  - age: { label: "Age", type: "int", min: 21, max: 100 }
+  - favouriteColour: { label: "Favourite colour", type: "string", allow: ["gray", "grey"] }
+  - languages: { label: "Preferred languages" type: "string+", allow: "${locale.languages()}" }
 ```
 
 Field declaration consists of the name (`myField`), the type
@@ -272,8 +282,10 @@ name is `myField`, then the value of the field will be stored in
 
 Common options:
 - `label`: the field's label, usually human-readable;
-- `expr`: default value [expression](#expressions), evaluated when
-the form is called.
+- `value`: default value [expression](#expressions), evaluated when
+the form is called;
+- `allow`: allowed value(s). Can be a YAML literal, array, object or an
+[expression](#expressions).
 
 Supported types of fields and their options:
 - `string`: a string value
@@ -284,10 +296,11 @@ Supported types of fields and their options:
 Cardinality of the field can be specified by adding a cardinality
 quantifier to the type:
 - a single non-optional value: `string`;
-- optional value: `string?`.
+- optional value: `string?`;
+- one or more values: `string+`;
+- zero or more values: `string*`.
 
-Additional field types and cardinality quantifiers will be added in
-the next versions.
+Additional field types will be added in the next versions.
 
 ### Calling a form
 
