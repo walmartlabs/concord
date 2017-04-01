@@ -41,6 +41,7 @@ public class FormResourceImpl implements FormResource, Resource {
 
     @Override
     @Validate
+    @SuppressWarnings("unchecked")
     public FormInstanceEntry get(String processInstanceId, String formInstanceId) {
         Form form = formService.get(processInstanceId, formInstanceId);
         if (form == null) {

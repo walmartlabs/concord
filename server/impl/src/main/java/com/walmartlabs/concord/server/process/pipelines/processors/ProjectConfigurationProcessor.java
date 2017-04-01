@@ -19,6 +19,7 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         if (projectName == null) {

@@ -146,9 +146,9 @@ public class PerfTask implements Task {
         try {
             InetAddress[] as = InetAddress.getAllByName(host);
             Collection<URI> result = new ArrayList<>(as.length);
-            for (int i = 0; i < as.length; i++) {
+            for (InetAddress a : as) {
                 // TODO constants
-                result.add(URI.create("http://" + as[i].getHostAddress() + ":" + port));
+                result.add(URI.create("http://" + a.getHostAddress() + ":" + port));
             }
             return result;
         } catch (Exception e) {

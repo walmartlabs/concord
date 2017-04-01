@@ -39,13 +39,6 @@ public abstract class AbstractDao {
         }
     }
 
-    protected <T, R> List<R> mapToList(Collection<T> elements, Function<T, R> f) {
-        if (elements == null) {
-            return null;
-        }
-        return elements.stream().map(f).collect(Collectors.toList());
-    }
-
     protected InputStream getData(Function<DSLContext, String> sqlFn, PreparedStatementHandler h, int columnIndex) {
         String sql;
         try (DSLContext create = DSL.using(cfg)) {

@@ -46,7 +46,7 @@ public class AgentPoolManager {
 
     public void start() {
         synchronized (loaded) {
-            loaded.parallelStream().forEach(a -> a.start());
+            loaded.parallelStream().forEach(Agent::start);
         }
     }
 
@@ -119,12 +119,7 @@ public class AgentPoolManager {
                 Thread.currentThread().interrupt();
             }
 
-            for (Iterator<Agent> i = agents.iterator(); i.hasNext(); ) {
-                Agent a = i.next();
-                if (condition.apply(a)) {
-                    i.remove();
-                }
-            }
+            agents.removeIf(condition::apply);
 
             long t2 = System.currentTimeMillis();
             if (t2 - t1 >= timeout) {

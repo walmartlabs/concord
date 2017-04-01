@@ -10,7 +10,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.logging.Level;
 
 import static org.junit.Assert.*;
@@ -20,7 +19,7 @@ public abstract class AbstractIT {
     private static final long DEFAULT_WAIT_TIME = 10; // seconds
 
     @Rule
-    public WebDriverRule rule = new WebDriverRule();
+    public final WebDriverRule rule = new WebDriverRule();
 
     protected WebDriver getDriver() {
         return rule.getDriver();

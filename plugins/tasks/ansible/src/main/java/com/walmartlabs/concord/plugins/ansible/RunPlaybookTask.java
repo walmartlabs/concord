@@ -25,6 +25,7 @@ public class RunPlaybookTask implements Task {
         return "ansible";
     }
 
+    @SuppressWarnings("unchecked")
     public void run(Map<String, Object> args, String playbook, String playbookPath, String tags) throws Exception {
         Collection<String> hosts = (Collection<String>) args.get("hosts");
         String user = (String) args.get("user");

@@ -69,6 +69,7 @@ public class CrudIT extends AbstractServerIT {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testProjectCfg() throws Exception {
         ObjectMapper om = new ObjectMapper();
 

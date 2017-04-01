@@ -158,7 +158,7 @@ public class YamlConverter {
             return sourceMap(proc.catchEvent(e.getName()), s, "Event");
         } else if (s instanceof YamlFormCall) {
             YamlFormCall c = (YamlFormCall) s;
-            return proc.userTask(Arrays.asList(new FormExtension(c.getKey())));
+            return proc.userTask(Collections.singletonList(new FormExtension(c.getKey())));
         } else if (s instanceof YamlCall) {
             YamlCall c = (YamlCall) s;
 
@@ -190,6 +190,7 @@ public class YamlConverter {
         return proc.sourceMap(SourceMap.Significance.HIGH, l.getLineNr(), l.getColumnNr(), desc);
     }
 
+    @SuppressWarnings("unchecked")
     private static Seq<YamlStep> getErrorBlock(Map<String, Object> options) {
         if (options == null) {
             return null;
@@ -230,6 +231,7 @@ public class YamlConverter {
         return getString(options, "out");
     }
 
+    @SuppressWarnings("unchecked")
     private static Set<VariableMapping> getVarMap(Map<String, Object> options, String key) {
         if (options == null) {
             return null;
@@ -268,6 +270,7 @@ public class YamlConverter {
         return getVarMap(options, "out");
     }
 
+    @SuppressWarnings("unchecked")
     private static ELCall createELCall(String task, Object args) {
         StringBuilder b = new StringBuilder("${");
         b.append(task).append(".call(");
@@ -320,6 +323,7 @@ public class YamlConverter {
         return i >= 0 && s.indexOf("}") > i;
     }
 
+    @SuppressWarnings("unchecked")
     private static Object deepConvert(Object o) {
         if (o instanceof Seq) {
             List<Object> src = ((Seq) o).toList();

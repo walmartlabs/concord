@@ -38,9 +38,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public void insert(String projectName, String repositoryName, String url, String branch, String secretName) {
-        tx(tx -> {
-            insert(tx, projectName, repositoryName, url, branch, secretName);
-        });
+        tx(tx -> insert(tx, projectName, repositoryName, url, branch, secretName));
     }
 
     public void insert(DSLContext create, String projectName, String repositoryName, String url, String branch, String secretName) {

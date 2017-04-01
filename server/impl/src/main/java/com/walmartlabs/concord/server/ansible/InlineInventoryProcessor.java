@@ -27,6 +27,7 @@ public class InlineInventoryProcessor implements PayloadProcessor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (req == null) {

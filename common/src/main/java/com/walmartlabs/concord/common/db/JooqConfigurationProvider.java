@@ -30,11 +30,9 @@ public class JooqConfigurationProvider implements Provider<Configuration> {
         settings.setRenderCatalog(false);
         settings.setRenderNameStyle(RenderNameStyle.AS_IS);
 
-        Configuration jooq = new DefaultConfiguration()
+        return new DefaultConfiguration()
                 .set(settings)
                 .set(dataSource)
                 .set(dialect);
-
-        return jooq;
     }
 }

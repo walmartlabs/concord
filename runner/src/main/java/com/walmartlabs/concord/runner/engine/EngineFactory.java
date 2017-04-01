@@ -57,7 +57,7 @@ public class EngineFactory {
 
         UserTaskHandler uth = new FormTaskHandler(wpa.forms(), formService);
 
-        Engine e = new EngineBuilder()
+        return new EngineBuilder()
                 .withExpressionManager(expressionManager)
                 .withDefinitionProvider(wpa.processes())
                 .withTaskRegistry(taskRegistry)
@@ -65,8 +65,6 @@ public class EngineFactory {
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
                 .build();
-
-        return e;
     }
 
     private static class WorkflowProviderAdapter {
@@ -78,11 +76,11 @@ public class EngineFactory {
         }
 
         public ProcessDefinitionProvider processes() {
-            return id -> delegate.getProcess(id);
+            return delegate::getProcess;
         }
 
         public FormDefinitionProvider forms() {
-            return id -> delegate.getForm(id);
+            return delegate::getForm;
         }
     }
 }

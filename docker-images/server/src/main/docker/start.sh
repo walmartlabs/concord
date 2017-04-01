@@ -16,4 +16,4 @@ fi;
 
 export DEPS_STORE_DIR="$APP_DIR/lib";
 
-python2 $APP_DIR/bin/launcher.py run
+python2 ${APP_DIR}/bin/launcher.py run

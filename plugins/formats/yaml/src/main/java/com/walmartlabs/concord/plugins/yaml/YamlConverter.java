@@ -23,6 +23,7 @@ public final class YamlConverter {
     private static final String IN_VARS_KEY = "in";
     private static final String ERRORS_KEY = "errors";
 
+    @SuppressWarnings("unchecked")
     public static Collection<ProcessDefinition> convert(Map<String, Object> data) throws ParserException {
         Collection<ProcessDefinition> result = new ArrayList<>();
         for (Map.Entry<String, Object> entry : data.entrySet()) {
@@ -76,6 +77,7 @@ public final class YamlConverter {
         return b.toString();
     }
 
+    @SuppressWarnings("unchecked")
     private static List<AbstractElement> toElements(IdGenerator idGenerator, Collection<Object> elements) throws ParserException {
         List<Container> result = new ArrayList<>();
 
@@ -118,6 +120,7 @@ public final class YamlConverter {
         throw new ParserException("Unsupported element type: " + m);
     }
 
+    @SuppressWarnings("unchecked")
     private static Container toSwitch(IdGenerator idGenerator, Map<String, Object> m) throws ParserException {
         Object o = m.get(SWITCH_KEY);
         if (o == null) {
@@ -172,6 +175,7 @@ public final class YamlConverter {
         return new Container(a, a);
     }
 
+    @SuppressWarnings("unchecked")
     private static Set<VariableMapping> toVariableMapping(Map<String, Object> m) throws ParserException {
         Object o = m.get(IN_VARS_KEY);
         if (o == null) {
@@ -211,6 +215,7 @@ public final class YamlConverter {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     private static Container toSubProcess(IdGenerator idGenerator, Map<String, Object> m) throws ParserException {
         Object steps = m.get(STEPS_KEY);
         if (steps == null) {
@@ -234,6 +239,7 @@ public final class YamlConverter {
         return new Container(sub, sub, toBoundaryEvents(idGenerator, subId, m));
     }
 
+    @SuppressWarnings("unchecked")
     private static List<AbstractElement> toBoundaryEvents(IdGenerator idGenerator, String attachedTo, Map<String, Object> m) throws ParserException {
         Object errors = m.get(ERRORS_KEY);
         if (errors == null) {

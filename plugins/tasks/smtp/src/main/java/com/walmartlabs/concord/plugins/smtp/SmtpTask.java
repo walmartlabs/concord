@@ -23,6 +23,7 @@ public class SmtpTask implements Task, JavaDelegate {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void execute(ExecutionContext ctx) throws Exception {
         Map<String, Object> smtpParams = (Map<String, Object>) ctx.getVariable("smtpParams");
         Map<String, Object> mailParams = (Map<String, Object>) ctx.getVariable("mailParams");

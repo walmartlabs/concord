@@ -21,7 +21,7 @@ import java.util.Set;
 @Singleton
 public class DataSourceProvider implements Provider<DataSource> {
 
-    private static Logger log = LoggerFactory.getLogger(DataSourceProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(DataSourceProvider.class);
 
     private final DatabaseConfiguration cfg;
     private final Set<DatabaseChangeLogProvider> changeLogs;

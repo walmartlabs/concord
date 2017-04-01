@@ -87,7 +87,6 @@ public class ConcordFormService {
             Map<String, Object> m = new HashMap<>();
             m.put("arguments", args);
             processResource.resume(f.getProcessBusinessKey(), f.getEventName(), m);
-            return;
         };
 
         return DefaultFormService.submit(resumeHandler, validator, form, data);

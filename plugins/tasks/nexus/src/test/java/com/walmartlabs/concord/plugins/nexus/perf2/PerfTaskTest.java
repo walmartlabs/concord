@@ -23,6 +23,7 @@ public class PerfTaskTest {
     private static final String SCENARIOS_DIR = "scenarios";
 
     @Test
+    @SuppressWarnings("unchecked")
     public void test() throws Exception {
         Path payloadDir = preparePayload();
 
@@ -81,7 +82,7 @@ public class PerfTaskTest {
         return tmpDir;
     }
 
-    private static AgentConnection prepareJobResource() throws Exception {
+    private static AgentConnection prepareJobResource() {
         AgentConnection r = mock(AgentConnection.class);
         when(r.getStatus(any(String.class)))
                 .thenReturn(JobStatus.RUNNING)

@@ -55,7 +55,7 @@ public class LdapRealm extends AbstractLdapRealm {
             UsernamePasswordToken received = (UsernamePasswordToken) token;
 
             return stored.getUsername().equals(received.getUsername()) &&
-                    stored.getPassword().equals(received.getPassword());
+                    Arrays.equals(stored.getPassword(), received.getPassword());
         });
     }
 

@@ -71,6 +71,7 @@ public class ExecutionManager {
         jobExecutors.put(JobType.JUNIT_GROOVY, new JunitGroovyJobExecutor());
     }
 
+    @SuppressWarnings("unchecked")
     public void start(String instanceId, JobType type, String entryPoint, InputStream payload) throws ExecutionException {
         JobExecutor exec = jobExecutors.get(type);
         if (exec == null) {
@@ -228,6 +229,7 @@ public class ExecutionManager {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static Map<String, Object> getAgentParameters(Path payload) throws ExecutionException {
         Path p = payload.resolve(Constants.AGENT_PARAMS_FILE_NAME);
         if (!Files.exists(p)) {
@@ -242,6 +244,7 @@ public class ExecutionManager {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static Collection<String> getDependencies(Path payload) throws ExecutionException {
         Path p = payload.resolve(Constants.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {

@@ -33,9 +33,7 @@ public class ProjectDao extends AbstractDao {
     }
 
     public void insert(String name, Collection<String> templateIds) {
-        tx(tx -> {
-            insert(tx, name, templateIds);
-        });
+        tx(tx -> insert(tx, name, templateIds));
     }
 
     public void insert(DSLContext create, String name, Collection<String> templateIds) {
@@ -56,9 +54,7 @@ public class ProjectDao extends AbstractDao {
     }
 
     public void delete(String id) {
-        tx(tx -> {
-            delete(tx, id);
-        });
+        tx(tx -> delete(tx, id));
     }
 
     public void delete(DSLContext create, String name) {

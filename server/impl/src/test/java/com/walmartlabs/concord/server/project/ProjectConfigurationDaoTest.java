@@ -67,6 +67,7 @@ public class ProjectConfigurationDaoTest extends AbstractDaoTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testUpdate() throws Exception {
         String projectName = "project#" + System.currentTimeMillis();
         ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));

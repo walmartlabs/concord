@@ -99,7 +99,7 @@ public class YamlGrammar {
                 betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                         many(satisfyToken(JsonToken.FIELD_NAME).bind(a ->
                                 value.map(v -> new KV<>(a.name, v)))))
-                        .map(values -> toMap(values))));
+                        .map(YamlGrammar::toMap)));
     }
 
     // identifier := VALUE_STRING
@@ -117,11 +117,7 @@ public class YamlGrammar {
 
                 String s = a.name;
                 Matcher m = FORM_NAME_PATTERN.matcher(s);
-                if (!m.matches()) {
-                    return false;
-                }
-
-                return true;
+                return m.matches();
             }).map(a -> {
                 String s = a.name;
                 Matcher m = FORM_NAME_PATTERN.matcher(s);
@@ -158,19 +154,19 @@ public class YamlGrammar {
 
     // exprOptions := (outField | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> exprOptions = label("Expression options",
-            many(choice(errorBlock, outField)).map(values -> toMap(values)));
+            many(choice(errorBlock, outField)).map(YamlGrammar::toMap));
 
     // taskOptions := (inVars | outVars | outField | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> taskOptions = label("Task options",
-            many(choice(inVars, outVars, errorBlock, outField)).map(values -> toMap(values)));
+            many(choice(inVars, outVars, errorBlock, outField)).map(YamlGrammar::toMap));
 
     // groupOptions := (errorBlock)*
     private static final Parser<Atom, Map<String, Object>> groupOptions = label("Group options",
-            many(errorBlock).map(values -> toMap(values)));
+            many(errorBlock).map(YamlGrammar::toMap));
 
     // formCallOptions := (inVars | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> formCallOptions = label("Form call options",
-            many(choice(inVars, errorBlock)).map(values -> toMap(values)));
+            many(choice(inVars, errorBlock)).map(YamlGrammar::toMap));
 
     // exprShort := expression
     private static final Parser<Atom, YamlStep> exprShort = label("Expression (short form)",

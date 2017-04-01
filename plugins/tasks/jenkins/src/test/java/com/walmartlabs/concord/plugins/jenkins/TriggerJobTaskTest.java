@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
 public class TriggerJobTaskTest {
 
     @Rule
-    public WireMockRule wireMock = new WireMockRule(options().dynamicPort());
+    public final WireMockRule wireMock = new WireMockRule(options().dynamicPort());
 
     @Test
     public void test() throws Exception {

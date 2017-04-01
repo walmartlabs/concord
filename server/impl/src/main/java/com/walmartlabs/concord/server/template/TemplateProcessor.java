@@ -42,6 +42,7 @@ public class TemplateProcessor implements PayloadProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         if (projectName != null) {
@@ -61,6 +62,10 @@ public class TemplateProcessor implements PayloadProcessor {
 
         try {
             Path templatePath = templateResolver.get(templateName);
+            if (templatePath == null) {
+                throw new ProcessException("Template not found: " + templateName);
+            }
+
             payload = process(payload, templatePath);
             return chain.process(payload);
         } catch (IOException e) {
@@ -81,6 +86,10 @@ public class TemplateProcessor implements PayloadProcessor {
         try {
             String templateName = templateNames.iterator().next();
             Path templatePath = templateResolver.get(templateName);
+            if (templatePath == null) {
+                throw new ProcessException("Template not found: " + templateName);
+            }
+
             return process(payload, templatePath);
         } catch (IOException e) {
             log.error("process ['{}'] -> error", payload.getInstanceId(), e);
@@ -89,10 +98,6 @@ public class TemplateProcessor implements PayloadProcessor {
     }
 
     private Payload process(Payload payload, Path templatePath) throws IOException {
-        if (templatePath == null) {
-            throw new ProcessException("Template not found: " + templatePath);
-        }
-
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload

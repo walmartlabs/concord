@@ -32,6 +32,7 @@ public class RunPlaybookTask2 implements Task {
         return "ansible2";
     }
 
+    @SuppressWarnings("unchecked")
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
         Map<String, Object> defOpts = (Map<String, Object>) args.get(AnsibleConstants.DEFAULT_OPTS_KEY);
         String cfgFile = createCfgFile(addDefaults(defOpts, payloadPath));

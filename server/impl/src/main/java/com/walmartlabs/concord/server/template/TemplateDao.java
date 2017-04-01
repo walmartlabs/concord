@@ -65,12 +65,10 @@ public class TemplateDao extends AbstractDao {
                 .values((String) null, null)
                 .getSQL();
 
-        tx(tx -> {
-            executeUpdate(tx, sqlFn, ps -> {
-                ps.setString(1, name);
-                ps.setBinaryStream(2, data);
-            });
-        });
+        tx(tx -> executeUpdate(tx, sqlFn, ps -> {
+            ps.setString(1, name);
+            ps.setBinaryStream(2, data);
+        }));
     }
 
     public void update(String name, InputStream data) {
@@ -79,12 +77,10 @@ public class TemplateDao extends AbstractDao {
                 .where(TEMPLATES.TEMPLATE_NAME.eq(name))
                 .getSQL();
 
-        tx(tx -> {
-            executeUpdate(tx, sqlFn, ps -> {
-                ps.setBinaryStream(1, data);
-                ps.setString(2, name);
-            });
-        });
+        tx(tx -> executeUpdate(tx, sqlFn, ps -> {
+            ps.setBinaryStream(1, data);
+            ps.setString(2, name);
+        }));
     }
 
     public void delete(String name) {

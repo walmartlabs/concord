@@ -57,6 +57,7 @@ public class DependenciesProcessor implements PayloadProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> request = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
@@ -103,6 +104,7 @@ public class DependenciesProcessor implements PayloadProcessor {
 
         if (depsDir == null) {
             log.warn("processSystemDependencies ['{}'] -> dependencies directory not set, skipping", instanceId);
+            return;
         }
 
         Path libDir = workspace.resolve(Constants.LIBRARIES_DIR_NAME);
@@ -138,6 +140,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         return s;
     }
 
+    @SuppressWarnings("unchecked")
     private static Collection<String> deps(Map<String, Object> req) {
         Object o = req.get(Constants.DEPENDENCIES_KEY);
         if (o == null) {
@@ -167,7 +170,7 @@ public class DependenciesProcessor implements PayloadProcessor {
     }
 
     private static boolean valid(String a) {
-        return !BLACKLISTED_ARTIFACTS.stream().anyMatch(p -> a.matches(p));
+        return BLACKLISTED_ARTIFACTS.stream().noneMatch(a::matches);
     }
 
     private static boolean system(String a) {

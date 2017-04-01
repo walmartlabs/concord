@@ -43,9 +43,11 @@ public class JunitGroovyJobExecutor implements JobExecutor {
             Result r = junit.run(test);
 
             if (r.getFailureCount() > 0) {
+                StringBuilder b = new StringBuilder();
                 for (Failure f : r.getFailures()) {
-                    throw new Exception(f.toString());
+                    b.append(f).append("\n");
                 }
+                throw new Exception(b.toString());
             }
         } catch (Exception e) {
             throw new ExecutionException("Error while executing a groovy script", e);

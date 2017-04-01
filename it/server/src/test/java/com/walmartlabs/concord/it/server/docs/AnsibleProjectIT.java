@@ -72,6 +72,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         test(input);
     }
 
+    @SuppressWarnings("unchecked")
     public void test(Map<String, InputStream> input) throws Exception {
         String templateName = "ansible";
         String projectName = "project@" + System.currentTimeMillis();

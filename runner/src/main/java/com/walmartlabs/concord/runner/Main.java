@@ -11,7 +11,6 @@ import com.walmartlabs.concord.common.format.DefinitionType;
 import com.walmartlabs.concord.common.format.WorkflowDefinitionProvider;
 import com.walmartlabs.concord.plugins.fs.FSDefinitionProvider;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
-import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.api.Event;
 import io.takari.bpm.api.EventService;

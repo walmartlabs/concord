@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class SuspendMainTest extends AbstractMainTest {

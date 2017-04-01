@@ -9,6 +9,7 @@ public final class ConfigurationUtils {
         return get(m, depth, path);
     }
 
+    @SuppressWarnings("unchecked")
     public static Object get(Map<String, Object> m, int depth, String... path) {
         if (m == null) {
             return null;
@@ -34,6 +35,7 @@ public final class ConfigurationUtils {
         return m.get(path[path.length - 1]);
     }
 
+    @SuppressWarnings("unchecked")
     public static void merge(Map<String, Object> a, Map<String, Object> b, String... path) {
         Object holder = get(a, path);
 
@@ -45,6 +47,7 @@ public final class ConfigurationUtils {
         m.putAll(b);
     }
 
+    @SuppressWarnings("unchecked")
     public static Map<String, Object> deepMerge(Map<String, Object> a, Map<String, Object> b) {
         for (String k : b.keySet()) {
             Object av = a.get(k);

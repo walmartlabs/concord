@@ -60,7 +60,8 @@ public class RoleResourceImpl implements RoleResource, Resource {
             throw new ValidationErrorsException("Role not found: " + name);
         }
 
-        return delete(name);
+        roleDao.delete(name);
+        return new DeleteRoleResponse();
     }
 
     private static void assertPermissions(String permission, String message) {

@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.server.project;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.server.project.ConfigurationUtils;
 import org.junit.Test;
 
@@ -13,6 +12,7 @@ import static org.junit.Assert.assertEquals;
 public class ConfigurationUtilsTest {
 
     @Test
+    @SuppressWarnings("unchecked")
     public void test() throws Exception {
         String json = "{ \"smtp\": { \"host\": \"localhost\" }, \"ssl\": false }";
 
@@ -43,6 +43,7 @@ public class ConfigurationUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testDeepMerge() throws Exception {
         ObjectMapper om = new ObjectMapper();
 

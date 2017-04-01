@@ -116,6 +116,7 @@ public class StartMojo extends AbstractMojo {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static void sendPayload(Log log, Path payload, String serverAddr, String apiToken) throws MojoFailureException {
         try (CloseableHttpClient client = HttpClients.createDefault();
              InputStream in = Files.newInputStream(payload)) {

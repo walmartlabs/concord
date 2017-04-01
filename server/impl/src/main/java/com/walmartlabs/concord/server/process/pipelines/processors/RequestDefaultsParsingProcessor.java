@@ -22,6 +22,7 @@ public class RequestDefaultsParsingProcessor implements PayloadProcessor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         if (workspace == null) {

@@ -84,7 +84,7 @@ public class FileEventStorage implements EventStorage {
     public Collection<Event> find(String processBusinessKey, String eventName) {
         try {
             return Files.list(dir)
-                    .map(p -> get(p))
+                    .map(this::get)
                     .filter(ev -> processBusinessKey.equals(ev.getProcessBusinessKey()) &&
                             (eventName == null || eventName.equals(ev.getName())))
                     .collect(Collectors.toList());

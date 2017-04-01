@@ -21,6 +21,7 @@ public class BooTask implements Task {
         return "boo";
     }
 
+    @SuppressWarnings("unchecked")
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Inside boo task impl. Input: " + args.get("input"));
         BooCli boo = new BooCli();

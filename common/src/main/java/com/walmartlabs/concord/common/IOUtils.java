@@ -71,16 +71,16 @@ public final class IOUtils {
     public static void unzip(ZipInputStream in, Path targetDir) throws IOException {
         ZipEntry e;
         while ((e = in.getNextEntry()) != null) {
-            File f = targetDir.resolve(e.getName()).toFile();
+            Path p = targetDir.resolve(e.getName());
             if (e.isDirectory()) {
-                f.mkdirs();
+                Files.createDirectories(p);
             } else {
-                File parent = f.getParentFile();
-                if (!parent.exists()) {
-                    parent.mkdirs();
+                Path parent = p.getParent();
+                if (!Files.exists(parent)) {
+                    Files.createDirectories(parent);
                 }
 
-                try (OutputStream out = new FileOutputStream(f)) {
+                try (OutputStream out = Files.newOutputStream(p)) {
                     copy(in, out);
                 }
             }

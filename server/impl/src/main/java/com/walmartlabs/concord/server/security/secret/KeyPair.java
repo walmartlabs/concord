@@ -31,7 +31,7 @@ public class KeyPair implements Secret {
         }
 
         byte[] publicKey = array(out -> k.writePublicKey(out, DEFAULT_KEY_COMMENT));
-        byte[] privateKey = array(out -> k.writePrivateKey(out));
+        byte[] privateKey = array(k::writePrivateKey);
 
         return new KeyPair(publicKey, privateKey);
     }

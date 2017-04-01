@@ -23,6 +23,7 @@ public class YamlParser implements WorkflowDefinitionParser {
     private static final Logger log = LoggerFactory.getLogger(YamlParser.class);
 
     @Override
+    @SuppressWarnings("unchecked")
     public WorkflowDefinition parse(String source, InputStream in) throws ParserException {
         log.warn("parse -> this format is deprecated");
 

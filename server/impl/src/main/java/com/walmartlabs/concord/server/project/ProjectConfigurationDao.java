@@ -107,6 +107,7 @@ public class ProjectConfigurationDao extends AbstractDao {
         return (List) v;
     }
 
+    @SuppressWarnings("unchecked")
     private class Loader extends CacheLoader<String, Optional<Map<String, Object>>> {
 
         @Override

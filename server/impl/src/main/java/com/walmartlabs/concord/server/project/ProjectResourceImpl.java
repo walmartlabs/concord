@@ -101,9 +101,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         assertSecret(request.getSecret());
 
-        tx(tx -> {
-            repositoryDao.insert(tx, projectName, request.getName(), request.getUrl(), request.getBranch(), request.getSecret());
-        });
+        tx(tx -> repositoryDao.insert(tx, projectName, request.getName(), request.getUrl(), request.getBranch(), request.getSecret()));
         return new CreateRepositoryResponse();
     }
 
@@ -131,6 +129,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getConfiguration(String projectName, String path) {
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
@@ -205,9 +204,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertRepository(projectName, repositoryName);
         assertSecret(request.getSecret());
 
-        tx(tx -> {
-            repositoryDao.update(tx, repositoryName, request.getUrl(), request.getBranch(), request.getSecret());
-        });
+        tx(tx -> repositoryDao.update(tx, repositoryName, request.getUrl(), request.getBranch(), request.getSecret()));
         return new UpdateRepositoryResponse();
     }
 
@@ -228,9 +225,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         validateCfg(cfg);
 
         Map<String, Object> newCfg = cfg;
-        tx(tx -> {
-            configurationDao.update(tx, projectName, newCfg);
-        });
+        tx(tx -> configurationDao.update(tx, projectName, newCfg));
         return new UpdateProjectConfigurationResponse();
     }
 
@@ -240,9 +235,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified project");
 
-        tx(tx -> {
-            projectDao.delete(tx, projectName);
-        });
+        tx(tx -> projectDao.delete(tx, projectName));
         return new DeleteProjectResponse();
     }
 
@@ -254,9 +247,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         assertRepository(projectName, repositoryName);
 
-        tx(tx -> {
-            repositoryDao.delete(tx, repositoryName);
-        });
+        tx(tx -> repositoryDao.delete(tx, repositoryName));
         return new DeleteRepositoryResponse();
     }
 

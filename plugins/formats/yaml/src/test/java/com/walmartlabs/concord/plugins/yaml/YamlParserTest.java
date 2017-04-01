@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 public class YamlParserTest {
 
     @Rule
-    public EngineRule engineRule = new EngineRule(new DeploymentProcessor() {
+    public final EngineRule engineRule = new EngineRule(new DeploymentProcessor() {
         @Override
         public void handle(InputStream in, TestProcessDefinitionProvider provider) throws ParserException {
             YamlParser p = new YamlParser();

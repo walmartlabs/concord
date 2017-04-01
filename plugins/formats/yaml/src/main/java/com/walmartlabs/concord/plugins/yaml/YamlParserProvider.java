@@ -3,12 +3,10 @@ package com.walmartlabs.concord.plugins.yaml;
 import com.walmartlabs.concord.common.format.ParserException;
 import com.walmartlabs.concord.common.format.PriorityBasedParser;
 import com.walmartlabs.concord.common.format.WorkflowDefinition;
-import io.takari.bpm.model.ProcessDefinition;
 
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.InputStream;
-import java.util.Collection;
 
 @Named
 public class YamlParserProvider implements Provider<PriorityBasedParser> {

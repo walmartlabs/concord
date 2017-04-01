@@ -13,7 +13,7 @@ function* nextForm({processInstanceId}): Generator<*, *, *> {
         let forms = [];
 
         while (true) {
-            forms = yield call(formApi.listForms, processInstanceId)
+            forms = yield call(formApi.listForms, processInstanceId);
             if (forms && forms.length > 0) {
                 break;
             }

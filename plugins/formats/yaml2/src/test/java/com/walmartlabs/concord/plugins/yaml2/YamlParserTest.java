@@ -21,12 +21,11 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class YamlParserTest {
 
-    private TestWorkflowProvider workflowProvider = new TestWorkflowProvider();
+    private final TestWorkflowProvider workflowProvider = new TestWorkflowProvider();
     private TestServiceTaskRegistry taskRegistry;
     private Engine engine;
     private Map<UUID, Form> forms;
@@ -389,6 +388,7 @@ public class YamlParserTest {
 
         TestInterface testTask2 = spy(new TestInterface() {
             @Override
+            @SuppressWarnings("unchecked")
             public void call(Object arg1) {
                 List<Object> l = (List<Object>) arg1;
                 assertEquals(inputNumber, l.get(0));
@@ -398,6 +398,7 @@ public class YamlParserTest {
 
         TestInterface testTask3 = spy(new TestInterface() {
             @Override
+            @SuppressWarnings("unchecked")
             public void call(Object arg1) {
                 assertNotNull(arg1);
 
@@ -560,6 +561,7 @@ public class YamlParserTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void test103() throws Exception {
         deploy("103.yml");
 
@@ -779,11 +781,11 @@ public class YamlParserTest {
         }
 
         public ProcessDefinitionProvider processes() {
-            return id -> processes.get(id);
+            return processes::get;
         }
 
         public FormDefinitionProvider forms() {
-            return id -> forms.get(id);
+            return forms::get;
         }
 
         private static WorkflowDefinition loadWorkflow(String resource) {
