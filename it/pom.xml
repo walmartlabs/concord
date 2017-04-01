@@ -16,6 +16,7 @@
     <modules>
         <module>agent</module>
         <module>runner</module>
+        <module>db</module>
         <module>server</module>
         <module>console</module>
     </modules>
