@@ -1,5 +1,14 @@
 # Change log
 
+## Unreleased
+
+### Changed
+
+- concord-server: merge existing process values with form values;
+- upgrade BPM version to 0.2.1.
+
+
+
 ## [0.3.1] - 2017-04-02
 
 ### Changed

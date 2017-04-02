@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.project.ConfigurationUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
@@ -89,6 +90,27 @@ public class ConcordFormService {
             processResource.resume(f.getProcessBusinessKey(), f.getEventName(), m);
         };
 
-        return DefaultFormService.submit(resumeHandler, validator, form, data);
+        Map<String, Object> merged = merge(form, data);
+        return DefaultFormService.submit(resumeHandler, validator, form, merged);
+    }
+
+    private static Map<String, Object> merge(Form form, Map<String, Object> data) {
+        String formName = form.getFormDefinition().getName();
+
+        Map<String, Object> env = form.getEnv();
+        if (env == null) {
+            env = Collections.emptyMap();
+        }
+
+        Map<String, Object> formState = (Map<String, Object>) env.get(formName);
+        if (formState == null) {
+            formState = Collections.emptyMap();
+        }
+
+        Map<String, Object> a = new HashMap<>(formState != null ? formState : Collections.emptyMap());
+        Map<String, Object> b = new HashMap<>(data != null ? data : Collections.emptyMap());
+
+        ConfigurationUtils.merge(a, b);
+        return a;
     }
 }

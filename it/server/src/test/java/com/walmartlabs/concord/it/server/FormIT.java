@@ -41,7 +41,10 @@ public class FormIT extends AbstractServerIT {
         FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);
         assertTrue(fsr.isOk());
 
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessStatusResponse psr = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*100223.*", ab);
 
         // ---
 
@@ -56,12 +59,13 @@ public class FormIT extends AbstractServerIT {
         fsr = formResource.submit(spr.getInstanceId(), formId, data);
         assertTrue(fsr.isOk());
 
-        ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        psr = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, psr.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pir.getLogFileName());
+        ab = getLog(psr.getLogFileName());
         assertLog(".*" + firstName + " " + lastName + ".*", ab);
+        assertLog(".*100323.*", ab);
     }
 }

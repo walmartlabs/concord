@@ -1,3 +1,8 @@
 {
-  "entryPoint": "main"
+  "entryPoint": "main",
+  "arguments": {
+    "myForm1": {
+      "x": 100123
+    }
+  }
 }
