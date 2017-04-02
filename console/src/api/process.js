@@ -30,3 +30,27 @@ export const fetchStatus = (id: ConcordId) => {
             return json;
         });
 };
+
+export const start = (entryPoint: string) => {
+    console.debug("API: start ['%s'] -> starting...", entryPoint);
+
+    const body = JSON.stringify({});
+    const contentType = {"Content-Type": "application/json"};
+    const opts = {
+        method: "POST",
+        headers: Object.assign({}, authHeader, contentType),
+        body: body
+    };
+
+    return fetch(`/api/v1/process/${entryPoint}`, opts)
+        .then(response => {
+            if (!response.ok) {
+                throw new defaultError(response);
+            }
+            return response.json();
+        })
+        .then(json => {
+            console.debug("API: start ['%s'] -> done, got %o", entryPoint, json);
+            return json;
+        });
+};

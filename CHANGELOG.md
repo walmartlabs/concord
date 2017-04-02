@@ -1,5 +1,14 @@
 # Change log
 
+## Unreleased
+
+### Changed
+
+- concord-console: host the landing page;
+- concord-console: simple process launcher using `/#/portal/start?entryPoint=abc` URLs.
+
+
+
 ## [0.3.0] - 2017-03-31
 
 ### Changed

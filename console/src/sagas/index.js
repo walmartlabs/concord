@@ -8,6 +8,7 @@ import templateList from "../containers/VisibleTemplateList/sagas";
 import processForm from "../containers/VisibleProcessForm/sagas";
 import process from "../containers/VisibleProcessPage/sagas";
 import processWizard from "../containers/VisibleProcessWizard/sagas";
+import portal from "../containers/VisiblePortalPage/sagas";
 
 export default function*(): Generator<*, *, *> {
     yield [
@@ -18,6 +19,7 @@ export default function*(): Generator<*, *, *> {
         fork(log),
         fork(processForm),
         fork(process),
-        fork(processWizard)
+        fork(processWizard),
+        fork(portal)
     ];
 }

@@ -24,7 +24,7 @@ function* nextForm({processInstanceId}): Generator<*, *, *> {
                 return;
             }
 
-            yield call(delay, 1000);
+            yield call(delay, 2000);
         }
 
         const {formInstanceId} = forms[0];

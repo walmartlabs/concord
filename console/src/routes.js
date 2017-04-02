@@ -13,6 +13,7 @@ import VisibleLoginForm from "./containers/VisibleLoginForm";
 import VisibleProcessPage from "./containers/VisibleProcessPage";
 import VisibleProcessForm from "./containers/VisibleProcessForm";
 import VisibleProcessWizard from "./containers/VisibleProcessWizard";
+import VisiblePortalPage from "./containers/VisiblePortalPage";
 import {getIsLoggedIn} from "./reducers";
 
 export const getProcessPath = (instanceId: ConcordId) => `/process/${instanceId}`;
@@ -55,6 +56,7 @@ export default (store: Store<mixed, mixed>, history: mixed) => {
                 {/*<Route path="new" component={VisibleProjectForm}/>*/}
                 {/*<Route path=":name" component={VisibleProjectForm}/>*/}
             </Route>
+            <Route path="portal/start" component={VisiblePortalPage}/>
         </Route>
     </Router>;
 };
