@@ -5,8 +5,16 @@
 ### Changed
 
 - concord-server: merge existing process values with form values;
-- concord-server: fix update for LDAP group mappings;
+- concord-server: fix the LDAP mapping update method;
+- concord-server: new method `/api/v1/ldap/query/{username}/group` to
+retrieve a list of LDAP user's groups.
 - upgrade BPM version to 0.2.1.
+
+## Breaking
+
+- concord-server: LDAP mappings methods moved to `/api/v1/ldap/mapping`
+path prefix.
+
 
 
 ## [0.3.1] - 2017-04-02
@@ -14,9 +22,8 @@
 ### Changed
 
 - concord-console: host the landing page;
-- concord-console: simple process launcher using `/#/portal/start?entryPoint=abc` URLs.
-
-
+- concord-console: simple process launcher using
+`/#/portal/start?entryPoint=abc` URLs.
 
 ## [0.3.0] - 2017-03-31
 

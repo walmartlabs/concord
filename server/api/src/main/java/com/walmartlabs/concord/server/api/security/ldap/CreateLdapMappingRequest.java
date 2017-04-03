@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 @JsonInclude(Include.NON_NULL)
@@ -21,6 +23,10 @@ public class CreateLdapMappingRequest implements Serializable {
                                     @JsonProperty("roles") Set<String> roles) {
         this.ldapDn = ldapDn;
         this.roles = roles;
+    }
+
+    public CreateLdapMappingRequest(String ldapDn, String... roles) {
+        this(ldapDn, new HashSet<>(Arrays.asList(roles)));
     }
 
     public String getLdapDn() {

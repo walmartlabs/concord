@@ -8,6 +8,8 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 @JsonInclude(Include.NON_NULL)
@@ -27,6 +29,10 @@ public class RoleEntry implements Serializable {
         this.name = name;
         this.description = description;
         this.permissions = permissions;
+    }
+
+    public RoleEntry(String name, String description, String... permissions) {
+        this(name, description, new HashSet<>(Arrays.asList(permissions)));
     }
 
     public String getName() {

@@ -1,5 +1,8 @@
 package com.walmartlabs.concord.server.cfg;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
@@ -13,6 +16,7 @@ import java.util.Properties;
 @Singleton
 public class LdapConfiguration implements Serializable {
 
+    private static final Logger log = LoggerFactory.getLogger(LdapConfiguration.class);
     public static final String LDAP_CFG_KEY = "LDAP_CFG";
 
     private final String url;
@@ -30,10 +34,12 @@ public class LdapConfiguration implements Serializable {
             try (InputStream in = Files.newInputStream(Paths.get(path))) {
                 props.load(in);
             }
+            log.info("init -> using external LDAP configuration: {}", path);
         } else {
             try (InputStream in = LdapConfiguration.class.getResourceAsStream("default_ldap.properties")) {
                 props.load(in);
             }
+            log.info("init -> using default LDAP configuration");
         }
 
         this.url = props.getProperty("url");

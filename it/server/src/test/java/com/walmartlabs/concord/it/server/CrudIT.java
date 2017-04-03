@@ -2,18 +2,22 @@ package com.walmartlabs.concord.it.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.api.project.*;
+import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
+import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
+import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
+import com.walmartlabs.concord.server.api.security.ldap.LdapResource;
 import com.walmartlabs.concord.server.api.security.secret.*;
 import com.walmartlabs.concord.server.api.template.CreateTemplateResponse;
 import com.walmartlabs.concord.server.api.template.DeleteTemplateResponse;
 import com.walmartlabs.concord.server.api.template.TemplateResource;
 import com.walmartlabs.concord.server.api.template.UpdateTemplateResponse;
+import com.walmartlabs.concord.server.api.user.RoleEntry;
+import com.walmartlabs.concord.server.api.user.RoleResource;
 import org.junit.Test;
 
 import javax.ws.rs.BadRequestException;
 import java.io.ByteArrayInputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -203,6 +207,37 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(s);
         assertEquals(SecretType.USERNAME_PASSWORD, s.getType());
         assertEquals(keyName, s.getName());
+    }
+
+    @Test
+    public void testLdapMappings() throws Exception {
+        String roleA = "roleA_" + System.currentTimeMillis();
+        String roleB = "roleB_" + System.currentTimeMillis();
+        String ldapDn = "testDn_" + System.currentTimeMillis();
+
+        RoleResource roleResource = proxy(RoleResource.class);
+        roleResource.createOrUpdate(new RoleEntry(roleA, "A", "1", "2"));
+        roleResource.createOrUpdate(new RoleEntry(roleB, "B", "2", "3"));
+
+        // ---
+
+        LdapResource ldapResource = proxy(LdapResource.class);
+        CreateLdapMappingResponse clmr = ldapResource.createOrUpdate(new CreateLdapMappingRequest(ldapDn, roleA, roleB));
+        assertTrue(clmr.isCreated());
+
+        List<LdapMappingEntry> l = ldapResource.listMappings();
+        assertFalse(l.isEmpty());
+
+        boolean found = false;
+        for (LdapMappingEntry e : l) {
+            if (e.getId().equals(clmr.getId())) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue(found);
+
+        ldapResource.deleteMapping(clmr.getId());
     }
 
     private static ProjectEntry findProject(List<ProjectEntry> l, String name) {

@@ -13,20 +13,26 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
+import javax.naming.NamingException;
+import javax.ws.rs.WebApplicationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 @Named
+@Singleton
 public class LdapResourceImpl implements LdapResource, Resource {
 
     private final LdapDao ldapDao;
     private final RoleDao roleDao;
+    private final LdapManager ldapManager;
 
     @Inject
-    public LdapResourceImpl(LdapDao ldapDao, RoleDao roleDao) {
+    public LdapResourceImpl(LdapDao ldapDao, RoleDao roleDao, LdapManager ldapManager) {
         this.ldapDao = ldapDao;
         this.roleDao = roleDao;
+        this.ldapManager = ldapManager;
     }
 
     @Override
@@ -53,20 +59,31 @@ public class LdapResourceImpl implements LdapResource, Resource {
     }
 
     @Override
-    public List<LdapMappingEntry> list() {
+    public List<LdapMappingEntry> listMappings() {
         return ldapDao.list();
     }
 
     @Override
     @Validate
     @RequiresPermissions(Permissions.LDAP_MAPPING_DELETE_ANY)
-    public DeleteLdapMappingResponse delete(String id) {
+    public DeleteLdapMappingResponse deleteMapping(String id) {
         if (!ldapDao.exists(id)) {
             throw new ValidationErrorsException("LDAP group mapping not found: " + id);
         }
 
         ldapDao.delete(id);
         return new DeleteLdapMappingResponse();
+    }
+
+    @Override
+    @Validate
+    @RequiresPermissions(Permissions.LDAP_QUERY)
+    public List<String> getLdapGroups(String username) {
+        try {
+            return ldapManager.getGroups(username);
+        } catch (NamingException e) {
+            throw new WebApplicationException("LDAP query error", e);
+        }
     }
 
     private void validateRoles(Collection<String> roles) {

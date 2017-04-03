@@ -35,6 +35,8 @@ public final class Permissions {
     public static final String LDAP_MAPPING_UPDATE_ANY = "ldapMapping:update";
     public static final String LDAP_MAPPING_DELETE_ANY = "ldapMapping:delete";
 
+    public static final String LDAP_QUERY = "ldap:query";
+
     private Permissions() {
     }
 }

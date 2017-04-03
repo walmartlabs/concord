@@ -13,12 +13,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,20 +24,21 @@ public class LdapRealm extends AbstractLdapRealm {
 
     private final UserDao userDao;
     private final LdapDao ldapDao;
+    private final LdapManager ldapManager;
     private final ConcordShiroAuthorizer authorizer;
+
     private final String usernameSuffix;
-    private final String userFilter;
 
     @Inject
-    public LdapRealm(LdapConfiguration cfg, UserDao userDao, LdapDao ldapDao, ConcordShiroAuthorizer authorizer) {
+    public LdapRealm(LdapConfiguration cfg, UserDao userDao, LdapDao ldapDao, LdapManager ldapManager, ConcordShiroAuthorizer authorizer) {
         this.userDao = userDao;
         this.ldapDao = ldapDao;
+        this.ldapManager = ldapManager;
         this.authorizer = authorizer;
 
         this.url = cfg.getUrl();
         this.searchBase = cfg.getSearchBase();
         this.usernameSuffix = cfg.getPrincipalSuffix();
-        this.userFilter = cfg.getPrincipalSearchFilter();
         this.systemUsername = cfg.getSystemUsername();
         this.systemPassword = cfg.getSystemPassword();
 
@@ -106,28 +102,8 @@ public class LdapRealm extends AbstractLdapRealm {
         try {
             ctx = ldapContextFactory.getSystemLdapContext();
 
-            SearchControls searchCtls = new SearchControls();
-            searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            Object[] args = new Object[]{u.getName()};
-
-            NamingEnumeration answer = ctx.search(searchBase, userFilter, args, searchCtls);
-
-            while (answer.hasMoreElements()) {
-                SearchResult sr = (SearchResult) answer.next();
-                Attributes attrs = sr.getAttributes();
-
-                if (attrs != null) {
-                    NamingEnumeration ae = attrs.getAll();
-                    while (ae.hasMore()) {
-                        Attribute attr = (Attribute) ae.next();
-
-                        if (attr.getID().equals("memberOf")) {
-                            Collection<String> groupNames = LdapUtils.getAllAttributeValues(attr);
-                            roles.addAll(ldapDao.getRoles(groupNames));
-                        }
-                    }
-                }
-            }
+            Collection<String> groups = ldapManager.getGroups(ctx, u.getName());
+            roles.addAll(ldapDao.getRoles(groups));
 
             return authorizer.getAuthorizationInfo(u, roles);
         } finally {
