@@ -124,7 +124,7 @@ public class LdapDao extends AbstractDao {
 
     private static void deleteRoles(DSLContext create, String mappingId) {
         create.deleteFrom(LDAP_GROUP_ROLES)
-                .where(LDAP_GROUP_MAPPINGS.MAPPING_ID.eq(mappingId))
+                .where(LDAP_GROUP_ROLES.MAPPING_ID.eq(mappingId))
                 .execute();
     }
 

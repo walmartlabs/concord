@@ -31,7 +31,7 @@ public class LdapResourceImpl implements LdapResource, Resource {
 
     @Override
     @Validate
-    public CreateLdapMappingResponse create(CreateLdapMappingRequest request) {
+    public CreateLdapMappingResponse createOrUpdate(CreateLdapMappingRequest request) {
         String ldapDn = request.getLdapDn();
         validateRoles(request.getRoles());
 

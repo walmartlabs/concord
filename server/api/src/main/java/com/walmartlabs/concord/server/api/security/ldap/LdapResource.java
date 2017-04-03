@@ -24,7 +24,7 @@ public interface LdapResource {
     @ApiOperation("Create or update a LDAP group mapping")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    CreateLdapMappingResponse create(@ApiParam CreateLdapMappingRequest request);
+    CreateLdapMappingResponse createOrUpdate(@ApiParam CreateLdapMappingRequest request);
 
     /**
      * Lists LDAP group mappings.
