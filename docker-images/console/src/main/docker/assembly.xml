@@ -12,6 +12,11 @@
             <outputDirectory>.</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <unpack>true</unpack>
+            <unpackOptions>
+                <excludes>
+                    <exclude>**/*.js.map</exclude>
+                </excludes>
+            </unpackOptions>
         </dependencySet>
     </dependencySets>
 
