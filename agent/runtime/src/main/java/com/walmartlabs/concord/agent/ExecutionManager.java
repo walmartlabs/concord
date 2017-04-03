@@ -95,6 +95,9 @@ public class ExecutionManager {
             statuses.put(instanceId, JobStatus.RUNNING);
         }
 
+        // create a log file synchronously
+        logManager.touch(instanceId);
+
         Future<?> f = executor.submit(() -> {
             try {
                 exec.exec(instanceId, tmpDir, entryPoint, jvmArgs);

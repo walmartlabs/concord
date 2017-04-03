@@ -73,6 +73,17 @@ public class LogManager {
         }
     }
 
+    public void touch(String id) {
+        Path f = logFile(id);
+        if (!Files.exists(f)) {
+            try {
+                Files.createFile(f);
+            } catch (IOException e) {
+                throw new RuntimeException("Error opening a log file: " + f, e);
+            }
+        }
+    }
+
     public Path open(String id) {
         return logFile(id);
     }
