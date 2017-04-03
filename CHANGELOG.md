@@ -7,7 +7,8 @@
 - concord-server: merge existing process values with form values;
 - concord-server: fix the LDAP mapping update method;
 - concord-server: new method `/api/v1/ldap/query/{username}/group` to
-retrieve a list of LDAP user's groups.
+retrieve a list of LDAP user's groups;
+- concord-agent: fix a race condition in the log creation;
 - upgrade BPM version to 0.2.1.
 
 ## Breaking
