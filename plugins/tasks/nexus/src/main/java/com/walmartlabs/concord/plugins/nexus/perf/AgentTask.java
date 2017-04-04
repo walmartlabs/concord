@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-@Named
+@Named("perf")
 public class AgentTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(AgentTask.class);
@@ -26,11 +26,6 @@ public class AgentTask implements Task {
     @Inject
     public AgentTask(AgentPoolHolder poolHolder) {
         this.poolHolder = poolHolder;
-    }
-
-    @Override
-    public String getKey() {
-        return "perf";
     }
 
     public void connect(String txId, String[] urls) {

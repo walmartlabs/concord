@@ -6,15 +6,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 
-@Named
+@Named("sleep")
 public class SleepTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(SleepTask.class);
-
-    @Override
-    public String getKey() {
-        return "sleep";
-    }
 
     public void ms(long t) {
         try {

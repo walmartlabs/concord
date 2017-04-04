@@ -7,13 +7,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-@Named
+@Named("resource")
 public class ResourceTask implements Task {
-
-    @Override
-    public String getKey() {
-        return "resource";
-    }
 
     public String asString(String path) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();

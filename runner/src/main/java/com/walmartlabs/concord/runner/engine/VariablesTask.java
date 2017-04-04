@@ -5,13 +5,8 @@ import io.takari.bpm.api.ExecutionContext;
 
 import javax.inject.Named;
 
-@Named
+@Named("vars")
 public class VariablesTask implements Task {
-
-    @Override
-    public String getKey() {
-        return "vars";
-    }
 
     public Object get(ExecutionContext ctx, String key, Object defaultValue) {
         Object v = ctx.getVariable(key);

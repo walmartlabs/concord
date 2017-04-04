@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 import java.util.zip.ZipOutputStream;
 
-@Named
+@Named("perf2")
 @Singleton
 public class PerfTask implements Task {
 
@@ -40,11 +40,6 @@ public class PerfTask implements Task {
     @Inject
     public PerfTask(AgentPoolFactory agentPoolFactory) {
         this.agentPoolFactory = agentPoolFactory;
-    }
-
-    @Override
-    public String getKey() {
-        return "perf2";
     }
 
     public void loadAndStart(ExecutionContext ctx, String agentAddr, String scenarioDir, Collection<Map<String, Object>> scenarios) {

@@ -12,18 +12,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-@Named
+@Named("ansible")
 @Deprecated
 public class RunPlaybookTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(RunPlaybookTask.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
-
-    @Override
-    public String getKey() {
-        return "ansible";
-    }
 
     @SuppressWarnings("unchecked")
     public void run(Map<String, Object> args, String playbook, String playbookPath, String tags) throws Exception {

@@ -12,15 +12,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import java.util.Map;
 
-@Named
+@Named("smtp")
 public class SmtpTask implements Task, JavaDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(SmtpTask.class);
-
-    @Override
-    public String getKey() {
-        return "smtp";
-    }
 
     @Override
     @SuppressWarnings("unchecked")

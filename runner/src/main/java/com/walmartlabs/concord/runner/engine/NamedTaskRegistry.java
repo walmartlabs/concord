@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,23 +18,30 @@ public class NamedTaskRegistry implements ServiceTaskRegistry {
     private final Map<String, Task> tasks;
 
     @Inject
-    public NamedTaskRegistry(Collection<Task> tasks) {
-        Map<String, Task> m = new HashMap<>();
-        for (Task t : tasks) {
-            String k = t.getKey();
-            m.put(k, t);
-            log.debug("init -> got '{}' - {}", k, t.getClass());
-        }
-
-        this.tasks = m;
+    public NamedTaskRegistry(Map<String, Task> tasks) {
+        this.tasks = tasks;
     }
 
     public NamedTaskRegistry(Task... tasks) {
-        this(Arrays.asList(tasks));
+        this(toMap(tasks));
     }
 
     @Override
     public Object getByKey(String key) {
         return tasks.get(key);
+    }
+
+    private static Map<String, Task> toMap(Task[] tasks) {
+        Map<String, Task> m = new HashMap<>();
+        for (Task t : tasks) {
+            Named n = t.getClass().getAnnotation(Named.class);
+            if (n == null || n.value() == null) {
+                log.warn("init -> skipping {}, invalid @Named annotation", t);
+                continue;
+            }
+
+            m.put(n.value(), t);
+        }
+        return m;
     }
 }

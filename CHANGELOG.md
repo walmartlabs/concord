@@ -1,5 +1,14 @@
 # Change log
 
+## Unreleased
+
+### Breaking
+
+- concord-common: removed `Task#getKey`. Value of
+`javax.inject.@Named` annotation is used to resolve a task.
+
+
+
 ## [0.3.2] - 2017-04-03
 
 ### Changed

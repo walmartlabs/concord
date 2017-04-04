@@ -4,6 +4,7 @@ import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.Task;
 import org.junit.Test;
 
+import javax.inject.Named;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,12 +42,8 @@ public class SuspendMainTest extends AbstractMainTest {
         verify(testBean, times(1)).call(eq("bbb"));
     }
 
+    @Named("testBean")
     public static class TestBean implements Task {
-
-        @Override
-        public String getKey() {
-            return "testBean";
-        }
 
         public void call(Object arg) {
         }

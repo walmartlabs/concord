@@ -20,15 +20,10 @@ import java.util.Map;
  * </ul>
  * Rest of the parameters will be passed as they are.
  */
-@Named
+@Named("jenkins")
 public class TriggerJobTask implements JavaDelegate, Task {
 
     public static final String JENKINS_URL_KEY = "jenkins_url";
-
-    @Override
-    public String getKey() {
-        return "jenkins";
-    }
 
     @Override
     public void execute(ExecutionContext ctx) throws Exception {

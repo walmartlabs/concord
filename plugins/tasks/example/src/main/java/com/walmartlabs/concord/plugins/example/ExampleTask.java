@@ -6,15 +6,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 
-@Named
+@Named("example")
 public class ExampleTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(ExampleTask.class);
-
-    @Override
-    public String getKey() {
-        return "example";
-    }
 
     public void hello() {
         log.info("Hello!");

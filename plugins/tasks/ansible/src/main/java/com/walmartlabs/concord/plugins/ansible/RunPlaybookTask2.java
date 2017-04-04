@@ -20,17 +20,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@Named
+@Named("ansible2")
 public class RunPlaybookTask2 implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(RunPlaybookTask2.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
-
-    @Override
-    public String getKey() {
-        return "ansible2";
-    }
 
     @SuppressWarnings("unchecked")
     public void run(Map<String, Object> args, String payloadPath) throws Exception {

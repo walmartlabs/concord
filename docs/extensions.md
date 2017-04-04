@@ -12,13 +12,8 @@ An example of a simple task:
 import com.walmartlabs.concord.common.Task;
 import javax.inject.Named;
 
-@Named
+@Named("myTask")
 public class MyTask implements Task {
-
-    @Override
-    public String getKey() {
-        return "myTask";
-    }
 
     public void sayHello(String name) {
         System.out.println("Hello, " + name + "!");
@@ -46,14 +41,9 @@ import com.walmartlabs.concord.common.Task;
 import io.takari.bpm.api.JavaDelegate;
 import javax.inject.Named;
 
-@Named
+@Named("myTask")
 public class MyDelegateTask implements JavaDelegate, Task {
    
-    @Override
-    public String getKey() {
-        return "myTask";
-    }
-    
     @Override
     public void execute(ExecutionContext ctx) throws Exception {
         System.out.println("Hello, " + ctx.getVariable("name"));

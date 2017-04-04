@@ -12,14 +12,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-@Named
+@Named("boo")
 public class BooTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(BooTask.class);
-
-    @Override
-    public String getKey() {
-        return "boo";
-    }
 
     @SuppressWarnings("unchecked")
     public void run(Map<String, Object> args, String payloadPath) throws Exception {

@@ -23,7 +23,7 @@ public class SuspendTest {
     public void test() throws Exception {
         Path baseDir = Files.createTempDirectory("test");
 
-        NamedTaskRegistry taskRegistry = new NamedTaskRegistry(Collections.emptyList());
+        NamedTaskRegistry taskRegistry = new NamedTaskRegistry();
         ProcessProvider wdp = id -> new ProcessDefinition(id,
                 new StartEvent("start"),
                 new SequenceFlow("f1", "start", "ev1"),

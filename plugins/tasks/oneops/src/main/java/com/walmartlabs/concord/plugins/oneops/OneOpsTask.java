@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import java.util.Collections;
 
-@Named
+@Named("oneOps")
 public class OneOpsTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(OneOpsTask.class);
@@ -27,11 +27,6 @@ public class OneOpsTask implements Task {
     public static final String VARIABLE_VALUE_KEY = "variable_value";
     public static final String VARIABLE_NAMES_KEY = "variable_names";
     public static final String TO_UPPER_CASE_KEY = "to_upper_case";
-
-    @Override
-    public String getKey() {
-        return "oneOps";
-    }
 
     public void updateVariable(ExecutionContext ctx) {
         String org = (String) ctx.getVariable(ORGANIZATION_KEY);
