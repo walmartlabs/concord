@@ -6,6 +6,7 @@ import {IndexRedirect, Route, Router} from "react-router";
 import {syncHistoryWithStore} from "react-router-redux";
 import VisibleLayout from "./containers/VisibleLayout";
 import VisibleHistoryTable from "./containers/VisibleHistoryTable";
+import VisibleKeypairTable from "./containers/VisibleKeypairTable";
 import VisibleProjectTable from "./containers/VisibleProjectTable";
 import VisibleLogViewer from "./containers/VisibleLogViewer";
 import VisibleLoginForm from "./containers/VisibleLoginForm";
@@ -15,6 +16,12 @@ import VisibleProcessForm from "./containers/VisibleProcessForm";
 import VisibleProcessWizard from "./containers/VisibleProcessWizard";
 import VisiblePortalPage from "./containers/VisiblePortalPage";
 import {getIsLoggedIn} from "./reducers";
+
+export const getKeypairListPath = () => "/keypair/list";
+export const getKeypairPath = (name: ConcordKey) => {
+    const n = encodeURIComponent(name);
+    return `/keypair/${n}`;
+};
 
 export const getProcessPath = (instanceId: ConcordId) => `/process/${instanceId}`;
 export const getProcessFormPath = (processInstanceId: ConcordId, formInstanceId: ConcordId) => `/process/${processInstanceId}/form/${formInstanceId}`;
@@ -55,6 +62,10 @@ export default (store: Store<mixed, mixed>, history: mixed) => {
                 <Route path="list" component={VisibleProjectTable}/>
                 {/*<Route path="new" component={VisibleProjectForm}/>*/}
                 {/*<Route path=":name" component={VisibleProjectForm}/>*/}
+            </Route>
+            <Route path="keypair" onEnter={checkAuth}>
+                <IndexRedirect to="list"/>
+                <Route path="list" component={VisibleKeypairTable}/>
             </Route>
             <Route path="portal/start" component={VisiblePortalPage}/>
         </Route>

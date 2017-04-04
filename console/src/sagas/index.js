@@ -1,5 +1,6 @@
 // @flow
 import {fork} from "redux-saga/effects";
+import keypairTable from "../containers/VisibleKeypairTable/sagas";
 import projectTable from "../containers/VisibleProjectTable/sagas";
 import historyTable from "../containers/VisibleHistoryTable/sagas";
 import projectForm from "../containers/VisibleProjectForm/sagas";
@@ -13,6 +14,7 @@ import portal from "../containers/VisiblePortalPage/sagas";
 export default function*(): Generator<*, *, *> {
     yield [
         fork(historyTable),
+        fork(keypairTable),
         fork(projectTable),
         fork(projectForm),
         fork(templateList),
