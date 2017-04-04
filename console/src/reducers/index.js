@@ -1,6 +1,6 @@
 import history from "../containers/VisibleHistoryTable/reducers";
-import keypairList from "../containers/VisibleKeypairTable/reducers";
-//import keypair from "../containers/VisibleKeypairForm/reducers";
+import secretList from "../containers/VisibleSecretTable/reducers";
+//import secret from "../containers/VisibleSecretForm/reducers";
 import projectList from "../containers/VisibleProjectTable/reducers";
 import project from "../containers/VisibleProjectForm/reducers";
 import log from "../containers/VisibleLogViewer/reducers";
@@ -11,11 +11,11 @@ import processWizard from "../containers/VisibleProcessWizard/reducers";
 import portal from "../containers/VisiblePortalPage/reducers";
 import * as fromSession from "./session";
 
-export default {history, keypairList, projectList, project, templateList, log, processForm, process, processWizard, portal};
+export default {history, secretList, projectList, project, templateList, log, processForm, process, processWizard, portal};
 
 export const getHistoryState = (state) => state.history;
-export const getKeypairListState = (state) => state.keypairList;
-//export const getKeypairState = (state) => state.keypair;
+export const getSecretListState = (state) => state.secretList;
+//export const getSecretState = (state) => state.secret;
 export const getProjectListState = (state) => state.projectList;
 export const getLogState = (state) => state.log;
 export const getProjectState = (state) => state.project;

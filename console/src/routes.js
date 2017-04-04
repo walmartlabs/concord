@@ -6,7 +6,7 @@ import {IndexRedirect, Route, Router} from "react-router";
 import {syncHistoryWithStore} from "react-router-redux";
 import VisibleLayout from "./containers/VisibleLayout";
 import VisibleHistoryTable from "./containers/VisibleHistoryTable";
-import VisibleKeypairTable from "./containers/VisibleKeypairTable";
+import VisibleSecretTable from "./containers/VisibleSecretTable";
 import VisibleProjectTable from "./containers/VisibleProjectTable";
 import VisibleLogViewer from "./containers/VisibleLogViewer";
 import VisibleLoginForm from "./containers/VisibleLoginForm";
@@ -17,10 +17,10 @@ import VisibleProcessWizard from "./containers/VisibleProcessWizard";
 import VisiblePortalPage from "./containers/VisiblePortalPage";
 import {getIsLoggedIn} from "./reducers";
 
-export const getKeypairListPath = () => "/keypair/list";
-export const getKeypairPath = (name: ConcordKey) => {
+export const getSecretListPath = () => "/secret/list";
+export const getSecretPath = (name: ConcordKey) => {
     const n = encodeURIComponent(name);
-    return `/keypair/${n}`;
+    return `/secret/${n}`;
 };
 
 export const getProcessPath = (instanceId: ConcordId) => `/process/${instanceId}`;
@@ -63,9 +63,9 @@ export default (store: Store<mixed, mixed>, history: mixed) => {
                 {/*<Route path="new" component={VisibleProjectForm}/>*/}
                 {/*<Route path=":name" component={VisibleProjectForm}/>*/}
             </Route>
-            <Route path="keypair" onEnter={checkAuth}>
+            <Route path="secret" onEnter={checkAuth}>
                 <IndexRedirect to="list"/>
-                <Route path="list" component={VisibleKeypairTable}/>
+                <Route path="list" component={VisibleSecretTable}/>
             </Route>
             <Route path="portal/start" component={VisiblePortalPage}/>
         </Route>

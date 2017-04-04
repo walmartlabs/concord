@@ -2,16 +2,16 @@ import {combineReducers} from "redux";
 import * as common from "../../reducers/common";
 import {actionTypes} from "./actions";
 
-const rows = common.makeListRowsReducer(actionTypes.FETCH_KEYPAIR_LIST_RESULT);
-const loading = common.makeBooleanTriggerReducer(actionTypes.FETCH_KEYPAIR_LIST_REQUEST, actionTypes.FETCH_KEYPAIR_LIST_RESULT);
-const error = common.makeErrorReducer(actionTypes.FETCH_KEYPAIR_LIST_REQUEST, actionTypes.FETCH_KEYPAIR_LIST_RESULT);
-const lastQuery = common.makeListLastQueryReducer(actionTypes.FETCH_KEYPAIR_LIST_REQUEST);
+const rows = common.makeListRowsReducer(actionTypes.FETCH_SECRET_LIST_RESULT);
+const loading = common.makeBooleanTriggerReducer(actionTypes.FETCH_SECRET_LIST_REQUEST, actionTypes.FETCH_SECRET_LIST_RESULT);
+const error = common.makeErrorReducer(actionTypes.FETCH_SECRET_LIST_REQUEST, actionTypes.FETCH_SECRET_LIST_RESULT);
+const lastQuery = common.makeListLastQueryReducer(actionTypes.FETCH_SECRET_LIST_REQUEST);
 
 const inFlight = (state = [], action) => {
     switch (action.type) {
-        case actionTypes.DELETE_KEYPAIR_REQUEST:
+        case actionTypes.DELETE_SECRET_REQUEST:
             return [...state, action.name];
-        case actionTypes.DELETE_KEYPAIR_RESULT:
+        case actionTypes.DELETE_SECRET_RESULT:
             return state.filter((v) => v !== action.name);
         default:
             return state;

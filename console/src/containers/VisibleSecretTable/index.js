@@ -1,13 +1,13 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
-import KeypairTable from "../../components/KeypairTable";
+import SecretTable from "../../components/SecretTable";
 import ErrorMessage from "../../components/ErrorMessage";
-import {getKeypairListState as getState} from "../../reducers";
+import {getSecretListState as getState} from "../../reducers";
 import {getRows, getIsLoading, getError, isInFlight} from "./reducers";
-import * as constants from "../../components/KeypairTable/constants";
+import * as constants from "../../components/SecretTable/constants";
 import * as actions from "./actions";
 
-class VisibleKeypairTable extends Component {
+class VisibleSecretTable extends Component {
     componentDidMount() {
         this.update();
     }
@@ -29,7 +29,7 @@ class VisibleKeypairTable extends Component {
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.update()}/>;
         }
-        return <KeypairTable {...rest} onRefreshFn={() => this.update()}/>;
+        return <SecretTable {...rest} onRefreshFn={() => this.update()}/>;
     }
 }
 
@@ -49,8 +49,8 @@ const mapStateToProps = (state, {location}) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    fetchData: (sortBy, sortDir) => dispatch(actions.fetchKeypairList(sortBy, sortDir)),
-    onDeleteFn: (name) => dispatch(actions.deleteKeypair(name))
+    fetchData: (sortBy, sortDir) => dispatch(actions.fetchSecretList(sortBy, sortDir)),
+    onDeleteFn: (name) => dispatch(actions.deleteSecret(name))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(VisibleKeypairTable);
+export default connect(mapStateToProps, mapDispatchToProps)(VisibleSecretTable);

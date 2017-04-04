@@ -14,7 +14,7 @@ const headerFn = (currentKey, currentDir) => (key, label) => {
     }
 
     const path = {
-        pathname: routes.getKeypairListPath(),
+        pathname: routes.getSecretListPath(),
         query: {sortBy: key, sortDir: reverseSort(currentDir)}
     };
 
@@ -27,13 +27,13 @@ const headerFn = (currentKey, currentDir) => (key, label) => {
 const cellFn = (inFlightFn, onDeleteFn) => (row, key) => {
     if (key === constants.nameKey) {
         const name = row[constants.nameKey];
-        return <Link to={routes.getKeypairPath(name)}>{row[key]}</Link>;
+        return <Link to={routes.getSecretPath(name)}>{row[key]}</Link>;
     }
 
     // column with buttons (actions)
     if (key === constants.actionsKey) {
         const name = row[constants.nameKey];
-        return onDeleteFn && <ConfirmationPopup icon="trash" message="Delete the selected keypair?"
+        return onDeleteFn && <ConfirmationPopup icon="trash" message="Delete the selected secret?"
                                                 onConfirmFn={() => onDeleteFn(name)}
                                                 disabled={inFlightFn(name)}/>;
     }
@@ -49,12 +49,12 @@ const cellFn = (inFlightFn, onDeleteFn) => (row, key) => {
     return row[key];
 };
 
-class KeypairTable extends Component {
+class SecretTable extends Component {
 
     render() {
         const {loading, onRefreshFn, inFlightFn, onDeleteFn, sortBy, sortDir, cols, rows} = this.props;
         return <div>
-            <Header as="h3">{ onRefreshFn && <RefreshButton loading={loading} onClick={onRefreshFn}/> }Keypairs</Header>
+            <Header as="h3">{ onRefreshFn && <RefreshButton loading={loading} onClick={onRefreshFn}/> }Secrets</Header>
             <DataTable cols={cols} rows={rows}
                        headerFn={headerFn(sortBy, sortDir)}
                        cellFn={cellFn(inFlightFn, onDeleteFn)}/>
@@ -62,7 +62,7 @@ class KeypairTable extends Component {
     }
 }
 
-KeypairTable.propTypes = {
+SecretTable.propTypes = {
     loading: PropTypes.bool,
     onRefreshFn: PropTypes.func,
     inFlightFn: PropTypes.func,
@@ -71,4 +71,4 @@ KeypairTable.propTypes = {
     sortDir: PropTypes.string
 };
 
-export default KeypairTable;
+export default SecretTable;
