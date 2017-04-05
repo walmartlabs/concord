@@ -25,9 +25,9 @@ const headerFn = (currentKey, currentDir) => (key, label) => {
 };
 
 const cellFn = (inFlightFn, onDeleteFn) => (row, key) => {
+
     if (key === constants.nameKey) {
-        const name = row[constants.nameKey];
-        return <Link to={routes.getSecretPath(name)}>{row[key]}</Link>;
+        return <span>{row[key]}</span>;
     }
 
     // column with buttons (actions)

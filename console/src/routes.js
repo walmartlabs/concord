@@ -18,10 +18,6 @@ import VisiblePortalPage from "./containers/VisiblePortalPage";
 import {getIsLoggedIn} from "./reducers";
 
 export const getSecretListPath = () => "/secret/list";
-export const getSecretPath = (name: ConcordKey) => {
-    const n = encodeURIComponent(name);
-    return `/secret/${n}`;
-};
 
 export const getProcessPath = (instanceId: ConcordId) => `/process/${instanceId}`;
 export const getProcessFormPath = (processInstanceId: ConcordId, formInstanceId: ConcordId) => `/process/${processInstanceId}/form/${formInstanceId}`;

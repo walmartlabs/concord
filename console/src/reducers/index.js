@@ -1,6 +1,5 @@
 import history from "../containers/VisibleHistoryTable/reducers";
 import secretList from "../containers/VisibleSecretTable/reducers";
-//import secret from "../containers/VisibleSecretForm/reducers";
 import projectList from "../containers/VisibleProjectTable/reducers";
 import project from "../containers/VisibleProjectForm/reducers";
 import log from "../containers/VisibleLogViewer/reducers";
@@ -15,7 +14,6 @@ export default {history, secretList, projectList, project, templateList, log, pr
 
 export const getHistoryState = (state) => state.history;
 export const getSecretListState = (state) => state.secretList;
-//export const getSecretState = (state) => state.secret;
 export const getProjectListState = (state) => state.projectList;
 export const getLogState = (state) => state.log;
 export const getProjectState = (state) => state.project;
