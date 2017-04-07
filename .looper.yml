@@ -5,9 +5,5 @@ tools:
   - 3.3.9
 
 flows:
-  master:
-    - mvn clean install -Plooper
-
-  pr:
-    - echo "Running build for $GITHUB_PR_URL"
-    - call: master
+  default (on linux):
+    - DOCKER_HOST=tcp://localhost:2375 mvn clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
