@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.project.ConfigurationUtils;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;

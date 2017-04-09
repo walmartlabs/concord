@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.project.ConfigurationUtils;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 
 import javax.inject.Named;
 import javax.inject.Singleton;

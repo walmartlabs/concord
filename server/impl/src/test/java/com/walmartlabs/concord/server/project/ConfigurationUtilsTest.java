@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.project;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.server.project.ConfigurationUtils;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.junit.Test;
 
 import java.util.HashMap;

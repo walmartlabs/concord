@@ -1,7 +1,0 @@
-main:
-  - form: myForm
-  - ${testBean.toString(myForm.age)}
-
-form (myForm):
-  - age: { type: "int", min: 21, max: 200 }
-  - percent: { type: "decimal?", min: 0, max: 1 }

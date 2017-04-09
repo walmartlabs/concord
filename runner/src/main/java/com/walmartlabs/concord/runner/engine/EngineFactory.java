@@ -1,15 +1,19 @@
 package com.walmartlabs.concord.runner.engine;
 
 import com.walmartlabs.concord.common.Constants;
-import com.walmartlabs.concord.common.format.WorkflowDefinitionProvider;
+import com.walmartlabs.concord.project.ProjectDirectoryLoader;
+import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
+import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.el.DefaultExpressionManager;
 import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.event.EventStorage;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.NoopResumeHandler;
+import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.task.UserTaskHandler;
 
@@ -18,6 +22,10 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Named
 public class EngineFactory {
@@ -29,7 +37,7 @@ public class EngineFactory {
         this.taskRegistry = taskRegistry;
     }
 
-    public Engine create(Path baseDir, WorkflowDefinitionProvider workflows) {
+    public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles) {
         Path stateDir = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.JOB_STATE_DIR_NAME);
 
@@ -47,19 +55,19 @@ public class EngineFactory {
 
         ExpressionManager expressionManager = new DefaultExpressionManager(taskRegistry);
 
-        WorkflowProviderAdapter wpa = new WorkflowProviderAdapter(workflows);
-
         EventStorage eventStorage = new FileEventStorage(eventsDir);
         PersistenceManager persistenceManager = new FilePersistenceManager(instancesDir);
 
         FormStorage formStorage = new FileFormStorage(formsDir);
         FormService formService = new DefaultFormService(new NoopResumeHandler(), formStorage, expressionManager);
 
-        UserTaskHandler uth = new FormTaskHandler(wpa.forms(), formService);
+        ProjectDefinitionAdapter adapter = new ProjectDefinitionAdapter(project, activeProfiles, baseDir);
+
+        UserTaskHandler uth = new FormTaskHandler(adapter.forms(), formService);
 
         return new EngineBuilder()
                 .withExpressionManager(expressionManager)
-                .withDefinitionProvider(wpa.processes())
+                .withDefinitionProvider(adapter.processes())
                 .withTaskRegistry(taskRegistry)
                 .withEventStorage(eventStorage)
                 .withPersistenceManager(persistenceManager)
@@ -67,20 +75,46 @@ public class EngineFactory {
                 .build();
     }
 
-    private static class WorkflowProviderAdapter {
+    private static class ProjectDefinitionAdapter {
 
-        private final WorkflowDefinitionProvider delegate;
+        private final ProjectDefinition project;
+        private final Collection<String> activeProfiles;
+        private final Map<String, String> attributes;
 
-        private WorkflowProviderAdapter(WorkflowDefinitionProvider delegate) {
-            this.delegate = delegate;
+        private ProjectDefinitionAdapter(ProjectDefinition project, Collection<String> activeProfiles, Path baseDir) {
+            this.project = project;
+            this.activeProfiles = activeProfiles;
+
+            // TODO this should be replaces with a project attribute
+            String localPath = baseDir.toAbsolutePath().toString();
+            this.attributes = Collections.singletonMap(Constants.LOCAL_PATH_ATTR, localPath);
         }
 
-        public ProcessDefinitionProvider processes() {
-            return delegate::getProcess;
+        ProcessDefinitionProvider processes() {
+            return id -> {
+                ProcessDefinition pd = ProjectDefinitionUtils.getFlow(project, activeProfiles, id);
+                if (pd == null) {
+                    return null;
+                }
+
+                return mergeAttr(pd, attributes);
+            };
         }
 
-        public FormDefinitionProvider forms() {
-            return delegate::getForm;
+        FormDefinitionProvider forms() {
+            return id -> ProjectDefinitionUtils.getForm(project, activeProfiles, id);
+        }
+
+        private static ProcessDefinition mergeAttr(ProcessDefinition pd, Map<String, String> attr) {
+            Map<String, String> current = pd.getAttributes();
+            if (current == null) {
+                current = Collections.emptyMap();
+            }
+
+            Map<String, String> m = new HashMap<>(current);
+            m.putAll(attr);
+
+            return new ProcessDefinition(pd, m);
         }
     }
 }

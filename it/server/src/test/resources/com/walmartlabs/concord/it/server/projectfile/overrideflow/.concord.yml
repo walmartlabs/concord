@@ -1,0 +1,16 @@
+flows:
+  main:
+  - myOtherFlow
+
+  myOtherFlow:
+  - log: Bye, ${name}
+
+variables:
+  arguments:
+    name: "world"
+
+profiles:
+  test:
+    flows:
+      myOtherFlow:
+      - log: Hello, ${name}

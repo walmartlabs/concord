@@ -1,0 +1,13 @@
+flows:
+  main:
+  - log: Hello, ${name}
+
+variables:
+  arguments:
+    name: "stranger"
+
+profiles:
+  test:
+    variables:
+      arguments:
+        name: "world"

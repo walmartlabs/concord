@@ -16,6 +16,7 @@
 
     <modules>
         <module>common</module>
+        <module>project-model</module>
         <module>agent</module>
         <module>plugins</module>
         <module>runner</module>

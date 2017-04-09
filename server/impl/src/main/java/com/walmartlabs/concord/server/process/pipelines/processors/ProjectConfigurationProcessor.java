@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.project.ConfigurationUtils;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.project.ProjectConfigurationDao;
 
 import javax.inject.Inject;

@@ -4,8 +4,8 @@ Concord provides several extension points.
 
 ## Tasks
 
-Tasks are used to call 3rd-party code or to perform something that is too complex to express it with BPMN or YAML
-directly.
+Tasks are used to call 3rd-party code or to perform something that is
+too complex to express it with YAML directly.
 
 An example of a simple task:
 ```java
@@ -21,21 +21,17 @@ public class MyTask implements Task {
 }
 ```
 
-Tasks such as this example can be called via JUEL expressions in BPMN's `ServiceTask` or YAML's `expr` elements:
-```xml
-<bpmn2:serviceTask concord:expressionType="expression"
-    concord:expression="${myTask.sayHello('world')}"/>
-```
+Tasks such as this example can be called using JUEL expressions in YAML's `expr` elements:
 
 ```yaml
 main:
+- ${myTask.sayHello("world")}
 - expr: ${myTask.sayHello("world")}
 ```
 
 See also [the description of expressions](yaml/README.md#expressions).
 
-If a task implements the `JavaDelegate` interface, it can be called as a "delegate expression".
-Supported only in the BPMN format:
+If a task implements the `JavaDelegate` interface, it can be called using full form of a YAML "task":
 ```java
 import com.walmartlabs.concord.common.Task;
 import io.takari.bpm.api.JavaDelegate;
@@ -51,7 +47,9 @@ public class MyDelegateTask implements JavaDelegate, Task {
 }
 ```
 
-```xml
-<bpmn2:serviceTask concord:expressionType="delegate"
-    concord:expression="${myTask}"/>
+```yaml
+main:
+- task: myTask
+  in:
+    name: world
 ```

@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.project;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Test;

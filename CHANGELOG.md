@@ -2,10 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- support for `.concord.yml` files. Those files can contain flow and
+form definitions, default variables and "profiles".
+
 ### Breaking
 
 - concord-common: removed `Task#getKey`. Value of
 `javax.inject.@Named` annotation is used to resolve a task.
+- removed bpmn-format and yaml-format modules;
+- yaml2-format replaced with a single module: project-model. 
 
 
 

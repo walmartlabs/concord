@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.common.format.AutoParser;
-import com.walmartlabs.concord.common.format.DefinitionType;
-import com.walmartlabs.concord.common.format.WorkflowDefinitionProvider;
-import com.walmartlabs.concord.plugins.fs.FSDefinitionProvider;
+import com.walmartlabs.concord.project.ProjectDirectoryLoader;
+import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.api.Event;
@@ -37,12 +37,10 @@ public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
-    private final AutoParser parser;
     private final EngineFactory engineFactory;
 
     @Inject
-    public Main(AutoParser parser, EngineFactory engineFactory) {
-        this.parser = parser;
+    public Main(EngineFactory engineFactory) {
         this.engineFactory = engineFactory;
     }
 
@@ -64,18 +62,30 @@ public class Main {
     }
 
     private void start(String instanceId, Path baseDir) throws ExecutionException {
-        // load process definitions
-        WorkflowDefinitionProvider workflows = createWorkflowProvider(baseDir);
-
         // read the request data
         Map<String, Object> cfg = readRequest(baseDir);
+
+        // get active profiles from the request data
+        Collection<String> activeProfiles = getActiveProfiles(cfg);
+
+        // load the project
+        ProjectDefinition project = loadProject(baseDir);
+
+        // get the project's variables
+        Map<String, Object> projectVars = ProjectDefinitionUtils.getVariables(project, activeProfiles);
+
+        // merge the project's variables with the request data
+        cfg = ConfigurationUtils.deepMerge(projectVars, cfg);
+
+        // get the entry point
         String entryPoint = (String) cfg.get(Constants.ENTRY_POINT_KEY);
+
+        // prepare the process' arguments
         Map<String, Object> args = createArgs(instanceId, cfg);
 
-        log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
-
         // start the process
-        Engine e = engineFactory.create(baseDir, workflows);
+        log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
+        Engine e = engineFactory.create(project, baseDir, activeProfiles);
         e.start(instanceId, entryPoint, args);
 
         // save the suspended state marker if needed
@@ -83,32 +93,45 @@ public class Main {
     }
 
     private void resume(String instanceId, Path baseDir, String eventName) throws ExecutionException {
-        // we don't need a real definitions provider, everything should be available from the state
-        WorkflowDefinitionProvider workflows = createWorkflowProvider(baseDir);
-
         // read the request data
         Map<String, Object> cfg = readRequest(baseDir);
         Map<String, Object> args = createArgs(instanceId, cfg);
 
         log.debug("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
 
+        // get active profiles from the request data
+        Collection<String> activeProfiles = getActiveProfiles(cfg);
+
+        // load the project
+        ProjectDefinition project = loadProject(baseDir);
+
         // start the process
-        Engine e = engineFactory.create(baseDir, workflows);
+        Engine e = engineFactory.create(project, baseDir, activeProfiles);
         e.resume(instanceId, eventName, args);
 
         // save the suspended state marker if needed
         finalizeState(e, instanceId, baseDir);
     }
 
-    private WorkflowDefinitionProvider createWorkflowProvider(Path baseDir) throws ExecutionException {
-        Map<String, String> attrs = Collections.singletonMap(
-                Constants.LOCAL_PATH_ATTR, baseDir.toAbsolutePath().toString());
+    private static Collection<String> getActiveProfiles(Map<String, Object> cfg) {
+        if (cfg == null) {
+            return Collections.emptyList();
+        }
 
-        Path scenariosDir = baseDir.resolve(Constants.DEFINITIONS_DIR_NAME);
-        log.debug("createDefinitionProvider -> serving process definitions from '{}'", scenariosDir);
+        Object v = cfg.get(Constants.ACTIVE_PROFILES_KEY);
+        if (v == null) {
+            return Collections.emptyList();
+        }
 
-        return new FSDefinitionProvider(parser, attrs, scenariosDir,
-                DefinitionType.CONCORD_YAML.getMask());
+        return (Collection<String>) v;
+    }
+
+    private static ProjectDefinition loadProject(Path baseDir) throws ExecutionException {
+        try {
+            return new ProjectDirectoryLoader().load(baseDir);
+        } catch (IOException e) {
+            throw new ExecutionException("Error while loading a project", e);
+        }
     }
 
     private static String readResumeEvent(Path baseDir) throws IOException {

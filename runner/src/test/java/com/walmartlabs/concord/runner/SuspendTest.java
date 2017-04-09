@@ -1,12 +1,10 @@
 package com.walmartlabs.concord.runner;
 
-import com.walmartlabs.concord.common.Constants;
-import com.walmartlabs.concord.common.format.WorkflowDefinitionProvider;
+import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.model.*;
-import io.takari.bpm.model.form.FormDefinition;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -24,14 +22,14 @@ public class SuspendTest {
         Path baseDir = Files.createTempDirectory("test");
 
         NamedTaskRegistry taskRegistry = new NamedTaskRegistry();
-        ProcessProvider wdp = id -> new ProcessDefinition(id,
+        ProjectDefinition project = project(new ProcessDefinition("test",
                 new StartEvent("start"),
                 new SequenceFlow("f1", "start", "ev1"),
                 new IntermediateCatchEvent("ev1"),
                 new SequenceFlow("f2", "ev1", "end"),
-                new EndEvent("end"));
+                new EndEvent("end")));
 
-        Engine engine = new EngineFactory(taskRegistry).create(baseDir, wdp);
+        Engine engine = new EngineFactory(taskRegistry).create(project, baseDir, Collections.emptySet());
 
         // ---
 
@@ -40,9 +38,7 @@ public class SuspendTest {
 
         // ---
 
-        long totalSize = Files.walk(baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME))
-                .mapToLong(SuspendTest::size).sum();
-
+        long totalSize = Files.walk(baseDir).mapToLong(SuspendTest::size).sum();
         assertTrue(totalSize > 0);
 
         // ---
@@ -58,11 +54,7 @@ public class SuspendTest {
         }
     }
 
-    private interface ProcessProvider extends WorkflowDefinitionProvider {
-
-        @Override
-        default FormDefinition getForm(String id) {
-            return null;
-        }
+    private static ProjectDefinition project(ProcessDefinition pd) {
+        return new ProjectDefinition(Collections.singletonMap(pd.getId(), pd), null, null, null);
     }
 }

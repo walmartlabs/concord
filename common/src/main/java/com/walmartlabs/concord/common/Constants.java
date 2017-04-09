@@ -5,6 +5,11 @@ import io.takari.bpm.model.ProcessDefinition;
 public final class Constants {
 
     /**
+     * Name of a main project file.
+     */
+    public static final String PROJECT_FILE_NAME = ".concord.yml";
+
+    /**
      * Process definition attribute: path to a local directory, containing agent's payload
      */
     public static final String LOCAL_PATH_ATTR = "localPath";
@@ -63,6 +68,11 @@ public final class Constants {
      * Process entry point.
      */
     public static final String ENTRY_POINT_KEY = "entryPoint";
+
+    /**
+     * Active profiles.
+     */
+    public static final String ACTIVE_PROFILES_KEY = "activeProfiles";
 
     /**
      * Template name.

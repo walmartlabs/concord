@@ -15,8 +15,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-project-model</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -31,21 +36,6 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.plugins</groupId>
-            <artifactId>fs-definition-provider</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!--<dependency>-->
-            <!--<groupId>com.walmartlabs.concord.plugins</groupId>-->
-            <!--<artifactId>yaml-format</artifactId>-->
-            <!--<version>${project.version}</version>-->
-        <!--</dependency>-->
-        <dependency>
-            <groupId>com.walmartlabs.concord.plugins</groupId>
-            <artifactId>yaml2-format</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.takari.bpm</groupId>
