@@ -13,8 +13,11 @@ public class SelfContainedArchivePipeline extends Chain {
     @Inject
     public SelfContainedArchivePipeline(Injector injector) {
         super(injector.getInstance(WorkspaceArchiveProcessor.class),
+                injector.getInstance(ProjectDefinitionProcessor.class),
                 injector.getInstance(RequestDefaultsParsingProcessor.class),
                 injector.getInstance(TemplateProcessor.class),
+                injector.getInstance(ActiveProfilesProcessor.class),
+                injector.getInstance(ProjectConfigurationProcessor.class),
                 injector.getInstance(DependenciesProcessor.class),
                 injector.getInstance(RequestDataStoringProcessor.class),
                 injector.getInstance(RunnerProcessor.class),

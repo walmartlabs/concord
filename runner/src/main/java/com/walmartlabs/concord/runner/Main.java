@@ -79,6 +79,9 @@ public class Main {
 
         // get the entry point
         String entryPoint = (String) cfg.get(Constants.ENTRY_POINT_KEY);
+        if (entryPoint == null) {
+            throw new ExecutionException("Entry point must be set");
+        }
 
         // prepare the process' arguments
         Map<String, Object> args = createArgs(instanceId, cfg);

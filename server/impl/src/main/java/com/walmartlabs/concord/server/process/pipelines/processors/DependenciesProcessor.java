@@ -61,12 +61,13 @@ public class DependenciesProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> request = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
+        // get a list of dependencies from the request data
         Collection<String> deps = deps(request);
         if (deps == null) {
             return chain.process(payload);
         }
 
-        // collect all valid dependencies
+        // filter all valid dependencies
         Collection<String> validDeps = deps.stream()
                 .filter(e -> valid(path(e)))
                 .collect(Collectors.toSet());

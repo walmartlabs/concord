@@ -17,8 +17,10 @@ public class ProjectPipeline extends Chain {
     @Inject
     public ProjectPipeline(Injector injector) {
         super(injector.getInstance(RequestDataParsingProcessor.class),
+                injector.getInstance(ActiveProfilesProcessor.class),
                 injector.getInstance(ProjectConfigurationProcessor.class),
                 injector.getInstance(RepositoryProcessor.class),
+                injector.getInstance(ProjectDefinitionProcessor.class),
                 injector.getInstance(RequestDefaultsParsingProcessor.class),
                 injector.getInstance(InventoryProcessor.class),
                 injector.getInstance(InlineInventoryProcessor.class),

@@ -17,11 +17,14 @@ public class RequestDataOnlyPipeline extends Chain {
     @Inject
     public RequestDataOnlyPipeline(Injector injector) {
         super(injector.getInstance(RepositoryProcessor.class),
+                injector.getInstance(ProjectDefinitionProcessor.class),
                 injector.getInstance(RequestDefaultsParsingProcessor.class),
                 injector.getInstance(InventoryProcessor.class),
                 injector.getInstance(InlineInventoryProcessor.class),
                 injector.getInstance(PrivateKeyProcessor.class),
                 injector.getInstance(TemplateProcessor.class),
+                injector.getInstance(ActiveProfilesProcessor.class),
+                injector.getInstance(ProjectConfigurationProcessor.class),
                 injector.getInstance(DependenciesProcessor.class),
                 injector.getInstance(RequestDataStoringProcessor.class),
                 injector.getInstance(RunnerProcessor.class),

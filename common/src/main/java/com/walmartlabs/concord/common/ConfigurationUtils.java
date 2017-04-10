@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.common;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public final class ConfigurationUtils {
@@ -60,6 +62,18 @@ public final class ConfigurationUtils {
             }
         }
         return a;
+    }
+
+    public static Map<String, Object> deepMerge(Map<String, Object>... maps) {
+        if (maps == null || maps.length == 0) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Object> result = new HashMap<>(maps[0]);
+        for (int i = 1; i < maps.length; i++) {
+            result = deepMerge(result, maps[i]);
+        }
+        return result;
     }
 
     private ConfigurationUtils() {

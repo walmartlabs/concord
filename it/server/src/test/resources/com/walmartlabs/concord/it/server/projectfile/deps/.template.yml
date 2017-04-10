@@ -1,0 +1,6 @@
+flows:
+  main:
+  - ${example.hello()}
+
+variables:
+  dependencies: ["WILL_BE_REPLACED"]

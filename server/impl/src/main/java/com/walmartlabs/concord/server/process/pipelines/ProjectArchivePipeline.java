@@ -18,8 +18,10 @@ public class ProjectArchivePipeline extends Chain {
     public ProjectArchivePipeline(Injector injector) {
         super(injector.getInstance(WorkspaceArchiveProcessor.class),
                 injector.getInstance(WorkspaceRequestDataParsingProcessor.class),
+                injector.getInstance(ActiveProfilesProcessor.class),
                 injector.getInstance(ProjectConfigurationProcessor.class),
                 injector.getInstance(RepositoryProcessor.class),
+                injector.getInstance(ProjectDefinitionProcessor.class),
                 injector.getInstance(RequestDefaultsParsingProcessor.class),
                 injector.getInstance(InventoryProcessor.class),
                 injector.getInstance(InlineInventoryProcessor.class),

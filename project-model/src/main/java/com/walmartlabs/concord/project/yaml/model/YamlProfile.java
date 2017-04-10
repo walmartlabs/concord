@@ -17,6 +17,7 @@ public class YamlProfile implements Serializable {
     public YamlProfile(@JsonProperty("flows") Map<String, List<YamlStep>> flows,
                        @JsonProperty("forms") Map<String, List<YamlFormField>> forms,
                        @JsonProperty("variables") Map<String, Object> variables) {
+
         this.flows = flows;
         this.forms = forms;
         this.variables = variables;
