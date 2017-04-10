@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.project.model;
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
@@ -7,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class ProjectDefinitionUtils {
@@ -31,7 +33,8 @@ public final class ProjectDefinitionUtils {
         Map<String, Object> variables = project.getVariables();
         Map<String, Profile> profiles = project.getProfiles();
 
-        Map<String, Object> view = overlay(variables, profiles, activeProfiles, p -> p.getVariables());
+        Map<String, Object> view = overlay(variables, profiles, activeProfiles, p -> p.getVariables(),
+                (a, b) -> ConfigurationUtils.deepMerge(a, b));
         return view;
     }
 
@@ -39,6 +42,17 @@ public final class ProjectDefinitionUtils {
                                               Map<String, Profile> profiles,
                                               Collection<String> activeProfiles,
                                               Function<Profile, Map<String, T>> selector) {
+        return overlay(initial, profiles, activeProfiles, selector, (a, b) -> {
+            a.putAll(b);
+            return a;
+        });
+    }
+
+    private static <T> Map<String, T> overlay(Map<String, T> initial,
+                                              Map<String, Profile> profiles,
+                                              Collection<String> activeProfiles,
+                                              Function<Profile, Map<String, T>> selector,
+                                              BiFunction<Map<String, T>, Map<String, T>, Map<String, T>> mergeFn) {
 
         Map<String, T> view = new HashMap<>(initial != null ? initial : Collections.emptyMap());
         if (profiles != null && activeProfiles != null) {
@@ -50,7 +64,7 @@ public final class ProjectDefinitionUtils {
 
                 Map<String, T> overlays = selector.apply(p);
                 if (overlays != null) {
-                    view.putAll(overlays);
+                    view = mergeFn.apply(view, overlays);
                 }
             }
         }

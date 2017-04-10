@@ -1,5 +1,13 @@
 # Change log
 
+## Unreleased
+
+### Changed
+
+- fixed merging of profile variables with defaults and request's data.
+
+
+
 ## [0.4.0] - 2017-04-10
 
 ### Added
