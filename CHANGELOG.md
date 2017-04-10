@@ -7,7 +7,8 @@
 - support for `.concord.yml` files. Those files can contain flow and
 form definitions, default variables and "profiles";
 - allow overriding`dependencies` in a project file, defaults or user
-requests.
+requests;
+- concord-console: list of secrets.
 
 ### Breaking
 
