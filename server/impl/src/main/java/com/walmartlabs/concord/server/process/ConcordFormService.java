@@ -94,6 +94,7 @@ public class ConcordFormService {
         return DefaultFormService.submit(resumeHandler, validator, form, merged);
     }
 
+    @SuppressWarnings("unchecked")
     private static Map<String, Object> merge(Form form, Map<String, Object> data) {
         String formName = form.getFormDefinition().getName();
 
@@ -107,7 +108,7 @@ public class ConcordFormService {
             formState = Collections.emptyMap();
         }
 
-        Map<String, Object> a = new HashMap<>(formState != null ? formState : Collections.emptyMap());
+        Map<String, Object> a = new HashMap<>(formState);
         Map<String, Object> b = new HashMap<>(data != null ? data : Collections.emptyMap());
 
         ConfigurationUtils.merge(a, b);

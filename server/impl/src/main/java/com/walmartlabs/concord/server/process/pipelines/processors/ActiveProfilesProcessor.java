@@ -14,6 +14,7 @@ public class ActiveProfilesProcessor implements PayloadProcessor {
     public static final String[] DEFAULT_PROFILES = {"default"};
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (cfg == null) {

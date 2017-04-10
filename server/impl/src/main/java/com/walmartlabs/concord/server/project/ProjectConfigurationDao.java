@@ -81,6 +81,7 @@ public class ProjectConfigurationDao extends AbstractDao {
         return cache.getUnchecked(projectName).orElse(null);
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> _get(String projectName) {
         try (InputStream in = attachmentDao.get(projectName, PROJECT_CFG_ATTACHMENT_KEY)) {
             if (in == null) {
@@ -97,6 +98,7 @@ public class ProjectConfigurationDao extends AbstractDao {
         return ConfigurationUtils.get(cfg, path);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Map<String, Object>> getList(String projectName, String... path) {
         Object v = getValue(projectName, path);
         if (v == null) {
@@ -105,7 +107,7 @@ public class ProjectConfigurationDao extends AbstractDao {
         if (!(v instanceof List)) {
             throw new IllegalArgumentException("Invalid data type, expected list, got: " + v.getClass());
         }
-        return (List) v;
+        return (List<Map<String, Object>>) v;
     }
 
     @SuppressWarnings("unchecked")

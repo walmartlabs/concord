@@ -18,6 +18,10 @@ import java.util.Map;
 @Named
 public class PayloadManager {
 
+    private static final String REQUEST_DIR_NAME = "request";
+    private static final String WORKSPACE_DIR_NAME = "workspace";
+    private static final String INPUT_ARCHIVE_NAME = "_input.zip";
+
     private final PayloadStoreConfiguration cfg;
     private final ProcessAttachmentManager attachmentManager;
 
@@ -38,7 +42,7 @@ public class PayloadManager {
      */
     public Payload createPayload(String instanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
         Path baseDir = ensurePayloadDir(instanceId);
-        Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
+        Path workspaceDir = Files.createDirectory(baseDir.resolve(WORKSPACE_DIR_NAME));
 
         Payload p = PayloadParser.parse(instanceId, baseDir, input)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir);
@@ -56,8 +60,8 @@ public class PayloadManager {
      * @return
      */
     public Payload createPayload(String instanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
-        Path baseDir = Files.createTempDirectory("request");
-        Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
+        Path baseDir = Files.createTempDirectory(REQUEST_DIR_NAME);
+        Path workspaceDir = Files.createDirectory(baseDir.resolve(WORKSPACE_DIR_NAME));
 
         Payload p = new Payload(instanceId)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
@@ -76,10 +80,10 @@ public class PayloadManager {
      * @return
      */
     public Payload createPayload(String instanceId, String initiator, InputStream in) throws IOException {
-        Path baseDir = Files.createTempDirectory("request");
-        Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
+        Path baseDir = Files.createTempDirectory(REQUEST_DIR_NAME);
+        Path workspaceDir = Files.createDirectory(baseDir.resolve(WORKSPACE_DIR_NAME));
 
-        Path archive = baseDir.resolve("_input.zip");
+        Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
         Files.copy(in, archive);
 
         Payload p = new Payload(instanceId);
@@ -119,8 +123,8 @@ public class PayloadManager {
             throw new IllegalStateException("No existing state found to resume the process");
         }
 
-        Path baseDir = Files.createTempDirectory("request");
-        Path workspaceDir = Files.createDirectory(baseDir.resolve("workspace"));
+        Path baseDir = Files.createTempDirectory(REQUEST_DIR_NAME);
+        Path workspaceDir = Files.createDirectory(baseDir.resolve(WORKSPACE_DIR_NAME));
 
         Path stateDir = workspaceDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.JOB_STATE_DIR_NAME);

@@ -38,6 +38,9 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
+        if (projectName == null) {
+            return chain.process(payload);
+        }
 
         Collection<Map<String, Object>> cfg = cfgDao.getList(projectName,
                 AnsibleConfigurationConstants.GROUP_KEY, AnsibleConfigurationConstants.PRIVATE_KEYS);

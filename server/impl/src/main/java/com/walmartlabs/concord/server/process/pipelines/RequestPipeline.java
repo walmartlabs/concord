@@ -12,16 +12,17 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named
-public class ProjectArchivePipeline extends Chain {
+public class RequestPipeline extends Chain {
 
     @Inject
-    public ProjectArchivePipeline(Injector injector) {
+    public RequestPipeline(Injector injector) {
         super(injector.getInstance(WorkspaceArchiveProcessor.class),
                 injector.getInstance(WorkspaceRequestDataParsingProcessor.class),
+                injector.getInstance(RequestDataParsingProcessor.class),
                 injector.getInstance(ActiveProfilesProcessor.class),
+                injector.getInstance(ProjectDefinitionProcessor.class),
                 injector.getInstance(ProjectConfigurationProcessor.class),
                 injector.getInstance(RepositoryProcessor.class),
-                injector.getInstance(ProjectDefinitionProcessor.class),
                 injector.getInstance(RequestDefaultsParsingProcessor.class),
                 injector.getInstance(InventoryProcessor.class),
                 injector.getInstance(InlineInventoryProcessor.class),

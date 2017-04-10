@@ -6,7 +6,8 @@ import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
-import com.walmartlabs.concord.server.process.pipelines.*;
+import com.walmartlabs.concord.server.process.pipelines.RequestPipeline;
+import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import org.apache.shiro.SecurityUtils;
@@ -38,9 +39,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     private final ProjectDao projectDao;
     private final ProcessHistoryDao historyDao;
-    private final Chain projectPipeline;
-    private final Chain projectArchivePipeline;
-    private final Chain archivePipeline;
     private final Chain requestPipeline;
     private final Chain resumePipeline;
     private final ProcessExecutorImpl processExecutor;
@@ -50,10 +48,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
                                ProcessHistoryDao historyDao,
-                               ProjectPipeline projectPipeline,
-                               ProjectArchivePipeline projectArchivePipeline,
-                               SelfContainedArchivePipeline archivePipeline,
-                               RequestDataOnlyPipeline requestPipeline,
+                               RequestPipeline requestPipeline,
                                ResumePipeline resumePipeline,
                                ProcessExecutorImpl processExecutor,
                                ProcessAttachmentManager attachmentManager,
@@ -61,9 +56,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         this.projectDao = projectDao;
         this.historyDao = historyDao;
-        this.projectPipeline = projectPipeline;
-        this.projectArchivePipeline = projectArchivePipeline;
-        this.archivePipeline = archivePipeline;
         this.requestPipeline = requestPipeline;
         this.resumePipeline = resumePipeline;
         this.processExecutor = processExecutor;
@@ -82,7 +74,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        archivePipeline.process(payload);
+        requestPipeline.process(payload);
         return new StartProcessResponse(instanceId);
     }
 
@@ -118,7 +110,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        projectPipeline.process(payload);
+        requestPipeline.process(payload);
         return new StartProcessResponse(instanceId);
     }
 
@@ -134,7 +126,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        projectArchivePipeline.process(payload);
+        requestPipeline.process(payload);
         return new StartProcessResponse(instanceId);
     }
 
