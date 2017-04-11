@@ -3,6 +3,7 @@ package com.walmartlabs.concord.runner.engine;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import io.takari.bpm.Configuration;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
@@ -63,6 +64,9 @@ public class EngineFactory {
 
         UserTaskHandler uth = new FormTaskHandler(adapter.forms(), formService);
 
+        Configuration cfg = new Configuration();
+        cfg.setInterpolateInputVariables(true);
+
         return new EngineBuilder()
                 .withExpressionManager(expressionManager)
                 .withDefinitionProvider(adapter.processes())
@@ -70,6 +74,7 @@ public class EngineFactory {
                 .withEventStorage(eventStorage)
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
+                .withConfiguration(cfg)
                 .build();
     }
 

@@ -1,5 +1,13 @@
 # Change log
 
+## Unreleased
+
+### Added
+
+- concord-runner: support for expressions in variables.
+
+
+
 ## [0.4.1] - 2017-04-10
 
 ### Changed
