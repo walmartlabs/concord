@@ -3,34 +3,83 @@
 ## Payload format
 
 The server expects a ZIP archive of the following structure:
-- `_main.json` - request data in JSON format (see below);
-- `_defaults.json` - request's default in the same format as `_main.json`.
-  Before sending the payload to an agent, the values from `_default.json` and
-  `_main.json` will be merged. This allows users to set some default values
-  for every request by, for example, storing `_defaults.json` in a GIT repository
-  or in a project template;
-- `processes` - directory containing `.yml` process definitions;
+- `.concord.yml` - main project file;
+- `_main.json` - request data in JSON format (see [below](#request-data));
+- `processes` - directory containing `.yml` process and form definitions;
 - `lib` - directory for additional runtime dependencies.
 
-Anything else will be unpacked as is and will be available for running
-processes. The plugins may require other files to be present in a
-payload.
+Anything else will be unpacked as-is and will be available for a process.
+The plugins can require other files to be present in a payload.
+
+## Project file
+
+A payload archive can contain a project file: `.concord.yml`.
+This file will be loaded first and can contain process and flow definitions,
+input variables and profiles:
+
+```yaml
+flows:
+  main:
+  - form: myForm
+  - log: Hello, ${myForm.name}
+  
+forms:
+  myForm:
+  - name: {type: "string"}
+  
+variables:
+  dependencies: ["..."]
+  otherCfgVar: 123
+  arguments:
+    myForm: {name: "stranger"}
+    
+profiles:
+  myProfile:
+    variables:
+      arguments:
+        myForm: {name: "world"}
+```
+
+Profiles can override default variables, flows and forms. For example, if the
+process above will be executed using `myProfile` profile, then the default
+value of `myForm.name` will be `world`.
+
+See also [the YAML format for describing flows and forms](./yaml.md).
+
+## Request data
+
+A payload's `_main.json` file is either supplied by users or created by the
+server from an user's request data.
 
 The request's JSON format:
 ```json
 {
   "entryPoint": "...",
-  "dependencies": [ ... ],
+  "activeProfiles": ["myProfile", "..."],
+  "otherCfgVar": 123,
   "arguments": {
-    "a": 1,
-    "b": "two",
-    "c": false,
-    "d": ["x", "y"]
+    "myForm": {
+      "name": "John"
+    }
   }
 }
 ```
 
-Only the `entryPoint` parameter is mandatory.
+Only `entryPoint` parameter is mandatory. The `activeProfiles` parameter is a
+list of project file's profiles that will be used to start a process. If not
+set, a `default` profile will be used.
+
+## Variables
+
+Before executing a process, variables from a project file and a request data
+are merged. Project variables override default project variables and then
+user request's variables are applied.
+
+There are a few variables that affect execution of a process:
+- `template` - the name of a template, will be used by the server to create a
+payload archive;
+- `dependencies` - array of URLs, list of external JAR dependencies;
+- `arguments` - a JSON object, will be used as process arguments.
 
 The `dependencies` array allows to pull external dependencies necessary
 for the process' execution. Each element of the array must be a valid URL.
