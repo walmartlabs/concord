@@ -4,12 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.ProjectDirectoryLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.api.Event;
@@ -70,12 +68,6 @@ public class Main {
 
         // load the project
         ProjectDefinition project = loadProject(baseDir);
-
-        // get the project's variables
-        Map<String, Object> projectVars = ProjectDefinitionUtils.getVariables(project, activeProfiles);
-
-        // merge the project's variables with the request data
-        cfg = ConfigurationUtils.deepMerge(projectVars, cfg);
 
         // get the entry point
         String entryPoint = (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
