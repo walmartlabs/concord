@@ -37,7 +37,8 @@ profiles:
   myProfile:
     variables:
       arguments:
-        myForm: {name: "world"}
+        myAlias: "stranger"
+        myForm: {name: "${myAlias}"}
 ```
 
 Profiles can override default variables, flows and forms. For example, if the
@@ -80,6 +81,18 @@ There are a few variables that affect execution of a process:
 payload archive;
 - `dependencies` - array of URLs, list of external JAR dependencies;
 - `arguments` - a JSON object, will be used as process arguments.
+
+Values of `arguments` can contain [expressions](./yaml.md#expressions).
+Expressions can use all regular "tasks" plus external `dependencies`:
+
+```yaml
+variables:
+  arguments:
+    listOfStuff: ${myServiceTask.retrieveListOfStuff()}
+    myStaticVar: 123
+```
+
+The order of evaluation is not guaranteed.
 
 The `dependencies` array allows to pull external dependencies necessary
 for the process' execution. Each element of the array must be a valid URL.
