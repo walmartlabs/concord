@@ -6,6 +6,10 @@
 
 - concord-runner: support for expressions in variables.
 
+### Breaking
+
+- project and process related constants moved to project-model module.
+
 
 
 ## [0.4.1] - 2017-04-10
