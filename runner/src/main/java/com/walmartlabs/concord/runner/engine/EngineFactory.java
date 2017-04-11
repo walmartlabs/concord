@@ -1,13 +1,11 @@
 package com.walmartlabs.concord.runner.engine;
 
-import com.walmartlabs.concord.common.Constants;
-import com.walmartlabs.concord.project.ProjectDirectoryLoader;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
-import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.el.DefaultExpressionManager;
 import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.event.EventStorage;
@@ -38,12 +36,12 @@ public class EngineFactory {
     }
 
     public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles) {
-        Path stateDir = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.JOB_STATE_DIR_NAME);
+        Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
         Path eventsDir = stateDir.resolve("events");
         Path instancesDir = stateDir.resolve("instances");
-        Path formsDir = stateDir.resolve(Constants.JOB_FORMS_DIR_NAME);
+        Path formsDir = stateDir.resolve(Constants.Files.JOB_FORMS_DIR_NAME);
 
         try {
             Files.createDirectories(eventsDir);
@@ -87,7 +85,7 @@ public class EngineFactory {
 
             // TODO this should be replaces with a project attribute
             String localPath = baseDir.toAbsolutePath().toString();
-            this.attributes = Collections.singletonMap(Constants.LOCAL_PATH_ATTR, localPath);
+            this.attributes = Collections.singletonMap(Constants.Context.LOCAL_PATH_ATTR, localPath);
         }
 
         ProcessDefinitionProvider processes() {

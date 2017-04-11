@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ public class WorkspaceRequestDataParsingProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
-        Path src = workspace.resolve(Constants.REQUEST_DATA_FILE_NAME);
+        Path src = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(src)) {
             return chain.process(payload);
         }

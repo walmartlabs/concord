@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.runner;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.Task;
+import com.walmartlabs.concord.project.Constants;
 import org.junit.Test;
 
 import javax.inject.Named;
@@ -30,9 +30,9 @@ public class SuspendMainTest extends AbstractMainTest {
         // ---
 
         Path baseDir = Paths.get(System.getProperty("user.dir"));
-        Path evFile = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.JOB_STATE_DIR_NAME)
-                .resolve(Constants.RESUME_MARKER_FILE_NAME);
+        Path evFile = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
+                .resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
         Files.write(evFile, "ev1".getBytes());
 
         main.run();

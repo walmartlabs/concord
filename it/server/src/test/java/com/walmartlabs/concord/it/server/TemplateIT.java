@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
@@ -67,7 +67,7 @@ public class TemplateIT extends AbstractServerIT {
         Path metaPath = tmpDir.resolve(TemplateConstants.REQUEST_DATA_TEMPLATE_FILE_NAME);
         Files.write(metaPath, META_JS.getBytes());
 
-        Path processesPath = tmpDir.resolve(Constants.DEFINITIONS_DIR_NAME);
+        Path processesPath = tmpDir.resolve(Constants.Files.DEFINITIONS_DIR_NAME);
         Files.createDirectories(processesPath);
 
         Path procPath = processesPath.resolve("hello.yml");

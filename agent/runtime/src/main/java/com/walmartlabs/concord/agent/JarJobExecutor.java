@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.agent;
 
-import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.project.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ public class JarJobExecutor implements JobExecutor {
         cmd.addAll(jvmArgs);
         cmd.add("-DinstanceId=" + id);
         cmd.add("-cp");
-        cmd.add(Constants.LIBRARIES_DIR_NAME + "/*:" + entryPoint);
+        cmd.add(Constants.Files.LIBRARIES_DIR_NAME + "/*:" + entryPoint);
         cmd.add(mainClass);
 
         // start the process
@@ -88,7 +88,7 @@ public class JarJobExecutor implements JobExecutor {
                     .redirectErrorStream(true);
 
             Map<String, String> env = b.environment();
-            env.put("_CONCORD_ATTACHMENTS_DIR", workDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
+            env.put("_CONCORD_ATTACHMENTS_DIR", workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                     .toAbsolutePath().toString());
 
             return b.start();

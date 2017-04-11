@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.cfg.PayloadStoreConfiguration;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -118,7 +118,7 @@ public class PayloadManager {
      * @return
      */
     public Payload createResumePayload(String instanceId, String eventName, Map<String, Object> req) throws IOException {
-        Path prevStateDir = attachmentManager.get(instanceId, Constants.JOB_STATE_DIR_NAME + "/");
+        Path prevStateDir = attachmentManager.get(instanceId, Constants.Files.JOB_STATE_DIR_NAME + "/");
         if (prevStateDir == null) {
             throw new IllegalStateException("No existing state found to resume the process");
         }
@@ -126,8 +126,8 @@ public class PayloadManager {
         Path baseDir = Files.createTempDirectory(REQUEST_DIR_NAME);
         Path workspaceDir = Files.createDirectory(baseDir.resolve(WORKSPACE_DIR_NAME));
 
-        Path stateDir = workspaceDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.JOB_STATE_DIR_NAME);
+        Path stateDir = workspaceDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
         IOUtils.copy(prevStateDir, stateDir);
 
         return new Payload(instanceId)
@@ -156,6 +156,6 @@ public class PayloadManager {
         String realEntryPoint = rest.length > 0 ? rest[rest.length - 1] : null;
         return p.putHeader(Payload.PROJECT_NAME, e.getProjectName())
                 .putHeader(Payload.ENTRY_POINT, e.getEntryPoint())
-                .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(Constants.ENTRY_POINT_KEY, realEntryPoint));
+                .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(Constants.Request.ENTRY_POINT_KEY, realEntryPoint));
     }
 }

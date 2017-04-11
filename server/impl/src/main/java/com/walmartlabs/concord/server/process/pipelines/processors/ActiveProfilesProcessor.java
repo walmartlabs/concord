@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
@@ -21,7 +21,7 @@ public class ActiveProfilesProcessor implements PayloadProcessor {
             return chain.process(useDefaultProfiles(payload));
         }
 
-        Object v = cfg.get(Constants.ACTIVE_PROFILES_KEY);
+        Object v = cfg.get(Constants.Request.ACTIVE_PROFILES_KEY);
         if (v == null) {
             return chain.process(useDefaultProfiles(payload));
         }

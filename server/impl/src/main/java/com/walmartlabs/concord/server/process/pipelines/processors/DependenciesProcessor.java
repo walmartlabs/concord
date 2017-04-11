@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.google.common.collect.Sets;
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.cfg.DependencyStoreConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -90,7 +90,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         Collection<String> rest = new HashSet<>(validDeps);
         rest.removeAll(systemDeps);
 
-        request.put(Constants.DEPENDENCIES_KEY, rest);
+        request.put(Constants.Request.DEPENDENCIES_KEY, rest);
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, request);
 
         return chain.process(payload);
@@ -108,7 +108,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             return;
         }
 
-        Path libDir = workspace.resolve(Constants.LIBRARIES_DIR_NAME);
+        Path libDir = workspace.resolve(Constants.Files.LIBRARIES_DIR_NAME);
         if (!Files.exists(libDir)) {
             Files.createDirectories(libDir);
         }
@@ -143,7 +143,7 @@ public class DependenciesProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private static Collection<String> deps(Map<String, Object> req) {
-        Object o = req.get(Constants.DEPENDENCIES_KEY);
+        Object o = req.get(Constants.Request.DEPENDENCIES_KEY);
         if (o == null) {
             return null;
         }

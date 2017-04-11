@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.Sets;
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
@@ -52,7 +52,7 @@ public class ProjectIT extends AbstractServerIT {
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
         String greeting = "Hello, _" + System.currentTimeMillis();
-        Map<String, Object> args = Collections.singletonMap(Constants.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
         // ---

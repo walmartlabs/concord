@@ -1,7 +1,8 @@
 package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.ProjectDirectoryLoader;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
@@ -48,14 +49,14 @@ public class ProjectFileIT extends AbstractServerIT {
                 l.add(line.replaceAll("WILL_BE_REPLACED", dep));
             }
 
-            Path p = tmpDir.resolve(Constants.PROJECT_FILE_NAME);
+            Path p = tmpDir.resolve(ProjectDirectoryLoader.PROJECT_FILE_NAME);
             Files.write(p, l);
         }
 
         // create the payload
 
         String request = "{ \"entryPoint\": \"main\" }";
-        Path requestFile = tmpDir.resolve(Constants.REQUEST_DATA_FILE_NAME);
+        Path requestFile = tmpDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         Files.write(requestFile, Arrays.asList(request));
 
         Path src = Paths.get(DependenciesIT.class.getResource("projectfile/deps").toURI());

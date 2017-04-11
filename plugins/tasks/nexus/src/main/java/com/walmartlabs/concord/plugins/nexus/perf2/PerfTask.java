@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.plugins.nexus.perf2;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Task;
+import com.walmartlabs.concord.project.Constants;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class PerfTask implements Task {
     }
 
     public void loadAndStart(ExecutionContext ctx, String agentAddr, String scenarioDir, Collection<Map<String, Object>> scenarios) {
-        Path srcDir = getPath(ctx, Constants.LOCAL_PATH_KEY);
+        Path srcDir = getPath(ctx, Constants.Context.LOCAL_PATH_KEY);
 
         PerfSession session = null;
         try {
@@ -54,7 +54,7 @@ public class PerfTask implements Task {
                  ZipOutputStream zip = new ZipOutputStream(os)) {
 
                 // pack dependencies
-                Path libPath = srcDir.resolve(Constants.LIBRARIES_DIR_NAME);
+                Path libPath = srcDir.resolve(Constants.Files.LIBRARIES_DIR_NAME);
                 File libDir = libPath.toFile();
                 if (libDir.exists() && libDir.isDirectory()) {
                     IOUtils.zip(zip, libPath, SKIP_FILES);

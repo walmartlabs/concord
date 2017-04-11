@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.template;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
@@ -55,7 +55,7 @@ public class TemplateProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        String templateName = (String) req.get(Constants.TEMPLATE_KEY);
+        String templateName = (String) req.get(Constants.Request.TEMPLATE_KEY);
         if (templateName == null) {
             return chain.process(payload);
         }

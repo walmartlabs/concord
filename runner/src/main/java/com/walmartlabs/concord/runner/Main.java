@@ -5,8 +5,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.ProjectDirectoryLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
@@ -78,7 +78,7 @@ public class Main {
         cfg = ConfigurationUtils.deepMerge(projectVars, cfg);
 
         // get the entry point
-        String entryPoint = (String) cfg.get(Constants.ENTRY_POINT_KEY);
+        String entryPoint = (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
         if (entryPoint == null) {
             throw new ExecutionException("Entry point must be set");
         }
@@ -121,7 +121,7 @@ public class Main {
             return Collections.emptyList();
         }
 
-        Object v = cfg.get(Constants.ACTIVE_PROFILES_KEY);
+        Object v = cfg.get(Constants.Request.ACTIVE_PROFILES_KEY);
         if (v == null) {
             return Collections.emptyList();
         }
@@ -138,9 +138,9 @@ public class Main {
     }
 
     private static String readResumeEvent(Path baseDir) throws IOException {
-        Path p = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.JOB_STATE_DIR_NAME)
-                .resolve(Constants.RESUME_MARKER_FILE_NAME);
+        Path p = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
+                .resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
 
         if (!Files.exists(p)) {
             return null;
@@ -151,7 +151,7 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> readRequest(Path baseDir) throws ExecutionException {
-        Path p = baseDir.resolve(Constants.REQUEST_DATA_FILE_NAME);
+        Path p = baseDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
 
         try (InputStream in = Files.newInputStream(p)) {
             ObjectMapper om = new ObjectMapper();
@@ -165,18 +165,18 @@ public class Main {
     private static Map<String, Object> createArgs(String instanceId, Map<String, Object> cfg) {
         Map<String, Object> m = new HashMap<>();
 
-        Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.ARGUMENTS_KEY);
+        Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
         if (args != null) {
             m.putAll(args);
         }
 
-        m.put(Constants.TX_ID_KEY, instanceId);
+        m.put(Constants.Context.TX_ID_KEY, instanceId);
         return m;
     }
 
     private static void finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {
-        Path stateDir = baseDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.JOB_STATE_DIR_NAME);
+        Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
         EventService es = engine.getEventService();
         Collection<Event> events = es.getEvents(instanceId);
@@ -192,7 +192,7 @@ public class Main {
 
                 Set<String> eventNames = events.stream().map(Event::getName).collect(Collectors.toSet());
 
-                Path marker = stateDir.resolve(Constants.SUSPEND_MARKER_FILE_NAME);
+                Path marker = stateDir.resolve(Constants.Files.SUSPEND_MARKER_FILE_NAME);
                 Files.write(marker, eventNames);
                 log.debug("finalizeState ['{}'] -> created the suspended marker", instanceId);
             }

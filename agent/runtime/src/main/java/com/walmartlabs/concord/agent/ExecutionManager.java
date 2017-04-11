@@ -5,8 +5,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +85,7 @@ public class ExecutionManager {
         Path tmpDir = extract(instanceId, payload);
 
         Map<String, Object> agentParams = getAgentParameters(tmpDir);
-        Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
+        Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.Agent.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
         log.info("start ['{}'] -> JVM args: {}", instanceId, jvmArgs);
 
         Collection<String> deps = getDependencies(tmpDir);
@@ -119,7 +119,7 @@ public class ExecutionManager {
             }
 
             synchronized (mutex) {
-                Path attachmentsDir = tmpDir.resolve(Constants.JOB_ATTACHMENTS_DIR_NAME);
+                Path attachmentsDir = tmpDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
                 if (Files.exists(attachmentsDir)) {
                     attachments.put(instanceId, attachmentsDir);
                 }
@@ -234,7 +234,7 @@ public class ExecutionManager {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getAgentParameters(Path payload) throws ExecutionException {
-        Path p = payload.resolve(Constants.AGENT_PARAMS_FILE_NAME);
+        Path p = payload.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME);
         if (!Files.exists(p)) {
             return Collections.emptyMap();
         }
@@ -249,7 +249,7 @@ public class ExecutionManager {
 
     @SuppressWarnings("unchecked")
     private static Collection<String> getDependencies(Path payload) throws ExecutionException {
-        Path p = payload.resolve(Constants.REQUEST_DATA_FILE_NAME);
+        Path p = payload.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {
             return Collections.emptyList();
         }
@@ -258,7 +258,7 @@ public class ExecutionManager {
             ObjectMapper om = new ObjectMapper();
             Map<String, Object> m = om.readValue(in, Map.class);
 
-            Collection<String> deps = (Collection<String>) m.get(Constants.DEPENDENCIES_KEY);
+            Collection<String> deps = (Collection<String>) m.get(Constants.Request.DEPENDENCIES_KEY);
             return deps != null ? deps : Collections.emptyList();
         } catch (IOException e) {
             throw new ExecutionException("Error while reading a list of dependencies", e);
@@ -270,7 +270,7 @@ public class ExecutionManager {
             return;
         }
 
-        Path libDir = baseDir.resolve(Constants.LIBRARIES_DIR_NAME);
+        Path libDir = baseDir.resolve(Constants.Files.LIBRARIES_DIR_NAME);
         if (!Files.exists(libDir)) {
             try {
                 Files.createDirectories(libDir);

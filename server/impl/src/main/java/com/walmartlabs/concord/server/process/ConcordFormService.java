@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process;
 
-import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -37,7 +37,7 @@ public class ConcordFormService {
     }
 
     public Form get(String processInstanceId, String formInstanceId) {
-        String resource = Constants.JOB_STATE_DIR_NAME + "/" + Constants.JOB_FORMS_DIR_NAME + "/" + formInstanceId;
+        String resource = Constants.Files.JOB_STATE_DIR_NAME + "/" + Constants.Files.JOB_FORMS_DIR_NAME + "/" + formInstanceId;
         Path p = attachmentManager.get(processInstanceId, resource);
         if (p == null) {
             return null;
@@ -54,7 +54,7 @@ public class ConcordFormService {
     }
 
     public List<FormListEntry> list(String processInstanceId) throws ExecutionException {
-        String resource = Constants.JOB_STATE_DIR_NAME + "/" + Constants.JOB_FORMS_DIR_NAME + "/";
+        String resource = Constants.Files.JOB_STATE_DIR_NAME + "/" + Constants.Files.JOB_FORMS_DIR_NAME + "/";
         try {
             Path p = attachmentManager.get(processInstanceId, resource);
             if (p == null) {
@@ -77,7 +77,7 @@ public class ConcordFormService {
         }
 
         ResumeHandler resumeHandler = (f, args) -> {
-            String resource = Constants.JOB_STATE_DIR_NAME + "/" + Constants.JOB_FORMS_DIR_NAME + "/" + formInstanceId;
+            String resource = Constants.Files.JOB_STATE_DIR_NAME + "/" + Constants.Files.JOB_FORMS_DIR_NAME + "/" + formInstanceId;
             try {
                 attachmentManager.delete(processInstanceId, resource);
             } catch (IOException e) {

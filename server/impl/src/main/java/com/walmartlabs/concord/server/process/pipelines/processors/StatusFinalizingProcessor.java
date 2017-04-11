@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.pool.AgentConnection;
 import com.walmartlabs.concord.agent.pool.AgentPool;
-import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.Payload;
@@ -55,7 +55,7 @@ public class StatusFinalizingProcessor implements PayloadProcessor {
     }
 
     private boolean isSuspended(String instanceId) {
-        String resource = Constants.JOB_STATE_DIR_NAME + "/" + Constants.SUSPEND_MARKER_FILE_NAME;
+        String resource = Constants.Files.JOB_STATE_DIR_NAME + "/" + Constants.Files.SUSPEND_MARKER_FILE_NAME;
         return attachmentManager.contains(instanceId, resource);
     }
 }

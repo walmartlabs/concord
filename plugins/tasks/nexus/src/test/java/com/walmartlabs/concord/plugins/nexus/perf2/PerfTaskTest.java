@@ -5,7 +5,7 @@ import com.walmartlabs.concord.agent.api.JobStatus;
 import com.walmartlabs.concord.agent.api.JobType;
 import com.walmartlabs.concord.agent.pool.AgentConnection;
 import com.walmartlabs.concord.agent.pool.AgentPool;
-import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.project.Constants;
 import io.takari.bpm.api.ExecutionContext;
 import org.junit.Test;
 
@@ -45,7 +45,7 @@ public class PerfTaskTest {
         // ---
 
         ExecutionContext ctx = new MockExecutionContext();
-        ctx.setVariable(Constants.LOCAL_PATH_KEY, payloadDir.toAbsolutePath().toString());
+        ctx.setVariable(Constants.Context.LOCAL_PATH_KEY, payloadDir.toAbsolutePath().toString());
 
         // ---
 
@@ -62,7 +62,7 @@ public class PerfTaskTest {
     private static Path preparePayload() throws IOException {
         Path tmpDir = Files.createTempDirectory("junit");
 
-        File libsDir = tmpDir.resolve(Constants.LIBRARIES_DIR_NAME).toFile();
+        File libsDir = tmpDir.resolve(Constants.Files.LIBRARIES_DIR_NAME).toFile();
         libsDir.mkdirs();
 
         File aLib = new File(libsDir, "a.jar");

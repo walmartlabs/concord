@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
@@ -179,7 +179,7 @@ public abstract class AbstractServerIT {
         try (ZipOutputStream zip = new ZipOutputStream(out)) {
             IOUtils.zip(zip, Paths.get(uri));
             if (depsDir != null) {
-                IOUtils.zip(zip, Constants.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
+                IOUtils.zip(zip, Constants.Files.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
             }
         }
         return out.toByteArray();

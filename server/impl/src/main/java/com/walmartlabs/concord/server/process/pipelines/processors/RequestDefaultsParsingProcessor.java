@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.common.Constants;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -29,7 +29,7 @@ public class RequestDefaultsParsingProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        Path p = workspace.resolve(Constants.REQUEST_DEFAULTS_FILE_NAME);
+        Path p = workspace.resolve(Constants.Files.REQUEST_DEFAULTS_FILE_NAME);
         if (!Files.exists(p)) {
             return chain.process(payload);
         }

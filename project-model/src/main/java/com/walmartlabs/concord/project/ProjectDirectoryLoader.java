@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.project;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.yaml.YamlFormConverter;
@@ -22,17 +21,19 @@ import java.util.Map;
 
 public class ProjectDirectoryLoader {
 
+    public static final String PROJECT_FILE_NAME = ".concord.yml";
+
     private final YamlParser parser = new YamlParser();
 
     public ProjectDefinition load(Path baseDir) throws IOException {
         ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 
-        Path projectFile = baseDir.resolve(Constants.PROJECT_FILE_NAME);
+        Path projectFile = baseDir.resolve(PROJECT_FILE_NAME);
         if (Files.exists(projectFile)) {
             b.addProjectFile(projectFile);
         }
 
-        Path defsDir = baseDir.resolve(Constants.DEFINITIONS_DIR_NAME);
+        Path defsDir = baseDir.resolve(Constants.Files.DEFINITIONS_DIR_NAME);
         if (Files.exists(defsDir)) {
             b.addDefinitions(defsDir);
         }

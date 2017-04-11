@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.plugins.ansible;
 
-import com.walmartlabs.concord.common.Constants;
 import com.walmartlabs.concord.common.Task;
+import com.walmartlabs.concord.project.Constants;
 import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class RunPlaybookTask2 implements Task {
         String playbookPath = Paths.get(payloadPath, playbook).toAbsolutePath().toString();
         log.info("Using the playbook: {}", playbookPath);
 
-        String attachmentsDir = payloadPath + "/" + Constants.JOB_ATTACHMENTS_DIR_NAME;
+        String attachmentsDir = payloadPath + "/" + Constants.Files.JOB_ATTACHMENTS_DIR_NAME;
 
         String vaultPasswordFile = getVaultPasswordFilePath(payloadPath);
 
