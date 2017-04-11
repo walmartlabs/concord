@@ -1,5 +1,14 @@
 # Change log
 
+## Unreleased
+
+### Changed
+
+- fixed: `.concord.yml` variables are ignored when using a GIT
+repository.
+
+
+
 ## [0.5.0] - 2017-04-11
 
 ### Added
