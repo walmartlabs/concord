@@ -7,6 +7,10 @@ import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
+import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
+import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import org.junit.Test;
 
 import java.io.*;
@@ -15,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipOutputStream;
 
@@ -25,12 +30,12 @@ public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testSingleProfile() throws Exception {
-        simpleTest("projectfile/singleprofile");
+        simpleTest("projectfile/singleprofile", ".*Hello, world.*", ".*54321.*");
     }
 
     @Test(timeout = 30000)
     public void testOverrideFlow() throws Exception {
-        simpleTest("projectfile/overrideflow");
+        simpleTest("projectfile/overrideflow", ".*Hello, world.*");
     }
 
     @Test(timeout = 30000)
@@ -88,7 +93,40 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    private void simpleTest(String resource) throws Exception {
+    @Test
+    public void testArchiveOverride() throws Exception {
+        String projectName = "project_" + System.currentTimeMillis();
+        String repoName = "repo_" + System.currentTimeMillis();
+        String repoUrl = "git@test_" + System.currentTimeMillis();
+        String secretName = "secret_" + System.currentTimeMillis();
+
+        SecretResource secretResource = proxy(SecretResource.class);
+        secretResource.createKeyPair(secretName);
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null,
+                Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", secretName))));
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("projectfile/singleprofile").toURI());
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload));
+        assertNotNull(spr.getInstanceId());
+
+        ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*54321.*", ab);
+    }
+
+    private void simpleTest(String resource, String... logPatterns) throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource(resource).toURI());
 
         // ---
@@ -101,8 +139,14 @@ public class ProjectFileIT extends AbstractServerIT {
 
         // ---
 
+        if (logPatterns == null || logPatterns.length == 0) {
+            return;
+        }
+
         byte[] ab = getLog(pir.getLogFileName());
 
-        assertLog(".*Hello, world.*", ab);
+        for (String p : logPatterns) {
+            assertLog(p, ab);
+        }
     }
 }

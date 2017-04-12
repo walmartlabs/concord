@@ -1,13 +1,18 @@
 flows:
   main:
   - log: Hello, ${name}
+  - log: ${nested.val}
 
 variables:
   arguments:
     name: "stranger"
+    nested:
+      val: 12345
 
 profiles:
   test:
     variables:
       arguments:
         name: "world"
+        nested:
+          val: 54321

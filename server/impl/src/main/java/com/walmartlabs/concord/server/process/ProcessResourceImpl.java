@@ -6,7 +6,8 @@ import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
-import com.walmartlabs.concord.server.process.pipelines.RequestPipeline;
+import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
+import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.project.ProjectDao;
@@ -27,6 +28,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.Channel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -39,7 +41,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     private final ProjectDao projectDao;
     private final ProcessHistoryDao historyDao;
-    private final Chain requestPipeline;
+    private final Chain archivePipeline;
+    private final Chain projectPipeline;
     private final Chain resumePipeline;
     private final ProcessExecutorImpl processExecutor;
     private final ProcessAttachmentManager attachmentManager;
@@ -48,7 +51,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
                                ProcessHistoryDao historyDao,
-                               RequestPipeline requestPipeline,
+                               ArchivePipeline archivePipeline,
+                               ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
                                ProcessExecutorImpl processExecutor,
                                ProcessAttachmentManager attachmentManager,
@@ -56,7 +60,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         this.projectDao = projectDao;
         this.historyDao = historyDao;
-        this.requestPipeline = requestPipeline;
+        this.archivePipeline = archivePipeline;
+        this.projectPipeline = projectPipeline;
         this.resumePipeline = resumePipeline;
         this.processExecutor = processExecutor;
         this.attachmentManager = attachmentManager;
@@ -74,7 +79,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        requestPipeline.process(payload);
+        archivePipeline.process(payload);
         return new StartProcessResponse(instanceId);
     }
 
@@ -92,7 +97,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        requestPipeline.process(payload);
+        projectPipeline.process(payload);
         return new StartProcessResponse(instanceId);
     }
 
@@ -110,7 +115,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        requestPipeline.process(payload);
+        projectPipeline.process(payload);
         return new StartProcessResponse(instanceId);
     }
 
@@ -126,7 +131,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        requestPipeline.process(payload);
+        archivePipeline.process(payload);
         return new StartProcessResponse(instanceId);
     }
 

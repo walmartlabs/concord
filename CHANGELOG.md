@@ -5,7 +5,9 @@
 ### Changed
 
 - fixed: `.concord.yml` variables are ignored when using a GIT
-repository.
+repository;
+- fixed: project repositories should be ignored when starting a
+process using an archive.
 
 
 

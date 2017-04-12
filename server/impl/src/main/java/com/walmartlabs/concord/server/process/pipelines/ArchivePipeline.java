@@ -11,15 +11,19 @@ import com.walmartlabs.concord.server.template.TemplateProcessor;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+/**
+ * Processing self-contained archives.
+ *
+ * Runs a process using an archive, provided by an user.
+ */
 @Named
-public class RequestPipeline extends Chain {
+public class ArchivePipeline extends Chain {
 
     @Inject
-    public RequestPipeline(Injector injector) {
+    public ArchivePipeline(Injector injector) {
         super(injector.getInstance(WorkspaceArchiveProcessor.class),
                 injector.getInstance(WorkspaceRequestDataParsingProcessor.class),
                 injector.getInstance(RequestDataParsingProcessor.class),
-                injector.getInstance(RepositoryProcessor.class),
                 injector.getInstance(ActiveProfilesProcessor.class),
                 injector.getInstance(ProjectDefinitionProcessor.class),
                 injector.getInstance(ProjectConfigurationProcessor.class),
