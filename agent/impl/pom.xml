@@ -10,8 +10,12 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>concord-agent-runtime</artifactId>
-    <packaging>takari-jar</packaging>
+    <artifactId>concord-agent</artifactId>
+    <packaging>provisio</packaging>
+
+    <properties>
+        <main-class>com.walmartlabs.concord.agent.Main</main-class>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -112,6 +116,11 @@
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>io.takari.maven.plugins</groupId>
+                <artifactId>provisio-maven-plugin</artifactId>
+                <extensions>true</extensions>
             </plugin>
         </plugins>
     </build>

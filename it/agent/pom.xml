@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.agent</groupId>
-            <artifactId>concord-agent-runtime</artifactId>
+            <artifactId>concord-agent</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
