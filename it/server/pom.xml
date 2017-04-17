@@ -248,6 +248,7 @@
                                             <http>
                                                 <url>http://localhost:${it.agent.port}/api/v1/job/ping</url>
                                             </http>
+                                            <time>30000</time>
                                         </wait>
                                         <volumes>
                                             <bind>
@@ -266,7 +267,7 @@
                                         </ports>
                                         <volumes>
                                             <bind>
-                                                <volume>${java.io.tmpdir}:/tmp</volume>
+                                                <volume>/tmp:/tmp</volume>
                                             </bind>
                                         </volumes>
                                         <links>
@@ -277,6 +278,7 @@
                                             <http>
                                                 <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
                                             </http>
+                                            <time>30000</time>
                                         </wait>
                                     </run>
                                 </image>
