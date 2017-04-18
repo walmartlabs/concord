@@ -4,6 +4,7 @@
 
 ### Changed
 
+- boo: use all provided variables as template variables;
 - fixed: `.concord.yml` variables are ignored when using a GIT
 repository;
 - fixed: project repositories should be ignored when starting a
