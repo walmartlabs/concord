@@ -1,0 +1,29 @@
+flows:
+  main:
+  - smtp: [ "${smtpServer}", {
+      from: "${sender}",
+      to: "${recipient}",
+      subject: "Howdy",
+      message: "${message}"
+    }]
+  - log: mail sent to ${recipient}
+
+variables:
+  dependencies: [
+    "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/smtp-tasks/0.5.0/smtp-tasks-0.5.0.jar",
+    "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/org/apache/commons/commons-email/1.4/commons-email-1.4.jar",
+    "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/sun/mail/javax.mail/1.5.6/javax.mail-1.5.6.jar"
+  ]
+  arguments:
+    smtpServer:
+      host: "localhost"
+      port: 25
+    sender: "me@localhost"
+    recipient: "you@localhost"
+    message: |
+      We can use the YAML's support for
+      multi-line strings.
+
+      We can also have expressions
+      here (or in any other parameter):
+      from ${sender} to ${recipient}.
