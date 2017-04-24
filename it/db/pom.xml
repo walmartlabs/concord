@@ -96,6 +96,7 @@
                                         </env>
                                         <wait>
                                             <tcp>
+                                                <host>localhost</host>
                                                 <ports>
                                                     <port>5432</port>
                                                 </ports>
