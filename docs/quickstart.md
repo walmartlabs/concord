@@ -27,13 +27,13 @@ Concord](intro.md) to understand the basic concepts of Concord.
   registry is running on docker.prod.walmart.com this command:
  
   ```
-  docker run -d -p 8002:8002 -name agent walmartlabs/concord-agent
+  docker run -d -p 8002:8002 --name agent walmartlabs/concord-agent
   ```
 
   would be run as:
 
   ```
-  docker run -d -p 8002:8002 -name agent \
+  docker run -d -p 8002:8002 --name agent \
        docker.prod.walmart.com/walmartlabs/concord-agent
   ```
 
