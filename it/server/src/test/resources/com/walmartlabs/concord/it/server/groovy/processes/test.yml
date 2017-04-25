@@ -1,0 +1,5 @@
+main:
+- script: groovy
+  body: |
+    def username = initiator.username;
+    println "Hello, ${username}";

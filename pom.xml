@@ -47,7 +47,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aether.version>1.13.1</aether.version>
-        <bpm.version>0.23.0</bpm.version>
+        <bpm.version>0.24.0</bpm.version>
         <boo.version>1.0.3</boo.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.pool.version>2.4.2</commons.pool.version>

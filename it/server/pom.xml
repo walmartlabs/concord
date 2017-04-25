@@ -189,6 +189,12 @@
                                     <version>${javax.mail.version}</version>
                                 </artifactItem>
 
+                                <artifactItem>
+                                    <groupId>org.codehaus.groovy</groupId>
+                                    <artifactId>groovy-all</artifactId>
+                                    <version>${groovy.version}</version>
+                                </artifactItem>
+
                                 <!-- used by DependenciesIT as an example dependency -->
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins</groupId>
