@@ -8,7 +8,7 @@ export default (state: any = {}, action: any) => {
             return {...action};
         case types.UPDATE_SESSION:
             delete action.type;
-            return Object.assign({}, state, ...action);
+            return Object.assign({}, state, action.params);
         default:
             return state;
     }
@@ -20,3 +20,5 @@ export const isLoggedIn = (state: any) => {
 };
 
 export const getDisplayName = (state: any) => state.displayName;
+
+export const getDestination = (state: any) => state.destination;

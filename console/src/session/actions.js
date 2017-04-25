@@ -20,8 +20,9 @@ export const update = (data: any) => ({
     ...data
 });
 
-export const checkAuth = () => ({
-    type: types.CHECK_AUTH
+export const checkAuth = (destination: any) => ({
+    type: types.CHECK_AUTH,
+    destination
 });
 
 export const logOut = () => ({

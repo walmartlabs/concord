@@ -1,8 +1,9 @@
 // @flow
-import {fork, call, put, takeLatest} from "redux-saga/effects";
+import {fork, call, put, takeLatest, select} from "redux-saga/effects";
 import {push as pushHistory} from "react-router-redux";
 import types from "./actions";
 import {actions as session} from "../session";
+import {selectors} from "../session";
 import * as api from "./api";
 
 function* doLogin(action: any): Generator<*, *, *> {
@@ -16,7 +17,12 @@ function* doLogin(action: any): Generator<*, *, *> {
 
         yield put(session.setCurrent(response));
 
-        yield put(pushHistory("/"));
+        const destination = yield select(({session}) => selectors.getDestination(session));
+        if (destination) {
+            yield put(pushHistory(destination));
+        } else {
+            yield put(pushHistory("/"));
+        }
     } catch (e) {
         let msg = e.message || "Log in error";
         if (e.status === 401) {

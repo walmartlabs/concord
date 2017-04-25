@@ -22,8 +22,13 @@ const store = configureStore(hashHistory, reducers);
 
 const history = syncHistoryWithStore(hashHistory, store);
 
-const checkAuth = () => {
-    store.dispatch(session.checkAuth());
+const checkAuth = ({location: {pathname, query}}) => {
+    let destination = null;
+    if (pathname !== "/login") {
+        destination = {pathname, query};
+    }
+
+    store.dispatch(session.checkAuth(destination));
 };
 
 ReactDOM.render(
