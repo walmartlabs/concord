@@ -4,8 +4,9 @@
 
 ### Added
 
-- the Console now uses LDAP authentication.
-- expose (a configurable set of) LDAP attributes to processes.
+- the Console now uses LDAP authentication;
+- expose (a configurable set of) LDAP attributes to processes;
+- smtp: support for Mustache templates.
 
 
 

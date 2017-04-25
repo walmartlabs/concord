@@ -44,4 +44,9 @@ public class MockExecutionContext implements ExecutionContext {
     public <T> T eval(String expr, Class<T> type) {
         throw new UnsupportedOperationException("Not implemented");
     }
+
+    @Override
+    public Map<String, Object> toMap() {
+        return values;
+    }
 }

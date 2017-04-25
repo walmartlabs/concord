@@ -5,7 +5,7 @@
     "mailParams": {
       "to": "you@localhost",
       "subject": "test",
-      "message": "hi!"
+      "template": "test.mustache"
     }
   }
 }
