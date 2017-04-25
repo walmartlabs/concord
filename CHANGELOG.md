@@ -5,6 +5,7 @@
 ### Added
 
 - the Console now uses LDAP authentication.
+- expose (a configurable set of) LDAP attributes to processes.
 
 
 

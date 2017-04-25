@@ -98,6 +98,26 @@ The `dependencies` array allows to pull external dependencies necessary
 for the process' execution. Each element of the array must be a valid URL.
 Dependencies are resolved by the agent, before starting a process.
 
+## Provided variables
+
+Concord automatically provides a few built-in variables:
+- `execution` - a reference to a context variables map of a current
+execution;
+- `txId` - unique identifier of a current execution;
+- `initiator` - information about user who started a process:
+  - `initiator.username` - login, string;
+  - `initiator.displayName` - printable name, string;
+  - `initiator.groups` - list of user's groups;
+  - `initiator.attributes` - other LDAP attributes.
+
+LDAP attributes must be whitelisted in [the configuration](./configuration.md#ldap).
+
+Availability of other variables and "beans" depends on installed
+Concord's plugins and arguments passed on a process' start.
+See also the document on
+[how to create custom tasks](./extensions.md#tasks).
+
+
 ## Starting a new process instance
 
 *TBD*

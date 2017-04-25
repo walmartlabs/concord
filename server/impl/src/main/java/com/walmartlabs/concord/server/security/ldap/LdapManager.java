@@ -7,6 +7,7 @@ import org.apache.shiro.realm.ldap.LdapUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -14,12 +15,10 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Named
+@Singleton
 public class LdapManager {
 
     private static final String MEMBER_OF_ATTR = "memberOf";
@@ -56,8 +55,11 @@ public class LdapManager {
         Object[] args = new Object[]{username};
 
         NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, searchCtls);
+        if (!answer.hasMoreElements()) {
+            return null;
+        }
 
-        LdapInfoBuilder b = new LdapInfoBuilder();
+        LdapInfoBuilder b = new LdapInfoBuilder(username);
         while (answer.hasMoreElements()) {
             SearchResult sr = (SearchResult) answer.next();
 
@@ -76,6 +78,11 @@ public class LdapManager {
                         case DISPLAY_NAME_ATTR: {
                             b.displayName(attr.get().toString());
                         }
+                        default: {
+                            if (cfg.getExposeAttributes().contains(id)) {
+                                b.addAttribute(id, attr.get().toString());
+                            }
+                        }
                     }
                 }
             }
@@ -85,8 +92,14 @@ public class LdapManager {
 
     private static final class LdapInfoBuilder {
 
+        private final String username;
         private String displayName;
         private Set<String> groups;
+        private Map<String, String> attributes;
+
+        private LdapInfoBuilder(String username) {
+            this.username = username;
+        }
 
         public LdapInfoBuilder displayName(String displayName) {
             this.displayName = displayName;
@@ -94,10 +107,18 @@ public class LdapManager {
         }
 
         public LdapInfoBuilder addGroups(Collection<String> names) {
-            if (this.groups == null) {
-                this.groups = new HashSet<>();
+            if (groups == null) {
+                groups = new HashSet<>();
             }
-            this.groups.addAll(names);
+            groups.addAll(names);
+            return this;
+        }
+
+        public LdapInfoBuilder addAttribute(String k, String v) {
+            if (attributes == null) {
+                attributes = new HashMap<>();
+            }
+            attributes.put(k, v);
             return this;
         }
 
@@ -105,7 +126,11 @@ public class LdapManager {
             if (groups == null) {
                 groups = Collections.emptySet();
             }
-            return new LdapInfo(displayName, groups);
+            if (attributes == null) {
+                attributes = Collections.emptyMap();
+            }
+
+            return new LdapInfo(username, displayName, groups, attributes);
         }
     }
 }

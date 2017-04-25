@@ -61,6 +61,11 @@ public final class Constants {
          */
         public static final String TEMPLATE_KEY = "template";
 
+        /**
+         * Process initiator's info.
+         */
+        public static final String INITIATOR_KEY = "initiator";
+
         private Request() {
         }
     }

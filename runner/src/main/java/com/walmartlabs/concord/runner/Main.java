@@ -61,22 +61,22 @@ public class Main {
 
     private void start(String instanceId, Path baseDir) throws ExecutionException {
         // read the request data
-        Map<String, Object> cfg = readRequest(baseDir);
+        Map<String, Object> req = readRequest(baseDir);
 
         // get active profiles from the request data
-        Collection<String> activeProfiles = getActiveProfiles(cfg);
+        Collection<String> activeProfiles = getActiveProfiles(req);
 
         // load the project
         ProjectDefinition project = loadProject(baseDir);
 
         // get the entry point
-        String entryPoint = (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
+        String entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
         if (entryPoint == null) {
             throw new ExecutionException("Entry point must be set");
         }
 
         // prepare the process' arguments
-        Map<String, Object> args = createArgs(instanceId, cfg);
+        Map<String, Object> args = createArgs(instanceId, req);
 
         // start the process
         log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
@@ -157,12 +157,21 @@ public class Main {
     private static Map<String, Object> createArgs(String instanceId, Map<String, Object> cfg) {
         Map<String, Object> m = new HashMap<>();
 
+        // original arguments
         Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
         if (args != null) {
             m.putAll(args);
         }
 
+        // instance ID
         m.put(Constants.Context.TX_ID_KEY, instanceId);
+
+        // initiator's info
+        Object initiator = cfg.get(Constants.Request.INITIATOR_KEY);
+        if (initiator != null) {
+            m.put(Constants.Request.INITIATOR_KEY, initiator);
+        }
+
         return m;
     }
 

@@ -93,15 +93,7 @@ the expression will be stored;
 - `error` block - to handle any `BPMNError` exceptions thrown by the
 evaluation.
 
-Concord provides a couple built-in variables:
-- `execution` - a reference to a context variables map of a current
-execution;
-- `txId` - unique identifier of a current execution.
-
-Availability of other variables and "beans" depends on installed
-Concord's plugins and arguments passed on a process' start.
-See also the document on
-[how to create custom tasks](./extensions.md#tasks).
+See [the list of automatically provided variables](./processes.md#provided-variables).
 
 Literal values (e.g. arguments or [form](#forms) field values) can
 contain expressions:

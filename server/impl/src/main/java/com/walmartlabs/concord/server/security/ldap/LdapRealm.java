@@ -26,6 +26,7 @@ import java.util.HashSet;
 public class LdapRealm extends AbstractLdapRealm {
 
     private static final Logger log = LoggerFactory.getLogger(LdapRealm.class);
+    public static final String REALM_NAME = "ldap";
 
     private final UserDao userDao;
     private final LdapDao ldapDao;
@@ -93,7 +94,7 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         String id = userDao.getId(username);
-        UserPrincipal p = new UserPrincipal("ldap", id, username, ldapInfo);
+        UserPrincipal p = new UserPrincipal(REALM_NAME, id, username, ldapInfo);
 
         return new SimpleAccount(Arrays.asList(p, t), t, getName());
     }
