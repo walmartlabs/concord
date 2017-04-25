@@ -22,7 +22,10 @@ function* checkAuth({destination}): Generator<*, *, *> {
         yield put(login.doRefresh());
     } else {
         yield put(actions.update({params: {destination}}));
-        yield put(replaceHistory("/login"));
+
+        // preserve the fullscreen toggle
+        const fullScreen = destination && destination.query && destination.query.fullScreen;
+        yield put(replaceHistory({pathname: "/login", query: {fullScreen}}));
     }
 }
 

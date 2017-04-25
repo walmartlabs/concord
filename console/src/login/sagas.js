@@ -15,12 +15,15 @@ function* doLogin(action: any): Generator<*, *, *> {
             ...response
         });
 
+        const destination = yield select(({session}) => selectors.getDestination(session));
+
         yield put(session.setCurrent(response));
 
-        const destination = yield select(({session}) => selectors.getDestination(session));
         if (destination) {
+            // redirect to a previosly-saved destination
             yield put(pushHistory(destination));
         } else {
+            // redirect to the default path
             yield put(pushHistory("/"));
         }
     } catch (e) {
