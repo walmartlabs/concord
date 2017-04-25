@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- the Console now uses LDAP authentication.
+
+
+
 ## [0.5.1] - 2017-04-20
 
 ### Changed
