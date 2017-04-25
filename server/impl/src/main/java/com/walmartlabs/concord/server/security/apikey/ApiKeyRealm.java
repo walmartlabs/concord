@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.security.apikey;
 
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -39,19 +40,20 @@ public class ApiKeyRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         ApiKey t = (ApiKey) token;
+
         UserEntry u = userDao.get(t.getUserId());
         if (u == null) {
             return null;
         }
 
         // TODO roles?
-        log.debug("doGetAuthenticationInfo ['{}'] -> using {}", token, u);
-        return new SimpleAccount(Arrays.asList(u, t), t.getKey(), getName());
+        UserPrincipal p = new UserPrincipal("apikey", t.getUserId(), u.getName());
+        return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
     }
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        UserEntry u = (UserEntry) principals.getPrimaryPrincipal();
-        return authorizer.getAuthorizationInfo(u, null);
+        UserPrincipal p = (UserPrincipal) principals.getPrimaryPrincipal();
+        return authorizer.getAuthorizationInfo(p, null);
     }
 }

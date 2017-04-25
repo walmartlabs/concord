@@ -3,7 +3,6 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
 import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
@@ -11,6 +10,7 @@ import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -28,7 +28,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.channels.Channel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -240,7 +239,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             return null;
         }
 
-        UserEntry u = (UserEntry) subject.getPrincipal();
-        return u.getName();
+        UserPrincipal u = (UserPrincipal) subject.getPrincipal();
+        return u.getUsername();
     }
 }

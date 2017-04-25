@@ -1,16 +1,6 @@
-export const makeListRowsReducer = (resultActionType) => (state = [], action) => {
-    switch (action.type) {
-        case resultActionType:
-            if (action.error) {
-                return state;
-            }
-            return action.response;
-        default:
-            return state;
-    }
-};
+// @flow
 
-export const makeBooleanTriggerReducer = (requestActionType, resultActionType) => (state = false, action) => {
+export const booleanTrigger = (requestActionType: string, resultActionType: string) => (state: boolean = false, action: any) => {
     switch (action.type) {
         case requestActionType:
             return true;
@@ -21,24 +11,13 @@ export const makeBooleanTriggerReducer = (requestActionType, resultActionType) =
     }
 };
 
-export const makeErrorReducer = (requestActionType, resultActionType) => (state = null, action) => {
+export const error = (type: string) => (state: ?string = null, action: any) => {
     switch (action.type) {
-        case requestActionType:
-            return null;
-        case resultActionType:
+        case type:
             if (action.error) {
                 return action.message;
             }
             return null;
-        default:
-            return state;
-    }
-};
-
-export const makeListLastQueryReducer = (resultActionType) => (state = null, action) => {
-    switch (action.type) {
-        case resultActionType:
-            return {sortBy: action.sortBy, sortDir: action.sortDir};
         default:
             return state;
     }

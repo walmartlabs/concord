@@ -13,13 +13,20 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.HttpHeaders;
 import java.util.Base64;
 
 public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
-    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String AUTHORIZATION_HEADER = HttpHeaders.AUTHORIZATION;
     private static final String BASIC_AUTH_PREFIX = "Basic ";
-    private static final String[] ANON_URLS = {"/api/v1/server/ping"};
+
+    /**
+     * List of URLs that do not require authentication or authorization.
+     */
+    private static final String[] ANON_URLS = {
+            "/api/v1/server/ping",
+            "/api/service/console/logout"};
 
     private final ApiKeyDao apiKeyDao;
 
@@ -30,8 +37,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     public boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
-        request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
-
         HttpServletRequest r = WebUtils.toHttp(request);
         String p = r.getRequestURI();
         for (String s : ANON_URLS) {
@@ -51,8 +56,13 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         if (h.startsWith(BASIC_AUTH_PREFIX)) {
+            // create sessions if users are using username/password auth
+            request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
             return parseBasicAuth(h);
         } else {
+            // disable session creation for api token users
+            request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+
             String userId = apiKeyDao.findUserId(h);
             if (userId == null) {
                 return new UsernamePasswordToken();

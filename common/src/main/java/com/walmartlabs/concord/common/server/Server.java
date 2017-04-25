@@ -10,11 +10,17 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 public abstract class Server {
 
     private final int port;
+    private final boolean sessionsEnabled;
 
     private org.eclipse.jetty.server.Server server;
 
     public Server(int port) {
+        this(port, false);
+    }
+
+    public Server(int port, boolean sessionsEnabled) {
         this.port = port;
+        this.sessionsEnabled = sessionsEnabled;
     }
 
     public void start() throws Exception {
@@ -38,7 +44,11 @@ public abstract class Server {
     }
 
     private ServletContextHandler createServletContextHandler() {
-        ServletContextHandler h = new ServletContextHandler();
+        int options = 0;
+        if (sessionsEnabled) {
+            options |= ServletContextHandler.SESSIONS;
+        }
+        ServletContextHandler h = new ServletContextHandler(options);
 
         Injector i = createInjector(h);
         h.addEventListener(new GuiceServletContextListener() {

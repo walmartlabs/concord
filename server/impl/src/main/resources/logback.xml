@@ -5,6 +5,8 @@
         </encoder>
     </appender>
 
+    <logger name="org.apache.shiro" level="ERROR"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>

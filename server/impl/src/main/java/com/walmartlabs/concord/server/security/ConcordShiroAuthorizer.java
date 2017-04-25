@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.security;
 
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.user.RoleDao;
+import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 
@@ -12,17 +13,24 @@ import java.util.Collection;
 @Named
 public class ConcordShiroAuthorizer {
 
+    private final UserDao userDao;
     private final RoleDao roleDao;
 
     @Inject
-    public ConcordShiroAuthorizer(RoleDao roleDao) {
+    public ConcordShiroAuthorizer(UserDao userDao, RoleDao roleDao) {
+        this.userDao = userDao;
         this.roleDao = roleDao;
     }
 
-    public AuthorizationInfo getAuthorizationInfo(UserEntry u, Collection<String> roles) {
+    public AuthorizationInfo getAuthorizationInfo(UserPrincipal p, Collection<String> roles) {
         SimpleAuthorizationInfo i = new SimpleAuthorizationInfo();
 
-        if (u.getPermissions() != null) {
+        UserEntry u = null;
+        if (p.getId() != null) {
+            u = userDao.get(p.getId());
+        }
+
+        if (u != null && u.getPermissions() != null) {
             i.addStringPermissions(u.getPermissions());
         }
 

@@ -1,15 +1,18 @@
 package com.walmartlabs.concord.server.security.ldap;
 
-import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authc.*;
+import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.ldap.AbstractLdapRealm;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -21,6 +24,8 @@ import java.util.HashSet;
 
 @Named
 public class LdapRealm extends AbstractLdapRealm {
+
+    private static final Logger log = LoggerFactory.getLogger(LdapRealm.class);
 
     private final UserDao userDao;
     private final LdapDao ldapDao;
@@ -77,37 +82,33 @@ public class LdapRealm extends AbstractLdapRealm {
         LdapContext ctx = null;
         try {
             ctx = ldapContextFactory.getLdapContext(principalName, new String(password));
+            log.info("queryForAuthenticationInfo -> '{}', success", principalName);
         } finally {
             LdapUtils.closeContext(ctx);
         }
 
-        UserEntry u;
-
-        String id = userDao.getId(username);
-        if (id == null) {
-            u = new UserEntry("ldap", username, null);
-        } else {
-            u = userDao.get(id);
+        LdapInfo ldapInfo = ldapManager.getInfo(username);
+        if (ldapInfo == null) {
+            throw new AuthenticationException("LDAP data not found: " + username);
         }
 
-        return new SimpleAccount(Arrays.asList(u, t), t, getName());
+        String id = userDao.getId(username);
+        UserPrincipal p = new UserPrincipal("ldap", id, username, ldapInfo);
+
+        return new SimpleAccount(Arrays.asList(p, t), t, getName());
     }
 
     @Override
     protected AuthorizationInfo queryForAuthorizationInfo(PrincipalCollection principals, LdapContextFactory ldapContextFactory) throws NamingException {
-        UserEntry u = (UserEntry) principals.getPrimaryPrincipal();
-        Collection<String> roles = new HashSet<>();
+        UserPrincipal u = (UserPrincipal) principals.getPrimaryPrincipal();
 
-        LdapContext ctx = null;
-        try {
-            ctx = ldapContextFactory.getSystemLdapContext();
-
-            Collection<String> groups = ldapManager.getGroups(ctx, u.getName());
-            roles.addAll(ldapDao.getRoles(groups));
-
-            return authorizer.getAuthorizationInfo(u, roles);
-        } finally {
-            LdapUtils.closeContext(ctx);
+        LdapInfo i = u.getLdapInfo();
+        if (i == null) {
+            throw new AuthorizationException("LDAP data not found: " + u.getUsername());
         }
+
+        Collection<String> roles = new HashSet<>();
+        roles.addAll(ldapDao.getRoles(i.getGroups()));
+        return authorizer.getAuthorizationInfo(u, roles);
     }
 }

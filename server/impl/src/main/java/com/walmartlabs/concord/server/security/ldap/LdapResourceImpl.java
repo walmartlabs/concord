@@ -16,9 +16,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.naming.NamingException;
 import javax.ws.rs.WebApplicationException;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 @Singleton
@@ -80,7 +78,11 @@ public class LdapResourceImpl implements LdapResource, Resource {
     @RequiresPermissions(Permissions.LDAP_QUERY)
     public List<String> getLdapGroups(String username) {
         try {
-            return ldapManager.getGroups(username);
+            LdapInfo i = ldapManager.getInfo(username);
+
+            List<String> l = new ArrayList<>(i.getGroups());
+            Collections.sort(l);
+            return l;
         } catch (NamingException e) {
             throw new WebApplicationException("LDAP query error", e);
         }

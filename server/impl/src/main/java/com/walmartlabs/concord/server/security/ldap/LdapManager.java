@@ -14,10 +14,16 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @Named
 public class LdapManager {
+
+    private static final String MEMBER_OF_ATTR = "memberOf";
+    private static final String DISPLAY_NAME_ATTR = "displayName";
 
     private final LdapConfiguration cfg;
     private final LdapContextFactory ctxFactory;
@@ -34,45 +40,72 @@ public class LdapManager {
         this.ctxFactory = f;
     }
 
-    public List<String> getGroups(String username) throws NamingException {
+    public LdapInfo getInfo(String username) throws NamingException {
         LdapContext ctx = null;
         try {
             ctx = ctxFactory.getSystemLdapContext();
-            return getGroups(ctx, username);
+            return getInfo(ctx, username);
         } finally {
             LdapUtils.closeContext(ctx);
         }
     }
 
-    public List<String> getGroups(LdapContext ctx, String username) throws NamingException {
-        Collection<String> groups = new HashSet<>();
-
+    public LdapInfo getInfo(LdapContext ctx, String username) throws NamingException {
         SearchControls searchCtls = new SearchControls();
         searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         Object[] args = new Object[]{username};
 
         NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, searchCtls);
 
+        LdapInfoBuilder b = new LdapInfoBuilder();
         while (answer.hasMoreElements()) {
             SearchResult sr = (SearchResult) answer.next();
-            Attributes attrs = sr.getAttributes();
 
+            Attributes attrs = sr.getAttributes();
             if (attrs != null) {
                 NamingEnumeration ae = attrs.getAll();
                 while (ae.hasMore()) {
                     Attribute attr = (Attribute) ae.next();
 
-                    if (attr.getID().equals("memberOf")) {
-                        Collection<String> groupNames = LdapUtils.getAllAttributeValues(attr);
-                        groups.addAll(groupNames);
+                    String id = attr.getID();
+                    switch (id) {
+                        case MEMBER_OF_ATTR: {
+                            Collection<String> names = LdapUtils.getAllAttributeValues(attr);
+                            b.addGroups(names);
+                        }
+                        case DISPLAY_NAME_ATTR: {
+                            b.displayName(attr.get().toString());
+                        }
                     }
                 }
             }
         }
+        return b.build();
+    }
 
-        List<String> l = new ArrayList<>(groups);
-        Collections.sort(l);
+    private static final class LdapInfoBuilder {
 
-        return l;
+        private String displayName;
+        private Set<String> groups;
+
+        public LdapInfoBuilder displayName(String displayName) {
+            this.displayName = displayName;
+            return this;
+        }
+
+        public LdapInfoBuilder addGroups(Collection<String> names) {
+            if (this.groups == null) {
+                this.groups = new HashSet<>();
+            }
+            this.groups.addAll(names);
+            return this;
+        }
+
+        public LdapInfo build() {
+            if (groups == null) {
+                groups = Collections.emptySet();
+            }
+            return new LdapInfo(displayName, groups);
+        }
     }
 }

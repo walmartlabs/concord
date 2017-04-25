@@ -17,7 +17,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         long t1 = System.currentTimeMillis();
 
-        Server server = new Server(8001) {
+        Server server = new Server(8001, true) {
             @Override
             protected void configureServletContext(ServletContextHandler h, Injector i) {
                 LogServletConfigurer logCfg = new LogServletConfigurer(i.getInstance(LogStoreConfiguration.class));
