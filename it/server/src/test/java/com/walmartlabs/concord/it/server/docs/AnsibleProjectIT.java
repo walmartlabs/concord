@@ -107,7 +107,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Hello, world.*", ab);
 
         // check if `force_color` is working
-        assertLog(".*\\[0;32m.*", 6, ab);
+        assertLog(".*\\[0;32m.*", 3, ab);
 
         // ---
 
