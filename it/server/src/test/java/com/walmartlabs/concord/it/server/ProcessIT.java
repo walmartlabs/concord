@@ -60,4 +60,25 @@ public class ProcessIT extends AbstractServerIT {
 
         processResource.kill(spr.getInstanceId());
     }
+
+    @Test(timeout = 30000)
+    public void testInterpolation() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("interpolation").toURI());
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload));
+        assertNotNull(spr.getInstanceId());
+
+        // ---
+
+        ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, world.*", ab);
+    }
 }
