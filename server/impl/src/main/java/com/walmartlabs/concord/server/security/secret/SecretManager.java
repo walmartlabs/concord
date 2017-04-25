@@ -29,7 +29,8 @@ public class SecretManager {
             throw new ProcessException("Secret not found: " + name);
         }
 
-        byte[] password = passwordManager.getPassword(s.getName(), ApiKey.getCurrentKey());
+        // TODO sessionKey
+        byte[] password = passwordManager.getPassword(s.getName(), "TODO");
         byte[] salt = secretCfg.getSalt();
         return SecretUtils.decrypt(s.getType(), s.getData(), password, salt);
     }

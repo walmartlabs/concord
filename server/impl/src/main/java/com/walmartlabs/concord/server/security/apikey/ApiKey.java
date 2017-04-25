@@ -18,7 +18,7 @@ public class ApiKey implements AuthenticationToken {
         }
 
         if (k == null) {
-            throw new UnauthorizedException("API token not found");
+            throw new UnauthorizedException("API key not found");
         }
 
         return k.getKey();

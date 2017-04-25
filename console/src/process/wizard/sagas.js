@@ -18,7 +18,11 @@ function* nextForm({instanceId}): Generator<*, *, *> {
             }
 
             const {status} = yield call(processApi.fetchStatus, instanceId);
-            if (!constants.activeStatuses.includes(status)) {
+
+            const stopped = !constants.activeStatuses.includes(status) &&
+                constants.status.suspendedStatus !== status;
+
+            if (stopped) {
                 yield put(pushHistory(`/process/${instanceId}`));
                 return;
             }
