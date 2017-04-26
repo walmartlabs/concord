@@ -21,10 +21,7 @@ public final class YamlProcessConverter {
     public static ProcessDefinition convert(YamlProcessDefinition def) throws YamlConverterException {
         ProcessDefinitionBuilder.Process proc = ProcessDefinitionBuilder.newProcess(def.getName());
         apply(proc, def.getSteps());
-
-        ProcessDefinition pd = proc.end();
-        System.out.println(ProcessDefinitionHelper.dump(pd));
-        return pd;
+        return proc.end();
     }
 
     private static ProcessDefinitionBuilder.Seq apply(ProcessDefinitionBuilder.Seq proc, List<YamlStep> steps) throws YamlConverterException {
