@@ -24,6 +24,16 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.oneops</groupId>
+            <artifactId>oneops-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
             <version>${project.version}</version>
