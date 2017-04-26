@@ -10,13 +10,11 @@ flows:
 
 variables:
   dependencies: [
-#    "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/smtp-tasks/0.6.0/smtp-tasks-0.6.0.jar"
-     "file:///Users/jpise/work/concord-fork/concord/server/impl/target/deps/smtp-tasks-0.5.2-SNAPSHOT.jar"
+    "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/smtp-tasks/0.6.0/smtp-tasks-0.6.0.jar"
   ]
   arguments:
     smtpServer:
-      host: "smtp-gw1.wal-mart.com"
+      host: "localhost"
       port: 25
-    sender: "jayesh@localhost"
-    recipient: "jpise@walmartlabs.com"
-
+    sender: "me@localhost"
+    recipient: "you@localhost"
