@@ -24,6 +24,9 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyObject;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.*;
 
 public class YamlParserTest {
@@ -456,7 +459,6 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
-
     @Test
     public void test018() throws Exception {
         deploy("018.yml");
@@ -471,6 +473,21 @@ public class YamlParserTest {
         engine.start(key, "main", args);
 
         verify(testBean, times(1)).toString(eq(20.0));
+    }
+
+    @Test
+    public void test019() throws Exception {
+        deploy("019.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        verify(testBean, times(1)).toString(eq(12345));
     }
 
     // FORMS (100 - 199)
