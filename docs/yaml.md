@@ -284,6 +284,8 @@ Supported types of fields and their options:
   - `pattern`: (optional) a regular expression to check the value.
 - `int`: an integer value
   - `min`, `max`: (optional) value bounds.
+- `decimal`: a decimal value
+  - `min`, `max`: (optional) value bounds.
   
 Cardinality of the field can be specified by adding a cardinality
 quantifier to the type:
