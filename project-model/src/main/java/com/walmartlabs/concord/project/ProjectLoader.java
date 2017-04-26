@@ -2,15 +2,13 @@ package com.walmartlabs.concord.project;
 
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.yaml.YamlFormConverter;
-import com.walmartlabs.concord.project.yaml.YamlParser;
-import com.walmartlabs.concord.project.yaml.YamlProcessConverter;
-import com.walmartlabs.concord.project.yaml.YamlProjectConverter;
+import com.walmartlabs.concord.project.yaml.*;
 import com.walmartlabs.concord.project.yaml.model.*;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,7 +17,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ProjectDirectoryLoader {
+public class ProjectLoader {
 
     public static final String PROJECT_FILE_NAME = ".concord.yml";
 
@@ -38,6 +36,12 @@ public class ProjectDirectoryLoader {
             b.addDefinitions(defsDir);
         }
 
+        return b.build();
+    }
+
+    public ProjectDefinition load(InputStream in) throws IOException {
+        ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
+        b.loadDefinitions(in);
         return b.build();
     }
 
@@ -76,6 +80,15 @@ public class ProjectDirectoryLoader {
             }
 
             YamlDefinitionFile df = parser.parseDefinitionFile(file);
+            loadDefinitions(df);
+        }
+
+        private void loadDefinitions(InputStream in) throws IOException {
+            YamlDefinitionFile df = parser.parseDefinitionFile(in);
+            loadDefinitions(df);
+        }
+
+        private void loadDefinitions(YamlDefinitionFile df) throws YamlConverterException {
             Map<String, YamlDefinition> m = df.getDefinitions();
             if (m != null) {
                 for (Map.Entry<String, YamlDefinition> e : m.entrySet()) {
@@ -95,8 +108,6 @@ public class ProjectDirectoryLoader {
                     }
                 }
             }
-
-            return;
         }
 
         public ProjectDefinition build() {

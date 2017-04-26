@@ -1,6 +1,0 @@
-main:
-- form: myForm
-- log: hello, ${name}
-
-form (myForm):
-- name: {type: "string"}

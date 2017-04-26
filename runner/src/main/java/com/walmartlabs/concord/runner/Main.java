@@ -6,7 +6,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
-import com.walmartlabs.concord.project.ProjectDirectoryLoader;
+import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import io.takari.bpm.api.Engine;
@@ -123,7 +123,7 @@ public class Main {
 
     private static ProjectDefinition loadProject(Path baseDir) throws ExecutionException {
         try {
-            return new ProjectDirectoryLoader().load(baseDir);
+            return new ProjectLoader().load(baseDir);
         } catch (IOException e) {
             throw new ExecutionException("Error while loading a project", e);
         }

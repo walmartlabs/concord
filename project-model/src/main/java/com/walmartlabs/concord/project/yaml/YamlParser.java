@@ -9,6 +9,7 @@ import com.walmartlabs.concord.project.yaml.model.YamlProject;
 import com.walmartlabs.concord.project.yaml.model.YamlStep;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 
@@ -35,5 +36,9 @@ public class YamlParser {
 
     public YamlDefinitionFile parseDefinitionFile(Path path) throws IOException {
         return objectMapper.readValue(path.toFile(), YamlDefinitionFile.class);
+    }
+
+    public YamlDefinitionFile parseDefinitionFile(InputStream in) throws IOException {
+        return objectMapper.readValue(in, YamlDefinitionFile.class);
     }
 }

@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.project.ProjectDirectoryLoader;
+import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -14,7 +14,7 @@ import java.nio.file.Path;
 @Singleton
 public class ProjectDefinitionProcessor implements PayloadProcessor {
 
-    private final ProjectDirectoryLoader loader = new ProjectDirectoryLoader();
+    private final ProjectLoader loader = new ProjectLoader();
 
     @Override
     public Payload process(Chain chain, Payload payload) {

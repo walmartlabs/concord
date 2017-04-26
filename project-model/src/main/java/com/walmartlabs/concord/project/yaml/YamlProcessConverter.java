@@ -21,7 +21,10 @@ public final class YamlProcessConverter {
     public static ProcessDefinition convert(YamlProcessDefinition def) throws YamlConverterException {
         ProcessDefinitionBuilder.Process proc = ProcessDefinitionBuilder.newProcess(def.getName());
         apply(proc, def.getSteps());
-        return proc.end();
+
+        ProcessDefinition pd = proc.end();
+        System.out.println(ProcessDefinitionHelper.dump(pd));
+        return pd;
     }
 
     private static ProcessDefinitionBuilder.Seq apply(ProcessDefinitionBuilder.Seq proc, List<YamlStep> steps) throws YamlConverterException {
@@ -82,7 +85,7 @@ public final class YamlProcessConverter {
                 proc = elseFork.joinTo(joinName);
             }
 
-            return proc.joinAll(joinName);
+            return proc.joinPoint(joinName);
         } else if (s instanceof YamlReturn) {
             proc.end();
             sourceMap(proc, s, "RETURN statement");
@@ -122,7 +125,7 @@ public final class YamlProcessConverter {
 
     private static String joinName(YamlStep s) {
         JsonLocation loc = s.getLocation();
-        return "join_" + loc.getLineNr() + "_" + loc.getColumnNr();
+        return "join_" + s.hashCode();
     }
 
     private static ProcessDefinitionBuilder.Seq sourceMap(ProcessDefinitionBuilder.Seq proc, YamlStep s, String desc) {
