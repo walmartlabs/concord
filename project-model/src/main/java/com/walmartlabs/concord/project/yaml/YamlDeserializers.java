@@ -83,8 +83,6 @@ public final class YamlDeserializers {
     }
 
     private static <T> T parse(JsonParser json, Parser<Atom, T> parser) throws IOException {
-//        List<Atom> atoms = toAtoms(json.readValueAsTree().traverse());
-//        json.nextToken();
         List<Atom> atoms = asSubtree(json);
 
         Input<Atom> in = new ListInput<>(atoms);
@@ -96,14 +94,6 @@ public final class YamlDeserializers {
         }
 
         return result.toSuccess().getResult();
-    }
-
-    private static List<Atom> toAtoms(JsonParser p) throws IOException {
-        List<Atom> l = new ArrayList<>();
-        while (p.nextToken() != null) {
-            l.add(Atom.current(p));
-        }
-        return l;
     }
 
     private static List<Atom> asSubtree(JsonParser p) throws IOException {
