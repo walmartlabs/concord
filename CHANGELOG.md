@@ -6,8 +6,9 @@
 
 - the Console now uses LDAP authentication;
 - expose (a configurable set of) LDAP attributes to processes;
-- smtp: support for Mustache templates.
-- yaml: simplify usage of external variables in script steps.
+- smtp: support for Mustache templates;
+- yaml: simplify usage of external variables in script steps;
+- boo: return deployment status from the task.
 
 
 
