@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
-import com.walmartlabs.concord.project.ProjectDirectoryLoader;
+import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
@@ -59,7 +59,7 @@ public class ProjectFileIT extends AbstractServerIT {
                 l.add(line.replaceAll("WILL_BE_REPLACED", dep));
             }
 
-            Path p = tmpDir.resolve(ProjectDirectoryLoader.PROJECT_FILE_NAME);
+            Path p = tmpDir.resolve(ProjectLoader.PROJECT_FILE_NAME);
             Files.write(p, l);
         }
 

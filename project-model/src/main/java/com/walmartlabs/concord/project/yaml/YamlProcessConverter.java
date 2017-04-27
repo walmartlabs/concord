@@ -82,7 +82,7 @@ public final class YamlProcessConverter {
                 proc = elseFork.joinTo(joinName);
             }
 
-            return proc.joinAll(joinName);
+            return proc.joinPoint(joinName);
         } else if (s instanceof YamlReturn) {
             proc.end();
             sourceMap(proc, s, "RETURN statement");
@@ -122,7 +122,7 @@ public final class YamlProcessConverter {
 
     private static String joinName(YamlStep s) {
         JsonLocation loc = s.getLocation();
-        return "join_" + loc.getLineNr() + "_" + loc.getColumnNr();
+        return "join_" + s.hashCode();
     }
 
     private static ProcessDefinitionBuilder.Seq sourceMap(ProcessDefinitionBuilder.Seq proc, YamlStep s, String desc) {

@@ -1,0 +1,7 @@
+main:
+  - ${testBean.toString("aaa")}
+  - form: myForm
+  - ${testBean.toString(myForm.name)}
+
+form (myForm):
+  - name: { type: "string" }

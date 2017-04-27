@@ -1,0 +1,9 @@
+main:
+  - if: ${aInt > 0}
+    then:
+      - ${testBean.toString("a")}
+      - return
+    else:
+      - ${testBean.toString("b")}
+
+  - ${testBean.toString("c")}
