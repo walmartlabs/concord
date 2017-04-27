@@ -25,9 +25,14 @@ public final class YamlProcessConverter {
     }
 
     private static ProcessDefinitionBuilder.Seq apply(ProcessDefinitionBuilder.Seq proc, List<YamlStep> steps) throws YamlConverterException {
+        if (steps == null) {
+            return proc;
+        }
+
         for (YamlStep s : steps) {
             proc = apply(proc, s);
         }
+
         return proc;
     }
 

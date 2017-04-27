@@ -1,9 +1,6 @@
 package com.walmartlabs.concord.project.yaml;
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -86,7 +83,9 @@ public final class YamlDeserializers {
     }
 
     private static <T> T parse(JsonParser json, Parser<Atom, T> parser) throws IOException {
-        List<Atom> atoms = toAtoms(json.readValueAsTree().traverse());
+//        List<Atom> atoms = toAtoms(json.readValueAsTree().traverse());
+//        json.nextToken();
+        List<Atom> atoms = asSubtree(json);
 
         Input<Atom> in = new ListInput<>(atoms);
         Result<Atom, T> result = parser.parse(in);
@@ -104,6 +103,34 @@ public final class YamlDeserializers {
         while (p.nextToken() != null) {
             l.add(Atom.current(p));
         }
+        return l;
+    }
+
+    private static List<Atom> asSubtree(JsonParser p) throws IOException {
+        int level = 0;
+
+        List<Atom> l = new ArrayList<>();
+        while (p.currentToken() != null) {
+            l.add(Atom.current(p));
+
+            switch (p.currentToken()) {
+                case START_OBJECT:
+                case START_ARRAY:
+                    level += 1;
+                    break;
+                case END_OBJECT:
+                case END_ARRAY:
+                    level -= 1;
+                    break;
+            }
+
+            if (level <= 0) {
+                break;
+            }
+
+            p.nextToken();
+        }
+
         return l;
     }
 

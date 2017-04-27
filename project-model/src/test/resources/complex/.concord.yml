@@ -1,0 +1,78 @@
+flows:
+  main:
+  - ${myTask.method(arg)}
+
+  - expr: ${myTask.method(arg)}
+
+  - expr: ${myTask.method(arg)}
+    out: myVar
+    error:
+    - ${handleError}
+
+  - myTask: [arg1, arg2]
+
+  - log: |
+      multiline
+      stuff
+
+  - task: myTask
+    in:
+      inVar: myVar
+      otherInVar: ${myTask.doSomething()}
+    out:
+      outVar: inVar
+    error:
+    - ${handleError}
+
+  - if: ${condition}
+    then:
+    - log: it's true
+    else:
+    - log: nope
+
+  - if: ${condition}
+    then:
+    - log: it's also true
+
+  - ::
+    - ${task.doSomethingDangerous()}
+    error:
+    - ${handleError}
+
+  - myOtherFlow
+
+  - script: js
+    body: |
+      function hello() {
+        console.log("Hello");
+      }
+
+  myOtherFlow:
+  - log: hola!
+  - form: myForm
+
+  myEmptyFlow:
+
+forms:
+  myForm:
+  - fullName: { label: "Name", type: "string", pattern: ".* .*" }
+  - age: { label: "Age", type: "int", min: 21, max: 100 }
+  - favouriteColour: { label: "Favourite colour", type: "string", allow: ["gray", "grey"] }
+  - languages: { label: "Preferred languages", type: "string+", allow: "${locale.languages()}" }
+
+variables:
+  nested:
+    stuff: true
+
+profiles:
+  myProfile:
+    flows:
+      myEmptyFlow:
+      - log: not so empty!
+    forms:
+      additionalForm:
+      - field1: {type: "string"}
+    variables:
+      more:
+        nested:
+          stuff: false

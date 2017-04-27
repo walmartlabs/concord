@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- fixed: missing line/column numbers when parsing YAML process
+definitions and project files.
+
+
+
 ## [0.6.0] - 2017-04-27
 
 ### Added

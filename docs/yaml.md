@@ -261,7 +261,7 @@ form (myForm):
   - fullName: { label: "Name", type: "string", pattern: ".* .*" }
   - age: { label: "Age", type: "int", min: 21, max: 100 }
   - favouriteColour: { label: "Favourite colour", type: "string", allow: ["gray", "grey"] }
-  - languages: { label: "Preferred languages" type: "string+", allow: "${locale.languages()}" }
+  - languages: { label: "Preferred languages", type: "string+", allow: "${locale.languages()}" }
 ```
 
 Field declaration consists of the name (`myField`), the type

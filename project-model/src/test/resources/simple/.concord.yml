@@ -1,0 +1,12 @@
+flows:
+  main:
+  - ${example.hello()}
+  other:
+  - ${olala}
+
+forms:
+  myForm:
+  - testField: {type: "string"}
+
+variables:
+  dependencies: ["abc"]
