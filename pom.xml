@@ -48,7 +48,8 @@
 
         <aether.version>1.13.1</aether.version>
         <bpm.version>0.24.0</bpm.version>
-        <boo.version>1.0.3</boo.version>
+        <boo.version>1.0.7</boo.version>
+        <oneops-client.version>5.0.6</oneops-client.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.pool.version>2.4.2</commons.pool.version>
         <commons.lang.version>3.5</commons.lang.version>
@@ -171,6 +172,11 @@
                 <groupId>com.oneops.boo</groupId>
                 <artifactId>boo</artifactId>
                 <version>${boo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oneops</groupId>
+                <artifactId>oneops-client</artifactId>
+                <version>${oneops-client.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oneops.client</groupId>
