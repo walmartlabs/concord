@@ -1,13 +1,12 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.agent.api.AgentResource;
+import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.cfg.AgentConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessAttachmentManager;
 import com.walmartlabs.concord.server.process.ProcessException;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -18,33 +17,35 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.zip.ZipInputStream;
 
 @Named
-public class AttachmentsSavingProcessor implements PayloadProcessor {
+public class StateTransferringProcessor implements PayloadProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(AttachmentsSavingProcessor.class);
-
-    private final ProcessAttachmentManager attachmentManager;
     private final AgentConfiguration agentCfg;
 
     @Inject
-    public AttachmentsSavingProcessor(ProcessAttachmentManager attachmentManager, AgentConfiguration agentCfg) {
-        this.attachmentManager = attachmentManager;
+    public StateTransferringProcessor(AgentConfiguration agentCfg) {
         this.agentCfg = agentCfg;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
+
+        Path dst = workspace.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
         try {
-            saveAttachments(instanceId);
+            saveState(payload.getInstanceId(), dst);
         } catch (IOException e) {
-            throw new ProcessException("Error while saving attachments: " + instanceId, e);
+            throw new ProcessException("Error while transferring a process state", e);
         }
+
         return chain.process(payload);
     }
 
-    private void saveAttachments(String instanceId) throws IOException {
+    private void saveState(String instanceId, Path dst) throws IOException {
         Client client = null;
         Response response = null;
 
@@ -64,8 +65,13 @@ public class AttachmentsSavingProcessor implements PayloadProcessor {
                 return;
             }
 
-            try (InputStream in = response.readEntity(InputStream.class)) {
-                attachmentManager.store(instanceId, in);
+            Path stateDir = dst.resolve(Constants.Files.JOB_STATE_DIR_NAME);
+            if (Files.exists(stateDir)) {
+                IOUtils.deleteRecursively(stateDir);
+            }
+
+            try (ZipInputStream zip = new ZipInputStream(response.readEntity(InputStream.class))) {
+                IOUtils.unzip(zip, dst);
             }
         } finally {
             if (response != null) {

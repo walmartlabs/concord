@@ -20,5 +20,6 @@ public class SecurityModule extends ShiroWebModule {
         bindRealm().to(LdapRealm.class);
 
         addFilterChain("/api/**", Key.get(ConcordAuthenticatingFilter.class));
+        addFilterChain("/forms/**", Key.get(ConcordAuthenticatingFilter.class));
     }
 }

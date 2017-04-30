@@ -1,12 +1,15 @@
 package com.walmartlabs.concord.server.process;
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -15,30 +18,32 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Named
 @Singleton
 public class ConcordFormService {
 
-    private final ProcessAttachmentManager attachmentManager;
+    private final PayloadManager payloadManager;
     private final FormValidator validator;
     private final ProcessResource processResource;
 
     @Inject
-    public ConcordFormService(ProcessAttachmentManager attachmentManager, ProcessResource processResource) {
-        this.attachmentManager = attachmentManager;
+    public ConcordFormService(PayloadManager payloadManager, ProcessResource processResource) {
+        this.payloadManager = payloadManager;
         this.processResource = processResource;
         this.validator = new DefaultFormValidator();
     }
 
     public Form get(String processInstanceId, String formInstanceId) {
-        String resource = Constants.Files.JOB_STATE_DIR_NAME + "/" + Constants.Files.JOB_FORMS_DIR_NAME + "/" + formInstanceId;
-        Path p = attachmentManager.get(processInstanceId, resource);
+        // TODO cache?
+        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
+                Constants.Files.JOB_STATE_DIR_NAME + "/" +
+                Constants.Files.JOB_FORMS_DIR_NAME + "/" +
+                formInstanceId;
+
+        Path p = payloadManager.getResource(processInstanceId, resource);
         if (p == null) {
             return null;
         }
@@ -54,17 +59,51 @@ public class ConcordFormService {
     }
 
     public List<FormListEntry> list(String processInstanceId) throws ExecutionException {
-        String resource = Constants.Files.JOB_STATE_DIR_NAME + "/" + Constants.Files.JOB_FORMS_DIR_NAME + "/";
+        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
+                Constants.Files.JOB_STATE_DIR_NAME + "/" +
+                Constants.Files.JOB_FORMS_DIR_NAME + "/";
+
         try {
-            Path p = attachmentManager.get(processInstanceId, resource);
-            if (p == null) {
+            Path baseDir = payloadManager.getResource(processInstanceId, resource);
+            if (baseDir == null) {
                 return Collections.emptyList();
             }
 
-            return Files.list(p)
-                    .map(ConcordFormService::deserialize)
-                    .map(f -> new FormListEntry(f.getFormInstanceId().toString(), f.getFormDefinition().getName()))
+            return Files.list(baseDir)
+                    .map(p -> {
+                        Form f = deserialize(p);
+
+                        String name = f.getFormDefinition().getName();
+
+                        // TODO constants
+                        String s = "forms/" + f.getFormDefinition().getName();
+                        Path branding = payloadManager.getResource(processInstanceId, s);
+
+                        return new FormListEntry(f.getFormInstanceId().toString(), name, branding != null);
+                    })
                     .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading list of forms: " + processInstanceId, e);
+        }
+    }
+
+    public String nextFormId(String processInstanceId) throws ExecutionException {
+        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
+                Constants.Files.JOB_STATE_DIR_NAME + "/" +
+                Constants.Files.JOB_FORMS_DIR_NAME + "/";
+
+        try {
+            Path baseDir = payloadManager.getResource(processInstanceId, resource);
+            if (baseDir == null) {
+                return null;
+            }
+
+            Optional<Path> o = Files.list(baseDir).findFirst();
+            if (!o.isPresent()) {
+                return null;
+            }
+
+            return o.get().getFileName().toString();
         } catch (IOException e) {
             throw new ExecutionException("Error while reading list of forms: " + processInstanceId, e);
         }
@@ -77,9 +116,14 @@ public class ConcordFormService {
         }
 
         ResumeHandler resumeHandler = (f, args) -> {
-            String resource = Constants.Files.JOB_STATE_DIR_NAME + "/" + Constants.Files.JOB_FORMS_DIR_NAME + "/" + formInstanceId;
+            String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
+                    Constants.Files.JOB_STATE_DIR_NAME + "/" +
+                    Constants.Files.JOB_FORMS_DIR_NAME + "/" +
+                    formInstanceId;
+
+            Path p = payloadManager.getResource(processInstanceId, resource);
             try {
-                attachmentManager.delete(processInstanceId, resource);
+                IOUtils.deleteRecursively(p);
             } catch (IOException e) {
                 throw new ExecutionException("Error while removing a form: " + formInstanceId, e);
             }

@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;

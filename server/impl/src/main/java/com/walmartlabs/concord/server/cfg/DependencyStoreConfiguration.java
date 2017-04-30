@@ -5,13 +5,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Named
 @Singleton
-public class DependencyStoreConfiguration implements Serializable {
+public class DependencyStoreConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(DependencyStoreConfiguration.class);
 

@@ -33,10 +33,14 @@ public class RunnerProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         // TODO this probably should be replaced with concord://concord-runner-${project.version}.jar
 
-        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
+        payload = payload.putHeader(ENTRY_POINT_NAME, runnerCfg.getTargetName());
 
+        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path src = runnerCfg.getPath();
         Path dst = workspace.resolve(runnerCfg.getTargetName());
+        if (Files.exists(dst)) {
+            return chain.process(payload);
+        }
 
         try {
             Files.copy(src, dst);
@@ -44,8 +48,6 @@ public class RunnerProcessor implements PayloadProcessor {
             log.error("process ['{}'] -> error while copying dependencies", payload.getInstanceId(), e);
             throw new ProcessException("Error while copying dependencies", e);
         }
-
-        payload = payload.putHeader(ENTRY_POINT_NAME, runnerCfg.getTargetName());
 
         return chain.process(payload);
     }

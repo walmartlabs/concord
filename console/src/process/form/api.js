@@ -56,3 +56,25 @@ export const submitForm = (instanceId: ConcordId, formInstanceId: ConcordId, dat
             return json;
         });
 };
+
+export const startSession = (instanceId: ConcordId, formInstanceId: ConcordId) => {
+    console.debug("API: startSession ['%s', '%s'] -> starting...", instanceId, formInstanceId);
+
+    const opts = {
+        method: "POST",
+        credentials: "same-origin",
+        redirect: "manual"
+    };
+
+    return fetch(`/api/service/custom_form/${instanceId}/${formInstanceId}/start`, opts)
+        .then(response => {
+            if (!response.ok) {
+                throw new defaultError(response);
+            }
+            return response.json();
+        })
+        .then(json => {
+            console.debug("API: startSession ['%s', '%s'] -> done, got: %o", instanceId, formInstanceId, json);
+            return json;
+        });
+};

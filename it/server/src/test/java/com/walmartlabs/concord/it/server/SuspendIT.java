@@ -13,6 +13,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 import static org.junit.Assert.assertEquals;
 
 public class SuspendIT extends AbstractServerIT {

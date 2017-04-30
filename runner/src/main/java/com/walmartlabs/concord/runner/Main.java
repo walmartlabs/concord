@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -178,6 +179,20 @@ public class Main {
     private static void finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {
         Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME);
+
+        try {
+            Path resumeMarker = stateDir.resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
+            if (Files.exists(resumeMarker)) {
+                Files.delete(resumeMarker);
+            }
+
+            Path suspendMarker = stateDir.resolve(Constants.Files.SUSPEND_MARKER_FILE_NAME);
+            if (Files.exists(suspendMarker)) {
+                Files.delete(suspendMarker);
+            }
+        } catch (IOException e) {
+            throw new ExecutionException("State cleanup error", e);
+        }
 
         EventService es = engine.getEventService();
         Collection<Event> events = es.getEvents(instanceId);

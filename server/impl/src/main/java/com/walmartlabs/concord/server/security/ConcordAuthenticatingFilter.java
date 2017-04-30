@@ -28,6 +28,10 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             "/api/v1/server/ping",
             "/api/service/console/logout"};
 
+    private static final String[] FORCE_BASIC_AUTH_URLS = {
+            "/forms/.*"
+    };
+
     private final ApiKeyDao apiKeyDao;
 
     @Inject
@@ -79,9 +83,30 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         if (!loggedId) {
             HttpServletResponse resp = WebUtils.toHttp(response);
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            forceBasicAuthIfNeeded(request, response);
         }
 
         return loggedId;
+    }
+
+    private static void forceBasicAuthIfNeeded(ServletRequest request, ServletResponse response) {
+        // send "WWW-Authenticate: Basic", but only for specific requests w/o
+        // authentication header or with basic authentication
+
+        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletResponse resp = WebUtils.toHttp(response);
+
+        String authHeader = req.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null || authHeader.contains("Basic")) {
+            String p = req.getRequestURI();
+            for (String s : FORCE_BASIC_AUTH_URLS) {
+                if (p.matches(s)) {
+                    resp.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic");
+                    break;
+                }
+            }
+        }
     }
 
     private static String getAuthzHeader(ServletRequest request) {

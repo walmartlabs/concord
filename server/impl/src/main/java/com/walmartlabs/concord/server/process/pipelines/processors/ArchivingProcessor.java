@@ -37,8 +37,7 @@ public class ArchivingProcessor implements PayloadProcessor {
                 log.info("process ['{}'] -> archive: {}", payload.getInstanceId(), dst);
             }
 
-            payload = payload.removeHeader(Payload.WORKSPACE_DIR)
-                    .putHeader(ARCHIVE_FILE, dst);
+            payload = payload.putHeader(ARCHIVE_FILE, dst);
 
             return chain.process(payload);
         } catch (IOException e) {

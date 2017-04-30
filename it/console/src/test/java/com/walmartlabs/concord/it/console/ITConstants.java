@@ -7,11 +7,16 @@ public final class ITConstants {
 
     public static final int SERVER_PORT;
     public static final int SELENIUM_PORT;
+
+    public static final String SERVER_URL;
+
     public static final String WEBDRIVER_TYPE;
     public static final String SCREENSHOTS_DIR;
 
     static {
         SERVER_PORT = Integer.parseInt(env("IT_SERVER_PORT", "8001"));
+        SERVER_URL = "http://localhost:" + SERVER_PORT;
+
         SELENIUM_PORT = Integer.parseInt(env("IT_SELENIUM_PORT", "4444"));
         WEBDRIVER_TYPE = env("IT_WEBDRIVER_TYPE", "local");
         SCREENSHOTS_DIR = env("IT_SCREENSHOTS_DIR", "target/screenshots");

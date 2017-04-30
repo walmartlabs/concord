@@ -10,6 +10,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.*;
 
 public class ProcessIT extends AbstractServerIT {

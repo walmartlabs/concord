@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <title>My Form</title>
+
+    <script src="data.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.6/handlebars.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css"/>
+</head>
+<body>
+
+<h1 class="ui center aligned header">My Form</h1>
+
+<div class="ui text center aligned container">
+    Example of using custom HTML/CSS/JS/etc resources.
+</div>
+
+<div class="ui text container">
+    <div class="ui segment">
+        <div id="container">
+            <script id="formTemplate" type="text/x-handlebars-template">
+                {{#if success}}
+                <h3 id="success" class="ui header">Success</h3>
+                {{else}}
+                <form class="ui form {{#if errors}}error{{/if}}" method="post" action="{{submitUrl}}">
+
+                    {{#if errors}}
+                    <div class="ui error message">
+                        <ul class='list'>
+                            {{#each errors}}
+                            <li>{{this}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                    {{/if}}
+
+                    <div class="field {{#if errors.firstName}}error{{/if}}">
+                        <label>First name:</label>
+                        <input name="firstName" value="{{values.firstName}}"/>
+                    </div>
+                    <div class="field">
+                        <label>Last name:</label>
+                        <input name="lastName" value="{{values.lastName}}"/>
+                    </div>
+                    <div class="field">
+                        <label>Age:</label>
+                        <input name="age" value="{{values.age}}" type="number"/>
+                    </div>
+                    <div class="field">
+                        <label>Favorite color:</label>
+                        <div class="ui selection dropdown">
+                            <input type="hidden" name="color" value="{{values.color}}"/>
+                            <i class="dropdown icon"></i>
+                            <div class="default text">Favorite color</div>
+                            <div class="menu">
+                                {{#each definitions.color.allow}}
+                                <div class="item" data-value="{{this}}">{{this}}</div>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="ui button" type="reset">Reset</button>
+                    <button class="ui primary button" type="submit" onclick="handleSubmit(event)">Submit</button>
+                </form>
+                {{/if}}
+            </script>
+        </div>
+    </div>
+
+    <img class="ui centered image small" src="logo.png"/>
+</div>
+
+<script>
+    function handleSubmit(ev) {
+        var button = ev.target;
+        var form = button.parentElement;
+        form.classList.add("loading");
+    }
+
+    var source = document.getElementById("formTemplate").innerHTML;
+    var template = Handlebars.compile(source);
+    var html = template(data);
+
+    document.getElementById("container").innerHTML = html;
+
+    $('.ui.dropdown').dropdown();
+</script>
+
+</body>
+</html>

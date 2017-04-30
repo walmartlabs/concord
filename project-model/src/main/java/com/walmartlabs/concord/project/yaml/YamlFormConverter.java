@@ -20,9 +20,22 @@ import java.util.Map;
 
 public final class YamlFormConverter {
 
+    private static final String OPTIONS_FIELD_NAME = "_options";
+
     public static FormDefinition convert(String name, List<YamlFormField> fields) throws YamlConverterException {
+        Map<String, Object> options = null;
+
         List<FormField> l = new ArrayList<>();
         for (YamlFormField f : fields) {
+            if (OPTIONS_FIELD_NAME.equals(f.getName())) {
+                if (options != null) {
+                    throw new YamlConverterException("Duplicate options definition in form '" + name + "'");
+                }
+
+                options = f.getOptions();
+                continue;
+            }
+
             l.add(convert(f));
         }
         return new FormDefinition(name, l);

@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
@@ -44,7 +45,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final Chain projectPipeline;
     private final Chain resumePipeline;
     private final ProcessExecutorImpl processExecutor;
-    private final ProcessAttachmentManager attachmentManager;
     private final PayloadManager payloadManager;
 
     @Inject
@@ -54,7 +54,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
                                ProcessExecutorImpl processExecutor,
-                               ProcessAttachmentManager attachmentManager,
                                PayloadManager payloadManager) {
 
         this.projectDao = projectDao;
@@ -63,7 +62,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.projectPipeline = projectPipeline;
         this.resumePipeline = resumePipeline;
         this.processExecutor = processExecutor;
-        this.attachmentManager = attachmentManager;
         this.payloadManager = payloadManager;
     }
 
@@ -75,6 +73,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         try {
             payload = payloadManager.createPayload(instanceId, getInitiator(), in);
         } catch (IOException e) {
+            log.error("start -> error creating a payload: {}", e);
             throw new WebApplicationException("Error creating a payload", e);
         }
 
@@ -93,6 +92,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         try {
             payload = payloadManager.createPayload(instanceId, getInitiator(), ep, req);
         } catch (IOException e) {
+            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
         }
 
@@ -111,6 +111,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         try {
             payload = payloadManager.createPayload(instanceId, getInitiator(), ep, input);
         } catch (IOException e) {
+            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
         }
 
@@ -127,6 +128,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         try {
             payload = payloadManager.createPayload(instanceId, getInitiator(), projectName, in);
         } catch (IOException e) {
+            log.error("start ['{}'] -> error creating a payload: {}", projectName, e);
             throw new WebApplicationException("Error creating a payload", e);
         }
 
@@ -141,6 +143,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         try {
             payload = payloadManager.createResumePayload(instanceId, eventName, req);
         } catch (IOException e) {
+            log.error("resume ['{}', '{}'] -> error creating a payload: {}", instanceId, eventName, e);
             throw new WebApplicationException("Error creating a payload", e);
         }
 
@@ -221,7 +224,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
         }
 
-        Path p = attachmentManager.get(instanceId, attachmentName);
+        // TODO sanitize
+        Path p = payloadManager.getResource(instanceId, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" + attachmentName);
         if (p == null) {
             return Response.status(Status.NOT_FOUND).build();
         }

@@ -8,12 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
+import static org.junit.Assert.*;
 
 public class FormIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 300000)
     public void test() throws Exception {
         String firstName = "john_" + System.currentTimeMillis();
         String lastName = "smith_" + System.currentTimeMillis();
@@ -35,7 +36,10 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        String formId = forms.get(0).getFormInstanceId();
+        FormListEntry f0 = forms.get(0);
+        assertFalse(f0.isCustom());
+
+        String formId = f0.getFormInstanceId();
 
         Map<String, Object> data = Collections.singletonMap("firstName", firstName);
         FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);

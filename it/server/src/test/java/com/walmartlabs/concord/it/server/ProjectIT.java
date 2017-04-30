@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertTrue;
 
 public class ProjectIT extends AbstractServerIT {

@@ -6,12 +6,15 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
 import java.net.URL;
 
-public class SwaggerServletConfigurer {
+@Named
+public class SwaggerServletConfigurer implements ServletConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(SwaggerServletConfigurer.class);
 
+    @Override
     public void configure(ServletContextHandler servletHandler) {
         URL url = ClassLoader.getSystemResource("com/walmartlabs/concord/server/api/swagger/");
         if (url == null) {

@@ -3,6 +3,14 @@ server {
 	server_name             _;
 	root                    /opt/concord/console/concord-console-${project.version};
 
+	location ~ ^/(api|logs|forms)/ {
+	    proxy_pass          http://SERVER_ADDR:SERVER_PORT;
+	    proxy_redirect      off;
+	    proxy_set_header    Host $http_host;
+	    proxy_set_header    X-Real-IP $remote_addr;
+        proxy_set_header    X-Forwarded-For $remote_addr;
+	}
+
 	location ~ ^/landing/(.*)$ {
 	    alias               /opt/concord/console/landing/$1;
 	}
@@ -16,11 +24,4 @@ server {
         add_header          Pragma public;
         add_header          Cache-Control "public";
     }
-
-	location ~ ^/(api|logs)/ {
-	    proxy_pass          http://SERVER_ADDR:SERVER_PORT;
-	    proxy_redirect      off;
-	    proxy_set_header    Host $host;
-	    proxy_set_header    X-Forwarded-For $remote_addr;
-	}
 }

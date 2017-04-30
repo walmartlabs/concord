@@ -14,12 +14,35 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <selenium.version>3.2.0</selenium.version>
+        <selenium.version>3.4.0</selenium.version>
         <webdriver.version>0.9.7376</webdriver.version>
         <webdriver.type>local</webdriver.type>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>concord-common-it</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server-api</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.ws.rs</groupId>
+            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -139,12 +162,31 @@
                             <skipRun>${skip.it.tests}</skipRun>
                             <images>
                                 <image>
+                                    <name>walmartlabs/concord-agent</name>
+                                    <alias>agent</alias>
+                                    <run>
+                                        <ports>
+                                            <port>it.agent.port:8002</port>
+                                        </ports>
+                                        <wait>
+                                            <!--suppress MavenModelInspection -->
+                                            <http>
+                                                <url>http://localhost:${it.agent.port}/api/v1/job/ping</url>
+                                            </http>
+                                            <time>30000</time>
+                                        </wait>
+                                    </run>
+                                </image>
+                                <image>
                                     <name>walmartlabs/concord-server</name>
                                     <alias>server</alias>
                                     <run>
                                         <ports>
                                             <port>it.server.port:8001</port>
                                         </ports>
+                                        <links>
+                                            <link>agent</link>
+                                        </links>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
                                             <http>

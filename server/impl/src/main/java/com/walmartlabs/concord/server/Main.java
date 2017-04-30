@@ -1,14 +1,17 @@
 package com.walmartlabs.concord.server;
 
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.walmartlabs.concord.common.bootstrap.Bootstrap;
 import com.walmartlabs.concord.common.server.Server;
-import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
 import com.walmartlabs.concord.server.security.SecurityModule;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class Main {
 
@@ -18,13 +21,15 @@ public class Main {
         long t1 = System.currentTimeMillis();
 
         Server server = new Server(8001, true) {
+
             @Override
             protected void configureServletContext(ServletContextHandler h, Injector i) {
-                LogServletConfigurer logCfg = new LogServletConfigurer(i.getInstance(LogStoreConfiguration.class));
-                logCfg.configure(h);
-
-                SwaggerServletConfigurer swaggerCfg = new SwaggerServletConfigurer();
-                swaggerCfg.configure(h);
+                for (Key<?> k : i.getAllBindings().keySet()) {
+                    if (ServletConfigurer.class.isAssignableFrom(k.getTypeLiteral().getRawType())) {
+                        ServletConfigurer s = (ServletConfigurer) i.getInstance(k);
+                        s.configure(h);
+                    }
+                }
             }
 
             @Override

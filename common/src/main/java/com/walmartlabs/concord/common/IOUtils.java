@@ -1,10 +1,7 @@
 package com.walmartlabs.concord.common;
 
 import java.io.*;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,6 +93,10 @@ public final class IOUtils {
     }
 
     public static void copy(Path src, Path dst) throws IOException {
+        copy(src, dst, new CopyOption[0]);
+    }
+
+    public static void copy(Path src, Path dst, CopyOption... options) throws IOException {
         Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -106,7 +107,7 @@ public final class IOUtils {
                     Files.createDirectories(pp);
                 }
 
-                Files.copy(file, p);
+                Files.copy(file, p, options);
                 return FileVisitResult.CONTINUE;
             }
         });

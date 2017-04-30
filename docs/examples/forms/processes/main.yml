@@ -3,5 +3,6 @@ main:
 - ${log.info('test', 'Hello, '.concat(myForm.firstName).concat(' ').concat(myForm.lastName))}
 
 form (myForm):
+- _options: { lastForm: true }
 - firstName: { label: "First name", type: "string" }
 - lastName: { label: "Last name", type: "string" }

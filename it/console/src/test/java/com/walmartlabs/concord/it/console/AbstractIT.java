@@ -1,6 +1,10 @@
 package com.walmartlabs.concord.it.console;
 
+import com.walmartlabs.concord.it.common.ServerClient;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -21,20 +25,53 @@ public abstract class AbstractIT {
     @Rule
     public final WebDriverRule rule = new WebDriverRule();
 
+    private ServerClient serverClient;
+
     protected WebDriver getDriver() {
         return rule.getDriver();
     }
 
+    @Before
+    public void init() {
+        serverClient = new ServerClient(ITConstants.SERVER_URL);
+    }
+
+    @After
+    public void _destroy() {
+        serverClient.close();
+    }
+
     protected void start() {
-        int port = ITConstants.LOCAL_CONSOLE_PORT;
+        goTo("/");
+    }
+
+    protected void goTo(String path) {
+        getDriver().get("http://localhost:" + getConsolePort() + path);
+    }
+
+    protected int getConsolePort() {
         if (rule.isRemote()) {
-            port = ITConstants.REMOTE_CONSOLE_PORT;
+            return ITConstants.REMOTE_CONSOLE_PORT;
         }
-        getDriver().get("http://localhost:" + port);
+        return ITConstants.LOCAL_CONSOLE_PORT;
+    }
+
+    protected <T> T proxy(Class<T> klass) {
+        return serverClient.proxy(klass);
     }
 
     protected void waitForPage() {
         getDriver().manage().timeouts().pageLoadTimeout(10, TimeUnit.SECONDS);
+    }
+
+    protected Alert waitForAlert(String message) {
+        try {
+            WebDriverWait wait = new WebDriverWait(getDriver(), DEFAULT_WAIT_TIME);
+            return wait.until(ExpectedConditions.alertIsPresent());
+        } catch (Exception e) {
+            fail(message);
+            return null;
+        }
     }
 
     protected WebElement waitFor(String message, By selector) {

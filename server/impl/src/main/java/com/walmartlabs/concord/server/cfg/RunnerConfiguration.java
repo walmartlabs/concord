@@ -6,14 +6,13 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
 @Named
 @Singleton
-public class RunnerConfiguration implements Serializable {
+public class RunnerConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(RunnerConfiguration.class);
 

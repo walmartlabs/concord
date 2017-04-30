@@ -166,7 +166,7 @@ public class Grammar {
 
     // formCallOptions := (inVars | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> formCallOptions = label("Form call options",
-            many(choice(inVars, errorBlock)).map(Grammar::toMap));
+            many(kv).map(Grammar::toMap));
 
     // exprShort := expression
     private static final Parser<Atom, YamlStep> exprShort = label("Expression (short form)",

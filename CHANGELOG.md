@@ -5,7 +5,9 @@
 ### Added
 
 - boo-task: pull more deployment information into the context;
-- teamrosters-task: new task to retrieve Team Rosters data.
+- teamrosters-task: new task to retrieve Team Rosters data;
+- support for the form branding: custom forms with user-provided
+HTML/CSS/JS/etc.
 
 ### Changed
 

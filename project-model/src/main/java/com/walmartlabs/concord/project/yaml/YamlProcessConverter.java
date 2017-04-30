@@ -107,7 +107,13 @@ public final class YamlProcessConverter {
             return sourceMap(proc.catchEvent(e.getName()), s, "Event");
         } else if (s instanceof YamlFormCall) {
             YamlFormCall c = (YamlFormCall) s;
-            return proc.userTask(Collections.singletonList(new FormExtension(c.getKey())));
+
+            Map<String, Object> options = c.getOptions();
+            if (options != null && options.isEmpty()) {
+                options = null;
+            }
+
+            return proc.userTask(Collections.singletonList(new FormExtension(c.getKey(), options)));
         } else if (s instanceof YamlCall) {
             YamlCall c = (YamlCall) s;
 

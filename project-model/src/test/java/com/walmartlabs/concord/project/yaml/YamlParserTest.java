@@ -692,6 +692,28 @@ public class YamlParserTest {
     }
 
     @Test
+    public void test107() throws Exception {
+        deploy("107.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        UUID formId = getFirstFormId();
+
+        FormSubmitResult result = formService.submit(formId, Collections.singletonMap("testValue", "else"));
+        assertTrue(result.isValid());
+
+        verify(testBean, times(1)).toString(eq("else"));
+    }
+
+    @Test
     public void testJunk() throws Exception {
         deploy("junk.yml");
     }

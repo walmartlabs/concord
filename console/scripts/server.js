@@ -10,10 +10,11 @@ app.use(express.static("build"));
 // proxy api requests to the backend server
 app.all("/api/*", proxy("localhost:8001"));
 app.all("/logs/*", proxy("localhost:8001"));
+app.all("/forms/*", proxy("localhost:8001"));
 
 // redirect everything else to index.html
 app.get("*", (req, resp) => {
     resp.sendFile(path.resolve(__dirname, "..", "build", "index.html"));
 });
 
-app.listen(3000);
+app.listen(8080);

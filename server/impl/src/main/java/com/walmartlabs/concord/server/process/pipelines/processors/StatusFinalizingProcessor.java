@@ -7,12 +7,14 @@ import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessAttachmentManager;
+import com.walmartlabs.concord.server.process.PayloadManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Named
 public class StatusFinalizingProcessor implements PayloadProcessor {
@@ -21,16 +23,15 @@ public class StatusFinalizingProcessor implements PayloadProcessor {
 
     private final AgentPool agentPool;
     private final ProcessHistoryDao historyDao;
-    private final ProcessAttachmentManager attachmentManager;
+    private final PayloadManager payloadManager;
 
     @Inject
     public StatusFinalizingProcessor(AgentPool agentPool,
-                                     ProcessHistoryDao historyDao,
-                                     ProcessAttachmentManager attachmentManager) {
+                                     ProcessHistoryDao historyDao, PayloadManager payloadManager) {
 
         this.agentPool = agentPool;
         this.historyDao = historyDao;
-        this.attachmentManager = attachmentManager;
+        this.payloadManager = payloadManager;
     }
 
     @Override
@@ -55,7 +56,10 @@ public class StatusFinalizingProcessor implements PayloadProcessor {
     }
 
     private boolean isSuspended(String instanceId) {
-        String resource = Constants.Files.JOB_STATE_DIR_NAME + "/" + Constants.Files.SUSPEND_MARKER_FILE_NAME;
-        return attachmentManager.contains(instanceId, resource);
+        String name = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
+                Constants.Files.JOB_STATE_DIR_NAME + "/" +
+                Constants.Files.SUSPEND_MARKER_FILE_NAME;
+
+        return payloadManager.getResource(instanceId, name) != null;
     }
 }

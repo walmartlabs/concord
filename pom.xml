@@ -47,7 +47,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aether.version>1.13.1</aether.version>
-        <bpm.version>0.24.0</bpm.version>
+        <bpm.version>0.24.1-SNAPSHOT</bpm.version>
         <boo.version>1.0.7</boo.version>
         <cmsdal.version>1.0.5</cmsdal.version>
         <oneops-client.version>5.0.6</oneops-client.version>

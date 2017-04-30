@@ -16,6 +16,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.zip.ZipOutputStream;
 
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 

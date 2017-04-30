@@ -7,6 +7,13 @@ npm install
 npm start
 ```
 
+It will start a HTTP server on port 3000, with API request proxy to 8001.
+
+To use the custom (branded) forms feature, start the development proxy server using
+```
+npm run dev
+```
+
 ### Type checking
 
 The project uses [Facebook's Flow](https://flowtype.org/).
@@ -35,6 +42,6 @@ Production build can be served locally using the following command:
 npm run server
 ```
 
-It will start a HTTP server on port 3000, serving static resources from the `./build` directory and
+It will start a HTTP server on port 8080, serving static resources from the `./build` directory and
 proxying all requests to `/api` and `/logs` to the backend server at `localhost:8001`.
 See [the server script](./scripts/server.js) for more details.

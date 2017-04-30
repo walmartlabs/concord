@@ -14,6 +14,9 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.util.Collections;
 
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertNotNull;
 
 public class InitiatorIT extends AbstractServerIT {
