@@ -116,7 +116,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
         // TODO constants
         Map<String, Object> opts = form.getOptions();
-        boolean lastForm = opts != null ? (boolean) opts.getOrDefault("lastForm", false) : false;
+        boolean yield = opts != null ? (boolean) opts.getOrDefault("yield", false) : false;
 
         Path dst = cfg.getBaseDir()
                 .resolve(processInstanceId)
@@ -129,7 +129,9 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
                 FormSubmitResult r = formService.submit(processInstanceId, formInstanceId, m);
                 if (r.isValid()) {
-                    if (lastForm) {
+                    if (yield) {
+                        // this was the last "interactive" form. The process will continue in "background"
+                        // and users should get a success page.
                         writeData(dst, new FormData(true));
                     } else {
                         while (true) {

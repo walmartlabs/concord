@@ -1,6 +1,6 @@
 main:
   - form: myForm
-    lastForm: true
+    yield: true
   - ${testBean.toString(myForm.testValue)}
 
 form (myForm):

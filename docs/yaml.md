@@ -320,6 +320,19 @@ a map object
 
 then the form's `myField` will be populated with `my string value`.
 
+The `form` command accepts additional options:
+```yaml
+main:
+  - form: myForm
+    param1: value
+    param2: 123
+```
+
+Supported options:
+- `yield`: a boolean value. If `true`, the UI wizard will stop after this
+form and the rest of the process will continue in "background". Supported
+only for custom (with branding) forms.
+
 ## Grammar
 
 Formal definition (PEG-like).
@@ -342,7 +355,7 @@ outVars := FIELD_NAME "out" START_OBJECT (kv)+ END_OBJECT
 exprOptions := (outField | errorBlock)*
 taskOptions := (inVars | outVars | outField | errorBlock)*
 groupOptions := (errorBlock)*
-formCallOptions := (inVars | errorBlock)*
+formCallOptions := (kv)*
 
 exprShort := expression
 exprFull := FIELD_NAME "expr" expression exprOptions
