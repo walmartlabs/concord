@@ -1,13 +1,20 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- support for the form branding: custom forms with user-provided
+HTML/CSS/JS/etc.
+
+
+
 ## [0.7.0] - 2017-04-30
 
 ### Added
 
 - boo-task: pull more deployment information into the context;
 - teamrosters-task: new task to retrieve Team Rosters data;
-- support for the form branding: custom forms with user-provided
-HTML/CSS/JS/etc.
 
 ### Changed
 
