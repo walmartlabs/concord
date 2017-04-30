@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- boo-task: pull more deployment information into the context;
+- teamrosters-task: new task to retrieve Team Rosters data.
+
 ### Changed
 
 - fixed: missing line/column numbers when parsing YAML process
