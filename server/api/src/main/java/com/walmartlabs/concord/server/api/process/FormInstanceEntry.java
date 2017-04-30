@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 @JsonInclude(Include.NON_NULL)
 public class FormInstanceEntry implements Serializable {

@@ -8,8 +8,6 @@ import com.walmartlabs.concord.server.api.process.ProcessResource;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -99,11 +97,8 @@ public class ConcordFormService {
             }
 
             Optional<Path> o = Files.list(baseDir).findFirst();
-            if (!o.isPresent()) {
-                return null;
-            }
+            return o.map(path -> path.getFileName().toString()).orElse(null);
 
-            return o.get().getFileName().toString();
         } catch (IOException e) {
             throw new ExecutionException("Error while reading list of forms: " + processInstanceId, e);
         }

@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -109,6 +108,7 @@ public class Main {
         finalizeState(e, instanceId, baseDir);
     }
 
+    @SuppressWarnings("unchecked")
     private static Collection<String> getActiveProfiles(Map<String, Object> cfg) {
         if (cfg == null) {
             return Collections.emptyList();

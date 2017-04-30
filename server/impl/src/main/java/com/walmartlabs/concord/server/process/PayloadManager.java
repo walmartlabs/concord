@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.process;
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.cfg.PayloadStoreConfiguration;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Map;
 
@@ -27,12 +25,10 @@ public class PayloadManager {
     private static final String INPUT_ARCHIVE_NAME = "_input.zip";
 
     private final PayloadStoreConfiguration cfg;
-//    private final ProcessAttachmentManager attachmentManager;
 
     @Inject
     public PayloadManager(PayloadStoreConfiguration cfg/*, ProcessAttachmentManager attachmentManager*/) {
         this.cfg = cfg;
-//        this.attachmentManager = attachmentManager;
     }
 
     public Path getResource(String instanceId, String name) {
@@ -134,11 +130,6 @@ public class PayloadManager {
      * @return
      */
     public Payload createResumePayload(String instanceId, String eventName, Map<String, Object> req) throws IOException {
-//        Path prevStateDir = attachmentManager.get(instanceId, Constants.Files.JOB_STATE_DIR_NAME + "/");
-//        if (prevStateDir == null) {
-//            throw new IllegalStateException("No existing state found to resume the process");
-//        }
-
         Path baseDir = ensurePayloadDir(instanceId);
         Path workspaceDir = baseDir.resolve(WORKSPACE_DIR_NAME);
         if (!Files.exists(workspaceDir)) {
@@ -147,10 +138,6 @@ public class PayloadManager {
 
             Files.createDirectory(workspaceDir);
         }
-
-//        Path stateDir = workspaceDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-//                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
-//        IOUtils.copy(prevStateDir, stateDir, StandardCopyOption.REPLACE_EXISTING);
 
         return new Payload(instanceId)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)

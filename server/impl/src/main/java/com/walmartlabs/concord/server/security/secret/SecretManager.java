@@ -3,7 +3,6 @@ package com.walmartlabs.concord.server.security.secret;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.security.PasswordManager;
-import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
 
 import javax.inject.Inject;

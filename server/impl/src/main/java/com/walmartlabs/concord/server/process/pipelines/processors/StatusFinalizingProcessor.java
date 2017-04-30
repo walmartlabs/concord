@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 @Named
 public class StatusFinalizingProcessor implements PayloadProcessor {

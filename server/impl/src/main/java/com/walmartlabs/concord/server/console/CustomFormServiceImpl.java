@@ -116,7 +116,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
         // TODO constants
         Map<String, Object> opts = form.getOptions();
-        boolean yield = opts != null ? (boolean) opts.getOrDefault("yield", false) : false;
+        boolean yield = opts != null && (boolean) opts.getOrDefault("yield", false);
 
         Path dst = cfg.getBaseDir()
                 .resolve(processInstanceId)
@@ -201,6 +201,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return path;
     }
 
+    @SuppressWarnings("unchecked")
     private FormData prepareData(String processInstanceId, String formInstanceId, Map<String, Object> overrides, List<ValidationError> errors) {
         // TODO constants
         String submitUrl = "/api/service/custom_form/" + processInstanceId + "/" + formInstanceId + "/continue";

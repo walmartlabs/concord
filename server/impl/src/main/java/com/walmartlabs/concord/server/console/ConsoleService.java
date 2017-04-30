@@ -18,13 +18,6 @@ import javax.ws.rs.core.Response;
 @Path("/api/service/console")
 public class ConsoleService implements Resource {
 
-    private final ProcessResource processResource;
-
-    @Inject
-    public ConsoleService(ProcessResource processResource) {
-        this.processResource = processResource;
-    }
-
     @GET
     @Path("/whoami")
     @Produces(MediaType.APPLICATION_JSON)

@@ -80,7 +80,7 @@ public class BooTask implements Task {
     }
 
     private List<Platform> buildPlatforms(CmsCISimple[] cis) {
-        List<Platform> platforms = new ArrayList<Platform>();
+        List<Platform> platforms = new ArrayList<>();
         for (CmsCISimple ci : cis) {
             if (ci.getCiClassName().matches("bom.*\\.Fqdn")) {
                 buildFqdn(ci, platforms);
