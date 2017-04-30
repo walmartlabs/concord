@@ -5,7 +5,8 @@
 ### Changed
 
 - fixed: missing line/column numbers when parsing YAML process
-definitions and project files.
+definitions and project files;
+- fixed: `value` attribute ignored in form field declarations.
 
 
 

@@ -67,5 +67,6 @@ public class FormIT extends AbstractServerIT {
         ab = getLog(psr.getLogFileName());
         assertLog(".*" + firstName + " " + lastName + ".*", ab);
         assertLog(".*100323.*", ab);
+        assertLog(".*red.*", ab);
     }
 }
