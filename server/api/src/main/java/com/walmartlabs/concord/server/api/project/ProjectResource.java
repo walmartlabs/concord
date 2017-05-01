@@ -64,6 +64,7 @@ public interface ProjectResource {
     @GET
     @ApiOperation("Get an existing repository")
     @Path("/{projectName}/repository/{repositoryName}")
+    @Produces(MediaType.APPLICATION_JSON)
     RepositoryEntry getRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                   @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
 
