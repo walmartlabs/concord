@@ -17,7 +17,6 @@ public class ResumePipeline extends Chain {
                 injector.getInstance(RunnerProcessor.class),
                 injector.getInstance(ArchivingProcessor.class),
                 injector.getInstance(AgentProcessor.class),
-//                injector.getInstance(AttachmentsSavingProcessor.class),
                 injector.getInstance(StateTransferringProcessor.class),
                 injector.getInstance(StatusFinalizingProcessor.class));
     }

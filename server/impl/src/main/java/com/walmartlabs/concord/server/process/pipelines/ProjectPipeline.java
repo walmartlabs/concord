@@ -13,7 +13,7 @@ import javax.inject.Named;
 
 /**
  * Processing project requests.
- *
+ * <p>
  * Runs a process by pulling a project's repository and applying
  * overrides from a request JSON.
  */
@@ -40,7 +40,6 @@ public class ProjectPipeline extends Chain {
                 injector.getInstance(ValidatingProcessor.class),
                 injector.getInstance(ArchivingProcessor.class),
                 injector.getInstance(AgentProcessor.class),
-//                injector.getInstance(AttachmentsSavingProcessor.class),
                 injector.getInstance(StateTransferringProcessor.class),
                 injector.getInstance(StatusFinalizingProcessor.class));
     }

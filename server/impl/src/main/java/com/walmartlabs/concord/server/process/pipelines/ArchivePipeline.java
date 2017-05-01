@@ -12,7 +12,7 @@ import javax.inject.Named;
 
 /**
  * Processing self-contained archives.
- *
+ * <p>
  * Runs a process using an archive, provided by an user.
  */
 @Named
@@ -39,7 +39,6 @@ public class ArchivePipeline extends Chain {
                 injector.getInstance(ValidatingProcessor.class),
                 injector.getInstance(ArchivingProcessor.class),
                 injector.getInstance(AgentProcessor.class),
-//                injector.getInstance(AttachmentsSavingProcessor.class),
                 injector.getInstance(StateTransferringProcessor.class),
                 injector.getInstance(StatusFinalizingProcessor.class));
     }
