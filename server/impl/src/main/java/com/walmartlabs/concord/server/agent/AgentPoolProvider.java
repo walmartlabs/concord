@@ -8,7 +8,8 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.net.URI;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 @Named
 @Singleton
@@ -26,8 +27,12 @@ public class AgentPoolProvider implements Provider<AgentPool> {
         // TODO support for multiple agents
         URI uri = cfg.getUri();
 
-        // a hacky way to allow up to two simultaneous connections
-        // TODO this should be replaced with "sticky" agents
-        return new AgentPool(Arrays.asList(uri, uri));
+        // a hacky way to allow multiple simultaneous connections
+        List<URI> l = new ArrayList<>(cfg.getMaxConn());
+        for (int i = 0; i < cfg.getMaxConn(); i++) {
+            l.add(uri);
+        }
+
+        return new AgentPool(l);
     }
 }
