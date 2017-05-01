@@ -20,7 +20,7 @@ platforms:
         ostype: "centos-7.3"
         repo_list: '["yum-config-manager --add-repo http://repos.walmart.com/mirrored-assets/postgressql/9.6/rhel7/ ; echo gpgcheck=0 >> /etc/yum.repos.d/repos.walmart.com_mirrored-assets_postgressql_9.6_rhel7_.repo"]'
       compute:
-        size: 'M'
+        size: 'XL'
       database:
         dbname: 'concord'
         username: 'sa'
@@ -39,12 +39,18 @@ platforms:
           "5432 5432 tcp 0.0.0.0/0"
         ]'
       user:
-        user-app:
+        user-jpise:
           system_account: true
           sudoer: true
-          username: 'app'
-          description: "Application user"
+          username: 'jpise'
+          description: 'Jayesh Pise'
           authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFo5HbpjfqZOg1DgVavWO1JwTZPsC4iLfk6Mxuh3GYqEIULzBxdYUzqAnMbFegGWODxmFNkIRMMcQcy56U1mf57gkmiPoeFLgpUeKrlBaX6i8PNnxvh0Gne2DXx5aPoYOV5ueLQMwB0D3KKeSXgvKf1eow82MDOFDv4inDvFoHLKDUen2IMX9xFqOX+CtGBAHstfbwiGTekOSut+NhaHQiALcHt1kNq5p4NoQSiDHQTIK+Zq4kE9UlQp3R5YvInBy0+lXoUykIUjI45LoYk6WzqryXuWZQDGSCK0vYODvRXWg6hIlWfcn1T7Z4u4AOwDd8cERGZqeiDVBsG7XZuW1/ jpise@walmartlabs.com"]'
+        user-ibodrov:
+          system_account: true
+          sudoer: true
+          username: 'ibodrov'
+          description: 'Ivan Bodrov'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxh2tqHfJnd+jzGkOJ+M6z+y7RNdMrFHpoAa4JcYvgaETeJgxYIhorkL+x0Vz00YoJyy2wGDS2S2NSzjXEV9bnu60pyRDrJbI4gBbmof8fDal/HmgvWcN2axyR/zUnn6BIuwKwEYOygKW11FezmYsfdXueIXgSfFn9sGfd3b+R2ygn5PieVa7KKgR8/djXfsjiM1fA55Z1ZtVig+YqqaVijUkdjKOW2LNhbXBGcD5ocWknmLUXXb2i7Ng/rersd8nD4uSZUCq8pSeZeeQdtr56FNcjh7XyvdTdo83wNCsFPJZMbOQxQVcSl/QP9QdGKFUDAt/Ljrq3svPpHdkDXXEt ibodrov@walmartlabs.com"]'
       fqdn:
          aliases: ["concorddb"]
           
@@ -56,28 +62,41 @@ platforms:
       docker-root: '{{dockerRoot}}'
       data-volume: '{{dataVolume}}'
     components:
-      file:
-        docker-script:
-                content: |
-                        docker pull docker.prod.walmart.com/walmartlabs/concord-agent
-                        docker rm -f agent
-                        docker run -d -p 8002:8002 -v /tmp:/tmp --name agent docker.prod.walmart.com/walmartlabs/concord-agent
+      compute:
+        size: 'L'
+      docker_engine:
+        attachments:
+          docker-script:
                 path: '{{dataVolume}}/docker-script.sh'
+                run_on: 'after-add,after-update,after-replace,on-demand'
+                priority: 1
                 exec_cmd: 'sudo chmod 755 /data/docker-script.sh; sudo /data/docker-script.sh'
+                content: |
+                  docker pull docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
 
+                  docker rm -f agent
+
+                  docker run -d -p 8002:8002 \
+                  -v /tmp:/tmp --name agent \
+                  docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
+          
       user:
-        user-app:
+        user-jpise:
           system_account: true
           sudoer: true
-          username: 'app'
-          description: "Application user"
+          username: 'jpise'
+          description: 'Jayesh Pise'
           authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFo5HbpjfqZOg1DgVavWO1JwTZPsC4iLfk6Mxuh3GYqEIULzBxdYUzqAnMbFegGWODxmFNkIRMMcQcy56U1mf57gkmiPoeFLgpUeKrlBaX6i8PNnxvh0Gne2DXx5aPoYOV5ueLQMwB0D3KKeSXgvKf1eow82MDOFDv4inDvFoHLKDUen2IMX9xFqOX+CtGBAHstfbwiGTekOSut+NhaHQiALcHt1kNq5p4NoQSiDHQTIK+Zq4kE9UlQp3R5YvInBy0+lXoUykIUjI45LoYk6WzqryXuWZQDGSCK0vYODvRXWg6hIlWfcn1T7Z4u4AOwDd8cERGZqeiDVBsG7XZuW1/ jpise@walmartlabs.com"]'
+        user-ibodrov:
+          system_account: true
+          sudoer: true
+          username: 'ibodrov'
+          description: 'Ivan Bodrov'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxh2tqHfJnd+jzGkOJ+M6z+y7RNdMrFHpoAa4JcYvgaETeJgxYIhorkL+x0Vz00YoJyy2wGDS2S2NSzjXEV9bnu60pyRDrJbI4gBbmof8fDal/HmgvWcN2axyR/zUnn6BIuwKwEYOygKW11FezmYsfdXueIXgSfFn9sGfd3b+R2ygn5PieVa7KKgR8/djXfsjiM1fA55Z1ZtVig+YqqaVijUkdjKOW2LNhbXBGcD5ocWknmLUXXb2i7Ng/rersd8nD4uSZUCq8pSeZeeQdtr56FNcjh7XyvdTdo83wNCsFPJZMbOQxQVcSl/QP9QdGKFUDAt/Ljrq3svPpHdkDXXEt ibodrov@walmartlabs.com"]'
 
       secgroup:
         inbound: '[
           "22 22 tcp 0.0.0.0/0",
-          "8080 8080 tcp 0.0.0.0/0",
-          "8081 8081 tcp 0.0.0.0/0",
           "8002 8002 tcp 0.0.0.0/0"
         ]'
 
@@ -89,61 +108,56 @@ platforms:
       docker-root: '{{dockerRoot}}'
       data-volume: '{{dataVolume}}'
     components:
+      compute:
+        size: 'L'
+      docker_engine:
+        attachments:
+          docker-script:
+                path: '{{dataVolume}}/docker-script.sh'
+                run_on: 'after-add,after-update,after-replace,on-demand'
+                priority: 1
+                exec_cmd: 'sudo chmod 755 /data/docker-script.sh; sudo /data/docker-script.sh'
+                content: |
+                  docker pull docker.prod.walmart.com/walmartlabs/concord-server:{{concordVersion}}
+                  docker pull docker.prod.walmart.com/walmartlabs/concord-console:{{concordVersion}}
+
+                  docker rm -f server console
+
+                  docker run -d -p 8001:8001 \
+                  --name server \
+                  -v /data:/opt/concord/data \
+                  -v /tmp:/tmp \
+                  -e 'AGENT_URL=http://agent:8002' \
+                  -e 'DB_URL=jdbc:postgresql://db:5432/concord' \
+                  -e 'DB_DIALECT=POSTGRES' \
+                  -e 'DB_DRIVER=org.postgresql.Driver' \
+                  -e 'DB_USERNAME=sa' \
+                  -e 'DB_PASSWORD=c0nc0rdDb' \
+                  -e 'LDAP_CFG=/opt/concord/data/conf/ldap.properties' \
+                  -e 'LOG_STORE_DIR=/opt/concord/data/logs' \
+                  docker.prod.walmart.com/walmartlabs/concord-server:{{concordVersion}}
+
+                  docker run -d -p 8080:8080 \
+                  --name console \
+                  -v /data/concord/console/landing:/data/console/landing:ro \
+                  --link server \
+                  docker.prod.walmart.com/walmartlabs/concord-console:{{concordVersion}}
+
       file:
          ldap-conf:
                 content: |
                         url=ldap://honts0102.homeoffice.wal-mart.com:389
                         searchBase=DC=homeoffice,DC=Wal-Mart,DC=com
                         principalSuffix=@homeoffice.wal-mart.com
-                        systemUsername='{{ldapUserName}}' #gec-svcmaven
-                        systemPassword='{{ldapPassword}}' #Maven123
+                        principalSearchFilter=(&(objectCategory=Person)(sAMAccountName={0}))
+                        systemUsername={{ldapUserName}}
+                        systemPassword={{ldapPassword}}
+                        exposeAttributes=company,mail
                 path: '{{dataVolume}}/conf/ldap.properties'
              
-         docker-script:
-                content: |
-
-                        docker pull docker.prod.walmart.com/walmartlabs/concord-server
-                        docker pull docker.prod.walmart.com/walmartlabs/concord-console
-
-                        docker rm -f server console
-
-                        docker run -d -p 8001:8001 \
-                        --name server \
-                        -v /mnt/concord:/data \
-                        -v /tmp:/tmp \
-                        docker pull docker.prod.walmart.com/walmartlabs/concord-server
-                        docker pull docker.prod.walmart.com/walmartlabs/concord-console
-
-                        docker rm -f server console
-
-                        docker run -d -p 8001:8001 \
-                        --name server \
-                        -v /data:/opt/concord/data \
-                        -v /tmp:/tmp \
-                        -e 'AGENT_URL=http://agent:8002' \
-                        -e 'DB_URL=jdbc:postgresql://db:5432/concord' \
-                        -e 'DB_DIALECT=POSTGRES' \
-                        -e 'DB_DRIVER=org.postgresql.Driver' \
-                        -e 'DB_USERNAME=sa' \
-                        -e 'DB_PASSWORD=c0nc0rdDb' \
-                        -e 'LDAP_CFG=/opt/concord/data/conf/ldap.properties' \
-                        -e 'LOG_STORE_DIR=/opt/concord/data/logs' \
-                        -e 'ATTACHMENT_STORE_DIR=/opt/concord/data/attachments' \
-                        docker.prod.walmart.com/walmartlabs/concord-server
-
-                        docker run -d -p 8080:8080 \
-                        --name console \
-                        -v /data/concord/console/landing:/data/console/landing:ro \
-                        --link server \
-                        docker.prod.walmart.com/walmartlabs/concord-console
-
-
-                path: '/data/docker-script.sh'
-                exec_cmd: 'sudo chmod 755 /data/docker-script.sh; sudo /data/docker-script.sh'
-      
       storage:
         storage:
-          size: "20G"
+          size: "80G"
           volume_type: "STANDARD1"
 
       volume:
@@ -151,12 +165,18 @@ platforms:
           size: "20%FREE"
                   
       user:
-        user-app:
+        user-jpise:
           system_account: true
           sudoer: true
-          username: 'app'
-          description: "Application user"
+          username: 'jpise'
+          description: 'Jayesh Pise'
           authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFo5HbpjfqZOg1DgVavWO1JwTZPsC4iLfk6Mxuh3GYqEIULzBxdYUzqAnMbFegGWODxmFNkIRMMcQcy56U1mf57gkmiPoeFLgpUeKrlBaX6i8PNnxvh0Gne2DXx5aPoYOV5ueLQMwB0D3KKeSXgvKf1eow82MDOFDv4inDvFoHLKDUen2IMX9xFqOX+CtGBAHstfbwiGTekOSut+NhaHQiALcHt1kNq5p4NoQSiDHQTIK+Zq4kE9UlQp3R5YvInBy0+lXoUykIUjI45LoYk6WzqryXuWZQDGSCK0vYODvRXWg6hIlWfcn1T7Z4u4AOwDd8cERGZqeiDVBsG7XZuW1/ jpise@walmartlabs.com"]'
+        user-ibodrov:
+          system_account: true
+          sudoer: true
+          username: 'ibodrov'
+          description: 'Ivan Bodrov'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxh2tqHfJnd+jzGkOJ+M6z+y7RNdMrFHpoAa4JcYvgaETeJgxYIhorkL+x0Vz00YoJyy2wGDS2S2NSzjXEV9bnu60pyRDrJbI4gBbmof8fDal/HmgvWcN2axyR/zUnn6BIuwKwEYOygKW11FezmYsfdXueIXgSfFn9sGfd3b+R2ygn5PieVa7KKgR8/djXfsjiM1fA55Z1ZtVig+YqqaVijUkdjKOW2LNhbXBGcD5ocWknmLUXXb2i7Ng/rersd8nD4uSZUCq8pSeZeeQdtr56FNcjh7XyvdTdo83wNCsFPJZMbOQxQVcSl/QP9QdGKFUDAt/Ljrq3svPpHdkDXXEt ibodrov@walmartlabs.com"]'
       secgroup:
         inbound: '[
           "22 22 tcp 0.0.0.0/0",
@@ -164,23 +184,10 @@ platforms:
           "8081 8081 tcp 0.0.0.0/0",
           "8001 8001 tcp 0.0.0.0/0"
         ]'
-#scale:
-#  server:
-#    scaling:
-#      compute:
-#        min: '1'
-#        max: '1'
-#        current: '1'
-#  agent:
-#    scaling:
-#      compute:
-#        min: '1'
-#        max: '1'
-#        current: '1'
 
 environment:
   global_dns: true
-  subdomain: '{{environmentName}}.{{assemblyName}}.{{organization}}' # environment_name.assembly_name
+  subdomain: '{{environmentName}}.{{assemblyName}}.{{organization}}'
   availability: Reduandant 
   profile: 'PROD'
   debug: false
@@ -195,11 +202,11 @@ environment:
     agent:
       availability: Single
   clouds:
-    qa-dfw1:
+    prod-cdc6:
       priority: '1'
       dpmt_order: '1'
       pct_scale: '100'
-    stg-dal2:
+    prod-cdc7:
       priority: '2'
       adminstatus: 'offline'
       dpmt_order: '1'
