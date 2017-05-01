@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.common.db;
 
+import com.zaxxer.hikari.HikariDataSource;
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -7,7 +8,6 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.logging.LogFactory;
 import liquibase.logging.LogLevel;
 import liquibase.resource.ClassLoaderResourceAccessor;
-import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +22,8 @@ import java.util.Set;
 public class DataSourceProvider implements Provider<DataSource> {
 
     private static final Logger log = LoggerFactory.getLogger(DataSourceProvider.class);
+    private static final int MIGRATION_MAX_RETRIES = 10;
+    private static final int MIGRATION_RETRY_DELAY = 10000;
 
     private final DatabaseConfiguration cfg;
     private final Set<DatabaseChangeLogProvider> changeLogs;
@@ -36,27 +38,39 @@ public class DataSourceProvider implements Provider<DataSource> {
     public DataSource get() {
         log.info("get -> creating a new datasource...");
 
-        PoolProperties props = new PoolProperties();
-        props.setUrl(cfg.getUrl());
-        props.setDriverClassName(cfg.getDriverClassName());
-        props.setUsername(cfg.getUsername());
-        props.setPassword(cfg.getPassword());
-        props.setDefaultAutoCommit(false);
-        props.setRollbackOnReturn(true);
-        props.setMinIdle(1);
-        props.setMaxIdle(5);
-        props.setMaxActive(10);
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl(cfg.getUrl());
+        ds.setDriverClassName(cfg.getDriverClassName());
+        ds.setUsername(cfg.getUsername());
+        ds.setPassword(cfg.getPassword());
 
-        org.apache.tomcat.jdbc.pool.DataSource ds = new org.apache.tomcat.jdbc.pool.DataSource();
-        ds.setPoolProperties(props);
+        ds.setAutoCommit(false);
+
+        ds.setMinimumIdle(1);
+        ds.setMaximumPoolSize(10);
 
         for (DatabaseChangeLogProvider p : changeLogs) {
-            try (Connection c = ds.getConnection()) {
-                log.info("get -> performing DB migration using '{}' change log...", p);
-                migrateDb(c, p.getChangeLogPath(), p.getChangeLogTable(), p.getLockTable());
-                log.info("get -> '{}' done", p);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            int retries = MIGRATION_MAX_RETRIES;
+
+            for (int i = 0; i < retries; i++) {
+                try (Connection c = ds.getConnection()) {
+                    log.info("get -> performing DB migration using '{}' change log...", p);
+                    migrateDb(c, p.getChangeLogPath(), p.getChangeLogTable(), p.getLockTable());
+                    log.info("get -> '{}' done", p);
+                    break;
+                } catch (Exception e) {
+                    if (i + 1 >= retries) {
+                        log.error("get -> db migration error, giving up", e);
+                        throw new RuntimeException(e);
+                    }
+
+                    log.warn("get -> db migration error, retrying in {}ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
+                    try {
+                        Thread.sleep(MIGRATION_RETRY_DELAY);
+                    } catch (InterruptedException ee) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
             }
         }
 
