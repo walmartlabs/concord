@@ -64,22 +64,22 @@ platforms:
     components:
       compute:
         size: 'L'
+
       docker_engine:
         attachments:
           docker-script:
-                path: '{{dataVolume}}/docker-script.sh'
-                run_on: 'after-add,after-update,after-replace,on-demand'
-                priority: 1
-                exec_cmd: 'sudo chmod 755 /data/docker-script.sh; sudo /data/docker-script.sh'
-                content: |
-                  docker pull docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
+            path: '{{dataVolume}}/docker-script.sh'
+            run_on: 'after-add,after-update,after-replace,on-demand'
+            priority: 1
+            exec_cmd: 'sudo chmod 755 /data/docker-script.sh; sudo /data/docker-script.sh'
+            content: |
+              docker pull docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
 
-                  docker rm -f agent
+              docker rm -f agent
 
-                  docker run -d -p 8002:8002 \
-                  -v /tmp:/tmp --name agent \
-                  docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
-          
+              docker run -d -p 8002:8002 \
+              -v {{dataVolume}}/tmp:/tmp --name agent \
+              docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
       user:
         user-jpise:
           system_account: true
@@ -110,6 +110,7 @@ platforms:
     components:
       compute:
         size: 'L'
+
       docker_engine:
         attachments:
           docker-script:
@@ -125,8 +126,8 @@ platforms:
 
                   docker run -d -p 8001:8001 \
                   --name server \
-                  -v /data:/opt/concord/data \
-                  -v /tmp:/tmp \
+                  -v {{dataVolume}}/data:/opt/concord/data \
+                  -v {{dataVolume}}/tmp:/tmp \
                   -e 'AGENT_URL=http://agent:8002' \
                   -e 'DB_URL=jdbc:postgresql://db:5432/concord' \
                   -e 'DB_DIALECT=POSTGRES' \
@@ -135,24 +136,26 @@ platforms:
                   -e 'DB_PASSWORD=c0nc0rdDb' \
                   -e 'LDAP_CFG=/opt/concord/data/conf/ldap.properties' \
                   -e 'LOG_STORE_DIR=/opt/concord/data/logs' \
+                  -e 'FORM_SERVER_DIR=/opt/concord/data/formserv' \
+                  -e 'PAYLOAD_DIR=/opt/concord/data/payload' \
                   docker.prod.walmart.com/walmartlabs/concord-server:{{concordVersion}}
 
                   docker run -d -p 8080:8080 \
                   --name console \
-                  -v /data/concord/console/landing:/data/console/landing:ro \
+                  -v {{dataVolume}}/data/console/landing:/opt/concord/console/landing:ro \
                   --link server \
                   docker.prod.walmart.com/walmartlabs/concord-console:{{concordVersion}}
 
       file:
          ldap-conf:
                 content: |
-                        url=ldap://honts0102.homeoffice.wal-mart.com:389
-                        searchBase=DC=homeoffice,DC=Wal-Mart,DC=com
-                        principalSuffix=@homeoffice.wal-mart.com
-                        principalSearchFilter=(&(objectCategory=Person)(sAMAccountName={0}))
-                        systemUsername={{ldapUserName}}
-                        systemPassword={{ldapPassword}}
-                        exposeAttributes=company,mail
+                  url=ldap://honts0102.homeoffice.wal-mart.com:389
+                  searchBase=DC=homeoffice,DC=Wal-Mart,DC=com
+                  principalSuffix=@homeoffice.wal-mart.com
+                  principalSearchFilter=(&(objectCategory=Person)(sAMAccountName={0}))
+                  systemUsername={{ldapUserName}}
+                  systemPassword={{ldapPassword}}
+                  exposeAttributes=company,mail
                 path: '{{dataVolume}}/conf/ldap.properties'
              
       storage:
