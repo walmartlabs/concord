@@ -70,10 +70,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @RequiresAuthentication
     public FormSessionResponse startSession(String processInstanceId, String formInstanceId) {
         // TODO locking
-        Form form = formService.get(processInstanceId, formInstanceId);
-        if (form == null) {
-            throw new WebApplicationException("Form not found: " + formInstanceId, Status.BAD_REQUEST);
-        }
+        Form form = assertForm(processInstanceId, formInstanceId);
 
         Path src = getBranding(form);
         if (src == null) {
@@ -96,7 +93,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
             IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
             // create JS file containing the form's data
-            FormData d = prepareData(processInstanceId, formInstanceId, null, null);
+            FormData d = prepareData(form, null, null);
             writeData(dst, d);
         } catch (IOException e) {
             log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}",
@@ -132,7 +129,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                     if (yield) {
                         // this was the last "interactive" form. The process will continue in "background"
                         // and users should get a success page.
-                        writeData(dst, new FormData(true));
+                        writeData(dst, success());
                     } else {
                         while (true) {
                             ProcessHistoryEntry entry = historyDao.get(processInstanceId);
@@ -141,18 +138,17 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                             if (s == ProcessStatus.SUSPENDED) {
                                 String nextFormId = formService.nextFormId(processInstanceId);
                                 if (nextFormId == null) {
-                                    writeData(dst, new FormData(true));
+                                    writeData(dst, success());
                                     break;
                                 } else {
                                     FormSessionResponse nextSession = startSession(processInstanceId, nextFormId);
                                     return redirectTo(nextSession.getUri());
                                 }
                             } else if (s == ProcessStatus.FAILED) {
-                                ValidationError err = new ValidationError("ERROR", "Process has failed");
-                                writeData(dst, prepareData(processInstanceId, formInstanceId, m, Collections.singletonList(err)));
+                                writeData(dst, processFailed());
                                 break;
                             } else if (s == ProcessStatus.FINISHED) {
-                                writeData(dst, new FormData(true));
+                                writeData(dst, success());
                                 break;
                             }
 
@@ -164,11 +160,11 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                         }
                     }
                 } else {
-                    writeData(dst, prepareData(processInstanceId, formInstanceId, m, r.getErrors()));
+                    writeData(dst, prepareData(form, m, r.getErrors()));
                 }
             } catch (ValidationException e) {
                 ValidationError err = new ValidationError(e.field.getName(), e.message);
-                FormData d = prepareData(processInstanceId, formInstanceId, m, Collections.singletonList(err));
+                FormData d = prepareData(form, m, Collections.singletonList(err));
                 writeData(dst, d);
             }
         } catch (IOException | ExecutionException e) {
@@ -181,6 +177,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     private Form assertForm(String processInstanceId, String formInstanceId) {
         Form form = formService.get(processInstanceId, formInstanceId);
         if (form == null) {
+            log.warn("assertForm ['{}', '{}'] -> not found", processInstanceId, formInstanceId);
             throw new WebApplicationException("Form not found", Status.NOT_FOUND);
         }
         return form;
@@ -202,17 +199,15 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     }
 
     @SuppressWarnings("unchecked")
-    private FormData prepareData(String processInstanceId, String formInstanceId, Map<String, Object> overrides, List<ValidationError> errors) {
+    private FormData prepareData(Form form, Map<String, Object> overrides, List<ValidationError> errors) {
         // TODO constants
+        String processInstanceId = form.getProcessBusinessKey();
+        String formInstanceId = form.getFormInstanceId().toString();
+
         String submitUrl = "/api/service/custom_form/" + processInstanceId + "/" + formInstanceId + "/continue";
         Map<String, FormDataDefinition> _definitions = new HashMap<>();
         Map<String, Object> _values = new HashMap<>();
         Map<String, String> _errors = new HashMap<>();
-
-        Form form = formService.get(processInstanceId, formInstanceId);
-        if (form == null) {
-            throw new WebApplicationException("Form not found", Status.NOT_FOUND);
-        }
 
         FormDefinition fd = form.getFormDefinition();
 
@@ -262,7 +257,15 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return String.format(FORMS_PATH_PATTERN, processInstanceId, formInstanceId);
     }
 
-    private void writeData(Path baseDir, FormData data) throws IOException {
+    private static Map<String, Object> success() {
+        return Collections.singletonMap("success", true);
+    }
+
+    private static Map<String, Object> processFailed() {
+        return Collections.singletonMap("processFailed", true);
+    }
+
+    private void writeData(Path baseDir, Object data) throws IOException {
         Path dst = baseDir.resolve("data.js");
         String s = String.format(DATA_FILE_TEMPLATE, objectMapper.writeValueAsString(data));
         Files.write(dst, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
@@ -379,22 +382,12 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     private static class FormData implements Serializable {
 
         private final String submitUrl;
-        private final boolean success;
         private final Map<String, FormDataDefinition> definitions;
         private final Map<String, Object> values;
         private final Map<String, String> errors;
 
         public FormData(String submitUrl, Map<String, FormDataDefinition> definitions, Map<String, Object> values, Map<String, String> errors) {
-            this(submitUrl, false, definitions, values, errors);
-        }
-
-        private FormData(boolean success) {
-            this(null, success, null, null, null);
-        }
-
-        public FormData(String submitUrl, boolean success, Map<String, FormDataDefinition> definitions, Map<String, Object> values, Map<String, String> errors) {
             this.submitUrl = submitUrl;
-            this.success = success;
             this.definitions = definitions;
             this.values = values;
             this.errors = errors;
@@ -402,10 +395,6 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
         public String getSubmitUrl() {
             return submitUrl;
-        }
-
-        public boolean isSuccess() {
-            return success;
         }
 
         public Map<String, FormDataDefinition> getDefinitions() {

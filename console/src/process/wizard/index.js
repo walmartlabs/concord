@@ -1,7 +1,6 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
-import {Container, Loader} from "semantic-ui-react";
-import {Link} from "react-router";
+import {Loader} from "semantic-ui-react";
 import ErrorMessage from "../../shared/ErrorMessage";
 import * as actions from "./actions";
 import * as selectors from "./reducers";
@@ -16,18 +15,12 @@ class ProcessWizard extends Component {
     }
 
     render() {
-        const {error, instanceId} = this.props;
+        const {error} = this.props;
         if (error) {
             return <ErrorMessage message={error}/>;
         }
         return <div>
-            <Container textAlign="center">
-                Please wait until the current process completes or <Link to={`/process/${instanceId}`}>click
-                here</Link> to check the status.
-            </Container>
-            <div>
-                <Loader active/>
-            </div>
+            <Loader active/>
         </div>;
     }
 }
