@@ -6,6 +6,10 @@
 
 - concord-agent: simple caching mechanism for dependencies.
 
+### Changed
+
+- boo-task: bug fixes.
+
 
 
 ## [0.8.0] - 2017-05-01
