@@ -43,6 +43,7 @@ public class ProcessExecutorImpl {
         } catch (Exception e) {
             log.error("run ['{}'] -> process error", instanceId, e);
             callback.onStatusChange(instanceId, ProcessStatus.FAILED);
+            log(logFile, "Failed: %s", e.getMessage());
             throw e;
         }
     }
