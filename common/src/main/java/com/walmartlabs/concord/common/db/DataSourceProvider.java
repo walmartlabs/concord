@@ -45,6 +45,7 @@ public class DataSourceProvider implements Provider<DataSource> {
         ds.setPassword(cfg.getPassword());
 
         ds.setAutoCommit(false);
+        ds.setMaxLifetime(Long.MAX_VALUE);
 
         ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(10);
