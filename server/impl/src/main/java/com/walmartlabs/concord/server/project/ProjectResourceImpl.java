@@ -74,24 +74,31 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             UpdateProjectRequest req = new UpdateProjectRequest(request.getTemplates(), request.getRepositories(), request.getCfg());
             update(projectName, req);
             return new CreateProjectResponse(false);
-        } else {
-            assertPermissions(projectName, Permissions.PROJECT_CREATE_NEW,
-                    "The current user does not have permissions to create a new project");
-
-            tx(tx -> {
-                projectDao.insert(tx, projectName, request.getTemplates());
-
-                Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
-                if (repos != null) {
-                    insert(tx, projectName, repos);
-                }
-
-                if (cfg != null) {
-                    configurationDao.insert(tx, projectName, cfg);
-                }
-            });
-            return new CreateProjectResponse(true);
         }
+
+        assertPermissions(projectName, Permissions.PROJECT_CREATE_NEW,
+                "The current user does not have permissions to create a new project");
+
+        Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
+        if (repos != null) {
+            for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
+                String secret = r.getValue().getSecret();
+                assertSecret(secret);
+            }
+        }
+
+        tx(tx -> {
+            projectDao.insert(tx, projectName, request.getTemplates());
+
+            if (repos != null) {
+                insert(tx, projectName, repos);
+            }
+
+            if (cfg != null) {
+                configurationDao.insert(tx, projectName, cfg);
+            }
+        });
+        return new CreateProjectResponse(true);
     }
 
     @Override
@@ -179,10 +186,17 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         Map<String, Object> cfg = request.getCfg();
         validateCfg(cfg);
 
+        Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
+        if (repos != null) {
+            for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
+                String secret = r.getValue().getSecret();
+                assertSecret(secret);
+            }
+        }
+
         tx(tx -> {
             projectDao.update(tx, projectName, request.getTemplates());
 
-            Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectName);
                 insert(tx, projectName, repos);
