@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Properties;
 
 @Named
 @Singleton
@@ -18,6 +19,7 @@ public class ConfigurationProvider implements Provider<Configuration> {
     public static final String PAYLOAD_DIR_KEY = "AGENT_PAYLOAD_DIR";
     public static final String JAVA_CMD_KEY = "AGENT_JAVA_CMD";
     public static final String DEPENDENCY_CACHE_DIR_KEY = "DEPS_CACHE_DIR";
+    public static final String RUNNER_PATH = "RUNNER_PATH";
 
     @Override
     public Configuration get() {
@@ -26,7 +28,15 @@ public class ConfigurationProvider implements Provider<Configuration> {
             Path payloadDir = getDir(PAYLOAD_DIR_KEY, "payloadDir");
             String agentJavaCmd = getEnv(JAVA_CMD_KEY, "java");
             Path dependencyCacheDir = getDir(DEPENDENCY_CACHE_DIR_KEY, "depsCacheDir");
-            return new Configuration(logDir, payloadDir, agentJavaCmd, dependencyCacheDir);
+
+            String s = System.getenv(RUNNER_PATH);
+            if (s == null) {
+                Properties props = new Properties();
+                props.load(ConfigurationProvider.class.getResourceAsStream("runner.properties"));
+                s = props.getProperty("runner.path");
+            }
+
+            return new Configuration(logDir, payloadDir, agentJavaCmd, dependencyCacheDir, Paths.get(s));
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

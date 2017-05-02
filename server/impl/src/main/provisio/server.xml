@@ -16,9 +16,4 @@
 
     <artifactSet to="/lib" ref="runtime.classpath"/>
 
-    <artifactSet to="/runner">
-        <artifact id="com.walmartlabs.concord:concord-runner:jar:jar-with-dependencies:${project.version}">
-            <exclusion id="*:*"/>
-        </artifact>
-    </artifactSet>
 </runtime>

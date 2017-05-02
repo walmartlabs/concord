@@ -55,6 +55,7 @@ public class ExecutionManager {
     @Inject
     public ExecutionManager(@Named("executionPool") ExecutorService executor,
                             JarJobExecutor jarJobExecutor,
+                            RunnerJobExecutor runnerJobExecutor,
                             LogManager logManager,
                             Configuration cfg, DependencyManager dependencyManager) {
 
@@ -66,6 +67,7 @@ public class ExecutionManager {
         this.jobExecutors = new HashMap<>();
 
         jobExecutors.put(JobType.JAR, jarJobExecutor);
+        jobExecutors.put(JobType.RUNNER, runnerJobExecutor);
         jobExecutors.put(JobType.JUNIT_GROOVY, new JunitGroovyJobExecutor());
     }
 

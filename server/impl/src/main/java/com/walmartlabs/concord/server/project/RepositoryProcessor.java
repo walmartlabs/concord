@@ -9,6 +9,8 @@ import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.security.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -22,6 +24,8 @@ import java.util.Arrays;
  */
 @Named
 public class RepositoryProcessor implements PayloadProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(RepositoryProcessor.class);
 
     /**
      * Repository effective parameters.
@@ -77,6 +81,7 @@ public class RepositoryProcessor implements PayloadProcessor {
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
             IOUtils.copy(src, dst);
         } catch (IOException | RepositoryException e) {
+            log.error("process ['{}'] -> repository error", payload.getInstanceId(), e);
             throw new ProcessException("Error while pulling a repository: " + repo.getUrl(), e);
         }
 

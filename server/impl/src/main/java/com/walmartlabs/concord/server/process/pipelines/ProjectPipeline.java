@@ -35,7 +35,6 @@ public class ProjectPipeline extends Chain {
                 injector.getInstance(DependenciesProcessor.class),
                 injector.getInstance(UserInfoProcessor.class),
                 injector.getInstance(RequestDataStoringProcessor.class),
-                injector.getInstance(RunnerProcessor.class),
                 injector.getInstance(LogFileProcessor.class),
                 injector.getInstance(ValidatingProcessor.class),
                 injector.getInstance(ArchivingProcessor.class),

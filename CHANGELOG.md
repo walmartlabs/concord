@@ -12,7 +12,9 @@
 a project with non-existing secret;
 - concord-server, concord-agent: fixed logging configuration conflicts;
 - concord-console: reduce wizard polling interval, "time to first form"
-improved.
+improved;
+- runner.jar moved from the server to the agent, futher reducing the
+process statup time.
 
 
 

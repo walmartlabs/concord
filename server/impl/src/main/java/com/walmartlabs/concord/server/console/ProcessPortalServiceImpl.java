@@ -3,6 +3,8 @@ package com.walmartlabs.concord.server.console;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import io.takari.bpm.api.ExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
@@ -18,6 +20,9 @@ import static javax.ws.rs.core.Response.Status;
 
 @Named
 public class ProcessPortalServiceImpl implements ProcessPortalService, Resource {
+
+    private static final Logger log = LoggerFactory.getLogger(ProcessPortalServiceImpl.class);
+    private static final long STATUS_REFRESH_DELAY = 250;
 
     private final ProcessResource processResource;
     private final ConcordFormService formService;
@@ -54,7 +59,8 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
             }
 
             try {
-                Thread.sleep(100);
+                // TODO exp back off?
+                Thread.sleep(STATUS_REFRESH_DELAY);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

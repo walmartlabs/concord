@@ -27,7 +27,6 @@ public class ProcessExecutorImpl {
      * Minimal period of time (in ms) between updating the status of a process on the server.
      */
     private static final long PROCESS_UPDATE_PERIOD = 5000;
-    private static final int LOG_BUFFER_SIZE = 256;
 
     private final AgentPool agentPool;
 
@@ -36,10 +35,9 @@ public class ProcessExecutorImpl {
         this.agentPool = agentPool;
     }
 
-    public void run(String instanceId, Path archive, String entryPoint, Path logFile, ProcessExecutorCallback callback) {
-
+    public void run(String instanceId, Path archive, Path logFile, ProcessExecutorCallback callback) {
         try {
-            _run(instanceId, archive, entryPoint, logFile, callback);
+            _run(instanceId, archive, logFile, callback);
         } catch (Exception e) {
             log.error("run ['{}'] -> process error", instanceId, e);
             callback.onStatusChange(instanceId, ProcessStatus.FAILED);
@@ -48,7 +46,7 @@ public class ProcessExecutorImpl {
         }
     }
 
-    private void _run(String instanceId, Path archive, String entryPoint, Path logFile, ProcessExecutorCallback callback) {
+    private void _run(String instanceId, Path archive, Path logFile, ProcessExecutorCallback callback) {
         log.info("run ['{}'] -> starting (log file: {})...", instanceId, logFile);
         log(logFile, "Starting %s...", instanceId);
 
@@ -57,7 +55,7 @@ public class ProcessExecutorImpl {
             callback.onStatusChange(instanceId, ProcessStatus.RUNNING);
 
             try (InputStream in = new BufferedInputStream(Files.newInputStream(archive))) {
-                a.start(instanceId, JobType.JAR, entryPoint, in);
+                a.start(instanceId, JobType.RUNNER, "n/a", in);
 
                 log.debug("run ['{}'] -> started", instanceId);
             } catch (Exception e) {

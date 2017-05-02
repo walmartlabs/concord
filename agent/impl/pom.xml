@@ -15,6 +15,9 @@
 
     <properties>
         <main-class>com.walmartlabs.concord.agent.Main</main-class>
+        <runner.path>
+            ${project.basedir}/../../runner/target/concord-runner-${project.version}-jar-with-dependencies.jar
+        </runner.path>
     </properties>
 
     <dependencies>
@@ -112,6 +115,23 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <filtering>false</filtering>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>${project.basedir}/src/main/filtered-resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>

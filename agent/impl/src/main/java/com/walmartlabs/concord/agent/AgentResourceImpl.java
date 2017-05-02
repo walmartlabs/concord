@@ -112,7 +112,7 @@ public class AgentResourceImpl implements AgentResource, Resource {
 
                         // job is still running, wait for more data
                         try {
-                            Thread.sleep(1000);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                             break;

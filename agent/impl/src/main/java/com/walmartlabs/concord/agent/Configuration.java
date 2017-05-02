@@ -9,12 +9,14 @@ public class Configuration implements Serializable {
     private final Path payloadDir;
     private final String agentJavaCmd;
     private final Path dependencyCacheDir;
+    private final Path runnerPath;
 
-    public Configuration(Path logDir, Path payloadDir, String agentJavaCmd, Path dependencyCacheDir) {
+    public Configuration(Path logDir, Path payloadDir, String agentJavaCmd, Path dependencyCacheDir, Path runnerPath) {
         this.logDir = logDir;
         this.payloadDir = payloadDir;
         this.agentJavaCmd = agentJavaCmd;
         this.dependencyCacheDir = dependencyCacheDir;
+        this.runnerPath = runnerPath;
     }
 
     public Path getLogDir() {
@@ -31,5 +33,9 @@ public class Configuration implements Serializable {
 
     public Path getDependencyCacheDir() {
         return dependencyCacheDir;
+    }
+
+    public Path getRunnerPath() {
+        return runnerPath;
     }
 }

@@ -48,7 +48,6 @@ public class AgentProcessor implements PayloadProcessor {
             ProcessExecutorCallback callback = new HistoryCallback(historyDao);
             executor.run(payload.getInstanceId(),
                     payload.getHeader(ArchivingProcessor.ARCHIVE_FILE),
-                    payload.getHeader(RunnerProcessor.ENTRY_POINT_NAME),
                     payload.getHeader(LogFileProcessor.LOG_FILE_PATH),
                     callback);
 

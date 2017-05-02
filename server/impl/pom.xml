@@ -15,9 +15,6 @@
 
     <properties>
         <main-class>com.walmartlabs.concord.server.Main</main-class>
-        <runner.path>
-            ${project.basedir}/../../runner/target/concord-runner-${project.version}-jar-with-dependencies.jar
-        </runner.path>
     </properties>
 
     <dependencies>
@@ -251,12 +248,6 @@
                             <!-- TODO this should be automated somehow -->
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord</groupId>
-                                    <artifactId>concord-runner</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>jar-with-dependencies</classifier>
-                                </artifactItem>
-                                <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins</groupId>
                                     <artifactId>ansible-tasks</artifactId>
                                     <version>${project.version}</version>
@@ -280,3 +271,4 @@
         </plugins>
     </build>
 </project>
+

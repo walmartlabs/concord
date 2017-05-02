@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -31,9 +32,15 @@ public class JarJobExecutor implements JobExecutor {
 
     @Override
     public void exec(String id, Path workDir, String entryPoint, Collection<String> jvmArgs) throws ExecutionException {
-        String javaCmd = cfg.getAgentJavaCmd();
-
         String mainClass = Utils.getMainClass(workDir, entryPoint);
+        exec(id, workDir, mainClass, jvmArgs, Collections.singleton(entryPoint));
+    }
+
+    public void exec(String id, Path workDir, String mainClass, Collection<String> jvmArgs,
+                     Collection<String> additionalClasspathEntries) throws ExecutionException {
+
+        String javaCmd = cfg.getAgentJavaCmd();
+        String classPath = Constants.Files.LIBRARIES_DIR_NAME + "/*:" + String.join(":", additionalClasspathEntries);
 
         // TODO pass an original ID?
         Collection<String> cmd = new ArrayList<>();
@@ -41,13 +48,13 @@ public class JarJobExecutor implements JobExecutor {
         cmd.addAll(jvmArgs);
         cmd.add("-DinstanceId=" + id);
         cmd.add("-cp");
-        cmd.add(Constants.Files.LIBRARIES_DIR_NAME + "/*:" + entryPoint);
+        cmd.add(classPath);
         cmd.add(mainClass);
 
         // start the process
 
-        Process proc = start(id, workDir, entryPoint, cmd.toArray(new String[cmd.size()]));
-        log.info("exec ['{}', '{}', '{}'] -> running...", id, workDir, entryPoint);
+        Process proc = start(id, workDir, cmd.toArray(new String[cmd.size()]));
+        log.info("exec ['{}', '{}', '{}'] -> running...", id, workDir, mainClass);
 
         // redirect the logs
 
@@ -64,7 +71,7 @@ public class JarJobExecutor implements JobExecutor {
             code = proc.waitFor();
             logManager.log(id, "Process finished with: %s", code);
         } catch (Exception e) {
-            throw handleError(id, workDir, entryPoint, proc, e);
+            throw handleError(id, workDir, proc, e);
         }
 
         if (code != 0) {
@@ -75,11 +82,11 @@ public class JarJobExecutor implements JobExecutor {
         log.info("exec ['{}'] -> finished with {}", id, code);
     }
 
-    private Process start(String id, Path workDir, String entryPoint, String[] cmd) throws ExecutionException {
+    private Process start(String id, Path workDir, String[] cmd) throws ExecutionException {
         String fullCmd = String.join(" ", cmd);
 
         try {
-            log.info("exec ['{}', '{}', '{}'] -> executing: {}", id, workDir, entryPoint, fullCmd);
+            log.info("exec ['{}', '{}'] -> executing: {}", id, workDir, fullCmd);
             logManager.log(id, "Starting: %s", fullCmd);
 
             ProcessBuilder b = new ProcessBuilder()
@@ -93,18 +100,18 @@ public class JarJobExecutor implements JobExecutor {
 
             return b.start();
         } catch (IOException e) {
-            log.error("exec ['{}', '{}', '{}'] -> error while starting for a process", id, workDir, entryPoint);
+            log.error("exec ['{}', '{}'] -> error while starting for a process", id, workDir);
             logManager.log(id, "Error: %s", e);
             throw new ExecutionException("Error starting a process: " + fullCmd, e);
         }
     }
 
-    private ExecutionException handleError(String id, Path workDir, String entryPoint, Process proc, Throwable e) throws ExecutionException {
-        log.warn("handleError ['{}', '{}', '{}'] -> execution error", id, workDir, entryPoint, e);
+    private ExecutionException handleError(String id, Path workDir, Process proc, Throwable e) throws ExecutionException {
+        log.warn("handleError ['{}', '{}'] -> execution error", id, workDir, e);
         logManager.log(id, "Interrupted");
 
         if (kill(proc)) {
-            log.warn("exec ['{}', '{}', '{}'] -> killed", id, workDir, entryPoint);
+            log.warn("exec ['{}', '{}'] -> killed", id, workDir);
         }
 
         throw new ExecutionException("Execution error: " + id, e);

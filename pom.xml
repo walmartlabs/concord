@@ -17,9 +17,9 @@
     <modules>
         <module>common</module>
         <module>project-model</module>
+        <module>runner</module>
         <module>agent</module>
         <module>plugins</module>
-        <module>runner</module>
         <module>server</module>
         <module>console</module>
         <module>maven-plugin</module>

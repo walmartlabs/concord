@@ -154,6 +154,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                             }
 
                             try {
+                                // TODO exp back off?
                                 Thread.sleep(STATUS_REFRESH_DELAY);
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
