@@ -93,6 +93,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         request.put(Constants.Request.DEPENDENCIES_KEY, rest);
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, request);
 
+        log.info("process ['{}'] -> done", payload.getInstanceId());
         return chain.process(payload);
     }
 

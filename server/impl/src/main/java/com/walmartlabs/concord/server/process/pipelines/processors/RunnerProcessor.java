@@ -49,6 +49,7 @@ public class RunnerProcessor implements PayloadProcessor {
             throw new ProcessException("Error while copying dependencies", e);
         }
 
+        log.info("process ['{}'] -> done", payload.getInstanceId());
         return chain.process(payload);
     }
 }

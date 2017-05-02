@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -15,6 +17,8 @@ import java.util.Map;
  * Stores payload's request data as a JSON file.
  */
 public class RequestDataStoringProcessor implements PayloadProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(RequestDataStoringProcessor.class);
 
     @Override
     public Payload process(Chain chain, Payload payload) {
@@ -33,6 +37,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
             throw new ProcessException("Error while saving a metadata file: " + dst, e);
         }
 
+        log.info("process ['{}'] -> done", payload.getInstanceId());
         return chain.process(payload);
     }
 }

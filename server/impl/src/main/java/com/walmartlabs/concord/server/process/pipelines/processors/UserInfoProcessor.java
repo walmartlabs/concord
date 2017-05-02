@@ -8,6 +8,8 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.Serializable;
@@ -18,6 +20,8 @@ import java.util.Set;
 @Named
 public class UserInfoProcessor implements PayloadProcessor {
 
+    private static final Logger log = LoggerFactory.getLogger(UserInfoProcessor.class);
+
     @Override
     public Payload process(Chain chain, Payload payload) {
         UserInfo info = getInfo();
@@ -25,6 +29,7 @@ public class UserInfoProcessor implements PayloadProcessor {
         payload = payload.mergeValues(Payload.REQUEST_DATA_MAP,
                 Collections.singletonMap(Constants.Request.INITIATOR_KEY, info));
 
+        log.info("process ['{}'] -> done", payload.getInstanceId());
         return chain.process(payload);
     }
 
