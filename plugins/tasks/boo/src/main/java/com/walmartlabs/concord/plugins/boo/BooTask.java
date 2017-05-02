@@ -112,9 +112,21 @@ public class BooTask implements Task {
         }
 
         Fqdn fqdn = new Fqdn();
-        fqdn.setEntries(ci.getCiAttributes().get("entries").replace("\"", ""));
-        fqdn.setAliases(ci.getCiAttributes().get("aliases").replace("\"", ""));
-        fqdn.setFullAliases(ci.getCiAttributes().get("full_aliases").replace("\"", ""));
+
+        String entries = ci.getCiAttributes().get("entries");
+        if (entries != null) {
+            fqdn.setEntries(entries.replace("\"", ""));
+        }
+
+        String aliases = ci.getCiAttributes().get("aliases");
+        if (aliases != null) {
+            fqdn.setAliases(aliases.replace("\"", ""));
+        }
+
+        String fullAliases = ci.getCiAttributes().get("full_aliases");
+        if (fullAliases != null) {
+            fqdn.setFullAliases(fullAliases.replace("\"", ""));
+        }
 
         platform.addFqdn(fqdn);
     }
