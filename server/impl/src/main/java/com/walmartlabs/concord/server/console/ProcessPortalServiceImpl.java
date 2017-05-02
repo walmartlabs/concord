@@ -33,6 +33,10 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
     @Override
     @Validate
     public Response startProcess(String entryPoint) {
+        if (entryPoint == null || entryPoint.trim().isEmpty()) {
+            throw new WebApplicationException("Invalid entry point", Status.BAD_REQUEST);
+        }
+
         StartProcessResponse resp = processResource.start(entryPoint, Collections.emptyMap());
 
         String instanceId = resp.getInstanceId();
