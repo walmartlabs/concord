@@ -67,11 +67,13 @@ public class TemplateProcessor implements PayloadProcessor {
             }
 
             payload = process(payload, templatePath);
-            return chain.process(payload);
         } catch (IOException e) {
             log.error("process ['{}'] -> error", payload.getInstanceId(), e);
             throw new ProcessException("Error while processing a template", e);
         }
+
+        log.info("process ['{}'] -> done", payload.getInstanceId());
+        return chain.process(payload);
     }
 
     private Payload processProject(Payload payload, String projectName) {

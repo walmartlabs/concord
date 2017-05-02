@@ -71,6 +71,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
             throw new ProcessException("Error while copying a private key: " + dst, e);
         }
 
+        log.info("process ['{}'] -> done", payload.getInstanceId());
         return chain.process(payload);
     }
 
