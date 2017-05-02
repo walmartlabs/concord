@@ -188,6 +188,36 @@ platforms:
           "8001 8001 tcp 0.0.0.0/0"
         ]'
 
+  static:
+    pack: oneops/custom
+    pack_version: '1'
+    components:
+      compute:
+        size: 'S'
+
+      os:
+        ostype: centos-7.2
+
+      user:
+        user-jpise:
+          system_account: true
+          sudoer: true
+          username: 'jpise'
+          description: 'Jayesh Pise'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFo5HbpjfqZOg1DgVavWO1JwTZPsC4iLfk6Mxuh3GYqEIULzBxdYUzqAnMbFegGWODxmFNkIRMMcQcy56U1mf57gkmiPoeFLgpUeKrlBaX6i8PNnxvh0Gne2DXx5aPoYOV5ueLQMwB0D3KKeSXgvKf1eow82MDOFDv4inDvFoHLKDUen2IMX9xFqOX+CtGBAHstfbwiGTekOSut+NhaHQiALcHt1kNq5p4NoQSiDHQTIK+Zq4kE9UlQp3R5YvInBy0+lXoUykIUjI45LoYk6WzqryXuWZQDGSCK0vYODvRXWg6hIlWfcn1T7Z4u4AOwDd8cERGZqeiDVBsG7XZuW1/ jpise@walmartlabs.com"]'
+        user-ibodrov:
+          system_account: true
+          sudoer: true
+          username: 'ibodrov'
+          description: 'Ivan Bodrov'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxh2tqHfJnd+jzGkOJ+M6z+y7RNdMrFHpoAa4JcYvgaETeJgxYIhorkL+x0Vz00YoJyy2wGDS2S2NSzjXEV9bnu60pyRDrJbI4gBbmof8fDal/HmgvWcN2axyR/zUnn6BIuwKwEYOygKW11FezmYsfdXueIXgSfFn9sGfd3b+R2ygn5PieVa7KKgR8/djXfsjiM1fA55Z1ZtVig+YqqaVijUkdjKOW2LNhbXBGcD5ocWknmLUXXb2i7Ng/rersd8nD4uSZUCq8pSeZeeQdtr56FNcjh7XyvdTdo83wNCsFPJZMbOQxQVcSl/QP9QdGKFUDAt/Ljrq3svPpHdkDXXEt ibodrov@walmartlabs.com"]'
+
+      secgroup:
+        inbound: '[
+          "22 22 tcp 0.0.0.0/0",
+          "80 80 tcp 0.0.0.0/0"
+        ]'
+
 environment:
   global_dns: true
   subdomain: '{{environmentName}}.{{assemblyName}}.{{organization}}'
