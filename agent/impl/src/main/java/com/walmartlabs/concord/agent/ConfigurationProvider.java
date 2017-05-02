@@ -17,6 +17,7 @@ public class ConfigurationProvider implements Provider<Configuration> {
     public static final String LOG_DIR_KEY = "AGENT_LOG_DIR";
     public static final String PAYLOAD_DIR_KEY = "AGENT_PAYLOAD_DIR";
     public static final String JAVA_CMD_KEY = "AGENT_JAVA_CMD";
+    public static final String DEPENDENCY_CACHE_DIR_KEY = "DEPS_CACHE_DIR";
 
     @Override
     public Configuration get() {
@@ -24,7 +25,8 @@ public class ConfigurationProvider implements Provider<Configuration> {
             Path logDir = getDir(LOG_DIR_KEY, "logDir");
             Path payloadDir = getDir(PAYLOAD_DIR_KEY, "payloadDir");
             String agentJavaCmd = getEnv(JAVA_CMD_KEY, "java");
-            return new Configuration(logDir, payloadDir, agentJavaCmd);
+            Path dependencyCacheDir = getDir(DEPENDENCY_CACHE_DIR_KEY, "depsCacheDir");
+            return new Configuration(logDir, payloadDir, agentJavaCmd, dependencyCacheDir);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

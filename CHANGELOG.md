@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent: simple caching mechanism for dependencies.
+
+
+
 ## [0.8.0] - 2017-05-01
 
 ### Added

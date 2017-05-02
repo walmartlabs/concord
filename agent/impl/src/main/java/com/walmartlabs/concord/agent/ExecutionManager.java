@@ -15,12 +15,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -44,6 +40,7 @@ public class ExecutionManager {
     private final ExecutorService executor;
     private final LogManager logManager;
     private final Configuration cfg;
+    private final DependencyManager dependencyManager;
 
     private final Map<String, Future<?>> executions = new HashMap<>();
     private final Cache<String, JobStatus> statuses = CacheBuilder.newBuilder()
@@ -59,12 +56,13 @@ public class ExecutionManager {
     public ExecutionManager(@Named("executionPool") ExecutorService executor,
                             JarJobExecutor jarJobExecutor,
                             LogManager logManager,
-                            Configuration cfg) {
+                            Configuration cfg, DependencyManager dependencyManager) {
 
         this.executor = executor;
 
         this.logManager = logManager;
         this.cfg = cfg;
+        this.dependencyManager = dependencyManager;
         this.jobExecutors = new HashMap<>();
 
         jobExecutors.put(JobType.JAR, jarJobExecutor);
@@ -82,21 +80,20 @@ public class ExecutionManager {
         // e.g. left after the execution was suspended
         logManager.delete(instanceId);
 
+        // create a log file synchronously
+        logManager.touch(instanceId);
+
         Path tmpDir = extract(instanceId, payload);
 
         Map<String, Object> agentParams = getAgentParameters(tmpDir);
         Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.Agent.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
         log.info("start ['{}'] -> JVM args: {}", instanceId, jvmArgs);
 
-        Collection<String> deps = getDependencies(tmpDir);
-        collectDependencies(instanceId, tmpDir, deps);
+        collectDependencies(instanceId, tmpDir);
 
         synchronized (mutex) {
             statuses.put(instanceId, JobStatus.RUNNING);
         }
-
-        // create a log file synchronously
-        logManager.touch(instanceId);
 
         Future<?> f = executor.submit(() -> {
             try {
@@ -128,6 +125,18 @@ public class ExecutionManager {
 
         synchronized (mutex) {
             executions.put(instanceId, f);
+        }
+    }
+
+    private void collectDependencies(String instanceId, Path tmpDir) throws ExecutionException {
+        Collection<String> deps = getDependencies(tmpDir);
+        if (deps != null && !deps.isEmpty()) {
+            logManager.log(instanceId, "Collecting dependencies...");
+        }
+        try {
+            dependencyManager.collectDependencies(deps, tmpDir.resolve(Constants.Files.LIBRARIES_DIR_NAME));
+        } catch (IOException e) {
+            throw new ExecutionException("Error while collecting dependencies", e);
         }
     }
 
@@ -263,53 +272,5 @@ public class ExecutionManager {
         } catch (IOException e) {
             throw new ExecutionException("Error while reading a list of dependencies", e);
         }
-    }
-
-    private static void collectDependencies(String instanceId, Path baseDir, Collection<String> deps) throws ExecutionException {
-        if (deps.isEmpty()) {
-            return;
-        }
-
-        Path libDir = baseDir.resolve(Constants.Files.LIBRARIES_DIR_NAME);
-        if (!Files.exists(libDir)) {
-            try {
-                Files.createDirectories(libDir);
-            } catch (IOException e) {
-                throw new ExecutionException("Dependencies processing error", e);
-            }
-        }
-
-        // TODO collect all errors before throwing an exception
-        for (String d : deps) {
-            URL url;
-            try {
-                url = new URL(d);
-            } catch (MalformedURLException e) {
-                throw new ExecutionException("Invalid dependency URL: " + d, e);
-            }
-
-            String name = getLastPart(url);
-            Path dst = libDir.resolve(name);
-            if (Files.exists(dst)) {
-                log.warn("collectDependencies ['{}'] -> library already exists: {}", instanceId, dst);
-                continue;
-            }
-
-            try (InputStream in = url.openStream();
-                 OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE)) {
-                IOUtils.copy(in, out);
-            } catch (IOException e) {
-                throw new ExecutionException("Error while copying a dependency: " + d, e);
-            }
-        }
-    }
-
-    private static String getLastPart(URL url) {
-        String p = url.getPath();
-        int idx = p.lastIndexOf('/');
-        if (idx >= 0 && idx + 1 < p.length()) {
-            return p.substring(idx + 1);
-        }
-        throw new IllegalArgumentException("Invalid URL: " + url);
     }
 }
