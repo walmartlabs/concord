@@ -1,7 +1,7 @@
 import React from "react";
 import {connect} from "react-redux";
 import {Control, LocalForm} from "react-redux-form";
-import {Dimmer, Form, Grid, Loader, Message, Segment} from "semantic-ui-react";
+import {Dimmer, Form, Grid, Icon, Image, Loader, Message, Segment} from "semantic-ui-react";
 import * as actions from "./actions";
 import reducers from "./reducers";
 import * as selectors from "./reducers";
@@ -13,6 +13,9 @@ const loginForm = ({error, submitting, doLogin}) =>
     <Grid centered verticalAlign="middle" className="maxHeight">
         <Grid.Column width="4" textAlign="left">
             <Segment>
+
+                <Image src='/strati-logo.png' size='small' centered />
+
                 <Dimmer active={submitting} inverted>
                     <Loader/>
                 </Dimmer>
@@ -21,8 +24,8 @@ const loginForm = ({error, submitting, doLogin}) =>
                            error={isThere(error)}
                            onSubmit={({username, password}) => doLogin(username, password)}>
 
-                    <Control component={Form.Input} label="Username" model=".username" required/>
-                    <Control component={Form.Input} label="Password" model=".password" type="password" required/>
+                    <Control icon="user" component={Form.Input} label="Username" model=".username" required/>
+                    <Control icon="lock" component={Form.Input} label="Password" model=".password" type="password" required/>
 
                     <Message error content={error}/>
                     <Form.Button primary fluid>Login</Form.Button>
