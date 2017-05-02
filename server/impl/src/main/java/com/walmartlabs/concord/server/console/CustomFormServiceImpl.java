@@ -44,6 +44,7 @@ import java.util.*;
 public class CustomFormServiceImpl implements CustomFormService, Resource {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormServiceImpl.class);
+    private static final long STATUS_REFRESH_DELAY = 250;
 
     private final FormServerConfiguration cfg;
     private final ConcordFormService formService;
@@ -153,7 +154,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                             }
 
                             try {
-                                Thread.sleep(3000);
+                                Thread.sleep(STATUS_REFRESH_DELAY);
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }

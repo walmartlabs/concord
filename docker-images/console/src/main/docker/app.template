@@ -3,7 +3,10 @@ server {
 	server_name             _;
 	root                    /opt/concord/console/concord-console-${project.version};
 
+	proxy_read_timeout      600;
+
 	location ~ ^/(api|logs|forms)/ {
+        expires             off;
 	    proxy_pass          http://SERVER_ADDR:SERVER_PORT;
 	    proxy_redirect      off;
 	    proxy_set_header    Host $http_host;

@@ -30,7 +30,6 @@ class PortalPage extends Component {
 
         return <div>
             <Loader active={submitting}/>
-            <Header as="h3" textAlign="center">Starting the process...</Header>
         </div>;
     }
 }

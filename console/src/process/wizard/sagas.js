@@ -7,6 +7,8 @@ import * as processApi from "../api";
 import * as formApi from "../form/api";
 import * as constants from "../constants";
 
+const STATUS_REFRESH_DELAY = 250;
+
 function* nextForm({instanceId}): Generator<*, *, *> {
     try {
         let forms = [];
@@ -27,7 +29,7 @@ function* nextForm({instanceId}): Generator<*, *, *> {
                 return;
             }
 
-            yield call(delay, 2000);
+            yield call(delay, STATUS_REFRESH_DELAY);
         }
 
         const {formInstanceId, custom} = forms[0];

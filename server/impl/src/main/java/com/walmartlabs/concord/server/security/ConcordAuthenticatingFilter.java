@@ -29,7 +29,8 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             "/api/service/console/logout"};
 
     private static final String[] FORCE_BASIC_AUTH_URLS = {
-            "/forms/.*"
+            "/forms/.*",
+            "/api/service/process_portal/.*"
     };
 
     private final ApiKeyDao apiKeyDao;

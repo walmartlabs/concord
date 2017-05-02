@@ -1,5 +1,21 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: GIT repository shallow cloning and caching.
+
+### Changed
+
+- concord-server: improved error message when creating or updating
+a project with non-existing secret;
+- concord-server, concord-agent: fixed logging configuration conflicts;
+- concord-console: reduce wizard polling interval, "time to first form"
+improved.
+
+
+
 ## [0.8.2] - 2017-05-01
 
 ### Added
