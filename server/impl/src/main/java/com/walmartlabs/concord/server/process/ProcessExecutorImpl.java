@@ -90,11 +90,12 @@ public class ProcessExecutorImpl {
         progressUpdater = new ThrottledRunnable(progressUpdater, PROCESS_UPDATE_PERIOD);
 
         Response r = a.streamLog(jobId);
-        try (InputStream in = r.readEntity(InputStream.class)) {
-            byte[] ab = new byte[LOG_BUFFER_SIZE];
-            int read;
-            while ((read = in.read(ab)) > 0) {
-                out.write(ab, 0, read);
+        try (InputStream in = r.readEntity(InputStream.class);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                out.write(line.getBytes());
+                out.write("\n".getBytes());
                 out.flush();
                 progressUpdater.run();
             }

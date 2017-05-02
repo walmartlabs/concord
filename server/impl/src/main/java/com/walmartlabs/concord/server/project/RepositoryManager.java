@@ -4,33 +4,50 @@ import com.google.common.base.Throwables;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
 import com.walmartlabs.concord.server.security.secret.KeyPair;
 import com.walmartlabs.concord.server.security.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.UsernamePassword;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.*;
-import org.eclipse.jgit.transport.CredentialItem.Password;
-import org.eclipse.jgit.transport.CredentialItem.Username;
 import org.eclipse.jgit.util.FS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Properties;
 
-public final class GitRepository {
+import static org.eclipse.jgit.transport.CredentialItem.Password;
+import static org.eclipse.jgit.transport.CredentialItem.Username;
 
-    private static final Logger log = LoggerFactory.getLogger(GitRepository.class);
+@Named
+public class RepositoryManager {
 
-    public static Path checkout(String uri, String branch, Secret secret) throws IOException, GitAPIException {
-        Path localPath = Files.createTempDirectory("git");
-        log.info("checkout -> cloning '{}' (branch: {}) into '{}'...", uri, branch, localPath);
+    private static final Logger log = LoggerFactory.getLogger(RepositoryManager.class);
+    private static final String DEFAULT_BRANCH = "master";
+
+    private final RepositoryConfiguration cfg;
+
+    @Inject
+    public RepositoryManager(RepositoryConfiguration cfg) {
+        this.cfg = cfg;
+    }
+
+    public Path fetch(String projectName, String uri, String branch, Secret secret) throws RepositoryException {
+        if (branch == null) {
+            branch = DEFAULT_BRANCH;
+        }
 
         TransportConfigCallback transportCallback = transport -> {
             if (transport instanceof SshTransport) {
@@ -40,20 +57,62 @@ public final class GitRepository {
             }
         };
 
-        Git git = Git.cloneRepository()
-                .setURI(uri)
-                .setDirectory(localPath.toFile())
-                .setBranch(branch)
-                .setTransportConfigCallback(transportCallback)
-                .call();
+        Git repo = null;
 
-        String currentBranch = git.getRepository().getBranch();
-        if (!branch.equals(currentBranch)) {
-            log.error("checkout ['{}'] -> can't checkout the branch. Expected: '{}', got: '{}'", uri, branch, currentBranch);
-            throw new IllegalArgumentException("Can't checkout the branch: " + branch);
+        Path localPath = cfg.getRepoCacheDir().resolve(projectName).resolve(branch);
+        if (Files.exists(localPath)) {
+            // check if there is an existing git repo
+            try {
+                repo = Git.open(localPath.toFile());
+            } catch (RepositoryNotFoundException e) {
+            } catch (IOException e) {
+                throw new RepositoryException("Error while opening a repository", e);
+            }
+
+        } else {
+            try {
+                Files.createDirectories(localPath);
+            } catch (IOException e) {
+                throw new RepositoryException("Can't create a directory for a repository", e);
+            }
         }
 
-        log.info("checkout -> cloned '{}' into '{}'", uri, localPath);
+        if (repo == null) {
+            try {
+                Git.cloneRepository()
+                        .setURI(uri)
+                        .setDirectory(localPath.toFile())
+                        .setBranch(branch)
+                        .setBranchesToClone(Collections.singleton(branch))
+                        .setTransportConfigCallback(transportCallback)
+                        .call();
+
+                // we are done
+                log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectName, uri, branch);
+                return localPath;
+            } catch (GitAPIException e) {
+                try {
+                    IOUtils.deleteRecursively(localPath);
+                } catch (IOException ee) {
+                    log.warn("fetch ['{}', '{}', '{}'] -> cleanup error: {}", projectName, uri, branch, ee.getMessage());
+                }
+                throw new RepositoryException("Error while cloning a repository", e);
+            }
+        }
+
+        try {
+            repo.checkout()
+                    .setName(branch)
+                    .call();
+
+            repo.pull()
+                    .setTransportConfigCallback(transportCallback)
+                    .call();
+            log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectName, uri, branch);
+        } catch (GitAPIException e) {
+            throw new RepositoryException("Error while updating a repository", e);
+        }
+
         return localPath;
     }
 
@@ -155,8 +214,5 @@ public final class GitRepository {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw Throwables.propagate(e);
         }
-    }
-
-    private GitRepository() {
     }
 }

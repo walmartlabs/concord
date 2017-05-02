@@ -9,7 +9,6 @@ import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.security.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
-import org.eclipse.jgit.api.errors.GitAPIException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,11 +32,16 @@ public class RepositoryProcessor implements PayloadProcessor {
 
     private final RepositoryDao repositoryDao;
     private final SecretManager secretManager;
+    private final RepositoryManager repositoryManager;
 
     @Inject
-    public RepositoryProcessor(RepositoryDao repositoryDao, SecretManager secretManager) {
+    public RepositoryProcessor(RepositoryDao repositoryDao,
+                               SecretManager secretManager,
+                               RepositoryManager repositoryManager) {
+
         this.repositoryDao = repositoryDao;
         this.secretManager = secretManager;
+        this.repositoryManager = repositoryManager;
     }
 
     @Override
@@ -69,10 +73,10 @@ public class RepositoryProcessor implements PayloadProcessor {
         }
 
         try {
-            Path src = GitRepository.checkout(repo.getUrl(), branch, secret);
+            Path src = repositoryManager.fetch(projectName, repo.getUrl(), branch, secret);
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
             IOUtils.copy(src, dst);
-        } catch (IOException | GitAPIException e) {
+        } catch (IOException | RepositoryException e) {
             throw new ProcessException("Error while pulling a repository: " + repo.getUrl(), e);
         }
 

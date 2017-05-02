@@ -48,6 +48,12 @@ All parameters are optional.
 |----------|----------------------------------|------------------------|
 | LDAP_CFG | Path to LDAP configuration file. | _empty_                |
 
+** Repositories **
+
+| Variable       | Description                                    | Default value               |
+|----------------|------------------------------------------------|-----------------------------|
+| REPO_CACHE_DIR | Directory to store project (git) repositories. | _a new temporary directory_ |
+
 ### LDAP
 
 Create `ldap.properties` file, containing the following parameters
