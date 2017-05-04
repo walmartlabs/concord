@@ -70,11 +70,11 @@ public class BooTask implements Task {
                 throw new IllegalArgumentException("oneopsApiHost not set in args");
             }
 
-            String costCenter = (String) ctx.getVariable("costCenter");
+            String costCenter = (String) args.get("costCenter");
             if (costCenter != null && ! costCenter.isEmpty()) {
                 tagAssembly(deployment, ooApiHost, costCenter, gson); //set cost center etc
             } else {
-                log.warn("No cost center set in concord ctx");
+                log.warn("No cost center set in args");
             }
 
             //query oneops to get all the CIs in this environment "namespace"
