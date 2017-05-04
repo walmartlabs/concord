@@ -26,7 +26,7 @@ import java.util.*;
 public class BooTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(BooTask.class);
     private static final String OO_API_CIS = "/adapter/rest/cm/simple/cis";
-    private static final String OO_COST_CENTER_TAG = "costCenter";
+    private static final String OO_COST_CENTER_TAG = "costcenter";
 
     @SuppressWarnings("unchecked")
     public Deployment run(Map<String, Object> args, String payloadPath) throws Exception {
