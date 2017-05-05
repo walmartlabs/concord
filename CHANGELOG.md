@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- boo-task: tag assembly with a cost center.
+
+
+
 ## [0.9.0] - 2017-05-04
 
 ### Added
