@@ -22,3 +22,24 @@ started in debug mode as usual.
 
 However, as the agent processes its payload in a separate JVM, it must be configured to
 start those processes with the remove debugging enabled: *TBD*
+
+## Making a release
+
+1. use `maven-release-plugin` as usual:
+   ```
+   ./mvnw release:prepare release:perform
+   ```
+2. push docker images:
+   ```
+   git checkout NEW_TAG
+   export DOCKER_REGISTRY=docker.prod.walmart.com
+   ```
+3. don't forget to push new tags and the release commit:
+   ```
+   git push origin master --tags
+   ```
+
+## Pull requests
+
+- squash and rebase your commits;
+- wait for CI checks to pass.
