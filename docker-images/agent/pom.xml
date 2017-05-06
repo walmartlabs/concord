@@ -40,7 +40,6 @@
                                     <tag>${project.version}</tag>
                                 </tags>
                                 <runCmds>
-                                    <run>yum -y install epel-release</run>
                                     <rum>yum -y install ansible openssh-clients sshpass util-linux</rum>
                                     <run>yum clean all</run>
                                 </runCmds>

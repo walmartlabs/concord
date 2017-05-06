@@ -110,6 +110,15 @@
 
     <profiles>
         <profile>
+            <id>looper</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <skip.it.tests>true</skip.it.tests>
+            </properties>
+        </profile>
+        <profile>
             <id>docker</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
