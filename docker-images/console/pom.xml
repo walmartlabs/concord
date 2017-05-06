@@ -43,7 +43,6 @@
                                     <tag>${project.version}</tag>
                                 </tags>
                                 <runCmds>
-                                    <run>yum -y install epel-release</run>
                                     <run>yum -y install nginx</run>
                                     <run>yum clean all</run>
                                 </runCmds>

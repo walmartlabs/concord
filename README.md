@@ -1,6 +1,10 @@
+# Concord
+[![Build Status](https://ci.stg.cloud.wal-mart.com/buildStatus/icon?job=concord&build=157)](https://ci.stg.cloud.wal-mart.com/job/concord/157/)
+
+
 TLDR: `mvn clean install -Pdocker -DskipTests`
 
-# Building
+## Building
 
 ```
 git clone ... 
@@ -8,7 +12,7 @@ cd concord
 ./mvnw clean install -DskipTests
 ```
 
-## Docker images
+### Docker images
 
 You can build docker images using this commands:
 
@@ -16,7 +20,7 @@ You can build docker images using this commands:
 ./mvnw clean install -Pdocker
 ```
 
-## Integration tests
+### Integration tests
 
 Prerequisites:
 - Linux, if you want to use docker-based ITs. Tests currently assume
@@ -41,15 +45,15 @@ To automatically start and stop the server and the agent using docker, use the
 
 The `docker.host.addr` value must be set to the IP address of `docker0` interface.
 
-# Development
+## Development
 
 See [the Development](docs/development.md) document.
 
-# Running
+## Running
 
 See [the Quick Start](docs/quickstart.md) document.
 
-# Examples
+## Examples
 
 See the [examples](docs/examples) directory.
 

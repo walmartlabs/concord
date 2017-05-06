@@ -85,7 +85,7 @@
                             <skipRun>${skip.it.tests}</skipRun>
                             <images>
                                 <image>
-                                    <name>postgres:9.6</name>
+                                    <name>hub.docker.prod.walmart.com/library/postgres</name>
                                     <alias>db</alias>
                                     <run>
                                         <ports>
