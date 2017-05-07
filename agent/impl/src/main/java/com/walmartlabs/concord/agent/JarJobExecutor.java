@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.agent;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,87 +8,127 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
-/**
- * Executes a job in a separate JVM.
- */
 @Named
 public class JarJobExecutor implements JobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(JarJobExecutor.class);
 
-    private final LogManager logManager;
+    private static final Collection<String> DEFAULT_JVM_ARGS = Arrays.asList(
+            "-Xmx192m",
+            "-Djavax.el.varArgs=true",
+            "-Djava.security.egd=file:/dev/./urandom",
+            "-Djava.net.preferIPv4Stack=true");
+
     private final Configuration cfg;
+    private final LogManager logManager;
+    private final DependencyManager dependencyManager;
+    private final ExecutorService executorService;
 
     @Inject
-    public JarJobExecutor(LogManager logManager, Configuration cfg) {
-        this.logManager = logManager;
+    public JarJobExecutor(Configuration cfg, LogManager logManager, DependencyManager dependencyManager, ExecutorService executorService) {
         this.cfg = cfg;
+        this.logManager = logManager;
+        this.dependencyManager = dependencyManager;
+        this.executorService = executorService;
+    }
+
+    protected Configuration getCfg() {
+        return cfg;
     }
 
     @Override
-    public void exec(String id, Path workDir, String entryPoint, Collection<String> jvmArgs) throws ExecutionException {
-        String mainClass = Utils.getMainClass(workDir, entryPoint);
-        exec(id, workDir, mainClass, jvmArgs, Collections.singleton(entryPoint));
-    }
+    public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
+        collectDependencies(instanceId, workDir);
 
-    public void exec(String id, Path workDir, String mainClass, Collection<String> jvmArgs,
-                     Collection<String> additionalClasspathEntries) throws ExecutionException {
+        Map<String, Object> agentParams = getAgentParameters(workDir);
+        Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.Agent.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
 
         String javaCmd = cfg.getAgentJavaCmd();
-        String classPath = Constants.Files.LIBRARIES_DIR_NAME + "/*:" + String.join(":", additionalClasspathEntries);
+        String classPath = createClassPath(entryPoint);
+        String mainClass = getMainClass(workDir, entryPoint);
 
-        // TODO pass an original ID?
         Collection<String> cmd = new ArrayList<>();
         cmd.add(javaCmd);
         cmd.addAll(jvmArgs);
-        cmd.add("-DinstanceId=" + id);
+        cmd.add("-DinstanceId=" + instanceId);
         cmd.add("-cp");
         cmd.add(classPath);
         cmd.add(mainClass);
 
-        // start the process
+        Process proc = start(instanceId, workDir, cmd.toArray(new String[cmd.size()]));
 
-        Process proc = start(id, workDir, cmd.toArray(new String[cmd.size()]));
-        log.info("exec ['{}', '{}', '{}'] -> running...", id, workDir, mainClass);
+        CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> {
+            try {
+                logManager.log(instanceId, proc.getInputStream());
+            } catch (IOException e) {
+                log.warn("start ['{}', '{}'] -> error while saving a log file", instanceId, workDir);
+            }
 
-        // redirect the logs
+            int code;
+            try {
+                code = proc.waitFor();
+            } catch (Exception e) {
+                throw handleError(instanceId, workDir, proc, e.getMessage());
+            }
 
-        Runnable redirect = () -> logManager.store(id, proc.getInputStream());
-        Thread redirectThread = new Thread(redirect, "Redirect: " + id);
-        redirectThread.start();
+            if (code != 0) {
+                log.warn("exec ['{}'] -> finished with {}", instanceId, code);
+                throw handleError(instanceId, workDir, proc, "Process exit code: " + code);
+            }
 
-        // TODO wait for the redirection thread?
+            log.info("exec ['{}'] -> finished with {}", instanceId, code);
+            logManager.log(instanceId, "Process finished with: %s", code);
+            return code;
+        }, executorService);
 
-        // wait for completion
+        return new JobInstance() {
 
-        int code;
-        try {
-            code = proc.waitFor();
-            logManager.log(id, "Process finished with: %s", code);
-        } catch (Exception e) {
-            throw handleError(id, workDir, proc, e);
-        }
+            @Override
+            public Path getWorkDir() {
+                return workDir;
+            }
 
-        if (code != 0) {
-            log.warn("exec ['{}'] -> finished with {}", id, code);
-            throw new ExecutionException("Process returned an error (" + code + "): " + String.join(" ", cmd));
-        }
+            @Override
+            public void kill() {
+                if (!f.isCancelled() && !f.isDone()) {
+                    f.cancel(true);
+                }
 
-        log.info("exec ['{}'] -> finished with {}", id, code);
+                if (JarJobExecutor.kill(proc)) {
+                    log.warn("kill -> killed by user", instanceId);
+                    logManager.log(instanceId, "Killed by user");
+                }
+            }
+
+            @Override
+            public CompletableFuture<?> future() {
+                return f;
+            }
+        };
     }
 
-    private Process start(String id, Path workDir, String[] cmd) throws ExecutionException {
+    protected String getMainClass(Path workDir, String entryPoint) throws ExecutionException {
+        return Utils.getMainClass(workDir, entryPoint);
+    }
+
+    protected String createClassPath(String entryPoint) {
+        return Constants.Files.LIBRARIES_DIR_NAME + "/*:" + entryPoint;
+    }
+
+    private Process start(String instanceId, Path workDir, String[] cmd) throws ExecutionException {
         String fullCmd = String.join(" ", cmd);
 
         try {
-            log.info("exec ['{}', '{}'] -> executing: {}", id, workDir, fullCmd);
-            logManager.log(id, "Starting: %s", fullCmd);
+            log.info("exec ['{}', '{}'] -> executing: {}", instanceId, workDir, fullCmd);
+            logManager.log(instanceId, "Starting: %s", fullCmd);
 
             ProcessBuilder b = new ProcessBuilder()
                     .directory(workDir.toFile())
@@ -100,21 +141,51 @@ public class JarJobExecutor implements JobExecutor {
 
             return b.start();
         } catch (IOException e) {
-            log.error("exec ['{}', '{}'] -> error while starting for a process", id, workDir);
-            logManager.log(id, "Error: %s", e);
+            log.error("exec ['{}', '{}'] -> error while starting for a process", instanceId, workDir);
+            logManager.log(instanceId, "Error: %s", e);
             throw new ExecutionException("Error starting a process: " + fullCmd, e);
         }
     }
 
-    private ExecutionException handleError(String id, Path workDir, Process proc, Throwable e) throws ExecutionException {
-        log.warn("handleError ['{}', '{}'] -> execution error", id, workDir, e);
-        logManager.log(id, "Interrupted");
+    private JobExecutorException handleError(String id, Path workDir, Process proc, String error) {
+        log.warn("handleError ['{}', '{}'] -> execution error: {}", id, workDir, error);
+        logManager.log(id, "Error: " + error);
 
         if (kill(proc)) {
-            log.warn("exec ['{}', '{}'] -> killed", id, workDir);
+            log.warn("handleError ['{}', '{}'] -> killed by agent", id, workDir);
         }
 
-        throw new ExecutionException("Execution error: " + id, e);
+        throw new JobExecutorException("Error while executing a job: " + error);
+    }
+
+    private void collectDependencies(String instanceId, Path tmpDir) throws ExecutionException {
+        Collection<String> deps = getDependencies(tmpDir);
+        if (deps != null && !deps.isEmpty()) {
+            logManager.log(instanceId, "Collecting dependencies...");
+        }
+        try {
+            dependencyManager.collectDependencies(deps, tmpDir.resolve(Constants.Files.LIBRARIES_DIR_NAME));
+        } catch (IOException e) {
+            throw new ExecutionException("Error while collecting dependencies", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Collection<String> getDependencies(Path payload) throws ExecutionException {
+        Path p = payload.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        if (!Files.exists(p)) {
+            return Collections.emptyList();
+        }
+
+        try (InputStream in = Files.newInputStream(p)) {
+            ObjectMapper om = new ObjectMapper();
+            Map<String, Object> m = om.readValue(in, Map.class);
+
+            Collection<String> deps = (Collection<String>) m.get(Constants.Request.DEPENDENCIES_KEY);
+            return deps != null ? deps : Collections.emptyList();
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading a list of dependencies", e);
+        }
     }
 
     private static boolean kill(Process proc) {
@@ -122,15 +193,13 @@ public class JarJobExecutor implements JobExecutor {
             return false;
         }
 
-        // TODO cfg?
         proc.destroy();
         try {
-            Thread.sleep(3000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             // ignore
         }
 
-        // TODO timeout?
         while (proc.isAlive()) {
             try {
                 Thread.sleep(3000);
@@ -141,5 +210,19 @@ public class JarJobExecutor implements JobExecutor {
         }
 
         return true;
+    }
+
+    private static Map<String, Object> getAgentParameters(Path payload) throws ExecutionException {
+        Path p = payload.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME);
+        if (!Files.exists(p)) {
+            return Collections.emptyMap();
+        }
+
+        try (InputStream in = Files.newInputStream(p)) {
+            ObjectMapper om = new ObjectMapper();
+            return om.readValue(in, Map.class);
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading an agent parameters file", e);
+        }
     }
 }

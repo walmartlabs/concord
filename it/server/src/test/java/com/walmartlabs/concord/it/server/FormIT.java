@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 
 public class FormIT extends AbstractServerIT {
 
-    @Test(timeout = 300000)
+    @Test(timeout = 30000)
     public void test() throws Exception {
         String firstName = "john_" + System.currentTimeMillis();
         String lastName = "smith_" + System.currentTimeMillis();

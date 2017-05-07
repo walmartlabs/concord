@@ -56,7 +56,7 @@ public class LogManager {
         }
     }
 
-    public void store(String id, InputStream src) {
+    public void log(String id, InputStream src) throws IOException {
         Path f = logFile(id);
         log.info("store ['{}'] -> storing into {}", id, f);
         try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
@@ -68,8 +68,6 @@ public class LogManager {
                 dst.write('\n');
                 dst.flush();
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Error writing to a log file: " + f, e);
         }
     }
 

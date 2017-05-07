@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: more reliable kill command.
+
+
+
 ## [0.10.0] - 2017-05-04
 
 ### Added

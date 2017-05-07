@@ -5,7 +5,7 @@ import javax.inject.Provider;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Named("executionPool")
+@Named
 public class ExecutionPoolProvider implements Provider<ExecutorService> {
 
     @Override

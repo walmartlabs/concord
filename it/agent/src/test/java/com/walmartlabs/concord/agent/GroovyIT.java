@@ -7,6 +7,7 @@ import com.walmartlabs.concord.agent.api.JobType;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.client.Client;
@@ -22,6 +23,7 @@ import java.util.zip.ZipOutputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+@Ignore
 public class GroovyIT {
 
     private Main main;

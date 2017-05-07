@@ -53,12 +53,12 @@ public class AgentResourceImpl implements AgentResource, Resource {
     @Override
     @Validate
     public void cancel(String id, boolean waitToFinish) {
-        executionManager.cancel(id, waitToFinish);
+        executionManager.cancel(id);
     }
 
     @Override
     public int count() {
-        return executionManager.jobCount();
+        return executionManager.countRunning();
     }
 
     @Override
