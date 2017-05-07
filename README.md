@@ -1,5 +1,5 @@
 # Concord
-[![Build Status](https://ci.stg.cloud.wal-mart.com/buildStatus/icon?job=concord&build=157)](https://ci.stg.cloud.wal-mart.com/job/concord/157/)
+[![Build Status](https://ci.stg.cloud.wal-mart.com/buildStatus/icon?job=concord)](https://ci.stg.cloud.wal-mart.com/job/concord/)
 
 
 TLDR: `mvn clean install -Pdocker -DskipTests`
