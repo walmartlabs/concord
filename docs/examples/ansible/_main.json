@@ -2,15 +2,14 @@
   "entryPoint": "main",
   "inventory": {
     "local": {
-      "hosts": ["192.168.0.108"]
+      "hosts": ["127.0.0.1"]
     }
   },
   "arguments": {
     "ansibleParams": {
       "playbook": "playbook/hello.yml",
       "defaults": {
-        "remote_port": 12345,
-        "timeout": 10
+        "transport": "local"
       },
       "extraVars": {
         "greetings": "Hello, world"
