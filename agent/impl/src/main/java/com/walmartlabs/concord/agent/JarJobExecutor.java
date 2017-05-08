@@ -14,7 +14,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 @Named
 public class JarJobExecutor implements JobExecutor {
@@ -22,7 +21,7 @@ public class JarJobExecutor implements JobExecutor {
     private static final Logger log = LoggerFactory.getLogger(JarJobExecutor.class);
 
     private static final Collection<String> DEFAULT_JVM_ARGS = Arrays.asList(
-            "-Xmx192m",
+            "-Xmx128m",
             "-Djavax.el.varArgs=true",
             "-Djava.security.egd=file:/dev/./urandom",
             "-Djava.net.preferIPv4Stack=true");
@@ -48,22 +47,8 @@ public class JarJobExecutor implements JobExecutor {
     public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
         collectDependencies(instanceId, workDir);
 
-        Map<String, Object> agentParams = getAgentParameters(workDir);
-        Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.Agent.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
-
-        String javaCmd = cfg.getAgentJavaCmd();
-        String classPath = createClassPath(entryPoint);
-        String mainClass = getMainClass(workDir, entryPoint);
-
-        Collection<String> cmd = new ArrayList<>();
-        cmd.add(javaCmd);
-        cmd.addAll(jvmArgs);
-        cmd.add("-DinstanceId=" + instanceId);
-        cmd.add("-cp");
-        cmd.add(classPath);
-        cmd.add(mainClass);
-
-        Process proc = start(instanceId, workDir, cmd.toArray(new String[cmd.size()]));
+        String[] cmd = createCommand(instanceId, workDir, entryPoint);
+        Process proc = start(instanceId, workDir, cmd);
 
         CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> {
             try {
@@ -98,12 +83,8 @@ public class JarJobExecutor implements JobExecutor {
 
             @Override
             public void kill() {
-                if (!f.isCancelled() && !f.isDone()) {
-                    f.cancel(true);
-                }
-
                 if (JarJobExecutor.kill(proc)) {
-                    log.warn("kill -> killed by user", instanceId);
+                    log.warn("kill -> killed by user: {}", instanceId);
                     logManager.log(instanceId, "Killed by user");
                 }
             }
@@ -121,6 +102,25 @@ public class JarJobExecutor implements JobExecutor {
 
     protected String createClassPath(String entryPoint) {
         return Constants.Files.LIBRARIES_DIR_NAME + "/*:" + entryPoint;
+    }
+
+    protected String[] createCommand(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
+        Map<String, Object> agentParams = getAgentParameters(workDir);
+        Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.Agent.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
+
+        String javaCmd = cfg.getAgentJavaCmd();
+        String classPath = createClassPath(entryPoint);
+        String mainClass = getMainClass(workDir, entryPoint);
+
+        Collection<String> cmd = new ArrayList<>();
+        cmd.add(javaCmd);
+        cmd.addAll(jvmArgs);
+        cmd.add("-DinstanceId=" + instanceId);
+        cmd.add("-cp");
+        cmd.add(classPath);
+        cmd.add(mainClass);
+
+        return cmd.toArray(new String[cmd.size()]);
     }
 
     private Process start(String instanceId, Path workDir, String[] cmd) throws ExecutionException {
@@ -163,6 +163,7 @@ public class JarJobExecutor implements JobExecutor {
         if (deps != null && !deps.isEmpty()) {
             logManager.log(instanceId, "Collecting dependencies...");
         }
+
         try {
             dependencyManager.collectDependencies(deps, tmpDir.resolve(Constants.Files.LIBRARIES_DIR_NAME));
         } catch (IOException e) {

@@ -5,14 +5,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 @Named
-@Singleton
 public class LogManager {
 
     private static final Logger log = LoggerFactory.getLogger(LogManager.class);
@@ -51,6 +49,7 @@ public class LogManager {
         try (OutputStream out = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
             String s = String.format(log + "\n", args);
             out.write(s.getBytes());
+            out.flush();
         } catch (IOException e) {
             throw new RuntimeException("Error writting to a log file: " + f, e);
         }
