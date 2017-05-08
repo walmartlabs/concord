@@ -92,8 +92,7 @@ public class PlaybookProcessBuilder {
     }
 
     private String[] formatCmd() throws IOException {
-        List<String> l = new ArrayList<>(Arrays.asList(
-                "ansible-playbook", "-T", "30", "-i", inventory, playbook));
+        List<String> l = new ArrayList<>(Arrays.asList("ansible-playbook", "-i", inventory, playbook));
 
         if (extraVars != null && !extraVars.isEmpty()) {
             l.add("-e");

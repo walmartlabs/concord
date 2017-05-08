@@ -18,6 +18,7 @@ import java.util.Map;
 
 @Named
 @Singleton
+// TODO move into RunPlaybookTask2
 public class InlineInventoryProcessor implements PayloadProcessor {
 
     private static final String INLINE_INVENTORY_KEY = "inventory";

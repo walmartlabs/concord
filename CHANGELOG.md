@@ -4,7 +4,8 @@
 
 ### Changed
 
-- concord-agent: more reliable kill command.
+- concord-agent: more reliable kill command;
+- ansible: allow overriding of connection timeout value.
 
 
 
