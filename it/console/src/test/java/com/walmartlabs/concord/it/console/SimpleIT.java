@@ -1,8 +1,10 @@
 package com.walmartlabs.concord.it.console;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.By;
 
+@Ignore
 public class SimpleIT extends AbstractIT {
 
     @Test(timeout = 30000)
