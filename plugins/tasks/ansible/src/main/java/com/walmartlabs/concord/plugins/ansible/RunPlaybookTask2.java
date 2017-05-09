@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.plugins.ansible;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.project.Constants;
 import io.takari.bpm.api.BpmnError;
@@ -7,13 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,6 +67,8 @@ public class RunPlaybookTask2 implements Task {
 
         int code = p.waitFor();
         log.debug("execution -> done, code {}", code);
+
+        updateAttachment(payloadPath, code);
 
         if (code != SUCCESS_EXIT_CODE) {
             log.warn("Playbook is finished with code {}", code);
@@ -161,6 +164,27 @@ public class RunPlaybookTask2 implements Task {
             return null;
         }
         return p.toAbsolutePath().toString();
+    }
+
+    private static void updateAttachment(String payloadPath, int code) throws IOException {
+        Path p = Paths.get(payloadPath, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, AnsibleConstants.STATS_FILE_NAME);
+
+        ObjectMapper om = new ObjectMapper()
+                .enable(SerializationFeature.INDENT_OUTPUT);
+
+        Map<String, Object> m = new HashMap<>();
+        if (Files.exists(p)) {
+            try (InputStream in = Files.newInputStream(p)) {
+                Map<String, Object> mm = om.readValue(in, Map.class);
+                m.putAll(mm);
+            }
+        }
+
+        m.put(AnsibleConstants.EXIT_CODE_KEY, code);
+
+        try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            om.writeValue(out, m);
+        }
     }
 
     private static String trim(String s) {

@@ -12,6 +12,10 @@ public final class AnsibleConstants {
 
     public static final String DEFAULT_OPTS_KEY = "defaults";
 
+    public static final String STATS_FILE_NAME = "ansible_stats.json";
+
+    public static final String EXIT_CODE_KEY = "exitCode";
+
     private AnsibleConstants() {
     }
 }

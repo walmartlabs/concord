@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- ansible: store exit code in the stats file.
+
 ### Changed
 
 - concord-agent: more reliable kill command;
