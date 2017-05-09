@@ -110,15 +110,6 @@
 
     <profiles>
         <profile>
-            <id>looper</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <skip.it.tests>true</skip.it.tests>
-            </properties>
-        </profile>
-        <profile>
             <id>docker</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -224,7 +215,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>selenium/standalone-chrome</name>
+                                    <name>docker.prod.walmart.com/selenium/standalone-chrome-3.4:wm-01</name>
                                     <alias>selenium-chrome</alias>
                                     <run>
                                         <network>
