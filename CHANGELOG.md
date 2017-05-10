@@ -4,7 +4,8 @@
 
 ### Changed
 
-- updated oneops-client version, fixing the `NoSuchMethodError` issue with boo-task.
+- updated oneops-client version, fixing the `NoSuchMethodError` issue with boo-task;
+- oneops-tasks: migrate to the official oneops-client.
 
 
 

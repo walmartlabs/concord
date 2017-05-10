@@ -15,7 +15,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.oneops.client</groupId>
+            <groupId>com.oneops</groupId>
             <artifactId>oneops-client</artifactId>
         </dependency>
         <dependency>

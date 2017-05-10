@@ -1,6 +1,8 @@
 package com.walmartlabs.concord.plugins.oneops;
 
-import com.oneops.client.OneOpsClient;
+import com.oneops.api.OOInstance;
+import com.oneops.api.exception.OneOpsClientAPIException;
+import com.oneops.api.resource.Transition;
 import com.walmartlabs.concord.common.Task;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
@@ -8,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.util.Collections;
 
 @Named("oneOps")
 public class OneOpsTask implements Task {
@@ -42,7 +43,9 @@ public class OneOpsTask implements Task {
         }
 
         try {
-            connect(ctx).updateVariable(org, asm, env, platform, variableName, variableValue, component);
+            OOInstance instance = connect(ctx);
+            Transition t = new Transition(instance, asm);
+            t.updatePlatformVariable(env, platform, variableName, variableValue, false);
         } catch (BpmnError e) {
             log.error("updateVariable ['{}', '{}', '{}', '{}', '{}', '{}', '{}'] -> error", org, asm, env, platform, component, variableName, variableValue, e);
             throw e;
@@ -61,11 +64,20 @@ public class OneOpsTask implements Task {
         boolean toUpperCase = Boolean.parseBoolean((String) ctx.getVariable(TO_UPPER_CASE_KEY));
         String[] keys = split((String) ctx.getVariable(VARIABLE_NAMES_KEY));
 
+        OOInstance instance = connect(ctx);
+        Transition t;
+        try {
+            t = new Transition(instance, asm);
+        } catch (OneOpsClientAPIException e) {
+            log.error("updateVariables ['{}', '{}', '{}', '{}', '{}'] -> error creating a transition", org, asm, env, platform, component, e);
+            throw new BpmnError("updateVariableError", e);
+        }
+
         for (String k : keys) {
             String varVal = (String) ctx.getVariable(k);
             String varName = toUpperCase ? k.toUpperCase() : k;
             try {
-                connect(ctx).updateVariable(org, asm, env, platform, varName, varVal, component);
+                t.updatePlatformVariable(env, platform, varName, varVal, false);
             } catch (BpmnError e) {
                 log.error("updateVariables ['{}', '{}', '{}', '{}', '{}'] -> error updating the variable '{}'", org, asm, env, platform, component, varName, e);
                 throw e;
@@ -92,7 +104,9 @@ public class OneOpsTask implements Task {
         String component = (String) ctx.getVariable(COMPONENT_KEY);
 
         try {
-            connect(ctx).touchComponents(org, asm, env, platform, component);
+            OOInstance instance = connect(ctx);
+            Transition t = new Transition(instance, asm);
+            t.touchPlatformComponent(env, platform, component);
             log.info("touchComponent ['{}', '{}', '{}', '{}', '{}'] -> done", org, asm, env, platform, component);
         } catch (BpmnError e) {
             log.error("touchComponent ['{}', '{}', '{}', '{}', '{}'] -> error", org, asm, env, platform, component, e);
@@ -110,7 +124,10 @@ public class OneOpsTask implements Task {
         String platform = (String) ctx.getVariable(PLATFORM_KEY);
 
         try {
-            connect(ctx).commitAndDeploy(org, asm, env, platform, false, false, Collections.singletonList(platform), String.valueOf(DEFAULT_POLL_FREQUENCY));
+            OOInstance instance = connect(ctx);
+            Transition t = new Transition(instance, asm);
+            t.commitEnvironment(env, null, "OneOpsTask");
+            t.deploy(env, "OneOpsTask");
             log.info("commitAndDeploy ['{}', '{}', '{}', '{}'] -> done", org, asm, env, platform);
         } catch (BpmnError e) {
             log.error("commitAndDeploy ['{}', '{}', '{}', '{}'] -> error", org, asm, env, platform, e);
@@ -121,10 +138,11 @@ public class OneOpsTask implements Task {
         }
     }
 
-    private static OneOpsClient connect(ExecutionContext ctx) {
-        return OneOpsClient.builder()
-                .baseUrl((String) ctx.getVariable(API_BASEURL))
-                .apiToken((String) ctx.getVariable(API_TOKEN))
-                .build();
+    private static OOInstance connect(ExecutionContext ctx) {
+        OOInstance instance = new OOInstance();
+        instance.setAuthtoken((String) ctx.getVariable(API_TOKEN));
+        instance.setEndpoint((String) ctx.getVariable(API_BASEURL));
+        instance.setOrgname((String) ctx.getVariable(ORGANIZATION_KEY));
+        return instance;
     }
 }
