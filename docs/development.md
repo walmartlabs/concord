@@ -25,6 +25,19 @@ start those processes with the remove debugging enabled: *TBD*
 
 ## Making a release
 
+All JAR files are signed using a GPG key. Pass phase for a key must be configured in
+`~/.m2/settings.xml`:
+```xml
+<profiles>
+  <profile>
+    <id>development</id>
+    <properties>
+      <gpg.passphrase>MY_PASS_PHASE</gpg.passphrase>
+    </properties>
+  </profile>
+</profiles>
+```
+
 1. use `maven-release-plugin` as usual:
    ```
    ./mvnw release:prepare release:perform
