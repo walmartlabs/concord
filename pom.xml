@@ -86,8 +86,7 @@
         <mustache.version>0.9.2</mustache.version>
         <nexus.perf.version>1.2.0</nexus.perf.version>
         <node.version>7.4.0</node.version>
-        <oneops-client.version>5.0.6</oneops-client.version>
-        <oneops.client.version>0.0.1</oneops.client.version>
+        <oneops-client.version>5.0.7</oneops-client.version>
         <parc.version>0.1.2</parc.version>
         <postgres.version>9.4.1212</postgres.version>
         <provisio.version>0.1.32</provisio.version>
