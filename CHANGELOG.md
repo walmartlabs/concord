@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased] - 2017-05-09
+
+### Changed
+
+- updated oneops-client version, fixing the `NoSuchMethodError` issue with boo-task.
+
+
+
 ## [0.11.1] - 2017-05-09
 
 ### Changed
