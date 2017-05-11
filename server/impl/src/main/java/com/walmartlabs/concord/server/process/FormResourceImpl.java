@@ -4,10 +4,13 @@ import com.walmartlabs.concord.server.api.process.FormInstanceEntry;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.FormResource;
 import com.walmartlabs.concord.server.api.process.FormSubmitResponse;
+import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
 import io.takari.bpm.api.ExecutionException;
+import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
+import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import org.sonatype.siesta.Resource;
@@ -23,10 +26,12 @@ import java.util.*;
 public class FormResourceImpl implements FormResource, Resource {
 
     private final ConcordFormService formService;
+    private final FormValidatorLocale validatorLocale;
 
     @Inject
     public FormResourceImpl(ConcordFormService formService) {
         this.formService = formService;
+        this.validatorLocale = new DefaultFormValidatorLocale();
     }
 
     @Override
@@ -106,6 +111,14 @@ public class FormResourceImpl implements FormResource, Resource {
     @Override
     @Validate
     public FormSubmitResponse submit(String processInstanceId, String formInstanceId, Map<String, Object> data) {
+        Form form = formService.get(processInstanceId, formInstanceId);
+        try {
+            data = FormUtils.convert(validatorLocale, form, data);
+        } catch (ValidationException e) {
+            Map<String, String> errors = Collections.singletonMap(e.getField().getName(), e.getMessage());
+            return new FormSubmitResponse(processInstanceId, errors);
+        }
+
         FormSubmitResult result;
         try {
             result = formService.submit(processInstanceId, formInstanceId, data);

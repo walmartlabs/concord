@@ -62,6 +62,7 @@ class ProcessForm extends Component {
             case "string":
                 return this.renderStringField(f, value);
             case "int":
+            case "decimal":
                 return this.renderIntField(f, value);
             default:
                 return <p key={f.name}>Unknown field type: {f.type}</p>

@@ -1,5 +1,13 @@
 # Change log
 
+## Unreleased
+
+## Added
+
+- concord-console: support for "int" and "decimal" fields in the default form renderer.
+
+
+
 ## [0.11.2] - 2017-05-09
 
 ### Changed
