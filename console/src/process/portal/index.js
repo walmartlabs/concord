@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
-import {Header, Loader} from "semantic-ui-react";
+import {Loader} from "semantic-ui-react";
 import ErrorMessage from "../../shared/ErrorMessage";
 import * as actions from "./actions";
 import * as selectors from "./reducers";
