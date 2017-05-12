@@ -10,5 +10,10 @@
 * [conditionals](conditionals) - an example of usage of more advanced YAML syntax;
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
 * [forms](forms) - using forms;
-* [project_file](project_file) - using a `.concord.yml` project file;
+
 * [smtp](smtp) - using SMTP task.
+
+## Using a .concord.yml file
+
+* [project_file](project_file) - basic usage of a `.concord.yml` project file;
+* [external_script](external_script) - calling an external JavaScript file.
