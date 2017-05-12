@@ -1,12 +1,3 @@
 main:
-  - if: ${aInt > 0}
-    then:
-      - ${testBean.toString("a")}
-    else:
-      - ${testBean.toString("b")}
-
-  - if: ${aInt < 0}
-    then:
-      - ${testBean.toString("c")}
-    else:
-      - ${testBean.toString("d")}
+  - script: externalscript/test.js
+  - ${testBean.toString(x)}

@@ -11,6 +11,7 @@ import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
+import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,10 +49,13 @@ public class YamlParserTest {
         ResumeHandler rs = (form, args) -> getEngine().resume(form.getProcessBusinessKey(), form.getEventName(), args);
         formService = new DefaultFormService(rs, fs, expressionManager);
 
+        ResourceResolver resourceResolver = name -> ClassLoader.getSystemResourceAsStream(name);
+
         engine = new EngineBuilder()
                 .withDefinitionProvider(workflowProvider.processes())
                 .withTaskRegistry(taskRegistry)
                 .withUserTaskHandler(new FormTaskHandler(workflowProvider.forms(), formService))
+                .withResourceResolver(resourceResolver)
                 .build();
     }
 
@@ -478,6 +482,21 @@ public class YamlParserTest {
     @Test
     public void test019() throws Exception {
         deploy("019.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        verify(testBean, times(1)).toString(eq(12345));
+    }
+
+    @Test
+    public void test020() throws Exception {
+        deploy("020.yml");
 
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);

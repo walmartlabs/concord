@@ -14,11 +14,13 @@ import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.NoopResumeHandler;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
+import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.UserTaskHandler;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -64,6 +66,11 @@ public class EngineFactory {
 
         UserTaskHandler uth = new FormTaskHandler(adapter.forms(), formService);
 
+        ResourceResolver resourceResolver = name -> {
+            Path p = baseDir.resolve(name);
+            return Files.newInputStream(p);
+        };
+
         Configuration cfg = new Configuration();
         cfg.setInterpolateInputVariables(true);
 
@@ -74,6 +81,7 @@ public class EngineFactory {
                 .withEventStorage(eventStorage)
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
+                .withResourceResolver(resourceResolver)
                 .withConfiguration(cfg)
                 .build();
     }

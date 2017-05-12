@@ -48,7 +48,7 @@
 
         <aether.version>1.13.1</aether.version>
         <boo.version>1.0.8</boo.version>
-        <bpm.version>0.25.0</bpm.version>
+        <bpm.version>0.26.0</bpm.version>
         <cmsdal.version>1.0.5</cmsdal.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.lang.version>3.5</commons.lang.version>

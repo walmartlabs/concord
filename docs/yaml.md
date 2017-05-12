@@ -229,6 +229,14 @@ main:
       execution.setVariable("output", doSomething(x));
 ```
 
+External scripts can also be used:
+```yaml
+main:
+  - script: my_scripts/test.js
+```
+
+Path to a script must be relative to the root directory of a workspace.
+
 See [the expressions](#expressions) section for the list of provided
 global variables.
 
@@ -365,7 +373,7 @@ ifExpr := FIELD_NAME "if" expression FIELD_NAME "then" steps (FIELD_NAME "else" 
 returnExpr := VALUE_STRING "return"
 group := FIELD_NAME ":" steps groupOptions
 callProc := VALUE_STRING
-inlineScript := FIELD_NAME "script" VALUE_STRING FIELD_NAME "body" VALUE_STRING
+script := FIELD_NAME "script" VALUE_STRING (FIELD_NAME "body" VALUE_STRING)?
 formCall := FIELD_NAME "form" VALUE_STRING formCallOptions
 
 stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | inlineScript | taskShort END_OBJECT

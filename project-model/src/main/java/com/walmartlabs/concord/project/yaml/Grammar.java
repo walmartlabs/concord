@@ -220,21 +220,22 @@ public class Grammar {
             satisfyField("event").then(satisfyToken(JsonToken.VALUE_STRING))
                     .map(a -> new YamlEvent(a.location, (String) a.value)));
 
-    // inlineScript := FIELD_NAME "script" VALUE_STRING FIELD_NAME "body" VALUE_STRING
-    private static final Parser<Atom, YamlStep> inlineScript = label("Script",
+    // script := FIELD_NAME "script" VALUE_STRING (FIELD_NAME "body" VALUE_STRING)?
+    private static final Parser<Atom, YamlStep> script = label("Script",
             satisfyField("script").then(satisfyToken(JsonToken.VALUE_STRING))
-                    .bind(a -> satisfyField("body").then(satisfyToken(JsonToken.VALUE_STRING))
-                            .map(b -> new YamlScript(a.location, ScriptTask.Type.CONTENT, (String) a.value, (String) b.value))));
+                    .bind(a -> option(satisfyField("body").then(satisfyToken(JsonToken.VALUE_STRING))
+                                    .map(b -> new YamlScript(a.location, ScriptTask.Type.CONTENT, (String) a.value, (String) b.value)),
+                            new YamlScript(a.location, ScriptTask.Type.REFERENCE, null, (String) a.value))));
 
     // formCall := FIELD_NAME "form" VALUE_STRING formCallOptions
     private static final Parser<Atom, YamlStep> formCall = label("Form call",
             satisfyField("form").then(satisfyToken(JsonToken.VALUE_STRING)).bind(a ->
                     formCallOptions.map(options -> new YamlFormCall(a.location, (String) a.value, options))));
 
-    // stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | event | inlineScript | taskShort END_OBJECT
+    // stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | event | script | taskShort END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(group, ifExpr, exprFull), formCall, taskFull, event, inlineScript, taskShort)));
+                    choice(choice(group, ifExpr, exprFull), formCall, taskFull, event, script, taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
     private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, callProc, stepObject);

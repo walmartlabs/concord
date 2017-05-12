@@ -125,7 +125,14 @@ public final class YamlProcessConverter {
             return sourceMap(proc.call(target, true), s, "Call");
         } else if (s instanceof YamlScript) {
             YamlScript c = (YamlScript) s;
-            return sourceMap(proc.script(c.getType(), c.getLanguage(), c.getBody()), s, "Script");
+            switch (c.getType()) {
+                case CONTENT:
+                    return sourceMap(proc.script(c.getType(), c.getLanguage(), c.getBody()), s, "Script");
+                case REFERENCE:
+                    return sourceMap(proc.script(c.getType(), null, c.getBody()), s, "External script");
+                default:
+                    throw new YamlConverterException("Unsupported script task type: " + c.getType());
+            }
         } else {
             throw new YamlConverterException("Unknown step type: " + s.getClass());
         }
