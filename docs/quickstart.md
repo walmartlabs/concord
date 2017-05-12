@@ -90,8 +90,8 @@ Create a zip archive of the following structure:
     "arguments": {
       "name": "world"
     }
-    }
-    ```
+  }
+  ```
     
   YAML file:
   
