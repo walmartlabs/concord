@@ -214,7 +214,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
         }
 
-        return new ProcessStatusResponse(r.getCreatedDt(), r.getInitiator(), r.getlastUpdateDt(), r.getStatus(), r.getLogFileName());
+        return new ProcessStatusResponse(r.getProjectName(), r.getCreatedDt(), r.getInitiator(),
+                r.getlastUpdateDt(), r.getStatus(), r.getLogFileName());
     }
 
     @Override

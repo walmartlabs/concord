@@ -4,7 +4,11 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <include file="v0.0.1.xml" relativeToChangelogFile="true"/>
-    <include file="v0.2.0.xml" relativeToChangelogFile="true"/>
-    <include file="v0.12.0.xml" relativeToChangelogFile="true"/>
+    <changeSet id="12000" author="ibodrov@gmail.com">
+        <addColumn tableName="PROCESS_HISTORY">
+            <column name="PROJECT_NAME" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

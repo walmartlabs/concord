@@ -40,17 +40,19 @@ public class ProcessHistoryDao extends AbstractDao {
         }
     }
 
-    public void insertInitial(String instanceId, String initiator, String logFileName) {
+    public void insertInitial(String instanceId, String projectName, String initiator, String logFileName) {
         transaction(cfg -> {
             DSLContext create = DSL.using(cfg);
             create.insertInto(PROCESS_HISTORY)
                     .columns(PROCESS_HISTORY.INSTANCE_ID,
+                            PROCESS_HISTORY.PROJECT_NAME,
                             PROCESS_HISTORY.INITIATOR,
                             PROCESS_HISTORY.CREATED_DT,
                             PROCESS_HISTORY.LAST_UPDATE_DT,
                             PROCESS_HISTORY.CURRENT_STATUS,
                             PROCESS_HISTORY.LOG_FILE_NAME)
                     .values(value(instanceId),
+                            value(projectName),
                             value(initiator),
                             currentTimestamp(),
                             currentTimestamp(),
@@ -126,12 +128,13 @@ public class ProcessHistoryDao extends AbstractDao {
 
     private static ProcessHistoryEntry toEntry(Record r) {
         String instanceId = r.get(PROCESS_HISTORY.INSTANCE_ID);
+        String projectName = r.get(PROCESS_HISTORY.PROJECT_NAME);
         Date createdDt = r.get(PROCESS_HISTORY.CREATED_DT);
         String initiator = r.get(PROCESS_HISTORY.INITIATOR);
         ProcessStatus status = ProcessStatus.valueOf(r.get(PROCESS_HISTORY.CURRENT_STATUS));
         Date lastUpdateDt = r.get(PROCESS_HISTORY.LAST_UPDATE_DT);
         String logFileName = r.get(PROCESS_HISTORY.LOG_FILE_NAME);
-        return new ProcessHistoryEntry(instanceId, createdDt, initiator, status, lastUpdateDt, logFileName);
+        return new ProcessHistoryEntry(instanceId, projectName, createdDt, initiator, status, lastUpdateDt, logFileName);
     }
 
     private static List<String> toString(ProcessStatus... as) {

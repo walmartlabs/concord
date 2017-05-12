@@ -33,7 +33,7 @@ public class ProcessHistoryDaoTest extends AbstractDaoTest {
 
         // ---
 
-        dao.insertInitial(i1, "a", "n/a");
+        dao.insertInitial(i1, "project", "a", "n/a");
         dao.update(i1, ProcessStatus.RUNNING);
 
         ProcessHistoryEntry e1 = dao.get(i1);
@@ -42,7 +42,7 @@ public class ProcessHistoryDaoTest extends AbstractDaoTest {
 
         // ---
 
-        dao.insertInitial(i2, "b", "n/a");
+        dao.insertInitial(i2, "project", "b", "n/a");
         dao.update(i2, ProcessStatus.FAILED);
 
         ProcessHistoryEntry e2 = dao.get(i2);
@@ -72,7 +72,7 @@ public class ProcessHistoryDaoTest extends AbstractDaoTest {
 
         // ---
 
-        dao.insertInitial(id, "a", "n/a");
+        dao.insertInitial(id, "project", "a", "n/a");
         dao.update(id, ProcessStatus.RUNNING);
 
         ProcessHistoryEntry e1 = dao.get(id);

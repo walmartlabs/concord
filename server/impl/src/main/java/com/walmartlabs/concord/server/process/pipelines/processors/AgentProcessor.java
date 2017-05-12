@@ -32,13 +32,16 @@ public class AgentProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        boolean resumeMode = payload.getHeader(Payload.RESUME_EVENT_NAME) != null;
+        String instanceId = payload.getInstanceId();
 
+        // TODO move into separate processors
+        boolean resumeMode = payload.getHeader(Payload.RESUME_EVENT_NAME) != null;
         if (resumeMode) {
-            historyDao.update(payload.getInstanceId(), ProcessStatus.RESUMING);
+            historyDao.update(instanceId, ProcessStatus.RESUMING);
         } else {
             // synchronously add an initial record to the process history
-            historyDao.insertInitial(payload.getInstanceId(),
+            historyDao.insertInitial(instanceId,
+                    payload.getHeader(Payload.PROJECT_NAME),
                     payload.getHeader(Payload.INITIATOR),
                     payload.getHeader(LogFileProcessor.LOG_FILE_NAME));
         }
@@ -46,7 +49,7 @@ public class AgentProcessor implements PayloadProcessor {
         // run the payload asynchronously
         threadPool.execute(() -> {
             ProcessExecutorCallback callback = new HistoryCallback(historyDao);
-            executor.run(payload.getInstanceId(),
+            executor.run(instanceId,
                     payload.getHeader(ArchivingProcessor.ARCHIVE_FILE),
                     payload.getHeader(LogFileProcessor.LOG_FILE_PATH),
                     callback);

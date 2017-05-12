@@ -62,6 +62,10 @@ class ProcessStatusPage extends Component {
             <Table definition collapsing>
                 <Table.Body>
                     <Table.Row>
+                        <Table.Cell>Project</Table.Cell>
+                        <Table.Cell>{data.projectName}</Table.Cell>
+                    </Table.Row>
+                    <Table.Row>
                         <Table.Cell>Status</Table.Cell>
                         <Table.Cell>
                             <Label color={constants.statusColors[data.status]}

@@ -4,7 +4,8 @@
 
 ## Added
 
-- concord-console: support for "int" and "decimal" fields in the default form renderer.
+- concord-console: support for "int" and "decimal" fields in the default form renderer;
+- added "project name" column to the process history.
 
 
 

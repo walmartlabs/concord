@@ -17,6 +17,7 @@ import * as constants from "../constants";
 
 const columns = [
     {key: "instanceId", label: "Instance ID", collapsing: true},
+    {key: "projectName", label: "Project", collapsing: true},
     {key: "status", label: "Status"},
     {key: "initiator", label: "Initiator"},
     {key: "lastUpdateDt", label: "Updated"},
