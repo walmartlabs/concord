@@ -8,6 +8,10 @@
 - added "project name" column to the process history;
 - concord-runner: support for external scripts.
 
+## Changed
+
+- concord-server: fixed LDAP attributes retrieval (including `displayName`).
+
 
 
 ## [0.11.2] - 2017-05-09

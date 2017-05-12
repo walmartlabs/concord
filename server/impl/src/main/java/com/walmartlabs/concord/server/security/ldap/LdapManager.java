@@ -74,9 +74,11 @@ public class LdapManager {
                         case MEMBER_OF_ATTR: {
                             Collection<String> names = LdapUtils.getAllAttributeValues(attr);
                             b.addGroups(names);
+                            break;
                         }
                         case DISPLAY_NAME_ATTR: {
                             b.displayName(attr.get().toString());
+                            break;
                         }
                         default: {
                             if (cfg.getExposeAttributes().contains(id)) {
