@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- boo, nexus-perf, teamrosters and oneops plugins are moved into a separate repository.
+
+
+
 ## [0.12.0] - 2017-05-12
 
 ## Added
