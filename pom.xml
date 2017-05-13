@@ -47,9 +47,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aether.version>1.13.1</aether.version>
-        <boo.version>1.0.9</boo.version>
         <bpm.version>0.26.0</bpm.version>
-        <cmsdal.version>1.0.5</cmsdal.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.lang.version>3.5</commons.lang.version>
         <commons.pool.version>2.4.2</commons.pool.version>
@@ -86,7 +84,6 @@
         <mustache.version>0.9.2</mustache.version>
         <nexus.perf.version>1.2.0</nexus.perf.version>
         <node.version>7.4.0</node.version>
-        <oneops-client.version>5.0.7</oneops-client.version>
         <parc.version>0.1.2</parc.version>
         <postgres.version>9.4.1212</postgres.version>
         <provisio.version>0.1.32</provisio.version>
@@ -169,21 +166,6 @@
                 <groupId>com.jcraft</groupId>
                 <artifactId>jsch</artifactId>
                 <version>${jsch.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oneops.boo</groupId>
-                <artifactId>boo</artifactId>
-                <version>${boo.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oneops.cms</groupId>
-                <artifactId>cmsdal</artifactId>
-                <version>${cmsdal.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oneops</groupId>
-                <artifactId>oneops-client</artifactId>
-                <version>${oneops-client.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>

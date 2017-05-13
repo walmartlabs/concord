@@ -77,12 +77,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.plugins</groupId>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>ansible-tasks</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.plugins</groupId>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>ansible-template</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -248,18 +248,8 @@
                             <!-- TODO this should be automated somehow -->
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins</groupId>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins</groupId>
-                                    <artifactId>smtp-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins</groupId>
-                                    <artifactId>boo-task</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
                             </artifactItems>

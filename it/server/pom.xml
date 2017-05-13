@@ -66,7 +66,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.plugins</groupId>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>ansible-template</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -174,14 +174,14 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins</groupId>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-tasks</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
 
                                 <!-- TODO this should be automated -->
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins</groupId>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>smtp-tasks</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
@@ -204,7 +204,7 @@
 
                                 <!-- used by DependenciesIT as an example dependency -->
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins</groupId>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>example-tasks</artifactId>
                                     <version>${project.version}</version>
                                     <destFileName>example.jar</destFileName>

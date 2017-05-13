@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.walmartlabs.concord.plugins</groupId>
+        <groupId>com.walmartlabs.concord.plugins.basic</groupId>
         <artifactId>parent</artifactId>
         <version>0.12.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
@@ -14,7 +14,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.walmartlabs.concord.plugins</groupId>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>ansible-tasks</artifactId>
             <version>${project.version}</version>
         </dependency>
