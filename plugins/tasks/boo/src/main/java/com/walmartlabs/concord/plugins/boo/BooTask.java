@@ -19,7 +19,6 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
 import java.util.*;
 
 @Named("boo")
@@ -27,6 +26,14 @@ public class BooTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(BooTask.class);
     private static final String OO_API_CIS = "/adapter/rest/cm/simple/cis";
     private static final String OO_COST_CENTER_TAG = "costcenter";
+    private static final String OO_DEPLOYMENT_STATE_FAILED = "failed";
+    private static final String OO_DEPLOYMENT_STATE_ACTIVE = "active";
+    private static final String ARGS_KEY_MAX_RETRIES = "maxDeploymentRetries";
+    private static final int DEFAULT_MAX_RETRIES = 3;
+    private static final String ARGS_KEY_RETRIES_SLEEP_SECS = "secondsBetweenRetries";
+    private static final int DEFAULT_RETRIES_SLEEP_SECS = 5;
+    private static final String ARGS_KEY_DEPLOYMENT_TIMEOUT = "deploymentTimeoutMins";
+    private static final int DEFAULT_DEPLOYMENT_TIMEOUT_MINS = 90;
 
     @SuppressWarnings("unchecked")
     public Deployment run(Map<String, Object> args, String payloadPath) throws Exception {
@@ -44,7 +51,60 @@ public class BooTask implements Task {
         BooCli boo = new BooCli();
         boo.init(booTemplatePath.toFile(), null, booTemplateVariables , null);
         Deployment deployment = boo.createOrUpdatePlatforms();
+
+        int deploymentTimeoutMins = getIntValue(args, ARGS_KEY_DEPLOYMENT_TIMEOUT, DEFAULT_DEPLOYMENT_TIMEOUT_MINS);
+        deployment = waitOnDeployment(deployment, deploymentTimeoutMins, boo);
+
+        int maxDeploymentRetries = getIntValue(args, ARGS_KEY_MAX_RETRIES, DEFAULT_MAX_RETRIES);
+        int secondsBetweenRetries = getIntValue(args, ARGS_KEY_RETRIES_SLEEP_SECS, DEFAULT_RETRIES_SLEEP_SECS);
+
+        for (int retryCounter = 0; deployment != null
+                && OO_DEPLOYMENT_STATE_FAILED.equals(deployment.getDeploymentState())
+                &&  retryCounter < maxDeploymentRetries; retryCounter++) { //retry failed deployment
+
+            log.info("Deployment " + deployment.getDeploymentId() + " failed, going to retry..");
+            Thread.sleep(secondsBetweenRetries * 1000);
+            log.info("Doing retry # " + retryCounter);
+            deployment = boo.retryDeployment();
+
+            //now poll the deployment status until it gets to an end state
+            deployment = waitOnDeployment(deployment, deploymentTimeoutMins, boo);
+        }
         return deployment;
+    }
+
+    private Deployment waitOnDeployment(Deployment deployment, int deploymentTimeoutMins,
+                                        BooCli boo) throws Exception {
+        int sleepDurationSeconds = 5;
+
+        if (deployment != null) {
+            int maxChecks = (deploymentTimeoutMins * 60)/sleepDurationSeconds;
+
+            for (int i=0 ; i < maxChecks; i++) {
+                deployment = boo.getDeployment(deployment.getDeploymentId());
+                if (deployment.getDeploymentState().equals(OO_DEPLOYMENT_STATE_ACTIVE)) {
+                    log.info("Deployment " + deployment.getDeploymentId() + " still active...");
+                    Thread.sleep(sleepDurationSeconds * 1000L);
+                    continue;
+                } else {
+                    return deployment;
+                }
+            }
+            log.warn("Deployment running too long, Please check in OneOps");
+        }
+        return null;
+    }
+
+    private int getIntValue(Map<String, Object> args, String argKey, int defaultValue) {
+        Object arg = args.get(argKey);
+        try {
+            if (arg != null) {
+                return Integer.parseInt(String.valueOf(arg).trim());
+            }
+        } catch (NumberFormatException e) {
+            //just return the default value
+        }
+        return defaultValue;
     }
 
     public void run(ExecutionContext ctx, Map<String, Object> args, String payloadPath) throws Exception {
@@ -57,11 +117,12 @@ public class BooTask implements Task {
             }
         }).create();
 
-        deployment.setId(ooDeployment.getDeploymentId());
-        deployment.setNsPath(ooDeployment.getNsPath());
-        deployment.setStatus(ooDeployment.getDeploymentState());
+        if (ooDeployment != null && ooDeployment.getNsPath() != null && ! ooDeployment.getNsPath().isEmpty()) {
+            log.info("Final deployment state: " + ooDeployment.getDeploymentState());
+            deployment.setId(ooDeployment.getDeploymentId());
+            deployment.setNsPath(ooDeployment.getNsPath());
+            deployment.setStatus(ooDeployment.getDeploymentState());
 
-        if (deployment != null && deployment.getNsPath() != null && ! deployment.getNsPath().isEmpty()) {
             ctx.setVariable("deployment", deployment);
             ctx.setVariable("host", args.get("host"));
 
