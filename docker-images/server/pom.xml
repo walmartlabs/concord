@@ -47,6 +47,7 @@
                                 </entryPoint>
                                 <ports>
                                     <port>8001</port>
+                                    <port>8101</port>
                                 </ports>
                                 <assembly>
                                     <mode>dir</mode>

@@ -5,8 +5,6 @@ import com.walmartlabs.concord.project.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -15,7 +13,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-@Named
 public class JarJobExecutor implements JobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(JarJobExecutor.class);
@@ -31,8 +28,9 @@ public class JarJobExecutor implements JobExecutor {
     private final DependencyManager dependencyManager;
     private final ExecutorService executorService;
 
-    @Inject
-    public JarJobExecutor(Configuration cfg, LogManager logManager, DependencyManager dependencyManager, ExecutorService executorService) {
+    public JarJobExecutor(Configuration cfg, LogManager logManager, DependencyManager dependencyManager,
+                          ExecutorService executorService) {
+
         this.cfg = cfg;
         this.logManager = logManager;
         this.dependencyManager = dependencyManager;
@@ -71,18 +69,30 @@ public class JarJobExecutor implements JobExecutor {
 
             log.info("exec ['{}'] -> finished with {}", instanceId, code);
             logManager.log(instanceId, "Process finished with: %s", code);
+
+            try {
+                postProcess(instanceId, workDir);
+            } catch (ExecutionException e) {
+                log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
+                handleError(instanceId, workDir, proc, e.getMessage());
+            }
+
             return code;
         }, executorService);
 
         return new JobInstance() {
 
             @Override
-            public Path getWorkDir() {
-                return workDir;
+            public Path logFile() {
+                return logManager.open(instanceId);
             }
 
             @Override
-            public void kill() {
+            public void cancel() {
+                if (!f.isCancelled()) {
+                    f.cancel(true);
+                }
+
                 if (JarJobExecutor.kill(proc)) {
                     log.warn("kill -> killed by user: {}", instanceId);
                     logManager.log(instanceId, "Killed by user");
@@ -121,6 +131,9 @@ public class JarJobExecutor implements JobExecutor {
         cmd.add(mainClass);
 
         return cmd.toArray(new String[cmd.size()]);
+    }
+
+    protected void postProcess(String instanceId, Path workDir) throws ExecutionException {
     }
 
     private Process start(String instanceId, Path workDir, String[] cmd) throws ExecutionException {

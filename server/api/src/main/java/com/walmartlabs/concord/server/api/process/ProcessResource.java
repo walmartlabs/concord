@@ -13,6 +13,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 
 @Api("Process")
@@ -95,8 +96,8 @@ public interface ProcessResource {
     @ApiOperation("Wait for a process to finish")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}/waitForCompletion")
-    ProcessStatusResponse waitForCompletion(@ApiParam @PathParam("id") @ConcordId String instanceId,
-                                            @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout);
+    ProcessEntry waitForCompletion(@ApiParam @PathParam("id") @ConcordId String instanceId,
+                                   @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout);
 
     /**
      * Forcefully stops a process.
@@ -118,7 +119,7 @@ public interface ProcessResource {
     @ApiOperation("Get status of a process")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    ProcessStatusResponse get(@ApiParam @ConcordId @PathParam("id") String instanceId);
+    ProcessEntry get(@ApiParam @ConcordId @PathParam("id") String instanceId);
 
     /**
      * Returns a process' attachment file.
@@ -133,4 +134,9 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response downloadAttachment(@ApiParam @ConcordId @PathParam("id") String instanceId,
                                 @PathParam("name") @NotNull @Size(min = 1) String attachmentName);
+
+    @GET
+    @ApiOperation("List processes")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<ProcessEntry> list();
 }

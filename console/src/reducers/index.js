@@ -2,7 +2,7 @@
 import {reducers as session} from "../session";
 import {reducers as login} from "../login";
 import {reducers as process} from "../process";
-import {reducers as history} from "../process/history";
+import {reducers as queue} from "../process/queue";
 import {reducers as log} from "../process/log";
 import {reducers as form} from "../process/form";
 import {reducers as wizard} from "../process/wizard";
@@ -14,7 +14,7 @@ export default {
     session,
     login,
     process,
-    history,
+    queue,
     log,
     form,
     wizard,

@@ -91,6 +91,7 @@
                 <artifactId>jooq-codegen-maven</artifactId>
                 <executions>
                     <execution>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>

@@ -5,7 +5,7 @@ import com.icegreen.greenmail.util.ServerSetup;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
@@ -57,7 +57,7 @@ public class SmtpIT extends AbstractServerIT {
 
         // ---
 
-        ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, pir.getStatus());
 
         // ---

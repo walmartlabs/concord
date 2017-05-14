@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.process;
 
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.cfg.PayloadStoreConfiguration;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.zip.ZipInputStream;
 
 @Named
 public class PayloadManager {
@@ -27,8 +29,31 @@ public class PayloadManager {
     private final PayloadStoreConfiguration cfg;
 
     @Inject
-    public PayloadManager(PayloadStoreConfiguration cfg/*, ProcessAttachmentManager attachmentManager*/) {
+    public PayloadManager(PayloadStoreConfiguration cfg) {
         this.cfg = cfg;
+    }
+
+    public void updateState(String instanceId, Path archive) throws IOException {
+        Path dst = ensureWorkspace(instanceId)
+                .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+
+        Path stateDir = dst.resolve(Constants.Files.JOB_STATE_DIR_NAME);
+        if (Files.exists(stateDir)) {
+            IOUtils.deleteRecursively(stateDir);
+        }
+
+        try (ZipInputStream zip = new ZipInputStream(Files.newInputStream(archive))) {
+            IOUtils.unzip(zip, dst);
+        }
+    }
+
+    public Path getWorkspace(String instanceId) {
+        Path baseDir = cfg.getBaseDir().resolve(instanceId);
+        Path p = baseDir.resolve(WORKSPACE_DIR_NAME);
+        if (!Files.exists(p)) {
+            return null;
+        }
+        return p;
     }
 
     public Path getResource(String instanceId, String name) {
@@ -54,7 +79,7 @@ public class PayloadManager {
      */
     public Payload createPayload(String instanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
         Path baseDir = ensurePayloadDir(instanceId);
-        Path workspaceDir = Files.createDirectory(baseDir.resolve(WORKSPACE_DIR_NAME));
+        Path workspaceDir = ensureWorkspace(instanceId);
 
         Payload p = PayloadParser.parse(instanceId, baseDir, input)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir);
@@ -72,8 +97,7 @@ public class PayloadManager {
      * @return
      */
     public Payload createPayload(String instanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
-        Path baseDir = ensurePayloadDir(instanceId);
-        Path workspaceDir = Files.createDirectory(baseDir.resolve(WORKSPACE_DIR_NAME));
+        Path workspaceDir = ensureWorkspace(instanceId);
 
         Payload p = new Payload(instanceId)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
@@ -93,7 +117,7 @@ public class PayloadManager {
      */
     public Payload createPayload(String instanceId, String initiator, InputStream in) throws IOException {
         Path baseDir = ensurePayloadDir(instanceId);
-        Path workspaceDir = Files.createDirectory(baseDir.resolve(WORKSPACE_DIR_NAME));
+        Path workspaceDir = ensureWorkspace(instanceId);
 
         Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
         Files.copy(in, archive);
@@ -130,8 +154,7 @@ public class PayloadManager {
      * @return
      */
     public Payload createResumePayload(String instanceId, String eventName, Map<String, Object> req) throws IOException {
-        Path baseDir = ensurePayloadDir(instanceId);
-        Path workspaceDir = baseDir.resolve(WORKSPACE_DIR_NAME);
+        Path workspaceDir = ensureWorkspace(instanceId);
         if (!Files.exists(workspaceDir)) {
             log.warn("createResumePayload ['{}', '{}'] -> workspace directory is suspiciously missing: {}",
                     instanceId, eventName, workspaceDir);
@@ -147,6 +170,15 @@ public class PayloadManager {
 
     private Path ensurePayloadDir(String instanceId) throws IOException {
         Path p = cfg.getBaseDir().resolve(instanceId);
+        if (!Files.exists(p)) {
+            Files.createDirectories(p);
+        }
+        return p;
+    }
+
+    private Path ensureWorkspace(String instanceId) throws IOException {
+        Path baseDir = ensurePayloadDir(instanceId);
+        Path p = baseDir.resolve(WORKSPACE_DIR_NAME);
         if (!Files.exists(p)) {
             Files.createDirectories(p);
         }

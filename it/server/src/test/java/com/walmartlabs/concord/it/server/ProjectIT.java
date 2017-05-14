@@ -5,7 +5,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
@@ -59,16 +59,16 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessStatusResponse psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args);
+        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*" + greeting + ".*", ab);
     }
 
-    protected ProcessStatusResponse doTest(String projectName, Set<String> projectTemplates,
-                                           String userName, Set<String> permissions,
-                                           String repoName, String repoUrl,
-                                           String entryPoint, Map<String, Object> args) throws InterruptedException, IOException {
+    protected ProcessEntry doTest(String projectName, Set<String> projectTemplates,
+                                  String userName, Set<String> permissions,
+                                  String repoName, String repoUrl,
+                                  String entryPoint, Map<String, Object> args) throws InterruptedException, IOException {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         CreateProjectResponse cpr = projectResource.createOrUpdate(new CreateProjectRequest(projectName, projectTemplates, null));
@@ -103,7 +103,7 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessStatusResponse psr = waitForCompletion(processResource, instanceId);
+        ProcessEntry psr = waitForCompletion(processResource, instanceId);
         assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
 
         // ---

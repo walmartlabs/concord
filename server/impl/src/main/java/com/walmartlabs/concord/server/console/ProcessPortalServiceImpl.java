@@ -46,7 +46,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
 
         String instanceId = resp.getInstanceId();
         while (true) {
-            ProcessStatusResponse psr = processResource.get(instanceId);
+            ProcessEntry psr = processResource.get(instanceId);
             ProcessStatus status = psr.getStatus();
 
             if (status == ProcessStatus.SUSPENDED) {

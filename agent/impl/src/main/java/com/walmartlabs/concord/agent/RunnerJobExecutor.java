@@ -1,18 +1,26 @@
 package com.walmartlabs.concord.agent;
 
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.api.agent.Client;
+import com.walmartlabs.concord.server.api.agent.ClientException;
+import com.walmartlabs.concord.server.api.agent.JobQueue;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
+import java.util.zip.ZipOutputStream;
 
-@Named
 public class RunnerJobExecutor extends JarJobExecutor {
 
-    @Inject
-    public RunnerJobExecutor(Configuration cfg, LogManager logManager, DependencyManager dependencyManager, ExecutorService executorService) {
+    private final Client client;
+
+    public RunnerJobExecutor(Configuration cfg, LogManager logManager, DependencyManager dependencyManager,
+                             ExecutorService executorService, Client client) {
+
         super(cfg, logManager, dependencyManager, executorService);
+        this.client = client;
     }
 
     @Override
@@ -24,5 +32,36 @@ public class RunnerJobExecutor extends JarJobExecutor {
     protected String createClassPath(String entryPoint) {
         String runnerPath = getCfg().getRunnerPath().normalize().toString();
         return Constants.Files.LIBRARIES_DIR_NAME + "/*:" + runnerPath;
+    }
+
+    @Override
+    protected void postProcess(String instanceId, Path workDir) throws ExecutionException {
+        super.postProcess(instanceId, workDir);
+
+        Path attachmentsDir = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+        if (!Files.exists(attachmentsDir)) {
+            return;
+        }
+
+        JobQueue q = client.getJobQueue();
+
+        // send attachments
+
+        Path tmp;
+        try {
+            // TODO cfg
+            tmp = Files.createTempFile("attachments", ".zip");
+            try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmp))) {
+                IOUtils.zip(zip, attachmentsDir);
+            }
+        } catch (IOException e) {
+            throw new ExecutionException("Error while archiving the attachments: " + instanceId, e);
+        }
+
+        try {
+            q.uploadAttachments(instanceId, tmp);
+        } catch (ClientException e) {
+            throw new ExecutionException("Error while sending the attachments: " + instanceId, e);
+        }
     }
 }

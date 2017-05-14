@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
@@ -43,7 +43,7 @@ public class GroovyIT extends AbstractServerIT {
 
         // ---
 
-        ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
 
         // ---
 

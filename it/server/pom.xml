@@ -48,12 +48,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.agent</groupId>
-            <artifactId>concord-agent-api</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server</artifactId>
             <version>${project.version}</version>
@@ -250,28 +244,6 @@
                             <skipRun>${skip.it.tests}</skipRun>
                             <images>
                                 <image>
-                                    <name>walmartlabs/concord-agent</name>
-                                    <alias>agent</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.agent.port:8002</port>
-                                        </ports>
-                                        <wait>
-                                            <!--suppress MavenModelInspection -->
-                                            <http>
-                                                <url>http://localhost:${it.agent.port}/api/v1/job/ping</url>
-                                            </http>
-                                            <time>30000</time>
-                                        </wait>
-                                        <volumes>
-                                            <bind>
-                                                <!-- allows the agent to pick up local dependencies -->
-                                                <volume>${deps.dir}:${deps.dir}</volume>
-                                            </bind>
-                                        </volumes>
-                                    </run>
-                                </image>
-                                <image>
                                     <name>walmartlabs/concord-server</name>
                                     <alias>server</alias>
                                     <run>
@@ -283,9 +255,6 @@
                                                 <volume>/tmp:/tmp</volume>
                                             </bind>
                                         </volumes>
-                                        <links>
-                                            <link>agent</link>
-                                        </links>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
                                             <http>
@@ -293,6 +262,21 @@
                                             </http>
                                             <time>30000</time>
                                         </wait>
+                                    </run>
+                                </image>
+                                <image>
+                                    <name>walmartlabs/concord-agent</name>
+                                    <alias>agent</alias>
+                                    <run>
+                                        <links>
+                                            <link>server</link>
+                                        </links>
+                                        <volumes>
+                                            <bind>
+                                                <!-- allows the agent to pick up local dependencies -->
+                                                <volume>${deps.dir}:${deps.dir}</volume>
+                                            </bind>
+                                        </volumes>
                                     </run>
                                 </image>
                             </images>

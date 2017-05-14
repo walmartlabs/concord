@@ -16,6 +16,7 @@
 
     <modules>
         <module>api</module>
+        <module>agent-api</module>
         <module>db</module>
         <module>impl</module>
         <module>mock</module>

@@ -2,14 +2,14 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
-import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
+import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.SecurityUtils;
@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,29 +41,29 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private static final Logger log = LoggerFactory.getLogger(ProcessResourceImpl.class);
 
     private final ProjectDao projectDao;
-    private final ProcessHistoryDao historyDao;
+    private final ProcessQueueDao queueDao;
     private final Chain archivePipeline;
     private final Chain projectPipeline;
     private final Chain resumePipeline;
-    private final ProcessExecutorImpl processExecutor;
     private final PayloadManager payloadManager;
+    private final AgentManager agentManager;
 
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
-                               ProcessHistoryDao historyDao,
+                               ProcessQueueDao queueDao,
                                ArchivePipeline archivePipeline,
                                ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
-                               ProcessExecutorImpl processExecutor,
-                               PayloadManager payloadManager) {
+                               PayloadManager payloadManager,
+                               AgentManager agentManager) {
 
         this.projectDao = projectDao;
-        this.historyDao = historyDao;
+        this.queueDao = queueDao;
         this.archivePipeline = archivePipeline;
         this.projectPipeline = projectPipeline;
         this.resumePipeline = resumePipeline;
-        this.processExecutor = processExecutor;
         this.payloadManager = payloadManager;
+        this.agentManager = agentManager;
     }
 
     @Override
@@ -159,12 +160,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
-    public ProcessStatusResponse waitForCompletion(String instanceId, long timeout) {
+    public ProcessEntry waitForCompletion(String instanceId, long timeout) {
         log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId, timeout);
 
         long t1 = System.currentTimeMillis();
 
-        ProcessStatusResponse r;
+        ProcessEntry r;
         while (true) {
             r = get(instanceId);
             if (r.getStatus() == ProcessStatus.FINISHED || r.getStatus() == ProcessStatus.FAILED) {
@@ -191,31 +192,31 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     public void kill(String instanceId) {
-        ProcessHistoryEntry e = historyDao.get(instanceId);
-        if (e == null) {
-            log.warn("kill ['{}'] -> not found", instanceId);
-            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+        ProcessEntry entry = queueDao.get(instanceId);
+        if (entry == null) {
+            throw new WebApplicationException("Process not found: " + instanceId, Status.NOT_FOUND);
         }
 
-        ProcessStatus s = e.getStatus();
-        if (s == ProcessStatus.SUSPENDED) {
-            historyDao.update(instanceId, ProcessStatus.FAILED);
-        } else {
-            processExecutor.cancel(instanceId);
+        boolean stopped = false;
+        if (entry.getStatus() == ProcessStatus.SUSPENDED) {
+            stopped = queueDao.update(instanceId, ProcessStatus.SUSPENDED, ProcessStatus.FAILED);
+        }
+
+        if (!stopped) {
+            agentManager.killProcess(instanceId);
         }
     }
 
     @Override
     @Validate
-    public ProcessStatusResponse get(String instanceId) {
-        ProcessHistoryEntry r = historyDao.get(instanceId);
-        if (r == null) {
+    public ProcessEntry get(String instanceId) {
+        ProcessEntry e = queueDao.get(instanceId);
+        if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
             throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
         }
-
-        return new ProcessStatusResponse(r.getProjectName(), r.getCreatedDt(), r.getInitiator(),
-                r.getlastUpdateDt(), r.getStatus(), r.getLogFileName());
+        return new ProcessEntry(instanceId, e.getProjectName(), e.getCreatedAt(), e.getInitiator(),
+                e.getLastUpdatedAt(), e.getStatus(), e.getLastAgentId());
     }
 
     @Override
@@ -246,5 +247,10 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UserPrincipal u = (UserPrincipal) subject.getPrincipal();
         return u.getUsername();
+    }
+
+    @Override
+    public List<ProcessEntry> list() {
+        return queueDao.list();
     }
 }

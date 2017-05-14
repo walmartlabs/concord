@@ -10,7 +10,7 @@ import Layout from "./layout";
 import LoginForm from "./login";
 import ProcessStatus from "./process";
 import ProcessLogViewer from "./process/log";
-import ProcessHistory from "./process/history";
+import ProcessQueue from "./process/queue";
 import ProcessForm from "./process/form";
 import ProcessWizard from "./process/wizard";
 import ProcessPortal from "./process/portal";
@@ -38,8 +38,8 @@ ReactDOM.render(
                 <IndexRedirect to="process"/>
                 <Route path="login" component={LoginForm}/>
                 <Route path="process" onEnter={checkAuth}>
-                    <IndexRedirect to="history"/>
-                    <Route path="history" component={ProcessHistory}/>
+                    <IndexRedirect to="queue"/>
+                    <Route path="queue" component={ProcessQueue}/>
                     <Route path="portal/start" component={ProcessPortal}/>
                     <Route path=":instanceId/log" component={ProcessLogViewer}/>
                     <Route path=":instanceId/form/:formInstanceId" component={ProcessForm}/>

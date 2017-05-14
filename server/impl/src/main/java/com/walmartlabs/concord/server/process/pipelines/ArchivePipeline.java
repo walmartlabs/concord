@@ -36,9 +36,7 @@ public class ArchivePipeline extends Chain {
                 injector.getInstance(RequestDataStoringProcessor.class),
                 injector.getInstance(LogFileProcessor.class),
                 injector.getInstance(ValidatingProcessor.class),
-                injector.getInstance(ArchivingProcessor.class),
-                injector.getInstance(AgentProcessor.class),
-                injector.getInstance(StateTransferringProcessor.class),
-                injector.getInstance(StatusFinalizingProcessor.class));
+                injector.getInstance(EnqueueingProcessor.class)
+        );
     }
 }

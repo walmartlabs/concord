@@ -24,6 +24,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>concord-server-agent-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-project-model</artifactId>
             <version>${project.version}</version>
@@ -62,18 +67,8 @@
             <artifactId>jsch</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.agent</groupId>
-            <artifactId>concord-agent-pool</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.agent</groupId>
-            <artifactId>concord-agent-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -185,6 +180,22 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty</artifactId>
         </dependency>
 
         <dependency>

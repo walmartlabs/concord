@@ -3,7 +3,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ public class SuspendIT extends AbstractServerIT {
 
         // ---
 
-        ProcessStatusResponse pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*aaaa.*", ab);

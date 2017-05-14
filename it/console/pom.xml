@@ -162,37 +162,27 @@
                             <skipRun>${skip.it.tests}</skipRun>
                             <images>
                                 <image>
-                                    <name>walmartlabs/concord-agent</name>
-                                    <alias>agent</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.agent.port:8002</port>
-                                        </ports>
-                                        <wait>
-                                            <!--suppress MavenModelInspection -->
-                                            <http>
-                                                <url>http://localhost:${it.agent.port}/api/v1/job/ping</url>
-                                            </http>
-                                            <time>30000</time>
-                                        </wait>
-                                    </run>
-                                </image>
-                                <image>
                                     <name>walmartlabs/concord-server</name>
                                     <alias>server</alias>
                                     <run>
                                         <ports>
                                             <port>it.server.port:8001</port>
                                         </ports>
-                                        <links>
-                                            <link>agent</link>
-                                        </links>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
                                             <http>
                                                 <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
                                             </http>
                                         </wait>
+                                    </run>
+                                </image>
+                                <image>
+                                    <name>walmartlabs/concord-agent</name>
+                                    <alias>agent</alias>
+                                    <run>
+                                        <links>
+                                            <link>server</link>
+                                        </links>
                                     </run>
                                 </image>
                                 <image>

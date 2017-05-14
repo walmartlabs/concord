@@ -3,21 +3,17 @@ package com.walmartlabs.concord.agent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-@Named
 public class LogManager {
 
     private static final Logger log = LoggerFactory.getLogger(LogManager.class);
 
     private final Configuration cfg;
 
-    @Inject
     public LogManager(Configuration cfg) {
         this.cfg = cfg;
     }
