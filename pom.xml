@@ -22,7 +22,6 @@
         <module>plugins</module>
         <module>server</module>
         <module>console</module>
-        <module>maven-plugin</module>
         <module>docker-images</module>
         <module>it</module>
     </modules>
@@ -46,7 +45,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <aether.version>1.13.1</aether.version>
         <bpm.version>0.26.0</bpm.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.lang.version>3.5</commons.lang.version>
@@ -66,8 +64,6 @@
         <javax.mail.version>1.5.6</javax.mail.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.0.Final</javax.ws.rs.version>
-        <jcabi.aether.version>0.10.1</jcabi.aether.version>
-        <jcommander.version>1.58</jcommander.version>
         <jetty.version>9.2.11.v20150529</jetty.version>
         <jgit.version>4.6.0.201612231935-r</jgit.version>
         <jooq.version>3.9.0</jooq.version>
@@ -410,51 +406,6 @@
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgres.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.sonatype.aether</groupId>
-                <artifactId>aether-api</artifactId>
-                <version>${aether.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.sonatype.aether</groupId>
-                <artifactId>aether-util</artifactId>
-                <version>${aether.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-settings-builder</artifactId>
-                <version>${maven.api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-model</artifactId>
-                <version>${maven.api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-project</artifactId>
-                <version>${maven.prj.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jcabi</groupId>
-                <artifactId>jcabi-aether</artifactId>
-                <version>${jcabi.aether.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.beust</groupId>
-                <artifactId>jcommander</artifactId>
-                <version>${jcommander.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-plugin-api</artifactId>
-                <version>${maven.api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.plugin-tools</groupId>
-                <artifactId>maven-plugin-annotations</artifactId>
-                <version>${maven.annotation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.icegreen</groupId>
