@@ -30,8 +30,8 @@ platforms:
         port: '5432'
       lb:
         listeners: '["tcp 5432 tcp 5432"]'
-        lbmethod: 'roundrobin' 
-        ecv_map: '{"5432" : "GET /notused"}' 
+        lbmethod: 'roundrobin'
+        ecv_map: '{"5432" : "GET /notused"}'
       secgroup:
         inbound: '[
           "22 22 tcp 0.0.0.0/0",
@@ -77,9 +77,10 @@ platforms:
 
               docker rm -f agent
 
-              docker run -d -p 8002:8002 \
-              -e 'SERVER_HOST_URL=server' \
-              -v {{dataVolume}}/tmp:/tmp --name agent \
+              docker run -d \
+              --name agent \
+              -e 'SERVER_HOST=server' \
+              -v {{dataVolume}}/tmp:/tmp \
               docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
       user:
         user-jpise:
@@ -97,8 +98,7 @@ platforms:
 
       secgroup:
         inbound: '[
-          "22 22 tcp 0.0.0.0/0",
-          "8002 8002 tcp 0.0.0.0/0"
+          "22 22 tcp 0.0.0.0/0"
         ]'
 
   server:
@@ -126,8 +126,10 @@ platforms:
 
                   docker rm -f server console
 
-                  docker run -d -p 8001:8001 \
+                  docker run -d \
                   --name server \
+                  -p 8001:8001 \
+                  -p 8101:8101 \
                   -v {{dataVolume}}/data:/opt/concord/data \
                   -v {{dataVolume}}/tmp:/tmp \
                   -e 'DB_URL=jdbc:postgresql://db:5432/concord' \
@@ -185,8 +187,8 @@ platforms:
         inbound: '[
           "22 22 tcp 0.0.0.0/0",
           "8080 8080 tcp 0.0.0.0/0",
-          "8081 8081 tcp 0.0.0.0/0",
-          "8001 8001 tcp 0.0.0.0/0"
+          "8001 8001 tcp 0.0.0.0/0",
+          "8101 8101 tcp 0.0.0.0/0"
         ]'
 
   static:
@@ -218,6 +220,14 @@ platforms:
           "22 22 tcp 0.0.0.0/0",
           "80 80 tcp 0.0.0.0/0"
         ]'
+
+#scale:
+#  agent:
+#    scaling:
+#      compute:
+#        min: '{{agentsMin}}'
+#        max: '{{agentsMax}}'
+#        current: '{{agentsMin}}'
 
 environment:
   global_dns: true
