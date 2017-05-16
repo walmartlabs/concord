@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -8,9 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,7 +26,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        Map<?, ?> meta = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> meta = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (meta == null) {
             return chain.process(payload);
         }
@@ -31,8 +35,22 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
         Path dst = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
 
         ObjectMapper om = new ObjectMapper();
-        try (Writer writer = Files.newBufferedWriter(dst)) {
-            om.writeValue(writer, meta);
+        try {
+            Map<String, Object> prev = Collections.emptyMap();
+            if (Files.exists(dst)) {
+                try (InputStream in = Files.newInputStream(dst)) {
+                    prev = om.readValue(in, Map.class);
+                }
+            }
+
+            // merge everything except "arguments"
+            Map<String, Object> data = new HashMap<>(prev);
+            data.remove(Constants.Request.ARGUMENTS_KEY);
+            ConfigurationUtils.deepMerge(data, meta);
+
+            try (Writer writer = Files.newBufferedWriter(dst)) {
+                om.writeValue(writer, data);
+            }
         } catch (IOException e) {
             throw new ProcessException("Error while saving a metadata file: " + dst, e);
         }

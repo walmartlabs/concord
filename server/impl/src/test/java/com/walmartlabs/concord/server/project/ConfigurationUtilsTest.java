@@ -59,4 +59,16 @@ public class ConfigurationUtilsTest {
         assertEquals("localhost", ConfigurationUtils.get(m, "arguments", "smtpParams", "host"));
         assertEquals("hello", ConfigurationUtils.get(m, "arguments", "mail"));
     }
+
+    @Test
+    public void testMerge() throws Exception {
+        Map<String, Object> a = new HashMap<>();
+        a.put("x", 123);
+
+        Map<String, Object> b = new HashMap<>();
+        b.put("y", 234);
+
+        ConfigurationUtils.merge(a, b);
+        assertEquals(234, a.get("y"));
+    }
 }
