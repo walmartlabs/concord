@@ -3,8 +3,7 @@ package com.walmartlabs.concord.server.console;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import io.takari.bpm.api.ExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
@@ -21,7 +20,6 @@ import static javax.ws.rs.core.Response.Status;
 @Named
 public class ProcessPortalServiceImpl implements ProcessPortalService, Resource {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessPortalServiceImpl.class);
     private static final long STATUS_REFRESH_DELAY = 250;
 
     private final ProcessResource processResource;
@@ -37,6 +35,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
 
     @Override
     @Validate
+    @RequiresAuthentication
     public Response startProcess(String entryPoint) {
         if (entryPoint == null || entryPoint.trim().isEmpty()) {
             throw new WebApplicationException("Invalid entry point", Status.BAD_REQUEST);
@@ -88,9 +87,6 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
         FormSessionResponse fsr = customFormService.startSession(instanceId, f.getFormInstanceId());
         return Response.status(Status.MOVED_PERMANENTLY)
                 .header(HttpHeaders.LOCATION, fsr.getUri())
-                .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-                .header("Pragma", "no-cache")
-                .header(HttpHeaders.EXPIRES, "0")
                 .build();
     }
 }

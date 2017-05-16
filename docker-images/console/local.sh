@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker rm -f console
+docker rm -f console &> /dev/null
 
 docker run -it --rm \
 --network=host \

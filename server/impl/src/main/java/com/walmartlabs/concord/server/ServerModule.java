@@ -23,6 +23,7 @@ public class ServerModule extends BootstrapModule {
             @Override
             protected void configureServlets() {
                 filter("/service/*", "/api/*", "/logs/*", "/forms/*", "/swagger/*").through(CORSFilter.class);
+                filter("/service/*", "/api/*", "/logs/*", "/forms/*", "/swagger/*").through(NoCacheFilter.class);
                 ShiroWebModule.bindGuiceFilter(binder());
             }
         };
