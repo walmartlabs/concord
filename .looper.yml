@@ -9,5 +9,5 @@ flows:
     - sonar("Sonar"):
       - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
   default (on linux):
-    - DOCKER_HOST=tcp://localhost:2375 mvn clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
+    - (name ITs) DOCKER_HOST=tcp://localhost:2375 mvn clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
     - call: runsonar
