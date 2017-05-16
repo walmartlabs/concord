@@ -9,10 +9,12 @@ npm start
 
 It will start a HTTP server on port 3000, with API request proxy to 8001.
 
-To use the custom (branded) forms feature, start the development proxy server using
+The easiest way to test custom (branded) forms is to use the console's docker image:
 ```
-npm run dev
+./docker-images/console/local.sh
 ```
+
+The UI will be available on the port 8080.
 
 ### Type checking
 
