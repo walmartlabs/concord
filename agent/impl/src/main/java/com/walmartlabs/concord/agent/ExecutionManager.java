@@ -2,30 +2,27 @@ package com.walmartlabs.concord.agent;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.walmartlabs.concord.agent.api.JobStatus;
-import com.walmartlabs.concord.agent.api.JobType;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.api.agent.Client;
+import com.walmartlabs.concord.server.api.agent.JobStatus;
+import com.walmartlabs.concord.server.api.agent.JobType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-@Named
-@Singleton
+//@Named
+//@Singleton
 public class ExecutionManager {
 
     private static final Logger log = LoggerFactory.getLogger(ExecutionManager.class);
@@ -45,21 +42,25 @@ public class ExecutionManager {
 
     private final Object mutex = new Object();
 
-    @Inject
-    public ExecutionManager(JarJobExecutor jarJobExecutor,
+    //    @Inject
+    public ExecutionManager(/*JarJobExecutor jarJobExecutor,
                             RunnerJobExecutor runnerJobExecutor,
-                            LogManager logManager,
+                            LogManager logManager,*/
+                            Client client,
                             Configuration cfg) {
 
-        this.logManager = logManager;
+        this.logManager = new LogManager(cfg);
         this.cfg = cfg;
         this.jobExecutors = new HashMap<>();
 
-        jobExecutors.put(JobType.JAR, jarJobExecutor);
-        jobExecutors.put(JobType.RUNNER, runnerJobExecutor);
+        DependencyManager dependencyManager = new DependencyManager(cfg);
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        jobExecutors.put(JobType.JAR, new JarJobExecutor(cfg, logManager, dependencyManager, executorService));
+        jobExecutors.put(JobType.RUNNER, new RunnerJobExecutor(cfg, logManager, dependencyManager, executorService, client));
     }
 
-    public void start(String instanceId, JobType type, String entryPoint, InputStream payload) throws ExecutionException {
+    public JobInstance start(String instanceId, JobType type, String entryPoint, InputStream payload) throws ExecutionException {
         JobExecutor exec = jobExecutors.get(type);
         if (exec == null) {
             throw new IllegalArgumentException("Unknown job type: " + type);
@@ -76,6 +77,7 @@ public class ExecutionManager {
             statuses.put(instanceId, JobStatus.RUNNING);
         }
 
+//        JobInstance i = exec.start(instanceId, tmpDir, entryPoint);
         JobInstance i;
         try {
             i = exec.start(instanceId, tmpDir, entryPoint);
@@ -97,6 +99,8 @@ public class ExecutionManager {
             handleError(instanceId, e);
             return null;
         });
+
+        return i;
     }
 
     private void handleError(String instanceId, Throwable e) {
@@ -109,6 +113,7 @@ public class ExecutionManager {
     }
 
     public int countRunning() {
+        /*
         int i = 0;
         synchronized (mutex) {
             for (Map.Entry<String, JobStatus> e : statuses.asMap().entrySet()) {
@@ -118,9 +123,12 @@ public class ExecutionManager {
             }
         }
         return i;
+        */
+        return 0;
     }
 
     public void cancel() {
+        /*
         Collection<String> ids;
         synchronized (mutex) {
             ids = new ArrayList<>(instances.asMap().keySet());
@@ -129,6 +137,7 @@ public class ExecutionManager {
         for (String id : ids) {
             cancel(id);
         }
+        */
     }
 
     public void cancel(String id) {
@@ -144,7 +153,7 @@ public class ExecutionManager {
             return;
         }
 
-        i.kill();
+        i.cancel();
     }
 
     public JobStatus getStatus(String id) {
@@ -184,19 +193,21 @@ public class ExecutionManager {
     }
 
     private Path getAttachmentDir(String instanceId) {
+        /*
         synchronized (mutex) {
             JobInstance i = instances.getIfPresent(instanceId);
             if (i == null) {
                 return null;
             }
             return i.getWorkDir().resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
-        }
+        }*/
+        return null;
     }
 
     private Path extract(String id, InputStream in) throws ExecutionException {
         Path baseDir = cfg.getPayloadDir();
         try {
-            Path dst = baseDir.resolve(id);
+            Path dst = Files.createTempDirectory(baseDir, "workDir");
             Files.createDirectories(dst);
 
             try (ZipInputStream zip = new ZipInputStream(in)) {

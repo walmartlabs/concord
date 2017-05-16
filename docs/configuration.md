@@ -8,12 +8,6 @@ Most of the configuration done via environment variables (e.g. passed with a `do
 
 All parameters are optional.
 
-**Agent**
-
-| Variable               | Description                                                     | Default value           |
-|------------------------|-----------------------------------------------------------------|-------------------------|
-| AGENT_URL              | URL of an agent instance                                        | `http://localhost:8002` |
-
 **Database**
 
 | Variable    | Description                                                     | Default value                        |

@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.api.history.ProcessHistoryEntry;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
-import com.walmartlabs.concord.server.history.ProcessHistoryDao;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.FormUtils;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
 import com.walmartlabs.concord.server.process.PayloadManager;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
@@ -53,16 +53,18 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     private final FormServerConfiguration cfg;
     private final ConcordFormService formService;
     private final PayloadManager payloadManager;
-    private final ProcessHistoryDao historyDao;
+    private final ProcessQueueDao queueDao;
     private final ObjectMapper objectMapper;
     private final FormValidatorLocale validatorLocale;
 
     @Inject
-    public CustomFormServiceImpl(FormServerConfiguration cfg, ConcordFormService formService, PayloadManager payloadManager, ProcessHistoryDao historyDao) {
+    public CustomFormServiceImpl(FormServerConfiguration cfg, ConcordFormService formService,
+                                 PayloadManager payloadManager, ProcessQueueDao queueDao) {
+
         this.cfg = cfg;
         this.formService = formService;
         this.payloadManager = payloadManager;
-        this.historyDao = historyDao;
+        this.queueDao = queueDao;
 
         this.objectMapper = new ObjectMapper()
                 .enable(SerializationFeature.INDENT_OUTPUT);
@@ -137,7 +139,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                         writeData(dst, success());
                     } else {
                         while (true) {
-                            ProcessHistoryEntry entry = historyDao.get(processInstanceId);
+                            ProcessEntry entry = queueDao.get(processInstanceId);
                             ProcessStatus s = entry.getStatus();
 
                             if (s == ProcessStatus.SUSPENDED) {

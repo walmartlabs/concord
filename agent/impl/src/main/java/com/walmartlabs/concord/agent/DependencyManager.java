@@ -4,8 +4,6 @@ import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 
-@Named
 public class DependencyManager {
 
     private static final Logger log = LoggerFactory.getLogger(DependencyManager.class);
@@ -23,7 +20,6 @@ public class DependencyManager {
     private final Configuration cfg;
     private final Object mutex = new Object();
 
-    @Inject
     public DependencyManager(Configuration cfg) {
         this.cfg = cfg;
     }

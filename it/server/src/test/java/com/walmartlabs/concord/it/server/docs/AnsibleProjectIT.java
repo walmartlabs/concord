@@ -6,7 +6,7 @@ import com.walmartlabs.concord.it.server.GitUtils;
 import com.walmartlabs.concord.it.server.ITConstants;
 import com.walmartlabs.concord.it.server.MockGitSshServer;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
@@ -101,7 +101,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessStatusResponse psr = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
 
         // ---
 

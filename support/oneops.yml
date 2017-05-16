@@ -78,6 +78,7 @@ platforms:
               docker rm -f agent
 
               docker run -d -p 8002:8002 \
+              -e 'SERVER_HOST_URL=server' \
               -v {{dataVolume}}/tmp:/tmp --name agent \
               docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
       user:
@@ -129,7 +130,6 @@ platforms:
                   --name server \
                   -v {{dataVolume}}/data:/opt/concord/data \
                   -v {{dataVolume}}/tmp:/tmp \
-                  -e 'AGENT_URL=http://agent:8002' \
                   -e 'DB_URL=jdbc:postgresql://db:5432/concord' \
                   -e 'DB_DIALECT=POSTGRES' \
                   -e 'DB_DRIVER=org.postgresql.Driver' \

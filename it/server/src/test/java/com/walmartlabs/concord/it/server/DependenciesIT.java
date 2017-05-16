@@ -4,7 +4,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class DependenciesIT extends AbstractServerIT {
         StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload));
         assertNotNull(spr.getInstanceId());
 
-        ProcessStatusResponse psr = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, psr.getStatus());
 
         // ---

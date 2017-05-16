@@ -3,7 +3,7 @@ import {fork} from "redux-saga/effects";
 import {sagas as session} from "./session";
 import {sagas as loginForm} from "./login";
 import {sagas as process} from "./process";
-import {sagas as processHistory} from "./process/history";
+import {sagas as processQueue} from "./process/queue";
 import {sagas as processLog} from "./process/log";
 import {sagas as form} from "./process/form";
 import {sagas as wizard} from "./process/wizard";
@@ -15,7 +15,7 @@ export default function*(): Generator<*, *, *> {
         fork(session),
         fork(loginForm),
         fork(process),
-        fork(processHistory),
+        fork(processQueue),
         fork(processLog),
         fork(form),
         fork(wizard),

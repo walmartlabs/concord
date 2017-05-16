@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.common;
 
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
@@ -85,11 +85,11 @@ public class ServerClient {
         return ab;
     }
 
-    public static ProcessStatusResponse waitForStatus(ProcessResource processResource, String instanceId,
-                                                      ProcessStatus status, ProcessStatus... more) throws InterruptedException {
+    public static ProcessEntry waitForStatus(ProcessResource processResource, String instanceId,
+                                             ProcessStatus status, ProcessStatus... more) throws InterruptedException {
         int retries = 5;
 
-        ProcessStatusResponse pir;
+        ProcessEntry pir;
         while (true) {
             try {
                 pir = processResource.get(instanceId);
@@ -113,7 +113,7 @@ public class ServerClient {
         }
     }
 
-    public static ProcessStatusResponse waitForCompletion(ProcessResource processResource, String instanceId) throws InterruptedException {
+    public static ProcessEntry waitForCompletion(ProcessResource processResource, String instanceId) throws InterruptedException {
         return waitForStatus(processResource, instanceId, ProcessStatus.FAILED, ProcessStatus.FINISHED);
     }
 

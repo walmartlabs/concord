@@ -61,9 +61,6 @@
                                 <entryPoint>
                                     <shell>${concord.baseDir}/agent/start.sh</shell>
                                 </entryPoint>
-                                <ports>
-                                    <port>8002</port>
-                                </ports>
                                 <assembly>
                                     <mode>dir</mode>
                                     <basedir>${concord.baseDir}/agent</basedir>

@@ -4,7 +4,7 @@ import com.walmartlabs.concord.it.server.AbstractServerIT;
 import com.walmartlabs.concord.it.server.ITConstants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
 
-        ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, pir.getStatus());
 
         // ---

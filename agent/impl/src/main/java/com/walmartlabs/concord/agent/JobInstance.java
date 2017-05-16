@@ -5,9 +5,9 @@ import java.util.concurrent.CompletableFuture;
 
 public interface JobInstance {
 
-    Path getWorkDir();
+    Path logFile();
 
-    void kill();
+    void cancel();
 
     CompletableFuture<?> future();
 }

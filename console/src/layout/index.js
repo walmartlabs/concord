@@ -34,8 +34,8 @@ const layout = ({fullScreen, user: {displayName, loggedIn}, title, children, doL
                 <Menu.Item active={router.isActive("/process")}>
                     <Menu.Header><Icon name="tasks"/>Processes</Menu.Header>
                     <Menu.Menu>
-                        <Menu.Item active={router.isActive("/process/history")}>
-                            <Link to="/process/history">History</Link>
+                        <Menu.Item active={router.isActive("/process/queue")}>
+                            <Link to="/process/queue">Queue</Link>
                         </Menu.Item>
                     </Menu.Menu>
                 </Menu.Item>

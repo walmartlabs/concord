@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessStatusResponse;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.Test;
 
@@ -31,7 +31,7 @@ public class ProcessIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -57,7 +57,7 @@ public class ProcessIT extends AbstractServerIT {
             fail("should fail");
         } catch (WebApplicationException e) {
             Response r = e.getResponse();
-            ProcessStatusResponse pir = r.readEntity(ProcessStatusResponse.class);
+            ProcessEntry pir = r.readEntity(ProcessEntry.class);
             assertEquals(ProcessStatus.RUNNING, pir.getStatus());
         }
 
@@ -76,7 +76,7 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        ProcessStatusResponse pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
 
         // ---
 

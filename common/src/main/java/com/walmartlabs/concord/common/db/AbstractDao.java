@@ -2,6 +2,7 @@ package com.walmartlabs.concord.common.db;
 
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
+import org.jooq.TransactionalCallable;
 import org.jooq.TransactionalRunnable;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -33,6 +34,12 @@ public abstract class AbstractDao {
                 DSLContext tx = DSL.using(cfg);
                 t.run(tx);
             });
+        }
+    }
+
+    protected <T> T txResult(TransactionalCallable<T> t) {
+        try (DSLContext ctx = DSL.using(cfg)) {
+            return ctx.transactionResult(t);
         }
     }
 
