@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: fixed rendering of "Updated" and "Created" columns in the queue table.
+
+
+
 ## [0.13.0] - 2017-05-16
 
 ### Added
