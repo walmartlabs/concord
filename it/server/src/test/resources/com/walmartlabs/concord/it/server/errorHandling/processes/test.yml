@@ -1,0 +1,4 @@
+main:
+- expr: ${misc.throwBpmnError('boom')}
+  error:
+  - log: We got ${lastError.message}

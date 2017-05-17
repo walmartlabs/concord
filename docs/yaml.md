@@ -18,7 +18,7 @@ main:
     then:
       - reportSuccess                             # (3)
     else:
-      - log: failure :-(
+      - log: failure :-( ${lastError.message}
     
 reportSuccess:
   - ${dbBean.updateStatus(result.id, "SUCCESS")}; # (4)

@@ -84,4 +84,19 @@ public class ProcessIT extends AbstractServerIT {
 
         assertLog(".*Hello, world.*", ab);
     }
+
+    @Test(timeout = 30000)
+    public void testErrorHandling() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("errorHandling").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload));
+        assertNotNull(spr.getInstanceId());
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*We got.*boom.*", ab);
+    }
 }

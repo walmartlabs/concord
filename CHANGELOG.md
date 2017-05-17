@@ -4,7 +4,8 @@
 
 ### Added
 
-- concord-server-db: indexes for the process queue.
+- concord-server-db: indexes for the process queue;
+- yaml: `lastError` can now be used to access the last handled `BpmnError`.
 
 ### Changed
 
@@ -16,12 +17,12 @@
 
 ### Added
 
-- concord-server: process queue.
+- concord-server: process queue;
 - concord-server, concord-agent: support for multiple agents, async transport.
 
 ### Changed
 
-- boo, nexus-perf, teamrosters and oneops plugins are moved into a separate repository;
+- boo, nexus-perf, teamrosters and oneops plugins are moved into a separate repository.
 
 
 
