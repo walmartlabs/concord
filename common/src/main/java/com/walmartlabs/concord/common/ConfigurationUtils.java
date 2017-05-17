@@ -64,6 +64,7 @@ public final class ConfigurationUtils {
         return a;
     }
 
+    @SafeVarargs
     public static Map<String, Object> deepMerge(Map<String, Object>... maps) {
         if (maps == null || maps.length == 0) {
             return Collections.emptyMap();

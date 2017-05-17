@@ -114,6 +114,7 @@ public class JarJobExecutor implements JobExecutor {
         return Constants.Files.LIBRARIES_DIR_NAME + "/*:" + entryPoint;
     }
 
+    @SuppressWarnings("unchecked")
     protected String[] createCommand(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
         Map<String, Object> agentParams = getAgentParameters(workDir);
         Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.Agent.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
@@ -226,6 +227,7 @@ public class JarJobExecutor implements JobExecutor {
         return true;
     }
 
+    @SuppressWarnings("unchecked")
     private static Map<String, Object> getAgentParameters(Path payload) throws ExecutionException {
         Path p = payload.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME);
         if (!Files.exists(p)) {

@@ -166,6 +166,7 @@ public class RunPlaybookTask2 implements Task {
         return p.toAbsolutePath().toString();
     }
 
+    @SuppressWarnings("unchecked")
     private static void updateAttachment(String payloadPath, int code) throws IOException {
         Path p = Paths.get(payloadPath, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, AnsibleConstants.STATS_FILE_NAME);
 

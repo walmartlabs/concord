@@ -80,6 +80,7 @@ platforms:
               docker run -d \
               --name agent \
               -e 'SERVER_HOST=server' \
+              -e 'WORKERS_COUNT={{agentWorkers}}' \
               -v {{dataVolume}}/tmp:/tmp \
               docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
       user:

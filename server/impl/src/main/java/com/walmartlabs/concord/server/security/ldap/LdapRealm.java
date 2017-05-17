@@ -62,6 +62,7 @@ public class LdapRealm extends AbstractLdapRealm {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected AuthenticationInfo queryForAuthenticationInfo(AuthenticationToken token, LdapContextFactory ldapContextFactory) throws NamingException {
         UsernamePasswordToken t = (UsernamePasswordToken) token;
 

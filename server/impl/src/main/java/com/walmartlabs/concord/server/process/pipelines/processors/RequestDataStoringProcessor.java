@@ -25,6 +25,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
     private static final Logger log = LoggerFactory.getLogger(RequestDataStoringProcessor.class);
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> meta = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (meta == null) {

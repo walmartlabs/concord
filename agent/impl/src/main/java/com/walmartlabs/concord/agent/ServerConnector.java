@@ -28,12 +28,10 @@ public class ServerConnector {
         String agentId = UUID.randomUUID().toString();
         String host = cfg.getServerHost();
         int port = cfg.getServerPort();
-
-        // TODO cfg
-        int workersCount = 3;
+        int workersCount = cfg.getWorkersCount();
 
         client = new Client(agentId, host, port);
-        log.info("start -> connected to {}:{}", host, port);
+        log.info("start -> connecting to {}:{}", host, port);
 
         ExecutionManager executionManager = new ExecutionManager(client, cfg);
         commandHandler = executor.submit(new CommandHandler(client, executionManager));

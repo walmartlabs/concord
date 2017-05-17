@@ -5,8 +5,7 @@ import java.util.concurrent.Executors;
 public class Main {
 
     public void start() throws Exception {
-        Configuration cfg = new ConfigurationProvider().get();
-
+        Configuration cfg = new Configuration();
         ServerConnector c = new ServerConnector(Executors.newCachedThreadPool());
         c.start(cfg);
 
