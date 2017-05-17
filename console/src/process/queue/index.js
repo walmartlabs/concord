@@ -20,7 +20,7 @@ const columns = [
     {key: "projectName", label: "Project", collapsing: true},
     {key: "status", label: "Status"},
     {key: "initiator", label: "Initiator"},
-    {key: "lastUpdateAt", label: "Updated"},
+    {key: "lastUpdatedAt", label: "Updated"},
     {key: "createdAt", label: "Created"},
     {key: "actions", label: "Actions", collapsing: true}
 ];

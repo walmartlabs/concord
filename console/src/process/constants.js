@@ -1,7 +1,7 @@
 // @flow
 
 // date fields
-export const dateKeys = ["lastUpdateDt", "createdDt"];
+export const dateKeys = ["lastUpdatedAt", "createdAt"];
 
 export const idKey = "instanceId";
 export const statusKey = "status";
