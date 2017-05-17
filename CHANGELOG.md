@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server-db: indexes for the process queue.
+
 ### Changed
 
 - concord-console: fixed rendering of "Updated" and "Created" columns in the queue table.
