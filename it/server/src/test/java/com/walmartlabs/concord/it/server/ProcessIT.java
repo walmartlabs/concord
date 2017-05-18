@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 import static org.junit.Assert.*;
 
 public class ProcessIT extends AbstractServerIT {
@@ -99,5 +100,19 @@ public class ProcessIT extends AbstractServerIT {
 
         assertLog(".*Kaboom.*", ab);
         assertLog(".*We got:.*java.lang.RuntimeException.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testStartupProblem() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("startupProblem").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload));
+        assertNotNull(spr.getInstanceId());
+
+        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*gaaarbage.*", ab);
     }
 }

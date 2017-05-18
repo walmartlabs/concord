@@ -73,8 +73,8 @@ public class ExecutionManager {
         try {
             i = exec.start(instanceId, tmpDir, entryPoint);
         } catch (Exception e) {
-            log.error("start ['{}', {}, '{}'] -> failed", instanceId, type, entryPoint, e);
-            handleError(instanceId, e);
+            log.warn("start ['{}', {}, '{}'] -> failed", instanceId, type, entryPoint, e);
+            handleError(instanceId);
             throw e;
         }
 
@@ -87,14 +87,14 @@ public class ExecutionManager {
                 statuses.put(instanceId, JobStatus.COMPLETED);
             }
         }).exceptionally(e -> {
-            handleError(instanceId, e);
+            handleError(instanceId);
             return null;
         });
 
         return i;
     }
 
-    private void handleError(String instanceId, Throwable e) {
+    private void handleError(String instanceId) {
         synchronized (mutex) {
             JobStatus s = statuses.getIfPresent(instanceId);
             if (s != JobStatus.CANCELLED) {

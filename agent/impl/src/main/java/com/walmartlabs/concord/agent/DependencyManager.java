@@ -76,6 +76,6 @@ public class DependencyManager {
         if (idx >= 0 && idx + 1 < p.length()) {
             return p.substring(idx + 1);
         }
-        throw new IllegalArgumentException("Invalid URL: " + uri);
+        throw new IllegalArgumentException("Invalid dependency URL: " + uri);
     }
 }

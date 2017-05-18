@@ -43,43 +43,56 @@ public class JarJobExecutor implements JobExecutor {
 
     @Override
     public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
-        collectDependencies(instanceId, workDir);
+        try {
+            collectDependencies(instanceId, workDir);
 
-        String[] cmd = createCommand(instanceId, workDir, entryPoint);
-        Process proc = start(instanceId, workDir, cmd);
+            String[] cmd = createCommand(instanceId, workDir, entryPoint);
+            Process proc = start(instanceId, workDir, cmd);
 
-        CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> {
-            try {
-                logManager.log(instanceId, proc.getInputStream());
-            } catch (IOException e) {
-                log.warn("start ['{}', '{}'] -> error while saving a log file", instanceId, workDir);
-            }
+            CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> {
+                try {
+                    logManager.log(instanceId, proc.getInputStream());
+                } catch (IOException e) {
+                    log.warn("start ['{}', '{}'] -> error while saving a log file", instanceId, workDir);
+                }
 
-            int code;
-            try {
-                code = proc.waitFor();
-            } catch (Exception e) {
-                throw handleError(instanceId, workDir, proc, e.getMessage());
-            }
+                int code;
+                try {
+                    code = proc.waitFor();
+                } catch (Exception e) {
+                    throw handleError(instanceId, workDir, proc, e.getMessage());
+                }
 
-            if (code != 0) {
-                log.warn("exec ['{}'] -> finished with {}", instanceId, code);
-                throw handleError(instanceId, workDir, proc, "Process exit code: " + code);
-            }
+                if (code != 0) {
+                    log.warn("exec ['{}'] -> finished with {}", instanceId, code);
+                    throw handleError(instanceId, workDir, proc, "Process exit code: " + code);
+                }
 
-            log.info("exec ['{}'] -> finished with {}", instanceId, code);
-            logManager.log(instanceId, "Process finished with: %s", code);
+                log.info("exec ['{}'] -> finished with {}", instanceId, code);
+                logManager.log(instanceId, "Process finished with: %s", code);
 
-            try {
-                postProcess(instanceId, workDir);
-            } catch (ExecutionException e) {
-                log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
-                handleError(instanceId, workDir, proc, e.getMessage());
-            }
+                try {
+                    postProcess(instanceId, workDir);
+                } catch (ExecutionException e) {
+                    log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
+                    handleError(instanceId, workDir, proc, e.getMessage());
+                }
 
-            return code;
-        }, executorService);
+                return code;
+            }, executorService);
 
+            return createJobInstance(instanceId, proc, f);
+        } catch (Exception e) {
+            log.warn("start ['{}', '{}'] -> process startup error: {}", instanceId, workDir, e.getMessage());
+            logManager.log(instanceId, "Process startup error: %s", e);
+
+            CompletableFuture<?> f = new CompletableFuture<>();
+            f.completeExceptionally(e);
+            return createJobInstance(instanceId, null, f);
+        }
+    }
+
+    private JobInstance createJobInstance(String instanceId, Process proc, CompletableFuture<?> f) {
         return new JobInstance() {
 
             @Override
@@ -93,7 +106,7 @@ public class JarJobExecutor implements JobExecutor {
                     f.cancel(true);
                 }
 
-                if (JarJobExecutor.kill(proc)) {
+                if (proc != null && JarJobExecutor.kill(proc)) {
                     log.warn("kill -> killed by user: {}", instanceId);
                     logManager.log(instanceId, "Killed by user");
                 }

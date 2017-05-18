@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: handle early process startup errors.
+
+
+
 ## [0.14.0] - 2017-05-17
 
 ### Added

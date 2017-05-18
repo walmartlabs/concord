@@ -53,7 +53,6 @@ public class LogManager {
 
     public void log(String id, InputStream src) throws IOException {
         Path f = logFile(id);
-        log.info("store ['{}'] -> storing into {}", id, f);
         try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
              BufferedReader reader = new BufferedReader(new InputStreamReader(src))) {
 
@@ -71,6 +70,7 @@ public class LogManager {
         if (!Files.exists(f)) {
             try {
                 Files.createFile(f);
+                log.info("store ['{}'] -> storing into {}", id, f);
             } catch (IOException e) {
                 throw new RuntimeException("Error opening a log file: " + f, e);
             }
