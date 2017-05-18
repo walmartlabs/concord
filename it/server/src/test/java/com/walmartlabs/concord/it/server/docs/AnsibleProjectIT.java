@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLogAtLeast;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
@@ -109,7 +110,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Hello, world.*", ab);
 
         // check if `force_color` is working
-        assertLog(".*\\[0;32m.*", 3, ab);
+        assertLogAtLeast(".*\\[0;32m.*", 3, ab);
 
         // ---
 

@@ -13,12 +13,12 @@ main:
     out:
       result: operationResult
     error:
-      - log: email sending error
+      - log: "email sending error"
   - if: ${result.ok}                              # (2)
     then:
       - reportSuccess                             # (3)
     else:
-      - log: failure :-( ${lastError.message}
+      - log: "failure :-( ${lastError.message}"
     
 reportSuccess:
   - ${dbBean.updateStatus(result.id, "SUCCESS")}; # (4)
@@ -90,8 +90,8 @@ main:
 Full form optionally contains additional declarations:
 - `out` field - contains the name of a variable, in which a result of
 the expression will be stored;
-- `error` block - to handle any `BPMNError` exceptions thrown by the
-evaluation.
+- `error` block - to handle any exceptions thrown by the evaluation.
+Exceptions are wrapped in `BpmnError` type.
 
 See [the list of automatically provided variables](./processes.md#provided-variables).
 

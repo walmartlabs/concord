@@ -5,11 +5,16 @@
 ### Added
 
 - concord-server-db: indexes for the process queue;
-- yaml: `lastError` can now be used to access the last handled `BpmnError`.
+- yaml: `lastError` can now be used to access the last handled
+`BpmnError`.
 
 ### Changed
 
-- concord-console: fixed rendering of "Updated" and "Created" columns in the queue table.
+- concord-console: fixed rendering of "Updated" and "Created"
+columns in the queue table.
+- concord-runner: all unhandled exceptions in a `ServiceTask`
+(YAML expressions) or in a `ScriptTask` (YAML script blocks)
+will be wrapped as `BpmnErrors`.
 
 
 
@@ -18,11 +23,13 @@
 ### Added
 
 - concord-server: process queue;
-- concord-server, concord-agent: support for multiple agents, async transport.
+- concord-server, concord-agent: support for multiple agents, async
+transport.
 
 ### Changed
 
-- boo, nexus-perf, teamrosters and oneops plugins are moved into a separate repository.
+- boo, nexus-perf, teamrosters and oneops plugins are moved into a
+separate repository.
 
 
 
@@ -30,13 +37,15 @@
 
 ## Added
 
-- concord-console: support for "int" and "decimal" fields in the default form renderer;
+- concord-console: support for "int" and "decimal" fields in the
+default form renderer;
 - added "project name" column to the process history;
 - concord-runner: support for external scripts.
 
 ## Changed
 
-- concord-server: fixed LDAP attributes retrieval (including `displayName`).
+- concord-server: fixed LDAP attributes retrieval (including
+`displayName`).
 
 
 

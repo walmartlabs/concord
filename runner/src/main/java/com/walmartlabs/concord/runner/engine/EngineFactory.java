@@ -73,6 +73,7 @@ public class EngineFactory {
 
         Configuration cfg = new Configuration();
         cfg.setInterpolateInputVariables(true);
+        cfg.setWrapAllExceptionsAsBpmnErrors(true);
 
         return new EngineBuilder()
                 .withExpressionManager(expressionManager)

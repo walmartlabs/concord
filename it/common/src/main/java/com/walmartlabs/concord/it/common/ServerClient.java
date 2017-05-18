@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class ServerClient {
@@ -123,6 +124,10 @@ public class ServerClient {
 
     public static void assertLog(String pattern, int times, byte[] ab) throws IOException {
         assertEquals(times, grep(pattern, ab).size());
+    }
+
+    public static void assertLogAtLeast(String pattern, int times, byte[] ab) throws IOException {
+        assertTrue(times <= grep(pattern, ab).size());
     }
 
     public void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException {

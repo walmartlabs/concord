@@ -97,6 +97,7 @@ public class ProcessIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
 
-        assertLog(".*We got.*boom.*", ab);
+        assertLog(".*Kaboom.*", ab);
+        assertLog(".*We got:.*java.lang.RuntimeException.*", ab);
     }
 }

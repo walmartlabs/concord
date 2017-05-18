@@ -4,6 +4,8 @@ import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -13,6 +15,8 @@ import java.nio.file.Path;
 @Named
 @Singleton
 public class ProjectDefinitionProcessor implements PayloadProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(ProjectDefinitionProcessor.class);
 
     private final ProjectLoader loader = new ProjectLoader();
 
@@ -28,6 +32,7 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
             return chain.process(payload);
         } catch (IOException e) {
+            log.warn("process ['{}'] -> project loading error: {}", payload.getInstanceId(), workspace, e);
             throw new ProcessException("Error while loading a project file: " + workspace, e);
         }
     }
