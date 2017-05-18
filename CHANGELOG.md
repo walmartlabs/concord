@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: fixed the state transfer for failed processes.
+
+
+
 ## [0.14.1] - 2017-05-17
 
 ### Changed

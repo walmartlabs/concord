@@ -51,34 +51,36 @@ public class JarJobExecutor implements JobExecutor {
 
             CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> {
                 try {
-                    logManager.log(instanceId, proc.getInputStream());
-                } catch (IOException e) {
-                    log.warn("start ['{}', '{}'] -> error while saving a log file", instanceId, workDir);
+                    try {
+                        logManager.log(instanceId, proc.getInputStream());
+                    } catch (IOException e) {
+                        log.warn("start ['{}', '{}'] -> error while saving a log file", instanceId, workDir);
+                    }
+
+                    int code;
+                    try {
+                        code = proc.waitFor();
+                    } catch (Exception e) {
+                        throw handleError(instanceId, workDir, proc, e.getMessage());
+                    }
+
+                    if (code != 0) {
+                        log.warn("exec ['{}'] -> finished with {}", instanceId, code);
+                        throw handleError(instanceId, workDir, proc, "Process exit code: " + code);
+                    }
+
+                    log.info("exec ['{}'] -> finished with {}", instanceId, code);
+                    logManager.log(instanceId, "Process finished with: %s", code);
+
+                    return code;
+                } finally {
+                    try {
+                        postProcess(instanceId, workDir);
+                    } catch (ExecutionException e) {
+                        log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
+                        handleError(instanceId, workDir, proc, e.getMessage());
+                    }
                 }
-
-                int code;
-                try {
-                    code = proc.waitFor();
-                } catch (Exception e) {
-                    throw handleError(instanceId, workDir, proc, e.getMessage());
-                }
-
-                if (code != 0) {
-                    log.warn("exec ['{}'] -> finished with {}", instanceId, code);
-                    throw handleError(instanceId, workDir, proc, "Process exit code: " + code);
-                }
-
-                log.info("exec ['{}'] -> finished with {}", instanceId, code);
-                logManager.log(instanceId, "Process finished with: %s", code);
-
-                try {
-                    postProcess(instanceId, workDir);
-                } catch (ExecutionException e) {
-                    log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
-                    handleError(instanceId, workDir, proc, e.getMessage());
-                }
-
-                return code;
             }, executorService);
 
             return createJobInstance(instanceId, proc, f);
