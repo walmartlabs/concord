@@ -44,7 +44,7 @@ public class DependenciesIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload));
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());

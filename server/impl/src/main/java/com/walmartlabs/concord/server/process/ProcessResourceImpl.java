@@ -1,9 +1,15 @@
 package com.walmartlabs.concord.server.process;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
-import com.walmartlabs.concord.server.api.process.*;
+import com.walmartlabs.concord.server.api.process.FormListEntry;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.api.process.ResumeProcessResponse;
+import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
@@ -12,6 +18,8 @@ import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import io.takari.bpm.api.ExecutionException;
+import io.takari.bpm.form.FormSubmitResult;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -34,6 +42,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named
 public class ProcessResourceImpl implements ProcessResource, Resource {
@@ -47,6 +56,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final Chain resumePipeline;
     private final PayloadManager payloadManager;
     private final AgentManager agentManager;
+    private final ConcordFormService formService;
 
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
@@ -55,7 +65,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
                                PayloadManager payloadManager,
-                               AgentManager agentManager) {
+                               AgentManager agentManager,
+                               ConcordFormService concordFormService) {
 
         this.projectDao = projectDao;
         this.queueDao = queueDao;
@@ -64,10 +75,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.resumePipeline = resumePipeline;
         this.payloadManager = payloadManager;
         this.agentManager = agentManager;
+        this.formService = concordFormService;
     }
 
     @Override
-    public StartProcessResponse start(InputStream in) {
+    public StartProcessResponse start(
+            InputStream in, boolean sync) {
         String instanceId = UUID.randomUUID().toString();
 
         Payload payload;
@@ -79,11 +92,17 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         archivePipeline.process(payload);
+
+        if(sync) {
+            Map<String, Object> args = readArgs(instanceId);
+            process(instanceId, args);
+        }
+
         return new StartProcessResponse(instanceId);
     }
 
     @Override
-    public StartProcessResponse start(String entryPoint, Map<String, Object> req) {
+    public StartProcessResponse start(String entryPoint, Map<String, Object> req, boolean sync) {
         String instanceId = UUID.randomUUID().toString();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
@@ -98,11 +117,17 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         projectPipeline.process(payload);
+
+        if(sync) {
+            Map<String, Object> args = readArgs(instanceId);
+            process(instanceId, args);
+        }
+
         return new StartProcessResponse(instanceId);
     }
 
     @Override
-    public StartProcessResponse start(String entryPoint, MultipartInput input) {
+    public StartProcessResponse start(String entryPoint, MultipartInput input, boolean sync) {
         String instanceId = UUID.randomUUID().toString();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
@@ -117,12 +142,18 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         projectPipeline.process(payload);
+
+        if(sync) {
+            Map<String, Object> args = readArgs(instanceId);
+            process(instanceId, args);
+        }
+
         return new StartProcessResponse(instanceId);
     }
 
     @Override
     @Validate
-    public StartProcessResponse start(String projectName, InputStream in) {
+    public StartProcessResponse start(String projectName, InputStream in, boolean sync) {
         String instanceId = UUID.randomUUID().toString();
 
         Payload payload;
@@ -134,6 +165,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         archivePipeline.process(payload);
+
+        if(sync) {
+            Map<String, Object> args = readArgs(instanceId);
+            process(instanceId, args);
+        }
+
         return new StartProcessResponse(instanceId);
     }
 
@@ -252,5 +289,72 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     public List<ProcessEntry> list() {
         return queueDao.list();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String,Object> readArgs(String instanceId) {
+        Path p = payloadManager.getResource(instanceId, Constants.Files.REQUEST_DATA_FILE_NAME);
+
+        try (InputStream in = Files.newInputStream(p)) {
+            ObjectMapper om = new ObjectMapper();
+            Map<String, Object> cfg = om.readValue(in, Map.class);
+            return (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while reading request data", e);
+        }
+    }
+
+    private void process(String instanceId, Map<String, Object> params) {
+        while (true) {
+            ProcessEntry psr = get(instanceId);
+            ProcessStatus status = psr.getStatus();
+
+            if (status == ProcessStatus.SUSPENDED) {
+                wakeUpProcess(instanceId, params);
+            } else if (status == ProcessStatus.FAILED) {
+                throw new WebApplicationException("Process error", Status.INTERNAL_SERVER_ERROR);
+            } else if (status == ProcessStatus.FINISHED) {
+                return;
+            }
+
+            try {
+                Thread.sleep(1_000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void wakeUpProcess(String instanceId, Map<String, Object> data) {
+        List<FormListEntry> forms;
+        try {
+            forms = formService.list(instanceId);
+        } catch (ExecutionException e) {
+            throw new WebApplicationException("Process error", Status.INTERNAL_SERVER_ERROR);
+        }
+
+        if (forms == null || forms.isEmpty()) {
+            throw new WebApplicationException("Invalid process state: no forms found", Status.INTERNAL_SERVER_ERROR);
+        }
+
+        for(FormListEntry f : forms) {
+            try {
+                Map<String, Object> args = (Map<String, Object>) data.get(f.getName());
+
+                FormSubmitResult submitResult = formService.submit(instanceId, f.getFormInstanceId(), args);
+                if(!submitResult.isValid()) {
+                    String error = "n/a";
+                    if(submitResult.getErrors() != null) {
+                        error = submitResult.getErrors().stream().map(e -> e.getFieldName() + ": " + e.getError()).collect(Collectors.joining(","));
+                    }
+                    throw new WebApplicationException(
+                            "Form '" + f.getName() + "' submit error: " + error,
+                            Status.BAD_REQUEST);
+                }
+            } catch (ExecutionException e) {
+                throw new WebApplicationException("Submit form error", Status.INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 }

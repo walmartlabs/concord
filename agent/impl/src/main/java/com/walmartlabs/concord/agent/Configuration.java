@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.agent;
 
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
 import java.io.IOException;
@@ -88,7 +89,7 @@ public class Configuration implements Serializable {
 
     private static String getEnv(String key, String defaultValue) {
         String s = System.getenv(key);
-        if (s == null) {
+        if (Strings.isNullOrEmpty(s)) {
             return defaultValue;
         }
         return s;

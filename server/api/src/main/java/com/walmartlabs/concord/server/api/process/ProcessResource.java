@@ -21,7 +21,7 @@ import java.util.Map;
 public interface ProcessResource {
 
     /**
-     * Starts a new process instance asynchronously.
+     * Starts a new process instance.
      *
      * @param in
      * @return
@@ -30,10 +30,11 @@ public interface ProcessResource {
     @ApiOperation("Starts a new process instance using a supplied payload archive")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
-    StartProcessResponse start(@ApiParam InputStream in);
+    StartProcessResponse start(@ApiParam InputStream in,
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
-     * Starts a new process instance asynchronously using a specified project.
+     * Starts a new process instance using a specified project.
      *
      * @param req
      * @return
@@ -44,10 +45,11 @@ public interface ProcessResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
-                               @ApiParam Map<String, Object> req);
+                               @ApiParam Map<String, Object> req,
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
-     * Starts a new process instance asynchronously using a specified project.
+     * Starts a new process instance using a specified project.
      *
      * @param entryPoint
      * @param input
@@ -59,10 +61,11 @@ public interface ProcessResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
-                               @ApiParam MultipartInput input);
+                               @ApiParam MultipartInput input,
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
-     * Starts a new process instance asynchronously using a specified project and a payload archive.
+     * Starts a new process instance using a specified project and a payload archive.
      *
      * @param projectName
      * @param in
@@ -74,7 +77,8 @@ public interface ProcessResource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                               @ApiParam InputStream in);
+                               @ApiParam InputStream in,
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     @POST
     @ApiOperation("Resume a process")

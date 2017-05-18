@@ -28,6 +28,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ProjectFileIT extends AbstractServerIT {
 
@@ -89,7 +90,7 @@ public class ProjectFileIT extends AbstractServerIT {
         // send the request
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload));
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
@@ -122,7 +123,7 @@ public class ProjectFileIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload));
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
@@ -134,13 +135,50 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*54321.*", ab);
     }
 
+    @Test
+    public void testArchiveOverrideSync() throws Exception {
+        String projectName = "project_" + System.currentTimeMillis();
+        String repoName = "repo_" + System.currentTimeMillis();
+        String repoUrl = "git@test_" + System.currentTimeMillis();
+        String secretName = "secret_" + System.currentTimeMillis();
+
+        SecretResource secretResource = proxy(SecretResource.class);
+        secretResource.createKeyPair(secretName);
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null,
+                Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", secretName))));
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("projectfile/singleprofile-sync").toURI());
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), true);
+        assertNotNull(spr.getInstanceId());
+
+        ProcessEntry pir = processResource.get(spr.getInstanceId());
+
+        // ---
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*100223.*", ab);
+        assertLog(".*Boo Zoo.*", ab);
+        assertLog(".*1000022.*", ab);
+        assertLog(".*100323.*", ab);
+        assertLog(".*red.*", ab);
+
+        assertTrue(pir.getStatus() == ProcessStatus.FINISHED);
+    }
+
     private void simpleTest(String resource, String... logPatterns) throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource(resource).toURI());
 
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload));
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());

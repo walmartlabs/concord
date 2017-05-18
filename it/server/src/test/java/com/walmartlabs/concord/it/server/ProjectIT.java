@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.it.server;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
@@ -59,16 +60,64 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args);
+        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args, false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*" + greeting + ".*", ab);
     }
 
+    @Test(timeout = 30000)
+    public void testSync() throws Exception {
+        File tmpDir = Files.createTempDirectory("test").toFile();
+        File src = new File(ProjectIT.class.getResource("project-sync").toURI());
+        IOUtils.copy(src.toPath(), tmpDir.toPath());
+
+        Git repo = Git.init().setDirectory(tmpDir).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.getAbsolutePath();
+
+        // ---
+
+        String projectName = "myProject_" + System.currentTimeMillis();
+        String userName = "myUser_" + System.currentTimeMillis();
+        Set<String> permissions = Sets.newHashSet(
+                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
+                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoUrl = gitUrl;
+        String entryPoint = projectName + ":" + repoName + ":main";
+        String greeting = "Hello, _" + System.currentTimeMillis();
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+                ImmutableMap.of(
+                        "myForm1", ImmutableMap.of(
+                                "x", 100123, "firstName", "Boo"),
+                        "myForm2", ImmutableMap.of(
+                                "lastName", "Zoo",
+                                "age", 1200,
+                                "color", "red")
+                ));
+
+        // ---
+
+        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args, true);
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*100223.*", ab);
+        assertLog(".*Boo Zoo.*", ab);
+        assertLog(".*1300.*", ab);
+        assertLog(".*100323.*", ab);
+        assertLog(".*red.*", ab);
+
+        assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
+    }
+
     protected ProcessEntry doTest(String projectName, Set<String> projectTemplates,
                                   String userName, Set<String> permissions,
                                   String repoName, String repoUrl,
-                                  String entryPoint, Map<String, Object> args) throws InterruptedException, IOException {
+                                  String entryPoint, Map<String, Object> args,
+                                  boolean sync) throws InterruptedException, IOException {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         CreateProjectResponse cpr = projectResource.createOrUpdate(new CreateProjectRequest(projectName, projectTemplates, null));
@@ -96,7 +145,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(entryPoint, args);
+        StartProcessResponse spr = processResource.start(entryPoint, args, sync);
         assertTrue(spr.isOk());
 
         String instanceId = spr.getInstanceId();

@@ -1,0 +1,19 @@
+main:
+  - form: myForm1
+  - ${log.info("test", myForm1.x + 100)}
+
+  - form: myForm2
+  - ${log.info("test", myForm1.firstName.concat(' ').concat(myForm2.lastName))}
+  - ${log.info("test", myForm2.age + 100)}
+
+  - ${log.info("test", myForm1.x + 200)}
+
+  - ${log.info("test", myForm2.color)}
+
+form (myForm1):
+  - firstName: { label: "First Name", type: "string" }
+
+form (myForm2):
+  - lastName: { label: "Last Name", type: "string" }
+  - age: { label: "Age", type: "int?", min: 21, max: 120 }
+  - color: { label: "Favorite color", type: "string", value: "red" }

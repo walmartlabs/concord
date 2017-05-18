@@ -5,8 +5,8 @@ import com.walmartlabs.concord.it.server.AbstractServerIT;
 import com.walmartlabs.concord.it.server.GitUtils;
 import com.walmartlabs.concord.it.server.ITConstants;
 import com.walmartlabs.concord.it.server.MockGitSshServer;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
@@ -19,8 +19,6 @@ import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.file.Path;
@@ -29,7 +27,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.walmartlabs.concord.it.common.ServerClient.*;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLogAtLeast;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
@@ -177,9 +178,5 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     private static InputStream resource(String path) {
         return AnsibleProjectIT.class.getResourceAsStream(path);
-    }
-
-    private static InputStream fsResource(String path) throws FileNotFoundException {
-        return new FileInputStream(path);
     }
 }

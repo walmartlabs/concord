@@ -26,7 +26,7 @@ public class AnsibleIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload));
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
 
         // ---
 

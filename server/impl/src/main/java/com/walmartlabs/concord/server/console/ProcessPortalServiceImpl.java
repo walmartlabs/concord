@@ -41,7 +41,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
             throw new WebApplicationException("Invalid entry point", Status.BAD_REQUEST);
         }
 
-        StartProcessResponse resp = processResource.start(entryPoint, Collections.emptyMap());
+        StartProcessResponse resp = processResource.start(entryPoint, Collections.emptyMap(), false);
 
         String instanceId = resp.getInstanceId();
         while (true) {

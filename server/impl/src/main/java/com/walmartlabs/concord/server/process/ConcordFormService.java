@@ -4,10 +4,15 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
+import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import io.takari.bpm.api.ExecutionException;
-import io.takari.bpm.form.*;
+import io.takari.bpm.form.DefaultFormService;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
+import io.takari.bpm.form.DefaultFormValidator;
+import io.takari.bpm.form.Form;
+import io.takari.bpm.form.FormSubmitResult;
+import io.takari.bpm.form.FormValidator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -16,7 +21,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Named
@@ -25,12 +34,14 @@ public class ConcordFormService {
 
     private final PayloadManager payloadManager;
     private final FormValidator validator;
-    private final ProcessResource processResource;
+    private final Chain resumePipeline;
 
     @Inject
-    public ConcordFormService(PayloadManager payloadManager, ProcessResource processResource) {
+    public ConcordFormService(
+            PayloadManager payloadManager,
+            ResumePipeline resumePipeline) {
         this.payloadManager = payloadManager;
-        this.processResource = processResource;
+        this.resumePipeline = resumePipeline;
         this.validator = new DefaultFormValidator();
     }
 
@@ -126,7 +137,7 @@ public class ConcordFormService {
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
             m.put("arguments", args);
-            processResource.resume(f.getProcessBusinessKey(), f.getEventName(), m);
+            resume(f.getProcessBusinessKey(), f.getEventName(), m);
         };
 
         Map<String, Object> merged = merge(form, data);
@@ -152,5 +163,16 @@ public class ConcordFormService {
 
         ConfigurationUtils.merge(a, b);
         return a;
+    }
+
+    private void resume(String instanceId, String eventName, Map<String, Object> req) throws ExecutionException {
+        Payload payload;
+        try {
+            payload = payloadManager.createResumePayload(instanceId, eventName, req);
+        } catch (IOException e) {
+            throw new ExecutionException("Error creating a payload for: " + instanceId, e);
+        }
+
+        resumePipeline.process(payload);
     }
 }

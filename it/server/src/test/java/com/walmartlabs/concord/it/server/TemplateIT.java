@@ -50,7 +50,7 @@ public class TemplateIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, Collections.singletonMap("name", myName));
+        StartProcessResponse spr = processResource.start(projectName, Collections.singletonMap("name", myName), false);
 
         // ---
 
