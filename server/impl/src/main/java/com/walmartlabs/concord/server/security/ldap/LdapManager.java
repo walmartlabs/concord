@@ -81,7 +81,8 @@ public class LdapManager {
                             break;
                         }
                         default: {
-                            if (cfg.getExposeAttributes().contains(id)) {
+                            Set<String> exposedAttr = cfg.getExposeAttributes();
+                            if (exposedAttr == null || exposedAttr.contains(id)) {
                                 b.addAttribute(id, attr.get().toString());
                             }
                         }

@@ -161,7 +161,6 @@ platforms:
                   principalSearchFilter=(&(objectCategory=Person)(sAMAccountName={0}))
                   systemUsername={{ldapUserName}}
                   systemPassword={{ldapPassword}}
-                  exposeAttributes=company,mail
                 path: '{{dataVolume}}/data/conf/ldap.properties'
              
       storage:

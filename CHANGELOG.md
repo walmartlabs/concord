@@ -4,7 +4,9 @@
 
 ### Changed
 
-- concord-agent: fixed the state transfer for failed processes.
+- concord-agent: fixed the state transfer for failed processes;
+- concord-server: make all LDAP attributes available in
+`${initiator.attributes}`.
 
 
 
