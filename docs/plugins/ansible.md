@@ -51,8 +51,8 @@ An inventory file can be inlined with the request JSON. For example:
   "inventory": {
     "local": {
       "hosts": ["127.0.0.1"],
-        "vars": {
-          "ansible_connection": "local"
+      "vars": {
+        "ansible_connection": "local"
       }
     }
   }

@@ -76,6 +76,9 @@ All parameters are optional.
 
 | Variable          | Description                                     | Default value               |
 |-------------------|-------------------------------------------------|-----------------------------|
+| SERVER_HOST       | Hostname of the server.                         | `localhost`                 |
+| SERVER_PORT       | Port of the server's API for agents.            | `8101`                      |
 | AGENT_LOG_DIR     | Directory to store payload execution log files. | _a new temporary directory_ |
-| AGENT_PAYLOAD_DIR | Directory to store unpacked payload files.      | _a new temporart directory_ |
+| AGENT_PAYLOAD_DIR | Directory to store unpacked payload files.      | _a new temporary directory_ |
 | AGENT_JAVA_CMD    | Path to `java` executable.                      | `java`                      |
+| DEPS_CACHE_DIR    | Path to a directory for the dependency cache.   | _a new temporary directory_ |

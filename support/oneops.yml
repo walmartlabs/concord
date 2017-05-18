@@ -81,6 +81,8 @@ platforms:
               --name agent \
               -e 'SERVER_HOST=server' \
               -e 'WORKERS_COUNT={{agentWorkers}}' \
+              -e 'DEPS_CACHE_DIR=/opt/concord/data/deps' \
+              -v {{dataVolume}}/data:/opt/concord/data \
               -v {{dataVolume}}/tmp:/tmp \
               docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
       user:
