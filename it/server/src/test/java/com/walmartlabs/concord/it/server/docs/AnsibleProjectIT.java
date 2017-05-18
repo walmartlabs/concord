@@ -7,6 +7,7 @@ import com.walmartlabs.concord.it.server.ITConstants;
 import com.walmartlabs.concord.it.server.MockGitSshServer;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
@@ -28,9 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLogAtLeast;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
@@ -73,6 +72,55 @@ public class AnsibleProjectIT extends AbstractServerIT {
         Map<String, InputStream> input = new HashMap<>();
         input.put("request", resource("ansibleproject/requestInline.json"));
         test(input);
+    }
+
+    @Test
+    public void testFailure() throws Exception {
+        Map<String, InputStream> input = new HashMap<>();
+        input.put("request", resource("ansibleproject/requestFailure.json"));
+
+        // ---
+
+        String templateName = "ansible";
+        String projectName = "project@" + System.currentTimeMillis();
+        String repoSecretName = "repoSecret@" + System.currentTimeMillis();
+        String repoName = "repo@" + System.currentTimeMillis();
+        String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
+        String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
+
+        // ---
+
+        SecretResource secretResource = proxy(SecretResource.class);
+        secretResource.createKeyPair(repoSecretName);
+
+        // ---
+
+        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", repoSecretName);
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName, singleton(templateName), singletonMap(repoName, repo)));
+
+        // ---
+
+        StartProcessResponse spr = start(entryPoint, input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
+
+        // ---
+
+        Response resp = processResource.downloadAttachment(spr.getInstanceId(), "ansible_stats.json");
+        assertEquals(Status.OK.getStatusCode(), resp.getStatus());
+
+        ObjectMapper om = new ObjectMapper();
+        Map<String, Object> stats = om.readValue(resp.readEntity(InputStream.class), Map.class);
+        resp.close();
+
+        Collection<String> failures = (Collection<String>) stats.get("failures");
+        assertNotNull(failures);
+        assertEquals(1, failures.size());
+        assertEquals("128.0.0.1", failures.iterator().next());
     }
 
     @SuppressWarnings("unchecked")
