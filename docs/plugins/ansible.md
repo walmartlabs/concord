@@ -2,17 +2,32 @@
 
 ## Configuring Ansible
 
-Ansible's [[defaults]](http://docs.ansible.com/ansible/intro_configuration.html#general-defaults)
-can be specified under `defaults` key in `request.json`:
+Ansible's [[configuration]](http://docs.ansible.com/ansible/intro_configuration.html)
+can be specified under `config` key in `request.json`:
 
 ```json
 {
   "playbook": "playbook/hello.yml",
   ...
-  "defaults": {
-    "forks": 50
+  "config": {
+    "defaults": {
+      "forks": 50
+    },
+    "ssh_connection": {
+      "pipelining": "True"
+    }
   }
 }
+```
+
+which is equivalent to:
+
+```
+[defaults]
+forks = 50
+
+[ssh_connection]
+pipelining = True
 ```
 
 ## Raw payload

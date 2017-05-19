@@ -4,10 +4,12 @@
 
 ### Added
 
-- concord-server: process start errors now include `stacktrace` field.
+- concord-server: process start errors now include `stacktrace` field;
 - concord-server: optional synchronous mode of the process start
 methods. All forms will be automatically submitted using the provided
-request data.
+request data;
+- ansible: `defaults` replaced with `config` JSON object. Each key
+represents a section in the configuration file.
 
 ### Changed
 

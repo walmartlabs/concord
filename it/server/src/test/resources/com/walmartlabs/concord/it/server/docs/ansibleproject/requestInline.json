@@ -11,7 +11,9 @@
   "extraVars": {
     "greeting": "Hello, world"
   },
-  "defaults": {
-    "force_color": 1
+  "config": {
+    "defaults": {
+      "force_color": 1
+    }
   }
 }

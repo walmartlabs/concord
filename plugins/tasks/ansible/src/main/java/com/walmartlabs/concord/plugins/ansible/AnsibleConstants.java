@@ -10,7 +10,7 @@ public final class AnsibleConstants {
 
     public static final String VAULT_PASSWORD_FILE_PATH = "_vaultPassword";
 
-    public static final String DEFAULT_OPTS_KEY = "defaults";
+    public static final String CONFIG_KEY = "config";
 
     public static final String STATS_FILE_NAME = "ansible_stats.json";
 

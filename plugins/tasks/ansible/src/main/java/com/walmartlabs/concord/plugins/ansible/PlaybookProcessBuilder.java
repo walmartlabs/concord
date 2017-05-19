@@ -80,7 +80,6 @@ public class PlaybookProcessBuilder {
                 .redirectErrorStream(true);
 
         Map<String, String> env = b.environment();
-        // TODO env.put("ANSIBLE_FORCE_COLOR", "true");
         if (cfgFile != null) {
             env.put("ANSIBLE_CONFIG", cfgFile);
         }

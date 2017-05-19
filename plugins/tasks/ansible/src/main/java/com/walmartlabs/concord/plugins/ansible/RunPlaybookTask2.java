@@ -2,6 +2,7 @@ package com.walmartlabs.concord.plugins.ansible;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.project.Constants;
 import io.takari.bpm.api.BpmnError;
@@ -30,8 +31,8 @@ public class RunPlaybookTask2 implements Task {
 
     @SuppressWarnings("unchecked")
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
-        Map<String, Object> defOpts = (Map<String, Object>) args.get(AnsibleConstants.DEFAULT_OPTS_KEY);
-        String cfgFile = createCfgFile(addDefaults(defOpts, payloadPath));
+        Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
+        String cfgFile = createCfgFile(makeCfg(cfg, payloadPath));
 
         // TODO constants
         String playbook = (String) args.get("playbook");
@@ -97,19 +98,25 @@ public class RunPlaybookTask2 implements Task {
         return p.toAbsolutePath().toString();
     }
 
-    private static Map<String, Object> addDefaults(Map<String, Object> m, String baseDir) {
-        if (m == null) {
-            m = new HashMap<>();
-        }
+    private static Map<String, Object> makeCfg(Map<String, Object> cfg, String baseDir) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("defaults", makeDefaults(baseDir));
+        m.put("ssh_connection", makeSshConnCfg());
 
-        // disable ssl host key checking if it's not enabled explicitly
-        if (!m.containsKey("host_key_checking")) {
-            m.put("host_key_checking", false);
+        if (cfg != null) {
+            ConfigurationUtils.deepMerge(m, cfg);
         }
+        return m;
+    }
+
+    private static Map<String, Object> makeDefaults(String baseDir) {
+        Map<String, Object> m = new HashMap<>();
+
+        // disable ssl host key checking by default
+        m.put("host_key_checking", false);
 
         // use a shorter path to store temporary files
         m.put("remote_tmp", "/tmp/ansible/$USER");
-
 
         // add plugins path
         m.put("callback_plugins", baseDir + "/_callbacks");
@@ -117,30 +124,52 @@ public class RunPlaybookTask2 implements Task {
         return m;
     }
 
-    private static String createCfgFile(Map<String, Object> defOpts) throws IOException {
+    private static Map<String, Object> makeSshConnCfg() {
+        Map<String, Object> m = new HashMap<>();
+
+        // use a shorter control_path to prevent path length errors
+        m.put("control_path", "%(directory)s/%%h-%%p-%%r\n");
+
+        return m;
+    }
+
+    private static String createCfgFile(Map<String, Object> cfg) throws IOException {
         StringBuilder b = new StringBuilder();
 
-        if (defOpts != null) {
-            b.append("[defaults]\n");
-            for (Map.Entry<String, Object> e : defOpts.entrySet()) {
-                Object v = e.getValue();
-                if (v == null) {
-                    continue;
-                }
-
-                b.append(e.getKey()).append(" = ").append(v).append("\n");
+        for (Map.Entry<String, Object> c : cfg.entrySet()) {
+            String k = c.getKey();
+            Object v = c.getValue();
+            if (!(v instanceof Map)) {
+                throw new IllegalArgumentException("Invalid configuration. Expected a JSON object: " + k + ", got: " + v);
             }
+
+            b = addCfgSection(b, k, (Map<String, Object>) v);
         }
 
-        b.append("[ssh_connection]\n" +
-                "control_path = %(directory)s/%%h-%%p-%%r\n" +
-                "pipelining=true");
+        log.info("Using the configuration: \n{}", b);
 
         Path tmpFile = Files.createTempFile("ansible", ".cfg");
         Files.write(tmpFile, b.toString().getBytes(StandardCharsets.UTF_8));
 
         log.debug("createCfgFile -> done, created {}", tmpFile);
         return tmpFile.toAbsolutePath().toString();
+    }
+
+    private static StringBuilder addCfgSection(StringBuilder b, String name, Map<String, Object> m) {
+        if (m == null || m.isEmpty()) {
+            return b;
+        }
+
+        b.append("[").append(name).append("]\n");
+        for (Map.Entry<String, Object> e : m.entrySet()) {
+            Object v = e.getValue();
+            if (v == null) {
+                continue;
+            }
+
+            b.append(e.getKey()).append(" = ").append(v).append("\n");
+        }
+        return b;
     }
 
     private static String getPrivateKeyPath(String payloadPath) throws IOException {
