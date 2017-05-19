@@ -9,7 +9,8 @@
 methods. All forms will be automatically submitted using the provided
 request data;
 - ansible: `defaults` replaced with `config` JSON object. Each key
-represents a section in the configuration file.
+represents a section in the configuration file;
+- concord-runner: additional methods for `LoggingTask`.
 
 ### Changed
 
