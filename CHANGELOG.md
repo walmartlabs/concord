@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: process start errors now include `stacktrace` field.
+
 ### Changed
 
 - concord-agent: fixed the state transfer for failed processes;
