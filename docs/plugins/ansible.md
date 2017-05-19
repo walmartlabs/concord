@@ -1,5 +1,13 @@
 # Ansible
 
+## Limitations
+
+Ansible's `strategy: debug` is not supported. It requires an interactive terminal and
+user input and shouldn't be used in Concord's environment.
+Playbooks with `strategy: debug` will hang indefinitely, but can be killed using the
+REST API or the Console.
+
+
 ## Configuring Ansible
 
 Ansible's [[configuration]](http://docs.ansible.com/ansible/intro_configuration.html)
