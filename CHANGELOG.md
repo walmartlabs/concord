@@ -5,6 +5,9 @@
 ### Added
 
 - concord-server: process start errors now include `stacktrace` field.
+- concord-server: optional synchronous mode of the process start
+methods. All forms will be automatically submitted using the provided
+request data.
 
 ### Changed
 
