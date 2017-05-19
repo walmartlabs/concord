@@ -11,6 +11,9 @@ export const failedStatuses = ["FAILED"];
 // statuses in which a process can be killed
 export const canBeKilledStatuses = ["RUNNING", "SUSPENDED"];
 
+// statuses that can have a log file
+export const hasLogStatuses = ["RUNNING", "SUSPENDED", "RESUMING", "FINISHED", "FAILED"];
+
 export const status = {
     runningStatus: "RUNNING",
     startingStatus: "STARTING",

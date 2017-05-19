@@ -11,6 +11,8 @@ request data.
 
 ### Changed
 
+- concord-console: disable the log button for the processes that
+don't have a log file;
 - concord-agent: fixed the state transfer for failed processes;
 - concord-server: make all LDAP attributes available in
 `${initiator.attributes}`.

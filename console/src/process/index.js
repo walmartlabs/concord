@@ -49,6 +49,7 @@ class ProcessStatusPage extends Component {
         }
 
         const showRefresh = constants.activeStatuses.includes(data.status);
+        const enableLogButton = constants.hasLogStatuses.includes(data.status) && data.logFileName;
         const showKillButton = constants.canBeKilledStatuses.includes(data.status);
         const showWizard = enableFormsStatuses.includes(data.status);
         const showForms = data.forms && data.forms.length > 0 && enableFormsStatuses.includes(data.status);
@@ -88,7 +89,7 @@ class ProcessStatusPage extends Component {
                 </Table.Body>
             </Table>
 
-            <Button onClick={() => this.openLog()}>View Log</Button>
+            <Button disabled={!enableLogButton} onClick={() => this.openLog()}>View Log</Button>
 
             { showKillButton &&
             <Button icon="delete" color="red" content="Kill" onClick={() => openKillPopup(instanceId)}/> }
