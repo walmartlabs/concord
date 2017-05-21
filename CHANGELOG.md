@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: return process JSON objects in sync mode regardless
+of success or failure.
+
+
+
 ## [0.16.0] - 2017-05-20
 
 ### Added

@@ -4,12 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
-import com.walmartlabs.concord.server.api.process.FormListEntry;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ResumeProcessResponse;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
@@ -32,6 +27,8 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -93,7 +90,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         archivePipeline.process(payload);
 
-        if(sync) {
+        if (sync) {
             Map<String, Object> args = readArgs(instanceId);
             process(instanceId, args);
         }
@@ -118,7 +115,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         projectPipeline.process(payload);
 
-        if(sync) {
+        if (sync) {
             Map<String, Object> args = readArgs(instanceId);
             process(instanceId, args);
         }
@@ -143,7 +140,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         projectPipeline.process(payload);
 
-        if(sync) {
+        if (sync) {
             Map<String, Object> args = readArgs(instanceId);
             process(instanceId, args);
         }
@@ -166,7 +163,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         archivePipeline.process(payload);
 
-        if(sync) {
+        if (sync) {
             Map<String, Object> args = readArgs(instanceId);
             process(instanceId, args);
         }
@@ -292,7 +289,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String,Object> readArgs(String instanceId) {
+    private Map<String, Object> readArgs(String instanceId) {
         Path p = payloadManager.getResource(instanceId, Constants.Files.REQUEST_DATA_FILE_NAME);
 
         try (InputStream in = Files.newInputStream(p)) {
@@ -310,9 +307,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             ProcessStatus status = psr.getStatus();
 
             if (status == ProcessStatus.SUSPENDED) {
-                wakeUpProcess(instanceId, params);
+                wakeUpProcess(psr, params);
             } else if (status == ProcessStatus.FAILED) {
-                throw new WebApplicationException("Process error", Status.INTERNAL_SERVER_ERROR);
+                throw err("Process error", Status.INTERNAL_SERVER_ERROR, psr);
             } else if (status == ProcessStatus.FINISHED) {
                 return;
             }
@@ -326,35 +323,42 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @SuppressWarnings("unchecked")
-    private void wakeUpProcess(String instanceId, Map<String, Object> data) {
+    private void wakeUpProcess(ProcessEntry entry, Map<String, Object> data) {
+        String instanceId = entry.getInstanceId();
+
         List<FormListEntry> forms;
         try {
             forms = formService.list(instanceId);
         } catch (ExecutionException e) {
-            throw new WebApplicationException("Process error", Status.INTERNAL_SERVER_ERROR);
+            throw err("Internal error", Status.INTERNAL_SERVER_ERROR, entry);
         }
 
         if (forms == null || forms.isEmpty()) {
-            throw new WebApplicationException("Invalid process state: no forms found", Status.INTERNAL_SERVER_ERROR);
+            throw err("Invalid process state: no forms found", Status.INTERNAL_SERVER_ERROR, entry);
         }
 
-        for(FormListEntry f : forms) {
+        for (FormListEntry f : forms) {
             try {
                 Map<String, Object> args = (Map<String, Object>) data.get(f.getName());
 
                 FormSubmitResult submitResult = formService.submit(instanceId, f.getFormInstanceId(), args);
-                if(!submitResult.isValid()) {
+                if (!submitResult.isValid()) {
                     String error = "n/a";
-                    if(submitResult.getErrors() != null) {
+                    if (submitResult.getErrors() != null) {
                         error = submitResult.getErrors().stream().map(e -> e.getFieldName() + ": " + e.getError()).collect(Collectors.joining(","));
                     }
-                    throw new WebApplicationException(
-                            "Form '" + f.getName() + "' submit error: " + error,
-                            Status.BAD_REQUEST);
+                    throw err("Form '" + f.getName() + "' submit error: " + error, Status.BAD_REQUEST, entry);
                 }
             } catch (ExecutionException e) {
-                throw new WebApplicationException("Submit form error", Status.INTERNAL_SERVER_ERROR);
+                throw err("Submit form error", Status.INTERNAL_SERVER_ERROR, entry);
             }
         }
+    }
+
+    private static WebApplicationException err(String message, Status status, ProcessEntry entry) {
+        throw new WebApplicationException(message, Response.status(status)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_TYPE)
+                .entity(entry)
+                .build());
     }
 }
