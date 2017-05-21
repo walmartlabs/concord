@@ -36,6 +36,10 @@ public class SecretManager {
 
     public KeyPair getKeyPair(String name) {
         Secret s = getSecret(name);
+        if (s == null) {
+            return null;
+        }
+
         if (!(s instanceof KeyPair)) {
             throw new IllegalArgumentException("Invalid secret type: " + name + ", expected a key pair, got: " + s.getClass());
         }

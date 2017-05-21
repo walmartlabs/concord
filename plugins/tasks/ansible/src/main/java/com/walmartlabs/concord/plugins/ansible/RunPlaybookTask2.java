@@ -34,21 +34,20 @@ public class RunPlaybookTask2 implements Task {
         Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
         String cfgFile = createCfgFile(makeCfg(cfg, payloadPath));
 
-        // TODO constants
-        String playbook = (String) args.get("playbook");
+        String playbook = (String) args.get(AnsibleConstants.PLAYBOOK_KEY);
         if (playbook == null || playbook.trim().isEmpty()) {
-            throw new IllegalArgumentException("The 'playbook' parameter is missing");
+            throw new IllegalArgumentException("Missing '" + AnsibleConstants.PLAYBOOK_KEY + "' parameter");
         }
 
-        String inventoryPath = getInventoryPath(payloadPath);
-        Map<String, String> extraVars = (Map<String, String>) args.get("extraVars");
+        String inventoryPath = getInventoryPath(args, payloadPath);
+        Map<String, String> extraVars = (Map<String, String>) args.get(AnsibleConstants.EXTRA_VARS_KEY);
 
         String playbookPath = Paths.get(payloadPath, playbook).toAbsolutePath().toString();
         log.info("Using the playbook: {}", playbookPath);
 
         String attachmentsDir = payloadPath + "/" + Constants.Files.JOB_ATTACHMENTS_DIR_NAME;
 
-        String vaultPasswordFile = getVaultPasswordFilePath(payloadPath);
+        String vaultPasswordFile = getVaultPasswordFilePath(args, payloadPath);
 
         PlaybookProcessBuilder b = new PlaybookProcessBuilder(playbookPath, inventoryPath)
                 .withAttachmentsDir(attachmentsDir)
@@ -77,8 +76,19 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    private static String getInventoryPath(String payloadPath) throws IOException {
-        // try a static inventory file first
+    @SuppressWarnings("unchecked")
+    private static String getInventoryPath(Map<String, Object> args, String payloadPath) throws IOException {
+        // try an "inline" inventory
+        Object v = args.get(AnsibleConstants.INVENTORY_KEY);
+        if (v instanceof Map) {
+            Path p = createInventoryFile((Map<String, Object>) v);
+            updateDynamicInventoryPermissions(p);
+            return p.toAbsolutePath().toString();
+        }
+
+        // TODO check if "inventory" is actually a path to a file
+
+        // try a static inventory file
         Path p = Paths.get(payloadPath, AnsibleConstants.INVENTORY_FILE_NAME);
         if (!Files.exists(p)) {
             // try a dynamic inventory script
@@ -88,11 +98,7 @@ public class RunPlaybookTask2 implements Task {
                 throw new IOException("Inventory file not found: " + p.toAbsolutePath());
             }
 
-            // ensure that a dynamic inventory script has the executable bit set
-            Set<PosixFilePermission> perms = new HashSet<>();
-            perms.add(PosixFilePermission.OWNER_READ);
-            perms.add(PosixFilePermission.OWNER_EXECUTE);
-            Files.setPosixFilePermissions(p, perms);
+            updateDynamicInventoryPermissions(p);
             log.debug("getInventoryPath ['{}'] -> dynamic inventory", payloadPath);
         }
         return p.toAbsolutePath().toString();
@@ -128,11 +134,12 @@ public class RunPlaybookTask2 implements Task {
         Map<String, Object> m = new HashMap<>();
 
         // use a shorter control_path to prevent path length errors
-        m.put("control_path", "%(directory)s/%%h-%%p-%%r\n");
+        m.put("control_path", "%(directory)s/%%h-%%p-%%r");
 
         return m;
     }
 
+    @SuppressWarnings("unchecked")
     private static String createCfgFile(Map<String, Object> cfg) throws IOException {
         StringBuilder b = new StringBuilder();
 
@@ -187,7 +194,17 @@ public class RunPlaybookTask2 implements Task {
         return p.toAbsolutePath().toString();
     }
 
-    private static String getVaultPasswordFilePath(String payloadPath) throws IOException {
+    private static String getVaultPasswordFilePath(Map<String, Object> args, String payloadPath) throws IOException {
+        // try an "inline" password first
+        Object v = args.get(AnsibleConstants.VAULT_PASSWORD_KEY);
+        if (v instanceof String) {
+            Path p = Files.createTempFile("vault", "password");
+            Files.write(p, ((String) v).getBytes());
+            return p.toAbsolutePath().toString();
+        } else if (v != null) {
+            throw new IllegalArgumentException("Invalid '" + AnsibleConstants.VAULT_PASSWORD_KEY + "' type: " + v);
+        }
+
         Path p = Paths.get(payloadPath, AnsibleConstants.VAULT_PASSWORD_FILE_PATH);
         if (!Files.exists(p)) {
             return null;
@@ -219,5 +236,34 @@ public class RunPlaybookTask2 implements Task {
 
     private static String trim(String s) {
         return s != null ? s.trim() : null;
+    }
+
+    private static Path createInventoryFile(Map<String, Object> m) throws IOException {
+        Path p = Files.createTempFile("inventory", ".sh");
+
+        try (BufferedWriter w = Files.newBufferedWriter(p)) {
+            w.write("#!/bin/bash");
+            w.newLine();
+            w.write("cat << \"EOF\"");
+            w.newLine();
+
+            ObjectMapper om = new ObjectMapper();
+            String s = om.writeValueAsString(m);
+            w.write(s);
+            w.newLine();
+
+            w.write("EOF");
+            w.newLine();
+        }
+
+        return p;
+    }
+
+    private static void updateDynamicInventoryPermissions(Path p) throws IOException {
+        // ensure that a dynamic inventory script has the executable bit set
+        Set<PosixFilePermission> perms = new HashSet<>();
+        perms.add(PosixFilePermission.OWNER_READ);
+        perms.add(PosixFilePermission.OWNER_EXECUTE);
+        Files.setPosixFilePermissions(p, perms);
     }
 }

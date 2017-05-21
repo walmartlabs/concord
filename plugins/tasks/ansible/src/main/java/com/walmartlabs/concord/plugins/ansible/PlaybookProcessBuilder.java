@@ -68,11 +68,14 @@ public class PlaybookProcessBuilder {
         File pwd = new File(playbook);
         if (pwd.isFile()) {
             pwd = pwd.getParentFile();
-            log.debug("build -> working directory: {}", pwd);
         }
+        if (!pwd.exists()) {
+            throw new IOException("Working directory not found: " + pwd);
+        }
+        log.info("build -> working directory: {}", pwd);
 
         String[] cmd = formatCmd();
-        log.debug("build -> cmd: {}", String.join(" ", cmd));
+        log.info("build -> cmd: {}", String.join(" ", cmd));
 
         ProcessBuilder b = new ProcessBuilder()
                 .command(cmd)
@@ -86,6 +89,7 @@ public class PlaybookProcessBuilder {
         if (attachmentsDir != null) {
             env.put("_CONCORD_ATTACHMENTS_DIR", attachmentsDir);
         }
+        log.info("build -> env: {}", env);
 
         return b.start();
     }

@@ -76,6 +76,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testFailure() throws Exception {
         Map<String, InputStream> input = new HashMap<>();
         input.put("request", resource("ansibleproject/requestFailure.json"));

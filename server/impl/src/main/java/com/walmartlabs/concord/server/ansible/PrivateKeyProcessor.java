@@ -36,25 +36,30 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        String projectName = payload.getHeader(Payload.PROJECT_NAME);
-        if (projectName == null) {
+        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+
+        Map<String, Object> ansibleCfg = (Map<String, Object>) cfg.get(AnsibleConfigurationConstants.GROUP_KEY);
+        if (ansibleCfg == null) {
             return chain.process(payload);
         }
 
-        Collection<Map<String, Object>> cfg = cfgDao.getList(projectName,
-                AnsibleConfigurationConstants.GROUP_KEY, AnsibleConfigurationConstants.PRIVATE_KEYS);
-        if (cfg == null) {
-            log.debug("process ['{}'] -> configuration not found, nothing to do", payload.getInstanceId());
+        Collection<Map<String, Object>> keys = (Collection<Map<String, Object>>) ansibleCfg.get(AnsibleConfigurationConstants.PRIVATE_KEYS);
+        if (keys == null) {
             return chain.process(payload);
         }
 
-        String secret = findMatchingSecret(payload, cfg);
+        String secret = findMatchingSecret(payload, keys);
         if (secret == null) {
             throw new ProcessException("No matching secrets found");
         }
 
         KeyPair keyPair = secretManager.getKeyPair(secret);
+        if (keyPair == null) {
+            throw new ProcessException("Secret not found: " + secret);
+        }
+
         if (keyPair.getPrivateKey() == null) {
             throw new ProcessException("Private key not found: " + secret);
         }
@@ -77,6 +82,8 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
     private static String findMatchingSecret(Payload payload, Collection<Map<String, Object>> items) {
         RepositoryInfo info = payload.getHeader(RepositoryProcessor.REPOSITORY_INFO_KEY);
+        String repoName = info != null ? info.getName() : "";
+
         for (Map<String, Object> i : items) {
             String secret = (String) i.get(AnsibleConfigurationConstants.SECRET_KEY);
             if (secret == null || secret.trim().isEmpty()) {
@@ -84,7 +91,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
             }
 
             String repo = (String) i.get(AnsibleConfigurationConstants.REPOSITORY_KEY);
-            if (repo != null && info.getName().matches(repo)) {
+            if (repo != null && repoName.matches(repo)) {
                 return secret;
             }
         }

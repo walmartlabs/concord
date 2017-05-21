@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines;
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.server.ansible.InlineInventoryProcessor;
 import com.walmartlabs.concord.server.ansible.InventoryProcessor;
 import com.walmartlabs.concord.server.ansible.PrivateKeyProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
@@ -29,7 +28,6 @@ public class ProjectPipeline extends Chain {
                 injector.getInstance(ProjectConfigurationProcessor.class),
                 injector.getInstance(RequestDefaultsParsingProcessor.class),
                 injector.getInstance(InventoryProcessor.class),
-                injector.getInstance(InlineInventoryProcessor.class),
                 injector.getInstance(PrivateKeyProcessor.class),
                 injector.getInstance(TemplateProcessor.class),
                 injector.getInstance(DependenciesProcessor.class),

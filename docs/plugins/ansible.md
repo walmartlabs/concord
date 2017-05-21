@@ -42,8 +42,28 @@ pipelining = True
 
 ### Vault password files
 
-A file named `_vaultPassword` must be added the root directory of a
-payload.
+When using the raw payload format, set
+`arguments.ansibleCfg.vaultPassword` variable in a request JSON object:
+```json
+{
+  "arguments": {
+    "ansibleCfg": {
+      "vaultPassword": "..."
+    }
+  }
+}
+```
+
+For the projects using "ansible" template, set `vaultPassword` variable
+in a top-level request JSON object:
+```json
+{
+  "vaultPassword": "..."
+}
+```
+
+Alternatively, a file named `_vaultPassword` can be added to the root
+directory of a payload.
 
 ## Ansible projects
 
