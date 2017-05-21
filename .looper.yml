@@ -5,6 +5,7 @@ envs:
     variables:
       # this should be provided by looper
       DOCKER_HOST: tcp://localhost:2375
+      DOCKER_REGISTRY: docker.prod.walmart.com
 
 tools:
   jdk: 8
