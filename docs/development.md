@@ -23,6 +23,13 @@ started in debug mode as usual.
 However, as the agent processes its payload in a separate JVM, it must be configured to
 start those processes with the remove debugging enabled: *TBD*
 
+## Building
+
+To skip NPM-related tasks when building the project:
+```
+./mvnw clean install -DskipTests -DskipNpmInstall -DskipNpmBuild
+```
+
 ## Making a release
 
 All JAR files are signed using a GPG key. Pass phase for a key must be configured in
