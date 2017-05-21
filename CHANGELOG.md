@@ -1,5 +1,24 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-runner: add `workDir` variable (same as `__attr_localPath`);
+- ansible-tasks: allow passing a vault password using request variables.
+- upgrade the bpm engine to 0.28.0 which allow flows to access
+available tasks using expressions `${tasks.get('name')}` or in a script
+block.
+
+### Changed
+
+- concord-console: wrap long lines in the log viewer;
+- concord-agent: do not cache `file://` and `SNAPSHOT` dependencies;
+- ansible-tasks: move inline inventory processing from the server into the
+plugin.
+
+
+
 ## [0.15.0] - 2017-05-19
 
 ### Added
