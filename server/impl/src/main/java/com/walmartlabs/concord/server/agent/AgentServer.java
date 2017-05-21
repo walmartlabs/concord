@@ -1,8 +1,7 @@
 package com.walmartlabs.concord.server.agent;
 
 import com.walmartlabs.concord.server.api.agent.ClientException;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.*;
 import org.eclipse.sisu.EagerSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.net.SocketAddress;
 
 @Named
 @EagerSingleton
@@ -28,6 +28,7 @@ public class AgentServer {
                 .forPort(port)
                 .addService(commandQueue)
                 .addService(jobQueue)
+                .addTransportFilter(new LoggingTransportFilter())
                 .build();
 
         try {
@@ -37,5 +38,28 @@ public class AgentServer {
         }
 
         log.info("init -> server started on {}", port);
+    }
+
+    private static final class LoggingTransportFilter extends ServerTransportFilter {
+
+        @Override
+        public Attributes transportReady(Attributes transportAttrs) {
+            SocketAddress remoteAddr = transportAttrs.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
+            if (remoteAddr != null) {
+                log.info("transportReady -> {} connected", remoteAddr);
+            }
+
+            return super.transportReady(transportAttrs);
+        }
+
+        @Override
+        public void transportTerminated(Attributes transportAttrs) {
+            SocketAddress remoteAddr = transportAttrs.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
+            if (remoteAddr != null) {
+                log.info("transportTerminated -> {} disconnected", remoteAddr);
+            }
+
+            super.transportTerminated(transportAttrs);
+        }
     }
 }

@@ -6,6 +6,7 @@
     </appender>
 
     <logger name="org.apache.shiro" level="ERROR"/>
+    <logger name="org.jooq" level="WARN"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>

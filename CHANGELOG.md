@@ -5,11 +5,13 @@
 ### Added
 
 - concord-server: return process JSON objects in sync mode regardless
-of success or failure.
+of success or failure;
+- concord-server: log incoming gRPC connections.
 
 ### Changed
 
 - concord-console: fix timestamps on the process page.
+- concord-server: suppress JOOQ banner.
 
 
 
