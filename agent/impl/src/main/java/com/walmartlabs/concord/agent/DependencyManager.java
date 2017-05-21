@@ -39,25 +39,24 @@ public class DependencyManager {
 
         for (String s : urls) {
             URI uri = URI.create(s);
+            boolean skipCache = shouldSkipCache(uri);
 
             String name = getLastPart(uri);
-            Path src = cacheDir.resolve(name);
+            Path cachedPath = cacheDir.resolve(name);
 
-            // TODO striped locks?
             synchronized (mutex) {
-                if (!Files.exists(src)) {
+                if (skipCache || !Files.exists(cachedPath)) {
                     log.info("collectDependencies -> downloading {}...", s);
-                    download(uri, src);
+                    download(uri, cachedPath);
                 }
 
-                // TODO integrity check?
-                log.info("collectDependencies -> using cached {}", src);
+                log.info("collectDependencies -> using cached {}", cachedPath);
                 if (!Files.exists(dstDir)) {
                     Files.createDirectories(dstDir);
                 }
 
-                Path dst = dstDir.resolve(name);
-                Files.createSymbolicLink(dst, src);
+                Path payloadPath = dstDir.resolve(name);
+                Files.createSymbolicLink(payloadPath, cachedPath);
                 continue;
             }
         }
@@ -77,5 +76,9 @@ public class DependencyManager {
             return p.substring(idx + 1);
         }
         throw new IllegalArgumentException("Invalid dependency URL: " + uri);
+    }
+
+    private static boolean shouldSkipCache(URI u) {
+        return "file".equalsIgnoreCase(u.getScheme()) || u.getPath().contains("SNAPSHOT");
     }
 }
