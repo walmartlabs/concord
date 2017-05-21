@@ -15,6 +15,6 @@ flows:
     - sonar("Sonar"):
       - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
   default (on linux):
-    - (name ITs) mvn clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
+    - (name ITs) mvn -U -B clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
     - call: runsonar
     - (name docker-images) mvn -f docker-images clean install docker:push -Pdocker
