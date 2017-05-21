@@ -104,6 +104,8 @@ Concord automatically provides a few built-in variables:
 - `execution` - a reference to a context variables map of a current
 execution;
 - `txId` - unique identifier of a current execution;
+- `tasks` - allows access to available tasks (for example:
+  `${tasks.get('oneops')}`);
 - `initiator` - information about user who started a process:
   - `initiator.username` - login, string;
   - `initiator.displayName` - printable name, string;
