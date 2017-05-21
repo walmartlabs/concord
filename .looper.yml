@@ -15,7 +15,18 @@ flows:
   runsonar:
     - sonar("Sonar"):
       - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
-  default (on linux):
+
+  it:
     - (name ITs) mvn -U -B clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
+
+  docker_push:
+     - (name docker-images) echo "And this is where I'd put my docker:push... if I had credentials!"
+#    - (name docker-images) mvn -f docker-images clean install docker:push -Pdocker
+
+  default (on linux):
+    - call: it
     - call: runsonar
-    - (name docker-images) mvn -f docker-images clean install docker:push -Pdocker
+    - call: docker_push
+
+  pr (on linux):
+    - call: it
