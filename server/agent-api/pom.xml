@@ -13,6 +13,10 @@
     <artifactId>concord-server-agent-api</artifactId>
     <packaging>takari-jar</packaging>
 
+    <properties>
+        <protoc.version>3.3.0</protoc.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -68,7 +72,7 @@
                 <configuration>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
-                    <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
+                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                 </configuration>
                 <executions>
                     <execution>
