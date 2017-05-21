@@ -76,7 +76,7 @@ public class Main {
         }
 
         // prepare the process' arguments
-        Map<String, Object> args = createArgs(instanceId, req);
+        Map<String, Object> args = createArgs(instanceId, baseDir, req);
 
         // start the process
         log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
@@ -90,7 +90,7 @@ public class Main {
     private void resume(String instanceId, Path baseDir, String eventName) throws ExecutionException {
         // read the request data
         Map<String, Object> cfg = readRequest(baseDir);
-        Map<String, Object> args = createArgs(instanceId, cfg);
+        Map<String, Object> args = createArgs(instanceId, baseDir, cfg);
 
         log.debug("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
 
@@ -155,7 +155,7 @@ public class Main {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> createArgs(String instanceId, Map<String, Object> cfg) {
+    private static Map<String, Object> createArgs(String instanceId, Path workDir, Map<String, Object> cfg) {
         Map<String, Object> m = new HashMap<>();
 
         // original arguments
@@ -166,6 +166,9 @@ public class Main {
 
         // instance ID
         m.put(Constants.Context.TX_ID_KEY, instanceId);
+
+        // workDir
+        m.put(Constants.Context.WORK_DIR_KEY, workDir.toAbsolutePath().toString());
 
         // initiator's info
         Object initiator = cfg.get(Constants.Request.INITIATOR_KEY);
