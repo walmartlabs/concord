@@ -80,11 +80,11 @@ class ProcessStatusPage extends Component {
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Started at</Table.Cell>
-                        <Table.Cell>{data.createdDt}</Table.Cell>
+                        <Table.Cell>{data.createdAt}</Table.Cell>
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Last update</Table.Cell>
-                        <Table.Cell>{data.lastUpdateDt}</Table.Cell>
+                        <Table.Cell>{data.lastUpdatedAt}</Table.Cell>
                     </Table.Row>
                 </Table.Body>
             </Table>

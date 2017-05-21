@@ -7,6 +7,10 @@
 - concord-server: return process JSON objects in sync mode regardless
 of success or failure.
 
+### Changed
+
+- concord-console: fix timestamps on the process page.
+
 
 
 ## [0.16.0] - 2017-05-20
