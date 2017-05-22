@@ -14,6 +14,7 @@ import ProcessQueue from "./process/queue";
 import ProcessForm from "./process/form";
 import ProcessWizard from "./process/wizard";
 import ProcessPortal from "./process/portal";
+import ProjectList from "./project/list";
 import UserSecrets from "./user/secret";
 import {actions as session} from "./session";
 import "./index.css";
@@ -45,6 +46,11 @@ ReactDOM.render(
                     <Route path=":instanceId/form/:formInstanceId" component={ProcessForm}/>
                     <Route path=":instanceId/wizard" component={ProcessWizard}/>
                     <Route path=":instanceId" component={ProcessStatus}/>
+                </Route>
+
+                <Route path="project" onEnter={checkAuth}>
+                    <IndexRedirect to="list"/>
+                    <Route path="list" component={ProjectList}/>
                 </Route>
 
                 <Route path="user" onEnter={checkAuth}>

@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: add the project list;
 - concord-server: add project description field;
 - concord-server: return process JSON objects in sync mode regardless
 of success or failure;

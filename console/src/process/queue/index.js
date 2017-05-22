@@ -9,11 +9,11 @@ import RefreshButton from "../../shared/RefreshButton";
 import ErrorMessage from "../../shared/ErrorMessage";
 import DataTable from "../../shared/DataTable";
 import {actions as modal} from "../../shared/Modal";
-import * as actions from "./actions";
-import reducers from "./reducers";
-import * as selectors from "./reducers";
-import sagas from "./sagas";
+import DataList from "../../shared/DataList";
+import * as api from "./api";
 import * as constants from "../constants";
+
+const {actions, reducers, selectors, sagas} = DataList("process/queue", api.loadData);
 
 const columns = [
     {key: "instanceId", label: "Instance ID", collapsing: true},
@@ -30,6 +30,11 @@ const actionsKey = "actions";
 const cellFn = (killPopupFn) => (row, key) => {
     // columns with dates
     if (constants.dateKeys.includes(key)) {
+        const v = row[key];
+        if (!v) {
+            return v;
+        }
+
         const raw = moment(row[key]);
         return raw.format("YYYY-MM-DD HH:mm:ss");
     }
