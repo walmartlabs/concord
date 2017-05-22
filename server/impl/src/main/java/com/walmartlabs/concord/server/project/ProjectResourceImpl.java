@@ -54,6 +54,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         this.key2ProjectField = new HashMap<>();
         key2ProjectField.put("name", PROJECTS.PROJECT_NAME);
+        key2ProjectField.put("description", PROJECTS.DESCRIPTION);
 
         this.key2RepositoryField = new HashMap<>();
         key2RepositoryField.put("name", REPOSITORIES.REPO_NAME);
