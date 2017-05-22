@@ -122,7 +122,7 @@ public class ProjectDao extends AbstractDao {
 
             if (!rName.equals(lastName)) {
                 if (lastName != null) {
-                    add(result, rDescription, lastName, lastTemplates);
+                    add(result, lastName, lastDescription, lastTemplates);
                 }
 
                 lastName = rName;
