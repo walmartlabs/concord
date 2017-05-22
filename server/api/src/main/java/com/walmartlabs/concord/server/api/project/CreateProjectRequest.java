@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,9 @@ public class CreateProjectRequest implements Serializable {
     @ConcordKey
     private final String name;
 
+    @Size(max = 1024)
+    private final String description;
+
     private final Set<String> templates;
 
     private final Map<String, UpdateRepositoryRequest> repositories;
@@ -22,19 +26,22 @@ public class CreateProjectRequest implements Serializable {
     private final Map<String, Object> cfg;
 
     public CreateProjectRequest(String name, Map<String, Object> cfg) {
-        this(name, null, null, cfg);
+        this(name, null, null, null, cfg);
     }
 
     public CreateProjectRequest(String name, Set<String> templates, Map<String, UpdateRepositoryRequest> repositories) {
-        this(name, templates, repositories, null);
+        this(name, null, templates, repositories, null);
     }
 
     @JsonCreator
     public CreateProjectRequest(@JsonProperty("name") String name,
+                                @JsonProperty("description") String description,
                                 @JsonProperty("templates") Set<String> templates,
                                 @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
                                 @JsonProperty("cfg") Map<String, Object> cfg) {
+
         this.name = name;
+        this.description = description;
         this.templates = templates;
         this.repositories = repositories;
         this.cfg = cfg;
@@ -42,6 +49,10 @@ public class CreateProjectRequest implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public Set<String> getTemplates() {
@@ -60,6 +71,7 @@ public class CreateProjectRequest implements Serializable {
     public String toString() {
         return "CreateProjectRequest{" +
                 "name='" + name + '\'' +
+                ", description='" + description + '\'' +
                 ", templates=" + templates +
                 ", repositories=" + repositories +
                 ", cfg=" + cfg +

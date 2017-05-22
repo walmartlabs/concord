@@ -11,26 +11,33 @@ import java.util.Set;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdateProjectRequest implements Serializable {
 
+    private final String description;
     private final Set<String> templates;
     private final Map<String, UpdateRepositoryRequest> repositories;
     private final Map<String, Object> cfg;
 
     public UpdateProjectRequest(Set<String> templates) {
-        this(templates, null, null);
+        this(null, templates, null, null);
     }
 
     public UpdateProjectRequest(Set<String> templates, Map<String, UpdateRepositoryRequest> repositories) {
-        this(templates, repositories, null);
+        this(null, templates, repositories, null);
     }
 
     @JsonCreator
-    public UpdateProjectRequest(@JsonProperty("templates") Set<String> templates,
+    public UpdateProjectRequest(@JsonProperty("description") String description,
+                                @JsonProperty("templates") Set<String> templates,
                                 @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
                                 @JsonProperty("cfg") Map<String, Object> cfg) {
 
+        this.description = description;
         this.templates = templates;
         this.repositories = repositories;
         this.cfg = cfg;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public Set<String> getTemplates() {
@@ -48,7 +55,8 @@ public class UpdateProjectRequest implements Serializable {
     @Override
     public String toString() {
         return "UpdateProjectRequest{" +
-                "templates=" + templates +
+                "description='" + description + '\'' +
+                ", templates=" + templates +
                 ", repositories=" + repositories +
                 ", cfg=" + cfg +
                 '}';

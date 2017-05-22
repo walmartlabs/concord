@@ -21,7 +21,7 @@ public class ProjectConfigurationDaoTest extends AbstractDaoTest {
     public void test() throws Exception {
         String projectName = "project#" + System.currentTimeMillis();
         ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        projectDao.insert(projectName, null);
+        projectDao.insert(projectName, "test", null);
 
         // ---
 
@@ -42,7 +42,7 @@ public class ProjectConfigurationDaoTest extends AbstractDaoTest {
     public void testCache() throws Exception {
         String projectName = "project#" + System.currentTimeMillis();
         ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        projectDao.insert(projectName, null);
+        projectDao.insert(projectName, "test", null);
 
         // ---
 
@@ -72,7 +72,7 @@ public class ProjectConfigurationDaoTest extends AbstractDaoTest {
     public void testUpdate() throws Exception {
         String projectName = "project#" + System.currentTimeMillis();
         ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        projectDao.insert(projectName, null);
+        projectDao.insert(projectName, "test", null);
 
         // ---
 

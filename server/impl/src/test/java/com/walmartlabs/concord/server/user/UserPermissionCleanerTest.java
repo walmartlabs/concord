@@ -52,7 +52,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         String projectName = "project#" + System.currentTimeMillis();
-        projectDao.insert(projectName, null);
+        projectDao.insert(projectName, "test", null);
 
         // ---
 

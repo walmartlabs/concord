@@ -85,7 +85,7 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project_" + System.currentTimeMillis();
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, null, cfg));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, null, null, cfg));
 
         // ---
 

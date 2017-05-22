@@ -40,7 +40,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
         String[] projectTemplates = {templateName};
 
-        projectDao.insert(projectName, Arrays.asList(projectTemplates));
+        projectDao.insert(projectName, "test", Arrays.asList(projectTemplates));
 
         // ---
 
@@ -62,7 +62,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
         String[] projectTemplates = {templateName};
 
-        projectDao.insert(projectName, Arrays.asList(projectTemplates));
+        projectDao.insert(projectName, "test", Arrays.asList(projectTemplates));
 
         // ---
 
@@ -109,8 +109,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
         bTemplateNames.add(aTemplateName);
         bTemplateNames.add(bTemplateName);
 
-        projectDao.insert(aName, Arrays.asList(aTemplates));
-        projectDao.insert(bName, Arrays.asList(bTemplates));
+        projectDao.insert(aName, "test", Arrays.asList(aTemplates));
+        projectDao.insert(bName, "test", Arrays.asList(bTemplates));
 
         // ---
 

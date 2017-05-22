@@ -71,7 +71,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         String projectName = request.getName();
         if (projectDao.exists(projectName)) {
-            UpdateProjectRequest req = new UpdateProjectRequest(request.getTemplates(), request.getRepositories(), request.getCfg());
+            UpdateProjectRequest req = new UpdateProjectRequest(request.getDescription(), request.getTemplates(),
+                    request.getRepositories(), request.getCfg());
             update(projectName, req);
             return new CreateProjectResponse(false);
         }
@@ -88,7 +89,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         tx(tx -> {
-            projectDao.insert(tx, projectName, request.getTemplates());
+            projectDao.insert(tx, projectName, request.getDescription(), request.getTemplates());
 
             if (repos != null) {
                 insert(tx, projectName, repos);
@@ -203,7 +204,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         tx(tx -> {
-            projectDao.update(tx, projectName, request.getTemplates());
+            projectDao.update(tx, projectName, request.getDescription(), request.getTemplates());
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectName);

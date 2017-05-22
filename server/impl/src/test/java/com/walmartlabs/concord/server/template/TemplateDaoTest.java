@@ -56,7 +56,7 @@ public class TemplateDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
         String[] projectTemplates = {templateName};
 
-        projectDao.insert(projectName, Arrays.asList(projectTemplates));
+        projectDao.insert(projectName, "test", Arrays.asList(projectTemplates));
 
         // ---
 

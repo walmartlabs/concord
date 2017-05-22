@@ -32,25 +32,30 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    public void insert(String name, Collection<String> templateIds) {
-        tx(tx -> insert(tx, name, templateIds));
+    public void insert(String name, String description, Collection<String> templateIds) {
+        tx(tx -> insert(tx, name, description, templateIds));
     }
 
-    public void insert(DSLContext create, String name, Collection<String> templateIds) {
+    public void insert(DSLContext create, String name, String description, Collection<String> templateIds) {
         create.insertInto(PROJECTS)
-                .columns(PROJECTS.PROJECT_NAME)
-                .values(name)
+                .columns(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION)
+                .values(name, description)
                 .execute();
 
         insertTemplates(create, name, templateIds);
     }
 
-    public void update(DSLContext create, String name, Collection<String> templateIds) {
-        create.deleteFrom(PROJECT_TEMPLATES)
+    public void update(DSLContext tx, String name, String description, Collection<String> templateIds) {
+        tx.update(PROJECTS)
+                .set(PROJECTS.DESCRIPTION, description)
+                .where(PROJECTS.PROJECT_NAME.eq(name))
+                .execute();
+
+        tx.deleteFrom(PROJECT_TEMPLATES)
                 .where(PROJECT_TEMPLATES.PROJECT_NAME.eq(name))
                 .execute();
 
-        insertTemplates(create, name, templateIds);
+        insertTemplates(tx, name, templateIds);
     }
 
     public void delete(String id) {
@@ -66,7 +71,7 @@ public class ProjectDao extends AbstractDao {
 
     public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
         try (DSLContext create = DSL.using(cfg)) {
-            SelectOnConditionStep<Record2<String, String>> query = selectProjectEntry(create);
+            SelectOnConditionStep<Record3<String, String, String>> query = selectProjectEntry(create);
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
@@ -99,7 +104,7 @@ public class ProjectDao extends AbstractDao {
         b.execute();
     }
 
-    private static List<ProjectEntry> fold(Result<Record2<String, String>> raw) {
+    private static List<ProjectEntry> fold(Result<Record3<String, String, String>> raw) {
         if (raw.isEmpty()) {
             return Collections.emptyList();
         }
@@ -107,18 +112,21 @@ public class ProjectDao extends AbstractDao {
         List<ProjectEntry> result = new ArrayList<>();
 
         String lastName = null;
+        String lastDescription = null;
         Set<String> lastTemplates = null;
 
-        for (Record2<String, String> r : raw) {
+        for (Record3<String, String, String> r : raw) {
             String rName = r.get(PROJECTS.PROJECT_NAME);
+            String rDescription = r.get(PROJECTS.DESCRIPTION);
             String rTemplate = r.get(TEMPLATES.TEMPLATE_NAME);
 
             if (!rName.equals(lastName)) {
                 if (lastName != null) {
-                    add(result, lastName, lastTemplates);
+                    add(result, rDescription, lastName, lastTemplates);
                 }
 
                 lastName = rName;
+                lastDescription = rDescription;
                 lastTemplates = new HashSet<>();
             }
 
@@ -127,20 +135,22 @@ public class ProjectDao extends AbstractDao {
             }
         }
 
-        add(result, lastName, lastTemplates);
+        add(result, lastName, lastDescription, lastTemplates);
         return result;
     }
 
-    private static ProjectEntry foldOne(Result<Record2<String, String>> raw) {
+    private static ProjectEntry foldOne(Result<Record3<String, String, String>> raw) {
         if (raw.isEmpty()) {
             return null;
         }
 
         String name = null;
+        String description = null;
         Set<String> templates = null;
 
-        for (Record2<String, String> r : raw) {
+        for (Record3<String, String, String> r : raw) {
             name = r.get(PROJECTS.PROJECT_NAME);
+            description = r.get(PROJECTS.DESCRIPTION);
             String template = r.get(TEMPLATES.TEMPLATE_NAME);
 
             if (template != null) {
@@ -151,15 +161,15 @@ public class ProjectDao extends AbstractDao {
             }
         }
 
-        return new ProjectEntry(name, templates);
+        return new ProjectEntry(name, description, templates);
     }
 
-    private static void add(List<ProjectEntry> l, String name, Set<String> templates) {
-        l.add(new ProjectEntry(name, templates));
+    private static void add(List<ProjectEntry> l, String name, String description, Set<String> templates) {
+        l.add(new ProjectEntry(name, description, templates));
     }
 
-    private static SelectOnConditionStep<Record2<String, String>> selectProjectEntry(DSLContext create) {
-        return create.select(PROJECTS.PROJECT_NAME, TEMPLATES.TEMPLATE_NAME)
+    private static SelectOnConditionStep<Record3<String, String, String>> selectProjectEntry(DSLContext create) {
+        return create.select(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, TEMPLATES.TEMPLATE_NAME)
                 .from(PROJECTS)
                 .leftOuterJoin(PROJECT_TEMPLATES).on(PROJECT_TEMPLATES.PROJECT_NAME.eq(PROJECTS.PROJECT_NAME))
                 .leftOuterJoin(TEMPLATES).on(PROJECT_TEMPLATES.TEMPLATE_NAME.eq(TEMPLATES.TEMPLATE_NAME));

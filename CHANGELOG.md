@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: add project description field;
 - concord-server: return process JSON objects in sync mode regardless
 of success or failure;
 - concord-server: log incoming gRPC connections;
