@@ -114,13 +114,14 @@ public class CrudIT extends AbstractServerIT {
         String projectName = "project_" + System.currentTimeMillis();
         String repoName = "repo_" + System.currentTimeMillis();
         String branch = "branch_" + System.currentTimeMillis();
+        String commitId = "commitId_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null))));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, commitId, null))));
 
         // ---
 
-        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, null));
+        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, commitId,null));
         assertTrue(urr.isOk());
 
         // ---
@@ -130,6 +131,7 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(e);
         assertEquals("something", e.getUrl());
         assertEquals(branch, e.getBranch());
+        assertEquals(commitId, e.getCommitId());
 
         DeleteRepositoryResponse drr = projectResource.deleteRepository(projectName, repoName);
         assertTrue(drr.isOk());
@@ -141,16 +143,16 @@ public class CrudIT extends AbstractServerIT {
         String projectName2 = "project2_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName1, null, null));
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName2, null, null));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName1, null, null, null));
+        projectResource.createOrUpdate(new CreateProjectRequest(projectName2, null, null, null));
 
         // ---
 
         String repoName = "repo_" + System.currentTimeMillis();
-        CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1, new CreateRepositoryRequest(repoName, "n/a", null, null));
+        CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1, new CreateRepositoryRequest(repoName, "n/a", null, null, null));
         assertTrue(crr1.isOk());
 
-        CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2, new CreateRepositoryRequest(repoName, "n/a", null, null));
+        CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2, new CreateRepositoryRequest(repoName, "n/a", null, null, null));
         assertTrue(crr2.isOk());
     }
 

@@ -97,7 +97,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", repoSecretName);
+        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new CreateProjectRequest(projectName, singleton(templateName), singletonMap(repoName, repo)));
 
@@ -141,7 +141,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", repoSecretName);
+        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new CreateProjectRequest(projectName, singleton(templateName), singletonMap(repoName, repo)));
 

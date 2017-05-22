@@ -77,7 +77,12 @@ public class RepositoryProcessor implements PayloadProcessor {
         }
 
         try {
-            Path src = repositoryManager.fetch(projectName, repo.getUrl(), branch, secret);
+            Path src;
+            if(repo.getCommitId() != null) {
+                src = repositoryManager.fetchByCommit(projectName, repo.getUrl(), repo.getCommitId(), secret);
+            } else {
+                src = repositoryManager.fetch(projectName, repo.getUrl(), branch, secret);
+            }
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
             IOUtils.copy(src, dst);
         } catch (IOException | RepositoryException e) {
@@ -89,7 +94,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         entryPoint = entryPoint.length > 1 ? Arrays.copyOfRange(entryPoint, 1, entryPoint.length) : new String[0];
 
         payload = payload.putHeader(Payload.ENTRY_POINT, entryPoint)
-                .putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch));
+                .putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch, repo.getCommitId()));
 
         return chain.process(payload);
     }
@@ -99,11 +104,13 @@ public class RepositoryProcessor implements PayloadProcessor {
         private final String name;
         private final String url;
         private final String branch;
+        private final String commitId;
 
-        public RepositoryInfo(String name, String url, String branch) {
+        public RepositoryInfo(String name, String url, String branch, String commitId) {
             this.name = name;
             this.url = url;
             this.branch = branch;
+            this.commitId = commitId;
         }
 
         public String getName() {
@@ -118,12 +125,17 @@ public class RepositoryProcessor implements PayloadProcessor {
             return branch;
         }
 
+        public String getCommitId() {
+            return commitId;
+        }
+
         @Override
         public String toString() {
             return "RepositoryInfo{" +
                     "name='" + name + '\'' +
                     ", url='" + url + '\'' +
                     ", branch='" + branch + '\'' +
+                    ", commitId='" + commitId + '\'' +
                     '}';
         }
     }

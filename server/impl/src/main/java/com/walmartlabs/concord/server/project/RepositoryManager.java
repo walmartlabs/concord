@@ -44,76 +44,113 @@ public class RepositoryManager {
         this.cfg = cfg;
     }
 
+    public Path fetchByCommit(String projectName, String uri, String commitId, Secret secret) throws RepositoryException {
+        Path localPath = cfg.getRepoCacheDir().resolve(projectName).resolve(commitId);
+
+        try(Git repo = openRepo(localPath)) {
+            if (repo != null) {
+                log.info("fetch ['{}', '{}', '{}'] -> repository exists", projectName, uri, commitId);
+                return localPath;
+            }
+        }
+
+        try(Git repo = cloneRepo(uri, localPath, null, createTransportConfigCallback(secret))) {
+            repo.checkout()
+                    .setName(commitId)
+                    .call();
+
+            log.info("fetchByCommit ['{}', '{}', '{}'] -> initial clone completed", projectName, uri, commitId);
+        } catch (GitAPIException e) {
+            throw new RepositoryException("Error while updating a repository", e);
+        }
+
+        return localPath;
+    }
+
     public Path fetch(String projectName, String uri, String branch, Secret secret) throws RepositoryException {
         if (branch == null) {
             branch = DEFAULT_BRANCH;
         }
 
-        TransportConfigCallback transportCallback = transport -> {
+        TransportConfigCallback transportCallback = createTransportConfigCallback(secret);
+
+        Path localPath = cfg.getRepoCacheDir().resolve(projectName).resolve(branch);
+        try(Git repo = openRepo(localPath)) {
+            if(repo != null) {
+                repo.checkout()
+                        .setName(branch)
+                        .call();
+
+                repo.pull()
+                        .setTransportConfigCallback(transportCallback)
+                        .call();
+
+                log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectName, uri, branch);
+
+                return localPath;
+            }
+        } catch (GitAPIException e) {
+            throw new RepositoryException("Error while updating a repository", e);
+        }
+
+        try(Git ignored = cloneRepo(uri, localPath, branch, transportCallback)) {
+            log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectName, uri, branch);
+            return localPath;
+        }
+    }
+
+    private static Git openRepo(Path path) throws RepositoryException {
+        if(!Files.exists(path)) {
+            return null;
+        }
+
+        // check if there is an existing git repo
+        try {
+            return Git.open(path.toFile());
+        } catch (RepositoryNotFoundException e) {
+            // ignore
+        } catch (IOException e) {
+            throw new RepositoryException("Error while opening a repository", e);
+        }
+
+        return null;
+    }
+
+    private static Git cloneRepo(String uri, Path path, String branch, TransportConfigCallback transportCallback) throws RepositoryException {
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                throw new RepositoryException("Can't create a directory for a repository", e);
+            }
+        }
+
+        try {
+            return Git.cloneRepository()
+                    .setURI(uri)
+                    .setBranch(branch)
+                    .setBranchesToClone(branch != null ? Collections.singleton(branch) : null)
+                    .setDirectory(path.toFile())
+                    .setTransportConfigCallback(transportCallback)
+                    .call();
+        } catch (GitAPIException e) {
+            try {
+                IOUtils.deleteRecursively(path);
+            } catch (IOException ee) {
+                log.warn("cloneRepo ['{}', '{}'] -> cleanup error: {}", uri, branch, ee.getMessage());
+            }
+            throw new RepositoryException("Error while cloning a repository", e);
+        }
+    }
+
+    private static TransportConfigCallback createTransportConfigCallback(Secret secret) {
+        return transport -> {
             if (transport instanceof SshTransport) {
                 configureSshTransport((SshTransport) transport, secret);
             } else if (transport instanceof HttpTransport) {
                 configureHttpTransport((HttpTransport) transport, secret);
             }
         };
-
-        Git repo = null;
-
-        Path localPath = cfg.getRepoCacheDir().resolve(projectName).resolve(branch);
-        if (Files.exists(localPath)) {
-            // check if there is an existing git repo
-            try {
-                repo = Git.open(localPath.toFile());
-            } catch (RepositoryNotFoundException e) {
-            } catch (IOException e) {
-                throw new RepositoryException("Error while opening a repository", e);
-            }
-
-        } else {
-            try {
-                Files.createDirectories(localPath);
-            } catch (IOException e) {
-                throw new RepositoryException("Can't create a directory for a repository", e);
-            }
-        }
-
-        if (repo == null) {
-            try {
-                Git.cloneRepository()
-                        .setURI(uri)
-                        .setDirectory(localPath.toFile())
-                        .setBranch(branch)
-                        .setBranchesToClone(Collections.singleton(branch))
-                        .setTransportConfigCallback(transportCallback)
-                        .call();
-
-                // we are done
-                log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectName, uri, branch);
-                return localPath;
-            } catch (GitAPIException e) {
-                try {
-                    IOUtils.deleteRecursively(localPath);
-                } catch (IOException ee) {
-                    log.warn("fetch ['{}', '{}', '{}'] -> cleanup error: {}", projectName, uri, branch, ee.getMessage());
-                }
-                throw new RepositoryException("Error while cloning a repository", e);
-            }
-        }
-
-        try {
-            repo.checkout()
-                    .setName(branch)
-                    .call();
-
-            repo.pull()
-                    .setTransportConfigCallback(transportCallback)
-                    .call();
-            log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectName, uri, branch);
-        } catch (GitAPIException e) {
-            throw new RepositoryException("Error while updating a repository", e);
-        }
-
-        return localPath;
     }
 
     private static void configureSshTransport(SshTransport t, Secret secret) {
