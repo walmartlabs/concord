@@ -4,6 +4,7 @@ import {connect} from "react-redux";
 import {Link} from "react-router";
 import {Button, Divider, Header, Label, Loader, Table} from "semantic-ui-react";
 import {push as pushHistory} from "react-router-redux";
+import moment from "moment";
 import ErrorMessage from "../shared/ErrorMessage";
 import RefreshButton from "../shared/RefreshButton";
 import KillProcessPopup from "./KillProcessPopup";
@@ -15,6 +16,8 @@ import * as selectors from "./reducers";
 import sagas from "./sagas";
 
 const enableFormsStatuses = [constants.status.suspendedStatus];
+
+const formatTimestamp = (t) => t ? moment(t).format("YYYY-MM-DD HH:mm:ss") : t;
 
 class ProcessStatusPage extends Component {
 
@@ -80,11 +83,11 @@ class ProcessStatusPage extends Component {
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Started at</Table.Cell>
-                        <Table.Cell>{data.createdAt}</Table.Cell>
+                        <Table.Cell>{formatTimestamp(data.createdAt)}</Table.Cell>
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Last update</Table.Cell>
-                        <Table.Cell>{data.lastUpdatedAt}</Table.Cell>
+                        <Table.Cell>{formatTimestamp(data.lastUpdatedAt)}</Table.Cell>
                     </Table.Row>
                 </Table.Body>
             </Table>
