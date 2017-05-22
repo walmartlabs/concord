@@ -92,6 +92,11 @@ public final class YamlProcessConverter {
             proc.end();
             sourceMap(proc, s, "RETURN statement");
             return proc;
+        } else if (s instanceof YamlReturnError) {
+            YamlReturnError e = (YamlReturnError) s;
+            proc.end(e.getErrorCode());
+            sourceMap(proc, s, "RETURN error statement");
+            return proc;
         } else if (s instanceof YamlGroup) {
             YamlGroup g = (YamlGroup) s;
 

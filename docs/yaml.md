@@ -184,6 +184,20 @@ main:
       - return
 ```
 
+### Return error command
+
+The `return error` command can be used to stop the execution of the current
+(sub) flow and throw error:
+
+```yaml
+main:
+  - if: ${myVar > 0}
+    then:
+      - log: moving along
+    else:
+      - return: error-code
+```
+
 ### Groups of steps
 
 Several steps can be grouped in one block. This allows `try-catch`-like
@@ -371,13 +385,14 @@ taskFull := FIELD_NAME "task" VALUE_STRING taskOptions
 taskShort := FIELD_NAME literal
 ifExpr := FIELD_NAME "if" expression FIELD_NAME "then" steps (FIELD_NAME "else" steps)?
 returnExpr := VALUE_STRING "return"
+returnErrorExpr := FIELD_NAME "return" VALUE_STRING
 group := FIELD_NAME ":" steps groupOptions
 callProc := VALUE_STRING
 script := FIELD_NAME "script" VALUE_STRING (FIELD_NAME "body" VALUE_STRING)?
 formCall := FIELD_NAME "form" VALUE_STRING formCallOptions
 
 stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | inlineScript | taskShort END_OBJECT
-step := returnExpr | exprShort | callProc | stepObject
+step := returnExpr | returnErrorExpr | exprShort | callProc | stepObject
 steps := START_ARRAY step+ END_ARRAY
 
 formField := START_OBJECT FIELD_NAME object END_OBJECT
