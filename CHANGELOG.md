@@ -6,7 +6,9 @@
 
 - concord-server: return process JSON objects in sync mode regardless
 of success or failure;
-- concord-server: log incoming gRPC connections.
+- concord-server: log incoming gRPC connections;
+- concord-server: improve request data validation for the Project REST
+API.
 
 ### Changed
 

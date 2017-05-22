@@ -107,6 +107,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
+        assertProject(projectName);
         assertSecret(request.getSecret());
 
         tx(tx -> repositoryDao.insert(tx, projectName, request.getName(), request.getUrl(), request.getBranch(), request.getSecret()));
@@ -132,6 +133,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
+        assertProject(projectName);
+
         return repositoryDao.get(projectName, repositoryName);
     }
 
@@ -141,6 +144,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     public Map<String, Object> getConfiguration(String projectName, String path) {
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
+
+        assertProject(projectName);
 
         String[] ps = path != null ? path.split("/") : null;
         Object v = configurationDao.getValue(projectName, ps);
@@ -168,6 +173,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
+        assertProject(projectName);
+
         Field<?> sortField = key2RepositoryField.get(sortBy);
         if (sortField == null) {
             throw new ValidationErrorsException("Unknown sort field: " + sortBy);
@@ -181,6 +188,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
+        assertProject(projectName);
         assertTemplates(request.getTemplates());
 
         Map<String, Object> cfg = request.getCfg();
@@ -228,6 +236,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     public UpdateProjectConfigurationResponse updateConfiguration(String projectName, String path, Map<String, Object> data) {
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
+
+        assertProject(projectName);
 
         Map<String, Object> cfg = configurationDao.get(projectName);
         if (cfg == null) {
@@ -299,6 +309,12 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         Subject subject = SecurityUtils.getSubject();
         if (!subject.isPermitted(String.format(Permissions.SECRET_READ_INSTANCE, name))) {
             throw new UnauthorizedException("The current user does not have permissions to use the specified secret");
+        }
+    }
+
+    private void assertProject(String projectName) {
+        if (!projectDao.exists(projectName)) {
+            throw new ValidationErrorsException("Project not found: " + projectName);
         }
     }
 
