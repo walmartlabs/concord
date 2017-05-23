@@ -3,7 +3,7 @@ language: workflow
 envs:
   global:
     variables:
-      # this should be provided by looper
+      # this should be provided by looper, but it never will
       DOCKER_HOST: tcp://localhost:2375
       DOCKER_REGISTRY: docker.prod.walmart.com
 
@@ -16,17 +16,19 @@ flows:
     - sonar("Sonar"):
       - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
 
-  it:
-    - (name ITs) mvn -U -B clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
+  build:
+    - (name build) mvn -U -B clean install
 
-  docker_push:
-     - (name docker-images) echo "And this is where I'd put my docker:push... if I had credentials!"
-#    - (name docker-images) mvn -f docker-images clean install docker:push -Pdocker
+# won't work in the current version of looper
+#  it:
+#    - (name ITs) mvn -U -B clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
+
+#  docker_push:
+#     - (name docker-images) echo "And this is where I'd put my docker:push... if I had credentials!"
 
   default (on linux):
-    - call: it
+    - call: build
     - call: runsonar
-    - call: docker_push
 
   pr (on linux):
-    - call: it
+    - call: build
