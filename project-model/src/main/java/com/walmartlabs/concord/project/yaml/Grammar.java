@@ -206,6 +206,11 @@ public class Grammar {
                 return "return".equals(s);
             }).map(a -> new YamlReturn(a.location)));
 
+    // event := FIELD_NAME "return" VALUE_STRING
+    private static final Parser<Atom, YamlStep> errorReturn = label("Error end event",
+            satisfyField("return").then(satisfyToken(JsonToken.VALUE_STRING))
+                    .map(a -> new YamlReturnError(a.location, (String) a.value)));
+
     // group := FIELD_NAME ":" steps groupOptions
     private static final Parser<Atom, YamlStep> group = label("Group of steps",
             satisfyField(":").bind(a -> steps.bind(items ->
@@ -235,7 +240,7 @@ public class Grammar {
     // stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | event | script | taskShort END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(group, ifExpr, exprFull), formCall, taskFull, event, script, taskShort)));
+                    choice(choice(group, ifExpr, exprFull), formCall, taskFull, event, errorReturn, script, taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
     private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, callProc, stepObject);

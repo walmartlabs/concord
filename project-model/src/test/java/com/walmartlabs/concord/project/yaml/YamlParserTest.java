@@ -509,6 +509,30 @@ public class YamlParserTest {
         verify(testBean, times(1)).toString(eq(12345));
     }
 
+    @Test
+    public void test021() throws Exception {
+        deploy("021.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 100);
+        try {
+            engine.start(key, "main", args);
+            fail("exception expected");
+        } catch (ExecutionException e) {
+            assertTrue(e.getMessage().contains("error-code"));
+        }
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verifyNoMoreInteractions(testBean);
+    }
+
     // FORMS (100 - 199)
 
     @Test
