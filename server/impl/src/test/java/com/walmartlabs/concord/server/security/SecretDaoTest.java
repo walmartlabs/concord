@@ -30,7 +30,7 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());
-        repositoryDao.insert(projectName, repoName, "n/a", null, secretName);
+        repositoryDao.insert(projectName, repoName, "n/a", null, null, secretName);
 
         // ---
 

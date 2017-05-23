@@ -4,6 +4,12 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <changeSet id="17000" author="ybrigo@gmail.com">
+        <addColumn tableName="REPOSITORIES">
+            <column name="REPO_COMMIT_ID" type="varchar(64)" remarks="Repository's commit id"/>
+        </addColumn>
+    </changeSet>
+
     <changeSet id="17500" author="ibodrov@gmail.com">
         <addColumn tableName="PROJECTS">
             <column name="DESCRIPTION" type="varchar(1024)">

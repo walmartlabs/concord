@@ -37,23 +37,25 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    public void insert(String projectName, String repositoryName, String url, String branch, String secretName) {
-        tx(tx -> insert(tx, projectName, repositoryName, url, branch, secretName));
+    public void insert(String projectName, String repositoryName, String url, String branch, String commitId, String secretName) {
+        tx(tx -> insert(tx, projectName, repositoryName, url, branch, commitId, secretName));
     }
 
-    public void insert(DSLContext create, String projectName, String repositoryName, String url, String branch, String secretName) {
+    public void insert(DSLContext create, String projectName, String repositoryName, String url, String branch, String commitId, String secretName) {
         create.insertInto(REPOSITORIES)
                 .columns(REPOSITORIES.PROJECT_NAME, REPOSITORIES.REPO_NAME,
-                        REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.SECRET_NAME)
-                .values(projectName, repositoryName, url, branch, secretName)
+                        REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
+                        REPOSITORIES.SECRET_NAME)
+                .values(projectName, repositoryName, url, branch, commitId, secretName)
                 .execute();
     }
 
-    public void update(DSLContext create, String repositoryName, String url, String branch, String secretName) {
+    public void update(DSLContext create, String repositoryName, String url, String branch, String commitId, String secretName) {
         create.update(REPOSITORIES)
                 .set(REPOSITORIES.REPO_URL, url)
                 .set(REPOSITORIES.SECRET_NAME, secretName)
                 .set(REPOSITORIES.REPO_BRANCH, branch)
+                .set(REPOSITORIES.REPO_COMMIT_ID, commitId)
                 .where(REPOSITORIES.REPO_NAME.eq(repositoryName))
                 .execute();
     }
@@ -72,7 +74,7 @@ public class RepositoryDao extends AbstractDao {
 
     public List<RepositoryEntry> list(String projectName, Field<?> sortField, boolean asc) {
         try (DSLContext create = DSL.using(cfg)) {
-            SelectConditionStep<Record4<String, String, String, String>> query = selectRepositoryEntry(create)
+            SelectConditionStep<Record5<String, String, String, String, String>> query = selectRepositoryEntry(create)
                     .where(REPOSITORIES.PROJECT_NAME.eq(projectName));
 
             if (sortField != null) {
@@ -83,19 +85,21 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    private static SelectJoinStep<Record4<String, String, String, String>> selectRepositoryEntry(DSLContext create) {
+    private static SelectJoinStep<Record5<String, String, String, String, String>> selectRepositoryEntry(DSLContext create) {
         return create.select(REPOSITORIES.REPO_NAME,
                 REPOSITORIES.REPO_URL,
                 REPOSITORIES.REPO_BRANCH,
+                REPOSITORIES.REPO_COMMIT_ID,
                 SECRETS.SECRET_NAME)
                 .from(REPOSITORIES)
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_NAME.eq(REPOSITORIES.SECRET_NAME));
     }
 
-    private static RepositoryEntry toEntry(Record4<String, String, String, String> r) {
+    private static RepositoryEntry toEntry(Record5<String, String, String, String, String> r) {
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_NAME),
                 r.get(REPOSITORIES.REPO_URL),
                 r.get(REPOSITORIES.REPO_BRANCH),
+                r.get(REPOSITORIES.REPO_COMMIT_ID),
                 r.get(REPOSITORIES.SECRET_NAME));
     }
 }

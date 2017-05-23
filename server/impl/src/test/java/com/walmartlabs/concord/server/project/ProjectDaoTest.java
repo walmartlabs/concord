@@ -68,7 +68,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         String repoName = "repo#" + System.currentTimeMillis();
         String repoUrl = "n/a";
-        repositoryDao.insert(projectName, repoName, repoUrl, null, null);
+        repositoryDao.insert(projectName, repoName, repoUrl, null, null, null);
 
         // ---
 

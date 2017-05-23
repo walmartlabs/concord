@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
@@ -17,6 +17,7 @@ import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.CreateUserResponse;
 import com.walmartlabs.concord.server.api.user.UserResource;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Test;
 
 import java.io.File;
@@ -64,6 +65,106 @@ public class ProjectIT extends AbstractServerIT {
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*" + greeting + ".*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testWithCommitId() throws Exception {
+        File tmpDir = Files.createTempDirectory("testWithCommitId").toFile();
+        File src = new File(ProjectIT.class.getResource("project").toURI());
+        IOUtils.copy(src.toPath(), tmpDir.toPath());
+
+        Git repo = Git.init().setDirectory(tmpDir).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        // commit-1
+        IOUtils.deleteRecursively(tmpDir.toPath().resolve("processes"));
+        src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
+        IOUtils.copy(src.toPath().resolve("1"), tmpDir.toPath());
+        repo.add().addFilepattern(".").call();
+        RevCommit cmt = repo.commit().setMessage("commit-1").call();
+        String commitId = cmt.getId().getName();
+
+        // commit-2
+        IOUtils.deleteRecursively(tmpDir.toPath().resolve("processes"));
+        src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
+        IOUtils.copy(src.toPath().resolve("2"), tmpDir.toPath());
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("commit-2").call();
+
+        String gitUrl = tmpDir.getAbsolutePath();
+
+        // ---
+
+        String projectName = "myProject_" + System.currentTimeMillis();
+        String userName = "myUser_" + System.currentTimeMillis();
+        Set<String> permissions = Sets.newHashSet(
+                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
+                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoUrl = gitUrl;
+        String entryPoint = projectName + ":" + repoName + ":main";
+        String greeting = "Hello, _" + System.currentTimeMillis();
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+                Collections.singletonMap("greeting", greeting));
+
+        // ---
+        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*test-commit-1.*" + greeting + ".*", ab);
+    }
+
+
+    @Test
+    public void testWithTag() throws Exception {
+        File tmpDir = Files.createTempDirectory("testWithTag").toFile();
+        File src = new File(ProjectIT.class.getResource("project").toURI());
+        IOUtils.copy(src.toPath(), tmpDir.toPath());
+
+        Git repo = Git.init().setDirectory(tmpDir).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        // commit-1
+        IOUtils.deleteRecursively(tmpDir.toPath().resolve("processes"));
+        src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
+        IOUtils.copy(src.toPath().resolve("1"), tmpDir.toPath());
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("commit-1").call();
+
+        String tag = "tag_for_testing";
+        repo.tag().setName(tag).call();
+
+        // commit-2
+        IOUtils.deleteRecursively(tmpDir.toPath().resolve("processes"));
+        src = new File(ProjectIT.class.getResource("project-commit-id").toURI());
+        IOUtils.copy(src.toPath().resolve("2"), tmpDir.toPath());
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("commit-2").call();
+
+        String gitUrl = tmpDir.getAbsolutePath();
+
+        System.out.println(">>>" + gitUrl);
+
+        // ---
+        String projectName = "myProject_" + System.currentTimeMillis();
+        String userName = "myUser_" + System.currentTimeMillis();
+        Set<String> permissions = Sets.newHashSet(
+                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
+                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoUrl = gitUrl;
+        String entryPoint = projectName + ":" + repoName + ":main";
+        String greeting = "Hello, _" + System.currentTimeMillis();
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+                Collections.singletonMap("greeting", greeting));
+
+        // ---
+        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args, null, tag, false);
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*test-commit-1.*" + greeting + ".*", ab);
     }
 
     @Test(timeout = 30000)
@@ -118,6 +219,16 @@ public class ProjectIT extends AbstractServerIT {
                                   String repoName, String repoUrl,
                                   String entryPoint, Map<String, Object> args,
                                   boolean sync) throws InterruptedException, IOException {
+        return doTest(projectName, projectTemplates, userName, permissions, repoName, repoUrl,
+            entryPoint, args, null, null, sync);
+    }
+
+    protected ProcessEntry doTest(String projectName, Set<String> projectTemplates,
+                                  String userName, Set<String> permissions,
+                                  String repoName, String repoUrl,
+                                  String entryPoint, Map<String, Object> args,
+                                  String commitId, String tag,
+                                  boolean sync) throws InterruptedException, IOException {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         CreateProjectResponse cpr = projectResource.createOrUpdate(new CreateProjectRequest(projectName, projectTemplates, null));
@@ -139,7 +250,7 @@ public class ProjectIT extends AbstractServerIT {
 
         setApiKey(apiKey);
 
-        CreateRepositoryResponse crr = projectResource.createRepository(projectName, new CreateRepositoryRequest(repoName, repoUrl, null, null));
+        CreateRepositoryResponse crr = projectResource.createRepository(projectName, new CreateRepositoryRequest(repoName, repoUrl, tag, commitId, null));
         assertTrue(crr.isOk());
 
         // ---

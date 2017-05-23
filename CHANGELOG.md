@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: ability to pull a repository using a `commitId`;
 - concord-console: add the project list;
 - concord-server: add project description field;
 - concord-server: return process JSON objects in sync mode regardless

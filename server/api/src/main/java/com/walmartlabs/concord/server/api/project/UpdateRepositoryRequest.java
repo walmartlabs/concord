@@ -16,16 +16,21 @@ public class UpdateRepositoryRequest implements Serializable {
     @Size(max = 255)
     private final String branch;
 
+    @Size(max = 64)
+    private final String commitId;
+
     @ConcordKey
     private final String secret;
 
     @JsonCreator
     public UpdateRepositoryRequest(@JsonProperty("url") String url,
                                    @JsonProperty("branch") String branch,
+                                   @JsonProperty("commitId") String commitId,
                                    @JsonProperty("secret") String secret) {
 
         this.url = url;
         this.branch = branch;
+        this.commitId = commitId;
         this.secret = secret;
     }
 
@@ -37,6 +42,10 @@ public class UpdateRepositoryRequest implements Serializable {
         return branch;
     }
 
+    public String getCommitId() {
+        return commitId;
+    }
+
     public String getSecret() {
         return secret;
     }
@@ -46,6 +55,7 @@ public class UpdateRepositoryRequest implements Serializable {
         return "UpdateRepositoryRequest{" +
                 "url='" + url + '\'' +
                 ", branch='" + branch + '\'' +
+                ", commitId='" + commitId + '\'' +
                 ", secret='" + secret + '\'' +
                 '}';
     }

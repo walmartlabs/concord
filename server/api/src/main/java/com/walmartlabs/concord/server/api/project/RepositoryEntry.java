@@ -23,6 +23,9 @@ public class RepositoryEntry implements Serializable {
     @Size(max = 255)
     private final String branch;
 
+    @Size(max = 64)
+    private final String commitId;
+
     @ConcordKey
     private final String secret;
 
@@ -30,11 +33,13 @@ public class RepositoryEntry implements Serializable {
     public RepositoryEntry(@JsonProperty("name") String name,
                            @JsonProperty("url") String url,
                            @JsonProperty("branch") String branch,
+                           @JsonProperty("commitId") String commitId,
                            @JsonProperty("secret") String secret) {
 
         this.name = name;
         this.url = url;
         this.branch = branch;
+        this.commitId = commitId;
         this.secret = secret;
     }
 
@@ -50,6 +55,10 @@ public class RepositoryEntry implements Serializable {
         return branch;
     }
 
+    public String getCommitId() {
+        return commitId;
+    }
+
     public String getSecret() {
         return secret;
     }
@@ -60,6 +69,7 @@ public class RepositoryEntry implements Serializable {
                 ", name='" + name + '\'' +
                 ", url='" + url + '\'' +
                 ", branch='" + branch + '\'' +
+                ", commitId='" + commitId + '\'' +
                 ", secret='" + secret + '\'' +
                 '}';
     }
