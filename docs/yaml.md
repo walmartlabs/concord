@@ -182,21 +182,15 @@ main:
       - log: moving along
     else:
       - return
-```
-
-### Return error command
-
-The `return error` command can be used to stop the execution of the current
-(sub) flow and throw error:
-
-```yaml
-main:
-  - if: ${myVar > 0}
+      
+  - if: ${myVar == 0}
     then:
-      - log: moving along
-    else:
-      - return: error-code
+      - return: shouldNotBeZero
 ```
+
+Optional error code can be specified after a colon `:`. Errors like
+this can be handled by an `error` section of a
+[group block](#groups-of-steps).
 
 ### Groups of steps
 
