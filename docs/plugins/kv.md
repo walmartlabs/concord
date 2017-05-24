@@ -49,3 +49,15 @@ In scripts:
   then:
     - log: "Ciao, myVar! You won't be missed."
 ```
+
+### Incrementing a value
+
+This can be used as a simple sequence number generator.
+
+```yaml
+- expr: ${kv.inc("idSeq")}
+  out: myId
+- log: "We got an ID: ${myId}"
+```
+
+**Warning**: the exising string values can't be incremented.
