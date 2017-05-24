@@ -82,7 +82,6 @@
         <metrics.version>3.2.2</metrics.version>
         <mockito.version>2.8.9</mockito.version>
         <mustache.version>0.9.4</mustache.version>
-        <nexus.perf.version>1.2.0</nexus.perf.version>
         <node.version>7.4.0</node.version>
         <parc.version>0.1.2</parc.version>
         <postgres.version>9.4.1212</postgres.version>
@@ -207,26 +206,6 @@
                 <groupId>io.takari.bpm</groupId>
                 <artifactId>testkit</artifactId>
                 <version>${bpm.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.takari.nexus</groupId>
-                <artifactId>nexus-perf</artifactId>
-                <version>${nexus.perf.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>logback-core</artifactId>
-                        <groupId>ch.qos.logback</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>logback-classic</artifactId>
-                        <groupId>ch.qos.logback</groupId>
-                    </exclusion>
-                    <!-- workaround for the classpath validation problem -->
-                    <exclusion>
-                        <artifactId>command</artifactId>
-                        <groupId>io.airlift</groupId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.takari.siesta</groupId>
