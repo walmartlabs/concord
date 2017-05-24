@@ -17,4 +17,21 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="17900" author="ibodrov@gmail.com">
+        <createTable tableName="PROJECT_KV_STORE" remarks="KV store">
+            <column name="PROJECT_NAME" type="varchar(128)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="VALUE_KEY" type="varchar(128)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="VALUE_LONG" type="number(16)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="VALUE_STRING" type="varchar(1024)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
 </databaseChangeLog>

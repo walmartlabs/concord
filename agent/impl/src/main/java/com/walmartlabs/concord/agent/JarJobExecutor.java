@@ -130,7 +130,9 @@ public class JarJobExecutor implements JobExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    protected String[] createCommand(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
+    protected String[] createCommand(String instanceId,
+                                     Path workDir, String entryPoint) throws ExecutionException {
+
         Map<String, Object> agentParams = getAgentParameters(workDir);
         Collection<String> jvmArgs = (Collection<String>) agentParams.getOrDefault(Constants.Agent.JVM_ARGS_KEY, DEFAULT_JVM_ARGS);
 
@@ -141,7 +143,10 @@ public class JarJobExecutor implements JobExecutor {
         Collection<String> cmd = new ArrayList<>();
         cmd.add(javaCmd);
         cmd.addAll(jvmArgs);
+        cmd.add("-DagentId=" + cfg.getAgentId());
         cmd.add("-DinstanceId=" + instanceId);
+        cmd.add("-Drpc.server.host=" + cfg.getServerHost());
+        cmd.add("-Drpc.server.port=" + cfg.getServerPort());
         cmd.add("-cp");
         cmd.add(classPath);
         cmd.add(mainClass);

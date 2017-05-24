@@ -2,9 +2,9 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
-import com.walmartlabs.concord.server.api.agent.Client;
-import com.walmartlabs.concord.server.api.agent.ClientException;
-import com.walmartlabs.concord.server.api.agent.JobQueue;
+import com.walmartlabs.concord.rpc.AgentApiClient;
+import com.walmartlabs.concord.rpc.ClientException;
+import com.walmartlabs.concord.rpc.JobQueue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,10 +14,10 @@ import java.util.zip.ZipOutputStream;
 
 public class RunnerJobExecutor extends JarJobExecutor {
 
-    private final Client client;
+    private final AgentApiClient client;
 
     public RunnerJobExecutor(Configuration cfg, LogManager logManager, DependencyManager dependencyManager,
-                             ExecutorService executorService, Client client) {
+                             ExecutorService executorService, AgentApiClient client) {
 
         super(cfg, logManager, dependencyManager, executorService);
         this.client = client;

@@ -1,12 +1,11 @@
 package com.walmartlabs.concord.agent;
 
-import com.walmartlabs.concord.server.api.agent.Client;
+import com.walmartlabs.concord.rpc.AgentApiClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -16,7 +15,7 @@ public class ServerConnector {
 
     private final ExecutorService executor;
 
-    private Client client;
+    private AgentApiClient client;
     private Future<?> commandHandler;
     private List<Future<?>> workers;
 
@@ -25,12 +24,12 @@ public class ServerConnector {
     }
 
     public void start(Configuration cfg) {
-        String agentId = UUID.randomUUID().toString();
+        String agentId = cfg.getAgentId();
         String host = cfg.getServerHost();
         int port = cfg.getServerPort();
         int workersCount = cfg.getWorkersCount();
 
-        client = new Client(agentId, host, port);
+        client = new AgentApiClient(agentId, host, port);
         log.info("start -> connecting to {}:{}", host, port);
 
         ExecutionManager executionManager = new ExecutionManager(client, cfg);

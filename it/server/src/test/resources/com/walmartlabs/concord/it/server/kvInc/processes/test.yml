@@ -1,0 +1,20 @@
+main:
+  - expr: ${kv.inc("x")}
+    out: x
+  - log: "x=${x}"
+
+  - if: ${kv.getString(testKey) == null}
+    then:
+      - log: "abc"
+
+  - ${kv.putString(testKey, "world")}
+  - log: "Hello, ${kv.getString(testKey)}"
+
+verify:
+  - log: "Hello again, ${kv.getString(testKey)}"
+  - ${kv.remove(testKey)}
+
+verify2:
+  - if: ${kv.getString(testKey) == null}
+    then:
+      - log: "xyz"

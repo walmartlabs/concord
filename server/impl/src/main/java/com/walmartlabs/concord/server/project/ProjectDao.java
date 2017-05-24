@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 
+import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectKvStore.PROJECT_KV_STORE;
 import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectTemplates.PROJECT_TEMPLATES;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPLATES;
@@ -62,9 +63,14 @@ public class ProjectDao extends AbstractDao {
         tx(tx -> delete(tx, id));
     }
 
-    public void delete(DSLContext create, String name) {
-        permissionCleaner.onProjectRemoval(create, name);
-        create.deleteFrom(PROJECTS)
+    public void delete(DSLContext tx, String name) {
+        permissionCleaner.onProjectRemoval(tx, name);
+
+        tx.deleteFrom(PROJECT_KV_STORE)
+                .where(PROJECT_KV_STORE.PROJECT_NAME.eq(name))
+                .execute();
+
+        tx.deleteFrom(PROJECTS)
                 .where(PROJECTS.PROJECT_NAME.eq(name))
                 .execute();
     }

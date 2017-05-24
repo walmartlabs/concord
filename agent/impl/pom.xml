@@ -27,8 +27,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server-agent-api</artifactId>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-rpc</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
