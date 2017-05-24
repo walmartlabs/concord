@@ -19,6 +19,7 @@
     <modules>
         <module>common</module>
         <module>project-model</module>
+        <module>rpc</module>
         <module>runner</module>
         <module>plugins</module>
         <module>server</module>

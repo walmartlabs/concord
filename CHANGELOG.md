@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: simple KV store backed by the database;
+- concord-runner: `kv` task to use the simple KV store;
 - yaml: optional error code in the `return` command;
 - concord-server: ability to pull a repository using a `commitId`;
 - concord-console: add the project list;
@@ -16,7 +18,8 @@ API.
 
 ### Changed
 
-- concord-console: fix timestamps on the process page.
+- concord-server: move the rpc module into the top-level directory;
+- concord-console: fix timestamps on the process page;
 - concord-server: suppress JOOQ banner.
 
 

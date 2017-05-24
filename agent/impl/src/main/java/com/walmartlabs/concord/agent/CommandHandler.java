@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.agent;
 
-import com.walmartlabs.concord.server.api.agent.*;
+import com.walmartlabs.concord.rpc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,10 +9,10 @@ public class CommandHandler implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
     private static final long ERROR_DELAY = 5000;
 
-    private final Client client;
+    private final AgentApiClient client;
     private final ExecutionManager executionManager;
 
-    public CommandHandler(Client client, ExecutionManager executionManager) {
+    public CommandHandler(AgentApiClient client, ExecutionManager executionManager) {
         this.client = client;
         this.executionManager = executionManager;
     }

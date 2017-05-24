@@ -3,9 +3,9 @@ package com.walmartlabs.concord.agent;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.api.agent.Client;
-import com.walmartlabs.concord.server.api.agent.JobStatus;
-import com.walmartlabs.concord.server.api.agent.JobType;
+import com.walmartlabs.concord.rpc.AgentApiClient;
+import com.walmartlabs.concord.rpc.JobStatus;
+import com.walmartlabs.concord.rpc.JobType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class ExecutionManager {
 
     private final Object mutex = new Object();
 
-    public ExecutionManager(Client client, Configuration cfg) {
+    public ExecutionManager(AgentApiClient client, Configuration cfg) {
 
         this.logManager = new LogManager(cfg);
         this.cfg = cfg;

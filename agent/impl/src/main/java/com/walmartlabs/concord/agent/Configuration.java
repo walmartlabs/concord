@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.UUID;
 
 public class Configuration implements Serializable {
 
@@ -21,6 +22,7 @@ public class Configuration implements Serializable {
     public static final String RUNNER_PATH = "RUNNER_PATH";
     public static final String WORKERS_COUNT_KEY = "WORKERS_COUNT";
 
+    private final String agentId;
     private final String serverHost;
     private final int serverPort;
     private final Path logDir;
@@ -31,6 +33,8 @@ public class Configuration implements Serializable {
     private final int workersCount;
 
     public Configuration() {
+        this.agentId = UUID.randomUUID().toString();
+
         try {
             this.serverHost = getEnv(SERVER_HOST_KEY, "localhost");
             this.serverPort = Integer.parseInt(getEnv(SERVER_PORT_KEY, "8101"));
@@ -53,6 +57,10 @@ public class Configuration implements Serializable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    public String getAgentId() {
+        return agentId;
     }
 
     public String getServerHost() {

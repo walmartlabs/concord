@@ -1,8 +1,9 @@
 package com.walmartlabs.concord.server.agent;
 
-import com.walmartlabs.concord.server.api.agent.CancelJobCommand;
+import com.walmartlabs.concord.rpc.CancelJobCommand;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.rpc.CommandQueueImpl;
 
 import javax.inject.Inject;
 import javax.inject.Named;
