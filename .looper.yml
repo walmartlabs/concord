@@ -3,6 +3,9 @@ language: workflow
 envs:
   global:
     variables:
+      MVN_SETTINGS: .looper/settings.xml
+      DEPLOYMENT_USERNAME: "%{credentials.username('walmart-deployment')}"
+      DEPLOYMENT_PASSWORD: "%{credentials.password('walmart-deployment')}"
       # this should be provided by looper, but it never will
       DOCKER_HOST: tcp://localhost:2375
       DOCKER_REGISTRY: docker.prod.walmart.com
@@ -17,7 +20,7 @@ flows:
       - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
 
   build:
-    - (name build) mvn -U -B clean install -Plooper
+    - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -Plooper
 
 # won't work in the current version of looper
 #  it:

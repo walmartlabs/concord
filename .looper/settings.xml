@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <mirrors>
+        <mirror>
+            <id>walmart-gec</id>
+            <mirrorOf>external:*</mirrorOf>
+            <url>http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/groups/devtools-public</url>
+        </mirror>
+    </mirrors>
+
+    <servers>
+        <server>
+            <id>walmart-gec</id>
+            <username>${env.DEPLOYMENT_USERNAME}</username>
+            <password>${env.DEPLOYMENT_PASSWORD}</password>
+        </server>
+    </servers>
+
+    <profiles>
+        <profile>
+            <id>looper</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <url>http://central</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>central</id>
+                    <url>http://central</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>looper</activeProfile>
+    </activeProfiles>
+</settings>
