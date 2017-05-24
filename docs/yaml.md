@@ -182,15 +182,7 @@ main:
       - log: moving along
     else:
       - return
-      
-  - if: ${myVar == 0}
-    then:
-      - return: shouldNotBeZero
 ```
-
-Optional error code can be specified after a colon `:`. Errors like
-this can be handled by an `error` section of a
-[group block](#groups-of-steps).
 
 ### Groups of steps
 
