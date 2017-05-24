@@ -1,0 +1,10 @@
+{
+  "entryPoint": "main",
+  "arguments": {
+    "nested": {
+      "x": 123,
+      "y": "abc"
+    },
+    "name": "world"
+  }
+}

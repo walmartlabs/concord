@@ -1,0 +1,12 @@
+flows:
+  main:
+  - log: "x=${nested.x}"
+  - log: "y=${nested.y}"
+  - log: "z=${nested.z}"
+  - log: "Hello, ${name}"
+
+variables:
+  arguments:
+    nested:
+      z: false
+    name: "stranger"
