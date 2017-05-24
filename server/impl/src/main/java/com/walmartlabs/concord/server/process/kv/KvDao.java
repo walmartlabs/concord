@@ -28,12 +28,32 @@ public class KvDao extends AbstractDao {
     }
 
     public synchronized void put(String projectName, String key, String value) {
-        tx(tx -> tx.insertInto(PROJECT_KV_STORE)
-                .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_STRING)
-                .values(projectName, key, value)
-                .onDuplicateKeyUpdate()
-                .set(PROJECT_KV_STORE.VALUE_STRING, value)
-                .execute());
+        tx(tx -> {
+            Record1<String> r = tx.select(PROJECT_KV_STORE.VALUE_STRING)
+                    .from(PROJECT_KV_STORE)
+                    .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
+                            .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
+                    .forUpdate()
+                    .fetchOne();
+
+            if (r == null) {
+                tx.insertInto(PROJECT_KV_STORE)
+                        .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_STRING)
+                        .values(projectName, key, value)
+                        .execute();
+                return;
+            }
+
+            int rows = tx.update(PROJECT_KV_STORE)
+                    .set(PROJECT_KV_STORE.VALUE_STRING, value)
+                    .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
+                            .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
+                    .execute();
+
+            if (rows != 1) {
+                throw new DataAccessException("Invalid number of rows: " + rows);
+            }
+        });
     }
 
     public String getString(String projectName, String key) {
