@@ -17,7 +17,7 @@ flows:
       - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
 
   build:
-    - (name build) mvn -U -B clean install -Plooper
+    - (name build) mvn -U -B clean deploy -Plooper
 
 # won't work in the current version of looper
 #  it:
