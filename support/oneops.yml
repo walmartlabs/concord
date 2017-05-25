@@ -24,7 +24,7 @@ platforms:
       database:
         dbname: 'concord'
         username: 'sa'
-        password: 'c0nc0rdDb'
+        password: '{{dbPasswordPrefix}}/{{assemblyName}}/{{environmentName}}'
       postgresql:
         version: '9.6'
         port: '5432'
@@ -139,7 +139,7 @@ platforms:
                   -e 'DB_DIALECT=POSTGRES' \
                   -e 'DB_DRIVER=org.postgresql.Driver' \
                   -e 'DB_USERNAME=sa' \
-                  -e 'DB_PASSWORD=c0nc0rdDb' \
+                  -e 'DB_PASSWORD={{dbPasswordPrefix}}/{{assemblyName}}/{{environmentName}}' \
                   -e 'LDAP_CFG=/opt/concord/data/conf/ldap.properties' \
                   -e 'LOG_STORE_DIR=/opt/concord/data/logs' \
                   -e 'FORM_SERVER_DIR=/opt/concord/data/formserv' \
