@@ -68,29 +68,32 @@ public class LdapManager {
                 NamingEnumeration ae = attrs.getAll();
                 while (ae.hasMore()) {
                     Attribute attr = (Attribute) ae.next();
-
-                    String id = attr.getID();
-                    switch (id) {
-                        case MEMBER_OF_ATTR: {
-                            Collection<String> names = LdapUtils.getAllAttributeValues(attr);
-                            b.addGroups(names);
-                            break;
-                        }
-                        case DISPLAY_NAME_ATTR: {
-                            b.displayName(attr.get().toString());
-                            break;
-                        }
-                        default: {
-                            Set<String> exposedAttr = cfg.getExposeAttributes();
-                            if (exposedAttr == null || exposedAttr.contains(id)) {
-                                b.addAttribute(id, attr.get().toString());
-                            }
-                        }
-                    }
+                    processAttribute(b, attr);
                 }
             }
         }
         return b.build();
+    }
+
+    private void processAttribute(LdapInfoBuilder b, Attribute attr) throws NamingException {
+        String id = attr.getID();
+        switch (id) {
+            case MEMBER_OF_ATTR: {
+                Collection<String> names = LdapUtils.getAllAttributeValues(attr);
+                b.addGroups(names);
+                break;
+            }
+            case DISPLAY_NAME_ATTR: {
+                b.displayName(attr.get().toString());
+                break;
+            }
+            default: {
+                Set<String> exposedAttr = cfg.getExposeAttributes();
+                if (exposedAttr == null || exposedAttr.isEmpty() || exposedAttr.contains(id)) {
+                    b.addAttribute(id, attr.get().toString());
+                }
+            }
+        }
     }
 
     private static final class LdapInfoBuilder {

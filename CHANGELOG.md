@@ -1,5 +1,14 @@
 # Change log
 
+## Unreleased
+
+### Changed
+
+- concord-server: fixed a bug preventing LDAP attributes from being
+collected.
+
+
+
 ## [0.17.2] - 2017-05-24
 
 ### Changed
