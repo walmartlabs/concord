@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- reverted back to jetty 9.2.11.v20150529 due to the issue with
+serving forms using `DefaultServlet`.
+
+
+
 ## [0.17.0] - 2017-05-24
 
 ### Added
