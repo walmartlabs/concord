@@ -226,7 +226,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         }
 
         for (FormField f : fd.getFields()) {
-            _definitions.put(f.getName(), new FormDataDefinition(f.getType(), f.getCardinality(), f.getAllowedValue()));
+            _definitions.put(f.getName(), new FormDataDefinition(f.getLabel(), f.getType(), f.getCardinality(), f.getAllowedValue()));
 
             Object v = overrides != null ? overrides.get(f.getName()) : null;
             if (v == null) {
@@ -314,14 +314,20 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @JsonInclude(Include.NON_NULL)
     private static class FormDataDefinition implements Serializable {
 
+        private final String label;
         private final String type;
         private final Cardinality cardinality;
         private final Object allow;
 
-        private FormDataDefinition(String type, Cardinality cardinality, Object allow) {
+        private FormDataDefinition(String label, String type, Cardinality cardinality, Object allow) {
+            this.label = label;
             this.type = type;
             this.cardinality = cardinality;
             this.allow = allow;
+        }
+
+        public String getLabel() {
+            return label;
         }
 
         public String getType() {

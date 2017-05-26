@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: add form field labels to the generated `data.js`
+files.
+
+
+
 ## [0.17.3] - 2017-05-25
 
 ### Changed
