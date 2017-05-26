@@ -1,16 +1,15 @@
 package com.walmartlabs.concord.server.api.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProjectEntry implements Serializable {
 
     @NotNull
@@ -22,14 +21,22 @@ public class ProjectEntry implements Serializable {
 
     private final Set<String> templates;
 
+    private final Map<String, UpdateRepositoryRequest> repositories;
+
+    private final Map<String, Object> cfg;
+
     @JsonCreator
     public ProjectEntry(@JsonProperty("name") String name,
                         @JsonProperty("description") String description,
-                        @JsonProperty("templates") Set<String> templates) {
+                        @JsonProperty("templates") Set<String> templates,
+                        @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
+                        @JsonProperty("cfg") Map<String, Object> cfg) {
 
         this.name = name;
         this.description = description;
         this.templates = templates;
+        this.repositories = repositories;
+        this.cfg = cfg;
     }
 
     public String getName() {
@@ -44,12 +51,22 @@ public class ProjectEntry implements Serializable {
         return templates;
     }
 
+    public Map<String, UpdateRepositoryRequest> getRepositories() {
+        return repositories;
+    }
+
+    public Map<String, Object> getCfg() {
+        return cfg;
+    }
+
     @Override
     public String toString() {
-        return "ProjectEntry{" +
+        return "CreateProjectRequest{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", templates=" + templates +
+                ", repositories=" + repositories +
+                ", cfg=" + cfg +
                 '}';
     }
 }

@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
-import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
+import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.user.UserResource;
 import org.junit.Test;
@@ -27,13 +27,13 @@ public class ValidationIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         try {
-            CreateProjectRequest req = new CreateProjectRequest("@123_123", null, null);
+            ProjectEntry req = new ProjectEntry("@123_123", null, null, null, null);
             projectResource.createOrUpdate(req);
             fail("Should fail with validation error");
         } catch (BadRequestException e) {
         }
 
-        CreateProjectRequest req = new CreateProjectRequest("aProperName@" + System.currentTimeMillis(), null, null);
+        ProjectEntry req = new ProjectEntry("aProperName@" + System.currentTimeMillis(), null, null, null, null);
         projectResource.createOrUpdate(req);
     }
 

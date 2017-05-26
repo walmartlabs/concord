@@ -7,9 +7,9 @@ import RefreshButton from "../../shared/RefreshButton";
 import ErrorMessage from "../../shared/ErrorMessage";
 import DataTable from "../../shared/DataTable";
 import * as api from "./api";
-import DataList from "../../shared/DataList";
+import DataItem from "../../shared/DataItem";
 
-const {actions, reducers, selectors, sagas} = DataList("project/list", api.listProjects);
+const {actions, reducers, selectors, sagas} = DataItem("project/list", [], api.listProjects);
 
 const columns = [
     {key: "name", label: "Project", collapsing: true},

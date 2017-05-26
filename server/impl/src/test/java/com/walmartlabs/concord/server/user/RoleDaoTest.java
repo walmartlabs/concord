@@ -37,14 +37,14 @@ public class RoleDaoTest extends AbstractDaoTest {
         // ---
 
         List<RoleEntry> l = roleDao.list();
-        assertEquals(3, l.size());
+        assertEquals(4, l.size()); // our 4 + 1 default
 
-        RoleEntry eA = l.get(0);
+        RoleEntry eA = l.get(1);
         assertEquals("roleA", eA.getName());
         assertEquals(2, eA.getPermissions().size());
         assertTrue(eA.getPermissions().contains("a"));
 
-        RoleEntry eC = l.get(2);
+        RoleEntry eC = l.get(3);
         assertEquals("testC", eC.getDescription());
         assertEquals(3, eC.getPermissions().size());
         assertTrue(eC.getPermissions().contains("d"));
@@ -53,6 +53,6 @@ public class RoleDaoTest extends AbstractDaoTest {
 
         roleDao.delete("roleB");
         l = roleDao.list();
-        assertEquals(2, l.size());
+        assertEquals(3, l.size()); // out 2 + 1 default
     }
 }

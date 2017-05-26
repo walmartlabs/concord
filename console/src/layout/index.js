@@ -7,12 +7,16 @@ import {actions, selectors, SessionWidget} from "../session";
 import Modal from "../shared/Modal";
 import KillProcessPopup from "../process/KillProcessPopup";
 import DeleteSecretPopup from "../user/secret/DeleteSecretPopup";
+import RepositoryPopup from "../project/RepositoryPopup";
+import DeleteProjectPopup from "../project/DeleteProjectPopup";
 import "./styles.css";
 
 // register our modals
 const MODAL_TYPES = {};
 MODAL_TYPES[KillProcessPopup.MODAL_TYPE] = KillProcessPopup;
 MODAL_TYPES[DeleteSecretPopup.MODAL_TYPE] = DeleteSecretPopup;
+MODAL_TYPES[RepositoryPopup.MODAL_TYPE] = RepositoryPopup;
+MODAL_TYPES[DeleteProjectPopup.MODAL_TYPE] = DeleteProjectPopup;
 
 const layout = ({fullScreen, user: {displayName, loggedIn}, title, children, doLogout, router}) => {
     if (fullScreen) {
@@ -44,6 +48,9 @@ const layout = ({fullScreen, user: {displayName, loggedIn}, title, children, doL
                     <Menu.Menu>
                         <Menu.Item active={router.isActive("/project/list")}>
                             <Link to="/project/list">List</Link>
+                        </Menu.Item>
+                        <Menu.Item active={router.isActive("/project/_new")}>
+                            <Link to="/project/_new">Create new</Link>
                         </Menu.Item>
                     </Menu.Menu>
                 </Menu.Item>

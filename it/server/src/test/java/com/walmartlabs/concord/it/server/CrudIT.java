@@ -17,7 +17,9 @@ import org.junit.Test;
 
 import javax.ws.rs.BadRequestException;
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -49,10 +51,10 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project_" + System.currentTimeMillis();
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName, null, Collections.singleton(templateName), null, null));
         assertTrue(cpr.isOk());
 
-        cpr = projectResource.createOrUpdate(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
+        cpr = projectResource.createOrUpdate(new ProjectEntry(projectName, null, Collections.singleton(templateName), null, null));
         assertTrue(cpr.isOk());
 
         // ---
@@ -85,7 +87,7 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project_" + System.currentTimeMillis();
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, null, null, cfg));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, null, cfg));
 
         // ---
 
@@ -117,11 +119,12 @@ public class CrudIT extends AbstractServerIT {
         String commitId = "commitId_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null, Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, commitId, null))));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null,
+                Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null, null)), null));
 
         // ---
 
-        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, commitId,null));
+        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, commitId, null));
         assertTrue(urr.isOk());
 
         // ---
@@ -143,8 +146,8 @@ public class CrudIT extends AbstractServerIT {
         String projectName2 = "project2_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName1, null, null, null, null));
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName2, null, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(projectName1, null, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(projectName2, null, null, null, null));
 
         // ---
 

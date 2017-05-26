@@ -75,7 +75,10 @@
         <jsch.version>0.1.54</jsch.version>
         <junit.version>4.12</junit.version>
         <launcher.version>0.128</launcher.version>
-        <liquibase.version>3.5.3</liquibase.version>
+
+        <!-- the newer versions has incorrect mappings for PG's blob/bytea -->
+        <liquibase.version>3.5.1</liquibase.version>
+
         <logback.version>1.2.3</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
@@ -85,7 +88,7 @@
         <mustache.version>0.9.4</mustache.version>
         <node.version>7.4.0</node.version>
         <parc.version>0.1.2</parc.version>
-        <postgres.version>9.4.1212</postgres.version>
+        <postgres.version>42.1.1.jre7</postgres.version>
         <protobuf.version>3.3.1</protobuf.version>
         <provisio.version>0.1.32</provisio.version>
         <resteasy.version>3.0.13.Final</resteasy.version>

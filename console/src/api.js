@@ -10,7 +10,6 @@ export const queryParams = (params: { [id: mixed]: string }) => {
     return Object.keys(params).map(k => esc(k) + "=" + esc(params[k])).join("&");
 };
 
-
 export const defaultError = (resp: any) => {
     return {
         status: resp.status,

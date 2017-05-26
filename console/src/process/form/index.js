@@ -199,16 +199,16 @@ ProcessForm.propTypes = {
     onReturnFn: PropTypes.func.isRequired
 };
 
-const mapStateToProps = ({form}, {params, location: {query}}) => ({
+const mapStateToProps = ({processForm}, {params, location: {query}}) => ({
     instanceId: params.instanceId,
     formInstanceId: params.formInstanceId,
     wizard: query.wizard,
-    data: selectors.getData(form),
-    loading: selectors.getIsLoading(form),
-    submitting: selectors.getIsSubmitting(form),
-    completed: selectors.getIsCompleted(form),
-    fetchError: selectors.getFetchError(form),
-    submitError: selectors.getSubmitError(form)
+    data: selectors.getData(processForm),
+    loading: selectors.getIsLoading(processForm),
+    submitting: selectors.getIsSubmitting(processForm),
+    completed: selectors.getIsCompleted(processForm),
+    fetchError: selectors.getFetchError(processForm),
+    submitError: selectors.getSubmitError(processForm)
 });
 
 const mapDispatchToProps = (dispatch) => ({

@@ -47,14 +47,14 @@ public class LdapDaoTest extends AbstractDaoTest {
         // ---
 
         List<LdapMappingEntry> l = ldapDao.list();
-        assertEquals(3, l.size());
+        assertEquals(4, l.size()); // our 3 + 1 default
 
-        LdapMappingEntry eA = l.get(0);
+        LdapMappingEntry eA = l.get(1);
         assertEquals("testA", eA.getLdapDn());
         assertEquals(2, eA.getRoles().size());
         assertTrue(eA.getRoles().contains("a"));
 
-        LdapMappingEntry eC = l.get(2);
+        LdapMappingEntry eC = l.get(3);
         assertEquals("testC", eC.getLdapDn());
         assertEquals(3, eC.getRoles().size());
         assertTrue(eC.getRoles().contains("d"));
@@ -63,6 +63,6 @@ public class LdapDaoTest extends AbstractDaoTest {
 
         ldapDao.delete("mappingB");
         l = ldapDao.list();
-        assertEquals(2, l.size());
+        assertEquals(3, l.size()); // our 2 + 1 default
     }
 }

@@ -3,11 +3,11 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.ProjectLoader;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
+import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
@@ -26,9 +26,7 @@ import java.util.zip.ZipOutputStream;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ProjectFileIT extends AbstractServerIT {
 
@@ -113,8 +111,8 @@ public class ProjectFileIT extends AbstractServerIT {
         secretResource.createKeyPair(secretName);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null,
-                Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, secretName))));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null,
+                Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, secretName)), null));
 
         // ---
 
@@ -146,8 +144,8 @@ public class ProjectFileIT extends AbstractServerIT {
         secretResource.createKeyPair(secretName);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, null,
-                Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, secretName))));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null,
+                Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, secretName)), null));
 
         // ---
 

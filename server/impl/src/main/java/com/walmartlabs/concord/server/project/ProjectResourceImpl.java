@@ -64,7 +64,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
-    public CreateProjectResponse createOrUpdate(CreateProjectRequest request) {
+    public CreateProjectResponse createOrUpdate(ProjectEntry request) {
         assertTemplates(request.getTemplates());
 
         Map<String, Object> cfg = request.getCfg();

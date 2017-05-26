@@ -2,6 +2,9 @@ package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
+import com.walmartlabs.concord.server.jooq.public_.tables.records.ProjectsRecord;
+import com.walmartlabs.concord.server.jooq.public_.tables.records.RepositoriesRecord;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -13,6 +16,7 @@ import java.util.*;
 import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectKvStore.PROJECT_KV_STORE;
 import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectTemplates.PROJECT_TEMPLATES;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
+import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPLATES;
 
 @Named
@@ -28,8 +32,30 @@ public class ProjectDao extends AbstractDao {
 
     public ProjectEntry get(String name) {
         try (DSLContext create = DSL.using(cfg)) {
-            return foldOne(selectProjectEntry(create)
-                    .where(PROJECTS.PROJECT_NAME.eq(name)).fetch());
+            ProjectsRecord r = create.selectFrom(PROJECTS)
+                    .where(PROJECTS.PROJECT_NAME.eq(name))
+                    .fetchOne();
+
+            if (r == null) {
+                return null;
+            }
+
+            Set<String> templates = create.select(PROJECT_TEMPLATES.TEMPLATE_NAME)
+                    .from(PROJECT_TEMPLATES)
+                    .where(PROJECT_TEMPLATES.PROJECT_NAME.eq(name))
+                    .fetchSet(PROJECT_TEMPLATES.TEMPLATE_NAME);
+
+            Result<RepositoriesRecord> repos = create.selectFrom(REPOSITORIES)
+                    .where(REPOSITORIES.PROJECT_NAME.eq(name))
+                    .fetch();
+
+            Map<String, UpdateRepositoryRequest> m = new HashMap<>();
+            for (RepositoriesRecord repo : repos) {
+                m.put(repo.getRepoName(), new UpdateRepositoryRequest(repo.getRepoUrl(),
+                        repo.getRepoBranch(), repo.getRepoCommitId(), repo.getSecretName()));
+            }
+
+            return new ProjectEntry(r.getProjectName(), r.getDescription(), templates, m, null);
         }
     }
 
@@ -77,7 +103,7 @@ public class ProjectDao extends AbstractDao {
 
     public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
         try (DSLContext create = DSL.using(cfg)) {
-            SelectOnConditionStep<Record3<String, String, String>> query = selectProjectEntry(create);
+            SelectOnConditionStep<Record3<String, String, String>> query = selectCreateProjectRequest(create);
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
@@ -145,36 +171,11 @@ public class ProjectDao extends AbstractDao {
         return result;
     }
 
-    private static ProjectEntry foldOne(Result<Record3<String, String, String>> raw) {
-        if (raw.isEmpty()) {
-            return null;
-        }
-
-        String name = null;
-        String description = null;
-        Set<String> templates = null;
-
-        for (Record3<String, String, String> r : raw) {
-            name = r.get(PROJECTS.PROJECT_NAME);
-            description = r.get(PROJECTS.DESCRIPTION);
-            String template = r.get(TEMPLATES.TEMPLATE_NAME);
-
-            if (template != null) {
-                if (templates == null) {
-                    templates = new HashSet<>();
-                }
-                templates.add(template);
-            }
-        }
-
-        return new ProjectEntry(name, description, templates);
-    }
-
     private static void add(List<ProjectEntry> l, String name, String description, Set<String> templates) {
-        l.add(new ProjectEntry(name, description, templates));
+        l.add(new ProjectEntry(name, description, templates, null, null));
     }
 
-    private static SelectOnConditionStep<Record3<String, String, String>> selectProjectEntry(DSLContext create) {
+    private static SelectOnConditionStep<Record3<String, String, String>> selectCreateProjectRequest(DSLContext create) {
         return create.select(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, TEMPLATES.TEMPLATE_NAME)
                 .from(PROJECTS)
                 .leftOuterJoin(PROJECT_TEMPLATES).on(PROJECT_TEMPLATES.PROJECT_NAME.eq(PROJECTS.PROJECT_NAME))

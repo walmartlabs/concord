@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
+import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Test;
 
@@ -21,7 +21,7 @@ public class VariablesIT extends AbstractServerIT {
         String projectName = "project_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName,
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, null,
                 ImmutableMap.of("arguments",
                         ImmutableMap.of("nested",
                                 ImmutableMap.of(

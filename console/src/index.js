@@ -15,6 +15,7 @@ import ProcessForm from "./process/form";
 import ProcessWizard from "./process/wizard";
 import ProcessPortal from "./process/portal";
 import ProjectList from "./project/list";
+import Project from "./project";
 import UserSecrets from "./user/secret";
 import {actions as session} from "./session";
 import "./index.css";
@@ -51,6 +52,7 @@ ReactDOM.render(
                 <Route path="project" onEnter={checkAuth}>
                     <IndexRedirect to="list"/>
                     <Route path="list" component={ProjectList}/>
+                    <Route path=":projectName" component={Project}/>
                 </Route>
 
                 <Route path="user" onEnter={checkAuth}>

@@ -22,11 +22,10 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMap;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.*;
 
@@ -435,8 +434,8 @@ public class YamlParserTest {
         // ---
 
         verify(testTask1, times(1)).call(eq(inputNumber));
-        verify(testTask2, times(1)).call(anyObject());
-        verify(testTask3, times(1)).call(anyObject());
+        verify(testTask2, times(1)).call(any());
+        verify(testTask3, times(1)).call(any());
     }
 
     @Test
@@ -706,7 +705,7 @@ public class YamlParserTest {
         FormSubmitResult result = formService.submit(formId, Collections.emptyMap());
         assertFalse(result.isValid());
 
-        verify(testBean, never()).toString(anyObject());
+        verify(testBean, never()).toString(any());
     }
 
     @Test

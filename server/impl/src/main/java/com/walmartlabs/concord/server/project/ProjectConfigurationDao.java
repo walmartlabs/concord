@@ -34,6 +34,7 @@ public class ProjectConfigurationDao extends AbstractDao {
     private final ProjectAttachmentDao attachmentDao;
     private final ObjectMapper objectMapper;
 
+    // TODO #multiserver
     private final LoadingCache<String, Optional<Map<String, Object>>> cache;
 
     @Inject

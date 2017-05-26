@@ -9,7 +9,7 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
+import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
@@ -99,7 +99,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, singleton(templateName), singletonMap(repoName, repo)));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, singleton(templateName), singletonMap(repoName, repo), null));
 
         // ---
 
@@ -143,7 +143,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, singleton(templateName), singletonMap(repoName, repo)));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, singleton(templateName), singletonMap(repoName, repo), null));
 
         // ---
 

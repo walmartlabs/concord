@@ -1,7 +1,8 @@
 import React from "react";
 import {connect} from "react-redux";
-import {Control, LocalForm} from "react-redux-form";
+import {reduxForm} from "redux-form";
 import {Dimmer, Form, Grid, Image, Loader, Message, Segment} from "semantic-ui-react";
+import {Field} from "../shared/forms";
 import * as actions from "./actions";
 import reducers from "./reducers";
 import * as selectors from "./reducers";
@@ -9,38 +10,44 @@ import sagas from "./sagas";
 
 const isThere = (x) => x !== undefined && x !== null;
 
-const loginForm = ({error, submitting, doLogin}) =>
-    <Grid centered verticalAlign="middle" className="maxHeight">
+let loginForm = (props) => {
+    const {error, loading, handleSubmit} = props;
+
+    return <Grid centered verticalAlign="middle" className="maxHeight">
         <Grid.Column width="4" textAlign="left">
             <Segment>
 
                 <Image src='/strati-logo.png' size='small' centered/>
 
-                <Dimmer active={submitting} inverted>
+                <Dimmer active={loading} inverted>
                     <Loader/>
                 </Dimmer>
 
-                <LocalForm component={Form}
-                           error={isThere(error)}
-                           onSubmit={({username, password}) => doLogin(username, password)}>
+                <Form error={isThere(error)} onSubmit={handleSubmit}>
 
-                    <Control icon="user" component={Form.Input} label="Username" model=".username" required/>
-                    <Control icon="lock" component={Form.Input} label="Password" model=".password" type="password"
-                             required/>
+                    <Field name="username" label="Username" icon="user" required/>
+                    <Field name="password" label="Password" type="password" icon="lock" required/>
 
                     <Message error content={error}/>
                     <Form.Button primary fluid>Login</Form.Button>
-                </LocalForm>
+                </Form>
             </Segment>
         </Grid.Column>
     </Grid>;
+};
+
+loginForm = reduxForm({form: "login"})(loginForm);
 
 const mapStateToProps = ({login}) => ({
     error: selectors.getError(login),
-    submitting: selectors.isSubmitting(login)
+    loading: selectors.isSubmitting(login)
+});
+
+const mapDispatchToProps = (dispatch) => ({
+    onSubmit: ({username, password}) => dispatch(actions.doLogin(username, password))
 });
 
 // re-export public stuff
 export {actions, reducers, selectors, sagas};
 
-export default connect(mapStateToProps, actions)(loginForm);
+export default connect(mapStateToProps, mapDispatchToProps)(loginForm);

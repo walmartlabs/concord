@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.console;
 
-import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import org.apache.shiro.SecurityUtils;
@@ -17,6 +17,13 @@ import javax.ws.rs.core.Response;
 @Named
 @Path("/api/service/console")
 public class ConsoleService implements Resource {
+
+    private final ProjectDao projectDao;
+
+    @Inject
+    public ConsoleService(ProjectDao projectDao) {
+        this.projectDao = projectDao;
+    }
 
     @GET
     @Path("/whoami")
@@ -54,5 +61,13 @@ public class ConsoleService implements Resource {
         }
 
         subject.logout();
+    }
+
+    @GET
+    @Path("/project/{projectName}/exists")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RequiresAuthentication
+    public boolean isProjectExist(@PathParam("projectName") String projectName) {
+        return projectDao.exists(projectName);
     }
 }

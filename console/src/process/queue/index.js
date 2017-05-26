@@ -9,11 +9,11 @@ import RefreshButton from "../../shared/RefreshButton";
 import ErrorMessage from "../../shared/ErrorMessage";
 import DataTable from "../../shared/DataTable";
 import {actions as modal} from "../../shared/Modal";
-import DataList from "../../shared/DataList";
+import DataItem from "../../shared/DataItem";
 import * as api from "./api";
 import * as constants from "../constants";
 
-const {actions, reducers, selectors, sagas} = DataList("process/queue", api.loadData);
+const {actions, reducers, selectors, sagas} = DataItem("process/queue", [], api.loadData);
 
 const columns = [
     {key: "instanceId", label: "Instance ID", collapsing: true},

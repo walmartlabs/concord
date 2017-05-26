@@ -6,7 +6,7 @@ import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
+import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.template.TemplateResource;
 import com.walmartlabs.concord.server.template.TemplateConstants;
@@ -45,7 +45,7 @@ public class TemplateIT extends AbstractServerIT {
         // ---
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, Collections.singleton(templateName), null));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, Collections.singleton(templateName), null, null));
 
         // ---
 

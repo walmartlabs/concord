@@ -18,6 +18,30 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="17600" author="ibodrov@gmail.com">
+        <insert tableName="ROLES">
+            <column name="ROLE_NAME">devtools-admin</column>
+            <column name="ROLE_DESCRIPTION">DevTools - Admin</column>
+        </insert>
+
+        <insert tableName="ROLE_PERMISSIONS">
+            <column name="ROLE_NAME">devtools-admin</column>
+            <column name="PERMISSION">*</column>
+        </insert>
+
+        <insert tableName="LDAP_GROUP_MAPPINGS">
+            <column name="MAPPING_ID">8491c938-41a4-11e7-93cd-a3ce3ef913f9</column>
+            <column name="LDAP_DN">
+                <![CDATA[CN=DevTools - WalmartLabs-devtools,OU=Distribution,OU=Groups,DC=homeoffice,DC=Wal-Mart,DC=com]]>
+            </column>
+        </insert>
+
+        <insert tableName="LDAP_GROUP_ROLES">
+            <column name="MAPPING_ID">8491c938-41a4-11e7-93cd-a3ce3ef913f9</column>
+            <column name="ROLE_NAME">devtools-admin</column>
+        </insert>
+    </changeSet>
+
     <changeSet id="17900" author="ibodrov@gmail.com">
         <createTable tableName="PROJECT_KV_STORE" remarks="KV store">
             <column name="PROJECT_NAME" type="varchar(128)">

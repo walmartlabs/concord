@@ -7,7 +7,7 @@ import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.CreateProjectRequest;
+import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,7 +48,7 @@ public class SmtpIT extends AbstractServerIT {
         cfg.put(Constants.Request.ARGUMENTS_KEY, args);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new CreateProjectRequest(projectName, cfg));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, null, cfg));
 
         // --
 

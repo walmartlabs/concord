@@ -8,6 +8,7 @@ import {sagas as processLog} from "./process/log";
 import {sagas as form} from "./process/form";
 import {sagas as wizard} from "./process/wizard";
 import {sagas as portal} from "./process/portal";
+import {sagas as project} from "./project";
 import {sagas as projectList} from "./project/list";
 import {sagas as secret} from "./user/secret";
 
@@ -21,6 +22,7 @@ export default function*(): Generator<*, *, *> {
         fork(form),
         fork(wizard),
         fork(portal),
+        fork(project),
         fork(projectList),
         fork(secret)
     ];
