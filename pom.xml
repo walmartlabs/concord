@@ -48,7 +48,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <bpm.version>0.28.0</bpm.version>
+        <bpm.version>0.29.0</bpm.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.lang.version>3.5</commons.lang.version>
         <commons.pool.version>2.4.2</commons.pool.version>

@@ -8,6 +8,11 @@
 - concord-server: add form field labels to the generated `data.js`
 files.
 
+### Changed
+
+- upgrade the bpm engine to 0.29.0. It changes the form validation
+messages: now it uses labels instead of field names (when available).
+
 
 
 ## [0.17.3] - 2017-05-25
