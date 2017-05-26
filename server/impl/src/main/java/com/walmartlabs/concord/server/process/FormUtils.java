@@ -79,14 +79,14 @@ public final class FormUtils {
                     try {
                         return Long.parseLong(s);
                     } catch (NumberFormatException e) {
-                        throw new ValidationException(f, s, locale.expectedInteger(formName, f.getName(), idx, s));
+                        throw new ValidationException(f, s, locale.expectedInteger(formName, f, idx, s));
                     }
                 }
                 case DefaultFormFields.DecimalField.TYPE: {
                     try {
                         return Double.parseDouble(s);
                     } catch (NumberFormatException e) {
-                        throw new ValidationException(f, s, locale.expectedDecimal(formName, f.getName(), idx, s));
+                        throw new ValidationException(f, s, locale.expectedDecimal(formName, f, idx, s));
                     }
                 }
             }
