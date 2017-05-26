@@ -244,17 +244,36 @@
                             <skipRun>${skip.it.tests}</skipRun>
                             <images>
                                 <image>
+                                    <name>hub.docker.prod.walmart.com/library/postgres</name>
+                                    <alias>db</alias>
+                                    <run>
+                                        <env>
+                                            <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
+                                        </env>
+                                    </run>
+                                </image>
+                                <image>
                                     <name>walmartlabs/concord-server</name>
                                     <alias>server</alias>
                                     <run>
                                         <ports>
                                             <port>it.server.port:8001</port>
                                         </ports>
+                                        <links>
+                                            <link>db</link>
+                                        </links>
                                         <volumes>
                                             <bind>
                                                 <volume>/tmp:/tmp</volume>
                                             </bind>
                                         </volumes>
+                                        <env>
+                                            <DB_URL>jdbc:postgresql://db:5432/postgres</DB_URL>
+                                            <DB_DIALECT>POSTGRES</DB_DIALECT>
+                                            <DB_DRIVER>org.postgresql.Driver</DB_DRIVER>
+                                            <DB_USERNAME>postgres</DB_USERNAME>
+                                            <DB_PASSWORD>it</DB_PASSWORD>
+                                        </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
                                             <http>
