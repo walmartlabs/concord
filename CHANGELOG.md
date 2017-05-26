@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: the project form;
 - concord-server: add form field labels to the generated `data.js`
 files.
 
