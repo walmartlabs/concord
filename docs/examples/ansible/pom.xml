@@ -10,12 +10,12 @@
     <packaging>pom</packaging>
 
     <properties>
-        <concord.plugins.version>0.10.0</concord.plugins.version>
+        <concord.plugins.version>0.18.0</concord.plugins.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.walmartlabs.concord.plugins</groupId>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>ansible-tasks</artifactId>
             <version>${concord.plugins.version}</version>
         </dependency>

@@ -1,15 +1,17 @@
 {
   "entryPoint": "main",
-  "inventory": {
-    "local": {
-      "hosts": ["127.0.0.1"]
-    }
-  },
   "arguments": {
     "ansibleParams": {
       "playbook": "playbook/hello.yml",
-      "defaults": {
-        "transport": "local"
+      "inventory": {
+        "local": {
+          "hosts": ["127.0.0.1"]
+        }
+      },
+      "config": {
+        "defaults": {
+          "transport": "local"
+        }
       },
       "extraVars": {
         "greetings": "Hello, world"
