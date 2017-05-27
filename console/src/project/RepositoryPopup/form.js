@@ -1,12 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
-import {formValueSelector, reduxForm, submit as submitForm} from "redux-form";
-import {Button, Form, Modal} from "semantic-ui-react";
+import {formValueSelector, getFormValues, reduxForm, submit as submitForm} from "redux-form";
+import {Button, Form, Modal, Popup} from "semantic-ui-react";
 import {Dropdown, Field} from "../../shared/forms";
 import SecretListDropdown from "../../user/secret/SecretsListDropdown";
 import * as v from "../../shared/validation";
 import * as c from "./constants";
+import {actions as repoActions, selectors as repoSelectors} from "../repository";
 
 const SOURCE_TYPE_LABELS = {
     [c.BRANCH_SOURCE_TYPE]: "Branch/tag",
@@ -18,6 +19,14 @@ let repositoryForm = (props) => {
 
     const {pristine, submitting, invalid} = props;
     const saveDisabled = pristine || submitting || invalid;
+
+    const {testResult, testError, testLoading, onTestRepoFn, formValues} = props;
+    const testDisabled = submitting || invalid;
+    const testIcon = testError ? "warning sign" : (testResult ? "check" : undefined);
+    const testFn = (ev) => {
+        ev.preventDefault();
+        onTestRepoFn(formValues);
+    };
 
     const {handleSubmit, onSaveFn, onCloseFn} = props;
 
@@ -44,6 +53,24 @@ let repositoryForm = (props) => {
         <Modal.Actions>
             <Button color="red" onClick={onCloseFn}>Cancel</Button>
             <Button color="green" onClick={onSaveFn} disabled={saveDisabled}>{editMode ? "Save" : "Add"}</Button>
+
+            <Popup trigger={<Button basic
+                                    positive={testResult}
+                                    negative={testError && true}
+                                    content="Test connection"
+                                    floated="left"
+                                    disabled={testDisabled}
+                                    loading={testLoading}
+                                    icon={testIcon}
+                                    onClick={testFn}/>}
+                   open={testError && true}
+                   on="click"
+                   hideOnScroll
+                   wide>
+                <Popup.Content>
+                    <p style={{color: "red"}}>Connection test error: {testError}</p>
+                </Popup.Content>
+            </Popup>
         </Modal.Actions>
     </Modal>;
 };
@@ -71,6 +98,7 @@ repositoryForm.propTypes = {
 
 repositoryForm = reduxForm({
     form: "repository",
+    initialValues: { sourceType: c.BRANCH_SOURCE_TYPE },
     validate,
     enableReinitialize: true,
     keepDirtyOnReinitialize: true
@@ -79,11 +107,16 @@ repositoryForm = reduxForm({
 const selector = formValueSelector("repository");
 
 const mapStateToProps = (state) => ({
-    sourceTypeValue: selector(state, "sourceType")
+    sourceTypeValue: selector(state, "sourceType"),
+    formValues: getFormValues("repository")(state),
+    testResult: repoSelectors.getTestResult(state.repository),
+    testError: repoSelectors.getError(state.repository),
+    testLoading: repoSelectors.isLoading(state.repository)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    onSaveFn: () => dispatch(submitForm("repository"))
+    onSaveFn: () => dispatch(submitForm("repository")),
+    onTestRepoFn: (data) => dispatch(repoActions.testRepository(data))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(repositoryForm);

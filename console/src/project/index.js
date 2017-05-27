@@ -5,6 +5,7 @@ import {Header, Loader} from "semantic-ui-react";
 import ErrorMessage from "../shared/ErrorMessage";
 import ProjectForm from "./form";
 import {actions, reducers, sagas, selectors} from "./crud";
+import * as repoConstants from "./RepositoryPopup/constants";
 
 /**
  * Converts the server's representation of a project object into the form's format.
@@ -19,7 +20,13 @@ const rawToForm = (data) => {
     const repos = [];
     for (const k in data.repositories) {
         const src = data.repositories[k];
+
         const dst = {name: k, ...src};
+        dst.sourceType = repoConstants.BRANCH_SOURCE_TYPE;
+        if (dst.commitId) {
+            dst.sourceType = repoConstants.REV_SOURCE_TYPE;
+        }
+
         repos.push(dst);
     }
 

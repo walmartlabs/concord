@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+- concord-console: add "Test connection" button to the repository
+form;
+- concord-server: improve error handling for GIT repository cloning.
+
+
+
 ## [0.18.0] - 2017-05-26
 
 ### Added

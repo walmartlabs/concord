@@ -23,6 +23,7 @@ public class SecretManager {
     }
 
     public Secret getSecret(String name) {
+        // TODO check for permissions
         SecretDataEntry s = secretDao.get(name);
         if (s == null) {
             throw new ProcessException("Secret not found: " + name);

@@ -5,6 +5,7 @@ import {getFormValues} from "redux-form";
 import {actions as modal} from "../../shared/Modal";
 import RepositoryForm from "./form";
 import * as c from "./constants";
+import {actions as repoActions} from "../repository";
 
 export const MODAL_TYPE = "NEW_REPOSITORY_POPUP";
 
@@ -38,7 +39,10 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    onCloseFn: () => dispatch(modal.close())
+    onCloseFn: () => {
+        dispatch(modal.close());
+        dispatch(repoActions.resetTest());
+    }
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(newRepositoryPopup);

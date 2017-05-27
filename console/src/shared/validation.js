@@ -5,12 +5,12 @@
  * @type {RegExp}
  */
 const CONCORD_KEY_PATTERN = /^[0-9a-zA-Z][0-9a-zA-Z_@.]{2,128}$/;
-const COMMIT_ID_PATTERN = /^[0-9a-f]{40}$/;
+const COMMIT_ID_PATTERN = /^[0-9a-f]{1,40}$/;
 
 const requiredError = () => "Required";
 const tooLongError = (n: any) => `Must be not more than ${n} characters.`;
 const invalidRepositoryUrlError = () => "Invalid repository URL: must begin with 'https://' or use 'git@host:path' scheme.";
-const invalidCommitIdError = () => "Invalid commit ID: must be a SHA-1 string.";
+const invalidCommitIdError = () => "Invalid commit ID: must be a valid revision.";
 const concordKeyPatternError = () => "Must start with a digit or a letter, may contain only digits, letters, underscores, '.' or '@' or. Must be between 3 and 128 characters in length.";
 
 export const projectAlreadyExistsError = (n: string) => `Project already exists: ${n}`;
