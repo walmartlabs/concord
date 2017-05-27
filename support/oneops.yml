@@ -223,13 +223,13 @@ platforms:
           "80 80 tcp 0.0.0.0/0"
         ]'
 
-#scale:
-#  agent:
-#    scaling:
-#      compute:
-#        min: '{{agentsMin}}'
-#        max: '{{agentsMax}}'
-#        current: '{{agentsMin}}'
+scale:
+  agent:
+    scaling:
+      compute:
+        min: '{{agentsMin}}'
+        max: '{{agentsMax}}'
+        current: '{{agentsMin}}'
 
 environment:
   global_dns: true
