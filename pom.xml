@@ -90,7 +90,6 @@
         <parc.version>0.1.2</parc.version>
         <postgres.version>42.1.1.jre7</postgres.version>
         <protobuf.version>3.3.1</protobuf.version>
-        <provisio.version>0.1.32</provisio.version>
         <resteasy.version>3.0.13.Final</resteasy.version>
         <servlet.version>3.1.0</servlet.version>
         <shiro.version>1.4.0</shiro.version>
@@ -511,12 +510,6 @@
                     <groupId>org.jooq</groupId>
                     <artifactId>jooq-codegen-maven</artifactId>
                     <version>${jooq.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>io.takari.maven.plugins</groupId>
-                    <artifactId>provisio-maven-plugin</artifactId>
-                    <version>${provisio.version}</version>
-                    <extensions>true</extensions>
                 </plugin>
                 <plugin>
                     <groupId>io.takari.maven.plugins</groupId>

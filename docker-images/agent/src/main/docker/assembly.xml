@@ -6,16 +6,16 @@
 
     <dependencySets>
         <dependencySet>
-            <includes>
-                <include>com.walmartlabs.concord.agent:concord-agent:tar.gz</include>
-            </includes>
             <outputDirectory>.</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <unpack>true</unpack>
         </dependencySet>
     </dependencySets>
 
     <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/target/runner</directory>
+            <outputDirectory>runner</outputDirectory>
+        </fileSet>
+
         <fileSet>
             <directory>${project.basedir}/src/main/docker</directory>
             <outputDirectory>.</outputDirectory>

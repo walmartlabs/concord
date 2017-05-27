@@ -17,6 +17,8 @@ walmartlabs/concord-server
 
 docker run -d -p 8080:8080 \
 --name console \
+-e SERVER_PORT_8001_TCP_ADDR=localhost \
+-e SERVER_PORT_8001_TCP_PORT=8001 \
 -v /opt/concord/console/landing:/opt/concord/console/landing:ro \
 --network=host \
 walmartlabs/concord-console

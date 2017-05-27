@@ -1,7 +1,5 @@
 #!/bin/bash
-APP_DIR="${concord.baseDir}/server/concord-server-${project.version}"
-
-export RUNNER_PATH="$APP_DIR/runner/concord-runner-${project.version}-jar-with-dependencies.jar"
+APP_DIR="${concord.baseDir}/server"
 
 if [ "$DB" == "postgresql" ]; then
     export DB_DIALECT="POSTGRES_9_5"
@@ -10,6 +8,12 @@ if [ "$DB" == "postgresql" ]; then
     export DB_USERNAME="postgres"
 fi;
 
-export DEPS_STORE_DIR="$APP_DIR/lib";
+export DEPS_STORE_DIR="$APP_DIR";
 
-python2 ${APP_DIR}/bin/launcher.py run
+java \
+-Xmx1g \
+-server \
+-Djava.security.egd=file:/dev/./urandom \
+-Dlogback.configurationFile=com/walmartlabs/concord/server/logback.xml \
+-cp "${APP_DIR}/*" \
+com.walmartlabs.concord.server.Main

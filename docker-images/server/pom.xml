@@ -17,7 +17,6 @@
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server</artifactId>
             <version>${project.version}</version>
-            <type>tar.gz</type>
         </dependency>
     </dependencies>
 

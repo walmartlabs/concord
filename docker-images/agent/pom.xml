@@ -17,12 +17,36 @@
             <groupId>com.walmartlabs.concord.agent</groupId>
             <artifactId>concord-agent</artifactId>
             <version>${project.version}</version>
-            <type>tar.gz</type>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-runner</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactItems>
+                        <artifactItem>
+                            <groupId>com.walmartlabs.concord</groupId>
+                            <artifactId>concord-runner</artifactId>
+                            <version>${project.version}</version>
+                            <classifier>jar-with-dependencies</classifier>
+                            <destFileName>runner.jar</destFileName>
+                        </artifactItem>
+                    </artifactItems>
+                    <outputDirectory>${project.basedir}/target/runner</outputDirectory>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>

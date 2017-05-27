@@ -6,12 +6,7 @@
 
     <dependencySets>
         <dependencySet>
-            <includes>
-                <include>com.walmartlabs.concord.server:concord-server:tar.gz</include>
-            </includes>
             <outputDirectory>.</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <unpack>true</unpack>
         </dependencySet>
     </dependencySets>
 

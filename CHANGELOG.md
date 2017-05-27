@@ -2,9 +2,16 @@
 
 ## [Unreleased]
 
+### Added
+
 - concord-console: add "Test connection" button to the repository
 form;
 - concord-server: improve error handling for GIT repository cloning.
+
+### Changed
+
+- remove "provisio" builds: use plain .sh startup scripts for the
+server and the agents.
 
 
 

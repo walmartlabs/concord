@@ -11,10 +11,9 @@
     </parent>
 
     <artifactId>concord-agent</artifactId>
-    <packaging>provisio</packaging>
+    <packaging>takari-jar</packaging>
 
     <properties>
-        <main-class>com.walmartlabs.concord.agent.Main</main-class>
         <runner.path>
             ${project.basedir}/../../runner/target/concord-runner-${project.version}-jar-with-dependencies.jar
         </runner.path>
@@ -75,8 +74,7 @@
         <plugins>
             <plugin>
                 <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>provisio-maven-plugin</artifactId>
-                <extensions>true</extensions>
+                <artifactId>takari-lifecycle-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

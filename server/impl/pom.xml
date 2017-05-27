@@ -11,11 +11,7 @@
     </parent>
 
     <artifactId>concord-server</artifactId>
-    <packaging>provisio</packaging>
-
-    <properties>
-        <main-class>com.walmartlabs.concord.server.Main</main-class>
-    </properties>
+    <packaging>takari-jar</packaging>
 
     <dependencies>
         <dependency>
@@ -231,11 +227,6 @@
             <plugin>
                 <groupId>io.takari.maven.plugins</groupId>
                 <artifactId>takari-lifecycle-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>provisio-maven-plugin</artifactId>
-                <extensions>true</extensions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
