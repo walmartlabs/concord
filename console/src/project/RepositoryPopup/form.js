@@ -47,7 +47,7 @@ let repositoryForm = (props) => {
                     <Field name={sourceTypeValue} label={SOURCE_TYPE_LABELS[sourceTypeValue]}/>
                 </Form.Group>
 
-                <Dropdown widget={SecretListDropdown} name="secret" label="Secret" required/>
+                <Dropdown widget={SecretListDropdown} name="secret" label="Credentials" required/>
             </Form>
         </Modal.Content>
         <Modal.Actions>
