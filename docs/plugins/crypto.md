@@ -1,6 +1,7 @@
 # Crypto task
 
-This task provides a method to decrypt values encrypted with a project's key.
+This task provides the method to decrypt values encrypted with a
+project's key.
 
 ## Usage
 
