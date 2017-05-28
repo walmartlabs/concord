@@ -15,7 +15,8 @@ values;
 
 - remove "provisio" builds: use plain .sh startup scripts for the
 server and the agents;
-- concord-server: improve KV store to work in multi server setups.
+- concord-server: improve KV store to work in multi server setups;
+- concord-server: simplify the project configuration handling.
 
 
 

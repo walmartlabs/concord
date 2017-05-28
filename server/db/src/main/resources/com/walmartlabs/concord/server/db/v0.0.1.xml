@@ -236,6 +236,7 @@
 
     <!-- PROJECT_ATTACHMENTS -->
 
+    <!-- removed in 0.18.0+
     <changeSet id="2100" author="ibodrov@gmail.com">
         <createTable tableName="PROJECT_ATTACHMENTS">
             <column name="PROJECT_NAME" type="varchar(128)">
@@ -256,4 +257,5 @@
                                  referencedTableName="PROJECTS" referencedColumnNames="PROJECT_NAME"
                                  onDelete="CASCADE"/>
     </changeSet>
+    -->
 </databaseChangeLog>
