@@ -14,12 +14,14 @@ public final class Constants {
 
         /**
          * Process definition attribute: path to a local directory, containing agent's payload
+         *
          * @see #WORK_DIR_KEY
          */
         public static final String LOCAL_PATH_ATTR = "localPath";
 
         /**
          * Execution context variable: path to a local directory, containing agent's payload.
+         *
          * @see #WORK_DIR_KEY
          */
         public static final String LOCAL_PATH_KEY = ProcessDefinition.ATTRIBUTE_KEY_PREFIX + LOCAL_PATH_ATTR;

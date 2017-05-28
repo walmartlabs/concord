@@ -8,6 +8,7 @@ import com.walmartlabs.concord.server.security.secret.SecretDao;
 import com.walmartlabs.concord.server.template.TemplateResolver;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.subject.Subject;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -30,6 +31,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     private final ProjectDao projectDao;
     private final ProjectConfigurationDao configurationDao;
+    private final ProjectSecretManager projectSecretManager;
     private final RepositoryDao repositoryDao;
     private final TemplateResolver templateResolver;
     private final SecretDao secretDao;
@@ -40,13 +42,15 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Inject
     public ProjectResourceImpl(Configuration cfg, ProjectDao projectDao, ProjectConfigurationDao configurationDao,
-                               RepositoryDao repositoryDao, TemplateResolver templateResolver, SecretDao secretDao,
+                               ProjectSecretManager projectSecretManager, RepositoryDao repositoryDao,
+                               TemplateResolver templateResolver, SecretDao secretDao,
                                Set<ConfigurationValidator> cfgValidators) {
 
         super(cfg);
 
         this.projectDao = projectDao;
         this.configurationDao = configurationDao;
+        this.projectSecretManager = projectSecretManager;
         this.repositoryDao = repositoryDao;
         this.templateResolver = templateResolver;
         this.secretDao = secretDao;
@@ -276,6 +280,21 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         tx(tx -> repositoryDao.delete(tx, repositoryName));
         return new DeleteRepositoryResponse();
+    }
+
+    @Override
+    @Validate
+    @RequiresAuthentication
+    public EncryptValueResponse encrypt(String projectName, EncryptValueRequest req) {
+        assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
+                "The current user does not have permissions to read the specified project");
+
+        assertProject(projectName);
+
+        byte[] input = req.getValue().getBytes();
+        byte[] result = projectSecretManager.encrypt(projectName, input);
+
+        return new EncryptValueResponse(result);
     }
 
     private void assertTemplates(Collection<String> templateNames) {

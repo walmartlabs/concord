@@ -115,3 +115,25 @@ message TKvIncRequest {
 message TKvIncResponse {
     uint64 result = 1;
 }
+
+// SECRET STORE SERVICE
+
+service TSecretStoreService {
+
+    rpc decrypt(TDecryptRequest) returns (TDecryptResponse);
+}
+
+message TDecryptRequest {
+    string instanceId = 1;
+    bytes data = 2;
+}
+
+enum TDecryptStatus {
+    SUCCESS = 0;
+    KEY_NOT_FOUND = 1;
+}
+
+message TDecryptResponse {
+    TDecryptStatus status = 1;
+    bytes data = 2;
+}

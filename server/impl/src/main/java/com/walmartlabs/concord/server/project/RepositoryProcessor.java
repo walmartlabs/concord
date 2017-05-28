@@ -74,6 +74,9 @@ public class RepositoryProcessor implements PayloadProcessor {
         Secret secret = null;
         if (repo.getSecret() != null) {
             secret = secretManager.getSecret(repo.getSecret());
+            if (secret == null) {
+                throw new ProcessException("Secret not found: " + repo.getSecret());
+            }
         }
 
         try {

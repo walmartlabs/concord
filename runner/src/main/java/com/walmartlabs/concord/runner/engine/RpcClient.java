@@ -2,6 +2,7 @@ package com.walmartlabs.concord.runner.engine;
 
 import com.walmartlabs.concord.rpc.KvService;
 import com.walmartlabs.concord.rpc.RunnerApiClient;
+import com.walmartlabs.concord.rpc.SecretStoreService;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -22,5 +23,9 @@ public class RpcClient {
 
     public KvService getKvService() {
         return client.getKvService();
+    }
+
+    public SecretStoreService getSecretStoreService() {
+        return client.getSecretStoreService();
     }
 }

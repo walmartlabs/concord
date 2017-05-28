@@ -1,0 +1,2 @@
+main:
+- log: "${crypto.decryptString(mySecret)}"

@@ -3,10 +3,7 @@ package com.walmartlabs.concord.server.security.secret;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.*;
-import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.security.PasswordManager;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
-import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -33,18 +30,14 @@ import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS
 public class SecretResourceImpl implements SecretResource, Resource {
 
     private final SecretDao secretDao;
-    private final SecretStoreConfiguration secretCfg;
-    private final PasswordManager passwordManager;
+    private final SecretManager secretManager;
 
     private final Map<String, Field<?>> key2Field;
 
     @Inject
-    public SecretResourceImpl(SecretDao secretDao, SecretStoreConfiguration secretCfg,
-                              PasswordManager passwordManager) {
-
+    public SecretResourceImpl(SecretDao secretDao, SecretManager secretManager) {
         this.secretDao = secretDao;
-        this.secretCfg = secretCfg;
-        this.passwordManager = passwordManager;
+        this.secretManager = secretManager;
 
         this.key2Field = new HashMap<>();
         key2Field.put("name", SECRETS.SECRET_NAME);
@@ -56,13 +49,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @Validate
     public PublicKeyResponse createKeyPair(String name) {
         assertUnique(name);
-
-        byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentKey());
-
-        KeyPair k = KeyPair.create();
-        byte[] ab = SecretUtils.encrypt(KeyPair::serialize, k, password, secretCfg.getSalt());
-
-        secretDao.insert(name, SecretType.KEY_PAIR, ab);
+        KeyPair k = secretManager.createKeypair(name, ApiKey.getCurrentKey());
         return toPublicKey(name, k.getPublicKey());
     }
 
@@ -81,10 +68,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
             throw new WebApplicationException("Key pair processing error", e);
         }
 
-        byte[] password = passwordManager.getPassword(name, ApiKey.getCurrentKey());
-        byte[] ab = SecretUtils.encrypt(KeyPair::serialize, k, password, secretCfg.getSalt());
-
-        secretDao.insert(name, SecretType.KEY_PAIR, ab);
+        secretManager.store(name, k);
         return new UploadSecretResponse();
     }
 
@@ -95,11 +79,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
         assertUnique(name);
 
         UsernamePassword k = new UsernamePassword(request.getUsername(), request.getPassword());
-
-        byte[] password = passwordManager.getPassword(request.getUsername(), ApiKey.getCurrentKey());
-        byte[] ab = SecretUtils.encrypt(UsernamePassword::serialize, k, password, secretCfg.getSalt());
-
-        secretDao.insert(name, SecretType.USERNAME_PASSWORD, ab);
+        secretManager.store(name, k);
         return new UploadSecretResponse();
     }
 
@@ -109,15 +89,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
                 "The current user does not have permissions to access the specified secret");
 
         assertSecret(secretName);
-
-        SecretDataEntry s = secretDao.get(secretName);
-        if (s.getType() != SecretType.KEY_PAIR) {
-            throw new ValidationErrorsException("The specified secret is not a key pair");
-        }
-
-        byte[] password = passwordManager.getPassword(s.getName(), ApiKey.getCurrentKey());
-        KeyPair k = SecretUtils.decrypt(KeyPair::deserialize, s.getData(), password, secretCfg.getSalt());
-        return toPublicKey(s.getName(), k.getPublicKey());
+        KeyPair k = secretManager.getKeyPair(secretName);
+        return toPublicKey(secretName, k.getPublicKey());
     }
 
     @Override

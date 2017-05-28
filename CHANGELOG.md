@@ -6,7 +6,10 @@
 
 - concord-console: add "Test connection" button to the repository
 form;
-- concord-server: improve error handling for GIT repository cloning.
+- concord-server: improve error handling for GIT repository cloning;
+- concord-server: add endpoint to encrypt values with a project's key;
+- concord-runner: add `crypto` task to decrypt previously encrypted
+values;
 
 ### Changed
 

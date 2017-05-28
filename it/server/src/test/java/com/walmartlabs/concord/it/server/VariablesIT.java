@@ -4,10 +4,13 @@ import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.project.EncryptValueRequest;
+import com.walmartlabs.concord.server.api.project.EncryptValueResponse;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Test;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -42,5 +45,33 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*x=123.*", ab);
         assertLog(".*y=abc.*", ab);
         assertLog(".*z=true.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testCrypto() throws Exception {
+        String projectName = "project_" + System.currentTimeMillis();
+        String secretValue = "secret_" + System.currentTimeMillis();
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, null, null));
+
+        EncryptValueResponse evr = projectResource.encrypt(projectName, new EncryptValueRequest(secretValue));
+        String encryptedValue = DatatypeConverter.printBase64Binary(evr.getData());
+
+        projectResource.updateConfiguration(projectName, "/",
+                ImmutableMap.of("arguments",
+                        ImmutableMap.of("mySecret", encryptedValue)));
+
+        // ---
+
+        byte[] payload = archive(VariablesIT.class.getResource("crypto").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), false);
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*" + secretValue + ".*", ab);
     }
 }

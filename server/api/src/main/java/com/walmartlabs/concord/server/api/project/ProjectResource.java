@@ -176,4 +176,15 @@ public interface ProjectResource {
     @Produces(MediaType.APPLICATION_JSON)
     DeleteRepositoryResponse deleteRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                               @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
+
+    /**
+     * Encrypts a string with the project's key.
+     */
+    @POST
+    @ApiOperation("Encrypts a string with the project's key")
+    @Path("/{projectName}/encrypt")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    EncryptValueResponse encrypt(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                 @ApiParam EncryptValueRequest req);
 }

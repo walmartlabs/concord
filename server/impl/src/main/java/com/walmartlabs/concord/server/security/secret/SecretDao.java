@@ -9,8 +9,6 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.ByteArrayInputStream;
-import java.sql.PreparedStatement;
 import java.util.List;
 
 import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS;
@@ -28,24 +26,16 @@ public class SecretDao extends AbstractDao {
 
     public void insert(String name, SecretType type, byte[] data) {
         transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-
-            // TODO workaround for the 'column is of type oid but expression is of type bytea' problem
-            String sql = create.insertInto(SECRETS)
-                    .columns(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
-                    .values((String) null, null, null)
-                    .getSQL();
-
-            create.connection(connection -> {
-                try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                    ps.setString(1, name);
-                    ps.setString(2, type.toString());
-                    ps.setBinaryStream(3, new ByteArrayInputStream(data));
-
-                    ps.execute();
-                }
-            });
+            DSLContext tx = DSL.using(cfg);
+            insert(tx, name, type, data);
         });
+    }
+
+    public void insert(DSLContext tx, String name, SecretType type, byte[] data) {
+        tx.insertInto(SECRETS)
+                .columns(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
+                .values(name, type.toString(), data)
+                .execute();
     }
 
     public SecretDataEntry get(String name) {

@@ -20,7 +20,11 @@ public class RpcServer {
     private final Server server;
 
     @Inject
-    public RpcServer(CommandQueueImpl commandQueue, JobQueueImpl jobQueue, KvServiceImpl kvService) throws ClientException {
+    public RpcServer(CommandQueueImpl commandQueue,
+                     JobQueueImpl jobQueue,
+                     KvServiceImpl kvService,
+                     SecretStoreServiceImpl secretStoreService) throws ClientException {
+
         // TODO cfg
         int port = 8101;
 
@@ -29,6 +33,7 @@ public class RpcServer {
                 .addService(commandQueue)
                 .addService(jobQueue)
                 .addService(kvService)
+                .addService(secretStoreService)
                 .addTransportFilter(new LoggingTransportFilter())
                 .build();
 
