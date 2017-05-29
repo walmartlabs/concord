@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.kv;
+package com.walmartlabs.concord.server.project.kv;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import org.junit.Test;

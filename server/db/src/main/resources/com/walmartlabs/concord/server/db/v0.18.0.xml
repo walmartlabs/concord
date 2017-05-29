@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="18000" author="ibodrov@gmail.com">
+        <addColumn tableName="PROJECTS">
+            <column name="PROJECT_CFG" type="blob">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="18010" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="PROJECT_ATTACHMENTS"/>
+        </preConditions>
+
+        <comment>Migrate project configuration from the attachments table to the main table.</comment>
+
+        <sql>
+            update PROJECTS as p
+            set PROJECT_CFG = a.ATTACHMENT_DATA
+            from PROJECT_ATTACHMENTS as a
+            where p.PROJECT_NAME = a.PROJECT_NAME;
+        </sql>
+    </changeSet>
+</databaseChangeLog>

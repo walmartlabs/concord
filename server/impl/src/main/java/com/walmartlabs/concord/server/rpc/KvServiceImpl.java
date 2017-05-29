@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.rpc;
 import com.google.protobuf.Empty;
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.kv.KvDao;
+import com.walmartlabs.concord.server.project.kv.KvDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
@@ -18,7 +18,6 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
 
     private static final Logger log = LoggerFactory.getLogger(KvServiceImpl.class);
     private static final String DEFAULT_PROJECT_NAME = "__no_project__";
-    private static final int MAX_STRING_VALUE_LENGTH = 1024;
 
     private final ProcessQueueDao queueDao;
     private final KvDao kvDao;
