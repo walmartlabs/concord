@@ -57,8 +57,8 @@ public class ProjectConfigurationDao extends AbstractDao {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> get(String projectName) {
-        try (DSLContext create = DSL.using(cfg)) {
-            byte[] ab = create.select(PROJECTS.PROJECT_CFG)
+        try (DSLContext tx = DSL.using(cfg)) {
+            byte[] ab = tx.select(PROJECTS.PROJECT_CFG)
                     .from(PROJECTS)
                     .where(PROJECTS.PROJECT_NAME.eq(projectName))
                     .fetchOne(PROJECTS.PROJECT_CFG);

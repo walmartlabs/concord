@@ -31,8 +31,8 @@ public class ProjectDao extends AbstractDao {
     }
 
     public ProjectEntry get(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            ProjectsRecord r = create.selectFrom(PROJECTS)
+        try (DSLContext tx = DSL.using(cfg)) {
+            ProjectsRecord r = tx.selectFrom(PROJECTS)
                     .where(PROJECTS.PROJECT_NAME.eq(name))
                     .fetchOne();
 
@@ -40,12 +40,12 @@ public class ProjectDao extends AbstractDao {
                 return null;
             }
 
-            Set<String> templates = create.select(PROJECT_TEMPLATES.TEMPLATE_NAME)
+            Set<String> templates = tx.select(PROJECT_TEMPLATES.TEMPLATE_NAME)
                     .from(PROJECT_TEMPLATES)
                     .where(PROJECT_TEMPLATES.PROJECT_NAME.eq(name))
                     .fetchSet(PROJECT_TEMPLATES.TEMPLATE_NAME);
 
-            Result<RepositoriesRecord> repos = create.selectFrom(REPOSITORIES)
+            Result<RepositoriesRecord> repos = tx.selectFrom(REPOSITORIES)
                     .where(REPOSITORIES.PROJECT_NAME.eq(name))
                     .fetch();
 
@@ -63,13 +63,13 @@ public class ProjectDao extends AbstractDao {
         tx(tx -> insert(tx, name, description, templateIds));
     }
 
-    public void insert(DSLContext create, String name, String description, Collection<String> templateIds) {
-        create.insertInto(PROJECTS)
+    public void insert(DSLContext tx, String name, String description, Collection<String> templateIds) {
+        tx.insertInto(PROJECTS)
                 .columns(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION)
                 .values(name, description)
                 .execute();
 
-        insertTemplates(create, name, templateIds);
+        insertTemplates(tx, name, templateIds);
     }
 
     public void update(DSLContext tx, String name, String description, Collection<String> templateIds) {
@@ -102,8 +102,8 @@ public class ProjectDao extends AbstractDao {
     }
 
     public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
-        try (DSLContext create = DSL.using(cfg)) {
-            SelectOnConditionStep<Record3<String, String, String>> query = selectCreateProjectRequest(create);
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectOnConditionStep<Record3<String, String, String>> query = selectCreateProjectRequest(tx);
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
@@ -114,18 +114,18 @@ public class ProjectDao extends AbstractDao {
     }
 
     public boolean exists(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.fetchExists(create.selectFrom(PROJECTS)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.fetchExists(tx.selectFrom(PROJECTS)
                     .where(PROJECTS.PROJECT_NAME.eq(name)));
         }
     }
 
-    private static void insertTemplates(DSLContext create, String projectName, Collection<String> templates) {
+    private static void insertTemplates(DSLContext tx, String projectName, Collection<String> templates) {
         if (templates == null || templates.size() == 0) {
             return;
         }
 
-        BatchBindStep b = create.batch(create.insertInto(PROJECT_TEMPLATES)
+        BatchBindStep b = tx.batch(tx.insertInto(PROJECT_TEMPLATES)
                 .columns(PROJECT_TEMPLATES.PROJECT_NAME, PROJECT_TEMPLATES.TEMPLATE_NAME)
                 .values((String) null, null));
 
@@ -175,8 +175,8 @@ public class ProjectDao extends AbstractDao {
         l.add(new ProjectEntry(name, description, templates, null, null));
     }
 
-    private static SelectOnConditionStep<Record3<String, String, String>> selectCreateProjectRequest(DSLContext create) {
-        return create.select(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, TEMPLATES.TEMPLATE_NAME)
+    private static SelectOnConditionStep<Record3<String, String, String>> selectCreateProjectRequest(DSLContext tx) {
+        return tx.select(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, TEMPLATES.TEMPLATE_NAME)
                 .from(PROJECTS)
                 .leftOuterJoin(PROJECT_TEMPLATES).on(PROJECT_TEMPLATES.PROJECT_NAME.eq(PROJECTS.PROJECT_NAME))
                 .leftOuterJoin(TEMPLATES).on(PROJECT_TEMPLATES.TEMPLATE_NAME.eq(TEMPLATES.TEMPLATE_NAME));

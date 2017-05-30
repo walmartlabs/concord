@@ -25,10 +25,7 @@ public class SecretDao extends AbstractDao {
     }
 
     public void insert(String name, SecretType type, byte[] data) {
-        transaction(cfg -> {
-            DSLContext tx = DSL.using(cfg);
-            insert(tx, name, type, data);
-        });
+        tx(tx -> insert(tx, name, type, data));
     }
 
     public void insert(DSLContext tx, String name, SecretType type, byte[] data) {
@@ -39,17 +36,16 @@ public class SecretDao extends AbstractDao {
     }
 
     public SecretDataEntry get(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return selectSecretDataEntry(create)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return selectSecretDataEntry(tx)
                     .where(SECRETS.SECRET_NAME.eq(name))
                     .fetchOne(SecretDao::toDataEntry);
         }
     }
 
     public List<SecretEntry> list(Field<?> sortField, boolean asc) {
-        try (DSLContext create = DSL.using(cfg)) {
-            SelectJoinStep<Record2<String, String>> query = create
-                    .select(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE)
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectJoinStep<Record2<String, String>> query = tx.select(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE)
                     .from(SECRETS);
 
             if (sortField != null) {
@@ -62,24 +58,23 @@ public class SecretDao extends AbstractDao {
     }
 
     public void delete(String name) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            permissionCleaner.onSecretRemoval(create, name);
-            create.deleteFrom(SECRETS)
+        tx(tx -> {
+            permissionCleaner.onSecretRemoval(tx, name);
+            tx.deleteFrom(SECRETS)
                     .where(SECRETS.SECRET_NAME.eq(name))
                     .execute();
         });
     }
 
     public boolean exists(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.fetchExists(create.selectFrom(SECRETS)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.fetchExists(tx.selectFrom(SECRETS)
                     .where(SECRETS.SECRET_NAME.eq(name)));
         }
     }
 
-    private static SelectJoinStep<Record3<String, String, byte[]>> selectSecretDataEntry(DSLContext create) {
-        return create.select(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
+    private static SelectJoinStep<Record3<String, String, byte[]>> selectSecretDataEntry(DSLContext tx) {
+        return tx.select(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_DATA)
                 .from(SECRETS);
     }
 

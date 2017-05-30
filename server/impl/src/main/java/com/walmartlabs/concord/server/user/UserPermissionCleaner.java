@@ -20,25 +20,25 @@ public class UserPermissionCleaner extends AbstractDao {
         super(cfg);
     }
 
-    public void onSecretRemoval(DSLContext create, String name) {
-        remove(create, Permissions.SECRET_PREFIX, name);
+    public void onSecretRemoval(DSLContext tx, String name) {
+        remove(tx, Permissions.SECRET_PREFIX, name);
     }
 
-    public void onTemplateRemoval(DSLContext create, String name) {
-        remove(create, Permissions.TEMPLATE_PREFIX, name);
+    public void onTemplateRemoval(DSLContext tx, String name) {
+        remove(tx, Permissions.TEMPLATE_PREFIX, name);
     }
 
-    public void onProjectRemoval(DSLContext create, String name) {
-        remove(create, Permissions.PROJECT_PREFIX, name);
+    public void onProjectRemoval(DSLContext tx, String name) {
+        remove(tx, Permissions.PROJECT_PREFIX, name);
     }
 
-    private void remove(DSLContext create, String prefix, String name) {
+    private void remove(DSLContext tx, String prefix, String name) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Invalid entity name: " + name);
         }
 
         String pattern = prefix + ":%:" + escape(name);
-        create.deleteFrom(USER_PERMISSIONS)
+        tx.deleteFrom(USER_PERMISSIONS)
                 .where(USER_PERMISSIONS.PERMISSION.like(pattern).escape(ESC_CHAR))
                 .execute();
     }

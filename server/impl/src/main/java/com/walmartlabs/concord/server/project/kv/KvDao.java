@@ -53,8 +53,8 @@ public class KvDao extends AbstractDao {
     }
 
     public String getString(String projectName, String key) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.select(PROJECT_KV_STORE.VALUE_STRING)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROJECT_KV_STORE.VALUE_STRING)
                     .from(PROJECT_KV_STORE)
                     .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
                             .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
@@ -63,8 +63,8 @@ public class KvDao extends AbstractDao {
     }
 
     public Long getLong(String projectName, String key) {
-        try (DSLContext create = DSL.using(cfg)) {
-            Record1<Long> r = create.select(PROJECT_KV_STORE.VALUE_LONG)
+        try (DSLContext tx = DSL.using(cfg)) {
+            Record1<Long> r = tx.select(PROJECT_KV_STORE.VALUE_LONG)
                     .from(PROJECT_KV_STORE)
                     .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
                             .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
@@ -79,10 +79,7 @@ public class KvDao extends AbstractDao {
     }
 
     public synchronized long inc(String projectName, String key) {
-        return txResult(cfg -> {
-            DSLContext tx = DSL.using(cfg);
-            return delegate.inc(tx, projectName, key);
-        });
+        return txResult(tx -> delegate.inc(tx, projectName, key));
     }
 
     private interface Kv {

@@ -28,8 +28,8 @@ public class TemplateDao extends AbstractDao {
     }
 
     public Collection<String> getProjectTemplates(String projectName) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.select(PROJECT_TEMPLATES.TEMPLATE_NAME)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROJECT_TEMPLATES.TEMPLATE_NAME)
                     .from(PROJECT_TEMPLATES)
                     .where(PROJECT_TEMPLATES.PROJECT_NAME.eq(projectName))
                     .fetch(PROJECT_TEMPLATES.TEMPLATE_NAME);
@@ -46,8 +46,8 @@ public class TemplateDao extends AbstractDao {
     }
 
     public List<TemplateEntry> list(Field<?> sortField, boolean asc) {
-        try (DSLContext create = DSL.using(cfg)) {
-            SelectJoinStep<Record2<String, Integer>> query = create
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectJoinStep<Record2<String, Integer>> query = tx
                     .select(TEMPLATES.TEMPLATE_NAME, TEMPLATES.TEMPLATE_DATA.length().as("SIZE"))
                     .from(TEMPLATES);
 
@@ -60,7 +60,7 @@ public class TemplateDao extends AbstractDao {
     }
 
     public void insert(String name, InputStream data) {
-        Function<DSLContext, String> sqlFn = create -> create.insertInto(TEMPLATES)
+        Function<DSLContext, String> sqlFn = tx -> tx.insertInto(TEMPLATES)
                 .columns(TEMPLATES.TEMPLATE_NAME, TEMPLATES.TEMPLATE_DATA)
                 .values((String) null, null)
                 .getSQL();
@@ -84,23 +84,22 @@ public class TemplateDao extends AbstractDao {
     }
 
     public void delete(String name) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            permissionCleaner.onTemplateRemoval(create, name);
+        tx(tx -> {
+            permissionCleaner.onTemplateRemoval(tx, name);
 
-            create.deleteFrom(PROJECT_TEMPLATES)
+            tx.deleteFrom(PROJECT_TEMPLATES)
                     .where(PROJECT_TEMPLATES.TEMPLATE_NAME.eq(name))
                     .execute();
 
-            create.deleteFrom(TEMPLATES)
+            tx.deleteFrom(TEMPLATES)
                     .where(TEMPLATES.TEMPLATE_NAME.eq(name))
                     .execute();
         });
     }
 
     public boolean exists(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            int cnt = create.fetchCount(create.selectFrom(TEMPLATES)
+        try (DSLContext tx = DSL.using(cfg)) {
+            int cnt = tx.fetchCount(tx.selectFrom(TEMPLATES)
                     .where(TEMPLATES.TEMPLATE_NAME.eq(name)));
 
             return cnt > 0;

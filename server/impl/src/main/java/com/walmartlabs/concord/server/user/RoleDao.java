@@ -21,8 +21,8 @@ public class RoleDao extends AbstractDao {
     }
 
     public Collection<String> getPermissions(Collection<String> roles) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.selectDistinct(ROLE_PERMISSIONS.PERMISSION)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.selectDistinct(ROLE_PERMISSIONS.PERMISSION)
                     .from(ROLE_PERMISSIONS)
                     .where(ROLE_PERMISSIONS.ROLE_NAME.in(roles))
                     .fetch(ROLE_PERMISSIONS.PERMISSION);
@@ -30,8 +30,8 @@ public class RoleDao extends AbstractDao {
     }
 
     public boolean exists(String name) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.fetchExists(create.selectFrom(ROLE_PERMISSIONS)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.fetchExists(tx.selectFrom(ROLE_PERMISSIONS)
                     .where(ROLE_PERMISSIONS.ROLE_NAME.eq(name)));
         }
     }
@@ -40,32 +40,32 @@ public class RoleDao extends AbstractDao {
         tx(tx -> insert(tx, name, description, permissions));
     }
 
-    public void insert(DSLContext create, String name, String description, Collection<String> permissions) {
-        create.insertInto(ROLES)
+    public void insert(DSLContext tx, String name, String description, Collection<String> permissions) {
+        tx.insertInto(ROLES)
                 .columns(ROLES.ROLE_NAME, ROLES.ROLE_DESCRIPTION)
                 .values(name, description)
                 .execute();
 
-        insertPermissions(create, name, permissions);
+        insertPermissions(tx, name, permissions);
     }
 
     public void update(String name, String description, Collection<String> permissions) {
         tx(tx -> update(tx, name, description, permissions));
     }
 
-    public void update(DSLContext create, String name, String description, Collection<String> permissions) {
-        create.update(ROLES)
+    public void update(DSLContext tx, String name, String description, Collection<String> permissions) {
+        tx.update(ROLES)
                 .set(ROLES.ROLE_DESCRIPTION, description)
                 .where(ROLES.ROLE_NAME.eq(name))
                 .execute();
 
-        deletePermissions(create, name);
-        insertPermissions(create, name, permissions);
+        deletePermissions(tx, name);
+        insertPermissions(tx, name, permissions);
     }
 
     public List<RoleEntry> list() {
-        try (DSLContext create = DSL.using(cfg)) {
-            Select<Record3<String, String, String>> select = create
+        try (DSLContext tx = DSL.using(cfg)) {
+            Select<Record3<String, String, String>> select = tx
                     .select(ROLES.ROLE_DESCRIPTION, ROLES.ROLE_NAME, ROLE_PERMISSIONS.PERMISSION)
                     .from(ROLES)
                     .leftOuterJoin(ROLE_PERMISSIONS).on(ROLE_PERMISSIONS.ROLE_NAME.eq(ROLES.ROLE_NAME))
@@ -106,24 +106,24 @@ public class RoleDao extends AbstractDao {
         tx(tx -> delete(tx, name));
     }
 
-    public void delete(DSLContext create, String name) {
-        create.deleteFrom(ROLES)
+    public void delete(DSLContext tx, String name) {
+        tx.deleteFrom(ROLES)
                 .where(ROLES.ROLE_NAME.eq(name))
                 .execute();
     }
 
-    private static void deletePermissions(DSLContext create, String roleName) {
-        create.deleteFrom(ROLE_PERMISSIONS)
+    private static void deletePermissions(DSLContext tx, String roleName) {
+        tx.deleteFrom(ROLE_PERMISSIONS)
                 .where(ROLE_PERMISSIONS.ROLE_NAME.eq(roleName))
                 .execute();
     }
 
-    private static void insertPermissions(DSLContext create, String roleName, Collection<String> permissions) {
+    private static void insertPermissions(DSLContext tx, String roleName, Collection<String> permissions) {
         if (permissions == null || permissions.isEmpty()) {
             return;
         }
 
-        BatchBindStep b = create.batch(create.insertInto(ROLE_PERMISSIONS)
+        BatchBindStep b = tx.batch(tx.insertInto(ROLE_PERMISSIONS)
                 .columns(ROLE_PERMISSIONS.ROLE_NAME, ROLE_PERMISSIONS.PERMISSION)
                 .values((String) null, null));
 

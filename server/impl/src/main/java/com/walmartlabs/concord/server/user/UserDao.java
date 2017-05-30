@@ -26,41 +26,32 @@ public class UserDao extends AbstractDao {
     }
 
     public void insert(String id, String username, Set<String> permissions) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-
-            create.insertInto(USERS)
+        tx(tx -> {
+            tx.insertInto(USERS)
                     .columns(USERS.USER_ID, USERS.USERNAME)
                     .values(id, username)
                     .execute();
 
-            insertPermissions(create, id, permissions);
+            insertPermissions(tx, id, permissions);
         });
     }
 
     public void delete(String id) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-
-            create.deleteFrom(USERS)
-                    .where(USERS.USER_ID.eq(id))
-                    .execute();
-        });
+        tx(tx -> tx.deleteFrom(USERS)
+                .where(USERS.USER_ID.eq(id))
+                .execute());
     }
 
     public void update(String id, Set<String> permissions) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            deletePermissions(create, id);
-            insertPermissions(create, id, permissions);
+        tx(tx -> {
+            deletePermissions(tx, id);
+            insertPermissions(tx, id, permissions);
         });
     }
 
     public UserEntry get(String id) {
-        try (DSLContext create = DSL.using(cfg)) {
-            Record2<String, String> r = create
-                    .select(USERS.USER_ID,
-                            USERS.USERNAME)
+        try (DSLContext tx = DSL.using(cfg)) {
+            Record2<String, String> r = tx.select(USERS.USER_ID, USERS.USERNAME)
                     .from(USERS)
                     .where(USERS.USER_ID.eq(id))
                     .fetchOne();
@@ -70,7 +61,7 @@ public class UserDao extends AbstractDao {
             }
 
             // TODO join?
-            List<String> perms = create.select(USER_PERMISSIONS.PERMISSION)
+            List<String> perms = tx.select(USER_PERMISSIONS.PERMISSION)
                     .from(USER_PERMISSIONS)
                     .where(USER_PERMISSIONS.USER_ID.eq(id))
                     .fetchInto(String.class);
@@ -80,8 +71,8 @@ public class UserDao extends AbstractDao {
     }
 
     public String getId(String username) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.select(USERS.USER_ID)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(USERS.USER_ID)
                     .from(USERS)
                     .where(USERS.USERNAME.eq(username))
                     .fetchOne(USERS.USER_ID);
@@ -89,8 +80,8 @@ public class UserDao extends AbstractDao {
     }
 
     public boolean exists(String username) {
-        try (DSLContext create = DSL.using(cfg)) {
-            int cnt = create.fetchCount(create.selectFrom(USERS)
+        try (DSLContext tx = DSL.using(cfg)) {
+            int cnt = tx.fetchCount(tx.selectFrom(USERS)
                     .where(USERS.USERNAME.eq(username)));
 
             return cnt > 0;
@@ -98,20 +89,20 @@ public class UserDao extends AbstractDao {
     }
 
     public boolean existsById(String id) {
-        try (DSLContext create = DSL.using(cfg)) {
-            int cnt = create.fetchCount(create.selectFrom(USERS)
+        try (DSLContext tx = DSL.using(cfg)) {
+            int cnt = tx.fetchCount(tx.selectFrom(USERS)
                     .where(USERS.USER_ID.eq(id)));
 
             return cnt > 0;
         }
     }
 
-    private static void insertPermissions(DSLContext create, String userId, Set<String> permissions) {
+    private static void insertPermissions(DSLContext tx, String userId, Set<String> permissions) {
         if (permissions == null || permissions.isEmpty()) {
             return;
         }
 
-        BatchBindStep b = create.batch(create.insertInto(USER_PERMISSIONS)
+        BatchBindStep b = tx.batch(tx.insertInto(USER_PERMISSIONS)
                 .columns(USER_PERMISSIONS.USER_ID, USER_PERMISSIONS.PERMISSION)
                 .values((String) null, null));
 
@@ -122,7 +113,7 @@ public class UserDao extends AbstractDao {
         b.execute();
     }
 
-    private static void deletePermissions(DSLContext create, String userId) {
-        create.deleteFrom(USER_PERMISSIONS).where(USER_PERMISSIONS.USER_ID.eq(userId)).execute();
+    private static void deletePermissions(DSLContext tx, String userId) {
+        tx.deleteFrom(USER_PERMISSIONS).where(USER_PERMISSIONS.USER_ID.eq(userId)).execute();
     }
 }

@@ -21,16 +21,16 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public boolean exists(String projectName, String repositoryName) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return create.fetchExists(create.selectFrom(REPOSITORIES)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.fetchExists(tx.selectFrom(REPOSITORIES)
                     .where(REPOSITORIES.PROJECT_NAME.eq(projectName)
                             .and(REPOSITORIES.REPO_NAME.eq(repositoryName))));
         }
     }
 
     public RepositoryEntry get(String projectName, String repositoryName) {
-        try (DSLContext create = DSL.using(cfg)) {
-            return selectRepositoryEntry(create)
+        try (DSLContext tx = DSL.using(cfg)) {
+            return selectRepositoryEntry(tx)
                     .where(REPOSITORIES.PROJECT_NAME.eq(projectName)
                             .and(REPOSITORIES.REPO_NAME.eq(repositoryName)))
                     .fetchOne(RepositoryDao::toEntry);
@@ -41,8 +41,8 @@ public class RepositoryDao extends AbstractDao {
         tx(tx -> insert(tx, projectName, repositoryName, url, branch, commitId, secretName));
     }
 
-    public void insert(DSLContext create, String projectName, String repositoryName, String url, String branch, String commitId, String secretName) {
-        create.insertInto(REPOSITORIES)
+    public void insert(DSLContext tx, String projectName, String repositoryName, String url, String branch, String commitId, String secretName) {
+        tx.insertInto(REPOSITORIES)
                 .columns(REPOSITORIES.PROJECT_NAME, REPOSITORIES.REPO_NAME,
                         REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
                         REPOSITORIES.SECRET_NAME)
@@ -50,8 +50,8 @@ public class RepositoryDao extends AbstractDao {
                 .execute();
     }
 
-    public void update(DSLContext create, String repositoryName, String url, String branch, String commitId, String secretName) {
-        create.update(REPOSITORIES)
+    public void update(DSLContext tx, String repositoryName, String url, String branch, String commitId, String secretName) {
+        tx.update(REPOSITORIES)
                 .set(REPOSITORIES.REPO_URL, url)
                 .set(REPOSITORIES.SECRET_NAME, secretName)
                 .set(REPOSITORIES.REPO_BRANCH, branch)
@@ -60,21 +60,21 @@ public class RepositoryDao extends AbstractDao {
                 .execute();
     }
 
-    public void delete(DSLContext create, String repositoryName) {
-        create.deleteFrom(REPOSITORIES)
+    public void delete(DSLContext tx, String repositoryName) {
+        tx.deleteFrom(REPOSITORIES)
                 .where(REPOSITORIES.REPO_NAME.eq(repositoryName))
                 .execute();
     }
 
-    public void deleteAll(DSLContext create, String projectName) {
-        create.deleteFrom(REPOSITORIES)
+    public void deleteAll(DSLContext tx, String projectName) {
+        tx.deleteFrom(REPOSITORIES)
                 .where(REPOSITORIES.PROJECT_NAME.eq(projectName))
                 .execute();
     }
 
     public List<RepositoryEntry> list(String projectName, Field<?> sortField, boolean asc) {
-        try (DSLContext create = DSL.using(cfg)) {
-            SelectConditionStep<Record5<String, String, String, String, String>> query = selectRepositoryEntry(create)
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectConditionStep<Record5<String, String, String, String, String>> query = selectRepositoryEntry(tx)
                     .where(REPOSITORIES.PROJECT_NAME.eq(projectName));
 
             if (sortField != null) {
@@ -85,8 +85,8 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    private static SelectJoinStep<Record5<String, String, String, String, String>> selectRepositoryEntry(DSLContext create) {
-        return create.select(REPOSITORIES.REPO_NAME,
+    private static SelectJoinStep<Record5<String, String, String, String, String>> selectRepositoryEntry(DSLContext tx) {
+        return tx.select(REPOSITORIES.REPO_NAME,
                 REPOSITORIES.REPO_URL,
                 REPOSITORIES.REPO_BRANCH,
                 REPOSITORIES.REPO_COMMIT_ID,

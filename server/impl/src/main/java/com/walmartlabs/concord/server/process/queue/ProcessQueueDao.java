@@ -26,23 +26,20 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void insertInitial(String instanceId, String projectName, String initiator) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            create.insertInto(PROCESS_QUEUE)
-                    .columns(PROCESS_QUEUE.INSTANCE_ID,
-                            PROCESS_QUEUE.PROJECT_NAME,
-                            PROCESS_QUEUE.CREATED_AT,
-                            PROCESS_QUEUE.INITIATOR,
-                            PROCESS_QUEUE.CURRENT_STATUS,
-                            PROCESS_QUEUE.LAST_UPDATED_AT)
-                    .values(value(instanceId),
-                            value(projectName),
-                            currentTimestamp(),
-                            value(initiator),
-                            value(ProcessStatus.ENQUEUED.toString()),
-                            currentTimestamp())
-                    .execute();
-        });
+        tx(tx -> tx.insertInto(PROCESS_QUEUE)
+                .columns(PROCESS_QUEUE.INSTANCE_ID,
+                        PROCESS_QUEUE.PROJECT_NAME,
+                        PROCESS_QUEUE.CREATED_AT,
+                        PROCESS_QUEUE.INITIATOR,
+                        PROCESS_QUEUE.CURRENT_STATUS,
+                        PROCESS_QUEUE.LAST_UPDATED_AT)
+                .values(value(instanceId),
+                        value(projectName),
+                        currentTimestamp(),
+                        value(initiator),
+                        value(ProcessStatus.ENQUEUED.toString()),
+                        currentTimestamp())
+                .execute());
     }
 
     public void update(String instanceId, String agentId, ProcessStatus status) {
@@ -75,9 +72,8 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public boolean update(String instanceId, ProcessStatus expected, ProcessStatus status) {
-        return txResult(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            int i = create.update(PROCESS_QUEUE)
+        return txResult(tx -> {
+            int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                     .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)
@@ -89,9 +85,9 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public ProcessEntry get(String instanceId) {
-        DSLContext create = DSL.using(cfg);
+        DSLContext tx = DSL.using(cfg);
 
-        ProcessQueueRecord r = create.selectFrom(PROCESS_QUEUE)
+        ProcessQueueRecord r = tx.selectFrom(PROCESS_QUEUE)
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .fetchOne();
 
@@ -103,10 +99,8 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public ProcessEntry poll() {
-        return txResult(cfg -> {
-            DSLContext create = DSL.using(cfg);
-
-            ProcessQueueRecord r = create.selectFrom(PROCESS_QUEUE)
+        return txResult(tx -> {
+            ProcessQueueRecord r = tx.selectFrom(PROCESS_QUEUE)
                     .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString()))
                     .orderBy(PROCESS_QUEUE.CREATED_AT)
                     .limit(1)
@@ -118,15 +112,15 @@ public class ProcessQueueDao extends AbstractDao {
             }
 
             r.setCurrentStatus(ProcessStatus.STARTING.toString());
-            create.executeUpdate(r);
+            tx.executeUpdate(r);
 
             return toEntry(r);
         });
     }
 
     public List<ProcessEntry> list() {
-        DSLContext create = DSL.using(cfg);
-        return create.selectFrom(PROCESS_QUEUE)
+        DSLContext tx = DSL.using(cfg);
+        return tx.selectFrom(PROCESS_QUEUE)
                 .orderBy(PROCESS_QUEUE.CREATED_AT.desc())
                 .limit(30)
                 .fetch(ProcessQueueDao::toEntry);

@@ -36,27 +36,21 @@ public class ApiKeyDao extends AbstractDao {
     }
 
     public void insert(String id, String userId, String key) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            create.insertInto(API_KEYS)
-                    .columns(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.API_KEY)
-                    .values(id, userId, hash(key))
-                    .execute();
-        });
+        tx(tx -> tx.insertInto(API_KEYS)
+                .columns(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.API_KEY)
+                .values(id, userId, hash(key))
+                .execute());
     }
 
     public void delete(String id) {
-        transaction(cfg -> {
-            DSLContext create = DSL.using(cfg);
-            create.deleteFrom(API_KEYS)
-                    .where(API_KEYS.KEY_ID.eq(id))
-                    .execute();
-        });
+        tx(tx -> tx.deleteFrom(API_KEYS)
+                .where(API_KEYS.KEY_ID.eq(id))
+                .execute());
     }
 
     public String findUserId(String key) {
-        try (DSLContext create = DSL.using(cfg)) {
-            String id = create.select(API_KEYS.USER_ID)
+        try (DSLContext tx = DSL.using(cfg)) {
+            String id = tx.select(API_KEYS.USER_ID)
                     .from(API_KEYS)
                     .where(API_KEYS.API_KEY.eq(hash(key)))
                     .fetchOne(API_KEYS.USER_ID);
@@ -70,8 +64,8 @@ public class ApiKeyDao extends AbstractDao {
     }
 
     public boolean existsById(String id) {
-        try (DSLContext create = DSL.using(cfg)) {
-            int cnt = create.fetchCount(create.selectFrom(API_KEYS)
+        try (DSLContext tx = DSL.using(cfg)) {
+            int cnt = tx.fetchCount(tx.selectFrom(API_KEYS)
                     .where(API_KEYS.KEY_ID.eq(id)));
 
             return cnt > 0;
