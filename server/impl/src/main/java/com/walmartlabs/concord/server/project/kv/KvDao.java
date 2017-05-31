@@ -144,7 +144,8 @@ public class KvDao extends AbstractDao {
             tx.mergeInto(PROJECT_KV_STORE)
                     .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_STRING)
                     .key(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY)
-                    .values(projectName, key, value);
+                    .values(projectName, key, value)
+                    .execute();
         }
 
         @Override
