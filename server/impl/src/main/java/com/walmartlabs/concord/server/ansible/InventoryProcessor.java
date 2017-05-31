@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.ansible;
 
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
@@ -23,6 +24,7 @@ public class InventoryProcessor implements PayloadProcessor {
     public static final AttachmentKey DYNAMIC_INVENTORY_FILE = AttachmentKey.register("dynamicInventory");
 
     @Override
+    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         if (!copy(payload, INVENTORY_FILE, AnsibleConstants.INVENTORY_FILE_NAME)) {
             if (!copy(payload, DYNAMIC_INVENTORY_FILE, AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME)) {

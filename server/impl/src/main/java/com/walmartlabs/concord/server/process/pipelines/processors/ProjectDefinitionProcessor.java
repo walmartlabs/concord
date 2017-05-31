@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
     private final ProjectLoader loader = new ProjectLoader();
 
     @Override
+    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         if (workspace == null) {

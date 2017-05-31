@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
@@ -35,6 +36,7 @@ public class LogFileProcessor implements PayloadProcessor {
     }
 
     @Override
+    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         Path baseDir = storeCfg.getBaseDir();
 

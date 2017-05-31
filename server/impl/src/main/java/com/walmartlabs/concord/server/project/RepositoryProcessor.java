@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
@@ -49,6 +50,7 @@ public class RepositoryProcessor implements PayloadProcessor {
     }
 
     @Override
+    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         String[] entryPoint = payload.getHeader(Payload.ENTRY_POINT);
@@ -81,7 +83,7 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         try {
             Path src;
-            if(repo.getCommitId() != null) {
+            if (repo.getCommitId() != null) {
                 src = repositoryManager.fetchByCommit(projectName, repo.getUrl(), repo.getCommitId(), secret);
             } else {
                 src = repositoryManager.fetch(projectName, repo.getUrl(), branch, secret);

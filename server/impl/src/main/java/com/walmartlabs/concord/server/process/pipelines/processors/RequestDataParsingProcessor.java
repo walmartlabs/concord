@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
@@ -25,8 +26,9 @@ public class RequestDataParsingProcessor implements PayloadProcessor {
 
     public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");
 
-    @SuppressWarnings("unchecked")
     @Override
+    @WithTimer
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Path p = payload.getAttachment(REQUEST_ATTACHMENT_KEY);
         if (p == null) {

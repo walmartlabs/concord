@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.template;
 
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,7 @@ public class TemplateResolver {
         this.predefinedTemplates = load();
     }
 
+    @WithTimer
     public Path get(String name) throws IOException {
         // check the predefined templates first
         Path dst = resolvePredefined(name);

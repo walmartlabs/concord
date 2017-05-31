@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
@@ -14,6 +15,7 @@ public class ActiveProfilesProcessor implements PayloadProcessor {
     public static final String[] DEFAULT_PROFILES = {"default"};
 
     @Override
+    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);

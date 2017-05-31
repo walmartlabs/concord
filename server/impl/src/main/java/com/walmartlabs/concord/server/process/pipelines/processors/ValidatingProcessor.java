@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
@@ -14,7 +15,9 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
  */
 @Named
 public class ValidatingProcessor implements PayloadProcessor {
+
     @Override
+    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         Map<String, Path> attachments = payload.getAttachments();
         if (!attachments.isEmpty()) {

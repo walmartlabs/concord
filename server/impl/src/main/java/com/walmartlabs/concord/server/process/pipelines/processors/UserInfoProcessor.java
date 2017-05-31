@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
@@ -23,6 +24,7 @@ public class UserInfoProcessor implements PayloadProcessor {
     private static final Logger log = LoggerFactory.getLogger(UserInfoProcessor.class);
 
     @Override
+    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         UserInfo info = getInfo();
 

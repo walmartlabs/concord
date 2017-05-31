@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.cfg.DependencyStoreConfiguration;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -57,6 +58,7 @@ public class DependenciesProcessor implements PayloadProcessor {
     }
 
     @Override
+    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> request = payload.getHeader(Payload.REQUEST_DATA_MAP);

@@ -48,6 +48,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+        <aopalliance.version>1.0</aopalliance.version>
         <bpm.version>0.29.0</bpm.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.lang.version>3.5</commons.lang.version>
@@ -463,6 +464,11 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
                 <version>${httpcore.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>aopalliance</groupId>
+                <artifactId>aopalliance</artifactId>
+                <version>${aopalliance.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -22,6 +23,7 @@ public class RequestDefaultsParsingProcessor implements PayloadProcessor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
+    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);

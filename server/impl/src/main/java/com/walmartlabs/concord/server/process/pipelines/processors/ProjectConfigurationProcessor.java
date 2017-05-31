@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.project.ProjectConfigurationDao;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
     }
 
     @Override
+    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         // project file's configuration

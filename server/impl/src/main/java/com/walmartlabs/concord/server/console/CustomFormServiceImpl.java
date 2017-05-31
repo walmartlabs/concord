@@ -8,6 +8,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.FormUtils;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
@@ -75,6 +76,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @Override
     @Validate
     @RequiresAuthentication
+    @WithTimer
     public FormSessionResponse startSession(String processInstanceId, String formInstanceId) {
         // TODO locking
         Form form = assertForm(processInstanceId, formInstanceId);

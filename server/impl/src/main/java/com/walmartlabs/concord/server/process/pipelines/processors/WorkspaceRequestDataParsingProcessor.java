@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import org.slf4j.Logger;
@@ -23,8 +24,9 @@ public class WorkspaceRequestDataParsingProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(WorkspaceRequestDataParsingProcessor.class);
 
-    @SuppressWarnings("unchecked")
     @Override
+    @WithTimer
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 

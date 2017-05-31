@@ -5,6 +5,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.process.*;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
@@ -255,6 +256,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @WithTimer
     public Response downloadAttachment(String instanceId, String attachmentName) {
         if (attachmentName.endsWith("/")) {
             throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
@@ -284,6 +286,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    @WithTimer
     public List<ProcessEntry> list() {
         return queueDao.list();
     }

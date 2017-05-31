@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.ansible;
 
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
@@ -36,6 +37,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     }
 
     @Override
+    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);

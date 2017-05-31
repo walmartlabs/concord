@@ -8,6 +8,7 @@ import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import io.grpc.stub.StreamObserver;
@@ -75,7 +76,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         }
     }
 
-    public Path getPayload(String instanceId) throws IOException {
+    private Path getPayload(String instanceId) throws IOException {
         Path src = payloadManager.getWorkspace(instanceId);
         if (src == null) {
             log.warn("getPayload ['{}'] -> not found", instanceId);
@@ -90,8 +91,8 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         return tmp;
     }
 
-
     @Override
+    @WithTimer
     public void updateStatus(TJobStatusUpdate request, StreamObserver<Empty> responseObserver) {
         String agentId = request.getAgentId();
         String instanceId = request.getInstanceId();
@@ -110,6 +111,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     }
 
     @Override
+    @WithTimer
     public void appendLog(TJobLogEntry request, StreamObserver<Empty> responseObserver) {
         // TODO move into a logmanager or something
 
@@ -132,6 +134,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     }
 
     @Override
+    @WithTimer
     public void uploadAttachments(TAttachments request, StreamObserver<Empty> responseObserver) {
         // TODO cfg
         Path tmp;

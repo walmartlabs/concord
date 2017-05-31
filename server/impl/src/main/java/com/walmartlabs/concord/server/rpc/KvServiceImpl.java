@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.rpc;
 import com.google.protobuf.Empty;
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.project.kv.KvDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import io.grpc.stub.StreamObserver;
@@ -29,6 +30,7 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
+    @WithTimer
     public void remove(TKvRemoveRequest request, StreamObserver<Empty> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<String> projectName = assertProjectName(instanceId);
@@ -45,6 +47,7 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
+    @WithTimer
     public void put(TKvPutStringRequest request, StreamObserver<Empty> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<String> projectName = assertProjectName(instanceId);
@@ -64,6 +67,7 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
+    @WithTimer
     public void get(TKvGetStringRequest request, StreamObserver<TKvGetStringResponse> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<String> projectName = assertProjectName(instanceId);
@@ -88,6 +92,7 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
+    @WithTimer
     public void inc(TKvIncRequest request, StreamObserver<TKvIncResponse> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<String> projectName = assertProjectName(instanceId);

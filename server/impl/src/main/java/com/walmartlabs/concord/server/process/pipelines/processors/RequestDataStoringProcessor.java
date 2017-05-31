@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
     private static final Logger log = LoggerFactory.getLogger(RequestDataStoringProcessor.class);
 
     @Override
+    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> meta = payload.getHeader(Payload.REQUEST_DATA_MAP);

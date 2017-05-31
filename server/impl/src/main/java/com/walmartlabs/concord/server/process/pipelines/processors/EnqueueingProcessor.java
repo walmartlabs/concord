@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
@@ -17,6 +18,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
     }
 
     @Override
+    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         String instanceId = payload.getInstanceId();
         String projectName = payload.getHeader(Payload.PROJECT_NAME);

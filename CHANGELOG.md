@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: add the first batch of metrics, expose with JMX;
 - concord-console: add "Test connection" button to the repository
 form;
 - concord-server: improve error handling for GIT repository cloning;
