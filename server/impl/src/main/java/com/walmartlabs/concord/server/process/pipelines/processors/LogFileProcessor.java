@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
@@ -9,7 +10,6 @@ import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -28,27 +28,21 @@ public class LogFileProcessor implements PayloadProcessor {
      */
     public static final HeaderKey<String> LOG_FILE_NAME = HeaderKey.register("_logFileName", String.class);
 
-    private final LogStoreConfiguration storeCfg;
+    private final LogManager logManager;
 
     @Inject
-    public LogFileProcessor(LogStoreConfiguration storeCfg) {
-        this.storeCfg = storeCfg;
+    public LogFileProcessor(LogManager logManager) {
+        this.logManager = logManager;
     }
 
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        Path baseDir = storeCfg.getBaseDir();
-
         try {
-            Files.createDirectories(baseDir);
+            String name = logManager.getFileName(payload.getInstanceId());
+            Path path = logManager.getPath(payload.getInstanceId());
 
-            String name = payload.getInstanceId() + ".log";
-            Path path = baseDir.resolve(name);
-
-            if (!Files.exists(path)) {
-                Files.createFile(path);
-            }
+            logManager.prepare(payload.getInstanceId());
 
             payload = payload.putHeader(LOG_FILE_NAME, name)
                     .putHeader(LOG_FILE_PATH, path);

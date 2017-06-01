@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.template;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -34,11 +35,13 @@ public class TemplateProcessor implements PayloadProcessor {
     private final TemplateDao templateDao;
     private final TemplateResolver templateResolver;
     private final ScriptEngine scriptEngine;
+    private final LogManager logManager;
 
     @Inject
-    public TemplateProcessor(TemplateDao templateDao, TemplateResolver templateResolver) {
+    public TemplateProcessor(TemplateDao templateDao, TemplateResolver templateResolver, LogManager logManager) {
         this.templateDao = templateDao;
         this.templateResolver = templateResolver;
+        this.logManager = logManager;
         this.scriptEngine = new NashornScriptEngineFactory().getScriptEngine("--no-java");
     }
 
@@ -65,12 +68,14 @@ public class TemplateProcessor implements PayloadProcessor {
         try {
             Path templatePath = templateResolver.get(templateName);
             if (templatePath == null) {
+                logManager.error(payload.getInstanceId(), "Template not found: " + templateName);
                 throw new ProcessException("Template not found: " + templateName);
             }
 
             payload = process(payload, templatePath);
         } catch (IOException e) {
             log.error("process ['{}'] -> error", payload.getInstanceId(), e);
+            logManager.error(payload.getInstanceId(), "Error while processing a template", e);
             throw new ProcessException("Error while processing a template", e);
         }
 
@@ -84,6 +89,7 @@ public class TemplateProcessor implements PayloadProcessor {
             return payload;
         }
         if (templateNames.size() > 1) {
+            logManager.error(payload.getInstanceId(), "Multiple project templates are not yet supported");
             throw new ProcessException("Multiple project templates are not yet supported", Status.BAD_REQUEST);
         }
 
@@ -91,12 +97,14 @@ public class TemplateProcessor implements PayloadProcessor {
             String templateName = templateNames.iterator().next();
             Path templatePath = templateResolver.get(templateName);
             if (templatePath == null) {
+                logManager.error(payload.getInstanceId(), "Template not found: " + templateName);
                 throw new ProcessException("Template not found: " + templateName);
             }
 
             return process(payload, templatePath);
         } catch (IOException e) {
             log.error("process ['{}'] -> error", payload.getInstanceId(), e);
+            logManager.error(payload.getInstanceId(), "Error while processing a template", e);
             throw new ProcessException("Error while processing a template", e);
         }
     }
@@ -111,7 +119,7 @@ public class TemplateProcessor implements PayloadProcessor {
         Path templateMeta = templatePath.resolve(TemplateConstants.REQUEST_DATA_TEMPLATE_FILE_NAME);
         if (Files.exists(templateMeta)) {
             Map in = payload.getHeader(Payload.REQUEST_DATA_MAP);
-            Map out = processMeta(in, templateMeta);
+            Map out = processMeta(payload.getInstanceId(), in, templateMeta);
             payload = payload.mergeValues(Payload.REQUEST_DATA_MAP, out);
         } else {
             log.debug("apply ['{}'] -> no template metadata file found, skipping", workspacePath);
@@ -122,7 +130,7 @@ public class TemplateProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> processMeta(Map meta, Path templateMeta) throws IOException {
+    private Map<String, Object> processMeta(String instanceId, Map meta, Path templateMeta) throws IOException {
         Object result;
         try (Reader r = new FileReader(templateMeta.toFile())) {
             Bindings b = scriptEngine.createBindings();
@@ -133,6 +141,7 @@ public class TemplateProcessor implements PayloadProcessor {
                 throw new ProcessException("Invalid template result. Expected a Java Map, got " + result);
             }
         } catch (ScriptException e) {
+            logManager.error(instanceId, "Template script execution error", e);
             throw new IOException("Template script execution error", e);
         }
         return (Map<String, Object>) result;

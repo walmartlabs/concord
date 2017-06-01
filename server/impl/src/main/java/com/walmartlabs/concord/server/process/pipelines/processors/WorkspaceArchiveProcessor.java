@@ -1,10 +1,12 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.BufferedInputStream;
@@ -19,6 +21,13 @@ import java.util.zip.ZipInputStream;
 @Named
 public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
+    private final LogManager logManager;
+
+    @Inject
+    public WorkspaceArchiveProcessor(LogManager logManager) {
+        this.logManager = logManager;
+    }
+
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
@@ -28,6 +37,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
         }
 
         if (!Files.exists(archive)) {
+            logManager.error(payload.getInstanceId(), "No input archive found: " + archive);
             throw new ProcessException("No input archive found: " + archive, Status.BAD_REQUEST);
         }
 
@@ -35,6 +45,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
         try (ZipInputStream zip = new ZipInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
             IOUtils.unzip(zip, workspace);
         } catch (IOException e) {
+            logManager.error(payload.getInstanceId(), "Error while unpacking an archive: " + archive, e);
             throw new ProcessException("Error while unpacking an archive: " + archive, e);
         }
 

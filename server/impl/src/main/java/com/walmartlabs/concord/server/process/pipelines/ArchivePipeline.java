@@ -19,7 +19,8 @@ public class ArchivePipeline extends Chain {
 
     @Inject
     public ArchivePipeline(Injector injector) {
-        super(injector.getInstance(WorkspaceArchiveProcessor.class),
+        super(injector.getInstance(LogFileProcessor.class),
+                injector.getInstance(WorkspaceArchiveProcessor.class),
                 injector.getInstance(WorkspaceRequestDataParsingProcessor.class),
                 injector.getInstance(RequestDataParsingProcessor.class),
                 injector.getInstance(ActiveProfilesProcessor.class),
@@ -32,7 +33,6 @@ public class ArchivePipeline extends Chain {
                 injector.getInstance(DependenciesProcessor.class),
                 injector.getInstance(UserInfoProcessor.class),
                 injector.getInstance(RequestDataStoringProcessor.class),
-                injector.getInstance(LogFileProcessor.class),
                 injector.getInstance(ValidatingProcessor.class),
                 injector.getInstance(EnqueueingProcessor.class)
         );

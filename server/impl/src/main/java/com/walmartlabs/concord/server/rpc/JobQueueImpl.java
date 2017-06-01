@@ -5,9 +5,9 @@ import com.google.protobuf.Empty;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.rpc.*;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.cfg.LogStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -19,10 +19,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipOutputStream;
 
 @Named
@@ -33,14 +31,15 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     private static final int PAYLOAD_CHUNK_SIZE = 512 * 1024; // 512kb
 
     private final ProcessQueueDao queueDao;
-    private final LogStoreConfiguration logStoreCfg;
     private final PayloadManager payloadManager;
 
+    private final LogManager logManager;
+
     @Inject
-    public JobQueueImpl(ProcessQueueDao queueDao, LogStoreConfiguration logStoreCfg, PayloadManager payloadManager) {
+    public JobQueueImpl(ProcessQueueDao queueDao, PayloadManager payloadManager, LogManager logManager) {
         this.queueDao = queueDao;
-        this.logStoreCfg = logStoreCfg;
         this.payloadManager = payloadManager;
+        this.logManager = logManager;
     }
 
     @Override
@@ -72,7 +71,6 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
             }
         } catch (IOException e) {
             responseObserver.onError(e);
-            return;
         }
     }
 
@@ -113,16 +111,12 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     @Override
     @WithTimer
     public void appendLog(TJobLogEntry request, StreamObserver<Empty> responseObserver) {
-        // TODO move into a logmanager or something
-
+        // TODO validate the id
         String instanceId = request.getInstanceId();
         byte[] data = request.getData().toByteArray();
-        // TODO validate the id
 
-        Path p = logStoreCfg.getBaseDir().resolve(instanceId + ".log");
-        // TODO cache open files?
-        try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.APPEND)) {
-            out.write(data);
+        try {
+            logManager.log(instanceId, data);
         } catch (IOException e) {
             log.warn("appendLog ['{}'] -> error while writing to a log file: {}", instanceId, e.getMessage());
             responseObserver.onError(e);
