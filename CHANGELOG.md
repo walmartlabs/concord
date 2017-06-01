@@ -1,5 +1,12 @@
 # Change log
 
+## [Unreleased]
+
+- concord-server: create the log file of a process as early as
+possible to log startup errors.
+
+
+
 ## [0.19.0] - 2017-05-30
 
 ### Added
