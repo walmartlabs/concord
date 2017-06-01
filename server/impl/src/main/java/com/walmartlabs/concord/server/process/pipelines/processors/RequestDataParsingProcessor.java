@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -8,6 +9,7 @@ import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
@@ -26,6 +28,13 @@ public class RequestDataParsingProcessor implements PayloadProcessor {
 
     public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");
 
+    private final LogManager logManager;
+
+    @Inject
+    public RequestDataParsingProcessor(LogManager logManager) {
+        this.logManager = logManager;
+    }
+
     @Override
     @WithTimer
     @SuppressWarnings("unchecked")
@@ -41,6 +50,7 @@ public class RequestDataParsingProcessor implements PayloadProcessor {
             data = om.readValue(in, Map.class);
         } catch (IOException e) {
             log.error("process ['{}'] -> error while parsing a request data attachment", payload);
+            logManager.error(payload.getInstanceId(), "Invalid request data format", e);
             throw new ProcessException("Invalid request data format", e, Status.BAD_REQUEST);
         }
 

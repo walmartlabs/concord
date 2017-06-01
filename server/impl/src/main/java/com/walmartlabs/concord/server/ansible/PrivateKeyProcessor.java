@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.ansible;
 
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -27,12 +28,12 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyProcessor.class);
 
-    private final ProjectConfigurationDao cfgDao;
+    private final LogManager logManager;
     private final SecretManager secretManager;
 
     @Inject
-    public PrivateKeyProcessor(ProjectConfigurationDao cfgDao, SecretManager secretManager) {
-        this.cfgDao = cfgDao;
+    public PrivateKeyProcessor(LogManager logManager, SecretManager secretManager) {
+        this.logManager = logManager;
         this.secretManager = secretManager;
     }
 
@@ -54,27 +55,32 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
         String secret = findMatchingSecret(payload, keys);
         if (secret == null) {
+            logManager.error(payload.getInstanceId(), "No matching secrets found");
             throw new ProcessException("No matching secrets found");
         }
 
         KeyPair keyPair = secretManager.getKeyPair(secret);
         if (keyPair == null) {
+            logManager.error(payload.getInstanceId(), "Secret not found: " + secret);
             throw new ProcessException("Secret not found: " + secret);
         }
 
         if (keyPair.getPrivateKey() == null) {
+            logManager.error(payload.getInstanceId(), "Private key not found: " + secret);
             throw new ProcessException("Private key not found: " + secret);
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path dst = workspace.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
         if (Files.exists(dst)) {
+            logManager.error(payload.getInstanceId(), "File already exists: " + dst);
             throw new ProcessException("File already exists: " + dst);
         }
 
         try {
             Files.write(dst, keyPair.getPrivateKey());
         } catch (IOException e) {
+            logManager.error(payload.getInstanceId(), "Error while copying a private key: " + dst, e);
             throw new ProcessException("Error while copying a private key: " + dst, e);
         }
 

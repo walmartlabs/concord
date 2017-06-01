@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.project.ProjectConfigurationDao;
@@ -27,9 +28,12 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
 
     private final ProjectConfigurationDao cfgDao;
 
+    private final LogManager logManager;
+
     @Inject
-    public ProjectConfigurationProcessor(ProjectConfigurationDao cfgDao) {
+    public ProjectConfigurationProcessor(ProjectConfigurationDao cfgDao, LogManager logManager) {
         this.cfgDao = cfgDao;
+        this.logManager = logManager;
     }
 
     @Override
@@ -44,6 +48,7 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
             String[] activeProfiles = payload.getHeader(Payload.ACTIVE_PROFILES);
             if (activeProfiles == null) {
                 log.warn("process ['{}'] -> no active profiles found", payload.getInstanceId());
+                logManager.warn(payload.getInstanceId(), "No active profiles found");
             } else {
                 fileCfg = ProjectDefinitionUtils.getVariables(pd, Arrays.asList(activeProfiles));
             }

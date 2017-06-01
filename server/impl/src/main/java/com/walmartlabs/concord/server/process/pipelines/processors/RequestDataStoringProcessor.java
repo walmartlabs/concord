@@ -3,12 +3,14 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
@@ -24,6 +26,13 @@ import java.util.Map;
 public class RequestDataStoringProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(RequestDataStoringProcessor.class);
+
+    private final LogManager logManager;
+
+    @Inject
+    public RequestDataStoringProcessor(LogManager logManager) {
+        this.logManager = logManager;
+    }
 
     @Override
     @WithTimer
@@ -55,6 +64,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
                 om.writeValue(writer, data);
             }
         } catch (IOException e) {
+            logManager.error(payload.getInstanceId(), "Error while saving a metadata file: " + dst, e);
             throw new ProcessException("Error while saving a metadata file: " + dst, e);
         }
 

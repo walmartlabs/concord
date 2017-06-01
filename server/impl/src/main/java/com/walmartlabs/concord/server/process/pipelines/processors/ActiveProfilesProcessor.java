@@ -1,10 +1,12 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collection;
 import java.util.Map;
@@ -13,6 +15,13 @@ import java.util.Map;
 public class ActiveProfilesProcessor implements PayloadProcessor {
 
     public static final String[] DEFAULT_PROFILES = {"default"};
+
+    private final LogManager logManager;
+
+    @Inject
+    public ActiveProfilesProcessor(LogManager logManager) {
+        this.logManager = logManager;
+    }
 
     @Override
     @WithTimer
@@ -29,6 +38,9 @@ public class ActiveProfilesProcessor implements PayloadProcessor {
         }
 
         if (!(v instanceof Collection)) {
+            logManager.error(payload.getInstanceId(),
+                    "The value of 'activeProfiles' parameter must be an array of strings: {}", v);
+
             throw new ProcessException("The value of 'activeProfiles' parameter must be an array of strings");
         }
 

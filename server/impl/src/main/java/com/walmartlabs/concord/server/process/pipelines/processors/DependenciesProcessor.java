@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.google.common.collect.Sets;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.cfg.DependencyStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
@@ -39,11 +40,13 @@ public class DependenciesProcessor implements PayloadProcessor {
             "slf4j-api.*"
     );
 
+    private final LogManager logManager;
     private final DependencyStoreConfiguration cfg;
     private final Map<String, String> substituteData;
 
     @Inject
-    public DependenciesProcessor(DependencyStoreConfiguration cfg) {
+    public DependenciesProcessor(LogManager logManager, DependencyStoreConfiguration cfg) {
+        this.logManager = logManager;
         this.cfg = cfg;
 
         Properties props = new Properties();
@@ -64,7 +67,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         Map<String, Object> request = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
         // get a list of dependencies from the request data
-        Collection<String> deps = deps(request);
+        Collection<String> deps = deps(payload.getInstanceId(), request);
         if (deps == null) {
             return chain.process(payload);
         }
@@ -85,6 +88,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             processSystemDependencies(payload.getInstanceId(), workspace, cfg.getDepsDir(), systemDeps);
         } catch (IOException e) {
             log.error("process ['{}'] -> error while processing system dependencies", payload.getInstanceId(), e);
+            logManager.error(payload.getInstanceId(), "Error while processing system dependencies", e);
             throw new ProcessException("Error while processing system dependencies", e);
         }
 
@@ -145,7 +149,7 @@ public class DependenciesProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private static Collection<String> deps(Map<String, Object> req) {
+    private Collection<String> deps(String instanceId, Map<String, Object> req) {
         Object o = req.get(Constants.Request.DEPENDENCIES_KEY);
         if (o == null) {
             return null;
@@ -158,6 +162,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         if (o instanceof ScriptObjectMirror) {
             ScriptObjectMirror m = (ScriptObjectMirror) o;
             if (!m.isArray()) {
+                logManager.error(instanceId, "Invalid dependencies object type. Expected a JavaScript array, got: " + m);
                 throw new ProcessException("Invalid dependencies object type. Expected a JavaScript array, got: " + m);
             }
 
@@ -165,6 +170,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             return Arrays.asList(as);
         }
 
+        logManager.error(instanceId, "Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
         throw new ProcessException("Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
     }
 
