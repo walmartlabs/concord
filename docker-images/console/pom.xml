@@ -65,6 +65,7 @@
                                     <shell>${concord.baseDir}/console/start.sh</shell>
                                 </entryPoint>
                                 <ports>
+                                    <port>443</port>
                                     <port>8080</port>
                                 </ports>
                                 <assembly>

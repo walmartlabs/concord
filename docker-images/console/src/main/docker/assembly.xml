@@ -37,6 +37,7 @@
             <includes>
                 <include>nginx.conf</include>
                 <include>app.template</include>
+                <include>app.ssl.template</include>
             </includes>
         </fileSet>
     </fileSets>
