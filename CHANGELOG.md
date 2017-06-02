@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- docker-images: optional SSL support for the console's nginx.
+
+### Changed
+
 - concord-server: create the log file of a process as early as
 possible to log startup errors.
 
