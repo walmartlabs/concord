@@ -1,11 +1,11 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
+import com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
@@ -14,10 +14,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Named
@@ -25,14 +25,18 @@ import java.util.stream.Collectors;
 public class ConcordFormService {
 
     private final PayloadManager payloadManager;
+    private final ProcessStateManagerImpl stateManager;
     private final FormValidator validator;
     private final Chain resumePipeline;
 
     @Inject
     public ConcordFormService(
             PayloadManager payloadManager,
+            ProcessStateManagerImpl stateManager,
             ResumePipeline resumePipeline) {
+
         this.payloadManager = payloadManager;
+        this.stateManager = stateManager;
         this.resumePipeline = resumePipeline;
         this.validator = new DefaultFormValidator();
     }
@@ -44,18 +48,15 @@ public class ConcordFormService {
                 Constants.Files.JOB_FORMS_DIR_NAME + "/" +
                 formInstanceId;
 
-        Path p = payloadManager.getResource(processInstanceId, resource);
-        if (p == null) {
-            return null;
-        }
-        return deserialize(p);
+        Optional<Form> o = stateManager.get(processInstanceId, resource, ConcordFormService::deserialize);
+        return o.orElse(null);
     }
 
-    private static Form deserialize(Path p) {
-        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(p))) {
-            return (Form) in.readObject();
+    private static Optional<Form> deserialize(InputStream data) {
+        try (ObjectInputStream in = new ObjectInputStream(data)) {
+            return Optional.ofNullable((Form) in.readObject());
         } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Error while deserializing a form: " + p, e);
+            throw new RuntimeException("Error while deserializing a form", e);
         }
     }
 
@@ -64,28 +65,16 @@ public class ConcordFormService {
                 Constants.Files.JOB_STATE_DIR_NAME + "/" +
                 Constants.Files.JOB_FORMS_DIR_NAME + "/";
 
-        try {
-            Path baseDir = payloadManager.getResource(processInstanceId, resource);
-            if (baseDir == null) {
-                return Collections.emptyList();
-            }
+        List<Form> forms = stateManager.list(processInstanceId, resource, ConcordFormService::deserialize);
+        return forms.stream().map(f -> {
+            String name = f.getFormDefinition().getName();
 
-            return Files.list(baseDir)
-                    .map(p -> {
-                        Form f = deserialize(p);
+            // TODO constants
+            String s = "forms/" + f.getFormDefinition().getName();
+            boolean branding = stateManager.exists(processInstanceId, s);
 
-                        String name = f.getFormDefinition().getName();
-
-                        // TODO constants
-                        String s = "forms/" + f.getFormDefinition().getName();
-                        Path branding = payloadManager.getResource(processInstanceId, s);
-
-                        return new FormListEntry(f.getFormInstanceId().toString(), name, branding != null);
-                    })
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new ExecutionException("Error while reading list of forms: " + processInstanceId, e);
-        }
+            return new FormListEntry(f.getFormInstanceId().toString(), name, branding);
+        }).collect(Collectors.toList());
     }
 
     public String nextFormId(String processInstanceId) throws ExecutionException {
@@ -93,18 +82,18 @@ public class ConcordFormService {
                 Constants.Files.JOB_STATE_DIR_NAME + "/" +
                 Constants.Files.JOB_FORMS_DIR_NAME + "/";
 
-        try {
-            Path baseDir = payloadManager.getResource(processInstanceId, resource);
-            if (baseDir == null) {
-                return null;
+        Function<String, Optional<String>> getId = s -> {
+            int i = s.lastIndexOf("/");
+            if (i < 0 || i + 1 >= s.length()) {
+                return Optional.empty();
             }
+            return Optional.of(s.substring(i + 1));
+        };
 
-            Optional<Path> o = Files.list(baseDir).findFirst();
-            return o.map(path -> path.getFileName().toString()).orElse(null);
+        Optional<String> o = stateManager.findPath(processInstanceId, resource,
+                files -> files.findFirst().flatMap(getId));
 
-        } catch (IOException e) {
-            throw new ExecutionException("Error while reading list of forms: " + processInstanceId, e);
-        }
+        return o.orElse(null);
     }
 
     public FormSubmitResult submit(String processInstanceId, String formInstanceId, Map<String, Object> data) throws ExecutionException {
@@ -119,12 +108,7 @@ public class ConcordFormService {
                     Constants.Files.JOB_FORMS_DIR_NAME + "/" +
                     formInstanceId;
 
-            Path p = payloadManager.getResource(processInstanceId, resource);
-            try {
-                IOUtils.deleteRecursively(p);
-            } catch (IOException e) {
-                throw new ExecutionException("Error while removing a form: " + formInstanceId, e);
-            }
+            stateManager.delete(processInstanceId, resource);
 
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
@@ -162,7 +146,7 @@ public class ConcordFormService {
         try {
             payload = payloadManager.createResumePayload(instanceId, eventName, req);
         } catch (IOException e) {
-            throw new ExecutionException("Error creating a payload for: " + instanceId, e);
+            throw new ExecutionException("Error while creating a payload for: " + instanceId, e);
         }
 
         resumePipeline.process(payload);

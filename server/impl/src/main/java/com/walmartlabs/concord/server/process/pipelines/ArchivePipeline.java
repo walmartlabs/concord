@@ -38,6 +38,7 @@ public class ArchivePipeline extends Pipeline {
                     UserInfoProcessor.class,
                     RequestDataStoringProcessor.class,
                     ValidatingProcessor.class,
+                    StateImportingProcessor.class,
                     EnqueueingProcessor.class);
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);

@@ -138,14 +138,14 @@ public final class IOUtils {
         }
     }
 
-    public static void deleteRecursively(Path p) throws IOException {
+    public static boolean deleteRecursively(Path p) throws IOException {
         if (!Files.exists(p)) {
-            return;
+            return false;
         }
 
         if (!Files.isDirectory(p)) {
             Files.delete(p);
-            return;
+            return true;
         }
 
         Files.walkFileTree(p, new SimpleFileVisitor<Path>() {
@@ -161,6 +161,8 @@ public final class IOUtils {
                 return FileVisitResult.CONTINUE;
             }
         });
+
+        return true;
     }
 
     private IOUtils() {

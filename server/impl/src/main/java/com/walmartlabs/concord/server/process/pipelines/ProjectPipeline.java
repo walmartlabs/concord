@@ -9,7 +9,6 @@ import com.walmartlabs.concord.server.template.TemplateProcessor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Optional;
 
 /**
  * Processing project requests.
@@ -40,6 +39,7 @@ public class ProjectPipeline extends Pipeline {
                 UserInfoProcessor.class,
                 RequestDataStoringProcessor.class,
                 ValidatingProcessor.class,
+                StateImportingProcessor.class,
                 EnqueueingProcessor.class);
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
