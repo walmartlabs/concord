@@ -9,20 +9,19 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named
-public class EnqueueingProcessor implements PayloadProcessor {
+public class FailProcessor implements ExceptionProcessor {
 
     private final ProcessQueueDao queueDao;
 
     @Inject
-    public EnqueueingProcessor(ProcessQueueDao queueDao) {
+    public FailProcessor(ProcessQueueDao queueDao) {
         this.queueDao = queueDao;
     }
 
     @Override
     @WithTimer
-    public Payload process(Chain chain, Payload payload) {
+    public void process(Payload payload, Exception e) {
         String instanceId = payload.getInstanceId();
-        queueDao.update(instanceId, ProcessStatus.ENQUEUED);
-        return chain.process(payload);
+        queueDao.update(instanceId, ProcessStatus.FAILED);
     }
 }

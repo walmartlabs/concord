@@ -37,7 +37,7 @@ public class ProcessQueueDao extends AbstractDao {
                         value(projectName),
                         currentTimestamp(),
                         value(initiator),
-                        value(ProcessStatus.ENQUEUED.toString()),
+                        value(ProcessStatus.PREPARING.toString()),
                         currentTimestamp())
                 .execute());
     }
