@@ -5,7 +5,7 @@ import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
-import com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
@@ -20,19 +20,21 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
+
 @Named
 @Singleton
 public class ConcordFormService {
 
     private final PayloadManager payloadManager;
-    private final ProcessStateManagerImpl stateManager;
+    private final ProcessStateManager stateManager;
     private final FormValidator validator;
     private final Chain resumePipeline;
 
     @Inject
     public ConcordFormService(
             PayloadManager payloadManager,
-            ProcessStateManagerImpl stateManager,
+            ProcessStateManager stateManager,
             ResumePipeline resumePipeline) {
 
         this.payloadManager = payloadManager;
@@ -42,11 +44,10 @@ public class ConcordFormService {
     }
 
     public Form get(String processInstanceId, String formInstanceId) {
-        // TODO cache?
-        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
-                Constants.Files.JOB_STATE_DIR_NAME + "/" +
-                Constants.Files.JOB_FORMS_DIR_NAME + "/" +
-                formInstanceId;
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_DIR_NAME,
+                formInstanceId);
 
         Optional<Form> o = stateManager.get(processInstanceId, resource, ConcordFormService::deserialize);
         return o.orElse(null);
@@ -61,9 +62,9 @@ public class ConcordFormService {
     }
 
     public List<FormListEntry> list(String processInstanceId) throws ExecutionException {
-        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
-                Constants.Files.JOB_STATE_DIR_NAME + "/" +
-                Constants.Files.JOB_FORMS_DIR_NAME + "/";
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_DIR_NAME);
 
         List<Form> forms = stateManager.list(processInstanceId, resource, ConcordFormService::deserialize);
         return forms.stream().map(f -> {
@@ -78,9 +79,9 @@ public class ConcordFormService {
     }
 
     public String nextFormId(String processInstanceId) throws ExecutionException {
-        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
-                Constants.Files.JOB_STATE_DIR_NAME + "/" +
-                Constants.Files.JOB_FORMS_DIR_NAME + "/";
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_DIR_NAME);
 
         Function<String, Optional<String>> getId = s -> {
             int i = s.lastIndexOf("/");
@@ -90,6 +91,7 @@ public class ConcordFormService {
             return Optional.of(s.substring(i + 1));
         };
 
+        // TODO this probably should be replaced with ProcessStateManager#findFirst
         Optional<String> o = stateManager.findPath(processInstanceId, resource,
                 files -> files.findFirst().flatMap(getId));
 
@@ -103,10 +105,10 @@ public class ConcordFormService {
         }
 
         ResumeHandler resumeHandler = (f, args) -> {
-            String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
-                    Constants.Files.JOB_STATE_DIR_NAME + "/" +
-                    Constants.Files.JOB_FORMS_DIR_NAME + "/" +
-                    formInstanceId;
+            String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                    Constants.Files.JOB_STATE_DIR_NAME,
+                    Constants.Files.JOB_FORMS_DIR_NAME,
+                    formInstanceId);
 
             stateManager.delete(processInstanceId, resource);
 

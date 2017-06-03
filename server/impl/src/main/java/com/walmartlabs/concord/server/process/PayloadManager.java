@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
-import com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl.copyTo;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
 @Named
 public class PayloadManager {
@@ -22,10 +22,10 @@ public class PayloadManager {
     private static final String WORKSPACE_DIR_NAME = "workspace";
     private static final String INPUT_ARCHIVE_NAME = "_input.zip";
 
-    private final ProcessStateManagerImpl stateManager;
+    private final ProcessStateManager stateManager;
 
     @Inject
-    public PayloadManager(ProcessStateManagerImpl stateManager) {
+    public PayloadManager(ProcessStateManager stateManager) {
         this.stateManager = stateManager;
     }
 
@@ -121,7 +121,7 @@ public class PayloadManager {
     public Payload createResumePayload(String instanceId, String eventName, Map<String, Object> req) throws IOException {
         Path tmpDir = Files.createTempDirectory("payload");
 
-        if (!stateManager.exportPath(instanceId, null, copyTo(tmpDir))) {
+        if (!stateManager.export(instanceId, copyTo(tmpDir))) {
             throw new ProcessException("Can't resume '" + instanceId + "', state snapshot not found");
         }
 

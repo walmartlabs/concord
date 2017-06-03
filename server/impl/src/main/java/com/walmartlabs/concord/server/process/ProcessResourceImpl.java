@@ -13,7 +13,7 @@ import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.takari.bpm.api.ExecutionException;
@@ -43,6 +43,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
+
 @Named
 public class ProcessResourceImpl implements ProcessResource, Resource {
 
@@ -54,7 +56,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final Chain projectPipeline;
     private final Chain resumePipeline;
     private final PayloadManager payloadManager;
-    private final ProcessStateManagerImpl stateManager;
+    private final ProcessStateManager stateManager;
     private final AgentManager agentManager;
     private final ConcordFormService formService;
 
@@ -65,7 +67,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
                                PayloadManager payloadManager,
-                               ProcessStateManagerImpl stateManager,
+                               ProcessStateManager stateManager,
                                AgentManager agentManager,
                                ConcordFormService concordFormService) {
 
@@ -283,7 +285,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
         }
 
-        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" + attachmentName;
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
         Optional<Path> o = stateManager.get(instanceId, resource, src -> {
             try {
                 Path tmp = Files.createTempFile("attachment", ".bin");

@@ -158,7 +158,6 @@ platforms:
                   -e 'LDAP_CFG=/opt/concord/data/conf/ldap.properties' \
                   -e 'LOG_STORE_DIR=/opt/concord/data/logs' \
                   -e 'FORM_SERVER_DIR=/opt/concord/data/formserv' \
-                  -e 'PAYLOAD_DIR=/opt/concord/data/payload' \
                   docker.prod.walmart.com/walmartlabs/concord-server:{{concordVersion}}
 
                   docker run -d -p 8080:8080 \

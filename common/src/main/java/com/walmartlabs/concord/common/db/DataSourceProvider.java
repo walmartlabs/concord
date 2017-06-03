@@ -50,6 +50,8 @@ public class DataSourceProvider implements Provider<DataSource> {
         ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(10);
 
+        ds.setLeakDetectionThreshold(10000);
+
         for (DatabaseChangeLogProvider p : changeLogs) {
             int retries = MIGRATION_MAX_RETRIES;
 

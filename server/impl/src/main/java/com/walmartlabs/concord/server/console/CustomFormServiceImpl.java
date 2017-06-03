@@ -12,7 +12,7 @@ import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.FormUtils;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
@@ -43,7 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl.copyTo;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
 @Named
 public class CustomFormServiceImpl implements CustomFormService, Resource {
@@ -53,7 +53,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
     private final FormServerConfiguration cfg;
     private final ConcordFormService formService;
-    private final ProcessStateManagerImpl stateManager;
+    private final ProcessStateManager stateManager;
     private final ProcessQueueDao queueDao;
     private final ObjectMapper objectMapper;
     private final FormValidatorLocale validatorLocale;
@@ -61,7 +61,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @Inject
     public CustomFormServiceImpl(FormServerConfiguration cfg,
                                  ConcordFormService formService,
-                                 ProcessStateManagerImpl stateManager,
+                                 ProcessStateManager stateManager,
                                  ProcessQueueDao queueDao) {
 
         this.cfg = cfg;
@@ -95,7 +95,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
             // TODO constants
             String resource = "forms/" + form.getFormDefinition().getName();
             // copy original branding files into the target directory
-            boolean branded = stateManager.exportPath(processInstanceId, resource, copyTo(dst));
+            boolean branded = stateManager.exportDirectory(processInstanceId, resource, copyTo(dst));
             if (!branded) {
                 // not branded, redirect to the default wizard
                 // TODO constants

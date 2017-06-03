@@ -10,7 +10,7 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,8 @@ import java.nio.file.Path;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import static com.walmartlabs.concord.server.process.state.ProcessStateManagerImpl.zipTo;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
@@ -34,11 +35,11 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     private static final int PAYLOAD_CHUNK_SIZE = 512 * 1024; // 512kb
 
     private final ProcessQueueDao queueDao;
-    private final ProcessStateManagerImpl stateManager;
+    private final ProcessStateManager stateManager;
     private final LogManager logManager;
 
     @Inject
-    public JobQueueImpl(ProcessQueueDao queueDao, ProcessStateManagerImpl stateManager, LogManager logManager) {
+    public JobQueueImpl(ProcessQueueDao queueDao, ProcessStateManager stateManager, LogManager logManager) {
         this.queueDao = queueDao;
         this.stateManager = stateManager;
         this.logManager = logManager;
@@ -58,7 +59,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
             // TODO this probably can be replaced with an in-memory buffer
             Path tmp = Files.createTempFile("payload", ".zip");
             try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmp))) {
-                stateManager.exportPath(instanceId, null, zipTo(zip));
+                stateManager.export(instanceId, zipTo(zip));
             }
 
             try (InputStream in = Files.newInputStream(tmp)) {
@@ -132,8 +133,8 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
                 IOUtils.unzip(zip, tmpDir);
             }
 
-            stateManager.tx(tx -> {
-                stateManager.delete(tx, instanceId, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" + Constants.Files.JOB_STATE_DIR_NAME);
+            stateManager.transaction(tx -> {
+                stateManager.delete(tx, instanceId, path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_STATE_DIR_NAME));
                 stateManager.importPath(tx, instanceId, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
             });
         } catch (IOException e) {
@@ -148,9 +149,9 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     }
 
     private boolean isSuspended(String instanceId) {
-        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
-                Constants.Files.JOB_STATE_DIR_NAME + "/" +
-                Constants.Files.SUSPEND_MARKER_FILE_NAME;
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.SUSPEND_MARKER_FILE_NAME);
 
         return stateManager.exists(instanceId, resource);
     }
