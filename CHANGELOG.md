@@ -5,7 +5,9 @@
 ### Added
 
 - docker-images: optional SSL support for the console's nginx;
-- concord-server: new `PREPARING` process state.
+- concord-server: new `PREPARING` process state;
+- concord-runner: upgrade the bpm engine to 0.30.0. EL 3.0 can now
+be used in flow expressions.
 
 ### Changed
 

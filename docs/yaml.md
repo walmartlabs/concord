@@ -57,11 +57,7 @@ An entry point must be followed by one or more execution steps.
 #### Expressions
 
 Expressions are used to invoke some 3rd-party code. All expressions
-must be valid
-[JUEL](https://en.wikipedia.org/wiki/Unified_Expression_Language)
-(JSR 245) expressions. Currently,
-[de.odysseus.juel/juel-impl](https://github.com/beckchr/juel/) is used
-as an implementation.
+must be valid [EL 3.0](https://github.com/javaee/el-spec).
 
 Short form:
 ```yaml
@@ -74,9 +70,10 @@ main:
   
   # literal values
   - ${1 + 2}
+  
+  # EL 3.0 extensions:
+  - ${[1, 2, 3].stream().map(x -> x + 1).toList()}
 ```
-
-Short form is simply a JUEL expression.
 
 Full form:
 ```yaml
@@ -87,7 +84,7 @@ main:
       - ${log.error("something bad happened")}
 ```
 
-Full form optionally contains additional declarations:
+Full form can optionally contain additional declarations:
 - `out` field - contains the name of a variable, in which a result of
 the expression will be stored;
 - `error` block - to handle any exceptions thrown by the evaluation.
