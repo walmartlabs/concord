@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
@@ -89,7 +90,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        archivePipeline.process(payload);
+        try {
+            archivePipeline.process(payload);
+        } catch (Exception e) {
+            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+        }
 
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
@@ -114,7 +119,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        projectPipeline.process(payload);
+        try {
+            projectPipeline.process(payload);
+        } catch (Exception e) {
+            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+        }
 
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
@@ -139,7 +148,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        projectPipeline.process(payload);
+        try {
+            projectPipeline.process(payload);
+        } catch (Exception e) {
+            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+        }
 
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
@@ -162,7 +175,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        archivePipeline.process(payload);
+        try {
+            archivePipeline.process(payload);
+        } catch (Exception e) {
+            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+        }
 
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
@@ -356,6 +373,13 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 throw err("Submit form error", Status.INTERNAL_SERVER_ERROR, entry);
             }
         }
+    }
+
+    private static WebApplicationException err(String message, Status status, String instanceId) {
+        throw new WebApplicationException(message, Response.status(status)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_TYPE)
+                .entity(ImmutableMap.of("instanceId", instanceId))
+                .build());
     }
 
     private static WebApplicationException err(String message, Status status, ProcessEntry entry) {

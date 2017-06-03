@@ -15,26 +15,36 @@ import javax.inject.Named;
  * Runs a process using an archive, provided by an user.
  */
 @Named
-public class ArchivePipeline extends Chain {
+public class ArchivePipeline extends Pipeline {
+
+    private final ExceptionProcessor exceptionProcessor;
 
     @Inject
     public ArchivePipeline(Injector injector) {
-        super(injector.getInstance(LogFileProcessor.class),
-                injector.getInstance(WorkspaceArchiveProcessor.class),
-                injector.getInstance(WorkspaceRequestDataParsingProcessor.class),
-                injector.getInstance(RequestDataParsingProcessor.class),
-                injector.getInstance(ActiveProfilesProcessor.class),
-                injector.getInstance(ProjectDefinitionProcessor.class),
-                injector.getInstance(ProjectConfigurationProcessor.class),
-                injector.getInstance(RequestDefaultsParsingProcessor.class),
-                injector.getInstance(InventoryProcessor.class),
-                injector.getInstance(PrivateKeyProcessor.class),
-                injector.getInstance(TemplateProcessor.class),
-                injector.getInstance(DependenciesProcessor.class),
-                injector.getInstance(UserInfoProcessor.class),
-                injector.getInstance(RequestDataStoringProcessor.class),
-                injector.getInstance(ValidatingProcessor.class),
-                injector.getInstance(EnqueueingProcessor.class)
-        );
+        super(injector,
+                    LogFileProcessor.class,
+                    PreparingProcessor.class,
+                    WorkspaceArchiveProcessor.class,
+                    WorkspaceRequestDataParsingProcessor.class,
+                    RequestDataParsingProcessor.class,
+                    ActiveProfilesProcessor.class,
+                    ProjectDefinitionProcessor.class,
+                    ProjectConfigurationProcessor.class,
+                    RequestDefaultsParsingProcessor.class,
+                    InventoryProcessor.class,
+                    PrivateKeyProcessor.class,
+                    TemplateProcessor.class,
+                    DependenciesProcessor.class,
+                    UserInfoProcessor.class,
+                    RequestDataStoringProcessor.class,
+                    ValidatingProcessor.class,
+                    EnqueueingProcessor.class);
+
+        this.exceptionProcessor = injector.getInstance(FailProcessor.class);
+    }
+
+    @Override
+    protected ExceptionProcessor getExceptionProcessor() {
+        return exceptionProcessor;
     }
 }
