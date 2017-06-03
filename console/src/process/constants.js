@@ -24,6 +24,7 @@ export const status = {
 };
 
 export const statusIcons = {
+    "PREPARING": "hourglass empty",
     "STARTING": "hourglass start",
     "RUNNING": "hourglass half",
     "SUSPENDED": "wait",

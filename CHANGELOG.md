@@ -4,7 +4,8 @@
 
 ### Added
 
-- docker-images: optional SSL support for the console's nginx.
+- docker-images: optional SSL support for the console's nginx;
+- concord-server: new `PREPARING` process state.
 
 ### Changed
 
