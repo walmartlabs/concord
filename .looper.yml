@@ -20,6 +20,9 @@ flows:
       - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
 
   build:
+    - (name build) mvn -U -B -s $MVN_SETTINGS clean install -Plooper
+
+  build_and_deploy:
     - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -Plooper
 
 # won't work in the current version of looper
@@ -30,7 +33,7 @@ flows:
 #     - (name docker-images) echo "And this is where I'd put my docker:push... if I had credentials!"
 
   default (on linux):
-    - call: build
+    - call: build_and_deploy
     - call: runsonar
 
   pr (on linux):
