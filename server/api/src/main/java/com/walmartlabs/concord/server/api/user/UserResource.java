@@ -33,7 +33,7 @@ public interface UserResource {
      * @return
      */
     @GET
-    @ApiOperation("Find an user")
+    @ApiOperation("Find a user")
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     UserEntry findByUsername(@PathParam("username") @ConcordUsername @NotNull String username);

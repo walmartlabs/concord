@@ -31,7 +31,7 @@ The server provides several REST API endpoints for managing it's data,
 they are described in a [separate document](./api).
 
 The main purpose of the server is to receive a workflow process
-definition and its dependencies from an user and execute it remotely
+definition and its dependencies from a user and execute it remotely
 using the agent.
 
 Workflow process definitions, its dependencies and supporting files

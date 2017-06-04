@@ -50,7 +50,7 @@ See also [the YAML format for describing flows and forms](./yaml.md).
 ## Request data
 
 A payload's `_main.json` file is either supplied by users or created by the
-server from an user's request data.
+server from a user's request data.
 
 The request's JSON format:
 ```json

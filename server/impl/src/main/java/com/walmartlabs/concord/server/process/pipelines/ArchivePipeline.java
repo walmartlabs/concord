@@ -12,7 +12,7 @@ import javax.inject.Named;
 /**
  * Processing self-contained archives.
  * <p>
- * Runs a process using an archive, provided by an user.
+ * Runs a process using an archive, provided by a user.
  */
 @Named
 public class ArchivePipeline extends Pipeline {
