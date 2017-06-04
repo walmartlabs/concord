@@ -53,7 +53,7 @@ public class YamlParserTest {
         engine = new EngineBuilder()
                 .withDefinitionProvider(workflowProvider.processes())
                 .withTaskRegistry(taskRegistry)
-                .withUserTaskHandler(new FormTaskHandler(workflowProvider.forms(), formService))
+                .withUserTaskHandler(new FormTaskHandler(workflowProvider.forms(), formService, expressionManager))
                 .withResourceResolver(resourceResolver)
                 .build();
     }
