@@ -1,6 +1,7 @@
 // @flow
 import {fork} from "redux-saga/effects";
 import {sagas as session} from "./session";
+import {sagas as about} from "./system/about";
 import {sagas as loginForm} from "./login";
 import {sagas as process} from "./process";
 import {sagas as processQueue} from "./process/queue";
@@ -16,6 +17,7 @@ import {sagas as secret} from "./user/secret";
 export default function*(): Generator<*, *, *> {
     yield [
         fork(session),
+        fork(about),
         fork(loginForm),
         fork(process),
         fork(processQueue),

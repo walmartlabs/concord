@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: the version information page;
+- concord-server: `/api/v1/server/version` API endpoint;
 - docker-images: optional SSL support for the console's nginx;
 - concord-server: new `PREPARING` process state;
 - concord-runner: upgrade the bpm engine to 0.30.0. EL 3.0 can now

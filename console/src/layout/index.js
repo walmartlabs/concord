@@ -62,6 +62,14 @@ const layout = ({fullScreen, user: {displayName, loggedIn}, title, children, doL
                         </Menu.Item>
                     </Menu.Menu>
                 </Menu.Item>
+                <Menu.Item active={router.isActive("/system")}>
+                    <Menu.Header><Icon name="lab"/>System</Menu.Header>
+                    <Menu.Menu>
+                        <Menu.Item active={router.isActive("/system/about")}>
+                            <Link to="/system/about">About</Link>
+                        </Menu.Item>
+                    </Menu.Menu>
+                </Menu.Item>
             </Menu>
         </Grid.Column>
         <Grid.Column id="mainContent" width={14} className="mainContent">

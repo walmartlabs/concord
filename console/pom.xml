@@ -51,6 +51,9 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
+                            <environmentVariables>
+                                <REACT_APP_CONCORD_VERSION>${project.version}</REACT_APP_CONCORD_VERSION>
+                            </environmentVariables>
                             <skip>${skipNpmBuild}</skip>
                             <arguments>run build</arguments>
                         </configuration>

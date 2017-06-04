@@ -8,6 +8,7 @@ import configureStore from "./store";
 import reducers from "./reducers";
 import Layout from "./layout";
 import LoginForm from "./login";
+import AboutPage from "./system/about";
 import ProcessStatus from "./process";
 import ProcessLogViewer from "./process/log";
 import ProcessQueue from "./process/queue";
@@ -58,6 +59,11 @@ ReactDOM.render(
                 <Route path="user" onEnter={checkAuth}>
                     <IndexRedirect to="secret"/>
                     <Route path="secret" component={UserSecrets}/>
+                </Route>
+
+                <Route path="system" onEnter={checkAuth}>
+                    <IndexRedirect to="about"/>
+                    <Route path="about" component={AboutPage}/>
                 </Route>
 
                 {/* for backwards compatibility */}

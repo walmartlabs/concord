@@ -12,4 +12,9 @@ public interface ServerResource {
     @Path("/ping")
     @Produces(MediaType.APPLICATION_JSON)
     PingResponse ping();
+
+    @GET
+    @Path("version")
+    @Produces(MediaType.APPLICATION_JSON)
+    VersionResponse version();
 }
