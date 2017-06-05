@@ -202,7 +202,7 @@ ProcessForm.propTypes = {
 const mapStateToProps = ({processForm}, {params, location: {query}}) => ({
     instanceId: params.instanceId,
     formInstanceId: params.formInstanceId,
-    wizard: query.wizard,
+    wizard: query.wizard === "true",
     data: selectors.getData(processForm),
     loading: selectors.getIsLoading(processForm),
     submitting: selectors.getIsSubmitting(processForm),

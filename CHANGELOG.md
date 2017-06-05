@@ -14,6 +14,8 @@
 
 ### Changed
 
+- concord-console: handle `ENQUEUED` status in the default form
+wizard;
 - concord-server: create the log file of a process as early as
 possible to log startup errors.
 
