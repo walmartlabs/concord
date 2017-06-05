@@ -15,6 +15,7 @@ public class ResumePipeline extends Pipeline {
                 LogFileProcessor.class,
                 ResumeStateStoringProcessor.class,
                 RequestDataStoringProcessor.class,
+                StateImportingProcessor.class,
                 EnqueueingResumeProcessor.class);
     }
 }

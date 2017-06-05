@@ -16,6 +16,7 @@ public class Payload {
     public static final HeaderKey<String[]> ENTRY_POINT = HeaderKey.register("_entryPoint", String[].class);
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
+    public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);
     public static final HeaderKey<Map> REQUEST_DATA_MAP = HeaderKey.register("_meta", Map.class);
     public static final HeaderKey<String> RESUME_EVENT_NAME = HeaderKey.register("_resumeEventName", String.class);
     public static final HeaderKey<String[]> ACTIVE_PROFILES = HeaderKey.register("_activeProfiles", String[].class);
@@ -118,6 +119,10 @@ public class Payload {
         Map<String, Path> m = new HashMap<>(attachments);
         m.remove(key.name());
         return new Payload(this, this.headers, m);
+    }
+
+    public Payload clearAttachments() {
+        return new Payload(this, this.headers, Collections.emptyMap());
     }
 
     @Override
