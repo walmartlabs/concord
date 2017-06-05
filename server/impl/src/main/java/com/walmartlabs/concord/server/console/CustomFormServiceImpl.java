@@ -35,6 +35,7 @@ import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -118,7 +119,10 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @Override
     @Validate
     @RequiresAuthentication
-    public Response continueSession(UriInfo uriInfo, String processInstanceId, String formInstanceId, MultivaluedMap<String, String> data) {
+    public Response continueSession(UriInfo uriInfo, HttpHeaders headers,
+                                    String processInstanceId, String formInstanceId,
+                                    MultivaluedMap<String, String> data) {
+
         // TODO locking
         Form form = assertForm(processInstanceId, formInstanceId);
 
@@ -183,7 +187,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
             throw new WebApplicationException("Error while submitting a form", e);
         }
 
-        return redirectToForm(uriInfo, processInstanceId, formInstanceId);
+        return redirectToForm(uriInfo, headers, processInstanceId, formInstanceId);
     }
 
     private Form assertForm(String processInstanceId, String formInstanceId) {
@@ -238,9 +242,25 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return new FormData(submitUrl, _definitions, _values, _errors);
     }
 
-    private static Response redirectToForm(UriInfo uriInfo, String processInstanceId, String formInstanceId) {
+    private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,
+                                           String processInstanceId, String formInstanceId) {
+
+        String scheme = uriInfo.getBaseUri().getScheme();
+
+        // check if we need to force https
+        String origin = headers.getHeaderString("Origin");
+        if (origin != null) {
+            URI originUri = URI.create(origin);
+            String originScheme = originUri.getScheme();
+            if (originScheme.equalsIgnoreCase("https")) {
+                scheme = originScheme;
+            }
+        }
+
         UriBuilder b = UriBuilder.fromUri(uriInfo.getBaseUri())
+                .scheme(scheme)
                 .path(formPath(processInstanceId, formInstanceId));
+
         return redirectTo(b.build().toString());
     }
 

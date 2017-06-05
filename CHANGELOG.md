@@ -16,6 +16,8 @@
 
 - concord-console: handle `ENQUEUED` status in the default form
 wizard;
+- concord-server: fixed the issue with custom form redirects when
+using HTTPS proxy;
 - concord-server: store process state in the DB;
 - concord-server: create the log file of a process as early as
 possible to log startup errors.

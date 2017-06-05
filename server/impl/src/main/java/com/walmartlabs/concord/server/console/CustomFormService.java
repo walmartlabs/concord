@@ -23,6 +23,7 @@ public interface CustomFormService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     Response continueSession(@Context UriInfo uriInfo,
+                             @Context HttpHeaders headers,
                              @PathParam("processInstanceId") @ConcordId String processInstanceId,
                              @PathParam("formInstanceId") @ConcordId String formInstanceId,
                              MultivaluedMap<String, String> data);
