@@ -43,10 +43,10 @@ public class SmtpTask implements Task, JavaDelegate {
 
         send((String) smtpParams.get("host"), (int) smtpParams.get("port"),
                 (String) mailParams.get("from"), (String) mailParams.get("to"),
-                (String) mailParams.get("subject"), (String) mailParams.get("message"));
+                (String) mailParams.get("subject"), (String) mailParams.get("message"), (String) mailParams.get("bcc"));
     }
 
-    public void send(String hostName, int port, String from, String to, String subject, String message) {
+    public void send(String hostName, int port, String from, String to, String subject, String message, String bcc) {
         try {
             Email email = new SimpleEmail();
             email.setHostName(hostName);
@@ -55,6 +55,9 @@ public class SmtpTask implements Task, JavaDelegate {
             email.addTo(to);
             email.setSubject(subject);
             email.setMsg(message);
+            if( bcc != null ){
+            	email.addBcc(bcc);
+            }
             String msgId = email.send();
             log.info("send ['{}', {}, '{}', '{}', '{}', '{}'] -> done, msgId: {}", hostName, port, from, to, subject, message, msgId);
         } catch (Exception e) {
