@@ -122,11 +122,14 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         s = s.substring(BASIC_AUTH_PREFIX.length());
         s = new String(Base64.getDecoder().decode(s));
 
-        String[] as = s.split(":");
-        if (as.length != 2) {
+        int idx = s.indexOf(":");
+        if (idx < 0 || idx + 1 >= s.length()) {
             throw new IllegalArgumentException("Invalid basic auth header");
         }
 
-        return new UsernamePasswordToken(as[0], as[1]);
+        String username = s.substring(0, idx);
+        String password = s.substring(idx + 1, s.length());
+
+        return new UsernamePasswordToken(username, password);
     }
 }

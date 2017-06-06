@@ -14,7 +14,7 @@
 
 ### Changed
 
-- concord-runner: fixed an issue
+- concord-server: fixed basic auth using passwords with `:` symbol;
 - concord-console: handle `ENQUEUED` status in the default form
 wizard;
 - concord-server: fixed the issue with custom form redirects when
