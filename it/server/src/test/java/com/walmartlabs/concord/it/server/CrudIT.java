@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.it.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
@@ -228,7 +229,7 @@ public class CrudIT extends AbstractServerIT {
 
         LdapResource ldapResource = proxy(LdapResource.class);
         CreateLdapMappingResponse clmr = ldapResource.createOrUpdate(new CreateLdapMappingRequest(ldapDn, roleA, roleB));
-        assertTrue(clmr.isCreated());
+        assertEquals(PerformedActionType.CREATED, clmr.getActionType());
 
         List<LdapMappingEntry> l = ldapResource.listMappings();
         assertFalse(l.isEmpty());

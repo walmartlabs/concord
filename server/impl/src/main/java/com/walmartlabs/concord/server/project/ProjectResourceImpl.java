@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
@@ -79,7 +80,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             UpdateProjectRequest req = new UpdateProjectRequest(request.getDescription(), request.getTemplates(),
                     request.getRepositories(), request.getCfg());
             update(projectName, req);
-            return new CreateProjectResponse(false);
+            return new CreateProjectResponse(PerformedActionType.UPDATED);
         }
 
         assertPermissions(projectName, Permissions.PROJECT_CREATE_NEW,
@@ -104,7 +105,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 configurationDao.insert(tx, projectName, cfg);
             }
         });
-        return new CreateProjectResponse(true);
+        return new CreateProjectResponse(PerformedActionType.CREATED);
     }
 
     @Override

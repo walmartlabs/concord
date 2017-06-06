@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.api.user;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.api.PerformedActionType;
 
 import java.io.Serializable;
 
@@ -9,25 +10,26 @@ public class CreateUserResponse implements Serializable {
 
     private final boolean ok = true;
     private final String id;
-    private final boolean created;
+    private final PerformedActionType actionType;
 
     @JsonCreator
     public CreateUserResponse(@JsonProperty("id") String id,
-                              @JsonProperty("created") boolean created) {
+                              @JsonProperty("actionType") PerformedActionType actionType) {
+
         this.id = id;
-        this.created = created;
+        this.actionType = actionType;
     }
 
     public String getId() {
         return id;
     }
 
-    public boolean isCreated() {
-        return created;
-    }
-
     public boolean isOk() {
         return ok;
+    }
+
+    public PerformedActionType getActionType() {
+        return actionType;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class CreateUserResponse implements Serializable {
         return "CreateUserResponse{" +
                 "ok=" + ok +
                 ", id='" + id + '\'' +
-                ", created=" + created +
+                ", actionType=" + actionType +
                 '}';
     }
 }

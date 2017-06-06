@@ -2,32 +2,33 @@ package com.walmartlabs.concord.server.api.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.api.PerformedActionType;
 
 import java.io.Serializable;
 
 public class CreateProjectResponse implements Serializable {
 
     private final boolean ok = true;
-    private final boolean created;
+    private final PerformedActionType actionType;
 
     @JsonCreator
-    public CreateProjectResponse(@JsonProperty("created") boolean created) {
-        this.created = created;
+    public CreateProjectResponse(@JsonProperty("actionType") PerformedActionType actionType) {
+        this.actionType = actionType;
     }
 
     public boolean isOk() {
         return ok;
     }
 
-    public boolean isCreated() {
-        return created;
+    public PerformedActionType getActionType() {
+        return actionType;
     }
 
     @Override
     public String toString() {
         return "CreateProjectResponse{" +
                 "ok=" + ok +
-                ", created=" + created +
+                ", actionType=" + actionType +
                 '}';
     }
 }

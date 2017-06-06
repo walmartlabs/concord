@@ -14,6 +14,8 @@
 
 ### Changed
 
+- concord-server: `created` flags in the REST API responses are
+replaced with `actionType: CREATED|UPDATED`. Should be more obvious.
 - concord-server: fixed basic auth using passwords with `:` symbol;
 - concord-console: handle `ENQUEUED` status in the default form
 wizard;

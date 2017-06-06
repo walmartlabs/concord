@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.api.PerformedActionType;
 
 import java.io.Serializable;
 
@@ -11,26 +12,26 @@ import java.io.Serializable;
 public class CreateRoleResponse implements Serializable {
 
     private final boolean ok = true;
-    private final boolean created;
+    private final PerformedActionType actionType;
 
     @JsonCreator
-    public CreateRoleResponse(@JsonProperty("created") boolean created) {
-        this.created = created;
+    public CreateRoleResponse(@JsonProperty("actionType") PerformedActionType actionType) {
+        this.actionType = actionType;
     }
 
     public boolean isOk() {
         return ok;
     }
 
-    public boolean isCreated() {
-        return created;
+    public PerformedActionType getActionType() {
+        return actionType;
     }
 
     @Override
     public String toString() {
         return "CreateRoleResponse{" +
                 "ok=" + ok +
-                ", created=" + created +
+                ", actionType=" + actionType +
                 '}';
     }
 }

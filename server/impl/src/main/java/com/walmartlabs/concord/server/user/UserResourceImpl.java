@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.user;
 
+import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.user.*;
 import org.apache.shiro.SecurityUtils;
@@ -29,7 +30,7 @@ public class UserResourceImpl implements UserResource, Resource {
     @Override
     @Validate
     public CreateUserResponse createOrUpdate(CreateUserRequest request) {
-        boolean created = false;
+
         String username = request.getUsername();
 
         String id = userDao.getId(username);
@@ -37,14 +38,13 @@ public class UserResourceImpl implements UserResource, Resource {
             assertPermissions(Permissions.USER_CREATE_NEW, "The current user does not have permissions to create a new user");
             id = UUID.randomUUID().toString();
             userDao.insert(id, username, request.getPermissions());
-            created = true;
+            return new CreateUserResponse(id, PerformedActionType.CREATED);
         } else {
             // TODO check per-entry permissions?
             assertPermissions(Permissions.USER_UPDATE_ANY, "The current user does not have permissions to update an existing user");
             userDao.update(id, request.getPermissions());
+            return new CreateUserResponse(id, PerformedActionType.UPDATED);
         }
-
-        return new CreateUserResponse(id, created);
     }
 
     @Override

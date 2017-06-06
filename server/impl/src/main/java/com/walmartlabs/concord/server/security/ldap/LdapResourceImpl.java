@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.security.ldap;
 
+import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.ldap.*;
 import com.walmartlabs.concord.server.user.RoleDao;
@@ -45,14 +46,14 @@ public class LdapResourceImpl implements LdapResource, Resource {
                     "The current user does not have permissions to update the specified LDAP group mapping");
 
             ldapDao.update(id, ldapDn, request.getRoles());
-            return new CreateLdapMappingResponse(id, false);
+            return new CreateLdapMappingResponse(id, PerformedActionType.UPDATED);
         } else {
             assertPermissions(Permissions.LDAP_MAPPING_CREATE_NEW,
                     "The current user does not have permissions to create a new LDAP group mapping");
 
             id = UUID.randomUUID().toString();
             ldapDao.insert(id, ldapDn, request.getRoles());
-            return new CreateLdapMappingResponse(id, true);
+            return new CreateLdapMappingResponse(id, PerformedActionType.CREATED);
         }
     }
 

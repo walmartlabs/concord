@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.api.security.ldap;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordId;
+import com.walmartlabs.concord.server.api.PerformedActionType;
 
 import java.io.Serializable;
 
@@ -12,14 +13,13 @@ public class CreateLdapMappingResponse implements Serializable {
 
     @ConcordId
     private final String id;
-
-    private final boolean created;
+    private final PerformedActionType actionType;
 
     @JsonCreator
     public CreateLdapMappingResponse(@JsonProperty("id") String id,
-                                     @JsonProperty("created") boolean created) {
+                                     @JsonProperty("actionType") PerformedActionType actionType) {
         this.id = id;
-        this.created = created;
+        this.actionType = actionType;
     }
 
     public String getId() {
@@ -30,8 +30,8 @@ public class CreateLdapMappingResponse implements Serializable {
         return ok;
     }
 
-    public boolean isCreated() {
-        return created;
+    public PerformedActionType getActionType() {
+        return actionType;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class CreateLdapMappingResponse implements Serializable {
         return "CreateLdapMappingResponse{" +
                 "ok=" + ok +
                 ", id='" + id + '\'' +
-                ", created=" + created +
+                ", actionType=" + actionType +
                 '}';
     }
 }

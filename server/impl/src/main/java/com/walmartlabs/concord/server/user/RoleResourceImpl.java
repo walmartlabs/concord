@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.user;
 
+import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.user.CreateRoleResponse;
 import com.walmartlabs.concord.server.api.user.DeleteRoleResponse;
@@ -37,13 +38,13 @@ public class RoleResourceImpl implements RoleResource, Resource {
                     "The current user does not have permissions to update the specified role");
 
             roleDao.update(roleName, entry.getDescription(), entry.getPermissions());
-            return new CreateRoleResponse(false);
+            return new CreateRoleResponse(PerformedActionType.UPDATED);
         } else {
             assertPermissions(Permissions.ROLE_CREATE_NEW,
                     "The current user does not have permissions to create a new role");
 
             roleDao.insert(roleName, entry.getDescription(), entry.getPermissions());
-            return new CreateRoleResponse(true);
+            return new CreateRoleResponse(PerformedActionType.CREATED);
         }
     }
 
