@@ -1,0 +1,13 @@
+main:
+  - ${testBean.toString("a")}
+  - if: ${aInt == 1}
+    then:
+      - ${testBean.toString("success=1")}
+    else:
+      - if: ${aInt == 2}
+        then:
+          - ${testBean.toString("success=2")}
+        else:
+          - ${testBean.toString("success")}
+
+  - ${testBean.toString("success=end")}

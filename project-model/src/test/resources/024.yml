@@ -1,0 +1,6 @@
+main:
+  - ::
+    - ${testBean.toString("a")}
+    - return: error
+    error:
+      - ${testBean.toString("e")}

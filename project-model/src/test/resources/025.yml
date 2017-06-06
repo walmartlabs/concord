@@ -1,0 +1,10 @@
+main:
+  - ::
+    - ${testBean.toString("a")}
+    - if: ${aInt > 0}
+      then:
+        - return
+      else:
+        - ${testBean.toString("else")}
+    error:
+      - ${testBean.toString("e")}
