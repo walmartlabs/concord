@@ -75,6 +75,7 @@ public final class YamlProcessConverter {
             proc = sourceMap(proc.exclusiveGate(), s, "IF expression");
 
             YamlIfExpr ifExpr = (YamlIfExpr) s;
+
             String joinName = joinName(s);
 
             Fork<? extends ProcessDefinitionBuilder.Seq> thenFork = proc.fork().flowExpr(ifExpr.getExpr());
@@ -87,15 +88,17 @@ public final class YamlProcessConverter {
                 proc = elseFork.joinTo(joinName);
             }
 
-            return proc.joinPoint(joinName);
+            return proc.joinAll(joinName);
         } else if (s instanceof YamlReturn) {
-            proc.end();
+            YamlReturn e = (YamlReturn)s;
+
+            if (e.getErrorCode() != null) {
+                proc.endEvent(e.getErrorCode());
+            } else {
+                proc.endEvent();
+            }
+
             sourceMap(proc, s, "RETURN statement");
-            return proc;
-        } else if (s instanceof YamlReturnError) {
-            YamlReturnError e = (YamlReturnError) s;
-            proc.end(e.getErrorCode());
-            sourceMap(proc, s, "RETURN error statement");
             return proc;
         } else if (s instanceof YamlGroup) {
             YamlGroup g = (YamlGroup) s;

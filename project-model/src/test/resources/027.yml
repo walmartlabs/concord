@@ -1,0 +1,8 @@
+main:
+  - ::
+    - ${testBean.toString("a")}
+    - if: ${aInt == 1}
+      then:
+        - return
+    error:
+      - ${testBean.toString("e")}

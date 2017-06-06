@@ -2,8 +2,8 @@ main:
   - if: ${aInt > 0}
     then:
       - ${testBean.toString("a")}
+      - return: error-code
     else:
       - ${testBean.toString("b")}
-      - return: error-code-2
 
   - ${testBean.toString("c")}

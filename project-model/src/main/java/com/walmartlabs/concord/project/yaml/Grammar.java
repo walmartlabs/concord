@@ -209,7 +209,7 @@ public class Grammar {
     // event := FIELD_NAME "return" VALUE_STRING
     private static final Parser<Atom, YamlStep> errorReturn = label("Error end event",
             satisfyField("return").then(satisfyToken(JsonToken.VALUE_STRING))
-                    .map(a -> new YamlReturnError(a.location, (String) a.value)));
+                    .map(a -> new YamlReturn(a.location, (String) a.value)));
 
     // group := FIELD_NAME ":" steps groupOptions
     private static final Parser<Atom, YamlStep> group = label("Group of steps",

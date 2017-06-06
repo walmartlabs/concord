@@ -1,0 +1,14 @@
+main:
+- if: ${1 > 0}
+  then:
+     - expr: ${log.info("test", "Hello, " += name)}
+     - if: ${2 > 4}
+       then:
+         - expr: ${log.info("test", "Hello, " += name)}
+       else:
+         - expr: ${log.info("test -- 3", "Hello, " += name)}
+         - expr: ${log.info("test -- 4", "Hello, " += name)}
+
+  else:
+     - expr: ${log.info("test -- 1", "Hello, " += name)}
+     - expr: ${log.info("test -- 2", "Hello, " += name)}

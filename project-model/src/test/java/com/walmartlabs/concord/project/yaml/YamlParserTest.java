@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.project.yaml;
 
+import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import io.takari.bpm.EngineBuilder;
@@ -53,7 +54,7 @@ public class YamlParserTest {
         engine = new EngineBuilder()
                 .withDefinitionProvider(workflowProvider.processes())
                 .withTaskRegistry(taskRegistry)
-                .withUserTaskHandler(new FormTaskHandler(workflowProvider.forms(), formService))
+                .withUserTaskHandler(new FormTaskHandler(workflowProvider.forms(), formService, expressionManager))
                 .withResourceResolver(resourceResolver)
                 .build();
     }
@@ -80,6 +81,11 @@ public class YamlParserTest {
     public void test001() throws Exception {
         deploy("001.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> end
+        assertEquals(5, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -97,6 +103,11 @@ public class YamlParserTest {
     public void test002() throws Exception {
         deploy("002.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> task -> end
+        assertEquals(7, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -113,6 +124,11 @@ public class YamlParserTest {
     @Test
     public void test003() throws Exception {
         deploy("003.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> task -> end
+        assertEquals(7, pd.getChildren().size());
 
         String testValue = "test#" + System.currentTimeMillis();
 
@@ -135,6 +151,11 @@ public class YamlParserTest {
     public void test004() throws Exception {
         deploy("004.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> end
+        assertEquals(5, pd.getChildren().size());
+
         TestTask testTask = spy(new TestTask());
         taskRegistry.register("testTask", testTask);
 
@@ -151,6 +172,11 @@ public class YamlParserTest {
     @Test
     public void test005() throws Exception {
         deploy("005.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> task -> task -> task -> end
+        assertEquals(11, pd.getChildren().size());
 
         String testValue = "test#" + System.currentTimeMillis();
 
@@ -174,6 +200,11 @@ public class YamlParserTest {
     @Test
     public void test006() throws Exception {
         deploy("006.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> task -> end
+        assertEquals(7, pd.getChildren().size());
 
         String testValue = "test#" + System.currentTimeMillis();
 
@@ -199,6 +230,12 @@ public class YamlParserTest {
     public void test007() throws Exception {
         deploy("007.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //            /-> task -\   /-> task -\
+        // start -> gw -> task -> gw -> task -> end
+        assertEquals(17, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -219,6 +256,12 @@ public class YamlParserTest {
     public void test008() throws Exception {
         deploy("008.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //            /-> task -> end
+        // start -> gw -> task -> task -> end
+        assertEquals(13, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -237,6 +280,14 @@ public class YamlParserTest {
     @Test
     public void test009() throws Exception {
         deploy("009.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> subprocess -> task -> end
+        assertEquals(9, pd.getChildren().size());
+        // subprocess:
+        // start -> task -> task -> end
+        assertEquals(7, findSubprocess(pd).getChildren().size());
 
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
@@ -259,6 +310,12 @@ public class YamlParserTest {
     public void test010() throws Exception {
         deploy("010.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //                    /----------------------------->\
+        // start -> task -> task + boundary-event -> task -> task -> end
+        assertEquals(13, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -279,6 +336,12 @@ public class YamlParserTest {
     @Test
     public void test011() throws Exception {
         deploy("011.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //            /----------------------------->\
+        // start -> task + boundary-event -> task -> task -> end
+        assertEquals(11, pd.getChildren().size());
 
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
@@ -305,6 +368,15 @@ public class YamlParserTest {
     public void test012() throws Exception {
         deploy("012.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //                /------------------------------->\
+        // start -> subprocess + boundary-event -> task -> task -> end
+        assertEquals(11, pd.getChildren().size());
+        // subprocess:
+        // start -> task -> task -> end
+        assertEquals(7, findSubprocess(pd).getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -325,6 +397,11 @@ public class YamlParserTest {
     public void test013() throws Exception {
         deploy("013.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> callactiviti -> end
+        assertEquals(7, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -343,6 +420,12 @@ public class YamlParserTest {
     @Test
     public void test014() throws Exception {
         deploy("014.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //           /------------------->\
+        // start -> gw -> callactiviti -> end
+        assertEquals(8, pd.getChildren().size());
 
         int loops = 100;
 
@@ -367,6 +450,11 @@ public class YamlParserTest {
     public void test015() throws Exception {
         deploy("015.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> end
+        assertEquals(5, pd.getChildren().size());
+
         String testValue = "test#" + System.currentTimeMillis();
 
         TestTask testTask = spy(new TestTask());
@@ -387,6 +475,11 @@ public class YamlParserTest {
     @Test
     public void test016() throws Exception {
         deploy("016.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> task -> task -> end
+        assertEquals(9, pd.getChildren().size());
 
         int inputNumber = ThreadLocalRandom.current().nextInt();
         boolean inputBoolean = ThreadLocalRandom.current().nextBoolean();
@@ -442,6 +535,11 @@ public class YamlParserTest {
     public void test017() throws Exception {
         deploy("017.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> catchevent -> task -> end
+        assertEquals(9, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -466,6 +564,11 @@ public class YamlParserTest {
     public void test018() throws Exception {
         deploy("018.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> task -> end
+        assertEquals(7, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -482,6 +585,11 @@ public class YamlParserTest {
     public void test019() throws Exception {
         deploy("019.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> task -> end
+        assertEquals(7, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -497,6 +605,11 @@ public class YamlParserTest {
     public void test020() throws Exception {
         deploy("020.yml");
 
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> task -> task -> end
+        assertEquals(7, pd.getChildren().size());
+
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -511,6 +624,94 @@ public class YamlParserTest {
     @Test
     public void test021() throws Exception {
         deploy("021.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //           /--> task ---------> end
+        // start -> gw -> task -> task -> end
+        assertEquals(13, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 100);
+
+        engine.start(key, "main", args);
+
+        // ---
+        verify(testBean, times(1)).toString(eq("a"));
+        verify(testBean, times(1)).toString(eq("c"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test021_2() throws Exception {
+        deploy("021_2.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //           /--> task ---------> end
+        // start -> gw -> task -> task -> end
+        assertEquals(13, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", -100);
+        try {
+            engine.start(key, "main", args);
+            fail("exception expected");
+        } catch (ExecutionException e) {
+            assertTrue(e.getMessage().contains("error-code-2"));
+        }
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("b"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test022() throws Exception {
+        deploy("022.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //           /--> task ---------> end
+        // start -> gw -> task -> task -> end
+        assertEquals(13, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", -100);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("b"));
+        verify(testBean, times(1)).toString(eq("c"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test022_2() throws Exception {
+        deploy("022_2.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //           /--> task ---------> end
+        // start -> gw -> task -> task -> end
+        assertEquals(13, pd.getChildren().size());
 
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
@@ -529,6 +730,370 @@ public class YamlParserTest {
         // ---
 
         verify(testBean, times(1)).toString(eq("a"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test023() throws Exception {
+        deploy("023.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //           /--> task ---------> end
+        // start -> gw -> task -> task -> end
+        assertEquals(13, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 100);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test023_2() throws Exception {
+        deploy("023.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //           /--> task ---------> end
+        // start -> gw -> task -> task -> end
+        assertEquals(13, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", -100);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("b"));
+        verify(testBean, times(1)).toString(eq("c"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test024() throws Exception {
+        deploy("024.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //               /-------------------------------->\
+        // start -> subprocess + boundary-event -> task -> end
+        assertEquals(9, pd.getChildren().size());
+        // subprocess
+        // start -> task -> end
+        assertEquals(5, findSubprocess(pd).getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", ImmutableMap.of());
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verify(testBean, times(1)).toString(eq("e"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test025() throws Exception {
+        deploy("025.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //               /-------------------------------->\
+        // start -> subprocess + boundary-event -> task -> end
+        assertEquals(9, pd.getChildren().size());
+        // subprocess
+        //                   /----------> end
+        // start -> task -> gw -> task -> end
+        assertEquals(11, findSubprocess(pd).getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 1);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test025_2() throws Exception {
+        deploy("025.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //               /-------------------------------->\
+        // start -> subprocess + boundary-event -> task -> end
+        assertEquals(9, pd.getChildren().size());
+        // subprocess
+        //                   /----------> end
+        // start -> task -> gw -> task -> end
+        assertEquals(11, findSubprocess(pd).getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", -1);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verify(testBean, times(1)).toString(eq("else"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test026() throws Exception {
+        deploy("026.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //               /-------------------------------->\
+        // start -> subprocess + boundary-event -> task -> end
+        assertEquals(9, pd.getChildren().size());
+        // subprocess
+        //                   /--> task -> end-error
+        // start -> task -> gw -> task -> end
+        assertEquals(13, findSubprocess(pd).getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 1);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verify(testBean, times(1)).toString(eq("b"));
+        verify(testBean, times(1)).toString(eq("e"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test027() throws Exception {
+        deploy("027.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //             /--------------------------------->\
+        // start -> subprocess + boundary-event -> task -> end
+        assertEquals(9, pd.getChildren().size());
+        // subprocess
+        //                   /--> end
+        // start -> task -> gw -> end
+        assertEquals(9, findSubprocess(pd).getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 1);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test027_2() throws Exception {
+        deploy("027.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //             /--------------------------------->\
+        // start -> subprocess + boundary-event -> task -> end
+        assertEquals(9, pd.getChildren().size());
+        // subprocess
+        //                   /--> end
+        // start -> task -> gw -> end
+        assertEquals(9, findSubprocess(pd).getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", -1);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test028() throws Exception {
+        deploy("028.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //                         /--> task("success") -> end
+        //                   /--> gw -> task("success=2") -> error-end
+        // start -> task -> gw -> task("success=1") -> end
+        assertEquals(17, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", -1);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verify(testBean, times(1)).toString(eq("success"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test028_2() throws Exception {
+        deploy("028.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //                         /--> task("success") -> end
+        //                   /--> gw -> task("success=2") -> error-end
+        // start -> task -> gw -> task("success=1") -> end
+        assertEquals(17, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 1);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verify(testBean, times(1)).toString(eq("success=1"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test028_3() throws Exception {
+        deploy("028.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //                         /--> task("success") -> end
+        //                   /--> gw -> task("success=2") -> error-end
+        // start -> task -> gw -> task("success=1") -> end
+        assertEquals(17, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 2);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verify(testBean, times(1)).toString(eq("success=2"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test029() throws Exception {
+        deploy("029.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //                         /--> task("success")   ->\
+        //                   /--> gw -> task("success=2") ->\
+        // start -> task -> gw -> task("success=1")       -> task("success=end") -> end
+        assertEquals(19, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 2);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("a"));
+        verify(testBean, times(1)).toString(eq("success=2"));
+        verify(testBean, times(1)).toString(eq("success=end"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test030() throws Exception {
+        deploy("030.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //           /--> task -> task ---------------->\
+        //          /              /--> task -> task -->\
+        // start -> gw -> task -> gw -> task ----------> end
+        assertEquals(21, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("log", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("name", "foo");
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).info(eq("test"), eq("Hello, foo"));
+        verify(testBean, times(1)).info(eq("test -- 3"), eq("Hello, foo"));
+        verify(testBean, times(1)).info(eq("test -- 4"), eq("Hello, foo"));
         verifyNoMoreInteractions(testBean);
     }
 
@@ -767,6 +1332,14 @@ public class YamlParserTest {
         deploy("old.yml");
     }
 
+    private ProcessDefinition findSubprocess(ProcessDefinition pd) {
+        return pd.getChildren().stream()
+                .filter(e -> e instanceof ProcessDefinition)
+                .map(e -> (ProcessDefinition)e)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("subprocess not found"));
+    }
+
     private UUID getFirstFormId() {
         if (forms == null || forms.isEmpty()) {
             return null;
@@ -809,6 +1382,10 @@ public class YamlParserTest {
 
         public String[] getItems() {
             return items;
+        }
+
+        public void info(String a, String b) {
+            // do nothing
         }
     }
 
