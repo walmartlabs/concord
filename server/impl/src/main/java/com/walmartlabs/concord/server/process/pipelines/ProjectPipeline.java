@@ -17,25 +17,36 @@ import javax.inject.Named;
  * overrides from a request JSON.
  */
 @Named
-public class ProjectPipeline extends Chain {
+public class ProjectPipeline extends Pipeline {
+
+    private final ExceptionProcessor exceptionProcessor;
 
     @Inject
     public ProjectPipeline(Injector injector) {
-        super(injector.getInstance(RequestDataParsingProcessor.class),
-                injector.getInstance(RepositoryProcessor.class),
-                injector.getInstance(ActiveProfilesProcessor.class),
-                injector.getInstance(ProjectDefinitionProcessor.class),
-                injector.getInstance(ProjectConfigurationProcessor.class),
-                injector.getInstance(RequestDefaultsParsingProcessor.class),
-                injector.getInstance(InventoryProcessor.class),
-                injector.getInstance(PrivateKeyProcessor.class),
-                injector.getInstance(TemplateProcessor.class),
-                injector.getInstance(DependenciesProcessor.class),
-                injector.getInstance(UserInfoProcessor.class),
-                injector.getInstance(RequestDataStoringProcessor.class),
-                injector.getInstance(LogFileProcessor.class),
-                injector.getInstance(ValidatingProcessor.class),
-                injector.getInstance(EnqueueingProcessor.class)
-        );
+        super(injector,
+                LogFileProcessor.class,
+                PreparingProcessor.class,
+                RequestDataParsingProcessor.class,
+                RepositoryProcessor.class,
+                ActiveProfilesProcessor.class,
+                ProjectDefinitionProcessor.class,
+                ProjectConfigurationProcessor.class,
+                RequestDefaultsParsingProcessor.class,
+                InventoryProcessor.class,
+                PrivateKeyProcessor.class,
+                TemplateProcessor.class,
+                DependenciesProcessor.class,
+                UserInfoProcessor.class,
+                RequestDataStoringProcessor.class,
+                ValidatingProcessor.class,
+                StateImportingProcessor.class,
+                EnqueueingProcessor.class);
+
+        this.exceptionProcessor = injector.getInstance(FailProcessor.class);
+    }
+
+    @Override
+    protected ExceptionProcessor getExceptionProcessor() {
+        return exceptionProcessor;
     }
 }

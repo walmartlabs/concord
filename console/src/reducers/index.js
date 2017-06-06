@@ -2,6 +2,7 @@
 import {reducer as formReducer} from "redux-form";
 
 import {reducers as session} from "../session";
+import {reducers as about} from "../system/about";
 import {reducers as login} from "../login";
 import {reducers as process} from "../process";
 import {reducers as queue} from "../process/queue";
@@ -18,6 +19,7 @@ import {reducers as modal} from "../shared/Modal";
 export default {
     session,
     login,
+    about,
     process,
     queue,
     log,

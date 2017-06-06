@@ -7,14 +7,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named
-public class ResumePipeline extends Chain {
+public class ResumePipeline extends Pipeline {
 
     @Inject
     public ResumePipeline(Injector injector) {
-        super(injector.getInstance(ResumeStateStoringProcessor.class),
-                injector.getInstance(RequestDataStoringProcessor.class),
-                injector.getInstance(LogFileProcessor.class),
-                injector.getInstance(EnqueueingResumeProcessor.class)
-        );
+        super(injector,
+                LogFileProcessor.class,
+                ResumeStateStoringProcessor.class,
+                RequestDataStoringProcessor.class,
+                StateImportingProcessor.class,
+                EnqueueingResumeProcessor.class);
     }
 }

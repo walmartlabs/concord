@@ -4,10 +4,21 @@
 
 ### Added
 
-- docker-images: optional SSL support for the console's nginx.
+- concord-console: the version information page;
+- concord-server: `/api/v1/server/version` API endpoint;
+- docker-images: optional SSL support for the console's nginx;
+- concord-server: new `PREPARING` process state;
+- concord-runner: upgrade the bpm engine to 0.31.0:
+  - support for EL 3.0 in flow expressions;
+  - form options now can use expressions.
 
 ### Changed
 
+- concord-console: handle `ENQUEUED` status in the default form
+wizard;
+- concord-server: fixed the issue with custom form redirects when
+using HTTPS proxy;
+- concord-server: store process state in the DB;
 - concord-server: create the log file of a process as early as
 possible to log startup errors.
 

@@ -15,6 +15,7 @@ export const canBeKilledStatuses = ["RUNNING", "SUSPENDED"];
 export const hasLogStatuses = ["RUNNING", "SUSPENDED", "RESUMING", "FINISHED", "FAILED"];
 
 export const status = {
+    enqueuedStatus: "ENQUEUED",
     runningStatus: "RUNNING",
     startingStatus: "STARTING",
     suspendedStatus: "SUSPENDED",
@@ -24,6 +25,7 @@ export const status = {
 };
 
 export const statusIcons = {
+    "PREPARING": "hourglass empty",
     "STARTING": "hourglass start",
     "RUNNING": "hourglass half",
     "SUSPENDED": "wait",
@@ -41,4 +43,5 @@ export const statusColors = {
     "FAILED": "red"
 };
 
-export const activeStatuses = [status.runningStatus, status.startingStatus, status.resumingStatus];
+export const activeStatuses = [status.enqueuedStatus, status.runningStatus, status.startingStatus, status.resumingStatus];
+export const finalStatuses = [status.finishedStatus, status.failedStatus];

@@ -9,36 +9,39 @@ import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
 
     private static final Logger log = LoggerFactory.getLogger(JobQueueImpl.class);
-    private static final String[] IGNORED_FILES = {"\\.git"};
     private static final int PAYLOAD_CHUNK_SIZE = 512 * 1024; // 512kb
 
     private final ProcessQueueDao queueDao;
-    private final PayloadManager payloadManager;
-
+    private final ProcessStateManager stateManager;
     private final LogManager logManager;
 
     @Inject
-    public JobQueueImpl(ProcessQueueDao queueDao, PayloadManager payloadManager, LogManager logManager) {
+    public JobQueueImpl(ProcessQueueDao queueDao, ProcessStateManager stateManager, LogManager logManager) {
         this.queueDao = queueDao;
-        this.payloadManager = payloadManager;
+        this.stateManager = stateManager;
         this.logManager = logManager;
     }
 
@@ -51,9 +54,15 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         }
 
         String instanceId = entry.getInstanceId();
+
         try {
-            Path src = getPayload(instanceId);
-            try (InputStream in = Files.newInputStream(src)) {
+            // TODO this probably can be replaced with an in-memory buffer
+            Path tmp = Files.createTempFile("payload", ".zip");
+            try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmp))) {
+                stateManager.export(instanceId, zipTo(zip));
+            }
+
+            try (InputStream in = Files.newInputStream(tmp)) {
                 int read;
                 byte[] ab = new byte[PAYLOAD_CHUNK_SIZE];
 
@@ -72,21 +81,6 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         } catch (IOException e) {
             responseObserver.onError(e);
         }
-    }
-
-    private Path getPayload(String instanceId) throws IOException {
-        Path src = payloadManager.getWorkspace(instanceId);
-        if (src == null) {
-            log.warn("getPayload ['{}'] -> not found", instanceId);
-            throw new IllegalArgumentException("Process not found: " + instanceId);
-        }
-
-        // TODO cfg
-        Path tmp = Files.createTempFile("payload", ".zip");
-        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmp))) {
-            IOUtils.zip(zip, src, IGNORED_FILES);
-        }
-        return tmp;
     }
 
     @Override
@@ -130,19 +124,19 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     @Override
     @WithTimer
     public void uploadAttachments(TAttachments request, StreamObserver<Empty> responseObserver) {
-        // TODO cfg
-        Path tmp;
-        try {
-            tmp = Files.createTempFile("attachments", ".zip");
-            Files.write(tmp, request.getData().toByteArray());
-        } catch (IOException e) {
-            responseObserver.onError(e);
-            return;
-        }
-
         String instanceId = request.getInstanceId();
         try {
-            payloadManager.updateState(instanceId, tmp);
+            // TODO cfg
+            Path tmpDir = Files.createTempDirectory("attachments");
+            byte[] data = request.getData().toByteArray();
+            try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(data))) {
+                IOUtils.unzip(zip, tmpDir);
+            }
+
+            stateManager.transaction(tx -> {
+                stateManager.delete(tx, instanceId, path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_STATE_DIR_NAME));
+                stateManager.importPath(tx, instanceId, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
+            });
         } catch (IOException e) {
             responseObserver.onError(e);
             return;
@@ -155,11 +149,11 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     }
 
     private boolean isSuspended(String instanceId) {
-        String name = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" +
-                Constants.Files.JOB_STATE_DIR_NAME + "/" +
-                Constants.Files.SUSPEND_MARKER_FILE_NAME;
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.SUSPEND_MARKER_FILE_NAME);
 
-        return payloadManager.getResource(instanceId, name) != null;
+        return stateManager.exists(instanceId, resource);
     }
 
     private static ProcessStatus convert(TJobStatus s) {

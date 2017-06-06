@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
@@ -12,8 +11,8 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.FormUtils;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
-import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
@@ -36,14 +35,16 @@ import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
 @Named
 public class CustomFormServiceImpl implements CustomFormService, Resource {
@@ -53,18 +54,20 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
     private final FormServerConfiguration cfg;
     private final ConcordFormService formService;
-    private final PayloadManager payloadManager;
+    private final ProcessStateManager stateManager;
     private final ProcessQueueDao queueDao;
     private final ObjectMapper objectMapper;
     private final FormValidatorLocale validatorLocale;
 
     @Inject
-    public CustomFormServiceImpl(FormServerConfiguration cfg, ConcordFormService formService,
-                                 PayloadManager payloadManager, ProcessQueueDao queueDao) {
+    public CustomFormServiceImpl(FormServerConfiguration cfg,
+                                 ConcordFormService formService,
+                                 ProcessStateManager stateManager,
+                                 ProcessQueueDao queueDao) {
 
         this.cfg = cfg;
         this.formService = formService;
-        this.payloadManager = payloadManager;
+        this.stateManager = stateManager;
         this.queueDao = queueDao;
 
         this.objectMapper = new ObjectMapper()
@@ -81,14 +84,6 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         // TODO locking
         Form form = assertForm(processInstanceId, formInstanceId);
 
-        Path src = getBranding(form);
-        if (src == null) {
-            // not branded, redirect to the default wizard
-            // TODO const?
-            String dst = "/#/process/" + processInstanceId + "/form/" + formInstanceId + "?fullScreen=true&wizard=true";
-            return new FormSessionResponse(dst);
-        }
-
         Path dst = cfg.getBaseDir()
                 .resolve(processInstanceId)
                 .resolve(formInstanceId);
@@ -98,8 +93,16 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                 Files.createDirectories(dst);
             }
 
+            // TODO constants
+            String resource = "forms/" + form.getFormDefinition().getName();
             // copy original branding files into the target directory
-            IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+            boolean branded = stateManager.exportDirectory(processInstanceId, resource, copyTo(dst));
+            if (!branded) {
+                // not branded, redirect to the default wizard
+                // TODO constants
+                String uri = "/#/process/" + processInstanceId + "/form/" + formInstanceId + "?fullScreen=true&wizard=true";
+                return new FormSessionResponse(uri);
+            }
 
             // create JS file containing the form's data
             FormData d = prepareData(form, null, null);
@@ -116,7 +119,10 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @Override
     @Validate
     @RequiresAuthentication
-    public Response continueSession(UriInfo uriInfo, String processInstanceId, String formInstanceId, MultivaluedMap<String, String> data) {
+    public Response continueSession(UriInfo uriInfo, HttpHeaders headers,
+                                    String processInstanceId, String formInstanceId,
+                                    MultivaluedMap<String, String> data) {
+
         // TODO locking
         Form form = assertForm(processInstanceId, formInstanceId);
 
@@ -181,7 +187,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
             throw new WebApplicationException("Error while submitting a form", e);
         }
 
-        return redirectToForm(uriInfo, processInstanceId, formInstanceId);
+        return redirectToForm(uriInfo, headers, processInstanceId, formInstanceId);
     }
 
     private Form assertForm(String processInstanceId, String formInstanceId) {
@@ -191,21 +197,6 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
             throw new WebApplicationException("Form not found", Status.NOT_FOUND);
         }
         return form;
-    }
-
-    private Path getBranding(Form f) {
-        // TODO constants
-        String resource = "forms/" + f.getFormDefinition().getName();
-        Path path = payloadManager.getResource(f.getProcessBusinessKey(), resource);
-        if (path == null) {
-            return null;
-        }
-
-        if (!Files.isDirectory(path)) {
-            log.warn("getBranding ['{}'] -> expected a directory: {}", f.getFormInstanceId(), resource);
-        }
-
-        return path;
     }
 
     @SuppressWarnings("unchecked")
@@ -251,9 +242,25 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return new FormData(submitUrl, _definitions, _values, _errors);
     }
 
-    private static Response redirectToForm(UriInfo uriInfo, String processInstanceId, String formInstanceId) {
+    private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,
+                                           String processInstanceId, String formInstanceId) {
+
+        String scheme = uriInfo.getBaseUri().getScheme();
+
+        // check if we need to force https
+        String origin = headers.getHeaderString("Origin");
+        if (origin != null) {
+            URI originUri = URI.create(origin);
+            String originScheme = originUri.getScheme();
+            if (originScheme.equalsIgnoreCase("https")) {
+                scheme = originScheme;
+            }
+        }
+
         UriBuilder b = UriBuilder.fromUri(uriInfo.getBaseUri())
+                .scheme(scheme)
                 .path(formPath(processInstanceId, formInstanceId));
+
         return redirectTo(b.build().toString());
     }
 

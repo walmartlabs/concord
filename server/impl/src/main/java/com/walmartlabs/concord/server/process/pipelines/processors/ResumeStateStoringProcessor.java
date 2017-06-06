@@ -1,10 +1,12 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +14,14 @@ import java.nio.file.Path;
 
 @Named
 public class ResumeStateStoringProcessor implements PayloadProcessor {
+
+
+    private final LogManager logManager;
+
+    @Inject
+    public ResumeStateStoringProcessor(LogManager logManager) {
+        this.logManager = logManager;
+    }
 
     @Override
     @WithTimer
@@ -33,6 +43,7 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
             Path resumeMarker = stateDir.resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
             Files.write(resumeMarker, eventName.getBytes());
         } catch (IOException e) {
+            logManager.error(payload.getInstanceId(), "Error while saving resume state", e);
             throw new ProcessException("Error while saving resume state", e);
         }
 

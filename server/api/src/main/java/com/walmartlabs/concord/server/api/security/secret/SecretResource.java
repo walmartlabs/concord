@@ -31,7 +31,7 @@ public interface SecretResource {
                                        @ApiParam MultipartInput input);
 
     @POST
-    @ApiOperation("Add an username and password secret")
+    @ApiOperation("Add a username and password secret")
     @Path("/password")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

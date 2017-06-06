@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -22,12 +23,14 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
     public void test() throws Exception {
         String instanceA = UUID.randomUUID().toString();
         queueDao.insertInitial(instanceA, "testProject", "testInitiator");
+        queueDao.update(instanceA, ProcessStatus.ENQUEUED);
 
         // add a small delay between two jobs
         Thread.sleep(100);
 
         String instanceB = UUID.randomUUID().toString();
         queueDao.insertInitial(instanceB, "testProject", "testInitiator");
+        queueDao.update(instanceB, ProcessStatus.ENQUEUED);
 
         // ---
 

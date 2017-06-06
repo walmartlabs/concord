@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.project.yaml;
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import io.takari.bpm.EngineBuilder;
@@ -803,7 +802,7 @@ public class YamlParserTest {
         // ---
 
         String key = UUID.randomUUID().toString();
-        engine.start(key, "main", ImmutableMap.of());
+        engine.start(key, "main", Collections.emptyMap());
 
         // ---
 

@@ -2,7 +2,7 @@
 
 ## Create a new API key
 
-Creates a new API key for an user.
+Creates a new API key for a user.
 
 * **Permissions** `apikey:create`
 * **URI** `/api/v1/apikey`

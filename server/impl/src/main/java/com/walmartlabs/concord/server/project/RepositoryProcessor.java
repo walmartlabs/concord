@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.server.LogManager;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
@@ -38,15 +39,18 @@ public class RepositoryProcessor implements PayloadProcessor {
     private final RepositoryDao repositoryDao;
     private final SecretManager secretManager;
     private final RepositoryManager repositoryManager;
+    private final LogManager logManager;
 
     @Inject
     public RepositoryProcessor(RepositoryDao repositoryDao,
                                SecretManager secretManager,
-                               RepositoryManager repositoryManager) {
+                               RepositoryManager repositoryManager,
+                               LogManager logManager) {
 
         this.repositoryDao = repositoryDao;
         this.secretManager = secretManager;
         this.repositoryManager = repositoryManager;
+        this.logManager = logManager;
     }
 
     @Override
@@ -77,6 +81,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         if (repo.getSecret() != null) {
             secret = secretManager.getSecret(repo.getSecret());
             if (secret == null) {
+                logManager.error(payload.getInstanceId(), "Secret not found: " + repo.getSecret());
                 throw new ProcessException("Secret not found: " + repo.getSecret());
             }
         }
@@ -92,6 +97,7 @@ public class RepositoryProcessor implements PayloadProcessor {
             IOUtils.copy(src, dst);
         } catch (IOException | RepositoryException e) {
             log.error("process ['{}'] -> repository error", payload.getInstanceId(), e);
+            logManager.error(payload.getInstanceId(), "Error while pulling a repository: " + repo.getUrl(), e);
             throw new ProcessException("Error while pulling a repository: " + repo.getUrl(), e);
         }
 

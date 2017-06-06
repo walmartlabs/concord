@@ -22,12 +22,16 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     private static final String BASIC_AUTH_PREFIX = "Basic ";
 
     /**
-     * List of URLs that do not require authentication or authorization.
+     * List of URLs which do not require authentication or authorization.
      */
     private static final String[] ANON_URLS = {
             "/api/v1/server/ping",
+            "/api/v1/server/version",
             "/api/service/console/logout"};
 
+    /**
+     * List of URLs which enforces use of basic authentication.
+     */
     private static final String[] FORCE_BASIC_AUTH_URLS = {
             "/forms/.*",
             "/api/service/process_portal/.*"

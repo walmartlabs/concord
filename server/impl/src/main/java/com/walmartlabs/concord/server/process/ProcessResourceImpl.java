@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
@@ -12,6 +13,7 @@ import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.takari.bpm.api.ExecutionException;
@@ -35,12 +37,13 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
 @Named
 public class ProcessResourceImpl implements ProcessResource, Resource {
@@ -53,6 +56,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final Chain projectPipeline;
     private final Chain resumePipeline;
     private final PayloadManager payloadManager;
+    private final ProcessStateManager stateManager;
     private final AgentManager agentManager;
     private final ConcordFormService formService;
 
@@ -63,6 +67,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
                                PayloadManager payloadManager,
+                               ProcessStateManager stateManager,
                                AgentManager agentManager,
                                ConcordFormService concordFormService) {
 
@@ -72,6 +77,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.projectPipeline = projectPipeline;
         this.resumePipeline = resumePipeline;
         this.payloadManager = payloadManager;
+        this.stateManager = stateManager;
         this.agentManager = agentManager;
         this.formService = concordFormService;
     }
@@ -89,7 +95,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        archivePipeline.process(payload);
+        try {
+            archivePipeline.process(payload);
+        } catch (Exception e) {
+            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+        }
 
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
@@ -114,7 +124,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        projectPipeline.process(payload);
+        try {
+            projectPipeline.process(payload);
+        } catch (Exception e) {
+            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+        }
 
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
@@ -139,7 +153,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        projectPipeline.process(payload);
+        try {
+            projectPipeline.process(payload);
+        } catch (Exception e) {
+            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+        }
 
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
@@ -162,7 +180,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        archivePipeline.process(payload);
+        try {
+            archivePipeline.process(payload);
+        } catch (Exception e) {
+            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+        }
 
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
@@ -258,18 +280,32 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Validate
     @WithTimer
     public Response downloadAttachment(String instanceId, String attachmentName) {
+        // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
             throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
         }
 
-        // TODO sanitize
-        Path p = payloadManager.getResource(instanceId, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/" + attachmentName);
-        if (p == null) {
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
+        Optional<Path> o = stateManager.get(instanceId, resource, src -> {
+            try {
+                Path tmp = Files.createTempFile("attachment", ".bin");
+                try (OutputStream dst = Files.newOutputStream(tmp)) {
+                    IOUtils.copy(src, dst);
+                }
+                return Optional.of(tmp);
+            } catch (IOException e) {
+                throw new WebApplicationException("Error while exporting an attachment: " + attachmentName, e);
+            }
+        });
+
+        if (!o.isPresent()) {
             return Response.status(Status.NOT_FOUND).build();
         }
 
+        Path tmp = o.get();
+
         return Response.ok((StreamingOutput) out -> {
-            try (InputStream in = Files.newInputStream(p)) {
+            try (InputStream in = Files.newInputStream(tmp)) {
                 IOUtils.copy(in, out);
             }
         }).build();
@@ -293,15 +329,20 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> readArgs(String instanceId) {
-        Path p = payloadManager.getResource(instanceId, Constants.Files.REQUEST_DATA_FILE_NAME);
+        String resource = Constants.Files.REQUEST_DATA_FILE_NAME;
+        Optional<Map<String, Object>> o = stateManager.get(instanceId, resource, in -> {
+            try {
+                ObjectMapper om = new ObjectMapper();
 
-        try (InputStream in = Files.newInputStream(p)) {
-            ObjectMapper om = new ObjectMapper();
-            Map<String, Object> cfg = om.readValue(in, Map.class);
-            return (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
-        } catch (IOException e) {
-            throw new WebApplicationException("Error while reading request data", e);
-        }
+                Map<String, Object> cfg = om.readValue(in, Map.class);
+                Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
+
+                return Optional.ofNullable(args);
+            } catch (IOException e) {
+                throw new WebApplicationException("Error while reading request data", e);
+            }
+        });
+        return o.orElse(Collections.emptyMap());
     }
 
     private void process(String instanceId, Map<String, Object> params) {
@@ -356,6 +397,13 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 throw err("Submit form error", Status.INTERNAL_SERVER_ERROR, entry);
             }
         }
+    }
+
+    private static WebApplicationException err(String message, Status status, String instanceId) {
+        throw new WebApplicationException(message, Response.status(status)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_TYPE)
+                .entity(ImmutableMap.of("instanceId", instanceId))
+                .build());
     }
 
     private static WebApplicationException err(String message, Status status, ProcessEntry entry) {

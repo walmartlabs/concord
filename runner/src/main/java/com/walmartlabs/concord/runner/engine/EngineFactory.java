@@ -63,7 +63,7 @@ public class EngineFactory {
 
         ProjectDefinitionAdapter adapter = new ProjectDefinitionAdapter(project, activeProfiles, baseDir);
 
-        UserTaskHandler uth = new FormTaskHandler(adapter.forms(), formService);
+        UserTaskHandler uth = new FormTaskHandler(adapter.forms(), formService, expressionManager);
 
         ResourceResolver resourceResolver = name -> {
             Path p = baseDir.resolve(name);
