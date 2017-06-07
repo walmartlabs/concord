@@ -14,7 +14,7 @@ import "google/protobuf/any.proto";
 
 service TCommandQueue {
 
-    rpc poll (TCommandRequest) returns (TCommandResponse) {}
+    rpc take (TCommandRequest) returns (TCommandResponse) {}
 }
 
 message TCommandRequest {

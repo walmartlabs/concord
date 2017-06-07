@@ -8,8 +8,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Named
 @Singleton
@@ -21,11 +21,7 @@ public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
     public void add(String agentId, Command cmd) {
         BlockingQueue<Command> q;
         synchronized (queues) {
-            q = queues.get(agentId);
-            if (q == null) {
-                q = new ArrayBlockingQueue<>(16);
-                queues.put(agentId, q);
-            }
+            q = queues.computeIfAbsent(agentId, k -> new LinkedBlockingQueue<>());
         }
 
         try {
@@ -36,24 +32,28 @@ public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
     }
 
     @Override
-    public void poll(TCommandRequest request, StreamObserver<TCommandResponse> responseObserver) {
+    public void take(TCommandRequest request, StreamObserver<TCommandResponse> responseObserver) {
         String agentId = request.getAgentId();
-
-        TCommandResponse.Builder b = TCommandResponse.newBuilder();
 
         BlockingQueue<Command> q;
         synchronized (queues) {
-            q = queues.get(agentId);
+            q = queues.computeIfAbsent(agentId, k -> new LinkedBlockingQueue<>());
         }
 
-        if (q != null) {
-            Command cmd = q.poll();
-            if (cmd != null) {
-                b.setCommand(convert(cmd));
-            }
+        Command cmd;
+        try {
+            cmd = q.take();
+        } catch (InterruptedException e) {
+            responseObserver.onError(e);
+            return;
         }
 
-        responseObserver.onNext(b.build());
+        TCommandResponse resp = TCommandResponse.newBuilder()
+                .setCommand(convert(cmd))
+                .build();
+
+        responseObserver.onNext(resp);
+
         responseObserver.onCompleted();
     }
 

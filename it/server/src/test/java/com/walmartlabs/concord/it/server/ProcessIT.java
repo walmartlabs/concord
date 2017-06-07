@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.it.server;
 
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.Test;
 
@@ -11,9 +11,7 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.*;
 
 public class ProcessIT extends AbstractServerIT {
@@ -96,6 +94,8 @@ public class ProcessIT extends AbstractServerIT {
         }
 
         processResource.kill(spr.getInstanceId());
+
+        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED, ProcessStatus.FINISHED);
     }
 
     @Test(timeout = 30000)

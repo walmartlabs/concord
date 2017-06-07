@@ -2,15 +2,10 @@ package com.walmartlabs.concord.rpc;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.walmartlabs.concord.rpc.TCommandQueueGrpc.TCommandQueueBlockingStub;
 import io.grpc.ManagedChannel;
-import io.grpc.StatusRuntimeException;
-
-import java.util.concurrent.TimeUnit;
 
 public class CommandQueueImpl implements CommandQueue {
-
-    private static final int POLL_TIMEOUT = 5000;
-    private static final int RETRY_DELAY = 1000;
 
     private final String agentId;
     private final ManagedChannel channel;
@@ -36,29 +31,13 @@ public class CommandQueueImpl implements CommandQueue {
 
     @Override
     public Command take() throws ClientException {
-        TCommandQueueGrpc.TCommandQueueBlockingStub blockingStub = TCommandQueueGrpc.newBlockingStub(channel);
-        while (true) {
-            TCommandResponse resp;
-            try {
-                TCommandRequest req = TCommandRequest.newBuilder()
-                        .setAgentId(agentId)
-                        .build();
+        TCommandQueueBlockingStub stub = TCommandQueueGrpc.newBlockingStub(channel);
 
-                resp = blockingStub.withDeadlineAfter(POLL_TIMEOUT, TimeUnit.MILLISECONDS)
-                        .poll(req);
-            } catch (StatusRuntimeException e) {
-                throw new ClientException(e.getMessage(), e);
-            }
+        TCommandRequest req = TCommandRequest.newBuilder()
+                .setAgentId(agentId)
+                .build();
 
-            if (resp.hasCommand()) {
-                return convert(resp.getCommand());
-            }
-
-            try {
-                Thread.sleep(RETRY_DELAY);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+        TCommandResponse resp = stub.take(req);
+        return convert(resp.getCommand());
     }
 }
