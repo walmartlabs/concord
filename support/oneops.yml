@@ -24,7 +24,7 @@ platforms:
       database:
         dbname: 'concord'
         username: 'sa'
-        password: '{{dbPasswordPrefix}}/{{assemblyName}}/{{environmentName}}'
+        password: 'c0nc0rdDb'
       postgresql:
         version: '9.6'
         port: '5432'
@@ -36,7 +36,6 @@ platforms:
       secgroup:
         inbound: '[
           "22 22 tcp 0.0.0.0/0",
-          "8080 8080 tcp 0.0.0.0/0",
           "5432 5432 tcp 0.0.0.0/0"
         ]'
 
@@ -154,7 +153,7 @@ platforms:
                   -e 'DB_DIALECT=POSTGRES' \
                   -e 'DB_DRIVER=org.postgresql.Driver' \
                   -e 'DB_USERNAME=sa' \
-                  -e 'DB_PASSWORD={{dbPasswordPrefix}}/{{assemblyName}}/{{environmentName}}' \
+                  -e 'DB_PASSWORD=c0nc0rdDb' \
                   -e 'LDAP_CFG=/opt/concord/data/conf/ldap.properties' \
                   -e 'LOG_STORE_DIR=/opt/concord/data/logs' \
                   -e 'FORM_SERVER_DIR=/opt/concord/data/formserv' \
@@ -209,6 +208,7 @@ platforms:
       secgroup:
         inbound: '[
           "22 22 tcp 0.0.0.0/0",
+          "80 80 tcp 0.0.0.0/0",
           "443 443 tcp 0.0.0.0/0",
           "8080 8080 tcp 0.0.0.0/0",
           "8001 8001 tcp 0.0.0.0/0",
@@ -238,7 +238,12 @@ platforms:
           username: 'ibodrov'
           description: 'Ivan Bodrov'
           authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxh2tqHfJnd+jzGkOJ+M6z+y7RNdMrFHpoAa4JcYvgaETeJgxYIhorkL+x0Vz00YoJyy2wGDS2S2NSzjXEV9bnu60pyRDrJbI4gBbmof8fDal/HmgvWcN2axyR/zUnn6BIuwKwEYOygKW11FezmYsfdXueIXgSfFn9sGfd3b+R2ygn5PieVa7KKgR8/djXfsjiM1fA55Z1ZtVig+YqqaVijUkdjKOW2LNhbXBGcD5ocWknmLUXXb2i7Ng/rersd8nD4uSZUCq8pSeZeeQdtr56FNcjh7XyvdTdo83wNCsFPJZMbOQxQVcSl/QP9QdGKFUDAt/Ljrq3svPpHdkDXXEt ibodrov@walmartlabs.com"]'
-
+        user-brig:
+          system_account: true
+          sudoer: true
+          username: 'brig'
+          description: 'Yury Brigadirenko'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDjcICussHqyMEpY1xQAvqNz/qoVnnDBVIPrDKJ/kJ4fzwzJmgA0/vqcZqIB11hsa+h23qtwJcjFyFY4rk0g9zo2XwDzmj9pafD0eEJZFNyxUeJGd91YlZmfPtUYKfVjgJJm+WdhUW5AzkFHtLEl+4N4gri4Mg9AaqLlTLgYGKYxjAEgVfo5yF7L1X5a2XuAo6IMdYGmn4tiX3OL5a1H5U7wvk6Pn28zKr7UK/6nA+PN+lND+7zffjQN9pboB5h97W8fnsqOEKWx/Kr4ksM1tDdOynG6Kt0MS+6GlaQDSCgbQnQQKs7yLG66ZEPMkQBcfVC4xOtc3+etNoxEDmFKUe23MN3i2OoEBKHSSvI0uffXYf1PCVhDXNGLe88mUvGnOMQtp4/ZgNZ/uB+BN2nWv3PXdECB+HkbKIun0tKq+L7wtaJe54wE7GXyJcmts+XMiQuZny62qtzqv8PliTOFh2TBp7iPRtAsN3StwZgIClfk3brNV7mlH5vC97f6dG4g9k4IAiLHoILFbRzst1xCQ5mHPK7Lev3DeXwAyI8uxMp4XAXXTcpXW2xR5d4kKKPoSVQn1SXS7qm6d5mYiUFOFr4WOG9d04YX9qrngu/6+mGGaIejmmOBggKJq3mGztarUoixOcLQ5Cn3uPg8qMu2Ni+0wqFUv+BpFg1BhltrHPYJQ== YBrigadirenko@walmartlabs.com"]'
 
       secgroup:
         inbound: '[
