@@ -131,8 +131,8 @@ public class ProcessStateManager extends AbstractDao {
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
                             .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
-                    .fetchStream()
-                    .map(r -> r.get(PROCESS_STATE.ITEM_PATH));
+                    .fetch(PROCESS_STATE.ITEM_PATH)
+                    .stream();
 
             return converter.apply(s);
         }

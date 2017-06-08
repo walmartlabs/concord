@@ -1,5 +1,11 @@
 # Change log
 
+## [Unreleased]
+
+- concord-server: fix potential connection leak.
+
+
+
 ## [0.20.0] - 2017-06-06
 
 ### Added
