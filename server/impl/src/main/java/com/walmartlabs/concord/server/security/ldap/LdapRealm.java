@@ -36,7 +36,13 @@ public class LdapRealm extends AbstractLdapRealm {
     private final String usernameSuffix;
 
     @Inject
-    public LdapRealm(LdapConfiguration cfg, UserDao userDao, LdapDao ldapDao, LdapManager ldapManager, ConcordShiroAuthorizer authorizer) {
+    public LdapRealm(LdapConfiguration cfg,
+                     UserDao userDao,
+                     LdapDao ldapDao,
+                     ConcordLdapContextFactory ctxFactory,
+                     LdapManager ldapManager,
+                     ConcordShiroAuthorizer authorizer) {
+
         this.userDao = userDao;
         this.ldapDao = ldapDao;
         this.ldapManager = ldapManager;
@@ -59,6 +65,8 @@ public class LdapRealm extends AbstractLdapRealm {
             return stored.getUsername().equals(received.getUsername()) &&
                     Arrays.equals(stored.getPassword(), received.getPassword());
         });
+
+        setLdapContextFactory(ctxFactory);
     }
 
     @Override

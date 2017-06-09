@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Addedd
+
+- concord-server: support for LDAPS.
+
+
+
 ## [0.20.1] - 2017-06-08
 
 - concord-server: fix potential connection leak.

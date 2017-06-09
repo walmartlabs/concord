@@ -2,7 +2,6 @@ package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import org.apache.shiro.realm.ldap.JndiLdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
 
@@ -29,15 +28,9 @@ public class LdapManager {
     private final LdapContextFactory ctxFactory;
 
     @Inject
-    public LdapManager(LdapConfiguration cfg) {
+    public LdapManager(LdapConfiguration cfg, ConcordLdapContextFactory ctxFactory) {
         this.cfg = cfg;
-
-        JndiLdapContextFactory f = new JndiLdapContextFactory();
-        f.setUrl(cfg.getUrl());
-        f.setSystemUsername(cfg.getSystemUsername());
-        f.setSystemPassword(cfg.getSystemPassword());
-
-        this.ctxFactory = f;
+        this.ctxFactory = ctxFactory;
     }
 
     @WithTimer
