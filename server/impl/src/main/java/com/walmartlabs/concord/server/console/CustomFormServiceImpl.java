@@ -284,8 +284,14 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
     private void writeData(Path baseDir, Object data) throws IOException {
         Path dst = baseDir.resolve("data.js");
+
+        Path parent = dst.getParent();
+        if (!Files.exists(parent)) {
+            Files.createDirectories(parent);
+        }
+
         String s = String.format(DATA_FILE_TEMPLATE, objectMapper.writeValueAsString(data));
-        Files.write(dst, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(dst, s.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     @JsonInclude(Include.NON_EMPTY)

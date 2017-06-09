@@ -6,6 +6,11 @@
 
 - concord-server: support for LDAPS.
 
+### Changed
+
+- concord-server: fixed an issue with `data.js` generation when the
+store directory does not exist.
+
 
 
 ## [0.20.1] - 2017-06-08
