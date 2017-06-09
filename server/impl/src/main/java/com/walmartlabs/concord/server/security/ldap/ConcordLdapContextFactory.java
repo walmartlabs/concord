@@ -20,7 +20,10 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         JndiLdapContextFactory f = new JndiLdapContextFactory() {
             @Override
             protected LdapContext createLdapContext(Hashtable env) throws NamingException {
-                env.put("java.naming.ldap.factory.socket", TrustingSslSocketFactory.class.getName());
+                String url = cfg.getUrl();
+                if (url != null && url.startsWith("ldaps:")) {
+                    env.put("java.naming.ldap.factory.socket", TrustingSslSocketFactory.class.getName());
+                }
                 return super.createLdapContext(env);
             }
         };

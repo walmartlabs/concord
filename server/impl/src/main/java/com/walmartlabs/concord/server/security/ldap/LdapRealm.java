@@ -93,9 +93,6 @@ public class LdapRealm extends AbstractLdapRealm {
         try {
             ctx = ldapContextFactory.getLdapContext(principalName, new String(password));
             log.info("queryForAuthenticationInfo -> '{}', success", principalName);
-        } catch (Exception e) {
-            log.warn("queryForAuthenticationInfo -> '{}', authentication error: {}", principalName, e);
-            throw e;
         } finally {
             LdapUtils.closeContext(ctx);
         }
