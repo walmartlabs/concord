@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-### Addedd
+### Added
 
 - concord-server: support for LDAPS.
 
