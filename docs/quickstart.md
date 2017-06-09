@@ -37,45 +37,61 @@ Concord](intro.md) to understand the basic concepts of Concord.
        docker.prod.walmart.com/walmartlabs/concord-agent
   ```
 
-
 ## Starting Concord Docker Images
 
   There are three components to Concord: the Agent, the Server, and
   the Console.  Follow these steps to start all three components and
   run a simple process to test your Concord instance.
 
-### Step 1. Start the Concord Agent
+### Step 1. Create a LDAP configuration file
 
-  ```
-  docker run -d -p 8002:8002 --name agent walmartlabs/concord-agent
-  ```
-  
+  Use the example in [LDAP](./configuration.md#ldap) section of
+  Configuration document. You'll need to use actual parameters,
+  suitable for your environment.
+
 ### Step 2. Start the Concord Server
 
   ```
-  docker run -d -p 8001:8001 --name server --link agent \
-  	 walmartlabs/concord-server
+  docker run -d -p 8001:8001 \
+  --name server \
+  -v /path/to/ldap.properties:/opt/concord/conf/ldap.properties:ro \
+  -e 'LDAP_CFG=/opt/concord/data/conf/ldap.properties' \
+  --network=host \
+  walmartlabs/concord-server
   ```
-
+  
   This will start the server with an in-memory database and temporary
   storage for its working files. Please see the
   [Configuration](./configuration.md) description to configure a more
   permanent storage.
-
+  
 ### Step 3. Check the Concord Server Logs
   
   ```
   docker logs server
   ```
 
-### Step 4. Start the Concord Console
+### Step 4. Start the Concord Agent
 
   ```
-  docker run -d -p 8080:8080 --name console --link server \
-  	 walmartlabs/concord-console
+  docker run -d -p 8002:8002 \
+  --name agent \
+  --network=host \
+  walmartlabs/concord-agent
+  ```
+  
+### Step 5. Start the Concord Console
+
+  ```
+  docker run -d -p 8080:8080 \
+  --name console \  
+  -e SERVER_PORT_8001_TCP_ADDR=localhost \
+  -e SERVER_PORT_8001_TCP_PORT=8001 \
+  --network=host \
+  walmartlabs/concord-console
   ```
 
-### Step 5. Create a Sample Concord Process
+### Step 6. Create a Sample Concord Process
 
 Create a zip archive of the following structure:
 
@@ -100,7 +116,7 @@ Create a zip archive of the following structure:
   - expr: ${log.info("test", "Hello, ".concat(name))}
   ```
 
-### Step 6. Start a New Concord Process
+### Step 7. Start a New Concord Process
 
   ```
   curl -v -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
@@ -108,7 +124,7 @@ Create a zip archive of the following structure:
        --data-binary @archive.zip http://localhost:8001/api/v1/process
   ```
 
-### Step 7. Check the Concord Server Logs
+### Step 8. Check the Concord Server Logs
 
   ```
   docker logs server
@@ -126,5 +142,5 @@ Create a zip archive of the following structure:
 ### (Optional) Stop and remove the containers
 
   ```
-  docker rm -f {console,agent,server}
+  docker rm -f console agent server
   ```
