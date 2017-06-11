@@ -2,6 +2,7 @@ package com.walmartlabs.concord.project.yaml;
 
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.*;
@@ -10,6 +11,7 @@ import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.model.ProcessDefinition;
+import io.takari.bpm.model.ProcessDefinitionHelper;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
@@ -1093,6 +1095,42 @@ public class YamlParserTest {
         verify(testBean, times(1)).info(eq("test"), eq("Hello, foo"));
         verify(testBean, times(1)).info(eq("test -- 3"), eq("Hello, foo"));
         verify(testBean, times(1)).info(eq("test -- 4"), eq("Hello, foo"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test031() throws Exception {
+        deploy("031.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        //                          /--> task -->\
+        // start -> subprocess + boundary-event -> end
+        assertEquals(9, pd.getChildren().size());
+
+        // subprocess
+        // start -> callactiviti -> end
+        assertEquals(5, findSubprocess(pd).getChildren().size());
+
+        pd = workflowProvider.processes().getById("myOtherFlow");
+
+        // callactiviti
+        // start -> task -> end
+        assertEquals(5, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 2);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("in-call-activiti"));
+        verify(testBean, times(1)).toString(eq("e"));
         verifyNoMoreInteractions(testBean);
     }
 
