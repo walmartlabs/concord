@@ -1,7 +1,9 @@
 #!/bin/bash
 
-SERVER_ADDR="$SERVER_PORT_8001_TCP_ADDR"
-SERVER_PORT="$SERVER_PORT_8001_TCP_PORT"
+if [ ! -z "$SERVER_PORT_8001_TCP_ADDR" ]; then
+    export SERVER_ADDR="$SERVER_PORT_8001_TCP_ADDR"
+    export SERVER_PORT="$SERVER_PORT_8001_TCP_PORT"
+fi
 
 NGINX_CONF_TEMPLATE="app.template"
 if [ "${SSL}" == "true" ]; then
