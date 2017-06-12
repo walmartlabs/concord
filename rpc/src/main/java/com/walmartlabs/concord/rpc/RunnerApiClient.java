@@ -10,6 +10,7 @@ public class RunnerApiClient {
     private final ManagedChannel channel;
     private final KvService kvService;
     private final SecretStoreService secretStoreService;
+    private final EventService eventService;
 
     public RunnerApiClient(String instanceId, String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port)
@@ -18,6 +19,7 @@ public class RunnerApiClient {
 
         this.kvService = new KvServiceImpl(instanceId, channel);
         this.secretStoreService = new SecretStoreServiceImpl(instanceId, channel);
+        this.eventService = new EventServiceImpl(instanceId, channel);
     }
 
     public void stop() {
@@ -34,5 +36,9 @@ public class RunnerApiClient {
 
     public SecretStoreService getSecretStoreService() {
         return secretStoreService;
+    }
+
+    public EventService getEventService() {
+        return eventService;
     }
 }

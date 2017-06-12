@@ -13,6 +13,7 @@ import io.takari.bpm.event.EventStorage;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.NoopResumeHandler;
 import io.takari.bpm.model.ProcessDefinition;
+import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.UserTaskHandler;
@@ -32,9 +33,14 @@ public class EngineFactory {
 
     private final NamedTaskRegistry taskRegistry;
 
+    private final RpcClient rpcClient;
+
     @Inject
-    public EngineFactory(NamedTaskRegistry taskRegistry) {
+    public EngineFactory(
+            NamedTaskRegistry taskRegistry,
+            RpcClient rpcClient) {
         this.taskRegistry = taskRegistry;
+        this.rpcClient = rpcClient;
     }
 
     public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles) {
@@ -74,7 +80,7 @@ public class EngineFactory {
         cfg.setInterpolateInputVariables(true);
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
 
-        return new EngineBuilder()
+        Engine result = new EngineBuilder()
                 .withExpressionManager(expressionManager)
                 .withDefinitionProvider(adapter.processes())
                 .withTaskRegistry(taskRegistry)
@@ -84,6 +90,10 @@ public class EngineFactory {
                 .withResourceResolver(resourceResolver)
                 .withConfiguration(cfg)
                 .build();
+
+        result.addInterceptor(new TelemetryInterceptor(rpcClient, adapter.processes()));
+
+        return result;
     }
 
     private static class ProjectDefinitionAdapter {
@@ -125,7 +135,12 @@ public class EngineFactory {
             Map<String, String> m = new HashMap<>(current);
             m.putAll(attr);
 
-            return new ProcessDefinition(pd, m);
+            if(pd instanceof SourceAwareProcessDefinition) {
+                SourceAwareProcessDefinition spd = (SourceAwareProcessDefinition) pd;
+                return new SourceAwareProcessDefinition(pd.getId(), pd.getChildren(), m, spd.getSourceMaps());
+            } else {
+                return new ProcessDefinition(pd, m);
+            }
         }
     }
 }

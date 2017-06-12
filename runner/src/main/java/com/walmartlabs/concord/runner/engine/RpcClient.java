@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.runner.engine;
 
+import com.walmartlabs.concord.rpc.EventService;
 import com.walmartlabs.concord.rpc.KvService;
 import com.walmartlabs.concord.rpc.RunnerApiClient;
 import com.walmartlabs.concord.rpc.SecretStoreService;
@@ -27,5 +28,9 @@ public class RpcClient {
 
     public SecretStoreService getSecretStoreService() {
         return client.getSecretStoreService();
+    }
+
+    public EventService getEventService() {
+        return client.getEventService();
     }
 }
