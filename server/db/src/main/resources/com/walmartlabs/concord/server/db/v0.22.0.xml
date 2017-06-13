@@ -7,31 +7,6 @@
     <!-- PROCESS_EVENTS -->
 
     <changeSet id="22000" author="brig@gmail.com">
-        <preConditions onFail="MARK_RAN">
-            <dbms type="postgresql" />
-        </preConditions>
-
-        <createTable tableName="PROCESS_EVENTS">
-            <column name="INSTANCE_ID" type="varchar(36)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="EVENT_TYPE" type="varchar(36)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="EVENT_DATE" type="timestamp">
-                <constraints nullable="false"/>
-            </column>
-            <column name="EVENT_DATA" type="jsonb">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="22001" author="brig@gmail.com">
-        <preConditions onFail="MARK_RAN">
-            <dbms type="h2" />
-        </preConditions>
-
         <createTable tableName="PROCESS_EVENTS">
             <column name="INSTANCE_ID" type="varchar(36)">
                 <constraints nullable="false"/>
