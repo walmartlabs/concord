@@ -25,7 +25,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void onEvent(Date date, int type, Serializable data) throws ClientException {
+    public void onEvent(Date date, EventType type, Serializable data) throws ClientException {
         byte[] jsonData;
         try {
             jsonData = objectMapper.writeValueAsBytes(data);
@@ -40,10 +40,19 @@ public class EventServiceImpl implements EventService {
 
         blockingStub.onEvent(TEventRequest.newBuilder()
                 .setInstanceId(instanceId)
-                .setType(type)
+                .setType(convert(type))
                 .setDate(Timestamp.newBuilder().setSeconds(time.getEpochSecond())
                         .setNanos(time.getNano()).build())
                 .setData(ByteString.copyFrom(jsonData))
             .build());
+    }
+
+    private TEventType convert(EventType type) {
+        switch (type) {
+            case PROCESS_ELEMENT:
+                return TEventType.PROCESS_ELEMENT;
+            default:
+                throw new IllegalArgumentException("Unsupported event type: " + type);
+        }
     }
 }

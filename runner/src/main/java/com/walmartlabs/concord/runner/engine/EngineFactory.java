@@ -91,7 +91,7 @@ public class EngineFactory {
                 .withConfiguration(cfg)
                 .build();
 
-        result.addInterceptor(new TelemetryInterceptor(rpcClient, adapter.processes()));
+        result.addInterceptor(new ProcessElementInterceptor(rpcClient, adapter.processes()));
 
         return result;
     }

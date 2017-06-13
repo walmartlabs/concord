@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <changeSet id="20200" author="brig@gmail.com">
+    <changeSet id="22000" author="brig@gmail.com">
         <preConditions onFail="MARK_RAN">
             <dbms type="postgresql" />
         </preConditions>
@@ -13,7 +13,7 @@
             <column name="INSTANCE_ID" type="varchar(36)">
                 <constraints nullable="false"/>
             </column>
-            <column name="EVENT_TYPE" type="int">
+            <column name="EVENT_TYPE" type="varchar(36)">
                 <constraints nullable="false"/>
             </column>
             <column name="EVENT_DATE" type="timestamp">
@@ -25,7 +25,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20201" author="brig@gmail.com">
+    <changeSet id="22001" author="brig@gmail.com">
         <preConditions onFail="MARK_RAN">
             <dbms type="h2" />
         </preConditions>
@@ -34,7 +34,7 @@
             <column name="INSTANCE_ID" type="varchar(36)">
                 <constraints nullable="false"/>
             </column>
-            <column name="EVENT_TYPE" type="int">
+            <column name="EVENT_TYPE" type="varchar(36)">
                 <constraints nullable="false"/>
             </column>
             <column name="EVENT_DATE" type="timestamp">

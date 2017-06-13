@@ -3,6 +3,7 @@ package com.walmartlabs.concord.runner.engine;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.rpc.EventType;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.api.interceptors.ExecutionInterceptorAdapter;
@@ -17,17 +18,15 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 
-public class TelemetryInterceptor extends ExecutionInterceptorAdapter {
+public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(TelemetryInterceptor.class);
-
-    private static final int EVENT_TYPE = 0;
+    private static final Logger log = LoggerFactory.getLogger(ProcessElementInterceptor.class);
 
     private final RpcClient rpc;
 
     private final ProcessDefinitionProvider processDefinitionProvider;
 
-    public TelemetryInterceptor(RpcClient rpc, ProcessDefinitionProvider processDefinitionProvider) {
+    public ProcessElementInterceptor(RpcClient rpc, ProcessDefinitionProvider processDefinitionProvider) {
         this.rpc = rpc;
         this.processDefinitionProvider = processDefinitionProvider;
     }
@@ -51,25 +50,36 @@ public class TelemetryInterceptor extends ExecutionInterceptorAdapter {
         }
 
         try {
-            TelemetryEvent event = new TelemetryEvent(source.getLine(), source.getColumn(), source.getDescription());
-            rpc.getEventService().onEvent(new Date(), EVENT_TYPE, event);
+            rpc.getEventService().onEvent(new Date(), EventType.PROCESS_ELEMENT, convert(ev, source));
         } catch (Exception e) {
-            log.warn("onElement ['{}'] -> telemetry transfer error", ev.getProcessBusinessKey(), e);
+            log.warn("onElement ['{}'] -> transfer error", ev.getProcessBusinessKey(), e);
         }
     }
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    static class TelemetryEvent implements Serializable {
+    private static ProcessElementEvent convert(InterceptorElementEvent ev, SourceMap source) {
+        return new ProcessElementEvent(
+                ev.getProcessDefinitionId(), ev.getElementId(),
+                source.getLine(), source.getColumn(), source.getDescription());
+    }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    static class ProcessElementEvent implements Serializable {
+
+        private final String processDefinitionId;
+        private final String elementId;
         private final int line;
         private final int column;
         private final String description;
 
         @JsonCreator
-        public TelemetryEvent(
+        public ProcessElementEvent(
+                @JsonProperty("processDefinitionId") String processDefinitionId,
+                @JsonProperty("elementId") String elementId,
                 @JsonProperty("line") int line,
                 @JsonProperty("column") int column,
                 @JsonProperty("description") String description) {
+            this.processDefinitionId = processDefinitionId;
+            this.elementId = elementId;
             this.line = line;
             this.column = column;
             this.description = description;
@@ -87,13 +97,12 @@ public class TelemetryInterceptor extends ExecutionInterceptorAdapter {
             return description;
         }
 
-        @Override
-        public String toString() {
-            return "TelemetryEvent{" +
-                    "line=" + line +
-                    ", column=" + column +
-                    ", description='" + description + '\'' +
-                    '}';
+        public String getElementId() {
+            return elementId;
+        }
+
+        public String getProcessDefinitionId() {
+            return processDefinitionId;
         }
     }
 }

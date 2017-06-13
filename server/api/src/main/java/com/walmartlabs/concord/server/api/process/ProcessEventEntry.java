@@ -3,30 +3,25 @@ package com.walmartlabs.concord.server.api.process;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Map;
-import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProcessEventEntry implements Serializable {
 
     private final String processInstanceId;
 
-    private final int eventType;
+    private final ProcessEventType eventType;
 
     private final Date eventDate;
 
-    private final String data;
+    private final Object data;
 
     @JsonCreator
     public ProcessEventEntry(@JsonProperty("processInstanceId") String processInstanceId,
-                             @JsonProperty("eventType") int eventType,
+                             @JsonProperty("eventType") ProcessEventType eventType,
                              @JsonProperty("eventDate") Date eventDate,
                              @JsonProperty("data") String data) {
 
@@ -40,7 +35,7 @@ public class ProcessEventEntry implements Serializable {
         return processInstanceId;
     }
 
-    public int getEventType() {
+    public ProcessEventType getEventType() {
         return eventType;
     }
 
@@ -48,7 +43,8 @@ public class ProcessEventEntry implements Serializable {
         return eventDate;
     }
 
-    public String getData() {
+    @JsonRawValue
+    public Object getData() {
         return data;
     }
 }

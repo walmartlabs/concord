@@ -145,9 +145,13 @@ service TEventService {
     rpc onEvent(TEventRequest) returns (google.protobuf.Empty);
 }
 
+enum TEventType {
+    PROCESS_ELEMENT = 0;
+}
+
 message TEventRequest {
     string instanceId = 1;
-    int32 type = 2;
+    TEventType type = 2;
     google.protobuf.Timestamp date = 3;
     bytes data = 4;
 }

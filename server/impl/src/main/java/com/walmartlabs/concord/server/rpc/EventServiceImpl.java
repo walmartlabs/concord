@@ -4,6 +4,10 @@ import com.google.protobuf.Empty;
 import com.google.protobuf.util.Timestamps;
 import com.walmartlabs.concord.rpc.TEventRequest;
 import com.walmartlabs.concord.rpc.TEventServiceGrpc;
+import com.walmartlabs.concord.rpc.TEventType;
+import com.walmartlabs.concord.rpc.TJobStatus;
+import com.walmartlabs.concord.server.api.process.ProcessEventType;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.project.event.EventDao;
 import io.grpc.stub.StreamObserver;
@@ -28,9 +32,19 @@ public class EventServiceImpl extends TEventServiceGrpc.TEventServiceImplBase {
         byte[] data = request.getData().toByteArray();
         Date eventDate = new Date(Timestamps.toMillis(request.getDate()));
 
-        eventDao.insert(request.getInstanceId(), request.getType(), eventDate, new String(data));
+        eventDao.insert(request.getInstanceId(), convert(request.getType()), eventDate, new String(data));
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
+
+    private static ProcessEventType convert(TEventType type) {
+        switch (type) {
+            case PROCESS_ELEMENT:
+                return ProcessEventType.ELEMENT;
+            default:
+                throw new IllegalArgumentException("Unsupported event type: " + type);
+        }
+    }
+
 }

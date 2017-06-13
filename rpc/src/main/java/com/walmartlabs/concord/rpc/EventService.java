@@ -5,5 +5,5 @@ import java.util.Date;
 
 public interface EventService {
 
-    void onEvent(Date date, int type, Serializable data) throws ClientException;
+    void onEvent(Date date, EventType type, Serializable data) throws ClientException;
 }
