@@ -1,3 +1,3 @@
 # Documentation
 
-Moved to [the Concord website](concord.walmart.com).
+Moved to [the Concord website](http://concord.walmart.com).
