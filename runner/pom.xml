@@ -33,6 +33,10 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
         <!-- TODO this should be pulled from transitive deps, shouldn't? -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>

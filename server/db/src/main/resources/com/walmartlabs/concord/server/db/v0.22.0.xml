@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="22000" author="brig@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <dbms type="postgresql" />
+        </preConditions>
+
+        <createTable tableName="PROCESS_EVENT">
+            <column name="INSTANCE_ID" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EVENT_TYPE" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EVENT_DATE" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EVENT_DATA" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="22001" author="brig@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <dbms type="h2" />
+        </preConditions>
+
+        <createTable tableName="PROCESS_EVENT">
+            <column name="INSTANCE_ID" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EVENT_TYPE" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EVENT_DATE" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EVENT_DATA" type="varchar(4000)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

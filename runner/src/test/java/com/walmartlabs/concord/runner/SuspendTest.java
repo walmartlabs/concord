@@ -3,6 +3,7 @@ package com.walmartlabs.concord.runner;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
+import com.walmartlabs.concord.runner.engine.RpcClient;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.model.*;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class SuspendTest {
 
@@ -29,7 +31,7 @@ public class SuspendTest {
                 new SequenceFlow("f2", "ev1", "end"),
                 new EndEvent("end")));
 
-        Engine engine = new EngineFactory(taskRegistry).create(project, baseDir, Collections.emptySet());
+        Engine engine = new EngineFactory(taskRegistry, mock(RpcClient.class)).create(project, baseDir, Collections.emptySet());
 
         // ---
 

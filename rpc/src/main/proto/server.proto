@@ -9,6 +9,7 @@ package agent_api;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 
 // SYSTEM
 
@@ -136,4 +137,21 @@ enum TDecryptStatus {
 message TDecryptResponse {
     TDecryptStatus status = 1;
     bytes data = 2;
+}
+
+// EVENT SERVICE
+
+service TEventService {
+    rpc onEvent(TEventRequest) returns (google.protobuf.Empty);
+}
+
+enum TEventType {
+    PROCESS_ELEMENT = 0;
+}
+
+message TEventRequest {
+    string instanceId = 1;
+    TEventType type = 2;
+    google.protobuf.Timestamp date = 3;
+    bytes data = 4;
 }
