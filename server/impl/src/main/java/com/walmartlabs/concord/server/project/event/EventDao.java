@@ -47,6 +47,6 @@ public class EventDao extends AbstractDao {
     }
 
     private static ProcessEventEntry toEntry(ProcessEventRecord r) {
-        return new ProcessEventEntry(r.getInstanceId(), ProcessEventType.valueOf(r.getEventType()), r.getEventDate(), r.getEventData());
+        return new ProcessEventEntry(ProcessEventType.valueOf(r.getEventType()), r.getEventDate(), r.getEventData());
     }
 }
