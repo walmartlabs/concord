@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectKvStore.PROJECT_KV_STORE;
+import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
 
 @Named
 public class KvDao extends AbstractDao {

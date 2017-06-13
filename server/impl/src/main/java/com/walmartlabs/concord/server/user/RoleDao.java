@@ -9,8 +9,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.RolePermissions.ROLE_PERMISSIONS;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Roles.ROLES;
+import static com.walmartlabs.concord.server.jooq.tables.RolePermissions.ROLE_PERMISSIONS;
+import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
 
 @Named
 public class RoleDao extends AbstractDao {

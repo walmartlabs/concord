@@ -13,8 +13,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectTemplates.PROJECT_TEMPLATES;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPLATES;
+import static com.walmartlabs.concord.server.jooq.tables.ProjectTemplates.PROJECT_TEMPLATES;
+import static com.walmartlabs.concord.server.jooq.tables.Templates.TEMPLATES;
 
 @Named
 public class TemplateDao extends AbstractDao {

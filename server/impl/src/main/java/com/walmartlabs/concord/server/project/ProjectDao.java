@@ -3,8 +3,8 @@ package com.walmartlabs.concord.server.project;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
-import com.walmartlabs.concord.server.jooq.public_.tables.records.ProjectsRecord;
-import com.walmartlabs.concord.server.jooq.public_.tables.records.RepositoriesRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.RepositoriesRecord;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -13,11 +13,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectKvStore.PROJECT_KV_STORE;
-import static com.walmartlabs.concord.server.jooq.public_.tables.ProjectTemplates.PROJECT_TEMPLATES;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPLATES;
+import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
+import static com.walmartlabs.concord.server.jooq.tables.ProjectTemplates.PROJECT_TEMPLATES;
+import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
+import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.tables.Templates.TEMPLATES;
 
 @Named
 public class ProjectDao extends AbstractDao {

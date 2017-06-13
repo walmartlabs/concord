@@ -9,8 +9,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.LdapGroupMappings.LDAP_GROUP_MAPPINGS;
-import static com.walmartlabs.concord.server.jooq.public_.tables.LdapGroupRoles.LDAP_GROUP_ROLES;
+import static com.walmartlabs.concord.server.jooq.tables.LdapGroupMappings.LDAP_GROUP_MAPPINGS;
+import static com.walmartlabs.concord.server.jooq.tables.LdapGroupRoles.LDAP_GROUP_ROLES;
 
 @Named
 public class LdapDao extends AbstractDao {

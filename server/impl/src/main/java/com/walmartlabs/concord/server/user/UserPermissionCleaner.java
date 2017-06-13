@@ -8,7 +8,7 @@ import org.jooq.DSLContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.UserPermissions.USER_PERMISSIONS;
+import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PERMISSIONS;
 
 @Named
 public class UserPermissionCleaner extends AbstractDao {

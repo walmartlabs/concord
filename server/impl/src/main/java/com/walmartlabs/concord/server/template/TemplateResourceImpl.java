@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.Templates.TEMPLATES;
+import static com.walmartlabs.concord.server.jooq.tables.Templates.TEMPLATES;
 
 @Named
 public class TemplateResourceImpl implements TemplateResource, Resource {

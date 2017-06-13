@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.ProcessState.PROCESS_STATE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 
 @Named
 public class ProcessStateManager extends AbstractDao {

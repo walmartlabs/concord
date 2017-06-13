@@ -14,8 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.UserPermissions.USER_PERMISSIONS;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Users.USERS;
+import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PERMISSIONS;
+import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 
 @Named
 public class UserDao extends AbstractDao {

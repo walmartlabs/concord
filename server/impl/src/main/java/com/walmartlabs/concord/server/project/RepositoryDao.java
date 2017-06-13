@@ -9,8 +9,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS;
+import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 
 @Named
 public class RepositoryDao extends AbstractDao {

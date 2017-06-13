@@ -11,7 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
+import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 

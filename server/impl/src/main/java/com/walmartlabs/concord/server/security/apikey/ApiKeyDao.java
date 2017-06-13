@@ -14,7 +14,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.ApiKeys.API_KEYS;
+import static com.walmartlabs.concord.server.jooq.tables.ApiKeys.API_KEYS;
 
 @Named
 public class ApiKeyDao extends AbstractDao {

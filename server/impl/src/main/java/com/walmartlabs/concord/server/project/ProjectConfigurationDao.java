@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
+import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 
 @Named
 @Singleton

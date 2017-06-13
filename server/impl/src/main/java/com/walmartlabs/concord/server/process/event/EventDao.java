@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.process.event;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.process.ProcessEventEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEventType;
-import com.walmartlabs.concord.server.jooq.public_.tables.records.ProcessEventsRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.ProcessEventsRecord;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
-import static com.walmartlabs.concord.server.jooq.public_.Tables.PROCESS_EVENTS;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
 
 @Named
 public class EventDao extends AbstractDao {

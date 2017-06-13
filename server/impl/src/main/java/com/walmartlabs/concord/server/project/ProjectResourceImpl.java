@@ -24,8 +24,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.Projects.PROJECTS;
-import static com.walmartlabs.concord.server.jooq.public_.tables.Repositories.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
+import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 
 @Named
 public class ProjectResourceImpl extends AbstractDao implements ProjectResource, Resource {

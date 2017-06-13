@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.jooq.public_.tables.records.ProcessQueueRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
@@ -13,7 +13,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.currentTimestamp;
 import static org.jooq.impl.DSL.value;
 

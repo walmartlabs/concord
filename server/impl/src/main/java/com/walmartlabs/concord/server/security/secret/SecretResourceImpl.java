@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.server.jooq.public_.tables.Secrets.SECRETS;
+import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 
 @Named
 public class SecretResourceImpl implements SecretResource, Resource {

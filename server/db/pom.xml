@@ -109,6 +109,7 @@
                         <name>org.jooq.util.DefaultGenerator</name>
                         <database>
                             <name>org.jooq.util.h2.H2Database</name>
+                            <inputSchema>PUBLIC</inputSchema>
                             <includes>.*</includes>
                             <excludes>DATABASECHANGELOG.*</excludes>
                         </database>
