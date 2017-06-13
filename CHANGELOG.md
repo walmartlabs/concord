@@ -4,7 +4,8 @@
 
 ### Added
 
-- concord-server: support for LDAPS.
+- concord-server: support for LDAPS;
+- concord-runner, concord-server: record process execution events.
 
 ### Changed
 

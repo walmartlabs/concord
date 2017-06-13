@@ -5,11 +5,9 @@ import com.google.protobuf.util.Timestamps;
 import com.walmartlabs.concord.rpc.TEventRequest;
 import com.walmartlabs.concord.rpc.TEventServiceGrpc;
 import com.walmartlabs.concord.rpc.TEventType;
-import com.walmartlabs.concord.rpc.TJobStatus;
 import com.walmartlabs.concord.server.api.process.ProcessEventType;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.project.event.EventDao;
+import com.walmartlabs.concord.server.process.event.EventDao;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;

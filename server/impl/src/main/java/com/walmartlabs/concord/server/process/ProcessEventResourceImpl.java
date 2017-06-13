@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.server.api.process.ProcessEventEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEventResource;
-import com.walmartlabs.concord.server.project.event.EventDao;
+import com.walmartlabs.concord.server.process.event.EventDao;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;

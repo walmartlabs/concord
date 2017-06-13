@@ -4,12 +4,14 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- PROCESS_EVENTS -->
+
     <changeSet id="22000" author="brig@gmail.com">
         <preConditions onFail="MARK_RAN">
             <dbms type="postgresql" />
         </preConditions>
 
-        <createTable tableName="PROCESS_EVENT">
+        <createTable tableName="PROCESS_EVENTS">
             <column name="INSTANCE_ID" type="varchar(36)">
                 <constraints nullable="false"/>
             </column>
@@ -30,7 +32,7 @@
             <dbms type="h2" />
         </preConditions>
 
-        <createTable tableName="PROCESS_EVENT">
+        <createTable tableName="PROCESS_EVENTS">
             <column name="INSTANCE_ID" type="varchar(36)">
                 <constraints nullable="false"/>
             </column>
