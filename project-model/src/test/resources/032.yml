@@ -1,0 +1,7 @@
+main:
+  - set: {a: "1234", b: 2}
+  - ${testBean.toString(a)}
+  - set:
+      a: ${a += "1"}
+      b: 3
+  - ${testBean.toString(a)}

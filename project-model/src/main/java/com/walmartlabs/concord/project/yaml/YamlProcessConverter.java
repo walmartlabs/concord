@@ -141,6 +141,16 @@ public final class YamlProcessConverter {
                 default:
                     throw new YamlConverterException("Unsupported script task type: " + c.getType());
             }
+        } else if (s instanceof YamlSetVariablesStep) {
+            YamlSetVariablesStep c = (YamlSetVariablesStep) s;
+
+            String expression = "${vars.set(execution, __0)}";
+
+            Set<VariableMapping> maps = new HashSet<>();
+            maps.add(new VariableMapping(null, null, c.getVariables(), "__0", true));
+            ELCall call = new ELCall(expression, maps);
+
+            return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args, null), s, "Set variables");
         } else {
             throw new YamlConverterException("Unknown step type: " + s.getClass());
         }

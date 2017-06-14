@@ -4,6 +4,7 @@ import com.walmartlabs.concord.common.Task;
 import io.takari.bpm.api.ExecutionContext;
 
 import javax.inject.Named;
+import java.util.Map;
 
 @Named("vars")
 public class VariablesTask implements Task {
@@ -19,5 +20,9 @@ public class VariablesTask implements Task {
             v = ctx.getVariable(defaultKey);
         }
         ctx.setVariable(targetKey, v);
+    }
+
+    public void set(ExecutionContext ctx, Map<String, Object> vars) {
+        vars.forEach(ctx::setVariable);
     }
 }
