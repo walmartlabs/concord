@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.template;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.Files;
@@ -11,6 +12,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+@Ignore("requires a local DB instance")
 public class TemplateResolverTest extends AbstractDaoTest {
 
     @Test

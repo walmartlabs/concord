@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -15,6 +16,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
+@Ignore("requires a local DB instance")
 public class SecretDaoTest extends AbstractDaoTest {
 
     @Test

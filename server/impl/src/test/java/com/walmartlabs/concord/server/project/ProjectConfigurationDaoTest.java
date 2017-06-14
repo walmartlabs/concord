@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Map;
@@ -13,6 +14,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
+@Ignore("requires a local DB instance")
 public class ProjectConfigurationDaoTest extends AbstractDaoTest {
 
     @Test

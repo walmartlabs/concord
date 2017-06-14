@@ -6,8 +6,6 @@ import org.jooq.DSLContext;
 import org.jooq.Record1;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,10 +15,6 @@ import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_
 @Named
 public class KvDao extends AbstractDao {
 
-    private static final Logger log = LoggerFactory.getLogger(KvDao.class);
-
-    private final Kv delegate;
-
     @Inject
     public KvDao(Configuration cfg) {
         super(cfg);
@@ -28,12 +22,6 @@ public class KvDao extends AbstractDao {
         switch (cfg.dialect()) {
             case POSTGRES:
             case POSTGRES_9_5: {
-                delegate = new PgKv();
-                break;
-            }
-            case H2: {
-                log.warn("init -> using H2-specific implementation, expect issues in multi server setups");
-                delegate = new H2Kv();
                 break;
             }
             default:
@@ -49,7 +37,18 @@ public class KvDao extends AbstractDao {
     }
 
     public synchronized void put(String projectName, String key, String value) {
-        tx(tx -> delegate.put(tx, projectName, key, value));
+        tx(tx -> {
+            int rows = tx.insertInto(PROJECT_KV_STORE)
+                    .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_STRING)
+                    .values(projectName, key, value)
+                    .onConflict(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY)
+                    .doUpdate().set(PROJECT_KV_STORE.VALUE_STRING, value)
+                    .execute();
+
+            if (rows != 1) {
+                throw new DataAccessException("Invalid number of rows: " + rows);
+            }
+        });
     }
 
     public String getString(String projectName, String key) {
@@ -79,34 +78,7 @@ public class KvDao extends AbstractDao {
     }
 
     public synchronized long inc(String projectName, String key) {
-        return txResult(tx -> delegate.inc(tx, projectName, key));
-    }
-
-    private interface Kv {
-
-        void put(DSLContext tx, String projectName, String key, String value);
-
-        long inc(DSLContext tx, String projectName, String key);
-    }
-
-    private static final class PgKv implements Kv {
-
-        @Override
-        public void put(DSLContext tx, String projectName, String key, String value) {
-            int rows = tx.insertInto(PROJECT_KV_STORE)
-                    .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_STRING)
-                    .values(projectName, key, value)
-                    .onConflict(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY)
-                    .doUpdate().set(PROJECT_KV_STORE.VALUE_STRING, value)
-                    .execute();
-
-            if (rows != 1) {
-                throw new DataAccessException("Invalid number of rows: " + rows);
-            }
-        }
-
-        @Override
-        public long inc(DSLContext tx, String projectName, String key) {
+        return txResult(tx -> {
             // grab a lock, it will be released when the transaction ends
             tx.execute("select from pg_advisory_xact_lock(?)", hash(projectName, key));
 
@@ -124,63 +96,16 @@ public class KvDao extends AbstractDao {
                     .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
                             .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
                     .fetchOne(PROJECT_KV_STORE.VALUE_LONG);
-        }
-
-        private long hash(String projectName, String key) {
-            // should be "good enough" (tm) for advisory locking
-            String s = projectName + "/" + key;
-            long hash = 7;
-            for (int i = 0; i < s.length(); i++) {
-                hash = hash * 31 + s.charAt(i);
-            }
-            return hash;
-        }
+        });
     }
 
-    private static final class H2Kv implements Kv {
-
-        @Override
-        public void put(DSLContext tx, String projectName, String key, String value) {
-            tx.mergeInto(PROJECT_KV_STORE)
-                    .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_STRING)
-                    .key(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY)
-                    .values(projectName, key, value)
-                    .execute();
+    private static long hash(String projectName, String key) {
+        // should be "good enough" (tm) for advisory locking
+        String s = projectName + "/" + key;
+        long hash = 7;
+        for (int i = 0; i < s.length(); i++) {
+            hash = hash * 31 + s.charAt(i);
         }
-
-        @Override
-        public synchronized long inc(DSLContext tx, String projectName, String key) {
-            Long i = tx.select(PROJECT_KV_STORE.VALUE_LONG)
-                    .from(PROJECT_KV_STORE)
-                    .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
-                            .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
-                    .forUpdate()
-                    .fetchOne(PROJECT_KV_STORE.VALUE_LONG);
-
-            if (i == null) {
-                i = 1L;
-
-                tx.insertInto(PROJECT_KV_STORE)
-                        .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_LONG)
-                        .values(projectName, key, i)
-                        .execute();
-
-                return i;
-            }
-
-            i += 1;
-
-            int rows = tx.update(PROJECT_KV_STORE)
-                    .set(PROJECT_KV_STORE.VALUE_LONG, i)
-                    .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
-                            .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
-                    .execute();
-
-            if (rows != 1) {
-                throw new DataAccessException("Invalid number of rows: " + rows);
-            }
-
-            return i;
-        }
+        return hash;
     }
 }

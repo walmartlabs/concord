@@ -250,6 +250,9 @@
                                         <env>
                                             <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
                                         </env>
+                                        <wait>
+                                            <log>(?s).*ready for start up.*ready to accept connections.*</log>
+                                        </wait>
                                     </run>
                                 </image>
                                 <image>
