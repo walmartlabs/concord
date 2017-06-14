@@ -1134,6 +1134,31 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
+    @Test
+    public void test032() throws Exception {
+        deploy("032.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        // start -> subprocess + boundary-event -> end
+//        assertEquals(9, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        taskRegistry.register("vars", testBean);
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("aInt", 2);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("1234"));
+        verify(testBean, times(1)).toString(eq("12341"));
+    }
+
     // FORMS (100 - 199)
 
     @Test
@@ -1423,6 +1448,10 @@ public class YamlParserTest {
 
         public void info(String a, String b) {
             // do nothing
+        }
+
+        public void set(ExecutionContext executionContext, Map<String, Object> vars) {
+            vars.forEach(executionContext::setVariable);
         }
     }
 

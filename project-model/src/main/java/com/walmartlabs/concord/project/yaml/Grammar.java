@@ -237,10 +237,18 @@ public class Grammar {
             satisfyField("form").then(satisfyToken(JsonToken.VALUE_STRING)).bind(a ->
                     formCallOptions.map(options -> new YamlFormCall(a.location, (String) a.value, options))));
 
-    // stepObject := START_OBJECT group | ifExpr | exprFull | formCall | taskFull | event | script | taskShort END_OBJECT
+    // inVars := FIELD_NAME "vars" START_OBJECT (kv)+ END_OBJECT
+    private static final Parser<Atom, YamlStep> vars = label("Variables",
+            satisfyField("set")
+                    .bind(a ->
+                            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT, many1(kv))
+                                    .map(Grammar::toMap)
+                                    .map(v -> new YamlSetVariablesStep(a.location, v))));
+
+    // stepObject := START_OBJECT group | ifExpr | exprFull | formCall | vars | taskFull | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(group, ifExpr, exprFull), formCall, taskFull, event, errorReturn, script, taskShort)));
+                    choice(choice(group, ifExpr, exprFull, formCall, vars), taskFull, event, errorReturn, script, taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
     private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, callProc, stepObject);
