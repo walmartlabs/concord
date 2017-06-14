@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 
+@Ignore("requires a local DB instance")
 public class UserPermissionCleanerTest extends AbstractDaoTest {
 
     @Test

@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.user.RoleEntry;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Ignore("requires a local DB instance")
 public class RoleDaoTest extends AbstractDaoTest {
 
     @Test

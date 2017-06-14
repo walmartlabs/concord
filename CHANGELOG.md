@@ -12,6 +12,10 @@
 - concord-server: fixed an issue with `data.js` generation when the
 store directory does not exist.
 
+### Breaking
+
+- concord-server: remove the support for H2 database.
+
 
 
 ## [0.20.1] - 2017-06-08

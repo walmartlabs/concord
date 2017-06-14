@@ -4,6 +4,7 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.SecureRandomProvider;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Base64;
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertNull;
 
+@Ignore("requires a local DB instance")
 public class UserDaoTest extends AbstractDaoTest {
 
     private UserDao userDao;

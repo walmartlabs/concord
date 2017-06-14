@@ -6,9 +6,13 @@ envs:
       MVN_SETTINGS: .looper/settings.xml
       DEPLOYMENT_USERNAME: "%{credentials.username('walmart-deployment')}"
       DEPLOYMENT_PASSWORD: "%{credentials.password('walmart-deployment')}"
-      # this should be provided by looper, but it never will
-      DOCKER_HOST: tcp://localhost:2375
-      DOCKER_REGISTRY: docker.prod.walmart.com
+
+      # until we will be able to run docker images from mvn directly on a looper's slave
+      CI_DB_HOST: "docker.dev.concord-ci.devtools.prod.walmart.com"
+      CI_DB_USERNAME: "%{credentials.username('concordCiDb')}"
+      CI_DB_PASSWORD: "%{credentials.password('concordCiDb')}"
+      DOCKER_HOST: "tcp://docker.dev.concord-ci.devtools.prod.walmart.com:2375"
+      DOCKER_API_VERSION: "1.22"
 
 tools:
   jdk: 8
@@ -20,17 +24,15 @@ flows:
       - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
 
   build:
+    - call: cleanup
     - (name build) mvn -U -B -s $MVN_SETTINGS clean install -Plooper
 
   build_and_deploy:
+    - call: cleanup
     - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -Plooper
 
-# won't work in the current version of looper
-#  it:
-#    - (name ITs) mvn -U -B clean install -Plooper -Pit -Pdocker -Ddocker.host.addr=`/sbin/ip -o -4 addr list | grep docker0 | sed 's/.*inet //;s/\/.*//'`
-
-#  docker_push:
-#     - (name docker-images) echo "And this is where I'd put my docker:push... if I had credentials!"
+  cleanup:
+    - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
 
   default (on linux):
     - call: build_and_deploy

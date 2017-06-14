@@ -16,19 +16,19 @@ public class DatabaseConfigurationProvider implements Provider<DatabaseConfigura
     private static final Logger log = LoggerFactory.getLogger(DatabaseConfigurationProvider.class);
 
     public static final String DB_DIALECT_KEY = "DB_DIALECT";
-    public static final String DEFAULT_DB_DIALECT = "H2";
+    public static final String DEFAULT_DB_DIALECT = "POSTGRES";
 
     public static final String DB_DRIVER_KEY = "DB_DRIVER";
-    public static final String DEFAULT_DB_DRIVER = "org.h2.Driver";
+    public static final String DEFAULT_DB_DRIVER = "org.postgresql.Driver";
 
     public static final String DB_URL_KEY = "DB_URL";
-    public static final String DEFAULT_DB_URL = "jdbc:h2:mem:test";
+    public static final String DEFAULT_DB_URL = "jdbc:postgresql://localhost:5432/postgres";
 
     public static final String DB_USERNAME_KEY = "DB_USERNAME";
-    public static final String DEFAULT_DB_USERNAME = "sa";
+    public static final String DEFAULT_DB_USERNAME = "postgres";
 
     public static final String DB_PASSWORD_KEY = "DB_PASSWORD";
-    public static final String DEFAULT_DB_PASSWORD = null;
+    public static final String DEFAULT_DB_PASSWORD = "q1";
 
     @Override
     public DatabaseConfiguration get() {

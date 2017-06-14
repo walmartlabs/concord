@@ -5,6 +5,7 @@ import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.template.TemplateDao;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -15,6 +16,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
+@Ignore("requires a local DB instance")
 public class ProjectDaoTest extends AbstractDaoTest {
 
     private ProjectDao projectDao;

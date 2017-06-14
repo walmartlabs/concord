@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.security.ldap;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
 import com.walmartlabs.concord.server.user.RoleDao;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -13,6 +14,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Ignore("requires a local DB instance")
 public class LdapDaoTest extends AbstractDaoTest {
 
     @Test

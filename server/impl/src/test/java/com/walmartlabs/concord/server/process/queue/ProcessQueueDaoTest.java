@@ -4,12 +4,14 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.UUID;
 
 import static org.junit.Assert.*;
 
+@Ignore("requires a local DB instance")
 public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     private ProcessQueueDao queueDao;

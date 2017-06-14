@@ -1,12 +1,14 @@
 package com.walmartlabs.concord.server.project.kv;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore("requires a local DB instance")
 public class KvDaoTest extends AbstractDaoTest {
 
     @Test(timeout = 10000)
