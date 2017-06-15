@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <title>My Form</title>
+
+    <script src="data.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.6/handlebars.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css"/>
+</head>
+<body>
+
+<h1 class="ui center aligned header">My Form</h1>
+
+<div class="ui text center aligned container">
+    Dynamic form example.
+</div>
+
+<div class="ui text container">
+    <div class="ui segment">
+        <div id="container">
+            <script id="formTemplate" type="text/x-handlebars-template">
+                {{#if success}}
+                <h3 id="success" class="ui header">Success</h3>
+                {{else}}
+                <form class="ui form {{#if errors}}error{{/if}}" method="post" action="{{submitUrl}}">
+
+                    {{#if errors}}
+                    <div class="ui error message">
+                        <ul class='list'>
+                            {{#each errors}}
+                            <li>{{this}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                    {{/if}}
+
+                    <div class="field">
+                        <div id="list" class="ui list">
+                            {{#each values.colors}}
+                            <div class="item"><input type="text" name="colors" value="{{this}}"/></div>
+                            {{/each}}
+                        </div>
+
+                        <button class="ui labeled icon button" onclick="handleAdd(event)">
+                            <i class="add icon"></i>
+                            Add
+                        </button>
+                    </div>
+
+                    <div class="ui divider"></div>
+
+                    <button class="ui button" type="reset">Reset</button>
+                    <button class="ui primary button" type="submit" onclick="handleSubmit(event)">Submit</button>
+                </form>
+                {{/if}}
+            </script>
+        </div>
+    </div>
+
+    <img class="ui centered image small" src="logo.png"/>
+</div>
+
+<script>
+    function handleSubmit(ev) {
+        var button = ev.target;
+        var form = button.parentElement;
+        form.classList.add("loading");
+    }
+
+    function handleAdd(ev) {
+        ev.preventDefault();
+        $("#list").append("<div class='item'><input type='text' name='colors' value='enter something'/>");
+    }
+
+    var source = document.getElementById("formTemplate").innerHTML;
+    var template = Handlebars.compile(source);
+    var html = template(data);
+
+    document.getElementById("container").innerHTML = html;
+
+    $('.ui.dropdown').dropdown();
+</script>
+
+</body>
+</html>

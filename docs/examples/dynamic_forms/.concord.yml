@@ -1,0 +1,17 @@
+flows:
+  main:
+    - form: myForm
+    - log: "I've chosen those colors: ${myForm.colors}"
+
+forms:
+  myForm:
+    - colors: {type: "string+"}
+
+variables:
+  entryPoint: main
+  arguments:
+    myForm:
+      colors:
+        - red
+        - green
+        - blue
