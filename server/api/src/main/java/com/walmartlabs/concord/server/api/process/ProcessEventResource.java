@@ -26,6 +26,5 @@ public interface ProcessEventResource {
     @ApiOperation("List process events")
     @Path("/{processInstanceId}/event")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProcessEventEntry> list(
-            @ApiParam @PathParam("processInstanceId") @ConcordId String processInstanceId);
+    List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") @ConcordId String processInstanceId);
 }
