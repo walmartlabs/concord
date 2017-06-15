@@ -82,6 +82,7 @@ public class LogManager {
         Path path = getPath(id);
         if (!Files.exists(path)) {
             Files.createFile(path);
+            log.info("prepare ['{}'] -> created log file: {}", id, path.toAbsolutePath());
         }
     }
 
