@@ -12,16 +12,13 @@ import java.util.Date;
 public class ProcessEventEntry implements Serializable {
 
     private final ProcessEventType eventType;
-
     private final Date eventDate;
-
     private final Object data;
 
     @JsonCreator
-    public ProcessEventEntry(
-            @JsonProperty("eventType") ProcessEventType eventType,
-             @JsonProperty("eventDate") Date eventDate,
-             @JsonProperty("data") String data) {
+    public ProcessEventEntry(@JsonProperty("eventType") ProcessEventType eventType,
+                             @JsonProperty("eventDate") Date eventDate,
+                             @JsonProperty("data") String data) {
 
         this.eventType = eventType;
         this.eventDate = eventDate;

@@ -4,6 +4,7 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.WebApplicationException;
@@ -42,6 +43,18 @@ public class ProcessIT extends AbstractServerIT {
 
         assertLog(".*Hello, world.*", ab);
         assertLog(".*Hello, local files!.*", ab);
+    }
+
+    @Test
+    @Ignore
+    public void testLotsOfProcesses() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+
+        int count = 100;
+        for (int i = 0; i < count; i++) {
+            ProcessResource processResource = proxy(ProcessResource.class);
+            processResource.start(new ByteArrayInputStream(payload), false);
+        }
     }
 
     @Test(timeout = 30000)
