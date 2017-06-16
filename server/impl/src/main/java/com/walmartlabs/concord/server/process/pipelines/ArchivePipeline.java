@@ -22,24 +22,23 @@ public class ArchivePipeline extends Pipeline {
     @Inject
     public ArchivePipeline(Injector injector) {
         super(injector,
-                    LogFileProcessor.class,
-                    PreparingProcessor.class,
-                    WorkspaceArchiveProcessor.class,
-                    WorkspaceRequestDataParsingProcessor.class,
-                    RequestDataParsingProcessor.class,
-                    ActiveProfilesProcessor.class,
-                    ProjectDefinitionProcessor.class,
-                    ProjectConfigurationProcessor.class,
-                    RequestDefaultsParsingProcessor.class,
-                    InventoryProcessor.class,
-                    PrivateKeyProcessor.class,
-                    TemplateProcessor.class,
-                    DependenciesProcessor.class,
-                    UserInfoProcessor.class,
-                    RequestDataStoringProcessor.class,
-                    ValidatingProcessor.class,
-                    StateImportingProcessor.class,
-                    EnqueueingProcessor.class);
+                PreparingProcessor.class,
+                WorkspaceArchiveProcessor.class,
+                WorkspaceRequestDataParsingProcessor.class,
+                RequestDataParsingProcessor.class,
+                ActiveProfilesProcessor.class,
+                ProjectDefinitionProcessor.class,
+                ProjectConfigurationProcessor.class,
+                RequestDefaultsParsingProcessor.class,
+                InventoryProcessor.class,
+                PrivateKeyProcessor.class,
+                TemplateProcessor.class,
+                DependenciesProcessor.class,
+                UserInfoProcessor.class,
+                RequestDataStoringProcessor.class,
+                ValidatingProcessor.class,
+                StateImportingProcessor.class,
+                EnqueueingProcessor.class);
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
     }

@@ -1,13 +1,12 @@
 package com.walmartlabs.concord.server.ansible;
 
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
-import com.walmartlabs.concord.server.LogManager;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
-import com.walmartlabs.concord.server.project.ProjectConfigurationDao;
 import com.walmartlabs.concord.server.project.RepositoryProcessor;
 import com.walmartlabs.concord.server.project.RepositoryProcessor.RepositoryInfo;
 import com.walmartlabs.concord.server.security.secret.KeyPair;

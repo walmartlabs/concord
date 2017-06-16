@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <!-- AGENT_COMMANDS -->
+
+    <changeSet id="21000" author="ibodrov@gmail.com">
+        <createTable tableName="AGENT_COMMANDS">
+            <column name="COMMAND_ID" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="AGENT_ID" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COMMAND_STATUS" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_AT" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COMMAND_DATA" type="blob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="21010" author="ibodrov@gmail.com">
+        <createIndex tableName="AGENT_COMMANDS" indexName="IDX_A_CMD_A_ID">
+            <column name="AGENT_ID"/>
+            <column name="COMMAND_STATUS"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

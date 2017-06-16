@@ -8,6 +8,11 @@ public class CancelJobCommand implements Command {
         this.instanceId = instanceId;
     }
 
+    @Override
+    public CommandType getType() {
+        return CommandType.CANCEL_JOB;
+    }
+
     public String getInstanceId() {
         return instanceId;
     }

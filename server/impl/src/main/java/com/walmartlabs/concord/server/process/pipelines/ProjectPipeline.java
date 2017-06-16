@@ -24,7 +24,6 @@ public class ProjectPipeline extends Pipeline {
     @Inject
     public ProjectPipeline(Injector injector) {
         super(injector,
-                LogFileProcessor.class,
                 PreparingProcessor.class,
                 RequestDataParsingProcessor.class,
                 RepositoryProcessor.class,

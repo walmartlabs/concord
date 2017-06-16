@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-server: store agent commands in the DB;
+- concord-server: store process logs in the DB;
 - concord-server: fixed an issue with `data.js` generation when the
 store directory does not exist.
 

@@ -6,8 +6,9 @@ import types from "./actions";
 
 function* loadData(action: any): Generator<*, *, *> {
     try {
+        // TODO parallel?
         const status = yield call(process.fetchStatus, action.instanceId);
-        const response = yield call(log.fetchLog, status.logFileName, action.fetchRange);
+        const response = yield call(log.fetchLog, action.instanceId, action.fetchRange);
 
         yield put({
             type: types.PROCESS_LOG_RESPONSE,
