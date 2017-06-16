@@ -1,5 +1,8 @@
 {
   "entryPoint": "main",
+  "dependencies": [
+    "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/basic/ansible-tasks/0.20.0/ansible-tasks-0.20.0.jar"
+  ],
   "arguments": {
     "ansibleParams": {
       "playbook": "playbook/hello.yml",
