@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.rpc;
 
 import com.walmartlabs.concord.rpc.ClientException;
 import com.walmartlabs.concord.rpc.EventService;
+import com.walmartlabs.concord.rpc.SlackService;
 import io.grpc.*;
 import org.eclipse.sisu.EagerSingleton;
 import org.slf4j.Logger;
@@ -25,7 +26,8 @@ public class RpcServer {
                      JobQueueImpl jobQueue,
                      KvServiceImpl kvService,
                      SecretStoreServiceImpl secretStoreService,
-                     EventServiceImpl eventService) throws ClientException {
+                     EventServiceImpl eventService,
+                     SlackServiceImpl slackService) throws ClientException {
 
         // TODO cfg
         int port = 8101;
@@ -37,6 +39,7 @@ public class RpcServer {
                 .addService(kvService)
                 .addService(secretStoreService)
                 .addService(eventService)
+                .addService(slackService)
                 .addTransportFilter(new LoggingTransportFilter())
                 .build();
 

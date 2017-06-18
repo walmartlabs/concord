@@ -11,6 +11,7 @@ public class RunnerApiClient {
     private final KvService kvService;
     private final SecretStoreService secretStoreService;
     private final EventService eventService;
+    private final SlackService slackService;
 
     public RunnerApiClient(String instanceId, String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port)
@@ -20,6 +21,7 @@ public class RunnerApiClient {
         this.kvService = new KvServiceImpl(instanceId, channel);
         this.secretStoreService = new SecretStoreServiceImpl(instanceId, channel);
         this.eventService = new EventServiceImpl(instanceId, channel);
+        this.slackService = new SlackServiceImpl(instanceId, channel);
     }
 
     public void stop() {
@@ -40,5 +42,9 @@ public class RunnerApiClient {
 
     public EventService getEventService() {
         return eventService;
+    }
+
+    public SlackService getSlackService() {
+        return slackService;
     }
 }

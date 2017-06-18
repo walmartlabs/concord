@@ -1,9 +1,6 @@
 package com.walmartlabs.concord.runner.engine;
 
-import com.walmartlabs.concord.rpc.EventService;
-import com.walmartlabs.concord.rpc.KvService;
-import com.walmartlabs.concord.rpc.RunnerApiClient;
-import com.walmartlabs.concord.rpc.SecretStoreService;
+import com.walmartlabs.concord.rpc.*;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -15,11 +12,11 @@ public class RpcClient {
     private final RunnerApiClient client;
 
     public RpcClient() {
-        String instanceid = System.getProperty("instanceId");
+        String instanceId = System.getProperty("instanceId");
         String host = System.getProperty("rpc.server.host", "localhost");
         int port = Integer.parseInt(System.getProperty("rpc.server.port", "8101"));
 
-        this.client = new RunnerApiClient(instanceid, host, port);
+        this.client = new RunnerApiClient(instanceId, host, port);
     }
 
     public KvService getKvService() {
@@ -32,5 +29,9 @@ public class RpcClient {
 
     public EventService getEventService() {
         return client.getEventService();
+    }
+
+    public SlackService getSlackService() {
+        return client.getSlackService();
     }
 }
