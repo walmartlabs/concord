@@ -3,6 +3,8 @@ package com.walmartlabs.concord.common.server;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.GuiceServletContextListener;
+import org.eclipse.jetty.rewrite.handler.RewriteHandler;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -29,7 +31,7 @@ public abstract class Server {
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
         server.addConnector(connector);
-        server.setHandler(createServletContextHandler());
+        server.setHandler(createHandler());
 
         server.start();
     }
@@ -43,7 +45,14 @@ public abstract class Server {
         return c.getLocalPort();
     }
 
-    private ServletContextHandler createServletContextHandler() {
+    private Handler createHandler() {
+        RewriteHandler rewrite = new RewriteHandler();
+        configureRewriteHandler(rewrite);
+        rewrite.setHandler(createServletHandler());
+        return rewrite;
+    }
+
+    private Handler createServletHandler() {
         int options = 0;
         if (sessionsEnabled) {
             options |= ServletContextHandler.SESSIONS;
@@ -64,6 +73,9 @@ public abstract class Server {
         configureServletContext(h, i);
 
         return h;
+    }
+
+    protected void configureRewriteHandler(RewriteHandler h) {
     }
 
     protected void configureServletContext(ServletContextHandler h, Injector i) {

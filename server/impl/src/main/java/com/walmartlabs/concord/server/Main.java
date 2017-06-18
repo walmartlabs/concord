@@ -6,6 +6,8 @@ import com.walmartlabs.concord.common.bootstrap.Bootstrap;
 import com.walmartlabs.concord.common.server.Server;
 import com.walmartlabs.concord.server.security.SecurityModule;
 import org.apache.shiro.guice.aop.ShiroAopModule;
+import org.eclipse.jetty.rewrite.handler.RewriteHandler;
+import org.eclipse.jetty.rewrite.handler.RewriteRegexRule;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,15 @@ public class Main {
         long t1 = System.currentTimeMillis();
 
         Server server = new Server(8001, true) {
+
+            @Override
+            protected void configureRewriteHandler(RewriteHandler h) {
+                // backwards compatibility
+                RewriteRegexRule logsRule = new RewriteRegexRule();
+                logsRule.setRegex("/logs/(.*)\\.log");
+                logsRule.setReplacement("/api/v1/process/$1/log");
+                h.addRule(logsRule);
+            }
 
             @Override
             protected void configureServletContext(ServletContextHandler h, Injector i) {

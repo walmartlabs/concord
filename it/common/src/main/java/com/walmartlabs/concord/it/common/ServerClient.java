@@ -110,7 +110,7 @@ public class ServerClient {
                 }
             }
 
-            Thread.sleep(1000);
+            Thread.sleep(500);
         }
     }
 
@@ -143,7 +143,7 @@ public class ServerClient {
                 fail("waitForLog: " + pattern);
             }
 
-            Thread.sleep(1000);
+            Thread.sleep(500);
         }
     }
 

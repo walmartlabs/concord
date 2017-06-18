@@ -143,4 +143,11 @@ public interface ProcessResource {
     @ApiOperation("List processes")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> list();
+
+    @GET
+    @ApiOperation("Retrieve the log")
+    @Path("/{id}/log")
+    @Produces(MediaType.TEXT_PLAIN)
+    Response getLog(@ApiParam @ConcordId @PathParam("id") String instanceId,
+                    @HeaderParam("range") String range);
 }

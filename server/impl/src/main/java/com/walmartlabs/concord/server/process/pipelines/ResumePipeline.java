@@ -12,7 +12,6 @@ public class ResumePipeline extends Pipeline {
     @Inject
     public ResumePipeline(Injector injector) {
         super(injector,
-                LogFileProcessor.class,
                 ResumeStateStoringProcessor.class,
                 RequestDataStoringProcessor.class,
                 StateImportingProcessor.class,

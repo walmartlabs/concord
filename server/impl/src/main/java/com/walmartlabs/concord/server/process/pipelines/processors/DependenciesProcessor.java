@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.google.common.collect.Sets;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
-import com.walmartlabs.concord.server.LogManager;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.cfg.DependencyStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;

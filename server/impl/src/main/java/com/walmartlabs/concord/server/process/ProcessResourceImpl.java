@@ -8,6 +8,8 @@ import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
+import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
+import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogEntry;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
@@ -52,6 +54,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     private final ProjectDao projectDao;
     private final ProcessQueueDao queueDao;
+    private final ProcessLogsDao logsDao;
     private final Chain archivePipeline;
     private final Chain projectPipeline;
     private final Chain resumePipeline;
@@ -63,7 +66,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
                                ProcessQueueDao queueDao,
-                               ArchivePipeline archivePipeline,
+                               ProcessLogsDao logsDao, ArchivePipeline archivePipeline,
                                ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
                                PayloadManager payloadManager,
@@ -73,6 +76,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         this.projectDao = projectDao;
         this.queueDao = queueDao;
+        this.logsDao = logsDao;
         this.archivePipeline = archivePipeline;
         this.projectPipeline = projectPipeline;
         this.resumePipeline = resumePipeline;
@@ -325,6 +329,62 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @WithTimer
     public List<ProcessEntry> list() {
         return queueDao.list();
+    }
+
+    @Override
+    @Validate
+    @WithTimer
+    public Response getLog(String instanceId, String range) {
+        Integer start = null;
+        Integer end = null;
+
+        if (range != null && !range.trim().isEmpty()) {
+            if (!range.startsWith("bytes=")) {
+                throw new WebApplicationException("Invalid range header: " + range, Status.BAD_REQUEST);
+            }
+
+            String[] as = range.substring("bytes=".length()).split("-");
+            if (as.length > 0) {
+                try {
+                    start = Integer.parseInt(as[0]);
+                } catch (NumberFormatException e) {
+                }
+            }
+
+            if (as.length > 1) {
+                try {
+                    end = Integer.parseInt(as[1]);
+                } catch (NumberFormatException e) {
+                }
+            }
+        }
+
+        List<ProcessLogEntry> data = logsDao.get(instanceId, start, end);
+        // TODO check if the instance actually exists
+
+        if (data.isEmpty()) {
+            int actualStart = start != null ? start : 0;
+            int actualEnd = end != null ? end : 0;
+            return Response.ok()
+                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/0")
+                .build();
+        }
+
+        ProcessLogEntry first = data.get(0);
+        int actualStart = first.getStart();
+
+        ProcessLogEntry last = data.get(data.size() - 1);
+        int actualEnd = last.getStart() + last.getData().length;
+
+        StreamingOutput out = output -> {
+            for (ProcessLogEntry e : data) {
+                output.write(e.getData());
+            }
+        };
+
+        return Response.ok((StreamingOutput) out)
+                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + (actualEnd + 1))
+                .build();
     }
 
     @SuppressWarnings("unchecked")

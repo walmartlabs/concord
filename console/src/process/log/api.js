@@ -1,5 +1,5 @@
 // @flow
-import type {FetchRange} from "../../types";
+import type {ConcordId, FetchRange} from "../../types";
 import ContentRange from "http-range/lib/content-range";
 import * as common from "../../api";
 
@@ -41,10 +41,10 @@ const offsetRange = (data: string, range: FetchRange) => {
 
 const defaultFetchRange: FetchRange = {low: undefined, high: 2048};
 
-export const fetchLog = (fileName: string, fetchRange: FetchRange = defaultFetchRange) => {
+export const fetchLog = (instanceId: ConcordId, fetchRange: FetchRange = defaultFetchRange) => {
     const rangeHeader = formatRangeHeader(fetchRange);
-    console.debug("API: fetchLog ['%s', %o] -> starting...", fileName, rangeHeader);
-    return fetch(`/logs/${fileName}`, {headers: rangeHeader, credentials: "same-origin"})
+    console.debug("API: fetchLog ['%s', %o] -> starting...", instanceId, rangeHeader);
+    return fetch(`/api/v1/process/${instanceId}/log`, {headers: rangeHeader, credentials: "same-origin"})
         .then(response => {
             if (!response.ok) {
                 throw new common.defaultError(response);
@@ -52,7 +52,7 @@ export const fetchLog = (fileName: string, fetchRange: FetchRange = defaultFetch
 
             const rangeHeader = response.headers.get("Content-Range");
             return response.text().then(data => {
-                console.debug("API: fetchLog ['%s', %o] -> done, length: %d", fileName, fetchRange, data.length);
+                console.debug("API: fetchLog ['%s', %o] -> done, length: %d", instanceId, fetchRange, data.length);
                 return offsetRange(data, parseRange(rangeHeader));
             });
         });

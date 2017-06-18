@@ -22,4 +22,76 @@
             </column>
         </createTable>
     </changeSet>
+
+    <!-- PROCESS_LOGS -->
+
+    <changeSet id="22100" author="ibodrov@gmail.com">
+        <createTable tableName="PROCESS_LOGS">
+            <column name="INSTANCE_ID" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CHUNK_RANGE" type="int4range">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CHUNK_DATA" type="blob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="22110" author="ibodrov@gmail.com">
+        <createIndex tableName="PROCESS_LOGS" indexName="IDX_P_LOGS_IDS">
+            <column name="INSTANCE_ID"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="22120" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_LOGS_UPPER_BOUNDS">
+            select
+                INSTANCE_ID,
+                coalesce(max(upper(CHUNK_RANGE)), 0) as UPPER_BOUND
+            from PROCESS_LOGS
+            group by INSTANCE_ID
+        </createView>
+    </changeSet>
+
+    <changeSet id="22130" author="ibodrov@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_NEXT_RANGE(PROC_ID varchar, DATA_LEN int)
+            returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(UPPER_BOUND, 0) into R_START
+                from V_PROCESS_LOGS_UPPER_BOUNDS where INSTANCE_ID = PROC_ID;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START, R_START + DATA_LEN);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+
+    <changeSet id="22140" author="ibodrov@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_LAST_N_BYTES(PROC_ID varchar, DATA_LEN int)
+            returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(UPPER_BOUND, 0) into R_START
+                from V_PROCESS_LOGS_UPPER_BOUNDS where INSTANCE_ID = PROC_ID;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START - DATA_LEN, R_START);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
 </databaseChangeLog>
