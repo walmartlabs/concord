@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.server.cfg;
 
 import com.google.common.base.Strings;
-import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.NumberFormat;
 import java.util.Properties;
 
 @Named
@@ -42,11 +42,11 @@ public class SlackConfiguration {
 
             this.authToken = props.getProperty("authToken");
             this.proxyAddress = Strings.emptyToNull(props.getProperty("proxyAddress"));
-            this.proxyPort = MapUtils.getInteger(props, "proxyPort");
-            this.connectTimeout = MapUtils.getInteger(props, "connectTimeout", 30_000);
-            this.soTimeout = MapUtils.getInteger(props, "soTimeout", 30_000);
-            this.maxConnections = MapUtils.getInteger(props, "maxConnections", 10);
-            this.requestLimit = MapUtils.getDouble(props, "requestLimit", 1.0);
+            this.proxyPort = getInteger(props, "proxyPort", null);
+            this.connectTimeout = getInteger(props, "connectTimeout", 30_000);
+            this.soTimeout = getInteger(props, "soTimeout", 30_000);
+            this.maxConnections = getInteger(props, "maxConnections", 10);
+            this.requestLimit = getDouble(props, "requestLimit", 1.0);
         } else {
             this.authToken = "invalid-token";
             this.proxyAddress = null;
@@ -58,6 +58,36 @@ public class SlackConfiguration {
 
             log.info("init -> no Slack configuration");
         }
+    }
+
+    public static Number getNumber(Properties props, String name) {
+        String value = props.getProperty(name);
+        if(value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return NumberFormat.getInstance().parse(value);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("invalid prop '" + name + "' format", e);
+        }
+    }
+
+    private static double getDouble(Properties props, String name, double defaultValue) {
+        Number value = getNumber(props, name);
+        if(value != null) {
+            return value.doubleValue();
+        }
+
+        return defaultValue;
+    }
+
+    private static Integer getInteger(Properties props, String name, Integer defaultValue) {
+        Number value = getNumber(props, name);
+        if(value != null) {
+            return value.intValue();
+        }
+
+        return defaultValue;
     }
 
     public String getAuthToken() {

@@ -51,7 +51,6 @@
         <aopalliance.version>1.0</aopalliance.version>
         <bpm.version>0.31.1</bpm.version>
         <commons.email.version>1.4</commons.email.version>
-        <commons.collections.version>4.1</commons.collections.version>
         <commons.lang.version>3.5</commons.lang.version>
         <commons.pool.version>2.4.2</commons.pool.version>
         <docker.plugin.version>0.20.1</docker.plugin.version>
@@ -409,11 +408,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons.lang.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-collections4</artifactId>
-                <version>${commons.collections.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.spullara.mustache.java</groupId>
