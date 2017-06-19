@@ -30,9 +30,13 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Named
 public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotificationServiceImplBase {
+
+    private static final int RATE_LIMIT_TIMEOUT = 5;
 
     private final SlackSimpleClient slackClient;
 
@@ -48,7 +52,11 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
     @WithTimer
     public void notify(TSlackNotificationRequest request, StreamObserver<TSlackNotificationResponse> responseObserver) {
         try {
-            limiter.acquire();
+            boolean canAcquire = limiter.tryAcquire(RATE_LIMIT_TIMEOUT, TimeUnit.SECONDS);
+            if(!canAcquire) {
+                responseObserver.onError(new TimeoutException("rate limit exceeded"));
+                return;
+            }
 
             SlackSimpleClient.Response r = slackClient.notify(request.getSlackChannelId(), request.getNotificationText());
             responseObserver.onNext(convert(r));
