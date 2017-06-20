@@ -61,7 +61,7 @@ platforms:
 
       fqdn:
          aliases: ["concorddb"]
-          
+
   agent:
     pack: oneops/docker
     pack_version: '1'
@@ -74,25 +74,8 @@ platforms:
         size: 'L'
 
       docker_engine:
-        attachments:
-          docker-script:
-            path: '{{dataVolume}}/docker-script.sh'
-            run_on: 'after-add,after-update,after-replace,on-demand'
-            priority: 1
-            exec_cmd: 'sudo chmod 755 /data/docker-script.sh; sudo /data/docker-script.sh'
-            content: |
-              docker pull docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
+        daemon_options: '["--debug=false", "--selinux-enabled=false", "--bip=10.11.12.1/24"]'
 
-              docker rm -f agent
-
-              docker run -d \
-              --name agent \
-              -e 'SERVER_HOST=server' \
-              -e 'WORKERS_COUNT={{agentWorkers}}' \
-              -e 'DEPS_CACHE_DIR=/opt/concord/data/deps' \
-              -v {{dataVolume}}/data:/opt/concord/data \
-              -v {{dataVolume}}/tmp:/tmp \
-              docker.prod.walmart.com/walmartlabs/concord-agent:{{concordVersion}}
       user:
         user-jpise:
           system_account: true
@@ -131,51 +114,24 @@ platforms:
 
       docker_engine:
         daemon_options: '["--debug=false", "--selinux-enabled=false", "--bip=10.11.12.1/24"]'
-        attachments:
-          docker-script:
-                path: '{{dataVolume}}/docker-script.sh'
-                run_on: 'after-add,after-update,after-replace,on-demand'
-                priority: 1
-                exec_cmd: 'sudo chmod 755 /data/docker-script.sh; sudo /data/docker-script.sh'
-                content: |
-                  docker pull docker.prod.walmart.com/walmartlabs/concord-server:{{concordVersion}}
-                  docker pull docker.prod.walmart.com/walmartlabs/concord-console:{{concordVersion}}
 
-                  docker rm -f server console
+      {{#concordFqdnAlias}}
+      fqdn:
+        full_aliases: '["{{concordFqdnAlias}}"]'
+        hijackable_full_aliases: true
+        ttl: 5
+      {{/concordFqdnAlias}}
 
-                  docker run -d \
-                  --name server \
-                  -p 8001:8001 \
-                  -p 8101:8101 \
-                  -v {{dataVolume}}/data:/opt/concord/data \
-                  -v {{dataVolume}}/tmp:/tmp \
-                  -e 'DB_URL=jdbc:postgresql://db:5432/concord' \
-                  -e 'DB_DIALECT=POSTGRES' \
-                  -e 'DB_DRIVER=org.postgresql.Driver' \
-                  -e 'DB_USERNAME=sa' \
-                  -e 'DB_PASSWORD=c0nc0rdDb' \
-                  -e 'LDAP_CFG=/opt/concord/data/conf/ldap.properties' \
-                  -e 'LOG_STORE_DIR=/opt/concord/data/logs' \
-                  -e 'FORM_SERVER_DIR=/opt/concord/data/formserv' \
-                  docker.prod.walmart.com/walmartlabs/concord-server:{{concordVersion}}
+      lb:
+        listeners: '[
+          "http 80 http 8080",
+          "http 8001 http 8001",
+          "http 8080 http 8080",
+          "tcp 8101 tcp 8101"
+        ]'
+        lbmethod: 'roundrobin'
+        stickiness: true
 
-                  docker run -d -p 8080:8080 \
-                  --name console \
-                  -v {{dataVolume}}/data/console/landing:/opt/concord/console/landing:ro \
-                  --link server \
-                  docker.prod.walmart.com/walmartlabs/concord-console:{{concordVersion}}
-
-      file:
-         ldap-conf:
-                content: |
-                  url=ldap://honts0102.homeoffice.wal-mart.com:389
-                  searchBase=DC=homeoffice,DC=Wal-Mart,DC=com
-                  principalSuffix=@homeoffice.wal-mart.com
-                  principalSearchFilter=(&(objectCategory=Person)(sAMAccountName={0}))
-                  systemUsername={{ldapUserName}}
-                  systemPassword={{ldapPassword}}
-                path: '{{dataVolume}}/data/conf/ldap.properties'
-             
       storage:
         storage:
           size: "80G"
@@ -215,49 +171,19 @@ platforms:
           "8101 8101 tcp 0.0.0.0/0"
         ]'
 
-  static:
-    pack: oneops/custom
-    pack_version: '1'
-    components:
+scale:
+  server:
+    scaling:
       compute:
-        size: 'S'
-
-      os:
-        ostype: centos-7.2
-
-      user:
-        user-jpise:
-          system_account: true
-          sudoer: true
-          username: 'jpise'
-          description: 'Jayesh Pise'
-          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFo5HbpjfqZOg1DgVavWO1JwTZPsC4iLfk6Mxuh3GYqEIULzBxdYUzqAnMbFegGWODxmFNkIRMMcQcy56U1mf57gkmiPoeFLgpUeKrlBaX6i8PNnxvh0Gne2DXx5aPoYOV5ueLQMwB0D3KKeSXgvKf1eow82MDOFDv4inDvFoHLKDUen2IMX9xFqOX+CtGBAHstfbwiGTekOSut+NhaHQiALcHt1kNq5p4NoQSiDHQTIK+Zq4kE9UlQp3R5YvInBy0+lXoUykIUjI45LoYk6WzqryXuWZQDGSCK0vYODvRXWg6hIlWfcn1T7Z4u4AOwDd8cERGZqeiDVBsG7XZuW1/ jpise@walmartlabs.com"]'
-        user-ibodrov:
-          system_account: true
-          sudoer: true
-          username: 'ibodrov'
-          description: 'Ivan Bodrov'
-          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxh2tqHfJnd+jzGkOJ+M6z+y7RNdMrFHpoAa4JcYvgaETeJgxYIhorkL+x0Vz00YoJyy2wGDS2S2NSzjXEV9bnu60pyRDrJbI4gBbmof8fDal/HmgvWcN2axyR/zUnn6BIuwKwEYOygKW11FezmYsfdXueIXgSfFn9sGfd3b+R2ygn5PieVa7KKgR8/djXfsjiM1fA55Z1ZtVig+YqqaVijUkdjKOW2LNhbXBGcD5ocWknmLUXXb2i7Ng/rersd8nD4uSZUCq8pSeZeeQdtr56FNcjh7XyvdTdo83wNCsFPJZMbOQxQVcSl/QP9QdGKFUDAt/Ljrq3svPpHdkDXXEt ibodrov@walmartlabs.com"]'
-        user-brig:
-          system_account: true
-          sudoer: true
-          username: 'brig'
-          description: 'Yury Brigadirenko'
-          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDjcICussHqyMEpY1xQAvqNz/qoVnnDBVIPrDKJ/kJ4fzwzJmgA0/vqcZqIB11hsa+h23qtwJcjFyFY4rk0g9zo2XwDzmj9pafD0eEJZFNyxUeJGd91YlZmfPtUYKfVjgJJm+WdhUW5AzkFHtLEl+4N4gri4Mg9AaqLlTLgYGKYxjAEgVfo5yF7L1X5a2XuAo6IMdYGmn4tiX3OL5a1H5U7wvk6Pn28zKr7UK/6nA+PN+lND+7zffjQN9pboB5h97W8fnsqOEKWx/Kr4ksM1tDdOynG6Kt0MS+6GlaQDSCgbQnQQKs7yLG66ZEPMkQBcfVC4xOtc3+etNoxEDmFKUe23MN3i2OoEBKHSSvI0uffXYf1PCVhDXNGLe88mUvGnOMQtp4/ZgNZ/uB+BN2nWv3PXdECB+HkbKIun0tKq+L7wtaJe54wE7GXyJcmts+XMiQuZny62qtzqv8PliTOFh2TBp7iPRtAsN3StwZgIClfk3brNV7mlH5vC97f6dG4g9k4IAiLHoILFbRzst1xCQ5mHPK7Lev3DeXwAyI8uxMp4XAXXTcpXW2xR5d4kKKPoSVQn1SXS7qm6d5mYiUFOFr4WOG9d04YX9qrngu/6+mGGaIejmmOBggKJq3mGztarUoixOcLQ5Cn3uPg8qMu2Ni+0wqFUv+BpFg1BhltrHPYJQ== YBrigadirenko@walmartlabs.com"]'
-
-      secgroup:
-        inbound: '[
-          "22 22 tcp 0.0.0.0/0",
-          "80 80 tcp 0.0.0.0/0"
-        ]'
-
-#scale:
-#  agent:
-#    scaling:
-#      compute:
-#        min: '{{agentsMin}}'
-#        max: '{{agentsMax}}'
-#        current: '{{agentsMin}}'
+        min: '2'
+        max: '4'
+        current: '2'
+  agent:
+    scaling:
+      compute:
+        min: '{{agentsMin}}'
+        max: '{{agentsMax}}'
+        current: '{{agentsMin}}'
 
 environment:
   global_dns: true
@@ -270,19 +196,18 @@ environment:
   autoreplace: false
   platforms:
     server:
-      availability: Single
+      availability: Redundant
     db:
       availability: Redundant
     agent:
-      availability: Single
+      availability: Redundant
   clouds:
     prod-cdc6:
       priority: '1'
       dpmt_order: '1'
-      pct_scale: '100'
+      pct_scale: '50'
     prod-cdc7:
-      priority: '2'
-      adminstatus: 'offline'
+      priority: '1'
       dpmt_order: '1'
-      pct_scale: '100'
+      pct_scale: '50'
 
