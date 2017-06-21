@@ -1,0 +1,21 @@
+variables:
+  entryPoint: main
+
+  # to use `ansible2` task
+  dependencies:
+    - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/basic/ansible-tasks/0.20.0/ansible-tasks-0.20.0.jar"
+
+  arguments:
+    ansibleParams:
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      vaultPassword: myVaultPassword
+
+flows:
+  main:
+    - ${ansible2.run(ansibleParams, __attr_localPath)}
