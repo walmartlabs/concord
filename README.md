@@ -50,5 +50,5 @@ See [the website](http://concord.walmart.com).
 
 ## Examples
 
-See the [examples](docs/examples) directory.
+See the [examples](examples) directory.
 
