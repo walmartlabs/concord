@@ -1,8 +1,8 @@
-package com.walmartlabs.concord.server.api.template;
+package com.walmartlabs.concord.server.api.project;
 
 import java.io.Serializable;
 
-public class DeleteTemplateResponse implements Serializable {
+public class TemplateAliasResponse implements Serializable {
 
     private final boolean ok = true;
 
@@ -12,7 +12,7 @@ public class DeleteTemplateResponse implements Serializable {
 
     @Override
     public String toString() {
-        return "DeleteTemplateResponse{" +
+        return "TemplateAliasResponse{" +
                 "ok=" + ok +
                 '}';
     }

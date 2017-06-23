@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.agent;
 
+import com.walmartlabs.concord.common.DependencyManager;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.rpc.AgentApiClient;
@@ -16,8 +17,11 @@ public class RunnerJobExecutor extends JarJobExecutor {
 
     private final AgentApiClient client;
 
-    public RunnerJobExecutor(Configuration cfg, LogManager logManager, DependencyManager dependencyManager,
-                             ExecutorService executorService, AgentApiClient client) {
+    public RunnerJobExecutor(Configuration cfg,
+                             LogManager logManager,
+                             DependencyManager dependencyManager,
+                             ExecutorService executorService,
+                             AgentApiClient client) {
 
         super(cfg, logManager, dependencyManager, executorService);
         this.client = client;

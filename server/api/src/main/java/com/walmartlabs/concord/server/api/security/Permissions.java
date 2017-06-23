@@ -15,8 +15,8 @@ public final class Permissions {
     public static final String PROJECT_DELETE_INSTANCE = PROJECT_PREFIX + ":delete:%s";
 
     public static final String TEMPLATE_PREFIX = "template";
-    public static final String TEMPLATE_CREATE_NEW = TEMPLATE_PREFIX + ":create";
     public static final String TEMPLATE_USE_INSTANCE = TEMPLATE_PREFIX + ":use:%s";
+    public static final String TEMPLATE_MANAGE = TEMPLATE_PREFIX + ":manage";
 
     public static final String SECRET_PREFIX = "secret";
     public static final String SECRET_CREATE_NEW = SECRET_PREFIX + ":create";

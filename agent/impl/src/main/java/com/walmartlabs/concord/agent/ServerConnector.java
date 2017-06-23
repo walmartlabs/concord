@@ -4,6 +4,7 @@ import com.walmartlabs.concord.rpc.AgentApiClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -23,7 +24,7 @@ public class ServerConnector {
         this.executor = executor;
     }
 
-    public void start(Configuration cfg) {
+    public void start(Configuration cfg) throws IOException {
         String agentId = cfg.getAgentId();
         String host = cfg.getServerHost();
         int port = cfg.getServerPort();

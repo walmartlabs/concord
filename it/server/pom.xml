@@ -172,6 +172,12 @@
                                     <artifactId>ansible-tasks</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+                                    <artifactId>ansible-template</artifactId>
+                                    <version>${project.version}</version>
+                                    <destFileName>ansible-template.jar</destFileName>
+                                </artifactItem>
 
                                 <!-- TODO this should be automated -->
                                 <artifactItem>
@@ -268,6 +274,8 @@
                                         <volumes>
                                             <bind>
                                                 <volume>/tmp:/tmp</volume>
+                                                <!-- allows the server to pick up local dependencies -->
+                                                <volume>${deps.dir}:${deps.dir}</volume>
                                             </bind>
                                         </volumes>
                                         <env>

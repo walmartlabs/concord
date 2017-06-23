@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.ansible.InventoryProcessor;
 import com.walmartlabs.concord.server.ansible.PrivateKeyProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.*;
-import com.walmartlabs.concord.server.template.TemplateProcessor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,7 +31,7 @@ public class ArchivePipeline extends Pipeline {
                 RequestDefaultsParsingProcessor.class,
                 InventoryProcessor.class,
                 PrivateKeyProcessor.class,
-                TemplateProcessor.class,
+                ExternalTemplateProcessor.class,
                 DependenciesProcessor.class,
                 UserInfoProcessor.class,
                 RequestDataStoringProcessor.class,
