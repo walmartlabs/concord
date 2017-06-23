@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: Slack integration;
+- concord-runner: new `slack` task to send notifications to a Slack channel.
+
+
+
 ## [0.22.0] - 2017-06-18
 
 ### Added
