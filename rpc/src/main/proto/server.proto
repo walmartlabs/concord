@@ -155,3 +155,20 @@ message TEventRequest {
     google.protobuf.Timestamp date = 3;
     bytes data = 4;
 }
+
+// SLACK NOTIFICATION SERVICE
+
+message TSlackNotificationRequest {
+    string instanceId = 1;
+    string slackChannelId = 2;
+    string notificationText = 3;
+}
+
+service TSlackNotificationService {
+    rpc notify(TSlackNotificationRequest) returns (TSlackNotificationResponse);
+}
+
+message TSlackNotificationResponse {
+    bool ok = 1;
+    string error = 2;
+}
