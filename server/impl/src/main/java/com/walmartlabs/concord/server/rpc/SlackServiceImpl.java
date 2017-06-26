@@ -36,10 +36,10 @@ import java.util.concurrent.TimeoutException;
 @Named
 public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotificationServiceImplBase {
 
+    private static final Logger log = LoggerFactory.getLogger(SlackServiceImpl.class);
     private static final int RATE_LIMIT_TIMEOUT = 5;
 
     private final SlackSimpleClient slackClient;
-
     private final RateLimiter limiter;
 
     @Inject
@@ -53,8 +53,9 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
     public void notify(TSlackNotificationRequest request, StreamObserver<TSlackNotificationResponse> responseObserver) {
         try {
             boolean canAcquire = limiter.tryAcquire(RATE_LIMIT_TIMEOUT, TimeUnit.SECONDS);
-            if(!canAcquire) {
-                responseObserver.onError(new TimeoutException("rate limit exceeded"));
+            if (!canAcquire) {
+                log.error("notify ['{}'] -> rate limit exceeded", request.getInstanceId());
+                responseObserver.onError(new TimeoutException("Rate limit exceeded"));
                 return;
             }
 
@@ -62,6 +63,7 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
             responseObserver.onNext(convert(r));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("notify ['{}'] -> error", request.getInstanceId(), e);
             responseObserver.onError(e);
         }
     }
@@ -69,7 +71,7 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
     private static TSlackNotificationResponse convert(SlackSimpleClient.Response r) {
         TSlackNotificationResponse.Builder result = TSlackNotificationResponse.newBuilder()
                 .setOk(r.isOk());
-        if(r.getError() != null) {
+        if (r.getError() != null) {
             result.setError(r.getError());
         }
         return result.build();
@@ -78,15 +80,11 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
     static class SlackSimpleClient {
 
         private static final Logger log = LoggerFactory.getLogger(SlackSimpleClient.class);
-
         private static final String SLACK_API_ROOT = "https://slack.com/api/";
-
         private static final String CHAT_POST_MESSAGE_CMD = "chat.postMessage";
 
         private final ObjectMapper objectMapper = new ObjectMapper();
-
         private final String authToken;
-
         private final CloseableHttpClient client;
 
         public SlackSimpleClient(SlackConfiguration cfg) {
@@ -109,9 +107,9 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
 
             request.setEntity(new UrlEncodedFormEntity(params));
 
-            try(CloseableHttpResponse response = client.execute(request)) {
+            try (CloseableHttpResponse response = client.execute(request)) {
 
-                if(response.getEntity() == null) {
+                if (response.getEntity() == null) {
                     log.error("notify ['{}', '{}'] -> empty response", channelId, text);
                     return new Response(false, "internal-error");
                 }
@@ -134,7 +132,7 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
 
         private static RequestConfig createConfig(SlackConfiguration cfg) {
             HttpHost proxy = null;
-            if(cfg.getProxyAddress() != null) {
+            if (cfg.getProxyAddress() != null) {
                 proxy = new HttpHost(cfg.getProxyAddress(), cfg.getProxyPort(), "http");
             }
 
@@ -151,7 +149,6 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
         static class Response {
 
             private final boolean ok;
-
             private final String error;
 
             @JsonCreator
