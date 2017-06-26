@@ -5,7 +5,13 @@
 ### Added
 
 - concord-server: Slack integration;
-- concord-runner: new `slack` task to send notifications to a Slack channel.
+- concord-runner: new `slack` task to send notifications to a Slack
+channel.
+
+### Changed
+
+- concord-server: templates now are referenced by URLs in project
+configuration.
 
 
 
