@@ -2,21 +2,23 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.template.TemplateResource;
-import com.walmartlabs.concord.server.template.TemplateConstants;
+import com.walmartlabs.concord.server.api.project.TemplateAliasEntry;
+import com.walmartlabs.concord.server.api.project.TemplateAliasResource;
+import com.walmartlabs.concord.server.process.pipelines.processors.ExternalTemplateProcessor;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -30,22 +32,23 @@ public class TemplateIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        String templateName = "template_" + System.currentTimeMillis();
-        String projectName = "project_" + System.currentTimeMillis();
-        String myName = "myName_" + System.currentTimeMillis();
+        String templateAlias = "template_" + System.currentTimeMillis();
         Path templatePath = createTemplate();
+
+        TemplateAliasResource templateAliasResource = proxy(TemplateAliasResource.class);
+        templateAliasResource.createOrUpdate(new TemplateAliasEntry(templateAlias, templatePath.toUri().toString()));
 
         // ---
 
-        TemplateResource templateResource = proxy(TemplateResource.class);
-        try (InputStream in = Files.newInputStream(templatePath)) {
-            templateResource.create(templateName, in);
-        }
+        String projectName = "project_" + System.currentTimeMillis();
+        String myName = "myName_" + System.currentTimeMillis();
 
         // ---
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null, Collections.singleton(templateName), null, null));
+        Map<String, Object> cfg = new HashMap<>();
+        cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, cfg));
 
         // ---
 
@@ -66,7 +69,7 @@ public class TemplateIT extends AbstractServerIT {
     private static Path createTemplate() throws IOException {
         Path tmpDir = Files.createTempDirectory("template");
 
-        Path metaPath = tmpDir.resolve(TemplateConstants.REQUEST_DATA_TEMPLATE_FILE_NAME);
+        Path metaPath = tmpDir.resolve(ExternalTemplateProcessor.REQUEST_DATA_TEMPLATE_FILE_NAME);
         Files.write(metaPath, META_JS.getBytes());
 
         Path processesPath = tmpDir.resolve(Constants.Files.DEFINITIONS_DIR_NAME);
@@ -75,7 +78,7 @@ public class TemplateIT extends AbstractServerIT {
         Path procPath = processesPath.resolve("hello.yml");
         Files.write(procPath, PROCESS_YAML.getBytes());
 
-        Path tmpZip = Files.createTempFile("template", "zip");
+        Path tmpZip = Files.createTempFile("template", ".zip");
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmpZip))) {
             IOUtils.zip(zip, tmpDir);
         }

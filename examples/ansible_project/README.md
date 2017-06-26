@@ -38,13 +38,11 @@ We are going to create a new project using the `ansible` project template. The `
 will automatically add the necessary boilerplate - a workflow process definition to run our playbook
 and necessary runtime dependencies.
 
-Please refer to [the templates document](../templates.md) to find out how to upload a custom template.
-
 ```
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "name": "myProject", "templates": ["ansible"] }' \
+-d '{ "name": "myProject", "templates": ["http://nexus.prod.walmart.com/nexus/content/repositories/devtools/com/walmartlabs/concord/plugins/basic/ansible-template/0.22.0/ansible-template-0.22.0.jar"] }' \
 http://localhost:8001/api/v1/project
 ```
 
@@ -56,7 +54,7 @@ http://localhost:8001/api/v1/project
 
 ### 2. Create a new repository key
 
-Please refer to the [Generate a new key pair](../../api/secret.md#generate-a-new-key-pair) document.
+Please refer to the [Generate a new key pair](http://concord.walmart.com/docs/api/secret.html#generate-a-new-key-pair) document.
 Use `mySecret` as a name of the key pair, it will be used on the next step.
 
 ### 3. Add a repository
@@ -87,7 +85,7 @@ curl -v \
 http://localhost:8001/api/v1/user
 ```
 
-Check [the permissions description](../security.md#permissions) in the documentation.
+Check [the permissions description](http://concord.walmart.com/docs/api/security.md#permissions) in the documentation.
 
 ```json
 {

@@ -6,7 +6,6 @@ import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
-import com.walmartlabs.concord.server.template.TemplateResolver;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -22,7 +21,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
@@ -34,7 +36,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     private final ProjectConfigurationDao configurationDao;
     private final ProjectSecretManager projectSecretManager;
     private final RepositoryDao repositoryDao;
-    private final TemplateResolver templateResolver;
     private final SecretDao secretDao;
     private final Set<ConfigurationValidator> cfgValidators;
 
@@ -42,9 +43,12 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     private final Map<String, Field<?>> key2RepositoryField;
 
     @Inject
-    public ProjectResourceImpl(Configuration cfg, ProjectDao projectDao, ProjectConfigurationDao configurationDao,
-                               ProjectSecretManager projectSecretManager, RepositoryDao repositoryDao,
-                               TemplateResolver templateResolver, SecretDao secretDao,
+    public ProjectResourceImpl(Configuration cfg,
+                               ProjectDao projectDao,
+                               ProjectConfigurationDao configurationDao,
+                               ProjectSecretManager projectSecretManager,
+                               RepositoryDao repositoryDao,
+                               SecretDao secretDao,
                                Set<ConfigurationValidator> cfgValidators) {
 
         super(cfg);
@@ -53,7 +57,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         this.configurationDao = configurationDao;
         this.projectSecretManager = projectSecretManager;
         this.repositoryDao = repositoryDao;
-        this.templateResolver = templateResolver;
         this.secretDao = secretDao;
         this.cfgValidators = cfgValidators;
 
@@ -70,14 +73,12 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public CreateProjectResponse createOrUpdate(ProjectEntry request) {
-        assertTemplates(request.getTemplates());
-
         Map<String, Object> cfg = request.getCfg();
         validateCfg(cfg);
 
         String projectName = request.getName();
         if (projectDao.exists(projectName)) {
-            UpdateProjectRequest req = new UpdateProjectRequest(request.getDescription(), request.getTemplates(),
+            UpdateProjectRequest req = new UpdateProjectRequest(request.getDescription(),
                     request.getRepositories(), request.getCfg());
             update(projectName, req);
             return new CreateProjectResponse(PerformedActionType.UPDATED);
@@ -95,7 +96,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         tx(tx -> {
-            projectDao.insert(tx, projectName, request.getDescription(), request.getTemplates());
+            projectDao.insert(tx, projectName, request.getDescription());
 
             if (repos != null) {
                 insert(tx, projectName, repos);
@@ -196,7 +197,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 "The current user does not have permissions to update the specified project");
 
         assertProject(projectName);
-        assertTemplates(request.getTemplates());
 
         Map<String, Object> cfg = request.getCfg();
         validateCfg(cfg);
@@ -210,7 +210,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         tx(tx -> {
-            projectDao.update(tx, projectName, request.getDescription(), request.getTemplates());
+            projectDao.update(tx, projectName, request.getDescription());
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectName);
@@ -296,19 +296,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         byte[] result = projectSecretManager.encrypt(projectName, input);
 
         return new EncryptValueResponse(result);
-    }
-
-    private void assertTemplates(Collection<String> templateNames) {
-        if (templateNames == null || templateNames.isEmpty()) {
-            return;
-        }
-
-        templateNames.forEach(t -> {
-            assertTemplatePermissions(t);
-            if (!templateResolver.exists(t)) {
-                throw new ValidationErrorsException("Unknown template: " + t);
-            }
-        });
     }
 
     private void assertPermissions(String projectName, String wildcard, String message) {

@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.DependencyManager;
 import com.walmartlabs.concord.project.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

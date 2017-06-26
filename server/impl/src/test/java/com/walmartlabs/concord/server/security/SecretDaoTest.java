@@ -24,7 +24,7 @@ public class SecretDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        projectDao.insert(projectName, "test", Collections.emptySet());
+        projectDao.insert(projectName, "test");
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));

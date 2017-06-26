@@ -5,6 +5,7 @@ import com.walmartlabs.concord.it.server.AbstractServerIT;
 import com.walmartlabs.concord.it.server.GitUtils;
 import com.walmartlabs.concord.it.server.ITConstants;
 import com.walmartlabs.concord.it.server.MockGitSshServer;
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -24,13 +25,11 @@ import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLogAtLeast;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
@@ -83,7 +82,8 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        String templateName = "ansible";
+        String templatePath = "file://" + ITConstants.DEPENDENCIES_DIR + "/ansible-template.jar";
+
         String projectName = "project@" + System.currentTimeMillis();
         String repoSecretName = "repoSecret@" + System.currentTimeMillis();
         String repoName = "repo@" + System.currentTimeMillis();
@@ -99,7 +99,8 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null, singleton(templateName), singletonMap(repoName, repo), null));
+        Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, singletonMap(repoName, repo), cfg));
 
         // ---
 
@@ -127,7 +128,8 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     @SuppressWarnings("unchecked")
     public void test(Map<String, InputStream> input) throws Exception {
-        String templateName = "ansible";
+        String templatePath = "file://" + ITConstants.DEPENDENCIES_DIR + "/ansible-template.jar";
+
         String projectName = "project@" + System.currentTimeMillis();
         String repoSecretName = "repoSecret@" + System.currentTimeMillis();
         String repoName = "repo@" + System.currentTimeMillis();
@@ -143,7 +145,9 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null, singleton(templateName), singletonMap(repoName, repo), null));
+
+        Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null, singletonMap(repoName, repo), cfg));
 
         // ---
 

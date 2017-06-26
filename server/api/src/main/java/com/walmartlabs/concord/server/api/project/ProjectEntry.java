@@ -8,7 +8,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Set;
 
 public class ProjectEntry implements Serializable {
 
@@ -19,8 +18,6 @@ public class ProjectEntry implements Serializable {
     @Size(max = 1024)
     private final String description;
 
-    private final Set<String> templates;
-
     private final Map<String, UpdateRepositoryRequest> repositories;
 
     private final Map<String, Object> cfg;
@@ -28,13 +25,11 @@ public class ProjectEntry implements Serializable {
     @JsonCreator
     public ProjectEntry(@JsonProperty("name") String name,
                         @JsonProperty("description") String description,
-                        @JsonProperty("templates") Set<String> templates,
                         @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
                         @JsonProperty("cfg") Map<String, Object> cfg) {
 
         this.name = name;
         this.description = description;
-        this.templates = templates;
         this.repositories = repositories;
         this.cfg = cfg;
     }
@@ -45,10 +40,6 @@ public class ProjectEntry implements Serializable {
 
     public String getDescription() {
         return description;
-    }
-
-    public Set<String> getTemplates() {
-        return templates;
     }
 
     public Map<String, UpdateRepositoryRequest> getRepositories() {
@@ -64,7 +55,6 @@ public class ProjectEntry implements Serializable {
         return "CreateProjectRequest{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", templates=" + templates +
                 ", repositories=" + repositories +
                 ", cfg=" + cfg +
                 '}';

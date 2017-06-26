@@ -111,7 +111,7 @@ public class ProjectFileIT extends AbstractServerIT {
         secretResource.createKeyPair(secretName);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null,
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null,
                 Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, secretName)), null));
 
         // ---
@@ -144,7 +144,7 @@ public class ProjectFileIT extends AbstractServerIT {
         secretResource.createKeyPair(secretName);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null,
+        projectResource.createOrUpdate(new ProjectEntry(projectName, null,
                 Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, secretName)), null));
 
         // ---

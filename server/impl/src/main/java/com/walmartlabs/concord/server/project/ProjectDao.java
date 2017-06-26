@@ -11,13 +11,13 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
-import static com.walmartlabs.concord.server.jooq.tables.ProjectTemplates.PROJECT_TEMPLATES;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
-import static com.walmartlabs.concord.server.jooq.tables.Templates.TEMPLATES;
 
 @Named
 public class ProjectDao extends AbstractDao {
@@ -40,11 +40,6 @@ public class ProjectDao extends AbstractDao {
                 return null;
             }
 
-            Set<String> templates = tx.select(PROJECT_TEMPLATES.TEMPLATE_NAME)
-                    .from(PROJECT_TEMPLATES)
-                    .where(PROJECT_TEMPLATES.PROJECT_NAME.eq(name))
-                    .fetchSet(PROJECT_TEMPLATES.TEMPLATE_NAME);
-
             Result<RepositoriesRecord> repos = tx.selectFrom(REPOSITORIES)
                     .where(REPOSITORIES.PROJECT_NAME.eq(name))
                     .fetch();
@@ -55,34 +50,26 @@ public class ProjectDao extends AbstractDao {
                         repo.getRepoBranch(), repo.getRepoCommitId(), repo.getSecretName()));
             }
 
-            return new ProjectEntry(r.getProjectName(), r.getDescription(), templates, m, null);
+            return new ProjectEntry(r.getProjectName(), r.getDescription(), m, null);
         }
     }
 
-    public void insert(String name, String description, Collection<String> templateIds) {
-        tx(tx -> insert(tx, name, description, templateIds));
+    public void insert(String name, String description) {
+        tx(tx -> insert(tx, name, description));
     }
 
-    public void insert(DSLContext tx, String name, String description, Collection<String> templateIds) {
+    public void insert(DSLContext tx, String name, String description) {
         tx.insertInto(PROJECTS)
                 .columns(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION)
                 .values(name, description)
                 .execute();
-
-        insertTemplates(tx, name, templateIds);
     }
 
-    public void update(DSLContext tx, String name, String description, Collection<String> templateIds) {
+    public void update(DSLContext tx, String name, String description) {
         tx.update(PROJECTS)
                 .set(PROJECTS.DESCRIPTION, description)
                 .where(PROJECTS.PROJECT_NAME.eq(name))
                 .execute();
-
-        tx.deleteFrom(PROJECT_TEMPLATES)
-                .where(PROJECT_TEMPLATES.PROJECT_NAME.eq(name))
-                .execute();
-
-        insertTemplates(tx, name, templateIds);
     }
 
     public void delete(String id) {
@@ -103,13 +90,13 @@ public class ProjectDao extends AbstractDao {
 
     public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectOnConditionStep<Record3<String, String, String>> query = selectCreateProjectRequest(tx);
+            SelectJoinStep<Record2<String, String>> query = selectCreateProjectRequest(tx);
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            return fold(query.fetch());
+            return query.fetch(ProjectDao::toEntry);
         }
     }
 
@@ -120,65 +107,12 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    private static void insertTemplates(DSLContext tx, String projectName, Collection<String> templates) {
-        if (templates == null || templates.size() == 0) {
-            return;
-        }
-
-        BatchBindStep b = tx.batch(tx.insertInto(PROJECT_TEMPLATES)
-                .columns(PROJECT_TEMPLATES.PROJECT_NAME, PROJECT_TEMPLATES.TEMPLATE_NAME)
-                .values((String) null, null));
-
-        for (String tName : templates) {
-            b.bind(projectName, tName);
-        }
-
-        b.execute();
+    private static ProjectEntry toEntry(Record2<String, String> r) {
+        return new ProjectEntry(r.value1(), r.value2(), null, null);
     }
 
-    private static List<ProjectEntry> fold(Result<Record3<String, String, String>> raw) {
-        if (raw.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<ProjectEntry> result = new ArrayList<>();
-
-        String lastName = null;
-        String lastDescription = null;
-        Set<String> lastTemplates = null;
-
-        for (Record3<String, String, String> r : raw) {
-            String rName = r.get(PROJECTS.PROJECT_NAME);
-            String rDescription = r.get(PROJECTS.DESCRIPTION);
-            String rTemplate = r.get(TEMPLATES.TEMPLATE_NAME);
-
-            if (!rName.equals(lastName)) {
-                if (lastName != null) {
-                    add(result, lastName, lastDescription, lastTemplates);
-                }
-
-                lastName = rName;
-                lastDescription = rDescription;
-                lastTemplates = new HashSet<>();
-            }
-
-            if (rTemplate != null) {
-                lastTemplates.add(rTemplate);
-            }
-        }
-
-        add(result, lastName, lastDescription, lastTemplates);
-        return result;
-    }
-
-    private static void add(List<ProjectEntry> l, String name, String description, Set<String> templates) {
-        l.add(new ProjectEntry(name, description, templates, null, null));
-    }
-
-    private static SelectOnConditionStep<Record3<String, String, String>> selectCreateProjectRequest(DSLContext tx) {
-        return tx.select(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, TEMPLATES.TEMPLATE_NAME)
-                .from(PROJECTS)
-                .leftOuterJoin(PROJECT_TEMPLATES).on(PROJECT_TEMPLATES.PROJECT_NAME.eq(PROJECTS.PROJECT_NAME))
-                .leftOuterJoin(TEMPLATES).on(PROJECT_TEMPLATES.TEMPLATE_NAME.eq(TEMPLATES.TEMPLATE_NAME));
+    private static SelectJoinStep<Record2<String, String>> selectCreateProjectRequest(DSLContext tx) {
+        return tx.select(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION)
+                .from(PROJECTS);
     }
 }

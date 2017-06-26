@@ -61,7 +61,7 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args, false);
+        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*" + greeting + ".*", ab);
@@ -109,7 +109,7 @@ public class ProjectIT extends AbstractServerIT {
                 Collections.singletonMap("greeting", greeting));
 
         // ---
-        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
+        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
@@ -161,7 +161,7 @@ public class ProjectIT extends AbstractServerIT {
                 Collections.singletonMap("greeting", greeting));
 
         // ---
-        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args, null, tag, false);
+        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, null, tag, false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
@@ -202,7 +202,7 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry psr = doTest(projectName, null, userName, permissions, repoName, repoUrl, entryPoint, args, true);
+        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, true);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*100223.*", ab);
@@ -214,16 +214,16 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
     }
 
-    protected ProcessEntry doTest(String projectName, Set<String> projectTemplates,
+    protected ProcessEntry doTest(String projectName,
                                   String userName, Set<String> permissions,
                                   String repoName, String repoUrl,
                                   String entryPoint, Map<String, Object> args,
                                   boolean sync) throws InterruptedException, IOException {
-        return doTest(projectName, projectTemplates, userName, permissions, repoName, repoUrl,
-            entryPoint, args, null, null, sync);
+        return doTest(projectName, userName, permissions, repoName, repoUrl,
+                entryPoint, args, null, null, sync);
     }
 
-    protected ProcessEntry doTest(String projectName, Set<String> projectTemplates,
+    protected ProcessEntry doTest(String projectName,
                                   String userName, Set<String> permissions,
                                   String repoName, String repoUrl,
                                   String entryPoint, Map<String, Object> args,
@@ -231,7 +231,7 @@ public class ProjectIT extends AbstractServerIT {
                                   boolean sync) throws InterruptedException, IOException {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName, null, projectTemplates, null, null));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, null));
         assertTrue(cpr.isOk());
 
         UserResource userResource = proxy(UserResource.class);

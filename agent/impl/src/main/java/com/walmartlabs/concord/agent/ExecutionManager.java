@@ -2,6 +2,7 @@ package com.walmartlabs.concord.agent;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.walmartlabs.concord.common.DependencyManager;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.rpc.AgentApiClient;
 import com.walmartlabs.concord.rpc.JobStatus;
@@ -39,13 +40,13 @@ public class ExecutionManager {
 
     private final Object mutex = new Object();
 
-    public ExecutionManager(AgentApiClient client, Configuration cfg) {
+    public ExecutionManager(AgentApiClient client, Configuration cfg) throws IOException {
 
         this.logManager = new LogManager(cfg);
         this.cfg = cfg;
         this.jobExecutors = new HashMap<>();
 
-        DependencyManager dependencyManager = new DependencyManager(cfg);
+        DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
         ExecutorService executorService = Executors.newCachedThreadPool();
 
         jobExecutors.put(JobType.JAR, new JarJobExecutor(cfg, logManager, dependencyManager, executorService));
