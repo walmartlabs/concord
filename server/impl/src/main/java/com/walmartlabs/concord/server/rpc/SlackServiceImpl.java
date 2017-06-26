@@ -18,6 +18,12 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -27,7 +33,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +56,7 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
     private final RateLimiter limiter;
 
     @Inject
-    public SlackServiceImpl(SlackConfiguration cfg) {
+    public SlackServiceImpl(SlackConfiguration cfg) throws Exception {
         this.slackClient = new SlackSimpleClient(cfg);
         this.limiter = RateLimiter.create(cfg.getRequestLimit());
     }
@@ -87,7 +100,7 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
         private final String authToken;
         private final CloseableHttpClient client;
 
-        public SlackSimpleClient(SlackConfiguration cfg) {
+        public SlackSimpleClient(SlackConfiguration cfg) throws Exception {
             this.authToken = cfg.getAuthToken();
             this.client = createClient(cfg);
         }
@@ -120,8 +133,18 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
             }
         }
 
-        private CloseableHttpClient createClient(SlackConfiguration cfg) {
-            PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        private CloseableHttpClient createClient(SlackConfiguration cfg) throws Exception {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+
+            Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+                    .register("http", PlainConnectionSocketFactory.INSTANCE)
+                    .register("https", new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE))
+                    .build();
+
+            log.warn("createClient -> accepting all SSL certificates");
+
+            PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(registry);
             cm.setDefaultMaxPerRoute(cfg.getMaxConnections());
 
             return HttpClientBuilder.create()
@@ -143,10 +166,9 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
                     .build();
         }
 
-
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @JsonIgnoreProperties(ignoreUnknown = true)
-        static class Response {
+        private static class Response {
 
             private final boolean ok;
             private final String error;
@@ -173,6 +195,22 @@ public class SlackServiceImpl extends TSlackNotificationServiceGrpc.TSlackNotifi
                         "ok=" + ok +
                         ", error='" + error + '\'' +
                         '}';
+            }
+        }
+
+        private static class DefaultTrustManager implements X509TrustManager {
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return null;
             }
         }
     }
