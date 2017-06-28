@@ -1,0 +1,18 @@
+flows:
+  main:
+  - script: groovy
+    body: |
+      execution.setVariable("x", 123)
+
+  - script: groovy
+    body: |
+      // variables can be accessed via the context
+      println execution.getVariable("x")
+
+      // ...or used directly
+      println x
+
+variables:
+  entryPoint: main
+  dependencies:
+  - "http://nexus.prod.walmart.com/nexus/content/repositories/public/org/codehaus/groovy/groovy-all/2.4.10/groovy-all-2.4.10.jar"
