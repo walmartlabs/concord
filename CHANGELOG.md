@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- ansible: dependency URLs in the ansible template are temporary
+changed to use WARM.
+
+
+
 ## [0.23.0] - 2017-06-28
 
 ### Added
