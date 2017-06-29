@@ -5,7 +5,7 @@ Example of running an Ansible playbook without creating a project.
 ## Running
 
 ```
-cd docs/examples/ansible
+cd examples/ansible
 ./run.sh localhost:8001
 ```
 
@@ -15,13 +15,13 @@ or
 
 ```
 rm -rf target && mkdir target
-cp -R playbook processes _main.json target/
+cp -R playbook .concord.yml target/
 ```
 
 2. Archive the payload:
 
 ```
-cd target && zip -r payload.zip ./*
+cd target && zip -r payload.zip ./* .concord.yml
 ```
 
 3. Send the payload to the server:
