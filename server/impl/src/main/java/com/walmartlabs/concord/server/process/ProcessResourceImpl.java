@@ -9,7 +9,8 @@ import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
-import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogEntry;
+import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
+import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
@@ -359,31 +360,32 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             }
         }
 
-        List<ProcessLogEntry> data = logsDao.get(instanceId, start, end);
+        ProcessLog l = logsDao.get(instanceId, start, end);
+        List<ProcessLogChunk> data = l.getChunks();
         // TODO check if the instance actually exists
 
         if (data.isEmpty()) {
             int actualStart = start != null ? start : 0;
             int actualEnd = end != null ? end : start;
             return Response.ok()
-                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/0")
-                .build();
+                    .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
+                    .build();
         }
 
-        ProcessLogEntry first = data.get(0);
+        ProcessLogChunk first = data.get(0);
         int actualStart = first.getStart();
 
-        ProcessLogEntry last = data.get(data.size() - 1);
+        ProcessLogChunk last = data.get(data.size() - 1);
         int actualEnd = last.getStart() + last.getData().length;
 
         StreamingOutput out = output -> {
-            for (ProcessLogEntry e : data) {
+            for (ProcessLogChunk e : data) {
                 output.write(e.getData());
             }
         };
 
         return Response.ok((StreamingOutput) out)
-                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + (actualEnd + 1))
+                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                 .build();
     }
 

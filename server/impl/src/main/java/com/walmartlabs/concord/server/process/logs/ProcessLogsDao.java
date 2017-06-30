@@ -13,6 +13,7 @@ import java.util.List;
 
 import static com.walmartlabs.concord.server.jooq.Routines.processLogNextRange;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOGS;
+import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_LOGS_SIZE;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.value;
 
@@ -31,51 +32,63 @@ public class ProcessLogsDao extends AbstractDao {
                 .execute());
     }
 
-    public List<ProcessLogEntry> get(String instanceId, Integer start, Integer end) {
+    public ProcessLog get(String instanceId, Integer start, Integer end) {
         try (DSLContext tx = DSL.using(cfg)) {
-            String lowerBoundExpr = "lower(" + PROCESS_LOGS.CHUNK_RANGE + ")";
+            List<ProcessLogChunk> chunks = getChunks(tx, instanceId, start, end);
 
-            if (start == null && end == null) {
-                // entire file
-                return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
-                        .from(PROCESS_LOGS)
-                        .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId))
-                        .orderBy(PROCESS_LOGS.CHUNK_RANGE)
-                        .fetch(ProcessLogsDao::toEntry);
+            int size = tx.select(V_PROCESS_LOGS_SIZE.SIZE)
+                    .from(V_PROCESS_LOGS_SIZE)
+                    .where(V_PROCESS_LOGS_SIZE.INSTANCE_ID.eq(instanceId))
+                    .fetchOne(V_PROCESS_LOGS_SIZE.SIZE);
 
-            } else if (start != null) {
-                // ranges && [start, end)
-                String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && int4range(?, ?)";
-                return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
-                        .from(PROCESS_LOGS)
-                        .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId).and(rangeExpr, start, end))
-                        .orderBy(PROCESS_LOGS.CHUNK_RANGE)
-                        .fetch(ProcessLogsDao::toEntry);
-
-            } else if (end != null) {
-                // ranges && [upper_bound - end, upper_bound)
-                String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && PROCESS_LOG_LAST_N_BYTES(?, ?)";
-                return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
-                        .from(PROCESS_LOGS)
-                        .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId)
-                                .and(rangeExpr, instanceId, end))
-                        .fetch(ProcessLogsDao::toEntry);
-            } else {
-                throw new IllegalArgumentException("Invalid range options: start=" + start + ", end=" + end);
-            }
+            return new ProcessLog(size, chunks);
         }
     }
 
-    private static ProcessLogEntry toEntry(Record2<Object, byte[]> r) {
-        return new ProcessLogEntry((Integer) r.value1(), r.value2());
+    private List<ProcessLogChunk> getChunks(DSLContext tx, String instanceId, Integer start, Integer end) {
+        String lowerBoundExpr = "lower(" + PROCESS_LOGS.CHUNK_RANGE + ")";
+
+        if (start == null && end == null) {
+            // entire file
+            return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
+                    .from(PROCESS_LOGS)
+                    .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId))
+                    .orderBy(PROCESS_LOGS.CHUNK_RANGE)
+                    .fetch(ProcessLogsDao::toChunk);
+
+        } else if (start != null) {
+            // ranges && [start, end)
+            String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && int4range(?, ?)";
+            return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
+                    .from(PROCESS_LOGS)
+                    .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId).and(rangeExpr, start, end))
+                    .orderBy(PROCESS_LOGS.CHUNK_RANGE)
+                    .fetch(ProcessLogsDao::toChunk);
+
+        } else if (end != null) {
+            // ranges && [upper_bound - end, upper_bound)
+            String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && PROCESS_LOG_LAST_N_BYTES(?, ?)";
+            return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
+                    .from(PROCESS_LOGS)
+                    .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId)
+                            .and(rangeExpr, instanceId, end))
+                    .orderBy(PROCESS_LOGS.CHUNK_RANGE)
+                    .fetch(ProcessLogsDao::toChunk);
+        } else {
+            throw new IllegalArgumentException("Invalid range options: start=" + start + ", end=" + end);
+        }
     }
 
-    public static final class ProcessLogEntry implements Serializable {
+    private static ProcessLogChunk toChunk(Record2<Object, byte[]> r) {
+        return new ProcessLogChunk((Integer) r.value1(), r.value2());
+    }
+
+    public static final class ProcessLogChunk implements Serializable {
 
         private final int start;
         private final byte[] data;
 
-        public ProcessLogEntry(int start, byte[] data) {
+        public ProcessLogChunk(int start, byte[] data) {
             this.start = start;
             this.data = data;
         }
@@ -86,6 +99,25 @@ public class ProcessLogsDao extends AbstractDao {
 
         public byte[] getData() {
             return data;
+        }
+    }
+
+    public static final class ProcessLog implements Serializable {
+
+        private final int size;
+        private final List<ProcessLogChunk> chunks;
+
+        public ProcessLog(int size, List<ProcessLogChunk> chunks) {
+            this.size = size;
+            this.chunks = chunks;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public List<ProcessLogChunk> getChunks() {
+            return chunks;
         }
     }
 }

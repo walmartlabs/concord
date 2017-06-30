@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="24000" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_LOGS_SIZE">
+            select
+                INSTANCE_ID,
+                max(upper(CHUNK_RANGE)) as SIZE
+            from PROCESS_LOGS
+            group by INSTANCE_ID
+        </createView>
+    </changeSet>
+</databaseChangeLog>
