@@ -364,7 +364,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         if (data.isEmpty()) {
             int actualStart = start != null ? start : 0;
-            int actualEnd = end != null ? end : 0;
+            int actualEnd = end != null ? end : start;
             return Response.ok()
                 .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/0")
                 .build();
