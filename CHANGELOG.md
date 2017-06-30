@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- new task: `loadTasks`. Allows users to create their own tasks in
+Groovy, store them in process files and load dynamically.
+
 ### Changed
 
 - ansible: dependency URLs in the ansible template are temporary

@@ -18,6 +18,7 @@
         <module>tasks/ansible</module>
         <module>tasks/smtp</module>
         <module>tasks/example</module>
+        <module>tasks/dynamic-tasks</module>
         <module>templates/ansible</module>
     </modules>
 </project>
