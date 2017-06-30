@@ -1,6 +1,5 @@
 // @flow
 import type {ConcordId, FetchRange} from "../../types";
-import ContentRange from "http-range/lib/content-range";
 import * as common from "../../api";
 
 const str = (s: mixed) => s === undefined ? "" : String(s);
@@ -9,12 +8,17 @@ const formatRangeHeader = (range: FetchRange) =>
     ({"Range": `bytes=${str(range.low)}-${str(range.high)}`});
 
 const parseRange = (s: string): FetchRange => {
-    const range = ContentRange.prototype.parse(s);
+    const regex = /^bytes (\d*)-(\d*)\/(\d*)$/;
+    const m = regex.exec(s);
+    if (!m) {
+        throw {error: true, message: `Invalid Content-Range header: ${s}`};
+    }
+
     return {
-        unit: range.unit,
-        length: range.length,
-        low: range.range.low,
-        high: range.range.high
+        unit: "bytes",
+        length: parseInt(m[3]),
+        low: parseInt(m[1]),
+        high: parseInt(m[2])
     };
 };
 
