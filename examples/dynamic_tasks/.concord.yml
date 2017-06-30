@@ -1,0 +1,10 @@
+flows:
+  main:
+  - loadTasks: "tasks"
+  - ${myTask.hey("world")}
+
+variables:
+  entryPoint: main
+  dependencies:
+  - "http://nexus.prod.walmart.com/nexus/content/repositories/public/org/codehaus/groovy/groovy-all/2.4.10/groovy-all-2.4.10.jar"
+  - "http://nexus.prod.walmart.com/nexus/content/repositories/devtools/com/walmartlabs/concord/plugins/basic/dynamic-tasks/0.24.0/dynamic-tasks-0.24.0.jar"
