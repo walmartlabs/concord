@@ -1,0 +1,19 @@
+flows:
+  main:
+    - log: "Hello, ${name}"
+    - log: "x=${x}"
+
+variables:
+  arguments:
+    name: "stranger"
+    x: 0
+
+profiles:
+  test1:
+    variables:
+      arguments:
+        name: "world"
+  test2:
+    variables:
+      arguments:
+        x: 123

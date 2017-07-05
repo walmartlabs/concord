@@ -10,5 +10,6 @@ public interface ProcessPortalService {
 
     @GET
     @Path("/start")
-    Response startProcess(@QueryParam("entryPoint") String entryPoint);
+    Response startProcess(@QueryParam("entryPoint") String entryPoint,
+                          @QueryParam("activeProfiles") String activeProfiles);
 }

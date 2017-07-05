@@ -1,10 +1,10 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.project.Constants;
-import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,7 +39,7 @@ public class ActiveProfilesProcessor implements PayloadProcessor {
 
         if (!(v instanceof Collection)) {
             logManager.error(payload.getInstanceId(),
-                    "The value of 'activeProfiles' parameter must be an array of strings: {}", v);
+                    "The value of 'activeProfiles' parameter must be a JSON array or a Java list of strings: {}", v);
 
             throw new ProcessException("The value of 'activeProfiles' parameter must be an array of strings");
         }

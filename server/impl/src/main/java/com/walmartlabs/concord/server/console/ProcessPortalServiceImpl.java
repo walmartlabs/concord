@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.console;
 
+import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import io.takari.bpm.api.ExecutionException;
@@ -11,9 +12,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static javax.ws.rs.core.Response.Status;
 
@@ -36,12 +40,18 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
     @Override
     @Validate
     @RequiresAuthentication
-    public Response startProcess(String entryPoint) {
+    public Response startProcess(String entryPoint, String activeProfiles) {
         if (entryPoint == null || entryPoint.trim().isEmpty()) {
             throw new WebApplicationException("Invalid entry point", Status.BAD_REQUEST);
         }
 
-        StartProcessResponse resp = processResource.start(entryPoint, Collections.emptyMap(), false);
+        Map<String, Object> req = new HashMap<>();
+        if (activeProfiles != null) {
+            String[] as = activeProfiles.split(",");
+            req.put(Constants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
+        }
+
+        StartProcessResponse resp = processResource.start(entryPoint, req, false);
 
         String instanceId = resp.getInstanceId();
         while (true) {
@@ -54,7 +64,8 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
                 throw new WebApplicationException("Process error", Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
                 // TODO redirect to a success page?
-                throw new WebApplicationException("Process finished", Status.OK);
+                return Response.ok(psr, MediaType.APPLICATION_JSON)
+                        .build();
             }
 
             try {
