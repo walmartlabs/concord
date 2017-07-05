@@ -5,7 +5,9 @@
 ### Added
 
 - new task: `loadTasks`. Allows users to create their own tasks in
-Groovy, store them in process files and load dynamically.
+Groovy, store them in process files and load dynamically;
+- concord-server: optional `activeProfiles` parameter can now be
+used in the Portal API.
 
 ### Changed
 
