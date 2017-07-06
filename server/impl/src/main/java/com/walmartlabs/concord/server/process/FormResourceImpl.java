@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.process;
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.api.process.FormInstanceEntry;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.FormResource;
@@ -61,7 +62,17 @@ public class FormResourceImpl implements FormResource, Resource {
 
         Map<String, Object> data = env != null ? (Map<String, Object>) env.get(fd.getName()) : Collections.emptyMap();
         if (data == null) {
-            data = Collections.emptyMap();
+            data = new HashMap<>();
+        }
+
+        Map<String, Object> extra = null;
+        Map<String, Object> opts = form.getOptions();
+        if (opts != null) {
+            extra = (Map<String, Object>) opts.get("values");
+        }
+
+        if (extra != null) {
+            data = ConfigurationUtils.deepMerge(data, extra);
         }
 
         Map<String, Object> allowedValues = form.getAllowedValues();

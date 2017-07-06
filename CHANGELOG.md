@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: form calls can now override form values and/or
+provide additional data.
+
+
+
 ## [0.24.0] - 2017-07-05
 
 ### Added

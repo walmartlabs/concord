@@ -1,9 +1,0 @@
-main:
-- form: myForm
-- ${log.info('test', 'Hello, '.concat(myForm.firstName).concat(' ').concat(myForm.lastName))}
-
-form (myForm):
-- firstName: { label: "First name", type: "string" }
-- lastName: { label: "Last name", type: "string" }
-- age: { label: "Age", type: "int", min: 21, max: 999 }
-- color: { label: "Favorite color", type: "string", allow: ["red", "green", "blue"] }

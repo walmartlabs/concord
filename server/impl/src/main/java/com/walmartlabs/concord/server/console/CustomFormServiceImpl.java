@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
@@ -206,7 +207,12 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         String formInstanceId = form.getFormInstanceId().toString();
 
         String submitUrl = "/api/service/custom_form/" + processInstanceId + "/" + formInstanceId + "/continue";
+
+        // TODO merge with FormResourceImpl
         Map<String, FormDataDefinition> _definitions = new HashMap<>();
+
+        // the order of precedence should be:
+        //   submitted value > form call value > field's default value > environment value
         Map<String, Object> _values = new HashMap<>();
         Map<String, String> _errors = new HashMap<>();
 
@@ -215,7 +221,18 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         Map<String, Object> env = form.getEnv();
         Map<String, Object> data = env != null ? (Map<String, Object>) env.get(fd.getName()) : Collections.emptyMap();
         if (data == null) {
-            data = Collections.emptyMap();
+            data = new HashMap<>();
+        }
+
+        Map<String, Object> extra = null;
+        Map<String, Object> opts = form.getOptions();
+        if (opts != null) {
+            extra = (Map<String, Object>) opts.get("values");
+        }
+
+        if (extra != null) {
+            data = ConfigurationUtils.deepMerge(data, extra);
+            _values.putAll(extra);
         }
 
         for (FormField f : fd.getFields()) {

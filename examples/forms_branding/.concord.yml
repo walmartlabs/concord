@@ -1,0 +1,26 @@
+flows:
+  main:
+  - form: myForm
+    # form calls can override form values or provide additional data
+    values:
+      lastName: "Appleseed"
+      sum: "${1 + 2}"
+      address:
+        city: Toronto
+        province: Ontario
+        country: Canada
+
+  - ${log.info('test', 'Hello, '.concat(myForm.firstName).concat(' ').concat(myForm.lastName))}
+
+forms:
+  myForm:
+  - firstName: { label: "First name", type: "string", value: "John" }
+  - lastName: { label: "Last name", type: "string" }
+  - age: { label: "Age", type: "int", min: 21, max: 999 }
+  - color: { label: "Favorite color", type: "string", allow: ["red", "green", "blue"] }
+
+variables:
+  entryPoint: main
+  arguments:
+    myForm:
+      lastName: Smith
