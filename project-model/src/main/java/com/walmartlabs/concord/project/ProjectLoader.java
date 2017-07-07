@@ -21,19 +21,31 @@ public class ProjectLoader {
 
     public static final String PROJECT_FILE_NAME = ".concord.yml";
 
+    public static final String[] PROJECT_FILE_NAMES = {".concord.yml", "concord.yml"};
+
     private final YamlParser parser = new YamlParser();
 
     public ProjectDefinition load(Path baseDir) throws IOException {
         ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 
-        Path projectFile = baseDir.resolve(PROJECT_FILE_NAME);
-        if (Files.exists(projectFile)) {
-            b.addProjectFile(projectFile);
+        for (String n : PROJECT_FILE_NAMES) {
+            Path projectFile = baseDir.resolve(n);
+            if (Files.exists(projectFile)) {
+                b.addProjectFile(projectFile);
+                break;
+            }
         }
 
-        Path defsDir = baseDir.resolve(Constants.Files.DEFINITIONS_DIR_NAME);
-        if (Files.exists(defsDir)) {
-            b.addDefinitions(defsDir);
+        for (String n : Constants.Files.DEFINITIONS_DIR_NAMES) {
+            Path defsDir = baseDir.resolve(n);
+            if (Files.exists(defsDir)) {
+                b.addDefinitions(defsDir);
+            }
+        }
+
+        Path profilesDir = baseDir.resolve(Constants.Files.PROFILES_DIR_NAME);
+        if (Files.exists(profilesDir)) {
+            b.addProfiles(profilesDir);
         }
 
         return b.build();
@@ -51,6 +63,7 @@ public class ProjectLoader {
 
         private Map<String, ProcessDefinition> flows;
         private Map<String, FormDefinition> forms;
+        private Map<String, Profile> profiles;
         private ProjectDefinition projectDefinition;
 
         private ProjectDefinitionBuilder(YamlParser parser) {
@@ -68,6 +81,16 @@ public class ProjectLoader {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     loadDefinitions(file);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
+
+        public void addProfiles(Path path) throws IOException {
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    loadProfiles(file);
                     return FileVisitResult.CONTINUE;
                 }
             });
@@ -110,6 +133,31 @@ public class ProjectLoader {
             }
         }
 
+        private void loadProfiles(Path file) throws IOException {
+            String n = file.getFileName().toString();
+            if (!n.endsWith(".yml") && !n.endsWith(".yaml")) {
+                return;
+            }
+
+            YamlProfileFile pf = parser.parseProfileFile(file);
+            loadProfiles(pf);
+        }
+
+        private void loadProfiles(YamlProfileFile pf) throws YamlConverterException {
+            Map<String, YamlProfile> m = pf.getProfiles();
+
+            for (Map.Entry<String, YamlProfile> e : m.entrySet()) {
+                String k = e.getKey();
+                YamlProfile v = e.getValue();
+
+                Profile p = YamlProjectConverter.convert(v);
+                if (profiles == null) {
+                    profiles = new HashMap<>();
+                }
+                profiles.put(k, p);
+            }
+        }
+
         public ProjectDefinition build() {
             if (flows == null) {
                 flows = new HashMap<>();
@@ -119,8 +167,11 @@ public class ProjectLoader {
                 forms = new HashMap<>();
             }
 
+            if (profiles == null) {
+                profiles = new HashMap<>();
+            }
+
             Map<String, Object> variables = new HashMap<>();
-            Map<String, Profile> profiles = new HashMap<>();
 
             if (projectDefinition != null) {
                 if (projectDefinition.getFlows() != null) {

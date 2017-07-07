@@ -3,10 +3,7 @@ package com.walmartlabs.concord.project.yaml;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.walmartlabs.concord.project.yaml.model.YamlDefinitionFile;
-import com.walmartlabs.concord.project.yaml.model.YamlFormField;
-import com.walmartlabs.concord.project.yaml.model.YamlProject;
-import com.walmartlabs.concord.project.yaml.model.YamlStep;
+import com.walmartlabs.concord.project.yaml.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,5 +37,9 @@ public class YamlParser {
 
     public YamlDefinitionFile parseDefinitionFile(InputStream in) throws IOException {
         return objectMapper.readValue(in, YamlDefinitionFile.class);
+    }
+
+    public YamlProfileFile parseProfileFile(Path path) throws IOException {
+        return objectMapper.readValue(path.toFile(), YamlProfileFile.class);
     }
 }

@@ -1,6 +1,0 @@
-main:
-- switch:
-  - expr: ${myVar}
-    steps:
-    - expr: ${log.info("test", "Bye!")}
-    - end:

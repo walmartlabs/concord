@@ -90,9 +90,19 @@ public final class Constants {
         public static final String LIBRARIES_DIR_NAME = "lib";
 
         /**
-         * Directory containing process definitions of a payload.
+         * (Default) directory containing process definitions of a payload.
          */
-        public static final String DEFINITIONS_DIR_NAME = "processes";
+        public static final String DEFINITIONS_DIR_NAME = "flows";
+
+        /**
+         * Directories containing process definitions of a payload.
+         */
+        public static final String[] DEFINITIONS_DIR_NAMES = {"flows", "processes"};
+
+        /**
+         * Directory containing process profiles.
+         */
+        public static final String PROFILES_DIR_NAME = "profiles";
 
         /**
          * File, containing request data of a payload: process arguments, entry point name, etc.

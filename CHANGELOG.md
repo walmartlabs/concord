@@ -6,6 +6,12 @@
 
 - concord-server: form calls can now override form values and/or
 provide additional data.
+- concord-server: both `flows` and `processes` directories can now
+be used to load flows definitions;
+- concord-server: `concord.yml` can now be used instead of
+`.concord.yml`;
+- concord-server: profiles can now be loaded from a `profiles`
+directory.
 
 
 

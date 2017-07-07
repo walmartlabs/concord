@@ -36,6 +36,16 @@ public class ProjectFileIT extends AbstractServerIT {
     }
 
     @Test(timeout = 30000)
+    public void testExternalProfile() throws Exception {
+        simpleTest("projectfile/externalprofile", ".*Hello, world.*");
+    }
+
+    @Test(timeout = 30000)
+    public void testAltName() throws Exception {
+        simpleTest("projectfile/altname", ".*Hello, world.*");
+    }
+
+    @Test(timeout = 30000)
     public void testOverrideFlow() throws Exception {
         simpleTest("projectfile/overrideflow", ".*Hello, world.*");
     }

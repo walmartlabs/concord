@@ -1,0 +1,14 @@
+flows:
+  main:
+  - log: Hello, ${name}
+
+variables:
+  entryPoint: main
+  arguments:
+    name: "stranger"
+
+profiles:
+  notUsed:
+    variables:
+      arguments:
+        name: "there"

@@ -23,6 +23,10 @@ public final class YamlProjectConverter {
         return new ProjectDefinition(flows, forms, variables, profiles);
     }
 
+    public static Profile convert(YamlProfile profile) throws YamlConverterException {
+        return convertProfile(profile);
+    }
+
     private static Map<String, Profile> convertProfiles(Map<String, YamlProfile> profiles) throws YamlConverterException {
         if (profiles == null) {
             return null;
