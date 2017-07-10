@@ -145,7 +145,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                     if (yield) {
                         // this was the last "interactive" form. The process will continue in "background"
                         // and users should get a success page.
-                        writeData(dst, success());
+                        writeData(dst, success(form, m, r.getErrors()));
                     } else {
                         while (true) {
                             ProcessEntry entry = queueDao.get(processInstanceId);
@@ -154,17 +154,17 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                             if (s == ProcessStatus.SUSPENDED) {
                                 String nextFormId = formService.nextFormId(processInstanceId);
                                 if (nextFormId == null) {
-                                    writeData(dst, success());
+                                    writeData(dst, success(form, m, r.getErrors()));
                                     break;
                                 } else {
                                     FormSessionResponse nextSession = startSession(processInstanceId, nextFormId);
                                     return redirectTo(nextSession.getUri());
                                 }
                             } else if (s == ProcessStatus.FAILED) {
-                                writeData(dst, processFailed());
+                                writeData(dst, processFailed(form, m, r.getErrors()));
                                 break;
                             } else if (s == ProcessStatus.FINISHED) {
-                                writeData(dst, success());
+                                writeData(dst, success(form, m, r.getErrors()));
                                 break;
                             }
 
@@ -200,8 +200,22 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return form;
     }
 
-    @SuppressWarnings("unchecked")
+    private FormData success(Form form, Map<String, Object> overrides, List<ValidationError> errors) {
+        return prepareData(true, false, form, overrides, errors);
+    }
+
+    private FormData processFailed(Form form, Map<String, Object> overrides, List<ValidationError> errors) {
+        return prepareData(false, true, form, overrides, errors);
+    }
+
     private FormData prepareData(Form form, Map<String, Object> overrides, List<ValidationError> errors) {
+        return prepareData(false, false, form, overrides, errors);
+    }
+
+    @SuppressWarnings("unchecked")
+    private FormData prepareData(boolean success, boolean processFailed, Form form,
+                                 Map<String, Object> overrides, List<ValidationError> errors) {
+
         // TODO constants
         String processInstanceId = form.getProcessBusinessKey();
         String formInstanceId = form.getFormInstanceId().toString();
@@ -256,7 +270,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
             }
         }
 
-        return new FormData(submitUrl, _definitions, _values, _errors);
+        return new FormData(success, processFailed, submitUrl, _definitions, _values, _errors);
     }
 
     private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,
@@ -291,14 +305,6 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return String.format(FORMS_PATH_PATTERN, processInstanceId, formInstanceId);
     }
 
-    private static Map<String, Object> success() {
-        return Collections.singletonMap("success", true);
-    }
-
-    private static Map<String, Object> processFailed() {
-        return Collections.singletonMap("processFailed", true);
-    }
-
     private void writeData(Path baseDir, Object data) throws IOException {
         Path dst = baseDir.resolve("data.js");
 
@@ -314,16 +320,31 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @JsonInclude(Include.NON_EMPTY)
     private static class FormData implements Serializable {
 
+        private final boolean success;
+        private final boolean processFailed;
         private final String submitUrl;
         private final Map<String, FormDataDefinition> definitions;
         private final Map<String, Object> values;
         private final Map<String, String> errors;
 
-        public FormData(String submitUrl, Map<String, FormDataDefinition> definitions, Map<String, Object> values, Map<String, String> errors) {
+        public FormData(boolean success, boolean processFailed, String submitUrl,
+                        Map<String, FormDataDefinition> definitions, Map<String, Object> values,
+                        Map<String, String> errors) {
+
+            this.success = success;
+            this.processFailed = processFailed;
             this.submitUrl = submitUrl;
             this.definitions = definitions;
             this.values = values;
             this.errors = errors;
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public boolean isProcessFailed() {
+            return processFailed;
         }
 
         public String getSubmitUrl() {

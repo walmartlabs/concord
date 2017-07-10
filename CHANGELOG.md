@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: include all available form data for "success"
+and "process failed" pages.
+
+
+
 ## [0.25.0] - 2017-07-10
 
 ### Added
