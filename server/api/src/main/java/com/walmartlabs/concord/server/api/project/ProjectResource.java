@@ -9,7 +9,6 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
-import java.util.Map;
 
 @Api("Project")
 @Path("/api/v1/project")
@@ -67,20 +66,6 @@ public interface ProjectResource {
     @Produces(MediaType.APPLICATION_JSON)
     RepositoryEntry getRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                   @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
-
-    /**
-     * Returns a project configuration entry for the specified path.
-     *
-     * @param projectName
-     * @param path
-     * @return
-     */
-    @GET
-    @ApiOperation("Get project configuration")
-    @Path("/{projectName}/cfg/{path}")
-    @Produces(MediaType.APPLICATION_JSON)
-    Map<String, Object> getConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                         @ApiParam @PathParam("path") String path);
 
     /**
      * List projects.
@@ -142,14 +127,44 @@ public interface ProjectResource {
                                               @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName,
                                               @ApiParam @Valid UpdateRepositoryRequest request);
 
+    /**
+     * Returns a project configuration entry for the specified path.
+     *
+     * @param projectName
+     * @param path
+     * @return
+     */
+    @GET
+    @ApiOperation("Get project configuration")
+    @Path("/{projectName}/cfg{path: (.*)?}")
+    @Produces(MediaType.APPLICATION_JSON)
+    Object getConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                            @ApiParam @PathParam("path") String path);
+
+
     @PUT
     @ApiOperation("Update project's configuration parameter")
-    @Path("/{projectName}/cfg/{path}")
+    @Path("/{projectName}/cfg{path: (.*)?}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     UpdateProjectConfigurationResponse updateConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                                            @ApiParam @PathParam("path") String path,
-                                                           @ApiParam Map<String, Object> data);
+                                                           @ApiParam Object data);
+
+    @PUT
+    @ApiOperation("Update project's configuration parameter")
+    @Path("/{projectName}/cfg/")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    UpdateProjectConfigurationResponse updateConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                                           @ApiParam Object data);
+
+    @DELETE
+    @ApiOperation("Delete project's configuration parameter")
+    @Path("/{projectName}/cfg{path: (.*)?}")
+    @Produces(MediaType.APPLICATION_JSON)
+    DeleteProjectConfigurationResponse deleteConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                                           @ApiParam @PathParam("path") String path);
 
     /**
      * Removes a project and all it's resources.

@@ -29,7 +29,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
     @Test
     public void testInsertDelete() throws Exception {
         String projectName = "project#" + System.currentTimeMillis();
-        projectDao.insert(projectName, "test");
+        projectDao.insert(projectName, "test", null);
 
         // ---
 
@@ -56,8 +56,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String aName = "aProject#" + System.currentTimeMillis();
         String bName = "bProject#" + System.currentTimeMillis();
 
-        projectDao.insert(aName, "test");
-        projectDao.insert(bName, "test");
+        projectDao.insert(aName, "test", null);
+        projectDao.insert(bName, "test", null);
 
         // ---
 

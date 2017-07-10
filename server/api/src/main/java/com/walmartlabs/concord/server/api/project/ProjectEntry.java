@@ -1,6 +1,8 @@
 package com.walmartlabs.concord.server.api.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
@@ -9,6 +11,7 @@ import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Map;
 
+@JsonInclude(Include.NON_NULL)
 public class ProjectEntry implements Serializable {
 
     @NotNull

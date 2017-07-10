@@ -58,9 +58,8 @@ public class VariablesIT extends AbstractServerIT {
         EncryptValueResponse evr = projectResource.encrypt(projectName, new EncryptValueRequest(secretValue));
         String encryptedValue = DatatypeConverter.printBase64Binary(evr.getData());
 
-        projectResource.updateConfiguration(projectName, "/",
-                ImmutableMap.of("arguments",
-                        ImmutableMap.of("mySecret", encryptedValue)));
+        projectResource.updateConfiguration(projectName, ImmutableMap.of("arguments",
+                ImmutableMap.of("mySecret", encryptedValue)));
 
         // ---
 

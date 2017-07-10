@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.project;
 
+import com.google.common.base.Splitter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.PerformedActionType;
@@ -33,7 +34,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORI
 public class ProjectResourceImpl extends AbstractDao implements ProjectResource, Resource {
 
     private final ProjectDao projectDao;
-    private final ProjectConfigurationDao configurationDao;
     private final ProjectSecretManager projectSecretManager;
     private final RepositoryDao repositoryDao;
     private final SecretDao secretDao;
@@ -45,7 +45,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Inject
     public ProjectResourceImpl(Configuration cfg,
                                ProjectDao projectDao,
-                               ProjectConfigurationDao configurationDao,
                                ProjectSecretManager projectSecretManager,
                                RepositoryDao repositoryDao,
                                SecretDao secretDao,
@@ -54,7 +53,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         super(cfg);
 
         this.projectDao = projectDao;
-        this.configurationDao = configurationDao;
         this.projectSecretManager = projectSecretManager;
         this.repositoryDao = repositoryDao;
         this.secretDao = secretDao;
@@ -96,14 +94,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         tx(tx -> {
-            projectDao.insert(tx, projectName, request.getDescription());
+            projectDao.insert(tx, projectName, request.getDescription(), cfg);
 
             if (repos != null) {
                 insert(tx, projectName, repos);
-            }
-
-            if (cfg != null) {
-                configurationDao.insert(tx, projectName, cfg);
             }
         });
         return new CreateProjectResponse(PerformedActionType.CREATED);
@@ -144,25 +138,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertProject(projectName);
 
         return repositoryDao.get(projectName, repositoryName);
-    }
-
-    @Override
-    @Validate
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getConfiguration(String projectName, String path) {
-        assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
-                "The current user does not have permissions to read the specified project");
-
-        assertProject(projectName);
-
-        String[] ps = path != null ? path.split("/") : null;
-        Object v = configurationDao.getValue(projectName, ps);
-
-        if (v != null && !(v instanceof Map)) {
-            throw new WebApplicationException("Path should point to a JSON object, got: " + v.getClass(), Status.BAD_REQUEST);
-        }
-
-        return (Map<String, Object>) v;
     }
 
     @Override
@@ -210,15 +185,11 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         tx(tx -> {
-            projectDao.update(tx, projectName, request.getDescription());
+            projectDao.update(tx, projectName, request.getDescription(), cfg);
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectName);
                 insert(tx, projectName, repos);
-            }
-
-            if (cfg != null) {
-                configurationDao.update(tx, projectName, cfg);
             }
         });
 
@@ -240,25 +211,83 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
-    public UpdateProjectConfigurationResponse updateConfiguration(String projectName, String path, Map<String, Object> data) {
+    @SuppressWarnings("unchecked")
+    public Object getConfiguration(String projectName, String path) {
+        assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
+                "The current user does not have permissions to read the specified project");
+
+        assertProject(projectName);
+
+        String[] ps = cfgPath(path);
+        Object v = projectDao.getConfigurationValue(projectName, ps);
+
+        if (v == null) {
+            throw new WebApplicationException("Value not found: " + path, Status.NOT_FOUND);
+        }
+
+        return v;
+    }
+
+    @Override
+    @Validate
+    public UpdateProjectConfigurationResponse updateConfiguration(String projectName, String path, Object data) {
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
         assertProject(projectName);
 
-        Map<String, Object> cfg = configurationDao.get(projectName);
+        Map<String, Object> cfg = projectDao.getConfiguration(projectName);
         if (cfg == null) {
             cfg = new HashMap<>();
         }
 
-        String[] ps = path != null ? path.split("/") : null;
-        ConfigurationUtils.merge(cfg, data, ps);
+        String[] ps = cfgPath(path);
+        if (ps == null || ps.length < 1) {
+            if (!(data instanceof Map)) {
+                throw new ValidationErrorsException("Expected a JSON object: " + data);
+            }
+            cfg = (Map<String, Object>) data;
+        } else {
+            ConfigurationUtils.set(cfg, data, ps);
+        }
 
         validateCfg(cfg);
 
         Map<String, Object> newCfg = cfg;
-        tx(tx -> configurationDao.update(tx, projectName, newCfg));
+        tx(tx -> projectDao.update(tx, projectName, newCfg));
         return new UpdateProjectConfigurationResponse();
+    }
+
+    @Override
+    @Validate
+    public UpdateProjectConfigurationResponse updateConfiguration(String projectName, Object data) {
+        return updateConfiguration(projectName, "/", data);
+    }
+
+    @Override
+    public DeleteProjectConfigurationResponse deleteConfiguration(String projectName, String path) {
+        assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
+                "The current user does not have permissions to update the specified project");
+
+        assertProject(projectName);
+
+        Map<String, Object> cfg = projectDao.getConfiguration(projectName);
+        if (cfg == null) {
+            cfg = new HashMap<>();
+        }
+
+        String[] ps = cfgPath(path);
+        if (ps == null || ps.length == 0) {
+            cfg = null;
+        } else {
+            ConfigurationUtils.delete(cfg, ps);
+        }
+
+        validateCfg(cfg);
+
+        Map<String, Object> newCfg = cfg;
+        tx(tx -> projectDao.update(tx, projectName, newCfg));
+        return new DeleteProjectConfigurationResponse();
     }
 
     @Override
@@ -350,10 +379,12 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
     }
 
-    private static void assertTemplatePermissions(String name) {
-        Subject subject = SecurityUtils.getSubject();
-        if (!subject.isPermitted(String.format(Permissions.TEMPLATE_USE_INSTANCE, name))) {
-            throw new UnauthorizedException("The current user does not have permissions to use the template: " + name);
+    private static String[] cfgPath(String s) {
+        if (s == null) {
+            return new String[0];
         }
+
+        List<String> l = Splitter.on("/").omitEmptyStrings().splitToList(s);
+        return l.toArray(new String[l.size()]);
     }
 }

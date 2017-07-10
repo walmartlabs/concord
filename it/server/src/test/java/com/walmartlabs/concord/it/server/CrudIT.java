@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.it.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
@@ -15,7 +14,6 @@ import org.junit.Test;
 import javax.ws.rs.BadRequestException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -46,43 +44,6 @@ public class CrudIT extends AbstractServerIT {
 
         DeleteProjectResponse dpr = projectResource.delete(projectName);
         assertTrue(dpr.isOk());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testProjectCfg() throws Exception {
-        ObjectMapper om = new ObjectMapper();
-
-        String json1 = "{ \"smtp\": { \"host\": \"localhost\", \"port\": 25 }, \"ssl\": true }";
-        Map<String, Object> cfg = om.readValue(json1, Map.class);
-
-        // ---
-
-        ProjectResource projectResource = proxy(ProjectResource.class);
-
-        String projectName = "project_" + System.currentTimeMillis();
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, cfg));
-
-        // ---
-
-        Map<String, Object> m1 = projectResource.getConfiguration(projectName, "smtp");
-        assertNotNull(m1);
-        assertEquals(25, m1.get("port"));
-
-        assertNull(projectResource.getConfiguration(projectName, "somethingElse"));
-
-        // ---
-
-        String json2 = "{ \"port\": 2525 }";
-        Map<String, Object> partial = om.readValue(json2, Map.class);
-
-        projectResource.updateConfiguration(projectName, "smtp", partial);
-
-        // ---
-
-        Map<String, Object> m2 = projectResource.getConfiguration(projectName, "smtp");
-        assertNotNull(m2);
-        assertEquals(2525, m2.get("port"));
     }
 
     @Test

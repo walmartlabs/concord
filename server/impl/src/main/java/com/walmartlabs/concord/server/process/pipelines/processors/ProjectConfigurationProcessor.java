@@ -3,10 +3,10 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
-import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.project.ProjectConfigurationDao;
+import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.project.ProjectDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,13 +26,12 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectConfigurationProcessor.class);
 
-    private final ProjectConfigurationDao cfgDao;
-
+    private final ProjectDao projectDao;
     private final LogManager logManager;
 
     @Inject
-    public ProjectConfigurationProcessor(ProjectConfigurationDao cfgDao, LogManager logManager) {
-        this.cfgDao = cfgDao;
+    public ProjectConfigurationProcessor(ProjectDao projectDao, LogManager logManager) {
+        this.projectDao = projectDao;
         this.logManager = logManager;
     }
 
@@ -58,7 +57,7 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
         Map<String, Object> dbCfg = Collections.emptyMap();
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         if (projectName != null) {
-            dbCfg = cfgDao.get(projectName);
+            dbCfg = projectDao.getConfiguration(projectName);
             if (dbCfg == null) {
                 dbCfg = Collections.emptyMap();
             }

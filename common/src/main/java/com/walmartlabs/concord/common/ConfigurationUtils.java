@@ -37,6 +37,28 @@ public final class ConfigurationUtils {
         return m.get(path[path.length - 1]);
     }
 
+    public static void set(Map<String, Object> a, Object b, String... path) {
+        Object holder = get(a, path.length - 1, path);
+
+        if (holder != null && !(holder instanceof Map)) {
+            throw new IllegalArgumentException("Value should be contained in a JSON object: " + String.join("/", path));
+        }
+
+        Map<String, Object> m = (Map<String, Object>) holder;
+        m.put(path[path.length - 1], b);
+    }
+
+    public static void delete(Map<String, Object> a, String ... path) {
+        Object holder = get(a, path.length - 1, path);
+
+        if (holder != null && !(holder instanceof Map)) {
+            throw new IllegalArgumentException("Value should be contained in a JSON object: " + String.join("/", path));
+        }
+
+        Map<String, Object> m = (Map<String, Object>) holder;
+        m.remove(path[path.length - 1]);
+    }
+
     @SuppressWarnings("unchecked")
     public static void merge(Map<String, Object> a, Map<String, Object> b, String... path) {
         Object holder = get(a, path);
