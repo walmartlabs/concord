@@ -8,7 +8,7 @@ fi
 
 export RUNNER_PATH="$APP_DIR/runner/runner.jar"
 
-java \
+exec java \
 -Xmx256m \
 -server \
 -Djava.security.egd=file:/dev/./urandom \

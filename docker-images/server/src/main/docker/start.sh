@@ -10,7 +10,7 @@ fi;
 
 export DEPS_STORE_DIR="$APP_DIR";
 
-java \
+exec java \
 -Xmx1g \
 -server \
 -Djava.security.egd=file:/dev/./urandom \

@@ -17,4 +17,4 @@ cp ${NGINX_CONF_DIR}/${NGINX_CONF_TEMPLATE} ${NGINX_CONF_DIR}/app.conf
 /usr/bin/sed -i "s,SERVER_ADDR,$SERVER_ADDR,g;s,SERVER_PORT,$SERVER_PORT,g" ${NGINX_CONF_DIR}/app.conf
 /usr/bin/sed -i "s,SSL_CERT_PATH,$SSL_CERT_PATH,g" ${NGINX_CONF_DIR}/app.conf
 
-/usr/sbin/nginx -c ${NGINX_CONF_DIR}/nginx.conf
+exec /usr/sbin/nginx -c ${NGINX_CONF_DIR}/nginx.conf
