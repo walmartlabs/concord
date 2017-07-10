@@ -4,6 +4,9 @@
 
 ### Changed
 
+- concord-server: return project configuration on
+`GET /api/v1/project/{projectName}` calls;
+- concord-server: improve project configuration handling;
 - concord-server: include all available form data for "success"
 and "process failed" pages.
 
