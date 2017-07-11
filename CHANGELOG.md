@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: query parameters of the requests made using the
+"portal" endpoint are now accessible as `requestInfo.query.param`
+variables.
+
 ### Changed
 
 - concord-server: fixed the issue with interpolated default values

@@ -14,6 +14,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
     @Override
     @Validate
     @RequiresAuthentication
-    public Response startProcess(String entryPoint, String activeProfiles) {
+    public Response startProcess(String entryPoint, String activeProfiles, UriInfo uriInfo) {
         if (entryPoint == null || entryPoint.trim().isEmpty()) {
             throw new WebApplicationException("Invalid entry point", Status.BAD_REQUEST);
         }
@@ -49,6 +50,12 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
         if (activeProfiles != null) {
             String[] as = activeProfiles.split(",");
             req.put(Constants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
+        }
+
+        if (uriInfo != null) {
+            Map<String, Object> args = new HashMap<>();
+            args.put("requestInfo", makeRequestInfo(uriInfo));
+            req.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
         StartProcessResponse resp = processResource.start(entryPoint, req, false);
@@ -99,5 +106,24 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
         return Response.status(Status.MOVED_PERMANENTLY)
                 .header(HttpHeaders.LOCATION, fsr.getUri())
                 .build();
+    }
+
+    private static Map<String, Object> makeRequestInfo(UriInfo i) {
+        Map<String, Object> queryParams = new HashMap<>();
+        for (Map.Entry<String, List<String>> e : i.getQueryParameters(true).entrySet()) {
+            String k = e.getKey();
+            List<String> v = e.getValue();
+
+            if (v.size() == 1) {
+                queryParams.put(k, v.get(0));
+            } else {
+                queryParams.put(k, v);
+            }
+        }
+
+        Map<String, Object> m = new HashMap<>();
+        m.put("uri", i.getRequestUri());
+        m.put("query", queryParams);
+        return m;
     }
 }

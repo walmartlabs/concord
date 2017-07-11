@@ -60,7 +60,7 @@ public class PortalIT extends AbstractServerIT {
         // ---
 
         ProcessPortalService portalService = proxy(ProcessPortalService.class);
-        Response resp = portalService.startProcess(projectName + ":" + repoName + ":main", "test1,test2");
+        Response resp = portalService.startProcess(projectName + ":" + repoName + ":main", "test1,test2", null);
         assertEquals(200, resp.getStatus());
 
         ProcessEntry pe = resp.readEntity(ProcessEntry.class);
