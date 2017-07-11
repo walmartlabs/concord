@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 public class FileEventStorage implements EventStorage {
 
     private static final Logger log = LoggerFactory.getLogger(FileEventStorage.class);
@@ -30,8 +32,12 @@ public class FileEventStorage implements EventStorage {
     public void add(Event event) {
         Path p = dir.resolve(event.getId().toString());
 
-        try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(p))) {
-            out.writeObject(event);
+        try {
+            Path tmp = Files.createTempFile(event.getId().toString(), "event");
+            try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(tmp))) {
+                out.writeObject(event);
+            }
+            Files.move(tmp, p, REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

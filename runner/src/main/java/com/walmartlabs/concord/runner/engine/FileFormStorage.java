@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 public class FileFormStorage implements FormStorage {
 
     private final Path dir;
@@ -22,10 +24,14 @@ public class FileFormStorage implements FormStorage {
     @Override
     public void save(Form form) throws ExecutionException {
         UUID id = form.getFormInstanceId();
-
         Path p = dir.resolve(id.toString());
-        try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(p))) {
-            out.writeObject(form);
+        try {
+            Path tmp = Files.createTempFile(id.toString(), "form");
+            try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(tmp))) {
+                out.writeObject(form);
+            }
+
+            Files.move(tmp, p, REPLACE_EXISTING);
         } catch (IOException e) {
             throw new ExecutionException("Error while saving a form", e);
         }

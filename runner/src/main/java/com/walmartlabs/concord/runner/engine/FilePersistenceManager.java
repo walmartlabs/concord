@@ -6,12 +6,12 @@ import io.takari.bpm.state.ProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class FilePersistenceManager implements PersistenceManager {
 
@@ -27,8 +27,12 @@ public class FilePersistenceManager implements PersistenceManager {
     public void save(ProcessInstance state) throws ExecutionException {
         Path p = dir.resolve(state.getId().toString());
 
-        try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(p))) {
-            out.writeObject(state);
+        try {
+            Path tmp = Files.createTempFile(state.getId().toString(), "state");
+            try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(tmp))) {
+                out.writeObject(state);
+            }
+            Files.move(tmp, p, REPLACE_EXISTING);
         } catch (IOException e) {
             throw new ExecutionException("Error while saving state", e);
         }
