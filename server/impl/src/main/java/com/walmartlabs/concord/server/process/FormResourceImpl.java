@@ -87,12 +87,9 @@ public class FormResourceImpl implements FormResource, Resource {
             FormInstanceEntry.Cardinality c = map(f.getCardinality());
             String type = f.getType();
 
-            Object value = f.getDefaultValue();
-            if (value == null) {
-                value = data.get(fieldName);
-            }
-
+            Object value = data.get(fieldName);
             Object allowedValue = allowedValues.get(fieldName);
+
             fields.add(new FormInstanceEntry.Field(fieldName, f.getLabel(), type, c, value, allowedValue));
         }
 

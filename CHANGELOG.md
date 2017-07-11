@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed the issue with interpolated default values
+of form fields for non-branded forms.
+
+
+
 ## [0.26.0] - 2017-07-10
 
 ### Added
