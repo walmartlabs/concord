@@ -6,7 +6,10 @@
 
 - concord-server: query parameters of the requests made using the
 "portal" endpoint are now accessible as `requestInfo.query.param`
-variables.
+variables;
+- concord-runner: support for running docker images using `docker`
+flow command;
+- docker-images: new tool image - `ansible`.
 
 ### Changed
 
