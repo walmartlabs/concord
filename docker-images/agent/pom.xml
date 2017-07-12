@@ -75,7 +75,7 @@
                                     <descriptor>assembly.xml</descriptor>
                                 </assembly>
                                 <runCmds>
-                                    <run>yum -y install docker &amp;&amp; yum clean all</run>
+                                    <run>yum -y install docker-client &amp;&amp; yum clean all</run>
                                 </runCmds>
                                 <env>
                                     <DOCKER_HOST>tcp://dind:2375</DOCKER_HOST>
