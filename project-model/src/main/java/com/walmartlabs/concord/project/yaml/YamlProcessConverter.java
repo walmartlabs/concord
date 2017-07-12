@@ -151,6 +151,12 @@ public final class YamlProcessConverter {
             ELCall call = new ELCall(expression, maps);
 
             return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args, null), s, "Set variables");
+        } else if(s instanceof YamlDockerStep) {
+            YamlDockerStep c = (YamlDockerStep) s;
+
+            ELCall call = createELCall("docker", Arrays.asList(c.getImage(), c.getCmd(), "${__attr_localPath}"));
+
+            return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args,null), s, "Docker call");
         } else {
             throw new YamlConverterException("Unknown step type: " + s.getClass());
         }

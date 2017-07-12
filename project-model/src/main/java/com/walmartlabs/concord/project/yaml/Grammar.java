@@ -237,7 +237,7 @@ public class Grammar {
             satisfyField("form").then(satisfyToken(JsonToken.VALUE_STRING)).bind(a ->
                     formCallOptions.map(options -> new YamlFormCall(a.location, (String) a.value, options))));
 
-    // inVars := FIELD_NAME "vars" START_OBJECT (kv)+ END_OBJECT
+    // inVars := FIELD_NAME "set" START_OBJECT (kv)+ END_OBJECT
     private static final Parser<Atom, YamlStep> vars = label("Variables",
             satisfyField("set")
                     .bind(a ->
@@ -245,10 +245,18 @@ public class Grammar {
                                     .map(Grammar::toMap)
                                     .map(v -> new YamlSetVariablesStep(a.location, v))));
 
+    private static final Parser<Atom, Map<String, Object>> dockerOptions = label("Docker call options",
+            many(kv).map(Grammar::toMap));
+
+    // docker := FIELD_NAME "docker" VALUE_NULL dockerOptions
+    private static final Parser<Atom, YamlStep> docker = label("Docker call",
+            satisfyField("docker").then(satisfyToken(JsonToken.VALUE_NULL)).bind(a ->
+                    dockerOptions.map(options -> new YamlDockerStep(a.location, (String)options.get("image"), (String)options.get("cmd")))));
+
     // stepObject := START_OBJECT group | ifExpr | exprFull | formCall | vars | taskFull | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(group, ifExpr, exprFull, formCall, vars), taskFull, event, errorReturn, script, taskShort)));
+                    choice(choice(docker, group, ifExpr, exprFull, formCall, vars), taskFull, event, errorReturn, script, taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
     private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, callProc, stepObject);

@@ -1,0 +1,4 @@
+main:
+  - docker:
+    image: test-image
+    cmd: test-cmd

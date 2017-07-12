@@ -1,2 +1,2 @@
 main:
-- expr: ${ansible2.run(ansibleParams, __attr_localPath)}
+- expr: ${ansible2.run("docker.prod.walmart.com/walmartlabs/concord-ansible", ansibleParams, __attr_localPath)}

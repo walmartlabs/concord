@@ -55,27 +55,11 @@
                     <skipRun>true</skipRun>
                     <images>
                         <image>
-                            <name>walmartlabs/concord-agent-base:%v</name>
-                            <build>
-                                <from>walmartlabs/concord-base</from>
-                                <maintainer>${docker.maintainer}</maintainer>
-                                <tags>
-                                    <tag>latest</tag>
-                                    <tag>${project.version}</tag>
-                                </tags>
-                                <runCmds>
-                                    <rum>yum -y install ansible openssh-clients sshpass util-linux</rum>
-                                    <run>yum clean all</run>
-                                </runCmds>
-                                <optimise>true</optimise>
-                            </build>
-                        </image>
-                        <image>
                             <name>walmartlabs/concord-agent:%v</name>
                             <alias>agent</alias>
                             <build>
                                 <skip>${docker.skip}</skip>
-                                <from>walmartlabs/concord-agent-base</from>
+                                <from>walmartlabs/concord-base</from>
                                 <maintainer>${docker.maintainer}</maintainer>
                                 <tags>
                                     <tag>latest</tag>
@@ -90,6 +74,12 @@
                                     <basedir>${concord.baseDir}/agent</basedir>
                                     <descriptor>assembly.xml</descriptor>
                                 </assembly>
+                                <runCmds>
+                                    <run>yum -y install docker &amp;&amp; yum clean all</run>
+                                </runCmds>
+                                <env>
+                                    <DOCKER_HOST>tcp://dind:2375</DOCKER_HOST>
+                                </env>
                             </build>
                         </image>
                     </images>

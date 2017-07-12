@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+@Deprecated
 public class PlaybookProcessBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(PlaybookProcessBuilder.class);

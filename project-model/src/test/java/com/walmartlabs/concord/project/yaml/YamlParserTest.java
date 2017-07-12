@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.project.yaml;
 
+import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.*;
@@ -11,7 +11,6 @@ import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.model.ProcessDefinition;
-import io.takari.bpm.model.ProcessDefinitionHelper;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
@@ -1140,9 +1139,6 @@ public class YamlParserTest {
 
         ProcessDefinition pd = workflowProvider.processes().getById("main");
 
-        // start -> subprocess + boundary-event -> end
-//        assertEquals(9, pd.getChildren().size());
-
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
 
@@ -1157,6 +1153,26 @@ public class YamlParserTest {
 
         verify(testBean, times(1)).toString(eq("1234"));
         verify(testBean, times(1)).toString(eq("12341"));
+    }
+
+    @Test
+    public void test033() throws Exception {
+        deploy("033.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        DockerTask task = spy(new DockerTask());
+        taskRegistry.register("docker", task);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("__attr_localPath", "/tmp");
+        engine.start(key, "main", args);
+
+        // ---
+        verify(task, times(1)).call(eq("test-image"), eq("test-cmd"), eq("/tmp"));
     }
 
     // FORMS (100 - 199)
@@ -1480,6 +1496,12 @@ public class YamlParserTest {
         }
 
         public void call(Object arg1, Object arg2) {
+        }
+    }
+
+    private static class DockerTask implements Task {
+
+        public void call(String dockerImage, String cmd, String payloadPath) throws Exception {
         }
     }
 
