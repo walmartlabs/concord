@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [0.27.0] - 2017-07-12
 
 ### Added
 
@@ -13,8 +13,8 @@ flow command;
 
 ### Changed
 
-- concord-server: fixed the issue with interpolated default values
-of form fields for non-branded forms.
+- concord-server: fixed the issue with inability to use expressions
+as default values of form fields for non-branded forms.
 
 
 
