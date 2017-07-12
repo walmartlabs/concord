@@ -1,11 +1,14 @@
 package com.walmartlabs.concord.server;
 
+import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.common.db.DataSourceProvider;
 import com.walmartlabs.concord.common.db.DatabaseConfiguration;
 import com.walmartlabs.concord.common.db.JooqConfigurationProvider;
 import com.walmartlabs.concord.db.DatabaseChangeLogProviderImpl;
 import com.walmartlabs.concord.server.cfg.DatabaseConfigurationProvider;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.junit.After;
 import org.junit.Before;
 
@@ -33,6 +36,15 @@ public abstract class AbstractDaoTest {
     public void closeDataSource() throws Exception {
         Method m = dataSource.getClass().getMethod("close");
         m.invoke(dataSource);
+    }
+
+    protected void tx(AbstractDao.Tx t) {
+        try (DSLContext ctx = DSL.using(cfg)) {
+            ctx.transaction(cfg -> {
+                DSLContext tx = DSL.using(cfg);
+                t.run(tx);
+            });
+        }
     }
 
     protected Configuration getConfiguration() {

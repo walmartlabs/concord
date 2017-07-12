@@ -22,6 +22,8 @@ import java.util.Map;
 import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.value;
 
 @Named
 public class ProjectDao extends AbstractDao {
@@ -56,7 +58,7 @@ public class ProjectDao extends AbstractDao {
                         repo.getRepoBranch(), repo.getRepoCommitId(), repo.getSecretName()));
             }
 
-            Map<String, Object> cfg = deserialize(r.getProjectCfg());
+            Map<String, Object> cfg = deserialize((String)r.getProjectCfg());
             return new ProjectEntry(r.getProjectName(), r.getDescription(), m, cfg);
         }
     }
@@ -68,21 +70,21 @@ public class ProjectDao extends AbstractDao {
     public void insert(DSLContext tx, String name, String description, Map<String, Object> cfg) {
         tx.insertInto(PROJECTS)
                 .columns(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, PROJECTS.PROJECT_CFG)
-                .values(name, description, serialize(cfg))
+                .values(value(name), value(description), field("?::jsonb", serialize(cfg)))
                 .execute();
     }
 
     public void update(DSLContext tx, String name, String description, Map<String, Object> cfg) {
         tx.update(PROJECTS)
                 .set(PROJECTS.DESCRIPTION, description)
-                .set(PROJECTS.PROJECT_CFG, serialize(cfg))
+                .set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, serialize(cfg)))
                 .where(PROJECTS.PROJECT_NAME.eq(name))
                 .execute();
     }
 
     public void update(DSLContext tx, String name, Map<String, Object> cfg) {
         tx.update(PROJECTS)
-                .set(PROJECTS.PROJECT_CFG, serialize(cfg))
+                .set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, serialize(cfg)))
                 .where(PROJECTS.PROJECT_NAME.eq(name))
                 .execute();
     }
@@ -125,12 +127,10 @@ public class ProjectDao extends AbstractDao {
     @SuppressWarnings("unchecked")
     public Map<String, Object> getConfiguration(String projectName) {
         try (DSLContext tx = DSL.using(cfg)) {
-            byte[] ab = tx.select(PROJECTS.PROJECT_CFG)
+            return tx.select(PROJECTS.PROJECT_CFG.cast(String.class))
                     .from(PROJECTS)
                     .where(PROJECTS.PROJECT_NAME.eq(projectName))
-                    .fetchOne(PROJECTS.PROJECT_CFG);
-
-            return deserialize(ab);
+                    .fetchOne(e -> deserialize(e.value1()));
         }
     }
 
@@ -139,19 +139,20 @@ public class ProjectDao extends AbstractDao {
         return ConfigurationUtils.get(cfg, path);
     }
 
-    private byte[] serialize(Map<String, Object> m) {
+    private String serialize(Map<String, Object> m) {
         if (m == null) {
             return null;
         }
 
         try {
-            return objectMapper.writeValueAsBytes(m);
+            return objectMapper.writeValueAsString(m);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
 
-    private Map<String, Object> deserialize(byte[] ab) {
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> deserialize(String ab) {
         if (ab == null) {
             return null;
         }

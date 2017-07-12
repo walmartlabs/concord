@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.project;
 
+import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
@@ -8,6 +9,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.junit.Assert.assertEquals;
@@ -28,8 +30,13 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
     @Test
     public void testInsertDelete() throws Exception {
+        Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
-        projectDao.insert(projectName, "test", null);
+        projectDao.insert(projectName, "test", cfg);
+
+        // ---
+        Map<String, Object> actualCfg = projectDao.getConfiguration(projectName);
+        assertEquals(cfg, actualCfg);
 
         // ---
 
@@ -38,7 +45,24 @@ public class ProjectDaoTest extends AbstractDaoTest {
         repositoryDao.insert(projectName, repoName, repoUrl, null, null, null);
 
         // ---
+        Map<String, Object> newCfg1 = ImmutableMap.of("a1", "a1-v");
+        tx(tx -> projectDao.update(tx, projectName, newCfg1));
 
+        actualCfg = projectDao.getConfiguration(projectName);
+        assertEquals(newCfg1, actualCfg);
+
+        // ---
+        Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
+        tx(tx -> projectDao.update(tx, projectName, "new-description", newCfg2));
+
+        actualCfg = projectDao.getConfiguration(projectName);
+        assertEquals(newCfg2, actualCfg);
+
+        // ---
+        String v = (String) projectDao.getConfigurationValue(projectName, "a2");
+        assertEquals("a2-v", v);
+
+        // ---
         projectDao.delete(projectName);
 
         // ---
