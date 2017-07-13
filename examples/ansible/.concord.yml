@@ -18,4 +18,4 @@ variables:
 
 flows:
   main:
-    - ${ansible2.run("docker.prod.walmart.com/walmartlabs/concord-ansible", ansibleParams, __attr_localPath)}
+    - ${ansible2.run(ansibleParams, __attr_localPath)}
