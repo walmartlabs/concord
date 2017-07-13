@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: ability to override `type` in
+`<input type="..."/>` for non-branded forms (e.g. for `password`
+fields).
+
+
+
 ## [0.27.0] - 2017-07-12
 
 ### Added
