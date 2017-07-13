@@ -14,7 +14,7 @@ docker run -d \
 -v /opt/concord/conf/ldap.properties:/opt/concord/conf/ldap.properties:ro \
 -e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
-walmartlabs/concord-server
+docker.prod.walmart.com/walmartlabs/concord-server
 
 docker run -d \
 --privileged \
@@ -25,10 +25,10 @@ docker run -d \
 --name agent \
 --link dind \
 --link server \
-walmartlabs/concord-agent
+docker.prod.walmart.com/walmartlabs/concord-agent
 
 docker run -d \
 -p 8080:8080 \
 --name console \
 --link server \
-walmartlabs/concord-console
+docker.prod.walmart.com/walmartlabs/concord-console
