@@ -7,6 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @JsonInclude(Include.NON_NULL)
 public class FormInstanceEntry implements Serializable {
@@ -53,15 +57,22 @@ public class FormInstanceEntry implements Serializable {
         private final Cardinality cardinality;
         private final Object value;
         private final Object allowedValue;
+        private final Map<String, Object> options;
 
         @JsonCreator
-        public Field(String name, String label, String type, Cardinality cardinality, Object value, Object allowedValue) {
+        public Field(String name, String label, String type, Cardinality cardinality, Object value, Object allowedValue, Map<String, Object> options) {
             this.name = name;
             this.label = label;
             this.type = type;
             this.cardinality = cardinality;
             this.value = value;
             this.allowedValue = allowedValue;
+            this.options = Optional.ofNullable(options)
+                    .map(m -> m.entrySet()
+                            .stream()
+                            .filter(e -> Objects.nonNull(e.getValue()))
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
+                    .orElse(null);
         }
 
         public String getName() {
@@ -86,6 +97,10 @@ public class FormInstanceEntry implements Serializable {
 
         public Object getAllowedValue() {
             return allowedValue;
+        }
+
+        public Map<String, Object> getOptions() {
+            return options;
         }
     }
 

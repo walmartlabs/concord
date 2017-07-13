@@ -13,10 +13,7 @@ import io.takari.bpm.model.form.FormField.Option;
 import io.takari.parc.Seq;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class YamlFormConverter {
 
@@ -60,6 +57,7 @@ public final class YamlFormConverter {
         switch (tInfo.type) {
             case StringField.TYPE: {
                 options.put(StringField.PATTERN, opts.remove("pattern"));
+                options.put(new Option<>("inputType", String.class), opts.remove("inputType"));
                 break;
             }
             case IntegerField.TYPE: {

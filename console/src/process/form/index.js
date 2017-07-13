@@ -70,9 +70,10 @@ class ProcessForm extends Component {
     }
 
     // TODO extract the common stuff
-    renderStringField({name, label, type, cardinality, allowedValue}, value) {
+    renderStringField({name, label, type, cardinality, allowedValue, options}, value) {
         const {data: {errors}} = this.props;
         const error = errors ? errors[name] : undefined;
+        const inputType = options ? options.inputType : undefined;
 
         // TODO check cardinality
         const dropdown = allowedValue instanceof Array;
@@ -80,7 +81,7 @@ class ProcessForm extends Component {
         return <Form.Field key={name} error={error && true}>
             <label>{label}</label>
 
-            { dropdown ? this.renderDropdown(name, cardinality, value, allowedValue) : this.renderInput(name, type, value) }
+            { dropdown ? this.renderDropdown(name, cardinality, value, allowedValue) : this.renderInput(name, type, value, inputType) }
 
             { error && <Label basic color="red" pointing>{error}</Label> }
         </Form.Field>

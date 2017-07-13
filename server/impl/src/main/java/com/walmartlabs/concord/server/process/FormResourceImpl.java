@@ -90,7 +90,7 @@ public class FormResourceImpl implements FormResource, Resource {
             Object value = data.get(fieldName);
             Object allowedValue = allowedValues.get(fieldName);
 
-            fields.add(new FormInstanceEntry.Field(fieldName, f.getLabel(), type, c, value, allowedValue));
+            fields.add(new FormInstanceEntry.Field(fieldName, f.getLabel(), type, c, value, allowedValue, f.getOptions()));
         }
 
         String pbk = form.getProcessBusinessKey();
