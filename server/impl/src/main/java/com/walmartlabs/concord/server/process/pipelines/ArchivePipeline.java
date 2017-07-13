@@ -25,6 +25,7 @@ public class ArchivePipeline extends Pipeline {
                 WorkspaceArchiveProcessor.class,
                 WorkspaceRequestDataParsingProcessor.class,
                 RequestDataParsingProcessor.class,
+                RequestInfoProcessor.class,
                 ActiveProfilesProcessor.class,
                 ProjectDefinitionProcessor.class,
                 ProjectConfigurationProcessor.class,

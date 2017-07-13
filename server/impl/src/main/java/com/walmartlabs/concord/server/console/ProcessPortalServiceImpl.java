@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.console;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.process.ConcordFormService;
+import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import io.takari.bpm.api.ExecutionException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.sonatype.siesta.Resource;
@@ -54,7 +55,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
 
         if (uriInfo != null) {
             Map<String, Object> args = new HashMap<>();
-            args.put("requestInfo", makeRequestInfo(uriInfo));
+            args.put("requestInfo", RequestInfoProcessor.createRequestInfo(uriInfo));
             req.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
@@ -106,24 +107,5 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
         return Response.status(Status.MOVED_PERMANENTLY)
                 .header(HttpHeaders.LOCATION, fsr.getUri())
                 .build();
-    }
-
-    private static Map<String, Object> makeRequestInfo(UriInfo i) {
-        Map<String, Object> queryParams = new HashMap<>();
-        for (Map.Entry<String, List<String>> e : i.getQueryParameters(true).entrySet()) {
-            String k = e.getKey();
-            List<String> v = e.getValue();
-
-            if (v.size() == 1) {
-                queryParams.put(k, v.get(0));
-            } else {
-                queryParams.put(k, v);
-            }
-        }
-
-        Map<String, Object> m = new HashMap<>();
-        m.put("uri", i.getRequestUri());
-        m.put("query", queryParams);
-        return m;
     }
 }

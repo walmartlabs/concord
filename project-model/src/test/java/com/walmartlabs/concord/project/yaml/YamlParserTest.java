@@ -1175,6 +1175,25 @@ public class YamlParserTest {
         verify(task, times(1)).call(eq("test-image"), eq("test-cmd"), eq("/tmp"));
     }
 
+    @Test
+    public void test034() throws Exception {
+        deploy("034.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("x", new HashMap<>());
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(isNull());
+    }
+
     // FORMS (100 - 199)
 
     @Test

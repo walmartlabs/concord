@@ -8,6 +8,11 @@
 `<input type="..."/>` for non-branded forms (e.g. for `password`
 fields).
 
+### Changed
+
+- concord-server: fix usage of`${requestInfo}` in non-"portal"
+calls.
+
 
 
 ## [0.27.0] - 2017-07-12

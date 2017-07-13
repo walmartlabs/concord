@@ -25,6 +25,7 @@ public class ProjectPipeline extends Pipeline {
         super(injector,
                 PreparingProcessor.class,
                 RequestDataParsingProcessor.class,
+                RequestInfoProcessor.class,
                 RepositoryProcessor.class,
                 ActiveProfilesProcessor.class,
                 ProjectDefinitionProcessor.class,

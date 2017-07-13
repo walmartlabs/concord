@@ -1,0 +1,2 @@
+main:
+  - ${testBean.toString(x.y.z)}

@@ -75,6 +75,11 @@ public final class Constants {
          */
         public static final String INITIATOR_KEY = "initiator";
 
+        /**
+         * User request's metadata.
+         */
+        public static final String REQUEST_INFO_KEY = "requestInfo";
+
         private Request() {
         }
     }
