@@ -42,7 +42,7 @@ and necessary runtime dependencies.
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "name": "myProject", "cfg": { "template": "http://nexus.prod.walmart.com/nexus/content/repositories/devtools/com/walmartlabs/concord/plugins/basic/ansible-template/0.23.1/ansible-template-0.23.1.jar" } }' \
+-d '{ "name": "myProject", "cfg": { "template": "http://nexus.prod.walmart.com/nexus/content/repositories/devtools/com/walmartlabs/concord/plugins/basic/ansible-template/0.27.0/ansible-template-0.27.0.jar" } }' \
 http://localhost:8001/api/v1/project
 ```
 
