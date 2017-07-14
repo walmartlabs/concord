@@ -5,6 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="27000" author="ybrigo@gmail.com">
+        <validCheckSum>7:d9ce10fb0c597b471aa74a1c6b213f1c</validCheckSum>
         <sql>
             ALTER TABLE PROJECTS ALTER COLUMN PROJECT_CFG TYPE jsonb USING replace(encode(project_cfg, 'escape'), '\\', '\')::jsonb
         </sql>
