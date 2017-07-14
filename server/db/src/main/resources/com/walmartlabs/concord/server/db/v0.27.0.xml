@@ -6,7 +6,7 @@
 
     <changeSet id="27000" author="ybrigo@gmail.com">
         <sql>
-            ALTER TABLE PROJECTS ALTER COLUMN PROJECT_CFG TYPE jsonb USING encode(PROJECT_CFG, 'escape')::jsonb
+            ALTER TABLE PROJECTS ALTER COLUMN PROJECT_CFG TYPE jsonb USING replace(encode(project_cfg, 'escape'), '\\', '\')::jsonb
         </sql>
     </changeSet>
 </databaseChangeLog>
