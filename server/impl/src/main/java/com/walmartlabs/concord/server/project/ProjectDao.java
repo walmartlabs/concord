@@ -40,7 +40,8 @@ public class ProjectDao extends AbstractDao {
 
     public ProjectEntry get(String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            ProjectsRecord r = tx.selectFrom(PROJECTS)
+            Record3<String, String, String> r = tx.select(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, PROJECTS.PROJECT_CFG.cast(String.class))
+                    .from(PROJECTS)
                     .where(PROJECTS.PROJECT_NAME.eq(name))
                     .fetchOne();
 
@@ -58,8 +59,8 @@ public class ProjectDao extends AbstractDao {
                         repo.getRepoBranch(), repo.getRepoCommitId(), repo.getSecretName()));
             }
 
-            Map<String, Object> cfg = deserialize((String)r.getProjectCfg());
-            return new ProjectEntry(r.getProjectName(), r.getDescription(), m, cfg);
+            Map<String, Object> cfg = deserialize(r.value3());
+            return new ProjectEntry(r.value1(), r.value2(), m, cfg);
         }
     }
 
