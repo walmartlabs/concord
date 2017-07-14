@@ -235,7 +235,7 @@ public final class YamlProcessConverter {
             String sourceExpr = null;
             Object sourceValue = null;
 
-            Object v = kv.getValue();
+            Object v = deepConvert(kv.getValue());
             if (isExpression(v)) {
                 sourceExpr = v.toString();
             } else {

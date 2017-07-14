@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- project-model: fixed an issue with passing nested objects in
+IN-parameters of tasks.
+
+
+
 ## [0.28.1] - 2017-07-14
 
 ### Changed

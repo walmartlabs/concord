@@ -1,0 +1,7 @@
+main:
+  - task: testTask
+    in:
+      aList:
+        - abc
+        - xyz
+        - 132

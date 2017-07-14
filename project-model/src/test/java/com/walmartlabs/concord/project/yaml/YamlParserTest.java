@@ -17,8 +17,10 @@ import io.takari.bpm.task.ServiceTaskRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -1192,6 +1194,33 @@ public class YamlParserTest {
         // ---
 
         verify(testBean, times(1)).toString(isNull());
+    }
+
+    @Test
+    public void test035() throws Exception {
+        deploy("035.yml");
+
+        JavaDelegate task = spy(new JavaDelegate() {
+            @Override
+            public void execute(ExecutionContext ctx) throws Exception {
+                Object o = ctx.getVariable("aList");
+                assertTrue(o instanceof List);
+
+                List l = (List) o;
+                assertEquals(3, l.size());
+                assertEquals(132, l.get(2));
+            }
+        });
+        taskRegistry.register("testTask", task);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        verify(task, times(1)).execute(any(ExecutionContext.class));
     }
 
     // FORMS (100 - 199)
