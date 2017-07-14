@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed an data escaping issue with project
+configuration migration.
+
+
+
 ## [0.28.0] - 2017-07-13
 
 ### Added
