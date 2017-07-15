@@ -4,6 +4,10 @@
 
 ### Changed
 
+- concord-server: improve error handling - return error details, add
+optional stacktrace field to error messages;
+- concord-server: fixed NPE on retrieving an empty/non-existing log
+file;
 - project-model: fixed an issue with passing nested objects in
 IN-parameters of tasks.
 
