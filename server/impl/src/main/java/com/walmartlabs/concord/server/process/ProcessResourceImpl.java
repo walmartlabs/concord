@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.server.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
@@ -88,8 +87,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    public StartProcessResponse start(
-            InputStream in, boolean sync) {
+    public StartProcessResponse start(InputStream in, boolean sync) {
         String instanceId = UUID.randomUUID().toString();
 
         Payload payload;
@@ -102,8 +100,10 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         try {
             archivePipeline.process(payload);
+        } catch (ProcessException e) {
+            throw e;
         } catch (Exception e) {
-            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
         if (sync) {
@@ -131,8 +131,10 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         try {
             projectPipeline.process(payload);
+        } catch (ProcessException e) {
+            throw e;
         } catch (Exception e) {
-            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
         if (sync) {
@@ -160,8 +162,10 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         try {
             projectPipeline.process(payload);
+        } catch (ProcessException e) {
+            throw e;
         } catch (Exception e) {
-            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
         if (sync) {
@@ -187,8 +191,10 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         try {
             archivePipeline.process(payload);
+        } catch (ProcessException e) {
+            throw e;
         } catch (Exception e) {
-            throw err("Error starting process", Status.INTERNAL_SERVER_ERROR, instanceId);
+            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
         if (sync) {
@@ -456,16 +462,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                     throw err("Form '" + f.getName() + "' submit error: " + error, Status.BAD_REQUEST, entry);
                 }
             } catch (ExecutionException e) {
-                throw err("Submit form error", Status.INTERNAL_SERVER_ERROR, entry);
+                throw err("Form submit error: " + e.getMessage(), Status.INTERNAL_SERVER_ERROR, entry);
             }
         }
-    }
-
-    private static WebApplicationException err(String message, Status status, String instanceId) {
-        throw new WebApplicationException(message, Response.status(status)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_TYPE)
-                .entity(ImmutableMap.of("instanceId", instanceId))
-                .build());
     }
 
     private static WebApplicationException err(String message, Status status, ProcessEntry entry) {

@@ -27,6 +27,8 @@ public class ActiveProfilesProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (cfg == null) {
             return chain.process(useDefaultProfiles(payload));
@@ -38,10 +40,8 @@ public class ActiveProfilesProcessor implements PayloadProcessor {
         }
 
         if (!(v instanceof Collection)) {
-            logManager.error(payload.getInstanceId(),
-                    "The value of 'activeProfiles' parameter must be a JSON array or a Java list of strings: {}", v);
-
-            throw new ProcessException("The value of 'activeProfiles' parameter must be an array of strings");
+            logManager.error(instanceId, "The value of 'activeProfiles' parameter must be a JSON array or a Java list of strings: {}", v);
+            throw new ProcessException(instanceId, "The value of 'activeProfiles' parameter must be an array of strings");
         }
 
         Collection<String> c = (Collection<String>) v;

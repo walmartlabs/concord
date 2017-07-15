@@ -38,6 +38,8 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         Map<String, Object> meta = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (meta == null) {
             return chain.process(payload);
@@ -64,11 +66,11 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
                 om.writeValue(writer, data);
             }
         } catch (IOException e) {
-            logManager.error(payload.getInstanceId(), "Error while saving a metadata file: " + dst, e);
-            throw new ProcessException("Error while saving a metadata file: " + dst, e);
+            logManager.error(instanceId, "Error while saving a metadata file: " + dst, e);
+            throw new ProcessException(instanceId, "Error while saving a metadata file: " + dst, e);
         }
 
-        log.info("process ['{}'] -> done", payload.getInstanceId());
+        log.info("process ['{}'] -> done", instanceId);
         return chain.process(payload);
     }
 }

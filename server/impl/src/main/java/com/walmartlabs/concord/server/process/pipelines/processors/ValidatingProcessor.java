@@ -28,11 +28,13 @@ public class ValidatingProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         Map<String, Path> attachments = payload.getAttachments();
         if (!attachments.isEmpty()) {
             String msg = "Validation error, unprocessed payload attachments: " + String.join(", ", attachments.keySet());
-            logManager.error(payload.getInstanceId(), msg);
-            throw new ProcessException(msg, BAD_REQUEST);
+            logManager.error(instanceId, msg);
+            throw new ProcessException(instanceId, msg, BAD_REQUEST);
         }
 
         return chain.process(payload);

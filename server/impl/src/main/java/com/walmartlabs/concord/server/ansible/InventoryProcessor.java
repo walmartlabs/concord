@@ -48,6 +48,7 @@ public class InventoryProcessor implements PayloadProcessor {
     }
 
     private boolean copy(Payload payload, AttachmentKey src, String dstName) {
+        String instanceId = payload.getInstanceId();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         Path p = payload.getAttachment(src);
@@ -59,9 +60,8 @@ public class InventoryProcessor implements PayloadProcessor {
         try {
             Files.copy(p, dst);
         } catch (IOException e) {
-            logManager.error(payload.getInstanceId(),
-                    "Error while copying an inventory file: " + p, e);
-            throw new ProcessException("Error while copying an inventory file: " + p, e);
+            logManager.error(instanceId, "Error while copying an inventory file: " + p, e);
+            throw new ProcessException(instanceId, "Error while copying an inventory file: " + p, e);
         }
 
         return true;

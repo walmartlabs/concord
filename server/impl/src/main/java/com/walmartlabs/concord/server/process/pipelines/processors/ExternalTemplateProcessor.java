@@ -68,18 +68,18 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
         }
 
         try {
-            URI uri = getUri(s);
+            URI uri = getUri(instanceId, s);
             Path template = dependencyManager.resolve(uri);
             payload = process(payload, template);
 
             return chain.process(payload);
         } catch (URISyntaxException | IOException e) {
             logManager.error(instanceId, "Template error: " + s, e);
-            throw new ProcessException("Error while processing a template: " + s, e);
+            throw new ProcessException(instanceId, "Error while processing a template: " + s, e);
         }
     }
 
-    private URI getUri(String template) throws URISyntaxException {
+    private URI getUri(String instanceId, String template) throws URISyntaxException {
         try {
             return new URL(template).toURI();
         } catch (MalformedURLException e) {
@@ -87,7 +87,7 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
 
             Optional<String> o = aliasDao.get(template);
             if (!o.isPresent()) {
-                throw new ProcessException("Invalid template URL or alias: " + template);
+                throw new ProcessException(instanceId, "Invalid template URL or alias: " + template);
             }
 
             return new URI(o.get());
@@ -95,6 +95,7 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
     }
 
     private Payload process(Payload payload, Path template) throws IOException {
+        String instanceId = payload.getInstanceId();
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload
@@ -106,13 +107,13 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
         Path templateMeta = workspacePath.resolve(REQUEST_DATA_TEMPLATE_FILE_NAME);
         if (Files.exists(templateMeta)) {
             Map in = payload.getHeader(Payload.REQUEST_DATA_MAP);
-            Map out = processMeta(payload.getInstanceId(), in, templateMeta);
+            Map out = processMeta(instanceId, in, templateMeta);
             payload = payload.mergeValues(Payload.REQUEST_DATA_MAP, out);
         } else {
             log.debug("apply ['{}'] -> no template metadata file found, skipping", workspacePath);
         }
 
-        log.debug("process ['{}', '{}'] -> done", payload.getInstanceId(), template);
+        log.debug("process ['{}', '{}'] -> done", instanceId, template);
         return payload;
     }
 
@@ -125,7 +126,7 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
 
             result = scriptEngine.eval(r, b);
             if (result == null || !(result instanceof Map)) {
-                throw new ProcessException("Invalid template result. Expected a Java Map, got " + result);
+                throw new ProcessException(instanceId, "Invalid template result. Expected a Java Map, got " + result);
             }
         } catch (ScriptException e) {
             logManager.error(instanceId, "Template script execution error", e);

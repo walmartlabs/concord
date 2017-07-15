@@ -39,6 +39,8 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         // project file's configuration
         Map<String, Object> fileCfg = new HashMap<>();
 
@@ -46,8 +48,8 @@ public class ProjectConfigurationProcessor implements PayloadProcessor {
         if (pd != null) {
             String[] activeProfiles = payload.getHeader(Payload.ACTIVE_PROFILES);
             if (activeProfiles == null) {
-                log.warn("process ['{}'] -> no active profiles found", payload.getInstanceId());
-                logManager.warn(payload.getInstanceId(), "No active profiles found");
+                log.warn("process ['{}'] -> no active profiles found", instanceId);
+                logManager.warn(instanceId, "No active profiles found");
             } else {
                 fileCfg = ProjectDefinitionUtils.getVariables(pd, Arrays.asList(activeProfiles));
             }

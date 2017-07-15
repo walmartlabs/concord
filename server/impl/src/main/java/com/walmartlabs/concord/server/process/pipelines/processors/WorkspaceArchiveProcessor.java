@@ -31,22 +31,24 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         Path archive = payload.getAttachment(Payload.WORKSPACE_ARCHIVE);
         if (archive == null) {
             return chain.process(payload);
         }
 
         if (!Files.exists(archive)) {
-            logManager.error(payload.getInstanceId(), "No input archive found: " + archive);
-            throw new ProcessException("No input archive found: " + archive, Status.BAD_REQUEST);
+            logManager.error(instanceId, "No input archive found: " + archive);
+            throw new ProcessException(instanceId, "No input archive found: " + archive, Status.BAD_REQUEST);
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         try (ZipInputStream zip = new ZipInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
             IOUtils.unzip(zip, workspace);
         } catch (IOException e) {
-            logManager.error(payload.getInstanceId(), "Error while unpacking an archive: " + archive, e);
-            throw new ProcessException("Error while unpacking an archive: " + archive, e);
+            logManager.error(instanceId, "Error while unpacking an archive: " + archive, e);
+            throw new ProcessException(instanceId, "Error while unpacking an archive: " + archive, e);
         }
 
         payload = payload.removeAttachment(Payload.WORKSPACE_ARCHIVE);

@@ -64,17 +64,18 @@ public class DependenciesProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
         Map<String, Object> request = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
         // get a list of dependencies from the request data
-        Collection<String> deps = deps(payload.getInstanceId(), request);
+        Collection<String> deps = deps(instanceId, request);
         if (deps == null) {
             return chain.process(payload);
         }
 
         // filter all valid dependencies
         Collection<String> validDeps = deps.stream()
-                .filter(e -> valid(path(e)))
+                .filter(e -> valid(path(instanceId, e)))
                 .collect(Collectors.toSet());
 
         // collect "system" dependencies
@@ -85,11 +86,11 @@ public class DependenciesProcessor implements PayloadProcessor {
         // copy "system" dependencies into the workspace's lib directory
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         try {
-            processSystemDependencies(payload.getInstanceId(), workspace, cfg.getDepsDir(), systemDeps);
+            processSystemDependencies(instanceId, workspace, cfg.getDepsDir(), systemDeps);
         } catch (IOException e) {
-            log.error("process ['{}'] -> error while processing system dependencies", payload.getInstanceId(), e);
-            logManager.error(payload.getInstanceId(), "Error while processing system dependencies", e);
-            throw new ProcessException("Error while processing system dependencies", e);
+            log.error("process ['{}'] -> error while processing system dependencies", instanceId, e);
+            logManager.error(instanceId, "Error while processing system dependencies", e);
+            throw new ProcessException(instanceId, "Error while processing system dependencies", e);
         }
 
         // the rest of the dependencies will be resolved by an agent
@@ -99,7 +100,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         request.put(Constants.Request.DEPENDENCIES_KEY, rest);
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, request);
 
-        log.info("process ['{}'] -> done", payload.getInstanceId());
+        log.info("process ['{}'] -> done", instanceId);
         return chain.process(payload);
     }
 
@@ -121,11 +122,11 @@ public class DependenciesProcessor implements PayloadProcessor {
         }
 
         for (String d : deps) {
-            String s = substitute(path(d));
+            String s = substitute(path(instanceId, d));
 
             Path src = depsDir.resolve(s);
             if (!Files.exists(src)) {
-                throw new ProcessException("Dependency not found: " + d);
+                throw new ProcessException(instanceId, "Dependency not found: " + d);
             }
 
             Path dst = libDir.resolve(s);
@@ -133,12 +134,12 @@ public class DependenciesProcessor implements PayloadProcessor {
         }
     }
 
-    private static String path(String a) {
+    private static String path(String instanceId, String a) {
         URI uri = URI.create(a);
         String s = uri.getPath();
 
         if (s == null || s.trim().isEmpty()) {
-            throw new ProcessException("Invalid dependency URI path: " + a);
+            throw new ProcessException(instanceId, "Invalid dependency URI path: " + a);
         }
 
         if (s.startsWith("/")) {
@@ -163,7 +164,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             ScriptObjectMirror m = (ScriptObjectMirror) o;
             if (!m.isArray()) {
                 logManager.error(instanceId, "Invalid dependencies object type. Expected a JavaScript array, got: " + m);
-                throw new ProcessException("Invalid dependencies object type. Expected a JavaScript array, got: " + m);
+                throw new ProcessException(instanceId, "Invalid dependencies object type. Expected a JavaScript array, got: " + m);
             }
 
             String[] as = m.to(String[].class);
@@ -171,7 +172,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         }
 
         logManager.error(instanceId, "Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
-        throw new ProcessException("Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
+        throw new ProcessException(instanceId, "Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
     }
 
     private String substitute(String s) {

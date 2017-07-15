@@ -35,6 +35,8 @@ public class RequestDefaultsParsingProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         if (workspace == null) {
             return chain.process(payload);
@@ -49,9 +51,8 @@ public class RequestDefaultsParsingProcessor implements PayloadProcessor {
         try (InputStream in = Files.newInputStream(p)) {
             a = objectMapper.readValue(in, Map.class);
         } catch (IOException e) {
-            logManager.error(payload.getInstanceId(),
-                    "Error while reading request defaults: " + p, e);
-            throw new ProcessException("Error while reading request defaults: " + p, e);
+            logManager.error(instanceId, "Error while reading request defaults: " + p, e);
+            throw new ProcessException(instanceId, "Error while reading request defaults: " + p, e);
         }
 
         Map<String, Object> b = payload.getHeader(Payload.REQUEST_DATA_MAP);

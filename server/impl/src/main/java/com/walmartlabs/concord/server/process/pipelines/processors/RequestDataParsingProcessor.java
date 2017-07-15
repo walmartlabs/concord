@@ -39,6 +39,8 @@ public class RequestDataParsingProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         Path p = payload.getAttachment(REQUEST_ATTACHMENT_KEY);
         if (p == null) {
             return chain.process(payload);
@@ -50,8 +52,8 @@ public class RequestDataParsingProcessor implements PayloadProcessor {
             data = om.readValue(in, Map.class);
         } catch (IOException e) {
             log.error("process ['{}'] -> error while parsing a request data attachment", payload);
-            logManager.error(payload.getInstanceId(), "Invalid request data format", e);
-            throw new ProcessException("Invalid request data format", e, Status.BAD_REQUEST);
+            logManager.error(instanceId, "Invalid request data format", e);
+            throw new ProcessException(instanceId, "Invalid request data format", e, Status.BAD_REQUEST);
         }
 
         payload = payload.removeAttachment(REQUEST_ATTACHMENT_KEY)

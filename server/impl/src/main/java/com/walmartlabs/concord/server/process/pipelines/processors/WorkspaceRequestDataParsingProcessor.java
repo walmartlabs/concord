@@ -37,6 +37,7 @@ public class WorkspaceRequestDataParsingProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         Path src = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
@@ -50,8 +51,8 @@ public class WorkspaceRequestDataParsingProcessor implements PayloadProcessor {
             data = om.readValue(in, Map.class);
         } catch (IOException e) {
             log.error("process ['{}'] -> error while parsing a request data file", payload);
-            logManager.error(payload.getInstanceId(), "Invalid request data format", e);
-            throw new ProcessException("Invalid request data format", e, Status.BAD_REQUEST);
+            logManager.error(instanceId, "Invalid request data format", e);
+            throw new ProcessException(instanceId, "Invalid request data format", e, Status.BAD_REQUEST);
         }
 
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, data);

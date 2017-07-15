@@ -44,7 +44,7 @@ public class RepositoryManager {
         this.cfg = cfg;
     }
 
-    public void testConnection(String uri, String branch, String commitId, Secret secret) throws RepositoryException {
+    public void testConnection(String uri, String branch, String commitId, Secret secret) {
         Path tmpDir = null;
         try {
             tmpDir = Files.createTempDirectory("repository");
@@ -73,7 +73,7 @@ public class RepositoryManager {
         }
     }
 
-    public Path fetchByCommit(String projectName, String uri, String commitId, Secret secret) throws RepositoryException {
+    public Path fetchByCommit(String projectName, String uri, String commitId, Secret secret) {
         Path localPath = localPath(projectName, commitId);
 
         try (Git repo = openRepo(localPath)) {
@@ -96,7 +96,7 @@ public class RepositoryManager {
         return localPath;
     }
 
-    public Path fetch(String projectName, String uri, String branch, Secret secret) throws RepositoryException {
+    public Path fetch(String projectName, String uri, String branch, Secret secret) {
         if (branch == null) {
             branch = DEFAULT_BRANCH;
         }
@@ -132,7 +132,7 @@ public class RepositoryManager {
         return cfg.getRepoCacheDir().resolve(projectName).resolve(branch);
     }
 
-    private static Git openRepo(Path path) throws RepositoryException {
+    private static Git openRepo(Path path) {
         if (!Files.exists(path)) {
             return null;
         }
@@ -149,7 +149,7 @@ public class RepositoryManager {
         return null;
     }
 
-    private static Git cloneRepo(String uri, Path path, String branch, TransportConfigCallback transportCallback) throws RepositoryException {
+    private static Git cloneRepo(String uri, Path path, String branch, TransportConfigCallback transportCallback) {
         if (!Files.exists(path)) {
             try {
                 Files.createDirectories(path);
@@ -196,6 +196,10 @@ public class RepositoryManager {
     }
 
     private static void configureSshTransport(SshTransport t, Secret secret) {
+        if (!(secret instanceof KeyPair)) {
+            throw new RepositoryException("Invalid secret type, expected a key pair");
+        }
+
         SshSessionFactory f = new JschConfigSessionFactory() {
 
             @Override
@@ -203,10 +207,6 @@ public class RepositoryManager {
                 JSch d = super.createDefaultJSch(fs);
                 if (secret == null) {
                     return d;
-                }
-
-                if (!(secret instanceof KeyPair)) {
-                    throw new IllegalArgumentException("Invalid secret type, expected a key pair");
                 }
 
                 d.removeAllIdentity();
@@ -232,7 +232,7 @@ public class RepositoryManager {
     private static void configureHttpTransport(HttpTransport t, Secret secret) {
         if (secret != null) {
             if (!(secret instanceof UsernamePassword)) {
-                throw new IllegalArgumentException("Invalid secret type, expected a username/password credentials");
+                throw new RepositoryException("Invalid secret type, expected a username/password credentials");
             }
 
             UsernamePassword up = (UsernamePassword) secret;

@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.project;
 
-public class RepositoryException extends Exception {
+public class RepositoryException extends RuntimeException {
 
     public RepositoryException(Throwable cause) {
         super(cause);

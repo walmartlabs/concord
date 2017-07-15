@@ -26,6 +26,8 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         String eventName = payload.getHeader(Payload.RESUME_EVENT_NAME);
         if (eventName == null) {
             return chain.process(payload);
@@ -43,8 +45,8 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
             Path resumeMarker = stateDir.resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
             Files.write(resumeMarker, eventName.getBytes());
         } catch (IOException e) {
-            logManager.error(payload.getInstanceId(), "Error while saving resume state", e);
-            throw new ProcessException("Error while saving resume state", e);
+            logManager.error(instanceId, "Error while saving resume state", e);
+            throw new ProcessException(instanceId, "Error while saving resume state", e);
         }
 
         return chain.process(payload);

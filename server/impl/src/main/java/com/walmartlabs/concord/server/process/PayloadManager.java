@@ -122,7 +122,7 @@ public class PayloadManager {
         Path tmpDir = Files.createTempDirectory("payload");
 
         if (!stateManager.export(instanceId, copyTo(tmpDir))) {
-            throw new ProcessException("Can't resume '" + instanceId + "', state snapshot not found");
+            throw new ProcessException(instanceId, "Can't resume '" + instanceId + "', state snapshot not found");
         }
 
         return new Payload(instanceId)

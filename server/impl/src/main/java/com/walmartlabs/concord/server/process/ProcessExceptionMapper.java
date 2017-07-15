@@ -5,6 +5,8 @@ import org.sonatype.siesta.ExceptionMapperSupport;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.PrintWriter;
@@ -14,17 +16,31 @@ import java.io.StringWriter;
 @Singleton
 public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessException> {
 
+    public static final String TRACE_ENABLED_KEY = "X-Concord-Trace-Enabled";
+
+    @Context
+    HttpHeaders headers;
+
     @Override
-    protected Response convert(ProcessException exception, String id) {
-        String details = exception.getCause() != null ? exception.getCause().getMessage() : null;
+    protected Response convert(ProcessException e, String id) {
+        String details = e.getCause() != null ? e.getCause().getMessage() : null;
 
-        StringWriter stacktrace = new StringWriter();
-        exception.printStackTrace(new PrintWriter(stacktrace));
+        String stacktrace = null;
+        if (traceEnabled()) {
+            StringWriter w = new StringWriter();
+            e.printStackTrace(new PrintWriter(w));
+            stacktrace = w.toString();
+        }
 
-        ErrorMessage msg = new ErrorMessage(exception.getMessage(), details, stacktrace.toString());
-        return Response.status(exception.getStatus())
+        ErrorMessage msg = new ErrorMessage(e.getInstanceId(), e.getMessage(), details, stacktrace);
+        return Response.status(e.getStatus())
                 .entity(msg)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .build();
+    }
+
+    private boolean traceEnabled() {
+        String s = headers.getHeaderString(TRACE_ENABLED_KEY);
+        return s != null && Boolean.parseBoolean(s);
     }
 }

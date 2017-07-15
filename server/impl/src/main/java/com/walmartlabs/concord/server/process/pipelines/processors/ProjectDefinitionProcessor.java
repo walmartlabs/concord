@@ -33,6 +33,8 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         if (workspace == null) {
             return chain.process(payload);
@@ -43,9 +45,9 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
             return chain.process(payload);
         } catch (IOException e) {
-            log.warn("process ['{}'] -> project loading error: {}", payload.getInstanceId(), workspace, e);
-            logManager.error(payload.getInstanceId(),"Error while loading a project file: " + workspace, e);
-            throw new ProcessException("Error while loading a project file: " + workspace, e);
+            log.warn("process ['{}'] -> project loading error: {}", instanceId, workspace, e);
+            logManager.error(instanceId,"Error while loading a project file: " + workspace, e);
+            throw new ProcessException(instanceId, "Error while loading a project file: " + workspace, e);
         }
     }
 }

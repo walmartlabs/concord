@@ -56,6 +56,8 @@ public class RepositoryProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
+
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         String[] entryPoint = payload.getHeader(Payload.ENTRY_POINT);
         if (projectName == null || entryPoint == null || entryPoint.length < 1) {
@@ -81,8 +83,8 @@ public class RepositoryProcessor implements PayloadProcessor {
         if (repo.getSecret() != null) {
             secret = secretManager.getSecret(repo.getSecret());
             if (secret == null) {
-                logManager.error(payload.getInstanceId(), "Secret not found: " + repo.getSecret());
-                throw new ProcessException("Secret not found: " + repo.getSecret());
+                logManager.error(instanceId, "Secret not found: " + repo.getSecret());
+                throw new ProcessException(instanceId, "Secret not found: " + repo.getSecret());
             }
         }
 
@@ -96,9 +98,9 @@ public class RepositoryProcessor implements PayloadProcessor {
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
             IOUtils.copy(src, dst);
         } catch (IOException | RepositoryException e) {
-            log.error("process ['{}'] -> repository error", payload.getInstanceId(), e);
-            logManager.error(payload.getInstanceId(), "Error while pulling a repository: " + repo.getUrl(), e);
-            throw new ProcessException("Error while pulling a repository: " + repo.getUrl(), e);
+            log.error("process ['{}'] -> repository error", instanceId, e);
+            logManager.error(instanceId, "Error while pulling a repository: " + repo.getUrl(), e);
+            throw new ProcessException(instanceId, "Error while pulling a repository: " + repo.getUrl(), e);
         }
 
         // TODO replace with a queue/stack/linkedlist?

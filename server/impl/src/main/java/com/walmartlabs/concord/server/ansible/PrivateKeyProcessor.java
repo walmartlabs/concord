@@ -40,6 +40,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String instanceId = payload.getInstanceId();
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
         Map<String, Object> ansibleCfg = (Map<String, Object>) cfg.get(AnsibleConfigurationConstants.GROUP_KEY);
@@ -54,36 +55,36 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
         String secret = findMatchingSecret(payload, keys);
         if (secret == null) {
-            logManager.error(payload.getInstanceId(), "No matching secrets found");
-            throw new ProcessException("No matching secrets found");
+            logManager.error(instanceId, "No matching secrets found");
+            throw new ProcessException(instanceId, "No matching secrets found");
         }
 
         KeyPair keyPair = secretManager.getKeyPair(secret);
         if (keyPair == null) {
-            logManager.error(payload.getInstanceId(), "Secret not found: " + secret);
-            throw new ProcessException("Secret not found: " + secret);
+            logManager.error(instanceId, "Secret not found: " + secret);
+            throw new ProcessException(instanceId, "Secret not found: " + secret);
         }
 
         if (keyPair.getPrivateKey() == null) {
-            logManager.error(payload.getInstanceId(), "Private key not found: " + secret);
-            throw new ProcessException("Private key not found: " + secret);
+            logManager.error(instanceId, "Private key not found: " + secret);
+            throw new ProcessException(instanceId, "Private key not found: " + secret);
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path dst = workspace.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
         if (Files.exists(dst)) {
-            logManager.error(payload.getInstanceId(), "File already exists: " + dst);
-            throw new ProcessException("File already exists: " + dst);
+            logManager.error(instanceId, "File already exists: " + dst);
+            throw new ProcessException(instanceId, "File already exists: " + dst);
         }
 
         try {
             Files.write(dst, keyPair.getPrivateKey());
         } catch (IOException e) {
-            logManager.error(payload.getInstanceId(), "Error while copying a private key: " + dst, e);
-            throw new ProcessException("Error while copying a private key: " + dst, e);
+            logManager.error(instanceId, "Error while copying a private key: " + dst, e);
+            throw new ProcessException(instanceId, "Error while copying a private key: " + dst, e);
         }
 
-        log.info("process ['{}'] -> done", payload.getInstanceId());
+        log.info("process ['{}'] -> done", instanceId);
         return chain.process(payload);
     }
 
