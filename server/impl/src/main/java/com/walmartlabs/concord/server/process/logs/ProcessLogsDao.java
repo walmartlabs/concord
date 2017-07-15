@@ -39,7 +39,8 @@ public class ProcessLogsDao extends AbstractDao {
             int size = tx.select(V_PROCESS_LOGS_SIZE.SIZE)
                     .from(V_PROCESS_LOGS_SIZE)
                     .where(V_PROCESS_LOGS_SIZE.INSTANCE_ID.eq(instanceId))
-                    .fetchOne(V_PROCESS_LOGS_SIZE.SIZE);
+                    .fetchOptional(V_PROCESS_LOGS_SIZE.SIZE)
+                    .orElse(0);
 
             return new ProcessLog(size, chunks);
         }
