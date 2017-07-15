@@ -4,14 +4,13 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.UUID;
 
-public class Configuration implements Serializable {
+public class Configuration {
 
     public static final String SERVER_HOST_KEY = "SERVER_HOST";
     public static final String SERVER_PORT_KEY = "SERVER_PORT";

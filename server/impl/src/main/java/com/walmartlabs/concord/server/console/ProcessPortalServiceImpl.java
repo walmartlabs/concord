@@ -88,7 +88,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
         try {
             forms = formService.list(instanceId);
         } catch (ExecutionException e) {
-            throw new WebApplicationException("Process error", Status.INTERNAL_SERVER_ERROR);
+            throw new WebApplicationException("Process error", e);
         }
 
         if (forms == null || forms.isEmpty()) {

@@ -32,8 +32,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -442,11 +440,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         try {
             forms = formService.list(instanceId);
         } catch (ExecutionException e) {
-            throw err("Internal error", Status.INTERNAL_SERVER_ERROR, entry);
+            throw new ProcessException(instanceId, "Process execution error", e);
         }
 
         if (forms == null || forms.isEmpty()) {
-            throw err("Invalid process state: no forms found", Status.INTERNAL_SERVER_ERROR, entry);
+            throw new ProcessException(instanceId, "Invalid process state: no forms found");
         }
 
         for (FormListEntry f : forms) {
@@ -459,18 +457,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                     if (submitResult.getErrors() != null) {
                         error = submitResult.getErrors().stream().map(e -> e.getFieldName() + ": " + e.getError()).collect(Collectors.joining(","));
                     }
-                    throw err("Form '" + f.getName() + "' submit error: " + error, Status.BAD_REQUEST, entry);
+                    throw new ProcessException(instanceId, "Form '" + f.getName() + "' submit error: " + error, Status.BAD_REQUEST);
                 }
             } catch (ExecutionException e) {
-                throw err("Form submit error: " + e.getMessage(), Status.INTERNAL_SERVER_ERROR, entry);
+                throw new ProcessException(instanceId, "Form submit error: " + e.getMessage(), e);
             }
         }
-    }
-
-    private static WebApplicationException err(String message, Status status, ProcessEntry entry) {
-        throw new WebApplicationException(message, Response.status(status)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_TYPE)
-                .entity(entry)
-                .build());
     }
 }
