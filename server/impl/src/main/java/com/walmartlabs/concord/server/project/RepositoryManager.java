@@ -74,7 +74,7 @@ public class RepositoryManager {
     }
 
     public Path fetchByCommit(String projectName, String uri, String commitId, Secret secret) throws RepositoryException {
-        Path localPath = cfg.getRepoCacheDir().resolve(projectName).resolve(commitId);
+        Path localPath = localPath(projectName, commitId);
 
         try (Git repo = openRepo(localPath)) {
             if (repo != null) {
@@ -103,7 +103,7 @@ public class RepositoryManager {
 
         TransportConfigCallback transportCallback = createTransportConfigCallback(secret);
 
-        Path localPath = cfg.getRepoCacheDir().resolve(projectName).resolve(branch);
+        Path localPath = localPath(projectName, branch);
         try (Git repo = openRepo(localPath)) {
             if (repo != null) {
                 repo.checkout()
@@ -126,6 +126,10 @@ public class RepositoryManager {
             log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectName, uri, branch);
             return localPath;
         }
+    }
+
+    private Path localPath(String projectName, String branch) {
+        return cfg.getRepoCacheDir().resolve(projectName).resolve(branch);
     }
 
     private static Git openRepo(Path path) throws RepositoryException {
