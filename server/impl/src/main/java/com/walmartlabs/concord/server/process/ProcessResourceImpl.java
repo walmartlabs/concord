@@ -419,7 +419,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             if (status == ProcessStatus.SUSPENDED) {
                 wakeUpProcess(psr, params);
             } else if (status == ProcessStatus.FAILED) {
-                throw err("Process error", Status.INTERNAL_SERVER_ERROR, psr);
+                throw new ProcessException(instanceId, "Process error", Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
                 return;
             }
