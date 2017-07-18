@@ -1,0 +1,17 @@
+flows:
+  main:
+  - script: groovy
+    body: |
+      import com.walmartlabs.concord.plugins.example.ExampleBean
+      execution.setVariable("x", new ExampleBean("hello"))
+
+  - form: myForm
+
+  - log: "${myForm.y}"
+
+forms:
+  myForm:
+  - y: { type: "string" }
+
+variables:
+  entryPoint: main
