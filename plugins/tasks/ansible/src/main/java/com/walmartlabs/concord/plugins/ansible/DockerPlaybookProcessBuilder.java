@@ -13,7 +13,7 @@ public class DockerPlaybookProcessBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(DockerPlaybookProcessBuilder.class);
 
-    private static final String VOLUME_CONTAINER_DEST = "/workplace";
+    private static final String VOLUME_CONTAINER_DEST = "/workspace";
 
     private String dockerImageName;
 

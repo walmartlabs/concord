@@ -22,12 +22,13 @@ public class DockerTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(DockerTask.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
+    private static final String VOLUME_CONTAINER_DEST = "/workspace";
 
     public void call(String dockerImage, String cmd, String payloadPath) throws Exception {
         try {
             Process p = new DockerProcessBuilder(dockerImage)
                     .cleanup(true)
-                    .volume(payloadPath, "/workplace")
+                    .volume(payloadPath, VOLUME_CONTAINER_DEST)
                     .args(toList(cmd))
                     .build();
 

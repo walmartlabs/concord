@@ -1,5 +1,14 @@
 # Change log
 
+## Unreleased
+
+### Changed
+
+- concord-runner: use `/workspace` instead of `/workplace` in the
+docker task.
+
+
+
 ## [0.28.2] - 2017-07-18
 
 ### Changed
