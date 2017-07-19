@@ -3,6 +3,5 @@ variables:
 
 flows:
   main:
-    - docker:
-      image: docker.prod.walmart.com/walmartlabs/concord-ansible
+    - docker: docker.prod.walmart.com/walmartlabs/concord-ansible
       cmd: ansible-playbook playbook/hello.yml -i inventory.ini -e _CONCORD_ATTACHMENTS_DIR=_attachments -e ANSIBLE_CONFIG=ansible.cfg -e greetings=Hi
