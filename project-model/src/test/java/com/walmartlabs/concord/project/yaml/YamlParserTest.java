@@ -17,10 +17,8 @@ import io.takari.bpm.task.ServiceTaskRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -30,6 +28,7 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.*;
 
 public class YamlParserTest {
@@ -1161,8 +1160,6 @@ public class YamlParserTest {
     public void test033() throws Exception {
         deploy("033.yml");
 
-        ProcessDefinition pd = workflowProvider.processes().getById("main");
-
         DockerTask task = spy(new DockerTask());
         taskRegistry.register("docker", task);
 
@@ -1461,7 +1458,7 @@ public class YamlParserTest {
     private ProcessDefinition findSubprocess(ProcessDefinition pd) {
         return pd.getChildren().stream()
                 .filter(e -> e instanceof ProcessDefinition)
-                .map(e -> (ProcessDefinition)e)
+                .map(e -> (ProcessDefinition) e)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("subprocess not found"));
     }

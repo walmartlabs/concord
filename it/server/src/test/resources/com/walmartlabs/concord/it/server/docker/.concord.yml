@@ -1,0 +1,9 @@
+flows:
+  main:
+  - docker: walmartlabs/concord-base
+    cmd: echo "Hello, ${name}"
+
+variables:
+  entryPoint: main
+  arguments:
+    name: "world"

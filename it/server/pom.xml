@@ -299,6 +299,7 @@
                                     <alias>agent</alias>
                                     <run>
                                         <links>
+                                            <link>dind</link>
                                             <link>server</link>
                                         </links>
                                         <volumes>

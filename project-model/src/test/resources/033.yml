@@ -1,4 +1,3 @@
 main:
-  - docker:
-    image: test-image
+  - docker: test-image
     cmd: test-cmd

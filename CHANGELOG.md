@@ -5,7 +5,15 @@
 ### Changed
 
 - concord-runner: use `/workspace` instead of `/workplace` in the
-docker task.
+docker task;
+
+### Breaking
+
+- concord-runner: docker task syntax is changed to
+  ```
+  - docker: image-name
+    cmd: my-cmd
+  ```
 
 
 

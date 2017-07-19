@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonLocation;
 public class YamlDockerStep extends YamlStep {
 
     private final String image;
-
     private final String cmd;
 
     public YamlDockerStep(JsonLocation location, String image, String cmd) {
