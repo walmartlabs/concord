@@ -13,7 +13,7 @@ import {reducers as portal} from "../process/portal";
 import {reducers as project} from "../project";
 import {reducers as projectList} from "../project/list";
 import {reducers as repository} from "../project/repository";
-import {reducers as secret} from "../user/secret";
+import {reducers as secret} from "../secret/list";
 import {reducers as modal} from "../shared/Modal";
 
 export default {

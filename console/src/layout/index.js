@@ -6,7 +6,7 @@ import {Grid, Header, Icon, Menu} from "semantic-ui-react";
 import {actions, selectors, SessionWidget} from "../session";
 import Modal from "../shared/Modal";
 import KillProcessPopup from "../process/KillProcessPopup";
-import DeleteSecretPopup from "../user/secret/DeleteSecretPopup";
+import DeleteSecretPopup from "../secret/list/DeleteSecretPopup";
 import RepositoryPopup from "../project/RepositoryPopup";
 import DeleteProjectPopup from "../project/DeleteProjectPopup";
 import "./styles.css";

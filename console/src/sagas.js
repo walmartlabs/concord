@@ -12,7 +12,7 @@ import {sagas as portal} from "./process/portal";
 import {sagas as project} from "./project";
 import {sagas as projectList} from "./project/list";
 import {sagas as repository} from "./project/repository";
-import {sagas as secret} from "./user/secret";
+import {sagas as secret} from "./secret/list";
 
 export default function*(): Generator<*, *, *> {
     yield [
