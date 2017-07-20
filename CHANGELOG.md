@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-runner: docker task now requires `/bin/sh` to be available
+in all images.
+
+
+
 ## [0.28.3] - 2017-07-19
 
 ### Changed
