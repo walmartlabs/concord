@@ -295,6 +295,18 @@
                                     </run>
                                 </image>
                                 <image>
+                                    <name>docker.prod.walmart.com/walmartlabs/concord-dind</name>
+                                    <alias>dind</alias>
+                                    <run>
+                                        <privileged>true</privileged>
+                                        <volumes>
+                                            <bind>
+                                                <volume>/tmp:/tmp</volume>
+                                            </bind>
+                                        </volumes>
+                                    </run>
+                                </image>
+                                <image>
                                     <name>walmartlabs/concord-agent</name>
                                     <alias>agent</alias>
                                     <run>
