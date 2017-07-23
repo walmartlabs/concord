@@ -65,7 +65,7 @@ public class PayloadManager {
         Payload p = new Payload(instanceId)
                 .putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
-                .mergeValues(Payload.REQUEST_DATA_MAP, request);
+                .putHeader(Payload.REQUEST_DATA_MAP, request);
 
         p = addInitiator(p, initiator);
         return addEntryPoint(p, entryPoint);

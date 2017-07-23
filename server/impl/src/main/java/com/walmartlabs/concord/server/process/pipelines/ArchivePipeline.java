@@ -11,7 +11,7 @@ import javax.inject.Named;
 /**
  * Processing self-contained archives.
  * <p>
- * Runs a process using an archive, provided by a user.
+ * Runs a process using an archive provided by a user.
  */
 @Named
 public class ArchivePipeline extends Pipeline {
@@ -21,22 +21,17 @@ public class ArchivePipeline extends Pipeline {
     @Inject
     public ArchivePipeline(Injector injector) {
         super(injector,
-                PreparingProcessor.class,
-                WorkspaceArchiveProcessor.class,
-                WorkspaceRequestDataParsingProcessor.class,
-                RequestDataParsingProcessor.class,
+                InitialQueueEntryProcessor.class,
                 RequestInfoProcessor.class,
-                ActiveProfilesProcessor.class,
+                WorkspaceArchiveProcessor.class,
                 ProjectDefinitionProcessor.class,
-                ProjectConfigurationProcessor.class,
-                RequestDefaultsParsingProcessor.class,
+                RequestDataMergingProcessor.class,
                 InventoryProcessor.class,
                 PrivateKeyProcessor.class,
                 ExternalTemplateProcessor.class,
                 DependenciesProcessor.class,
                 UserInfoProcessor.class,
                 RequestDataStoringProcessor.class,
-                ValidatingProcessor.class,
                 StateImportingProcessor.class,
                 EnqueueingProcessor.class);
 

@@ -10,12 +10,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 @Named
-public class PreparingProcessor implements PayloadProcessor {
+public class InitialQueueEntryProcessor implements PayloadProcessor {
 
     private final ProcessQueueDao queueDao;
 
     @Inject
-    public PreparingProcessor(ProcessQueueDao queueDao) {
+    public InitialQueueEntryProcessor(ProcessQueueDao queueDao) {
         this.queueDao = queueDao;
     }
 

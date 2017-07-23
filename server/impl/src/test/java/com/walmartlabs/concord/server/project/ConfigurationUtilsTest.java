@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,6 +59,17 @@ public class ConfigurationUtilsTest {
         Map<String, Object> m = ConfigurationUtils.deepMerge(cfg, request);
         assertEquals("localhost", ConfigurationUtils.get(m, "arguments", "smtpParams", "host"));
         assertEquals("hello", ConfigurationUtils.get(m, "arguments", "mail"));
+    }
+
+    @Test
+    public void testDeepMergeEmptyLeftSide() throws Exception {
+        Map<String, Object> a = Collections.emptyMap();
+
+        Map<String, Object> b = new HashMap<>();
+        b.put("test", 123);
+
+        a = ConfigurationUtils.deepMerge(a, b);
+        assertEquals(123, a.get("test"));
     }
 
     @Test

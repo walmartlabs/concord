@@ -44,7 +44,7 @@ public class VariablesIT extends AbstractServerIT {
 
         assertLog(".*x=123.*", ab);
         assertLog(".*y=abc.*", ab);
-        assertLog(".*z=true.*", ab);
+        assertLog(".*z=false.*", ab);
     }
 
     @Test(timeout = 30000)

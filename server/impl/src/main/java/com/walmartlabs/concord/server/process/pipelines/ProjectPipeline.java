@@ -23,21 +23,18 @@ public class ProjectPipeline extends Pipeline {
     @Inject
     public ProjectPipeline(Injector injector) {
         super(injector,
-                PreparingProcessor.class,
-                RequestDataParsingProcessor.class,
+                InitialQueueEntryProcessor.class,
                 RequestInfoProcessor.class,
+                WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,
-                ActiveProfilesProcessor.class,
                 ProjectDefinitionProcessor.class,
-                ProjectConfigurationProcessor.class,
-                RequestDefaultsParsingProcessor.class,
+                RequestDataMergingProcessor.class,
                 InventoryProcessor.class,
                 PrivateKeyProcessor.class,
                 ExternalTemplateProcessor.class,
                 DependenciesProcessor.class,
                 UserInfoProcessor.class,
                 RequestDataStoringProcessor.class,
-                ValidatingProcessor.class,
                 StateImportingProcessor.class,
                 EnqueueingProcessor.class);
 

@@ -4,8 +4,14 @@
 
 ### Changed
 
+- concord-server: fixed the order of applying variable overrides;
 - concord-runner: docker task now requires `/bin/sh` to be available
 in all images.
+
+### Breaking
+
+- concord-server: storing overrides in `_defaults.json` is not
+supported anymore.
 
 
 

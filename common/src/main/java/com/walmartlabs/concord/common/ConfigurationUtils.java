@@ -73,17 +73,19 @@ public final class ConfigurationUtils {
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> deepMerge(Map<String, Object> a, Map<String, Object> b) {
+        Map<String, Object> result = new HashMap<>(a != null ? a : Collections.emptyMap());
+
         for (String k : b.keySet()) {
-            Object av = a.get(k);
+            Object av = result.get(k);
             Object bv = b.get(k);
 
             if (av instanceof Map && bv instanceof Map) {
-                a.put(k, deepMerge((Map<String, Object>) av, (Map<String, Object>) bv));
+                result.put(k, deepMerge((Map<String, Object>) av, (Map<String, Object>) bv));
             } else {
-                a.put(k, bv);
+                result.put(k, bv);
             }
         }
-        return a;
+        return result;
     }
 
     @SafeVarargs

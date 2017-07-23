@@ -164,8 +164,9 @@ public class RunPlaybookTask2 implements Task {
         m.put("ssh_connection", makeSshConnCfg());
 
         if (cfg != null) {
-            ConfigurationUtils.deepMerge(m, cfg);
+            return ConfigurationUtils.deepMerge(m, cfg);
         }
+
         return m;
     }
 

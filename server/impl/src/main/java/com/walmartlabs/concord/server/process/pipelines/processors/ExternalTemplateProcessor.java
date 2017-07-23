@@ -103,12 +103,12 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
             IOUtils.unzip(zip, workspacePath);
         }
 
-        // process _main.json
+        // process _main.js
         Path templateMeta = workspacePath.resolve(REQUEST_DATA_TEMPLATE_FILE_NAME);
         if (Files.exists(templateMeta)) {
-            Map in = payload.getHeader(Payload.REQUEST_DATA_MAP);
-            Map out = processMeta(instanceId, in, templateMeta);
-            payload = payload.mergeValues(Payload.REQUEST_DATA_MAP, out);
+            Map<String, Object> in = payload.getHeader(Payload.REQUEST_DATA_MAP);
+            Map<String, Object> out = processMeta(instanceId, in, templateMeta);
+            payload = payload.putHeader(Payload.REQUEST_DATA_MAP, out);
         } else {
             log.debug("apply ['{}'] -> no template metadata file found, skipping", workspacePath);
         }
