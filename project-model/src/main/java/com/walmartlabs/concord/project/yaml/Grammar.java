@@ -251,7 +251,10 @@ public class Grammar {
     // docker := FIELD_NAME "docker" VALUE_STRING dockerOptions
     private static final Parser<Atom, YamlStep> docker = label("Docker call",
             satisfyField("docker").then(satisfyToken(JsonToken.VALUE_STRING)).bind(a ->
-                    dockerOptions.map(options -> new YamlDockerStep(a.location, (String) a.value, (String)options.get("cmd")))));
+                    dockerOptions.map(options ->
+                            new YamlDockerStep(a.location, (String) a.value,
+                                    (String) options.get("cmd"),
+                                    (Map<String, Object>) options.get("env")))));
 
     // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",

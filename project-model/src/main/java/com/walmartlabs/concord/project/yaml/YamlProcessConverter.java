@@ -154,7 +154,7 @@ public final class YamlProcessConverter {
         } else if(s instanceof YamlDockerStep) {
             YamlDockerStep c = (YamlDockerStep) s;
 
-            ELCall call = createELCall("docker", Arrays.asList(c.getImage(), c.getCmd(), "${__attr_localPath}"));
+            ELCall call = createELCall("docker", Arrays.asList(c.getImage(), c.getCmd(), c.getEnv(), "${__attr_localPath}"));
 
             return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args,null), s, "Docker call");
         } else {

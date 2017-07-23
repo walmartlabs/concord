@@ -25,7 +25,7 @@ public class DockerTask implements Task {
     private static final int SUCCESS_EXIT_CODE = 0;
     private static final String VOLUME_CONTAINER_DEST = "/workspace";
 
-    public void call(String dockerImage, String cmd, String payloadPath) throws Exception {
+    public void call(String dockerImage, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
         try {
             createRunScript(payloadPath, cmd);
 
@@ -33,6 +33,7 @@ public class DockerTask implements Task {
                     .cleanup(true)
                     .volume(payloadPath, VOLUME_CONTAINER_DEST)
                     .arg("/workspace/.docker_cmd.sh")
+                    .env(stringify(env))
                     .build();
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -75,5 +76,23 @@ public class DockerTask implements Task {
         perms.add(PosixFilePermission.OWNER_WRITE);
         perms.add(PosixFilePermission.OWNER_EXECUTE);
         Files.setPosixFilePermissions(p, perms);
+    }
+
+    private static Map<String, String> stringify(Map<String, Object> m) {
+        if (m == null || m.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, Object> e : m.entrySet()) {
+            Object v = e.getValue();
+            if (v == null) {
+                continue;
+            }
+
+            result.put(e.getKey(), v.toString());
+        }
+
+        return result;
     }
 }

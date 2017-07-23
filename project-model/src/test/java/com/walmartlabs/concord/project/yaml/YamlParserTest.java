@@ -16,6 +16,7 @@ import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -1158,6 +1159,10 @@ public class YamlParserTest {
 
     @Test
     public void test033() throws Exception {
+        String txId = UUID.randomUUID().toString();
+
+        // ---
+
         deploy("033.yml");
 
         DockerTask task = spy(new DockerTask());
@@ -1168,10 +1173,18 @@ public class YamlParserTest {
         String key = UUID.randomUUID().toString();
         Map<String, Object> args = new HashMap<>();
         args.put("__attr_localPath", "/tmp");
+        args.put("txId", txId);
         engine.start(key, "main", args);
 
         // ---
-        verify(task, times(1)).call(eq("test-image"), eq("test-cmd"), eq("/tmp"));
+        ArgumentCaptor<Map<String, Object>> c = ArgumentCaptor.forClass(Map.class);
+        verify(task, times(1)).call(eq("test-image"), eq("test-cmd"), c.capture(), eq("/tmp"));
+
+        Map<String, Object> m = c.getValue();
+        assertNotNull(m);
+        assertEquals(2, m.size());
+        assertEquals(123, m.get("x"));
+        assertEquals(txId, m.get("y"));
     }
 
     @Test
@@ -1546,7 +1559,7 @@ public class YamlParserTest {
 
     private static class DockerTask implements Task {
 
-        public void call(String dockerImage, String cmd, String payloadPath) throws Exception {
+        public void call(String dockerImage, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
         }
     }
 

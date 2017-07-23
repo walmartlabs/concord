@@ -1,3 +1,6 @@
 main:
   - docker: test-image
     cmd: test-cmd
+    env:
+      x: 123
+      y: ${txId}

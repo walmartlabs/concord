@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-runner: environment variables support for `docker` task.
+
+
+
+## [0.29.0] - 2017-07-23
+
 ### Changed
 
 - concord-server: fixed the order of applying variable overrides;
