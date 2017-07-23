@@ -24,7 +24,6 @@ public class ProjectPipeline extends Pipeline {
     public ProjectPipeline(Injector injector) {
         super(injector,
                 InitialQueueEntryProcessor.class,
-                RequestInfoProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,
                 ProjectDefinitionProcessor.class,
@@ -32,6 +31,7 @@ public class ProjectPipeline extends Pipeline {
                 InventoryProcessor.class,
                 PrivateKeyProcessor.class,
                 ExternalTemplateProcessor.class,
+                RequestInfoProcessor.class,
                 DependenciesProcessor.class,
                 UserInfoProcessor.class,
                 RequestDataStoringProcessor.class,
