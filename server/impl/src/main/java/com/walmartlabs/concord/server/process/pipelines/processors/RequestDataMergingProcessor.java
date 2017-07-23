@@ -38,7 +38,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         // configuration from the user's request
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
 
         // project configuration
         Map<String, Object> projectCfg = getProjectCfg(payload);
