@@ -10,7 +10,7 @@ flows:
         province: Ontario
         country: Canada
 
-  - ${log.info('test', 'Hello, '.concat(myForm.firstName).concat(' ').concat(myForm.lastName))}
+  - log: "Hello, ${myForm.firstName} ${myForm.lastName}"
 
 forms:
   myForm:
