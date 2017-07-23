@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.it.common;
 
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
@@ -22,9 +22,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class ServerClient {
 
@@ -57,11 +55,24 @@ public class ServerClient {
         this.apiKey = apiKey;
     }
 
-    public StartProcessResponse start(String entryPoint, Map<String, InputStream> input) {
-        WebTarget target = client.target(baseUrl + "/" + ProcessResource.class.getAnnotation(Path.class).value() + "/" + entryPoint);
+    public StartProcessResponse start(Map<String, Object> input) {
+        return start(null, input);
+    }
+
+    public StartProcessResponse start(String entryPoint, Map<String, Object> input) {
+        WebTarget target = client.target(baseUrl + "/" + ProcessResource.class.getAnnotation(Path.class).value() +
+                (entryPoint != null ? "/" + entryPoint : ""));
 
         MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-        input.forEach((k, v) -> mdo.addFormData(k, v, MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        input.forEach((k, v) -> {
+            if (v instanceof InputStream || v instanceof byte[]) {
+                mdo.addFormData(k, v, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            } else if (v instanceof String) {
+                mdo.addFormData(k, v, MediaType.TEXT_PLAIN_TYPE);
+            } else {
+                throw new IllegalArgumentException("Unknown input type: " + v);
+            }
+        });
 
         GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
         };

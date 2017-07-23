@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -61,7 +60,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        Map<String, InputStream> input = new HashMap<>();
+        Map<String, Object> input = new HashMap<>();
         input.put("request", resource("ansibleproject/request.json"));
         input.put("inventory", resource("ansibleproject/inventory.ini"));
         test(input);
@@ -69,7 +68,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     @Test
     public void testInlineInventory() throws Exception {
-        Map<String, InputStream> input = new HashMap<>();
+        Map<String, Object> input = new HashMap<>();
         input.put("request", resource("ansibleproject/requestInline.json"));
         test(input);
     }
@@ -77,7 +76,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
     @Test
     @SuppressWarnings("unchecked")
     public void testFailure() throws Exception {
-        Map<String, InputStream> input = new HashMap<>();
+        Map<String, Object> input = new HashMap<>();
         input.put("request", resource("ansibleproject/requestFailure.json"));
 
         // ---
@@ -127,7 +126,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
     }
 
     @SuppressWarnings("unchecked")
-    public void test(Map<String, InputStream> input) throws Exception {
+    public void test(Map<String, Object> input) throws Exception {
         String templatePath = "file://" + ITConstants.DEPENDENCIES_DIR + "/ansible-template.jar";
 
         String projectName = "project@" + System.currentTimeMillis();

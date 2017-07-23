@@ -10,6 +10,8 @@ import org.junit.Test;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
@@ -160,5 +162,35 @@ public class ProcessIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*gaaarbage.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testMultipart() throws Exception {
+        String zVal = "z" + System.currentTimeMillis();
+        String myFileVal = "myFile" + System.currentTimeMillis();
+        byte[] payload = archive(ProcessIT.class.getResource("multipart").toURI());
+
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("entryPoint", "main");
+        input.put("arguments.z", zVal);
+        input.put("myfile.txt", myFileVal.getBytes());
+
+        StartProcessResponse spr = start(input);
+        assertNotNull(spr.getInstanceId());
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FINISHED);
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*x=123.*", ab);
+        assertLog(".*y=abc.*", ab);
+        assertLog(".*z=" + zVal + ".*", ab);
+        assertLog(".*myfile=" + myFileVal + ".*", ab);
     }
 }

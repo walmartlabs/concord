@@ -5,6 +5,8 @@
 ### Added
 
 - concord-runner: environment variables support for `docker` task.
+- concord-server: allow uploading arbitrary files and override
+request parameters using `multipart/form-data` requests.
 
 
 

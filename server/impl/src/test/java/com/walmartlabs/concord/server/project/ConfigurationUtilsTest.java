@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ConfigurationUtilsTest {
 
@@ -82,5 +83,35 @@ public class ConfigurationUtilsTest {
 
         ConfigurationUtils.merge(a, b);
         assertEquals(234, a.get("y"));
+    }
+
+    @Test
+    public void testToNested() throws Exception {
+        String k = "a.b.c";
+        Object v = 123;
+
+        Map<String, Object> m = ConfigurationUtils.toNested(k, v);
+        assertEquals(1, m.size());
+
+        Map<String, Object> m1 = (Map<String, Object>) m.get("a");
+        assertNotNull(m1);
+
+        Map<String, Object> m2 = (Map<String, Object>) m1.get("b");
+        assertNotNull(m2);
+
+        Object vv = m2.get("c");
+        assertEquals(v, vv);
+    }
+
+    @Test
+    public void testToNestedMinimal() throws Exception {
+        String k = "a";
+        Object v = 123;
+
+        Map<String, Object> m = ConfigurationUtils.toNested(k, v);
+        assertEquals(1, m.size());
+
+        Object vv = m.get("a");
+        assertEquals(v, vv);
     }
 }

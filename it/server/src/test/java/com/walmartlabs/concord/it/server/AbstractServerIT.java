@@ -6,7 +6,6 @@ import org.junit.After;
 import org.junit.Before;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
 public abstract class AbstractServerIT {
@@ -23,7 +22,11 @@ public abstract class AbstractServerIT {
         serverClient.close();
     }
 
-    protected StartProcessResponse start(String entryPoint, Map<String, InputStream> input) {
+    protected StartProcessResponse start(Map<String, Object> input) {
+        return serverClient.start(input);
+    }
+
+    protected StartProcessResponse start(String entryPoint, Map<String, Object> input) {
         return serverClient.start(entryPoint, input);
     }
 

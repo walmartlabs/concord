@@ -49,6 +49,19 @@ public interface ProcessResource {
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
+     * Starts a new process instance.
+     *
+     * @param input
+     * @return
+     */
+    @POST
+    @ApiOperation("Start a new process using multipart request data")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    StartProcessResponse start(@ApiParam MultipartInput input,
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+
+    /**
      * Starts a new process instance using a specified project.
      *
      * @param entryPoint

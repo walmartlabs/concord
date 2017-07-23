@@ -151,6 +151,10 @@ public class PayloadManager {
     }
 
     private static Payload addEntryPoint(Payload p, EntryPoint e) {
+        if (e == null) {
+            return p;
+        }
+
         String[] rest = e.getEntryPoint();
         String realEntryPoint = rest.length > 0 ? rest[rest.length - 1] : null;
         return p.putHeader(Payload.PROJECT_NAME, e.getProjectName())

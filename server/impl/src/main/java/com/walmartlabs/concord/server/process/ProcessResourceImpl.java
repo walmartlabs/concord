@@ -101,6 +101,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
+            log.error("start ['{}'] -> error starting the process", instanceId, e);
             throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -132,6 +133,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
+            log.error("start ['{}'] -> error starting the process", instanceId, e);
             throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -144,11 +146,18 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    public StartProcessResponse start(MultipartInput input, boolean sync) {
+        return start(null, input, sync);
+    }
+
+    @Override
     public StartProcessResponse start(String entryPoint, MultipartInput input, boolean sync) {
         String instanceId = UUID.randomUUID().toString();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
-        assertProject(ep.getProjectName());
+        if (ep != null) {
+            assertProject(ep.getProjectName());
+        }
 
         Payload payload;
         try {
@@ -163,6 +172,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
+            log.error("start ['{}'] -> error starting the process", instanceId, e);
             throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -192,6 +202,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
+            log.error("start ['{}'] -> error starting the process", instanceId, e);
             throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 

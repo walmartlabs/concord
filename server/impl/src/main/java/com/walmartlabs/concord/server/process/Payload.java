@@ -21,7 +21,7 @@ public class Payload {
     public static final HeaderKey<String> RESUME_EVENT_NAME = HeaderKey.register("_resumeEventName", String.class);
     public static final HeaderKey<ProjectDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProjectDefinition.class);
 
-    public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("_workspaceArchive");
+    public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 
     private final String instanceId;
     private final Map<String, Object> headers;
@@ -115,8 +115,12 @@ public class Payload {
             return this;
         }
 
+        return removeAttachment(key.name());
+    }
+
+    public Payload removeAttachment(String key) {
         Map<String, Path> m = new HashMap<>(attachments);
-        m.remove(key.name());
+        m.remove(key);
         return new Payload(this, this.headers, m);
     }
 
