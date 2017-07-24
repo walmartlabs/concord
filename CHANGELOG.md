@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- project-model: support for in/out variables and `error` blocks for
+process calls.
+
+
+
 ## [0.30.1] - 2017-07-24
 
 ### Changed

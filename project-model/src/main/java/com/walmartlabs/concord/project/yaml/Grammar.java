@@ -160,6 +160,10 @@ public class Grammar {
     private static final Parser<Atom, Map<String, Object>> taskOptions = label("Task options",
             many(choice(inVars, outVars, errorBlock, outField)).map(Grammar::toMap));
 
+    // callOptions := (inVars | outVars | errorBlock)*
+    private static final Parser<Atom, Map<String, Object>> callOptions = label("Process call options",
+            many(choice(inVars, outVars, errorBlock)).map(Grammar::toMap));
+
     // groupOptions := (errorBlock)*
     private static final Parser<Atom, Map<String, Object>> groupOptions = label("Group options",
             many(errorBlock).map(Grammar::toMap));
@@ -216,9 +220,14 @@ public class Grammar {
             satisfyField(":").bind(a -> steps.bind(items ->
                     groupOptions.map(options -> new YamlGroup(a.location, items, options)))));
 
+    // callFull := FIELD_NAME "call" VALUE_STRING taskOptions
+    private static final Parser<Atom, YamlStep> callFull = label("Process call (full form)",
+            satisfyField("call").then(satisfyToken(JsonToken.VALUE_STRING)).bind(a ->
+                    callOptions.map(options -> new YamlCall(a.location, (String) a.value, options))));
+
     // callProc := VALUE_STRING
     private static final Parser<Atom, YamlStep> callProc = label("Process call",
-            satisfyToken(JsonToken.VALUE_STRING).map(a -> new YamlCall(a.location, (String) a.value)));
+            satisfyToken(JsonToken.VALUE_STRING).map(a -> new YamlCall(a.location, (String) a.value, null)));
 
     // event := FIELD_NAME "event" VALUE_STRING
     private static final Parser<Atom, YamlStep> event = label("Event (debug only)",
@@ -256,10 +265,10 @@ public class Grammar {
                                     (String) options.get("cmd"),
                                     (Map<String, Object>) options.get("env")))));
 
-    // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | event | script | taskShort | vars END_OBJECT
+    // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(docker, group, ifExpr, exprFull, formCall, vars), taskFull, event, errorReturn, script, taskShort)));
+                    choice(choice(docker, group, ifExpr, exprFull, formCall, vars), taskFull, callFull, event, errorReturn, script, taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
     private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, callProc, stepObject);

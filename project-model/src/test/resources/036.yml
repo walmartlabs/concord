@@ -1,0 +1,23 @@
+main:
+  - ${testBean.toString(x + 100)}
+
+  - call: myFlow
+    in:
+      x: 2
+
+  - call: myFlow
+    in:
+      x: 3
+
+  - call: myFaultyFlow
+    in:
+      x: 4
+    error:
+      - ${testBean.toString("handled!")}
+
+myFlow:
+  - ${testBean.toString(x + 100)}
+
+myFaultyFlow:
+  - ${testBean.toString(x + 100)}
+  - return: ohNoes

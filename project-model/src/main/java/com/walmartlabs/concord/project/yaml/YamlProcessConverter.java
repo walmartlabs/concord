@@ -90,7 +90,7 @@ public final class YamlProcessConverter {
 
             return proc.joinAll(joinName);
         } else if (s instanceof YamlReturn) {
-            YamlReturn e = (YamlReturn)s;
+            YamlReturn e = (YamlReturn) s;
 
             if (e.getErrorCode() != null) {
                 proc.endEvent(e.getErrorCode());
@@ -125,12 +125,17 @@ public final class YamlProcessConverter {
         } else if (s instanceof YamlCall) {
             YamlCall c = (YamlCall) s;
 
-            String target = c.getProc();
+            String target = c.getKey();
             if (target.startsWith("${")) {
                 throw new YamlConverterException("Invalid call: " + target + ". It looks like an expression. @ " + c.getLocation());
             }
 
-            return sourceMap(proc.call(target, true), s, "Call");
+            Set<VariableMapping> in = getInVars(c.getOptions());
+            Set<VariableMapping> out = getOutVars(c.getOptions());
+
+            proc = sourceMap(proc.call(target, in, out, true), s, "Call");
+
+            return applyErrorBlock(proc, c.getOptions(), joinName(s));
         } else if (s instanceof YamlScript) {
             YamlScript c = (YamlScript) s;
             switch (c.getType()) {
@@ -151,12 +156,12 @@ public final class YamlProcessConverter {
             ELCall call = new ELCall(expression, maps);
 
             return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args, null), s, "Set variables");
-        } else if(s instanceof YamlDockerStep) {
+        } else if (s instanceof YamlDockerStep) {
             YamlDockerStep c = (YamlDockerStep) s;
 
             ELCall call = createELCall("docker", Arrays.asList(c.getImage(), c.getCmd(), c.getEnv(), "${__attr_localPath}"));
 
-            return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args,null), s, "Docker call");
+            return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args, null), s, "Docker call");
         } else {
             throw new YamlConverterException("Unknown step type: " + s.getClass());
         }
@@ -242,7 +247,7 @@ public final class YamlProcessConverter {
                 sourceValue = v;
             }
 
-            result.add(new VariableMapping(null, sourceExpr, sourceValue, target));
+            result.add(new VariableMapping(null, sourceExpr, sourceValue, target, true));
         }
 
         return result;

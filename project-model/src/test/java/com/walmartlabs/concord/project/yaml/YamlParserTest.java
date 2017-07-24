@@ -1233,6 +1233,29 @@ public class YamlParserTest {
         verify(task, times(1)).execute(any(ExecutionContext.class));
     }
 
+    @Test
+    public void test036() throws Exception {
+        deploy("036.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("x", 1L);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq(101L));
+        verify(testBean, times(1)).toString(eq(102L));
+        verify(testBean, times(1)).toString(eq(103L));
+        verify(testBean, times(1)).toString(eq(104L));
+        verify(testBean, times(1)).toString(eq("handled!"));
+    }
+
     // FORMS (100 - 199)
 
     @Test
