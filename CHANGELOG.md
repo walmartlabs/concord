@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed the merging of arguments while resuming a process.
+
+
+
 ## [0.30.0] - 2017-07-23
 
 ### Added
