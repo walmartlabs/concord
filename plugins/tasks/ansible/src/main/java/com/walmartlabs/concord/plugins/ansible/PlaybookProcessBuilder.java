@@ -24,6 +24,7 @@ public class PlaybookProcessBuilder {
     private String tags;
     private String privateKey;
     private String vaultPasswordFile;
+    private boolean debug;
 
     public PlaybookProcessBuilder(String playbook, String inventory) {
         this.playbook = playbook;
@@ -65,6 +66,11 @@ public class PlaybookProcessBuilder {
         return this;
     }
 
+    public PlaybookProcessBuilder withDebug(boolean debug) {
+        this.debug = debug;
+        return this;
+    }
+
     public Process build() throws IOException {
         File pwd = new File(playbook);
         if (pwd.isFile()) {
@@ -73,10 +79,16 @@ public class PlaybookProcessBuilder {
         if (!pwd.exists()) {
             throw new IOException("Working directory not found: " + pwd);
         }
-        log.info("build -> working directory: {}", pwd);
+
+        if (debug) {
+            log.info("build -> working directory: {}", pwd);
+        }
 
         String[] cmd = formatCmd();
-        log.info("build -> cmd: {}", String.join(" ", cmd));
+
+        if (debug) {
+            log.info("build -> cmd: {}", String.join(" ", cmd));
+        }
 
         ProcessBuilder b = new ProcessBuilder()
                 .command(cmd)
@@ -90,7 +102,10 @@ public class PlaybookProcessBuilder {
         if (attachmentsDir != null) {
             env.put("_CONCORD_ATTACHMENTS_DIR", attachmentsDir);
         }
-        log.info("build -> env: {}", env);
+
+        if (debug) {
+            log.info("build -> env: {}", env);
+        }
 
         return b.start();
     }

@@ -6,6 +6,8 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.project.Constants;
 import io.takari.bpm.api.BpmnError;
+import io.takari.bpm.api.ExecutionContext;
+import io.takari.bpm.api.JavaDelegate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Named("ansible2")
-public class RunPlaybookTask2 implements Task {
+public class RunPlaybookTask2 implements Task, JavaDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(RunPlaybookTask2.class);
 
@@ -33,6 +35,8 @@ public class RunPlaybookTask2 implements Task {
 
     @SuppressWarnings("unchecked")
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
+        boolean debug = toBoolean(args.get(AnsibleConstants.DEBUG_KEY));
+
         Files.createDirectories(Paths.get(payloadPath, TMP_DIR));
 
         String playbook = (String) args.get(AnsibleConstants.PLAYBOOK_KEY);
@@ -41,7 +45,7 @@ public class RunPlaybookTask2 implements Task {
         }
 
         Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
-        String cfgFile = createCfgFile(payloadPath, makeCfg(cfg, ""));
+        String cfgFile = createCfgFile(payloadPath, makeCfg(cfg, ""), debug);
 
         String inventoryPath = getInventoryPath(args, payloadPath);
         Map<String, String> extraVars = (Map<String, String>) args.get(AnsibleConstants.EXTRA_VARS_KEY);
@@ -58,8 +62,8 @@ public class RunPlaybookTask2 implements Task {
                 .withAttachmentsDir(attachmentsDir)
                 .withCfgFile(cfgFile)
                 .withPrivateKey(getPrivateKeyPath(payloadPath))
-                .withUser(trim((String) args.get("user")))
-                .withTags(trim((String) args.get("tags")))
+                .withUser(trim((String) args.get(AnsibleConstants.USER_KEY)))
+                .withTags(trim((String) args.get(AnsibleConstants.TAGS_KEY)))
                 .withVaultPasswordFile(vaultPasswordFile)
                 .withExtraVars(extraVars);
 
@@ -81,12 +85,42 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
+    @Override
+    public void execute(ExecutionContext ctx) throws Exception {
+        Map<String, Object> args = new HashMap<>();
+
+        addIfPresent(ctx, args, AnsibleConstants.CONFIG_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.PLAYBOOK_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.EXTRA_VARS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_FILE_NAME);
+        addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME);
+        addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
+
+        String payloadPath = (String) ctx.getVariable(Constants.Context.LOCAL_PATH_KEY);
+        if (payloadPath == null) {
+            payloadPath = (String) ctx.getVariable(AnsibleConstants.WORK_DIR_KEY);
+        }
+
+        run(args, payloadPath);
+    }
+
+    private static final void addIfPresent(ExecutionContext src, Map<String, Object> dst, String k) {
+        if (src.hasVariable(k)) {
+            dst.put(k, src.getVariable(k));
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
+        boolean debug = toBoolean(args.get(AnsibleConstants.DEBUG_KEY));
+
         Files.createDirectories(Paths.get(payloadPath, TMP_DIR));
 
         Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
-        String cfgFile = createCfgFile(payloadPath, makeCfg(cfg, payloadPath));
+        String cfgFile = createCfgFile(payloadPath, makeCfg(cfg, payloadPath), debug);
 
         String playbook = (String) args.get(AnsibleConstants.PLAYBOOK_KEY);
         if (playbook == null || playbook.trim().isEmpty()) {
@@ -107,10 +141,11 @@ public class RunPlaybookTask2 implements Task {
                 .withAttachmentsDir(attachmentsDir)
                 .withCfgFile(cfgFile)
                 .withPrivateKey(getPrivateKeyPath(payloadPath))
-                .withUser(trim((String) args.get("user")))
-                .withTags(trim((String) args.get("tags")))
+                .withUser(trim((String) args.get(AnsibleConstants.USER_KEY)))
+                .withTags(trim((String) args.get(AnsibleConstants.TAGS_KEY)))
                 .withVaultPasswordFile(vaultPasswordFile)
-                .withExtraVars(extraVars);
+                .withExtraVars(extraVars)
+                .withDebug(debug);
 
         Process p = b.build();
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -127,6 +162,20 @@ public class RunPlaybookTask2 implements Task {
         if (code != SUCCESS_EXIT_CODE) {
             log.warn("Playbook is finished with code {}", code);
             throw new BpmnError("ansibleError", new IllegalStateException("Process finished with with exit code " + code));
+        }
+    }
+
+    private static boolean toBoolean(Object v) {
+        if (v == null) {
+            return false;
+        }
+
+        if (v instanceof Boolean) {
+            return (Boolean) v;
+        } else if (v instanceof String) {
+            return Boolean.parseBoolean((String) v);
+        } else {
+            throw new IllegalArgumentException("Invalid boolean value: " + v);
         }
     }
 
@@ -180,7 +229,7 @@ public class RunPlaybookTask2 implements Task {
         m.put("remote_tmp", "/tmp/ansible/$USER");
 
         // add plugins path
-        if(!"".equals(baseDir) && !baseDir.endsWith("/")) {
+        if (!"".equals(baseDir) && !baseDir.endsWith("/")) {
             baseDir = baseDir + "/";
         }
         m.put("callback_plugins", baseDir + "_callbacks");
@@ -198,7 +247,7 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private static String createCfgFile(String payloadPath, Map<String, Object> cfg) throws IOException {
+    private static String createCfgFile(String payloadPath, Map<String, Object> cfg, boolean debug) throws IOException {
         StringBuilder b = new StringBuilder();
 
         for (Map.Entry<String, Object> c : cfg.entrySet()) {
@@ -211,10 +260,13 @@ public class RunPlaybookTask2 implements Task {
             b = addCfgSection(b, k, (Map<String, Object>) v);
         }
 
-        log.info("Using the configuration: \n{}", b);
+        if (debug) {
+            log.info("Using the configuration: \n{}", b);
+        }
 
-        Path tmpFile = Files.createFile(Paths.get(payloadPath, TMP_DIR, "ansible.cfg"));
-        Files.write(tmpFile, b.toString().getBytes(StandardCharsets.UTF_8));
+        Path tmpFile = Paths.get(payloadPath, TMP_DIR, "ansible.cfg");
+        Files.write(tmpFile, b.toString().getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
         log.debug("createCfgFile -> done, created {}", tmpFile);
         return tmpFile.toAbsolutePath().toString();
@@ -256,8 +308,8 @@ public class RunPlaybookTask2 implements Task {
         // try an "inline" password first
         Object v = args.get(AnsibleConstants.VAULT_PASSWORD_KEY);
         if (v instanceof String) {
-            Path p = Files.createFile(Paths.get(payloadPath, TMP_DIR, "vault_password"));
-            Files.write(p, ((String) v).getBytes());
+            Path p = Paths.get(payloadPath, TMP_DIR, "vault_password");
+            Files.write(p, ((String) v).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             return p.toAbsolutePath().toString();
         } else if (v != null) {
             throw new IllegalArgumentException("Invalid '" + AnsibleConstants.VAULT_PASSWORD_KEY + "' type: " + v);
@@ -297,9 +349,9 @@ public class RunPlaybookTask2 implements Task {
     }
 
     private static Path createInventoryFile(String payloadPath, Map<String, Object> m) throws IOException {
-        Path p = Files.createFile(Paths.get(payloadPath, TMP_DIR, "inventory.sh"));
+        Path p = Paths.get(payloadPath, TMP_DIR, "inventory.sh");
 
-        try (BufferedWriter w = Files.newBufferedWriter(p)) {
+        try (BufferedWriter w = Files.newBufferedWriter(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             w.write("#!/bin/sh");
             w.newLine();
             w.write("cat << \"EOF\"");
@@ -322,6 +374,7 @@ public class RunPlaybookTask2 implements Task {
         Set<PosixFilePermission> perms = new HashSet<>();
         perms.add(PosixFilePermission.OWNER_READ);
         perms.add(PosixFilePermission.OWNER_EXECUTE);
+        perms.add(PosixFilePermission.OWNER_WRITE);
         Files.setPosixFilePermissions(p, perms);
     }
 }
