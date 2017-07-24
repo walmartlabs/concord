@@ -220,7 +220,7 @@ public class Grammar {
             satisfyField(":").bind(a -> steps.bind(items ->
                     groupOptions.map(options -> new YamlGroup(a.location, items, options)))));
 
-    // callFull := FIELD_NAME "call" VALUE_STRING taskOptions
+    // callFull := FIELD_NAME "call" VALUE_STRING callOptions
     private static final Parser<Atom, YamlStep> callFull = label("Process call (full form)",
             satisfyField("call").then(satisfyToken(JsonToken.VALUE_STRING)).bind(a ->
                     callOptions.map(options -> new YamlCall(a.location, (String) a.value, options))));
