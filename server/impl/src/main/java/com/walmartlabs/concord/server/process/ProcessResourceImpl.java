@@ -86,7 +86,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     public StartProcessResponse start(InputStream in, boolean sync) {
-        String instanceId = UUID.randomUUID().toString();
+        UUID instanceId = UUID.randomUUID();
 
         Payload payload;
         try {
@@ -115,7 +115,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     public StartProcessResponse start(String entryPoint, Map<String, Object> req, boolean sync) {
-        String instanceId = UUID.randomUUID().toString();
+        UUID instanceId = UUID.randomUUID();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
         assertProject(ep.getProjectName());
@@ -152,7 +152,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     public StartProcessResponse start(String entryPoint, MultipartInput input, boolean sync) {
-        String instanceId = UUID.randomUUID().toString();
+        UUID instanceId = UUID.randomUUID();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
         if (ep != null) {
@@ -187,7 +187,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     public StartProcessResponse start(String projectName, InputStream in, boolean sync) {
-        String instanceId = UUID.randomUUID().toString();
+        UUID instanceId = UUID.randomUUID();
 
         Payload payload;
         try {
@@ -216,7 +216,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
-    public ResumeProcessResponse resume(String instanceId, String eventName, Map<String, Object> req) {
+    public ResumeProcessResponse resume(UUID instanceId, String eventName, Map<String, Object> req) {
         Payload payload;
         try {
             payload = payloadManager.createResumePayload(instanceId, eventName, req);
@@ -237,7 +237,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
-    public ProcessEntry waitForCompletion(String instanceId, long timeout) {
+    public ProcessEntry waitForCompletion(UUID instanceId, long timeout) {
         log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId, timeout);
 
         long t1 = System.currentTimeMillis();
@@ -268,7 +268,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
-    public void kill(String instanceId) {
+    public void kill(UUID instanceId) {
         ProcessEntry entry = queueDao.get(instanceId);
         if (entry == null) {
             throw new WebApplicationException("Process not found: " + instanceId, Status.NOT_FOUND);
@@ -286,7 +286,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
-    public ProcessEntry get(String instanceId) {
+    public ProcessEntry get(UUID instanceId) {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
@@ -299,7 +299,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @WithTimer
-    public Response downloadAttachment(String instanceId, String attachmentName) {
+    public Response downloadAttachment(UUID instanceId, String attachmentName) {
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
             throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
@@ -350,7 +350,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @WithTimer
-    public Response getLog(String instanceId, String range) {
+    public Response getLog(UUID instanceId, String range) {
         Integer start = null;
         Integer end = null;
 
@@ -405,7 +405,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> readArgs(String instanceId) {
+    private Map<String, Object> readArgs(UUID instanceId) {
         String resource = Constants.Files.REQUEST_DATA_FILE_NAME;
         Optional<Map<String, Object>> o = stateManager.get(instanceId, resource, in -> {
             try {
@@ -422,7 +422,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return o.orElse(Collections.emptyMap());
     }
 
-    private void process(String instanceId, Map<String, Object> params) {
+    private void process(UUID instanceId, Map<String, Object> params) {
         while (true) {
             ProcessEntry psr = get(instanceId);
             ProcessStatus status = psr.getStatus();
@@ -445,7 +445,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @SuppressWarnings("unchecked")
     private void wakeUpProcess(ProcessEntry entry, Map<String, Object> data) {
-        String instanceId = entry.getInstanceId();
+        UUID instanceId = entry.getInstanceId();
 
         List<FormListEntry> forms;
         try {

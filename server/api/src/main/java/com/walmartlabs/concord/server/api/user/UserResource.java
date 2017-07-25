@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.UUID;
 
 @Api("User")
 @Path("/api/v1/user")
@@ -48,5 +49,5 @@ public interface UserResource {
     @ApiOperation("Delete an existing user")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteUserResponse delete(@ApiParam @PathParam("id") String id);
+    DeleteUserResponse delete(@ApiParam @PathParam("id") UUID id);
 }

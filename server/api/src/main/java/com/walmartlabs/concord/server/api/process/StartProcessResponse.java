@@ -4,18 +4,19 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 public class StartProcessResponse implements Serializable {
 
     private final boolean ok = true;
-    private final String instanceId;
+    private final UUID instanceId;
 
     @JsonCreator
-    public StartProcessResponse(@JsonProperty("instanceId") String instanceId) {
+    public StartProcessResponse(@JsonProperty("instanceId") UUID instanceId) {
         this.instanceId = instanceId;
     }
 
-    public String getInstanceId() {
+    public UUID getInstanceId() {
         return instanceId;
     }
 
@@ -27,7 +28,7 @@ public class StartProcessResponse implements Serializable {
     public String toString() {
         return "StartProcessResponse{" +
                 "ok=" + ok +
-                ", instanceId='" + instanceId + '\'' +
+                ", instanceId=" + instanceId +
                 '}';
     }
 }

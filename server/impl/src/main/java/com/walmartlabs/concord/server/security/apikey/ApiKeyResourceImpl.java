@@ -31,20 +31,22 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
     @Validate
     @RequiresPermissions(Permissions.APIKEY_CREATE_NEW)
     public CreateApiKeyResponse create(CreateApiKeyRequest request) {
-        if (!userDao.existsById(request.getUserId())) {
+        UUID userId = request.getUserId();
+
+        if (!userDao.existsById(userId)) {
             throw new ValidationErrorsException("User not found: " + request.getUserId());
         }
 
-        String id = UUID.randomUUID().toString();
+        UUID id = UUID.randomUUID();
         String key = apiKeyDao.newApiKey();
-        apiKeyDao.insert(id, request.getUserId(), key);
+        apiKeyDao.insert(id, userId, key);
         return new CreateApiKeyResponse(id, key);
     }
 
     @Override
     @Validate
     @RequiresPermissions(Permissions.APIKEY_DELETE_ANY)
-    public DeleteApiKeyResponse delete(String id) {
+    public DeleteApiKeyResponse delete(UUID id) {
         if (!apiKeyDao.existsById(id)) {
             throw new ValidationErrorsException("API key not found: " + id);
         }

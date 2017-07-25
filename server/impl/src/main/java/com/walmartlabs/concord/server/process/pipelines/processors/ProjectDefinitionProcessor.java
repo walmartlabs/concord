@@ -14,6 +14,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.UUID;
 
 @Named
 @Singleton
@@ -33,7 +34,7 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         if (workspace == null) {

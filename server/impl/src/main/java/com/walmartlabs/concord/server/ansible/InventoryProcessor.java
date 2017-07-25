@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 /**
  * Support for external Ansible inventories.
@@ -48,7 +49,7 @@ public class InventoryProcessor implements PayloadProcessor {
     }
 
     private boolean copy(Payload payload, AttachmentKey src, String dstName) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         Path p = payload.getAttachment(src);

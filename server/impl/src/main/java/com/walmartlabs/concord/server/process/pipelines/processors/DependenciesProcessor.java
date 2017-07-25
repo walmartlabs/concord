@@ -64,7 +64,7 @@ public class DependenciesProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         Map<String, Object> request = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
         // get a list of dependencies from the request data
@@ -104,7 +104,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private void processSystemDependencies(String instanceId, Path workspace, Path depsDir,
+    private void processSystemDependencies(UUID instanceId, Path workspace, Path depsDir,
                                            Collection<String> deps) throws IOException {
 
         if (deps.isEmpty()) {
@@ -134,7 +134,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         }
     }
 
-    private static String path(String instanceId, String a) {
+    private static String path(UUID instanceId, String a) {
         URI uri = URI.create(a);
         String s = uri.getPath();
 
@@ -150,7 +150,7 @@ public class DependenciesProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<String> deps(String instanceId, Map<String, Object> req) {
+    private Collection<String> deps(UUID instanceId, Map<String, Object> req) {
         Object o = req.get(Constants.Request.DEPENDENCIES_KEY);
         if (o == null) {
             return null;

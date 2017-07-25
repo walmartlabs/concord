@@ -33,10 +33,10 @@ public class UserResourceImpl implements UserResource, Resource {
 
         String username = request.getUsername();
 
-        String id = userDao.getId(username);
+        UUID id = userDao.getId(username);
         if (id == null) {
             assertPermissions(Permissions.USER_CREATE_NEW, "The current user does not have permissions to create a new user");
-            id = UUID.randomUUID().toString();
+            id = UUID.randomUUID();
             userDao.insert(id, username, request.getPermissions());
             return new CreateUserResponse(id, PerformedActionType.CREATED);
         } else {
@@ -50,7 +50,7 @@ public class UserResourceImpl implements UserResource, Resource {
     @Override
     @Validate
     public UserEntry findByUsername(String username) {
-        String id = userDao.getId(username);
+        UUID id = userDao.getId(username);
         if (id == null) {
             throw new WebApplicationException("User not found: " + username, Status.NOT_FOUND);
         }
@@ -59,7 +59,7 @@ public class UserResourceImpl implements UserResource, Resource {
 
     @Override
     @RequiresPermissions(Permissions.USER_DELETE_ANY)
-    public DeleteUserResponse delete(String id) {
+    public DeleteUserResponse delete(UUID id) {
         if (!userDao.existsById(id)) {
             throw new ValidationErrorsException("User not found: " + id);
         }

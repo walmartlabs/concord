@@ -3,16 +3,17 @@ package com.walmartlabs.concord.server.agent;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 public class AgentCommand implements Serializable {
 
-    private final String commandId;
+    private final UUID commandId;
     private final String agentId;
     private final Status status;
     private final Date createdAt;
     private final Map<String, Object> data;
 
-    public AgentCommand(String commandId, String agentId, Status status, Date createdAt, Map<String, Object> data) {
+    public AgentCommand(UUID commandId, String agentId, Status status, Date createdAt, Map<String, Object> data) {
         this.commandId = commandId;
         this.agentId = agentId;
         this.status = status;
@@ -20,7 +21,7 @@ public class AgentCommand implements Serializable {
         this.data = data;
     }
 
-    public String getCommandId() {
+    public UUID getCommandId() {
         return commandId;
     }
 
@@ -43,7 +44,7 @@ public class AgentCommand implements Serializable {
     @Override
     public String toString() {
         return "AgentCommand{" +
-                "commandId='" + commandId + '\'' +
+                "commandId=" + commandId +
                 ", agentId='" + agentId + '\'' +
                 ", status=" + status +
                 ", createdAt=" + createdAt +

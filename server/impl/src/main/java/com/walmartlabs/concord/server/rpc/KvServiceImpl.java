@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Optional;
+import java.util.UUID;
 
 @Named
 public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
@@ -113,7 +114,7 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     private Optional<String> assertProjectName(String instanceId) {
-        ProcessEntry entry = queueDao.get(instanceId);
+        ProcessEntry entry = queueDao.get(UUID.fromString(instanceId));
         if (entry == null) {
             return Optional.empty();
         }

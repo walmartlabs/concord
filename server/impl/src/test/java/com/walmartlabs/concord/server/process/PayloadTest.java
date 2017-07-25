@@ -4,6 +4,7 @@ import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,7 +14,7 @@ public class PayloadTest {
 
     @Test
     public void test() throws Exception {
-        Payload p = new Payload("a")
+        Payload p = new Payload(UUID.randomUUID())
                 .putHeader(MY_STRING_HEADER, "hello")
                 .putHeaders(Collections.singletonMap("a", 1));
 

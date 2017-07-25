@@ -40,7 +40,7 @@ public class LdapResourceImpl implements LdapResource, Resource {
         String ldapDn = request.getLdapDn();
         validateRoles(request.getRoles());
 
-        String id = ldapDao.getId(ldapDn);
+        UUID id = ldapDao.getId(ldapDn);
         if (id != null) {
             assertPermissions(Permissions.LDAP_MAPPING_UPDATE_ANY,
                     "The current user does not have permissions to update the specified LDAP group mapping");
@@ -51,7 +51,7 @@ public class LdapResourceImpl implements LdapResource, Resource {
             assertPermissions(Permissions.LDAP_MAPPING_CREATE_NEW,
                     "The current user does not have permissions to create a new LDAP group mapping");
 
-            id = UUID.randomUUID().toString();
+            id = UUID.randomUUID();
             ldapDao.insert(id, ldapDn, request.getRoles());
             return new CreateLdapMappingResponse(id, PerformedActionType.CREATED);
         }
@@ -65,7 +65,7 @@ public class LdapResourceImpl implements LdapResource, Resource {
     @Override
     @Validate
     @RequiresPermissions(Permissions.LDAP_MAPPING_DELETE_ANY)
-    public DeleteLdapMappingResponse deleteMapping(String id) {
+    public DeleteLdapMappingResponse deleteMapping(UUID id) {
         if (!ldapDao.exists(id)) {
             throw new ValidationErrorsException("LDAP group mapping not found: " + id);
         }

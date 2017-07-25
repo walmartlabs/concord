@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.UUID;
 
 @Named
 public class StateImportingProcessor implements PayloadProcessor {
@@ -26,7 +27,7 @@ public class StateImportingProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         stateManager.transaction(tx -> {

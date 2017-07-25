@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiParam;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.UUID;
 
 @Api("API key")
 @Path("/api/v1/apikey")
@@ -35,5 +36,5 @@ public interface ApiKeyResource {
     @ApiOperation("Delete an existing API key")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteApiKeyResponse delete(@ApiParam @PathParam("id") @ConcordId String id);
+    DeleteApiKeyResponse delete(@ApiParam @PathParam("id") UUID id);
 }

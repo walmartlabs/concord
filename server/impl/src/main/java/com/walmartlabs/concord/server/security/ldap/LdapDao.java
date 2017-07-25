@@ -30,14 +30,14 @@ public class LdapDao extends AbstractDao {
         }
     }
 
-    public boolean exists(String id) {
+    public boolean exists(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.fetchExists(tx.selectFrom(LDAP_GROUP_MAPPINGS)
                     .where(LDAP_GROUP_MAPPINGS.MAPPING_ID.eq(id)));
         }
     }
 
-    public String getId(String ldapDn) {
+    public UUID getId(String ldapDn) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(LDAP_GROUP_MAPPINGS.MAPPING_ID)
                     .from(LDAP_GROUP_MAPPINGS)
@@ -46,11 +46,11 @@ public class LdapDao extends AbstractDao {
         }
     }
 
-    public void insert(String id, String ldapDn, Collection<String> roles) {
+    public void insert(UUID id, String ldapDn, Collection<String> roles) {
         tx(tx -> insert(tx, id, ldapDn, roles));
     }
 
-    public void insert(DSLContext tx, String id, String ldapDn, Collection<String> roles) {
+    public void insert(DSLContext tx, UUID id, String ldapDn, Collection<String> roles) {
         tx.insertInto(LDAP_GROUP_MAPPINGS)
                 .columns(LDAP_GROUP_MAPPINGS.MAPPING_ID, LDAP_GROUP_MAPPINGS.LDAP_DN)
                 .values(id, ldapDn)
@@ -59,11 +59,11 @@ public class LdapDao extends AbstractDao {
         insertRoles(tx, id, roles);
     }
 
-    public void update(String id, String ldapDn, Collection<String> roles) {
+    public void update(UUID id, String ldapDn, Collection<String> roles) {
         tx(tx -> update(tx, id, ldapDn, roles));
     }
 
-    public void update(DSLContext tx, String id, String ldapDn, Collection<String> roles) {
+    public void update(DSLContext tx, UUID id, String ldapDn, Collection<String> roles) {
         tx.update(LDAP_GROUP_MAPPINGS)
                 .set(LDAP_GROUP_MAPPINGS.LDAP_DN, ldapDn)
                 .where(LDAP_GROUP_MAPPINGS.MAPPING_ID.eq(id))
@@ -75,7 +75,7 @@ public class LdapDao extends AbstractDao {
 
     public List<LdapMappingEntry> list() {
         try (DSLContext tx = DSL.using(cfg)) {
-            Select<Record3<String, String, String>> select = tx
+            Select<Record3<UUID, String, String>> select = tx
                     .select(LDAP_GROUP_MAPPINGS.MAPPING_ID, LDAP_GROUP_MAPPINGS.LDAP_DN, LDAP_GROUP_ROLES.ROLE_NAME)
                     .from(LDAP_GROUP_MAPPINGS)
                     .leftOuterJoin(LDAP_GROUP_ROLES).on(LDAP_GROUP_ROLES.MAPPING_ID.eq(LDAP_GROUP_MAPPINGS.MAPPING_ID))
@@ -83,12 +83,12 @@ public class LdapDao extends AbstractDao {
 
             List<LdapMappingEntry> l = new ArrayList<>();
 
-            String cId = null;
+            UUID cId = null;
             String cDn = null;
             Set<String> cRoles = null;
 
-            for (Record3<String, String, String> r : select.fetch()) {
-                String id = r.get(LDAP_GROUP_MAPPINGS.MAPPING_ID);
+            for (Record3<UUID, String, String> r : select.fetch()) {
+                UUID id = r.get(LDAP_GROUP_MAPPINGS.MAPPING_ID);
                 String dn = r.get(LDAP_GROUP_MAPPINGS.LDAP_DN);
                 String perm = r.get(LDAP_GROUP_ROLES.ROLE_NAME);
 
@@ -112,30 +112,30 @@ public class LdapDao extends AbstractDao {
         }
     }
 
-    public void delete(String id) {
+    public void delete(UUID id) {
         tx(tx -> delete(tx, id));
     }
 
-    public void delete(DSLContext tx, String id) {
+    public void delete(DSLContext tx, UUID id) {
         tx.deleteFrom(LDAP_GROUP_MAPPINGS)
                 .where(LDAP_GROUP_MAPPINGS.MAPPING_ID.eq(id))
                 .execute();
     }
 
-    private static void deleteRoles(DSLContext tx, String mappingId) {
+    private static void deleteRoles(DSLContext tx, UUID mappingId) {
         tx.deleteFrom(LDAP_GROUP_ROLES)
                 .where(LDAP_GROUP_ROLES.MAPPING_ID.eq(mappingId))
                 .execute();
     }
 
-    private static void insertRoles(DSLContext tx, String mappingId, Collection<String> roles) {
+    private static void insertRoles(DSLContext tx, UUID mappingId, Collection<String> roles) {
         if (roles == null || roles.isEmpty()) {
             return;
         }
 
         BatchBindStep b = tx.batch(tx.insertInto(LDAP_GROUP_ROLES)
                 .columns(LDAP_GROUP_ROLES.MAPPING_ID, LDAP_GROUP_ROLES.ROLE_NAME)
-                .values((String) null, null));
+                .values((UUID) null, null));
 
         for (String r : roles) {
             b.bind(mappingId, r);

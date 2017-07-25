@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
@@ -97,7 +98,7 @@ public class ServerClient {
         return ab;
     }
 
-    public static ProcessEntry waitForStatus(ProcessResource processResource, String instanceId,
+    public static ProcessEntry waitForStatus(ProcessResource processResource, UUID instanceId,
                                              ProcessStatus status, ProcessStatus... more) throws InterruptedException {
         int retries = 5;
 
@@ -125,7 +126,7 @@ public class ServerClient {
         }
     }
 
-    public static ProcessEntry waitForCompletion(ProcessResource processResource, String instanceId) throws InterruptedException {
+    public static ProcessEntry waitForCompletion(ProcessResource processResource, UUID instanceId) throws InterruptedException {
         return waitForStatus(processResource, instanceId, ProcessStatus.FAILED, ProcessStatus.FINISHED);
     }
 

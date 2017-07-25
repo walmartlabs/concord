@@ -6,23 +6,24 @@ import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.api.PerformedActionType;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 public class CreateLdapMappingResponse implements Serializable {
 
     private final boolean ok = true;
 
     @ConcordId
-    private final String id;
+    private final UUID id;
     private final PerformedActionType actionType;
 
     @JsonCreator
-    public CreateLdapMappingResponse(@JsonProperty("id") String id,
+    public CreateLdapMappingResponse(@JsonProperty("id") UUID id,
                                      @JsonProperty("actionType") PerformedActionType actionType) {
         this.id = id;
         this.actionType = actionType;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -38,7 +39,7 @@ public class CreateLdapMappingResponse implements Serializable {
     public String toString() {
         return "CreateLdapMappingResponse{" +
                 "ok=" + ok +
-                ", id='" + id + '\'' +
+                ", id=" + id +
                 ", actionType=" + actionType +
                 '}';
     }

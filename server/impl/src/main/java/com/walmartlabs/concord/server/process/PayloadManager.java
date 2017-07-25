@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
@@ -38,7 +39,7 @@ public class PayloadManager {
      * @param input
      * @return
      */
-    public Payload createPayload(String instanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
+    public Payload createPayload(UUID instanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
@@ -58,7 +59,7 @@ public class PayloadManager {
      * @param request
      * @return
      */
-    public Payload createPayload(String instanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
+    public Payload createPayload(UUID instanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
@@ -79,7 +80,7 @@ public class PayloadManager {
      * @param in
      * @return
      */
-    public Payload createPayload(String instanceId, String initiator, InputStream in) throws IOException {
+    public Payload createPayload(UUID instanceId, String initiator, InputStream in) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
@@ -104,7 +105,7 @@ public class PayloadManager {
      * @param in
      * @return
      */
-    public Payload createPayload(String instanceId, String initiator, String projectName, InputStream in) throws IOException {
+    public Payload createPayload(UUID instanceId, String initiator, String projectName, InputStream in) throws IOException {
         Payload p = createPayload(instanceId, initiator, in);
         p = addInitiator(p, initiator);
         return p.putHeader(Payload.PROJECT_NAME, projectName);
@@ -118,7 +119,7 @@ public class PayloadManager {
      * @param req
      * @return
      */
-    public Payload createResumePayload(String instanceId, String eventName, Map<String, Object> req) throws IOException {
+    public Payload createResumePayload(UUID instanceId, String eventName, Map<String, Object> req) throws IOException {
         Path tmpDir = Files.createTempDirectory("payload");
 
         if (!stateManager.export(instanceId, copyTo(tmpDir))) {

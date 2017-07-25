@@ -8,6 +8,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.UUID;
 
 @Named
 public class InitialQueueEntryProcessor implements PayloadProcessor {
@@ -22,7 +23,7 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         String initiator = payload.getHeader(Payload.INITIATOR);
         queueDao.insertInitial(instanceId, projectName, initiator);

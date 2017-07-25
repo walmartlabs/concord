@@ -23,14 +23,14 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     @Test
     public void test() throws Exception {
-        String instanceA = UUID.randomUUID().toString();
+        UUID instanceA = UUID.randomUUID();
         queueDao.insertInitial(instanceA, "testProject", "testInitiator");
         queueDao.update(instanceA, ProcessStatus.ENQUEUED);
 
         // add a small delay between two jobs
         Thread.sleep(100);
 
-        String instanceB = UUID.randomUUID().toString();
+        UUID instanceB = UUID.randomUUID();
         queueDao.insertInitial(instanceB, "testProject", "testInitiator");
         queueDao.update(instanceB, ProcessStatus.ENQUEUED);
 

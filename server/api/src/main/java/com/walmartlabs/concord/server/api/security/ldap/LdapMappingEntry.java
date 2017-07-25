@@ -7,16 +7,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
 public class LdapMappingEntry implements Serializable {
 
-    private final String id;
+    private final UUID id;
     private final String ldapDn;
     private final Set<String> roles;
 
     @JsonCreator
-    public LdapMappingEntry(@JsonProperty("id") String id,
+    public LdapMappingEntry(@JsonProperty("id") UUID id,
                             @JsonProperty("ldapDn") String ldapDn,
                             @JsonProperty("roles") Set<String> roles) {
         this.id = id;
@@ -24,7 +25,7 @@ public class LdapMappingEntry implements Serializable {
         this.roles = roles;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -39,7 +40,7 @@ public class LdapMappingEntry implements Serializable {
     @Override
     public String toString() {
         return "LdapMappingEntry{" +
-                "id='" + id + '\'' +
+                "id=" + id +
                 ", ldapDn='" + ldapDn + '\'' +
                 ", roles=" + roles +
                 '}';

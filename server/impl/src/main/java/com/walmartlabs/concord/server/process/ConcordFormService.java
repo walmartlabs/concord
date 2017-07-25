@@ -43,7 +43,7 @@ public class ConcordFormService {
         this.validator = new DefaultFormValidator();
     }
 
-    public Form get(String processInstanceId, String formInstanceId) {
+    public Form get(UUID processInstanceId, String formInstanceId) {
         String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 Constants.Files.JOB_STATE_DIR_NAME,
                 Constants.Files.JOB_FORMS_DIR_NAME,
@@ -61,7 +61,7 @@ public class ConcordFormService {
         }
     }
 
-    public List<FormListEntry> list(String processInstanceId) throws ExecutionException {
+    public List<FormListEntry> list(UUID processInstanceId) throws ExecutionException {
         String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 Constants.Files.JOB_STATE_DIR_NAME,
                 Constants.Files.JOB_FORMS_DIR_NAME);
@@ -78,7 +78,7 @@ public class ConcordFormService {
         }).collect(Collectors.toList());
     }
 
-    public String nextFormId(String processInstanceId) throws ExecutionException {
+    public String nextFormId(UUID processInstanceId) throws ExecutionException {
         String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 Constants.Files.JOB_STATE_DIR_NAME,
                 Constants.Files.JOB_FORMS_DIR_NAME);
@@ -98,7 +98,7 @@ public class ConcordFormService {
         return o.orElse(null);
     }
 
-    public FormSubmitResult submit(String processInstanceId, String formInstanceId, Map<String, Object> data) throws ExecutionException {
+    public FormSubmitResult submit(UUID processInstanceId, String formInstanceId, Map<String, Object> data) throws ExecutionException {
         Form form = get(processInstanceId, formInstanceId);
         if (form == null) {
             throw new ExecutionException("Form not found: " + formInstanceId);
@@ -115,7 +115,7 @@ public class ConcordFormService {
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
             m.put("arguments", args);
-            resume(f.getProcessBusinessKey(), f.getEventName(), m);
+            resume(UUID.fromString(f.getProcessBusinessKey()), f.getEventName(), m);
         };
 
         Map<String, Object> merged = merge(form, data);
@@ -143,7 +143,7 @@ public class ConcordFormService {
         return a;
     }
 
-    private void resume(String instanceId, String eventName, Map<String, Object> req) throws ExecutionException {
+    private void resume(UUID instanceId, String eventName, Map<String, Object> req) throws ExecutionException {
         Payload payload;
         try {
             payload = payloadManager.createResumePayload(instanceId, eventName, req);

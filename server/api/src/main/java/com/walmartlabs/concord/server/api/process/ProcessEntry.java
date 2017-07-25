@@ -7,11 +7,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
 public class ProcessEntry implements Serializable {
 
-    private final String instanceId;
+    private final UUID instanceId;
     private final String projectName;
     private final Date createdAt;
     private final String initiator;
@@ -21,7 +22,7 @@ public class ProcessEntry implements Serializable {
     private final String logFileName;
 
     @JsonCreator
-    public ProcessEntry(@JsonProperty("instanceId") String instanceId,
+    public ProcessEntry(@JsonProperty("instanceId") UUID instanceId,
                         @JsonProperty("projectName") String projectName,
                         @JsonProperty("createdAt") Date createdAt,
                         @JsonProperty("initiator") String initiator,
@@ -41,7 +42,7 @@ public class ProcessEntry implements Serializable {
         this.logFileName = instanceId + ".log";
     }
 
-    public String getInstanceId() {
+    public UUID getInstanceId() {
         return instanceId;
     }
 
@@ -76,13 +77,14 @@ public class ProcessEntry implements Serializable {
     @Override
     public String toString() {
         return "ProcessEntry{" +
-                "instanceId='" + instanceId + '\'' +
+                "instanceId=" + instanceId +
                 ", projectName='" + projectName + '\'' +
                 ", createdAt=" + createdAt +
                 ", initiator='" + initiator + '\'' +
                 ", status=" + status +
                 ", lastAgentId='" + lastAgentId + '\'' +
                 ", lastUpdatedAt=" + lastUpdatedAt +
+                ", logFileName='" + logFileName + '\'' +
                 '}';
     }
 }

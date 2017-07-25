@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * Adds repository files to a payload.
@@ -56,7 +57,7 @@ public class RepositoryProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
 
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         String[] entryPoint = payload.getHeader(Payload.ENTRY_POINT);

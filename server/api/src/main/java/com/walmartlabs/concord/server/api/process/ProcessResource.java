@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.api.process;
 
-import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -15,6 +14,7 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Api("Process")
 @Path("/api/v1/process")
@@ -98,7 +98,7 @@ public interface ProcessResource {
     @Path("/{id}/resume/{eventName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    ResumeProcessResponse resume(@ApiParam @PathParam("id") @ConcordId String instanceId,
+    ResumeProcessResponse resume(@ApiParam @PathParam("id") UUID instanceId,
                                  @ApiParam @PathParam("eventName") @NotNull String eventName,
                                  @ApiParam Map<String, Object> req);
 
@@ -113,7 +113,7 @@ public interface ProcessResource {
     @ApiOperation("Wait for a process to finish")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}/waitForCompletion")
-    ProcessEntry waitForCompletion(@ApiParam @PathParam("id") @ConcordId String instanceId,
+    ProcessEntry waitForCompletion(@ApiParam @PathParam("id") UUID instanceId,
                                    @ApiParam @QueryParam("timeout") @DefaultValue("-1") long timeout);
 
     /**
@@ -124,7 +124,7 @@ public interface ProcessResource {
     @DELETE
     @ApiOperation("Forcefully stop a process")
     @Path("/{id}")
-    void kill(@ApiParam @PathParam("id") String instanceId);
+    void kill(@ApiParam @PathParam("id") UUID instanceId);
 
     /**
      * Returns a process instance details.
@@ -136,7 +136,7 @@ public interface ProcessResource {
     @ApiOperation("Get status of a process")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    ProcessEntry get(@ApiParam @ConcordId @PathParam("id") String instanceId);
+    ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId);
 
     /**
      * Returns a process' attachment file.
@@ -149,7 +149,7 @@ public interface ProcessResource {
     @ApiOperation("Download a process' attachment")
     @Path("/{id}/attachment/{name}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    Response downloadAttachment(@ApiParam @ConcordId @PathParam("id") String instanceId,
+    Response downloadAttachment(@ApiParam @PathParam("id") UUID instanceId,
                                 @PathParam("name") @NotNull @Size(min = 1) String attachmentName);
 
     @GET
@@ -161,6 +161,6 @@ public interface ProcessResource {
     @ApiOperation("Retrieve the log")
     @Path("/{id}/log")
     @Produces(MediaType.TEXT_PLAIN)
-    Response getLog(@ApiParam @ConcordId @PathParam("id") String instanceId,
+    Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                     @HeaderParam("range") String range);
 }

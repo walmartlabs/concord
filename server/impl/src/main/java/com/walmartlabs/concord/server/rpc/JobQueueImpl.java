@@ -5,10 +5,10 @@ import com.google.protobuf.Empty;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.rpc.*;
-import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.grpc.stub.StreamObserver;
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -53,7 +54,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
             return;
         }
 
-        String instanceId = entry.getInstanceId();
+        UUID instanceId = entry.getInstanceId();
 
         try {
             // TODO this probably can be replaced with an in-memory buffer
@@ -68,7 +69,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
 
                 while ((read = in.read(ab)) > 0) {
                     TJobResponse r = TJobResponse.newBuilder()
-                            .setInstanceId(instanceId)
+                            .setInstanceId(instanceId.toString())
                             .setType(TJobType.RUNNER)
                             .setChunk(ByteString.copyFrom(ab, 0, read))
                             .build();
@@ -87,7 +88,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     @WithTimer
     public void updateStatus(TJobStatusUpdate request, StreamObserver<Empty> responseObserver) {
         String agentId = request.getAgentId();
-        String instanceId = request.getInstanceId();
+        UUID instanceId = UUID.fromString(request.getInstanceId());
         ProcessStatus status = convert(request.getStatus());
 
         if (status == ProcessStatus.FINISHED && isSuspended(instanceId)) {
@@ -110,7 +111,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         byte[] data = request.getData().toByteArray();
 
         try {
-            logManager.log(instanceId, data);
+            logManager.log(UUID.fromString(instanceId), data);
         } catch (IOException e) {
             log.warn("appendLog ['{}'] -> error while writing to a log file: {}", instanceId, e.getMessage());
             responseObserver.onError(e);
@@ -124,7 +125,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     @Override
     @WithTimer
     public void uploadAttachments(TAttachments request, StreamObserver<Empty> responseObserver) {
-        String instanceId = request.getInstanceId();
+        UUID instanceId = UUID.fromString(request.getInstanceId());
         try {
             // TODO cfg
             Path tmpDir = Files.createTempDirectory("attachments");
@@ -148,7 +149,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         log.info("uploadAttachments ['{}'] -> done", instanceId);
     }
 
-    private boolean isSuspended(String instanceId) {
+    private boolean isSuspended(UUID instanceId) {
         String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 Constants.Files.JOB_STATE_DIR_NAME,
                 Constants.Files.SUSPEND_MARKER_FILE_NAME);

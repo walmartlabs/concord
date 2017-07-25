@@ -16,10 +16,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static javax.ws.rs.core.Response.Status;
 
@@ -61,7 +58,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
 
         StartProcessResponse resp = processResource.start(entryPoint, req, false);
 
-        String instanceId = resp.getInstanceId();
+        UUID instanceId = resp.getInstanceId();
         while (true) {
             ProcessEntry psr = processResource.get(instanceId);
             ProcessStatus status = psr.getStatus();

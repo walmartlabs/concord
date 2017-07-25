@@ -13,6 +13,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 import java.util.zip.ZipInputStream;
 
 /**
@@ -31,7 +32,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
 
         Path archive = payload.getAttachment(Payload.WORKSPACE_ARCHIVE);
         if (archive == null) {

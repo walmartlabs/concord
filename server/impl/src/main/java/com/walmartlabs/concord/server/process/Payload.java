@@ -5,10 +5,7 @@ import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class Payload {
 
@@ -23,11 +20,11 @@ public class Payload {
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 
-    private final String instanceId;
+    private final UUID instanceId;
     private final Map<String, Object> headers;
     private final Map<String, Path> attachments;
 
-    public Payload(String instanceId) {
+    public Payload(UUID instanceId) {
         this.instanceId = instanceId;
         this.headers = Collections.emptyMap();
         this.attachments = Collections.emptyMap();
@@ -39,7 +36,7 @@ public class Payload {
         this.attachments = Objects.requireNonNull(attachments, "Attachments map cannot be null");
     }
 
-    public String getInstanceId() {
+    public UUID getInstanceId() {
         return instanceId;
     }
 

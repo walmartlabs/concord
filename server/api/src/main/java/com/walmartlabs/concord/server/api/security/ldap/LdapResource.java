@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.UUID;
 
 @Api("LDAP")
 @Path("/api/v1/ldap")
@@ -49,7 +50,7 @@ public interface LdapResource {
     @ApiOperation("Delete a LDAP group mapping")
     @Path("/mapping/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteLdapMappingResponse deleteMapping(@ApiParam @PathParam("id") @ConcordId @NotNull String id);
+    DeleteLdapMappingResponse deleteMapping(@ApiParam @PathParam("id") @NotNull UUID id);
 
     /**
      * Lists user's groups.

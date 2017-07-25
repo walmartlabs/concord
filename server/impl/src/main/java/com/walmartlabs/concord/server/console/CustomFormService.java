@@ -4,6 +4,7 @@ import com.walmartlabs.concord.common.validation.ConcordId;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.util.UUID;
 
 @Path("/api/service/custom_form")
 public interface CustomFormService {
@@ -15,7 +16,7 @@ public interface CustomFormService {
     @POST
     @Path("{processInstanceId}/{formInstanceId}/start")
     @Produces(MediaType.APPLICATION_JSON)
-    FormSessionResponse startSession(@PathParam("processInstanceId") @ConcordId String processInstanceId,
+    FormSessionResponse startSession(@PathParam("processInstanceId") UUID processInstanceId,
                                      @PathParam("formInstanceId") @ConcordId String formInstanceId);
 
     @POST
@@ -24,7 +25,7 @@ public interface CustomFormService {
     @Produces(MediaType.APPLICATION_JSON)
     Response continueSession(@Context UriInfo uriInfo,
                              @Context HttpHeaders headers,
-                             @PathParam("processInstanceId") @ConcordId String processInstanceId,
+                             @PathParam("processInstanceId") UUID processInstanceId,
                              @PathParam("formInstanceId") @ConcordId String formInstanceId,
                              MultivaluedMap<String, String> data);
 }

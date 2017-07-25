@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.sql.Timestamp;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -85,7 +86,7 @@ public class ProcessStateCleaner {
 
         void deleteOldState(Timestamp cutoff) {
             tx(tx -> {
-                SelectConditionStep<Record1<String>> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
+                SelectConditionStep<Record1<UUID>> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
                         .from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.LAST_UPDATED_AT.lessThan(cutoff)
                                 .and(PROCESS_QUEUE.CURRENT_STATUS.in(REMOVE_STATUSES)));

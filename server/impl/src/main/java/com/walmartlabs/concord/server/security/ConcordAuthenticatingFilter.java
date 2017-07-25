@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.Base64;
+import java.util.UUID;
 
 public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
@@ -72,7 +73,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             // disable session creation for api token users
             request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
 
-            String userId = apiKeyDao.findUserId(h);
+            UUID userId = apiKeyDao.findUserId(h);
             if (userId == null) {
                 return new UsernamePasswordToken();
             }

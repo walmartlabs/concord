@@ -24,7 +24,7 @@ public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
     }
 
     public void add(String agentId, Command cmd) {
-        String commandId = UUID.randomUUID().toString();
+        UUID commandId = UUID.randomUUID();
         commandsDao.insert(commandId, agentId, Commands.toMap(cmd));
     }
 

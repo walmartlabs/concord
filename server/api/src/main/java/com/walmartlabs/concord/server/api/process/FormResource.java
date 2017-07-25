@@ -9,6 +9,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Api("Form")
 @Path("/api/v1/process")
@@ -18,7 +19,7 @@ public interface FormResource {
     @ApiOperation("List the available forms")
     @Path("/{processInstanceId}/form")
     @Produces(MediaType.APPLICATION_JSON)
-    List<FormListEntry> list(@ApiParam @PathParam("processInstanceId") @ConcordId String processInstanceId);
+    List<FormListEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId);
 
     /**
      * Returns the current state of a form instance.
@@ -30,7 +31,7 @@ public interface FormResource {
     @ApiOperation("Get the current state of a form")
     @Path("/{processInstanceId}/form/{formInstanceId}")
     @Produces(MediaType.APPLICATION_JSON)
-    FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") @ConcordId String processInstanceId,
+    FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                           @ApiParam @PathParam("formInstanceId") @ConcordId String formInstanceId);
 
     /**
@@ -45,7 +46,7 @@ public interface FormResource {
     @Path("/{processInstanceId}/form/{formInstanceId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    FormSubmitResponse submit(@ApiParam @PathParam("processInstanceId") @ConcordId String processInstanceId,
+    FormSubmitResponse submit(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                               @ApiParam @PathParam("formInstanceId") @ConcordId String formInstanceId,
                               @ApiParam Map<String, Object> data);
 }

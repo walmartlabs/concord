@@ -22,7 +22,7 @@ public class ProcessLogsDaoTest extends AbstractDaoTest {
         ThreadLocalRandom.current().nextBytes(data);
 
         for (int i = 0; i < files; i++) {
-            String instanceId = UUID.randomUUID().toString();
+            UUID instanceId = UUID.randomUUID();
 
             for (int j = 0; j < chunks; j++) {
                 processLogsDao.append(instanceId, data);

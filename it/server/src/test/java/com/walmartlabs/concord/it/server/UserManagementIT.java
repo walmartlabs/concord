@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
 

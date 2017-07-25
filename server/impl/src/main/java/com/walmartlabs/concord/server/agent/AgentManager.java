@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.rpc.CommandQueueImpl;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.UUID;
 
 @Named
 public class AgentManager {
@@ -20,7 +21,7 @@ public class AgentManager {
         this.commandQueue = commandQueue;
     }
 
-    public void killProcess(String instanceId) {
+    public void killProcess(UUID instanceId) {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
             // TODO throw an exception?
@@ -33,6 +34,6 @@ public class AgentManager {
             return;
         }
 
-        commandQueue.add(agentId, new CancelJobCommand(instanceId));
+        commandQueue.add(agentId, new CancelJobCommand(instanceId.toString()));
     }
 }

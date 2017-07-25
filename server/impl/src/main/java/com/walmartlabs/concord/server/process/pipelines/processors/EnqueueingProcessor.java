@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.UUID;
 
 @Named
 public class EnqueueingProcessor implements PayloadProcessor {
@@ -21,7 +22,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         queueDao.update(instanceId, ProcessStatus.ENQUEUED);
         return chain.process(payload);
     }

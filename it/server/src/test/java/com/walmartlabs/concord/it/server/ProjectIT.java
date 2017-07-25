@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
@@ -238,7 +239,7 @@ public class ProjectIT extends AbstractServerIT {
         CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(userName, permissions));
         assertTrue(cur.isOk());
 
-        String userId = cur.getId();
+        UUID userId = cur.getId();
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
         CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(userId));
@@ -259,7 +260,7 @@ public class ProjectIT extends AbstractServerIT {
         StartProcessResponse spr = processResource.start(entryPoint, args, sync);
         assertTrue(spr.isOk());
 
-        String instanceId = spr.getInstanceId();
+        UUID instanceId = spr.getInstanceId();
 
         // ---
 

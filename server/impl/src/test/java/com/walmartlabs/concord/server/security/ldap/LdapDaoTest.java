@@ -6,10 +6,7 @@ import com.walmartlabs.concord.server.user.RoleDao;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,9 +34,13 @@ public class LdapDaoTest extends AbstractDaoTest {
 
         // ---
 
-        ldapDao.insert("mappingA", "testA", Arrays.asList("a", "b"));
-        ldapDao.insert("mappingB", "testB", Arrays.asList("b", "c"));
-        ldapDao.insert("mappingC", "testC", Arrays.asList("b", "c", "d"));
+        UUID mappingA = UUID.randomUUID();
+        UUID mappingB = UUID.randomUUID();
+        UUID mappingC = UUID.randomUUID();
+
+        ldapDao.insert(mappingA, "testA", Arrays.asList("a", "b"));
+        ldapDao.insert(mappingB, "testB", Arrays.asList("b", "c"));
+        ldapDao.insert(mappingC, "testC", Arrays.asList("b", "c", "d"));
 
         // ---
 
@@ -63,7 +64,7 @@ public class LdapDaoTest extends AbstractDaoTest {
 
         // ---
 
-        ldapDao.delete("mappingB");
+        ldapDao.delete(mappingB);
         l = ldapDao.list();
         assertEquals(3, l.size()); // our 2 + 1 default
     }

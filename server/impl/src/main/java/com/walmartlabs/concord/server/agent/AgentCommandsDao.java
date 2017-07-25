@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 import static org.jooq.impl.DSL.currentTimestamp;
@@ -29,7 +30,7 @@ public class AgentCommandsDao extends AbstractDao {
         this.objectMapper = new ObjectMapper();
     }
 
-    public void insert(String commandId, String agentId, Map<String, Object> data) {
+    public void insert(UUID commandId, String agentId, Map<String, Object> data) {
         tx(tx -> tx.insertInto(AGENT_COMMANDS)
                 .columns(AGENT_COMMANDS.COMMAND_ID, AGENT_COMMANDS.AGENT_ID,
                         AGENT_COMMANDS.COMMAND_STATUS, AGENT_COMMANDS.CREATED_AT,
@@ -66,7 +67,7 @@ public class AgentCommandsDao extends AbstractDao {
     }
 
     private AgentCommand convert(AgentCommandsRecord r) {
-        String commandId = r.getCommandId();
+        UUID commandId = r.getCommandId();
         String agentId = r.getAgentId();
         Date createdAt = r.getCreatedAt();
         Status status = Status.SENT;

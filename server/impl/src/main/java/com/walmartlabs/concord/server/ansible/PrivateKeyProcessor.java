@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.UUID;
 
 @Named
 public class PrivateKeyProcessor implements PayloadProcessor {
@@ -40,7 +41,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
         Map<String, Object> ansibleCfg = (Map<String, Object>) cfg.get(AnsibleConfigurationConstants.GROUP_KEY);

@@ -38,7 +38,7 @@ public class FormResourceImpl implements FormResource, Resource {
 
     @Override
     @Validate
-    public List<FormListEntry> list(String processInstanceId) {
+    public List<FormListEntry> list(UUID processInstanceId) {
         try {
             return formService.list(processInstanceId);
         } catch (ExecutionException e) {
@@ -50,7 +50,7 @@ public class FormResourceImpl implements FormResource, Resource {
     @Validate
     @WithTimer
     @SuppressWarnings("unchecked")
-    public FormInstanceEntry get(String processInstanceId, String formInstanceId) {
+    public FormInstanceEntry get(UUID processInstanceId, String formInstanceId) {
         Form form = formService.get(processInstanceId, formInstanceId);
         if (form == null) {
             throw new WebApplicationException("Form not found: " + formInstanceId, Status.NOT_FOUND);
@@ -121,7 +121,7 @@ public class FormResourceImpl implements FormResource, Resource {
     @Override
     @Validate
     @WithTimer
-    public FormSubmitResponse submit(String processInstanceId, String formInstanceId, Map<String, Object> data) {
+    public FormSubmitResponse submit(UUID processInstanceId, String formInstanceId, Map<String, Object> data) {
         Form form = formService.get(processInstanceId, formInstanceId);
         try {
             data = FormUtils.convert(validatorLocale, form, data);
@@ -138,7 +138,7 @@ public class FormResourceImpl implements FormResource, Resource {
         }
 
         Map<String, String> errors = mergeErrors(result.getErrors());
-        return new FormSubmitResponse(result.getProcessBusinessKey(), errors);
+        return new FormSubmitResponse(UUID.fromString(result.getProcessBusinessKey()), errors);
     }
 
     private static Map<String, String> mergeErrors(List<ValidationError> errors) {

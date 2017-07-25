@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.zip.ZipInputStream;
 
 @Named
@@ -59,7 +60,7 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
         String s = (String) req.get(Constants.Request.TEMPLATE_KEY);
@@ -79,7 +80,7 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
         }
     }
 
-    private URI getUri(String instanceId, String template) throws URISyntaxException {
+    private URI getUri(UUID instanceId, String template) throws URISyntaxException {
         try {
             return new URL(template).toURI();
         } catch (MalformedURLException e) {
@@ -95,7 +96,7 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
     }
 
     private Payload process(Payload payload, Path template) throws IOException {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload
@@ -118,7 +119,7 @@ public class ExternalTemplateProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> processMeta(String instanceId, Map meta, Path templateMeta) throws IOException {
+    private Map<String, Object> processMeta(UUID instanceId, Map meta, Path templateMeta) throws IOException {
         Object result;
         try (Reader r = new FileReader(templateMeta.toFile())) {
             Bindings b = scriptEngine.createBindings();

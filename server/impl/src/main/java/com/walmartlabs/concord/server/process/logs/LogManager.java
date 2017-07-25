@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @Named
 @Singleton
@@ -29,31 +30,31 @@ public class LogManager {
         this.logsDao = logsDao;
     }
 
-    public void debug(String instanceId, String log, Object... args) {
+    public void debug(UUID instanceId, String log, Object... args) {
         log_(instanceId, LogLevel.DEBUG, log, args);
     }
 
-    public void info(String instanceId, String log, Object... args) {
+    public void info(UUID instanceId, String log, Object... args) {
         log_(instanceId, LogLevel.INFO, log, args);
     }
 
-    public void warn(String instanceId, String log, Object... args) {
+    public void warn(UUID instanceId, String log, Object... args) {
         log_(instanceId, LogLevel.WARN, log, args);
     }
 
-    public void error(String instanceId, String log, Object... args) {
+    public void error(UUID instanceId, String log, Object... args) {
         log_(instanceId, LogLevel.ERROR, log, args);
     }
 
-    public void log(String instanceId, String msg) throws IOException {
+    public void log(UUID instanceId, String msg) throws IOException {
         log(instanceId, msg.getBytes());
     }
 
-    public void log(String instanceId, byte[] msg) throws IOException {
+    public void log(UUID instanceId, byte[] msg) throws IOException {
         logsDao.append(instanceId, msg);
     }
 
-    private void log_(String instanceId, LogLevel level, String msg, Object... args) {
+    private void log_(UUID instanceId, LogLevel level, String msg, Object... args) {
         try {
             log(instanceId, formatMessage(level, msg, args));
         } catch (IOException e) {

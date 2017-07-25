@@ -8,6 +8,7 @@ import org.sonatype.siesta.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.UUID;
 
 @Named
 public class ProcessEventResourceImpl implements ProcessEventResource, Resource {
@@ -20,7 +21,7 @@ public class ProcessEventResourceImpl implements ProcessEventResource, Resource 
     }
 
     @Override
-    public List<ProcessEventEntry> list(String processInstanceId) {
+    public List<ProcessEventEntry> list(UUID processInstanceId) {
         return eventDao.list(processInstanceId);
     }
 }

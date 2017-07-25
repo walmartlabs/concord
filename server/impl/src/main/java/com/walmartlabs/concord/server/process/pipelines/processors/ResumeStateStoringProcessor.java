@@ -11,6 +11,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 @Named
 public class ResumeStateStoringProcessor implements PayloadProcessor {
@@ -26,7 +27,7 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
 
         String eventName = payload.getHeader(Payload.RESUME_EVENT_NAME);
         if (eventName == null) {

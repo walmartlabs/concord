@@ -3,19 +3,20 @@ package com.walmartlabs.concord.server.security;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 public class UserPrincipal implements Serializable {
 
     private final String realm;
-    private final String id;
+    private final UUID id;
     private final String username;
     private final LdapInfo ldapInfo;
 
-    public UserPrincipal(String realm, String id, String username) {
+    public UserPrincipal(String realm, UUID id, String username) {
         this(realm, id, username, null);
     }
 
-    public UserPrincipal(String realm, String id, String username, LdapInfo ldapInfo) {
+    public UserPrincipal(String realm, UUID id, String username, LdapInfo ldapInfo) {
         this.realm = realm;
         this.id = id;
         this.username = username;
@@ -26,7 +27,7 @@ public class UserPrincipal implements Serializable {
         return realm;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 

@@ -40,10 +40,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
@@ -81,12 +78,12 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @Validate
     @RequiresAuthentication
     @WithTimer
-    public FormSessionResponse startSession(String processInstanceId, String formInstanceId) {
+    public FormSessionResponse startSession(UUID processInstanceId, String formInstanceId) {
         // TODO locking
         Form form = assertForm(processInstanceId, formInstanceId);
 
         Path dst = cfg.getBaseDir()
-                .resolve(processInstanceId)
+                .resolve(processInstanceId.toString())
                 .resolve(formInstanceId);
 
         try {
@@ -121,7 +118,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     @Validate
     @RequiresAuthentication
     public Response continueSession(UriInfo uriInfo, HttpHeaders headers,
-                                    String processInstanceId, String formInstanceId,
+                                    UUID processInstanceId, String formInstanceId,
                                     MultivaluedMap<String, String> data) {
 
         // TODO locking
@@ -132,7 +129,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         boolean yield = opts != null && (boolean) opts.getOrDefault("yield", false);
 
         Path dst = cfg.getBaseDir()
-                .resolve(processInstanceId)
+                .resolve(processInstanceId.toString())
                 .resolve(formInstanceId);
 
         try {
@@ -191,7 +188,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return redirectToForm(uriInfo, headers, processInstanceId, formInstanceId);
     }
 
-    private Form assertForm(String processInstanceId, String formInstanceId) {
+    private Form assertForm(UUID processInstanceId, String formInstanceId) {
         Form form = formService.get(processInstanceId, formInstanceId);
         if (form == null) {
             log.warn("assertForm ['{}', '{}'] -> not found", processInstanceId, formInstanceId);
@@ -274,7 +271,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     }
 
     private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,
-                                           String processInstanceId, String formInstanceId) {
+                                           UUID processInstanceId, String formInstanceId) {
 
         String scheme = uriInfo.getBaseUri().getScheme();
 
@@ -301,7 +298,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                 .build();
     }
 
-    private static String formPath(String processInstanceId, String formInstanceId) {
+    private static String formPath(UUID processInstanceId, String formInstanceId) {
         return String.format(FORMS_PATH_PATTERN, processInstanceId, formInstanceId);
     }
 

@@ -18,10 +18,11 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public final class PayloadParser {
 
-    public static Payload parse(String instanceId, Path baseDir, MultipartInput input) throws IOException {
+    public static Payload parse(UUID instanceId, Path baseDir, MultipartInput input) throws IOException {
         Map<String, Path> attachments = new HashMap<>();
         Map<String, Object> req = new HashMap<>();
 

@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Routines.processLogNextRange;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOGS;
@@ -25,14 +26,14 @@ public class ProcessLogsDao extends AbstractDao {
         super(cfg);
     }
 
-    public void append(String instanceId, byte[] data) {
+    public void append(UUID instanceId, byte[] data) {
         tx(tx -> tx.insertInto(PROCESS_LOGS)
                 .columns(PROCESS_LOGS.INSTANCE_ID, PROCESS_LOGS.CHUNK_RANGE, PROCESS_LOGS.CHUNK_DATA)
                 .values(value(instanceId), processLogNextRange(instanceId, data.length), value(data))
                 .execute());
     }
 
-    public ProcessLog get(String instanceId, Integer start, Integer end) {
+    public ProcessLog get(UUID instanceId, Integer start, Integer end) {
         try (DSLContext tx = DSL.using(cfg)) {
             List<ProcessLogChunk> chunks = getChunks(tx, instanceId, start, end);
 
@@ -46,7 +47,7 @@ public class ProcessLogsDao extends AbstractDao {
         }
     }
 
-    private List<ProcessLogChunk> getChunks(DSLContext tx, String instanceId, Integer start, Integer end) {
+    private List<ProcessLogChunk> getChunks(DSLContext tx, UUID instanceId, Integer start, Integer end) {
         String lowerBoundExpr = "lower(" + PROCESS_LOGS.CHUNK_RANGE + ")";
 
         if (start == null && end == null) {

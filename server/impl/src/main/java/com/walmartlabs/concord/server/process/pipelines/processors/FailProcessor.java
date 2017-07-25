@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.UUID;
 
 @Named
 public class FailProcessor implements ExceptionProcessor {
@@ -21,7 +22,7 @@ public class FailProcessor implements ExceptionProcessor {
     @Override
     @WithTimer
     public void process(Payload payload, Exception e) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
         queueDao.update(instanceId, ProcessStatus.FAILED);
     }
 }

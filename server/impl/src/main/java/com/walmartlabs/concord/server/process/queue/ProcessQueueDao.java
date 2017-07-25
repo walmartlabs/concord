@@ -12,6 +12,7 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.currentTimestamp;
@@ -25,7 +26,7 @@ public class ProcessQueueDao extends AbstractDao {
         super(cfg);
     }
 
-    public void insertInitial(String instanceId, String projectName, String initiator) {
+    public void insertInitial(UUID instanceId, String projectName, String initiator) {
         tx(tx -> tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
                         PROCESS_QUEUE.PROJECT_NAME,
@@ -42,7 +43,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute());
     }
 
-    public void update(String instanceId, String agentId, ProcessStatus status) {
+    public void update(UUID instanceId, String agentId, ProcessStatus status) {
         tx(tx -> {
             int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
@@ -57,7 +58,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public void update(String instanceId, ProcessStatus status) {
+    public void update(UUID instanceId, ProcessStatus status) {
         tx(tx -> {
             int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
@@ -71,7 +72,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean update(String instanceId, ProcessStatus expected, ProcessStatus status) {
+    public boolean update(UUID instanceId, ProcessStatus expected, ProcessStatus status) {
         return txResult(tx -> {
             int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
@@ -84,7 +85,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public ProcessEntry get(String instanceId) {
+    public ProcessEntry get(UUID instanceId) {
         DSLContext tx = DSL.using(cfg);
 
         ProcessQueueRecord r = tx.selectFrom(PROCESS_QUEUE)

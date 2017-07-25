@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <!-- USER.USER_ID -->
+
+    <changeSet id="31000" author="ibodrov@gmail.com">
+        <dropForeignKeyConstraint baseTableName="API_KEYS" constraintName="FK_API_KEY_USER"/>
+    </changeSet>
+
+    <changeSet id="31010" author="ibodrov@gmail.com">
+        <modifyDataType tableName="API_KEYS" columnName="USER_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <changeSet id="31020" author="ibodrov@gmail.com">
+        <dropForeignKeyConstraint baseTableName="USER_PERMISSIONS" constraintName="FK_PERMISSIONS_USER"/>
+    </changeSet>
+
+    <changeSet id="31030" author="ibodrov@gmail.com">
+        <modifyDataType tableName="USER_PERMISSIONS" columnName="USER_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <changeSet id="31040" author="ibodrov@gmail.com">
+        <modifyDataType tableName="USERS" columnName="USER_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <changeSet id="31050" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_API_KEY_USER"
+                                 baseTableName="API_KEYS" baseColumnNames="USER_ID"
+                                 referencedTableName="USERS" referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="31060" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_PERMISSIONS_USER"
+                                 baseTableName="USER_PERMISSIONS" baseColumnNames="USER_ID"
+                                 referencedTableName="USERS" referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- API_KEY.KEY_ID -->
+
+    <changeSet id="31070" author="ibodrov@gmail.com">
+        <modifyDataType tableName="API_KEYS" columnName="KEY_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <!-- LDAP_GROUP_MAPPINGS.MAPPING_ID -->
+
+    <changeSet id="31080" author="ibodrov@gmail.com">
+        <modifyDataType tableName="LDAP_GROUP_MAPPINGS" columnName="MAPPING_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <changeSet id="31090" author="ibodrov@gmail.com">
+        <modifyDataType tableName="LDAP_GROUP_ROLES" columnName="MAPPING_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <changeSet id="31100" author="ibodrov@gmail.com">
+        <sql>
+            DELETE FROM LDAP_GROUP_ROLES R WHERE NOT EXISTS (SELECT * FROM LDAP_GROUP_MAPPINGS M WHERE M.MAPPING_ID = R.MAPPING_ID)
+        </sql>
+    </changeSet>
+
+    <changeSet id="31110" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint constraintName="FK_LDAP_G_R_MAPPING"
+                                 baseTableName="LDAP_GROUP_ROLES" baseColumnNames="MAPPING_ID"
+                                 referencedTableName="LDAP_GROUP_MAPPINGS" referencedColumnNames="MAPPING_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- PROCESS_QUEUE.INSTANCE_ID -->
+
+    <changeSet id="31120" author="ibodrov@gmail.com">
+        <modifyDataType tableName="PROCESS_QUEUE" columnName="INSTANCE_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <!-- PROCESS_STATE.INSTANCE_ID -->
+
+    <changeSet id="31130" author="ibodrov@gmail.com">
+        <modifyDataType tableName="PROCESS_STATE" columnName="INSTANCE_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <!-- AGENT_COMMANDS.COMMAND_ID -->
+
+    <changeSet id="31140" author="ibodrov@gmail.com">
+        <modifyDataType tableName="AGENT_COMMANDS" columnName="COMMAND_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <!-- PROCESS_EVENTS.INSTANCE_ID -->
+
+    <changeSet id="31150" author="ibodrov@gmail.com">
+        <modifyDataType tableName="PROCESS_EVENTS" columnName="INSTANCE_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <!-- PROCESS_LOGS.INSTANCE_ID -->
+
+    <changeSet id="31160" author="ibodrov@gmail.com">
+        <dropView viewName="V_PROCESS_LOGS_UPPER_BOUNDS"/>
+    </changeSet>
+
+    <changeSet id="31170" author="ibodrov@gmail.com">
+        <dropView viewName="V_PROCESS_LOGS_SIZE"/>
+    </changeSet>
+
+    <changeSet id="31180" author="ibodrov@gmail.com">
+        <modifyDataType tableName="PROCESS_LOGS" columnName="INSTANCE_ID" newDataType="uuid"/>
+    </changeSet>
+
+    <changeSet id="31190" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_LOGS_UPPER_BOUNDS">
+            select
+                INSTANCE_ID,
+                coalesce(max(upper(CHUNK_RANGE)), 0) as UPPER_BOUND
+            from PROCESS_LOGS
+            group by INSTANCE_ID
+        </createView>
+    </changeSet>
+
+    <changeSet id="31200" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_LOGS_SIZE">
+            select
+                INSTANCE_ID,
+                max(upper(CHUNK_RANGE)) as SIZE
+            from PROCESS_LOGS
+            group by INSTANCE_ID
+        </createView>
+    </changeSet>
+
+    <changeSet id="31210" author="ibodrov@gmail.com">
+        <sql>
+            DROP FUNCTION PROCESS_LOG_NEXT_RANGE(PROC_ID varchar, DATA_LEN int)
+        </sql>
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_NEXT_RANGE(PROC_ID uuid, DATA_LEN int)
+            returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(UPPER_BOUND, 0) into R_START
+                from V_PROCESS_LOGS_UPPER_BOUNDS where INSTANCE_ID = PROC_ID;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START, R_START + DATA_LEN);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+
+    <changeSet id="31220" author="ibodrov@gmail.com">
+        <sql>
+            DROP FUNCTION PROCESS_LOG_LAST_N_BYTES(PROC_ID varchar, DATA_LEN int)
+        </sql>
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_LAST_N_BYTES(PROC_ID uuid, DATA_LEN int)
+            returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(UPPER_BOUND, 0) into R_START
+                from V_PROCESS_LOGS_UPPER_BOUNDS where INSTANCE_ID = PROC_ID;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START - DATA_LEN, R_START);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+</databaseChangeLog>

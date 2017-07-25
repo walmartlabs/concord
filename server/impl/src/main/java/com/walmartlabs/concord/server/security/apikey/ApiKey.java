@@ -5,6 +5,8 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
 
+import java.util.UUID;
+
 public class ApiKey implements AuthenticationToken {
 
     public static String getCurrentKey() {
@@ -24,15 +26,15 @@ public class ApiKey implements AuthenticationToken {
         return k.getKey();
     }
 
-    private final String userId;
+    private final UUID userId;
     private final String key;
 
-    public ApiKey(String userId, String key) {
+    public ApiKey(UUID userId, String key) {
         this.userId = userId;
         this.key = key;
     }
 
-    public String getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 
@@ -48,5 +50,13 @@ public class ApiKey implements AuthenticationToken {
     @Override
     public Object getCredentials() {
         return getKey();
+    }
+
+    @Override
+    public String toString() {
+        return "ApiKey{" +
+                "userId=" + userId +
+                ", key='" + key + '\'' +
+                '}';
     }
 }

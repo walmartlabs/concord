@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -61,17 +62,17 @@ public class ProcessStateManager extends AbstractDao {
     /**
      * Fetches a single value specified by its path and applies a converter function.
      */
-    public <T> Optional<T> get(String instanceId, String path, Function<InputStream, Optional<T>> converter) {
+    public <T> Optional<T> get(UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx.select(PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((String) null)
+                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
                             .and(PROCESS_STATE.ITEM_PATH.eq((String) null)))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, instanceId);
+                    ps.setObject(1, instanceId);
                     ps.setString(2, path);
 
                     try (ResultSet rs = ps.executeQuery()) {
@@ -92,17 +93,17 @@ public class ProcessStateManager extends AbstractDao {
      * Fetches multiple values whose path begins with the specified value and applies a converter function
      * to each value.
      */
-    public <T> List<T> list(String instanceId, String path, Function<InputStream, Optional<T>> converter) {
+    public <T> List<T> list(UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx.select(PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((String) null)
+                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
                             .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, instanceId);
+                    ps.setObject(1, instanceId);
                     ps.setString(2, path);
 
                     List<T> result = new ArrayList<>();
@@ -125,7 +126,7 @@ public class ProcessStateManager extends AbstractDao {
     /**
      * Find all item paths that starts with the specified value.
      */
-    public <T> Optional<T> findPath(String instanceId, String path, Function<Stream<String>, Optional<T>> converter) {
+    public <T> Optional<T> findPath(UUID instanceId, String path, Function<Stream<String>, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
             Stream<String> s = tx.select(PROCESS_STATE.ITEM_PATH)
                     .from(PROCESS_STATE)
@@ -141,7 +142,7 @@ public class ProcessStateManager extends AbstractDao {
     /**
      * Checks is a value exists.
      */
-    public boolean exists(String instanceId, String path) {
+    public boolean exists(UUID instanceId, String path) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.fetchExists(tx.selectFrom(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
@@ -154,7 +155,7 @@ public class ProcessStateManager extends AbstractDao {
      *
      * @return {@code true} if values were found and removed.
      */
-    public boolean delete(DSLContext tx, String instanceId) {
+    public boolean delete(DSLContext tx, UUID instanceId) {
         int rows = tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId))
                 .execute();
@@ -167,11 +168,11 @@ public class ProcessStateManager extends AbstractDao {
      *
      * @returns {@code true} if a value was found and removed.
      */
-    public boolean delete(String instanceId, String path) {
+    public boolean delete(UUID instanceId, String path) {
         return transactionResult(tx -> delete(tx, instanceId, path));
     }
 
-    public boolean delete(DSLContext tx, String instanceId, String path) {
+    public boolean delete(DSLContext tx, UUID instanceId, String path) {
         int rows = tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId))
                 .and(PROCESS_STATE.ITEM_PATH.startsWith(path))
@@ -188,7 +189,7 @@ public class ProcessStateManager extends AbstractDao {
      * @param path       target path prefix
      * @param src        source directory or a file
      */
-    public void importPath(DSLContext tx, String instanceId, String path, Path src) {
+    public void importPath(DSLContext tx, UUID instanceId, String path, Path src) {
         importPath(tx, instanceId, path, src, f -> true);
     }
 
@@ -201,7 +202,7 @@ public class ProcessStateManager extends AbstractDao {
      * @param src        source directory or a file
      * @param filter     filter function
      */
-    public void importPath(DSLContext tx, String instanceId, Path src, Function<Path, Boolean> filter) {
+    public void importPath(DSLContext tx, UUID instanceId, Path src, Function<Path, Boolean> filter) {
         importPath(tx, instanceId, null, src, filter);
     }
 
@@ -215,12 +216,12 @@ public class ProcessStateManager extends AbstractDao {
      * @param src        source directory or a file
      * @param filter     filter function
      */
-    public void importPath(DSLContext tx, String instanceId, String path, Path src, Function<Path, Boolean> filter) {
+    public void importPath(DSLContext tx, UUID instanceId, String path, Path src, Function<Path, Boolean> filter) {
         String prefix = fixPath(path);
 
         String sql = tx.insertInto(PROCESS_STATE)
                 .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
-                .values((String) null, null, null)
+                .values((UUID) null, null, null)
                 .getSQL();
 
         tx.connection(conn -> {
@@ -240,7 +241,7 @@ public class ProcessStateManager extends AbstractDao {
                         }
 
                         try {
-                            ps.setString(1, instanceId);
+                            ps.setObject(1, instanceId);
                             ps.setString(2, n);
                             try (InputStream in = Files.newInputStream(file)) {
                                 ps.setBinaryStream(3, in);
@@ -266,17 +267,17 @@ public class ProcessStateManager extends AbstractDao {
      * @param consumer   a function that receives the name of a file and a data stream
      * @return {@code true} if at least a single element was exported.
      */
-    public boolean export(String instanceId, BiConsumer<String, InputStream> consumer) {
+    public boolean export(UUID instanceId, BiConsumer<String, InputStream> consumer) {
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx
                     .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((String) null))
+                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, instanceId);
+                    ps.setObject(1, instanceId);
 
                     boolean found = false;
                     try (ResultSet rs = ps.executeQuery()) {
@@ -304,20 +305,20 @@ public class ProcessStateManager extends AbstractDao {
      * @param consumer   a function that receives the name of a file and a data stream
      * @return {@code true} if at least a single element was exported.
      */
-    public boolean exportDirectory(String instanceId, String path, BiConsumer<String, InputStream> consumer) {
+    public boolean exportDirectory(UUID instanceId, String path, BiConsumer<String, InputStream> consumer) {
         String dir = fixPath(path);
 
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx
                     .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((String) null)
+                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
                             .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, instanceId);
+                    ps.setObject(1, instanceId);
                     ps.setString(2, dir);
 
                     boolean found = false;

@@ -5,6 +5,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.security.SecureRandom;
+import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
@@ -15,7 +16,7 @@ public class ApiKeyDaoTest extends AbstractDaoTest {
     @Test
     public void testDefaultAdminToken() throws Exception {
         ApiKeyDao m = new ApiKeyDao(getConfiguration(), mock(SecureRandom.class));
-        String id = m.findUserId("auBy4eDWrKWsyhiDp3AQiw");
+        UUID id = m.findUserId("auBy4eDWrKWsyhiDp3AQiw");
         assertNotNull(id);
     }
 }

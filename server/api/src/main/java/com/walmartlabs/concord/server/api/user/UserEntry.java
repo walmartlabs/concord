@@ -7,16 +7,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
 public class UserEntry implements Serializable {
 
-    private final String id;
+    private final UUID id;
     private final String name;
     private final Set<String> permissions;
 
     @JsonCreator
-    public UserEntry(@JsonProperty("id") String id,
+    public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
                      @JsonProperty("permissions") Set<String> permissions) {
         this.id = id;
@@ -25,7 +26,7 @@ public class UserEntry implements Serializable {
         this.permissions = permissions;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -35,5 +36,14 @@ public class UserEntry implements Serializable {
 
     public Set<String> getPermissions() {
         return permissions;
+    }
+
+    @Override
+    public String toString() {
+        return "UserEntry{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", permissions=" + permissions +
+                '}';
     }
 }

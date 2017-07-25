@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Base64.Encoder;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ApiKeys.API_KEYS;
 
@@ -35,22 +36,22 @@ public class ApiKeyDao extends AbstractDao {
         return e.encodeToString(ab);
     }
 
-    public void insert(String id, String userId, String key) {
+    public void insert(UUID id, UUID userId, String key) {
         tx(tx -> tx.insertInto(API_KEYS)
                 .columns(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.API_KEY)
                 .values(id, userId, hash(key))
                 .execute());
     }
 
-    public void delete(String id) {
+    public void delete(UUID id) {
         tx(tx -> tx.deleteFrom(API_KEYS)
                 .where(API_KEYS.KEY_ID.eq(id))
                 .execute());
     }
 
-    public String findUserId(String key) {
+    public UUID findUserId(String key) {
         try (DSLContext tx = DSL.using(cfg)) {
-            String id = tx.select(API_KEYS.USER_ID)
+            UUID id = tx.select(API_KEYS.USER_ID)
                     .from(API_KEYS)
                     .where(API_KEYS.API_KEY.eq(hash(key)))
                     .fetchOne(API_KEYS.USER_ID);
@@ -63,7 +64,7 @@ public class ApiKeyDao extends AbstractDao {
         }
     }
 
-    public boolean existsById(String id) {
+    public boolean existsById(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
             int cnt = tx.fetchCount(tx.selectFrom(API_KEYS)
                     .where(API_KEYS.KEY_ID.eq(id)));

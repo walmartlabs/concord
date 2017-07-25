@@ -13,6 +13,7 @@ import io.grpc.stub.StreamObserver;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Optional;
+import java.util.UUID;
 
 @Named
 public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStoreServiceImplBase {
@@ -50,7 +51,7 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
     }
 
     private Optional<String> assertProjectName(String instanceId) {
-        ProcessEntry entry = queueDao.get(instanceId);
+        ProcessEntry entry = queueDao.get(UUID.fromString(instanceId));
         if (entry == null) {
             return Optional.empty();
         }

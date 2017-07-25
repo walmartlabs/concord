@@ -21,6 +21,7 @@ import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.UUID;
 
 @Named
 public class LdapRealm extends AbstractLdapRealm {
@@ -105,7 +106,7 @@ public class LdapRealm extends AbstractLdapRealm {
             throw new AuthenticationException("LDAP data not found: " + username);
         }
 
-        String id = userDao.getId(username);
+        UUID id = userDao.getId(username);
         UserPrincipal p = new UserPrincipal(REALM_NAME, id, username, ldapInfo);
 
         return new SimpleAccount(Arrays.asList(p, t), t, getName());

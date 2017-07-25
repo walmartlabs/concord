@@ -13,6 +13,7 @@ import io.grpc.stub.StreamObserver;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Date;
+import java.util.UUID;
 
 @Named
 public class EventServiceImpl extends TEventServiceGrpc.TEventServiceImplBase {
@@ -27,10 +28,11 @@ public class EventServiceImpl extends TEventServiceGrpc.TEventServiceImplBase {
     @Override
     @WithTimer
     public void onEvent(TEventRequest request, StreamObserver<Empty> responseObserver) {
+        UUID instanceId = UUID.fromString(request.getInstanceId());
         byte[] data = request.getData().toByteArray();
         Date eventDate = new Date(Timestamps.toMillis(request.getDate()));
 
-        eventDao.insert(request.getInstanceId(), convert(request.getType()), eventDate, new String(data));
+        eventDao.insert(instanceId, convert(request.getType()), eventDate, new String(data));
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();

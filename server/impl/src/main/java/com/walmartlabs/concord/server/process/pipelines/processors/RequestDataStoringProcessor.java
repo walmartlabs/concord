@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Stores payload's request data as a JSON file.
@@ -34,7 +35,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        String instanceId = payload.getInstanceId();
+        UUID instanceId = payload.getInstanceId();
 
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (cfg == null) {
