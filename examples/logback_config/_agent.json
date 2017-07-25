@@ -1,0 +1,3 @@
+{
+  "jvmArgs": ["-Dlogback.configurationFile=my_logback.xml"]
+}
