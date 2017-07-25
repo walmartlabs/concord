@@ -28,6 +28,8 @@ public final class AnsibleConstants {
 
     public static final String DEBUG_KEY = "debug";
 
+    public static final String DOCKER_IMAGE_KEY = "dockerImage";
+
     public static final String STATS_FILE_NAME = "ansible_stats.json";
 
     public static final String EXIT_CODE_KEY = "exitCode";
