@@ -1,10 +1,6 @@
-package com.walmartlabs.concord.it.server.docs;
+package com.walmartlabs.concord.it.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.it.server.AbstractServerIT;
-import com.walmartlabs.concord.it.server.GitUtils;
-import com.walmartlabs.concord.it.server.ITConstants;
-import com.walmartlabs.concord.it.server.MockGitSshServer;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;

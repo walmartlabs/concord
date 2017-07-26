@@ -5,7 +5,13 @@
 ### Added
 
 - project-model: support for in/out variables and `error` blocks for
-process calls.
+process calls (aka the full form of `CallActivity`);
+- ansible-tasks: a `JavaDelegate` version of the task. Allows use of
+IN/OUT variables.
+
+### Changed
+
+- concord-server: use the native PostgreSQL UUID type.
 
 
 

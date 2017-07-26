@@ -1,7 +1,5 @@
-package com.walmartlabs.concord.it.server.docs;
+package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.it.server.AbstractServerIT;
-import com.walmartlabs.concord.it.server.ITConstants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
