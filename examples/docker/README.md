@@ -15,13 +15,13 @@ or
 
 ```
 rm -rf target && mkdir target
-cp -R playbook processes _main.json ansible.cfg inventory.ini target/
+cp -R playbook ansible.cfg inventory.ini .concord.yml target/
 ```
 
 2. Archive the payload:
 
 ```
-cd target && zip -r payload.zip ./*
+cd target && zip -r payload.zip ./* ./.concord.yml
 ```
 
 3. Send the payload to the server:
