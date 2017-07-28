@@ -1,33 +1,36 @@
 package com.walmartlabs.concord.runner.engine;
 
+import com.google.inject.Injector;
 import com.walmartlabs.concord.common.DynamicTaskRegistry;
 import com.walmartlabs.concord.common.Task;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Named
 @Singleton
-public class DynamicTaskRegistryImpl implements DynamicTaskRegistry {
+public class DynamicTaskRegistryImpl extends AbstractTaskRegistry implements DynamicTaskRegistry {
 
-    private final Map<String, Task> tasks = new ConcurrentHashMap<>();
+    private final Injector injector;
 
-    @Override
-    public Task getByKey(String key) {
-        return tasks.get(key);
+    @Inject
+    public DynamicTaskRegistryImpl(
+            Injector injector) {
+        this.injector = injector;
     }
 
     @Override
-    public void register(Task task) {
-        Named n = task.getClass().getAnnotation(Named.class);
+    public Task getByKey(String key) {
+        return get(key, injector);
+    }
+
+    public void register(Class<? extends Task> taskClass) {
+        Named n = taskClass.getAnnotation(Named.class);
         if (n == null) {
             throw new IllegalArgumentException("Tasks must be annotated with @Named");
         }
 
-        if (tasks.putIfAbsent(n.value(), task) != null) {
-            throw new IllegalArgumentException("Non-unique task name: " + n.value());
-        }
+        register(n.value(), taskClass);
     }
 }

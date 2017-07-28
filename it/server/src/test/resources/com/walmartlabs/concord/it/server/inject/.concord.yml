@@ -1,0 +1,12 @@
+flows:
+  main:
+  - ${example.hello("myName")}
+
+  - set:
+      myName: "world"
+  - ${example.helloButLouder()}
+
+variables:
+  entryPoint: main
+  arguments:
+    myName: "Concord"

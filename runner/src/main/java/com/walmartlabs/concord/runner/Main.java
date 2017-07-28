@@ -1,14 +1,17 @@
 package com.walmartlabs.concord.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
+import com.google.inject.*;
+import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
+import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.api.Event;
 import io.takari.bpm.api.EventService;
@@ -222,10 +225,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         try {
-            ClassLoader cl = Main.class.getClassLoader();
-            Module m = new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.CACHE));
-            Injector injector = Guice.createInjector(m);
-
+            Injector injector = createInjector();
             Main main = injector.getInstance(Main.class);
             main.run();
 
@@ -234,6 +234,47 @@ public class Main {
         } catch (Throwable e) {
             log.error("main -> unhandled exception", e);
             System.exit(1);
+        }
+    }
+
+    private static Injector createInjector() {
+        ClassLoader cl = Main.class.getClassLoader();
+        Module m = new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.CACHE));
+
+        // TODO: find a way to inject task classes directly
+        Module tasks = new AbstractModule() {
+            @Override
+            protected void configure() {
+                bindListener(new SubClassesOf(Task.class), new TaskClassesListener());
+            }
+        };
+
+        return Guice.createInjector(tasks, m);
+    }
+
+    private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {
+
+        private final Class<?> baseClass;
+
+        private SubClassesOf(Class<?> baseClass) {
+            this.baseClass = baseClass;
+        }
+
+        @Override
+        public boolean matches(TypeLiteral<?> t) {
+            return baseClass.isAssignableFrom(t.getRawType());
+        }
+    }
+
+    private static class TaskClassesListener implements TypeListener {
+        @SuppressWarnings("unchecked")
+        public <T> void hear(TypeLiteral<T> typeLiteral, TypeEncounter<T> typeEncounter) {
+            Class<?> clazz = typeLiteral.getRawType();
+            Named n = clazz.getAnnotation(Named.class);
+            if (n != null) {
+                TaskClassHolder h = TaskClassHolder.getInstance();
+                h.register(n.value(), (Class<? extends Task>) clazz);
+            }
         }
     }
 }

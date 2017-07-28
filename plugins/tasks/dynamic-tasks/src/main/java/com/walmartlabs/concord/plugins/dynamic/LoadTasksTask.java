@@ -3,8 +3,6 @@ package com.walmartlabs.concord.plugins.dynamic;
 import com.walmartlabs.concord.common.DynamicTaskRegistry;
 import com.walmartlabs.concord.common.Task;
 import groovy.lang.GroovyClassLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -14,8 +12,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 @Named("loadTasks")
 public class LoadTasksTask implements Task {
-
-    private static final Logger log = LoggerFactory.getLogger(LoadTasksTask.class);
 
     private final DynamicTaskRegistry taskRegistry;
     private final GroovyClassLoader classLoader;
@@ -43,7 +39,6 @@ public class LoadTasksTask implements Task {
     }
 
     private void register(Class c) throws Exception {
-        taskRegistry.register((Task) c.newInstance());
-        log.info("register ['{}'] -> done", c);
+        taskRegistry.register(c);
     }
 }

@@ -21,3 +21,4 @@ flow-typed/
 npm-debug.log
 jmeter.log
 package-lock.json
+dependency-reduced-pom.xml

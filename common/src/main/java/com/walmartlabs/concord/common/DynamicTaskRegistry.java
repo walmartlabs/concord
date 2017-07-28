@@ -4,5 +4,5 @@ public interface DynamicTaskRegistry {
 
     Task getByKey(String key);
 
-    void register(Task task);
+    void register(Class<? extends Task> c);
 }

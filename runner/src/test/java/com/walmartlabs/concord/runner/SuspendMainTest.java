@@ -1,7 +1,9 @@
 package com.walmartlabs.concord.runner;
 
+import com.google.inject.Injector;
 import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 import org.junit.Test;
 
 import javax.inject.Named;
@@ -18,8 +20,12 @@ public class SuspendMainTest extends AbstractMainTest {
     public void test() throws Exception {
         TestBean testBean = spy(new TestBean());
 
+        Injector injector = mock(Injector.class);
+        when(injector.getInstance(eq(TestBean.class))).thenReturn(testBean);
+        TaskClassHolder.getInstance().register("testBean", TestBean.class);
+
         String instanceId = UUID.randomUUID().toString();
-        Main main = createMain(instanceId, "suspend", testBean);
+        Main main = createMain(injector, instanceId, "suspend");
         main.run();
 
         // ---

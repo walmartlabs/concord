@@ -13,6 +13,11 @@ public final class Constants {
     public static final class Context {
 
         /**
+         * Execution context.
+         */
+        public static final String CONTEXT_KEY = "execution";
+
+        /**
          * Process definition attribute: path to a local directory, containing agent's payload
          *
          * @see #WORK_DIR_KEY

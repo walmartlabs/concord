@@ -1,9 +1,11 @@
 package com.walmartlabs.concord.runner;
 
+import com.google.inject.Injector;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
 import com.walmartlabs.concord.runner.engine.RpcClient;
+import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.model.*;
 import org.junit.Test;
@@ -22,8 +24,8 @@ public class SuspendTest {
     @Test
     public void test() throws Exception {
         Path baseDir = Files.createTempDirectory("test");
-
-        NamedTaskRegistry taskRegistry = new NamedTaskRegistry();
+        Injector injector = mock(Injector.class);
+        NamedTaskRegistry taskRegistry = new NamedTaskRegistry(injector, null);
         ProjectDefinition project = project(new ProcessDefinition("test",
                 new StartEvent("start"),
                 new SequenceFlow("f1", "start", "ev1"),

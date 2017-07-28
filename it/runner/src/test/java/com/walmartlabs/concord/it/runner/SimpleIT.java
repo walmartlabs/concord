@@ -18,6 +18,8 @@ public class SimpleIT extends AbstractRunnerIT {
 
         byte[] ab = readLog(proc);
 
+        System.out.println(new String(ab));
+
         int code = proc.waitFor();
         assertEquals(0, code);
 

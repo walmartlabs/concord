@@ -50,7 +50,7 @@ public final class YamlProcessConverter {
                 out = Collections.singleton(new VariableMapping(ServiceTask.EXPRESSION_RESULT_VAR, null, outVar));
             }
 
-            proc = sourceMap(proc.task(expr.getExpr(), null, out), s, "Expression");
+            proc = sourceMap(proc.task(expr.getExpr(), null, out, true), s, "Expression");
 
             return applyErrorBlock(proc, expr.getOptions(), joinName(s));
         } else if (s instanceof YamlTaskStep) {
@@ -60,14 +60,14 @@ public final class YamlProcessConverter {
             Set<VariableMapping> out = getOutVars(task.getOptions());
 
             String expr = "${" + task.getKey() + "}";
-            proc = sourceMap(proc.task(ExpressionType.DELEGATE, expr, in, out), s, "Task");
+            proc = sourceMap(proc.task(ExpressionType.DELEGATE, expr, in, out, true), s, "Task");
 
             return applyErrorBlock(proc, task.getOptions(), joinName(s));
         } else if (s instanceof YamlTaskShortStep) {
             YamlTaskShortStep task = (YamlTaskShortStep) s;
 
             ELCall call = createELCall(task.getKey(), task.getArg());
-            return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args, null), s, "Task");
+            return sourceMap(proc.task(ExpressionType.SIMPLE, call.expression, call.args, null, true), s, "Task");
         } else if (s instanceof YamlIfExpr) {
             // ... --> exclusiveGate ---> expr --> thenSteps+ ---> end
             //                      \                            /
@@ -140,9 +140,9 @@ public final class YamlProcessConverter {
             YamlScript c = (YamlScript) s;
             switch (c.getType()) {
                 case CONTENT:
-                    return sourceMap(proc.script(c.getType(), c.getLanguage(), c.getBody()), s, "Script");
+                    return sourceMap(proc.script(c.getType(), c.getLanguage(), c.getBody(), true), s, "Script");
                 case REFERENCE:
-                    return sourceMap(proc.script(c.getType(), null, c.getBody()), s, "External script");
+                    return sourceMap(proc.script(c.getType(), null, c.getBody(), true), s, "External script");
                 default:
                     throw new YamlConverterException("Unsupported script task type: " + c.getType());
             }

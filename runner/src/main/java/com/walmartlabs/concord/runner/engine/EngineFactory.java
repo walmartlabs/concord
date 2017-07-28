@@ -3,6 +3,8 @@ package com.walmartlabs.concord.runner.engine;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.runner.engine.el.InjectPropertiesELResolver;
+import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
 import io.takari.bpm.Configuration;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
@@ -16,6 +18,7 @@ import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.resource.ResourceResolver;
+import io.takari.bpm.task.ServiceTaskResolver;
 import io.takari.bpm.task.UserTaskHandler;
 
 import javax.inject.Inject;
@@ -59,7 +62,10 @@ public class EngineFactory {
             throw new RuntimeException(e);
         }
 
-        ExpressionManager expressionManager = new DefaultExpressionManager(taskRegistry);
+        ExpressionManager expressionManager = new DefaultExpressionManager(
+                new ServiceTaskResolver(taskRegistry),
+                new InjectPropertiesELResolver(),
+                new InjectVariableELResolver());
 
         EventStorage eventStorage = new FileEventStorage(eventsDir);
         PersistenceManager persistenceManager = new FilePersistenceManager(instancesDir);
