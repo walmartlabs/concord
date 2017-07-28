@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-runner: `@InjectVariable` annotation can now be used to
+inject process context variables as task fields or method arguments.
+
+
+
 ## [0.31.0] - 2017-07-25
 
 ### Added
