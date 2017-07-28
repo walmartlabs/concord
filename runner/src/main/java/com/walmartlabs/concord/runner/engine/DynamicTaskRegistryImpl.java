@@ -15,8 +15,7 @@ public class DynamicTaskRegistryImpl extends AbstractTaskRegistry implements Dyn
     private final Injector injector;
 
     @Inject
-    public DynamicTaskRegistryImpl(
-            Injector injector) {
+    public DynamicTaskRegistryImpl(Injector injector) {
         this.injector = injector;
     }
 
