@@ -20,6 +20,7 @@ walmartlabs/concord-server
 docker run -d \
 --privileged \
 --name dind \
+-v /tmp:/tmp \
 --network=host \
 docker.prod.walmart.com/walmartlabs/concord-dind
 
@@ -32,5 +33,7 @@ walmartlabs/concord-agent
 
 docker run -d \
 --name console \
+-e 'SERVER_ADDR=localhost' \
+-e 'SERVER_PORT=8001' \
 --network=host \
 walmartlabs/concord-console

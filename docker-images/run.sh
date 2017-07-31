@@ -19,12 +19,14 @@ docker.prod.walmart.com/walmartlabs/concord-server
 docker run -d \
 --privileged \
 --name dind \
+-v /tmp/tmp \
 docker.prod.walmart.com/walmartlabs/concord-dind
 
 docker run -d \
 --name agent \
 --link dind \
 --link server \
+-v /tmp:/tmp \
 docker.prod.walmart.com/walmartlabs/concord-agent
 
 docker run -d \
