@@ -4,15 +4,13 @@ import {reduxForm} from "redux-form";
 import {Dimmer, Form, Grid, Image, Loader, Message, Segment} from "semantic-ui-react";
 import {Field} from "../shared/forms";
 import * as actions from "./actions";
-import reducers from "./reducers";
-import * as selectors from "./reducers";
+import reducers, * as selectors from "./reducers";
 import sagas from "./sagas";
 
 const isThere = (x) => x !== undefined && x !== null;
 
 let loginForm = (props) => {
-    const {error, loading, handleSubmit} = props;
-
+    const {apiError, loading, handleSubmit} = props;
     return <Grid centered verticalAlign="middle" className="maxHeight">
         <Grid.Column width="4" textAlign="left">
             <Segment>
@@ -23,12 +21,12 @@ let loginForm = (props) => {
                     <Loader/>
                 </Dimmer>
 
-                <Form error={isThere(error)} onSubmit={handleSubmit}>
+                <Form error={isThere(apiError)} onSubmit={handleSubmit}>
 
                     <Field name="username" label="Username" icon="user" required/>
                     <Field name="password" label="Password" type="password" icon="lock" required/>
 
-                    <Message error content={error}/>
+                    <Message error content={apiError}/>
                     <Form.Button primary fluid>Login</Form.Button>
                 </Form>
             </Segment>
@@ -39,7 +37,7 @@ let loginForm = (props) => {
 loginForm = reduxForm({form: "login"})(loginForm);
 
 const mapStateToProps = ({login}) => ({
-    error: selectors.getError(login),
+    apiError: selectors.getError(login),
     loading: selectors.isSubmitting(login)
 });
 
