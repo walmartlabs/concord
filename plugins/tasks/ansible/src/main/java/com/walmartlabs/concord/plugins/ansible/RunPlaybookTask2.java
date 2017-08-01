@@ -53,7 +53,10 @@ public class RunPlaybookTask2 implements Task, JavaDelegate {
 
         Path vaultPasswordPath = getVaultPasswordFilePath(args, workDir, tmpDir);
 
-        Path privateKeyPath = workDir.relativize(getPrivateKeyPath(workDir));
+        Path privateKeyPath = getPrivateKeyPath(workDir);
+        if (privateKeyPath != null) {
+            privateKeyPath = workDir.relativize(privateKeyPath);
+        }
 
         PlaybookProcessBuilder b = pb.build(playbook, inventoryPath.toString())
                 .withAttachmentsDir(toString(attachmentsPath))

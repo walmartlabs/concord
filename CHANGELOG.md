@@ -7,6 +7,10 @@
 - concord-runner: `@InjectVariable` annotation can now be used to
 inject process context variables as task fields or method arguments.
 
+### Changed
+
+- ansible: fixed potential NPE.
+
 
 
 ## [0.31.0] - 2017-07-25
