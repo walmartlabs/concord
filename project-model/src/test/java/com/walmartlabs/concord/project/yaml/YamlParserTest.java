@@ -11,6 +11,7 @@ import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.model.ProcessDefinition;
+import io.takari.bpm.model.ProcessDefinitionHelper;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
@@ -287,8 +288,7 @@ public class YamlParserTest {
 
         // start -> task -> subprocess -> task -> end
         assertEquals(9, pd.getChildren().size());
-        // subprocess:
-        // start -> task -> task -> end
+        // subprocess: start -> task -> task -> end
         assertEquals(7, findSubprocess(pd).getChildren().size());
 
         TestBean testBean = spy(new TestBean());
@@ -426,7 +426,7 @@ public class YamlParserTest {
         ProcessDefinition pd = workflowProvider.processes().getById("main");
 
         //           /------------------->\
-        // start -> gw -> callactiviti -> end
+        // start -> gw -> callactivity -> end
         assertEquals(8, pd.getChildren().size());
 
         int loops = 100;
@@ -1254,6 +1254,24 @@ public class YamlParserTest {
         verify(testBean, times(1)).toString(eq(103L));
         verify(testBean, times(1)).toString(eq(104L));
         verify(testBean, times(1)).toString(eq("handled!"));
+    }
+
+    @Test
+    public void test037() throws Exception {
+        deploy("037.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("1"));
+        verify(testBean, times(1)).toString(eq("3"));
     }
 
     // FORMS (100 - 199)

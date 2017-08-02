@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- project-model: more robust yml-to-bpmn converter.
+
+
+
 ## [0.32.0] - 2017-08-01
 
 ### Added

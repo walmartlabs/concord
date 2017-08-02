@@ -1,0 +1,11 @@
+main:
+- ${testBean.toString("1")}
+- if: ${false}
+  then:
+  - ${testBean.toString("2")}
+  else:
+  - ::
+    - ${testBean.throwBpmnError("kaboom!")}
+    error:
+    - ${testBean.toString("3")}
+
