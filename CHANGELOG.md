@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-server: add Jolokia agent;
 - project-model: more robust yml-to-bpmn converter.
 
 

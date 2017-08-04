@@ -57,6 +57,8 @@ public class LdapRealm extends AbstractLdapRealm {
 
         setCachingEnabled(false);
 
+        setAuthenticationTokenClass(UsernamePasswordToken.class);
+
         setCredentialsMatcher((token, info) -> {
             SimpleAccount a = (SimpleAccount) info;
 
