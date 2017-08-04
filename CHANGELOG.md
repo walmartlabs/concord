@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
-### Changed
+### Added
 
 - concord-server: add Jolokia agent;
+
+### Changed
+
+- concord-server: normalize LDAP usernames;
 - project-model: more robust yml-to-bpmn converter.
 
 

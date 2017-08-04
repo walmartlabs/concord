@@ -103,6 +103,8 @@ public class LdapRealm extends AbstractLdapRealm {
             LdapUtils.closeContext(ctx);
         }
 
+        username = normalizeUsername(username);
+
         LdapInfo ldapInfo = ldapManager.getInfo(username);
         if (ldapInfo == null) {
             throw new AuthenticationException("LDAP data not found: " + username);
@@ -126,5 +128,18 @@ public class LdapRealm extends AbstractLdapRealm {
         Collection<String> roles = new HashSet<>();
         roles.addAll(ldapDao.getRoles(i.getGroups()));
         return authorizer.getAuthorizationInfo(u, roles);
+    }
+
+    private static final String normalizeUsername(String s) {
+        if (s == null) {
+            return s;
+        }
+
+        int i = s.indexOf("@");
+        if (i < 0) {
+            return s;
+        }
+
+        return s.substring(0, i);
     }
 }
