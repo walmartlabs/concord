@@ -5,7 +5,7 @@ main:
 
   - if: ${kv.getString(testKey) == null}
     then:
-      - log: "abc"
+      - log: "abc123"
 
   - ${kv.putString(testKey, "world")}
   - log: "Hello, ${kv.getString(testKey)}"

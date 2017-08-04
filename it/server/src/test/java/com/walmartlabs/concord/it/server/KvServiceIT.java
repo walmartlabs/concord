@@ -29,7 +29,7 @@ public class KvServiceIT extends AbstractServerIT {
 
         byte[] ab = test("main", testKey);
         assertLog(".*x=[0-9]+.*", ab);
-        assertLog(".*abc.*", ab);
+        assertLog(".*abc123.*", ab);
         assertLog(".*Hello, world.*", ab);
 
         // ---

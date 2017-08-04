@@ -8,6 +8,7 @@
 
 ### Changed
 
+- concord-agent: slightly improved startup time of process JVMs;
 - concord-server: normalize LDAP usernames;
 - project-model: more robust yml-to-bpmn converter.
 

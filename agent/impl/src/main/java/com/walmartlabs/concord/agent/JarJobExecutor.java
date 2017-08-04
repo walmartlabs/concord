@@ -19,6 +19,7 @@ public class JarJobExecutor implements JobExecutor {
     private static final Logger log = LoggerFactory.getLogger(JarJobExecutor.class);
 
     private static final Collection<String> DEFAULT_JVM_ARGS = Arrays.asList(
+            "-noverify",
             "-Xmx128m",
             "-Djavax.el.varArgs=true",
             "-Djava.security.egd=file:/dev/./urandom",
