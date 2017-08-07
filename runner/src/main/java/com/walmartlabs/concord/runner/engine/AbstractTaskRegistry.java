@@ -34,6 +34,6 @@ public abstract class AbstractTaskRegistry {
         if (tasks.putIfAbsent(name, taskClass) != null) {
             throw new IllegalArgumentException("Non-unique task name: " + name);
         }
-        log.info("register ['{}'] -> done", name);
+        log.debug("register ['{}'] -> done", name);
     }
 }

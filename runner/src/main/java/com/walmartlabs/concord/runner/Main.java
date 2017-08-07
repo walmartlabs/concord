@@ -53,6 +53,7 @@ public class Main {
 
         // determine current working directory, it should contain the payload
         Path baseDir = Paths.get(System.getProperty("user.dir"));
+        log.info("run -> working directory: {}", baseDir.toAbsolutePath());
 
         String eventName = readResumeEvent(baseDir);
         if (eventName == null) {
