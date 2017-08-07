@@ -1,2 +1,0 @@
-main:
-- expr: ${log.info("test", "Hello, ".concat(name))}
