@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-runner: use copyAllCallActivityOutVariables to prevent
+losing subprocess variables when events are used;
 - concord-agent: slightly improved startup time of process JVMs;
 - concord-server: normalize LDAP usernames;
 - project-model: more robust yml-to-bpmn converter.

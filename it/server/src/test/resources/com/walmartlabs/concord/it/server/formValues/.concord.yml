@@ -1,0 +1,16 @@
+flows:
+  main:
+  - sub
+
+  sub:
+  - set:
+      message: "Hello"
+  - form: myForm
+  - log: "${message}, ${myForm.name}"
+
+forms:
+  myForm:
+  - name: {type: "string"}
+
+variables:
+  entryPoint: main

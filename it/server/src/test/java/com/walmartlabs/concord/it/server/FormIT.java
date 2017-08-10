@@ -73,4 +73,37 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*100323.*", ab);
         assertLog(".*red.*", ab);
     }
+
+    @Test(timeout = 30000)
+    public void testValues() throws Exception {
+        byte[] payload = archive(FormIT.class.getResource("formValues").toURI());
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+
+        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+
+        // ---
+
+        FormResource formResource = proxy(FormResource.class);
+
+        List<FormListEntry> forms = formResource.list(spr.getInstanceId());
+
+        FormListEntry f0 = forms.get(0);
+        String formId = f0.getFormInstanceId();
+
+        Map<String, Object> data = Collections.singletonMap("name", "Concord");
+        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);
+        assertTrue(fsr.isOk());
+
+        // ---
+
+        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, psr.getStatus());
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*Hello, Concord.*", ab);
+    }
 }

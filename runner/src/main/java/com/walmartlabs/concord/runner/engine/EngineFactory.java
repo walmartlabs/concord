@@ -85,6 +85,7 @@ public class EngineFactory {
         Configuration cfg = new Configuration();
         cfg.setInterpolateInputVariables(true);
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
+        cfg.setCopyAllCallActivityOutVariables(true);
 
         Engine result = new EngineBuilder()
                 .withExpressionManager(expressionManager)
