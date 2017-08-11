@@ -13,6 +13,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 import java.util.zip.ZipInputStream;
 
@@ -46,7 +47,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         try (ZipInputStream zip = new ZipInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
-            IOUtils.unzip(zip, workspace);
+            IOUtils.unzip(zip, workspace, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             logManager.error(instanceId, "Error while unpacking an archive: " + archive, e);
             throw new ProcessException(instanceId, "Error while unpacking an archive: " + archive, e);

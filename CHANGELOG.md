@@ -5,6 +5,7 @@
 ### Added
 
 - concord-server: support for `shared` folders for custom forms;
+- concord-server: process files should overwrite template files;
 - ansible: static and dynamic inventory files can now be specified
 using `inventoryFile` and `dynamicInventoryFile` task parameters.
 

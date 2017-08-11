@@ -1,12 +1,12 @@
 package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.security.secret.Secret;
@@ -19,6 +19,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -96,8 +97,9 @@ public class RepositoryProcessor implements PayloadProcessor {
             } else {
                 src = repositoryManager.fetch(projectName, repo.getUrl(), branch, secret);
             }
+
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
-            IOUtils.copy(src, dst);
+            IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | RepositoryException e) {
             log.error("process ['{}'] -> repository error", instanceId, e);
             logManager.error(instanceId, "Error while pulling a repository: " + repo.getUrl(), e);

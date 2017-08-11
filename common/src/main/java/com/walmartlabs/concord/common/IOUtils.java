@@ -65,10 +65,18 @@ public final class IOUtils {
         });
     }
 
-    public static void unzip(ZipInputStream in, Path targetDir) throws IOException {
+    public static void unzip(ZipInputStream in, Path targetDir, OpenOption... options) throws IOException {
+        unzip(in, targetDir, false, options);
+    }
+
+    public static void unzip(ZipInputStream in, Path targetDir, boolean skipExisting, OpenOption... options) throws IOException {
         ZipEntry e;
         while ((e = in.getNextEntry()) != null) {
             Path p = targetDir.resolve(e.getName());
+            if (skipExisting && Files.exists(p)) {
+                continue;
+            }
+
             if (e.isDirectory()) {
                 Files.createDirectories(p);
             } else {
@@ -77,7 +85,7 @@ public final class IOUtils {
                     Files.createDirectories(parent);
                 }
 
-                try (OutputStream out = Files.newOutputStream(p)) {
+                try (OutputStream out = Files.newOutputStream(p, options)) {
                     copy(in, out);
                 }
             }

@@ -10,7 +10,7 @@ import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.TemplateAliasEntry;
 import com.walmartlabs.concord.server.api.project.TemplateAliasResource;
-import com.walmartlabs.concord.server.process.pipelines.processors.ExternalTemplateProcessor;
+import com.walmartlabs.concord.server.process.pipelines.processors.TemplateScriptProcessor;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class TemplateIT extends AbstractServerIT {
     private static Path createTemplate() throws IOException {
         Path tmpDir = Files.createTempDirectory("template");
 
-        Path metaPath = tmpDir.resolve(ExternalTemplateProcessor.REQUEST_DATA_TEMPLATE_FILE_NAME);
+        Path metaPath = tmpDir.resolve(TemplateScriptProcessor.REQUEST_DATA_TEMPLATE_FILE_NAME);
         Files.write(metaPath, META_JS.getBytes());
 
         Path processesPath = tmpDir.resolve(Constants.Files.DEFINITIONS_DIR_NAME);
