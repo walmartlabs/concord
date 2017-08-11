@@ -41,7 +41,7 @@ public class RunPlaybookTask2 implements Task, JavaDelegate {
         if (playbook == null || playbook.trim().isEmpty()) {
             throw new IllegalArgumentException("Missing '" + AnsibleConstants.PLAYBOOK_KEY + "' parameter");
         }
-        log.info("Using the playbook: {}", playbook);
+        log.info("Using a playbook: {}", playbook);
 
         Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
         Path cfgFile = workDir.relativize(createCfgFile(tmpDir, makeCfg(cfg, ""), debug));
@@ -159,24 +159,44 @@ public class RunPlaybookTask2 implements Task, JavaDelegate {
         if (v instanceof Map) {
             Path p = createInventoryFile(tmpDir, (Map<String, Object>) v);
             updateDynamicInventoryPermissions(p);
+            log.info("Using an inline inventory");
             return p;
         }
 
         // try a static inventory file
-        Path p = workDir.resolve(AnsibleConstants.INVENTORY_FILE_NAME);
-        if (!Files.exists(p)) {
-            // try a dynamic inventory script
-            p = workDir.resolve(AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME);
-            if (!Files.exists(p)) {
-                // we can't continue without an inventory
-                throw new IOException("Inventory file not found: " + p.toAbsolutePath());
-            }
-
-            updateDynamicInventoryPermissions(p);
-            log.debug("getInventoryPath ['{}'] -> dynamic inventory", workDir);
+        v = args.get(AnsibleConstants.INVENTORY_FILE_KEY);
+        if (v != null) {
+            Path p = workDir.resolve(v.toString());
+            log.info("Using a static inventory file: {}", p);
+            return p;
         }
 
-        return p;
+        // try an "old school" inventory file
+        Path p = workDir.resolve(AnsibleConstants.INVENTORY_FILE_NAME);
+        if (Files.exists(p)) {
+            log.info("Using a static inventory file uploaded separately: {}", p);
+            return p;
+        }
+
+        // try a dynamic inventory script
+        v = args.get(AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
+        if (v != null) {
+            p = workDir.resolve(v.toString());
+            updateDynamicInventoryPermissions(p);
+            log.info("Using a dynamic inventory script: {}", p);
+            return p;
+        }
+
+        // try an "old school" dynamic inventory script
+        p = workDir.resolve(AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME);
+        if (Files.exists(p)) {
+            updateDynamicInventoryPermissions(p);
+            log.info("Using a dynamic inventory script uploaded separately: {}", p);
+            return p;
+        }
+
+        // we can't continue without an inventory
+        throw new IOException("Inventory file not found: " + p.toAbsolutePath());
     }
 
     private static Map<String, Object> makeCfg(Map<String, Object> cfg, String baseDir) {

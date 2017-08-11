@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- ansible: static and dynamic inventory files can now be specified
+using `inventoryFile` and `dynamicInventoryFile` task parameters.
+
+
+
 ## [0.33.0] - 2017-08-10
 
 ### Added
