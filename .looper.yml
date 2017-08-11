@@ -34,9 +34,9 @@ flows:
   cleanup:
     - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
 
-  default (on linux):
+  default:
     - call: build_and_deploy
     - call: runsonar
 
-  pr (on linux):
+  pr:
     - call: build
