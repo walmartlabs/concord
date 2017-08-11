@@ -48,6 +48,17 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.c
 public class CustomFormServiceImpl implements CustomFormService, Resource {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormServiceImpl.class);
+
+    public static final String FORMS_PATH_PREFIX = "/forms/";
+
+    private static final String FORM_DIR_NAME = "form";
+    private static final String SHARED_DIR_NAME = "shared";
+    private static final String FORMS_PATH_TEMPLATE = FORMS_PATH_PREFIX + "%s/%s/" + FORM_DIR_NAME;
+    private static final String DATA_FILE_TEMPLATE = "data = %s;";
+
+    private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s?fullScreen=true&wizard=true";
+    private static final String FORM_WIZARD_CONTINUE_URL_TEMPLATE = "/api/service/custom_form/%s/%s/continue";
+
     private static final long STATUS_REFRESH_DELAY = 250;
 
     private final FormServerConfiguration cfg;
@@ -87,24 +98,26 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                 .resolve(formInstanceId);
 
         try {
-            if (!Files.exists(dst)) {
-                Files.createDirectories(dst);
+            Path formDir = dst.resolve(FORM_DIR_NAME);
+            if (!Files.exists(formDir)) {
+                Files.createDirectories(formDir);
             }
 
-            // TODO constants
-            String resource = "forms/" + form.getFormDefinition().getName();
+            String resource = ConcordFormService.FORMS_RESOURCES_PATH + "/" + form.getFormDefinition().getName();
             // copy original branding files into the target directory
-            boolean branded = stateManager.exportDirectory(processInstanceId, resource, copyTo(dst));
+            boolean branded = stateManager.exportDirectory(processInstanceId, resource, copyTo(formDir));
             if (!branded) {
                 // not branded, redirect to the default wizard
-                // TODO constants
-                String uri = "/#/process/" + processInstanceId + "/form/" + formInstanceId + "?fullScreen=true&wizard=true";
+                String uri = String.format(NON_BRANDED_FORM_URL_TEMPLATE, processInstanceId, formInstanceId);
                 return new FormSessionResponse(uri);
             }
 
             // create JS file containing the form's data
             FormData d = prepareData(form, null, null);
-            writeData(dst, d);
+            writeData(formDir, d);
+
+            // copy shared resources (if present)
+            copySharedResources(processInstanceId, formInstanceId, dst);
         } catch (IOException e) {
             log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}",
                     processInstanceId, formInstanceId, e);
@@ -132,6 +145,8 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                 .resolve(processInstanceId.toString())
                 .resolve(formInstanceId);
 
+        Path formDir = dst.resolve(FORM_DIR_NAME);
+
         try {
             Map<String, Object> m = new HashMap<>();
             try {
@@ -142,7 +157,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                     if (yield) {
                         // this was the last "interactive" form. The process will continue in "background"
                         // and users should get a success page.
-                        writeData(dst, success(form, m, r.getErrors()));
+                        writeData(formDir, success(form, m, r.getErrors()));
                     } else {
                         while (true) {
                             ProcessEntry entry = queueDao.get(processInstanceId);
@@ -151,17 +166,17 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                             if (s == ProcessStatus.SUSPENDED) {
                                 String nextFormId = formService.nextFormId(processInstanceId);
                                 if (nextFormId == null) {
-                                    writeData(dst, success(form, m, r.getErrors()));
+                                    writeData(formDir, success(form, m, r.getErrors()));
                                     break;
                                 } else {
                                     FormSessionResponse nextSession = startSession(processInstanceId, nextFormId);
                                     return redirectTo(nextSession.getUri());
                                 }
                             } else if (s == ProcessStatus.FAILED) {
-                                writeData(dst, processFailed(form, m, r.getErrors()));
+                                writeData(formDir, processFailed(form, m, r.getErrors()));
                                 break;
                             } else if (s == ProcessStatus.FINISHED) {
-                                writeData(dst, success(form, m, r.getErrors()));
+                                writeData(formDir, success(form, m, r.getErrors()));
                                 break;
                             }
 
@@ -174,12 +189,12 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                         }
                     }
                 } else {
-                    writeData(dst, prepareData(form, m, r.getErrors()));
+                    writeData(formDir, prepareData(form, m, r.getErrors()));
                 }
             } catch (ValidationException e) {
                 ValidationError err = new ValidationError(e.getField().getName(), e.getMessage());
                 FormData d = prepareData(form, m, Collections.singletonList(err));
-                writeData(dst, d);
+                writeData(formDir, d);
             }
         } catch (IOException | ExecutionException e) {
             throw new WebApplicationException("Error while submitting a form", e);
@@ -217,7 +232,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         String processInstanceId = form.getProcessBusinessKey();
         String formInstanceId = form.getFormInstanceId().toString();
 
-        String submitUrl = "/api/service/custom_form/" + processInstanceId + "/" + formInstanceId + "/continue";
+        String submitUrl = String.format(FORM_WIZARD_CONTINUE_URL_TEMPLATE, processInstanceId, formInstanceId);
 
         // TODO merge with FormResourceImpl
         Map<String, FormDataDefinition> _definitions = new HashMap<>();
@@ -270,6 +285,28 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return new FormData(success, processFailed, submitUrl, _definitions, _values, _errors);
     }
 
+    private void writeData(Path baseDir, Object data) throws IOException {
+        Path dst = baseDir.resolve("data.js");
+
+        Path parent = dst.getParent();
+        if (!Files.exists(parent)) {
+            Files.createDirectories(parent);
+        }
+
+        String s = String.format(DATA_FILE_TEMPLATE, objectMapper.writeValueAsString(data));
+        Files.write(dst, s.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    private void copySharedResources(UUID processInstanceId, String formInstanceId, Path dst) throws IOException {
+        Path sharedDir = dst.resolve(SHARED_DIR_NAME);
+        if (!Files.exists(sharedDir)) {
+            Files.createDirectories(sharedDir);
+        }
+
+        String resource = ConcordFormService.FORMS_RESOURCES_PATH + "/" + SHARED_DIR_NAME;
+        stateManager.exportDirectory(processInstanceId, resource, copyTo(sharedDir));
+    }
+
     private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,
                                            UUID processInstanceId, String formInstanceId) {
 
@@ -299,19 +336,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
     }
 
     private static String formPath(UUID processInstanceId, String formInstanceId) {
-        return String.format(FORMS_PATH_PATTERN, processInstanceId, formInstanceId);
-    }
-
-    private void writeData(Path baseDir, Object data) throws IOException {
-        Path dst = baseDir.resolve("data.js");
-
-        Path parent = dst.getParent();
-        if (!Files.exists(parent)) {
-            Files.createDirectories(parent);
-        }
-
-        String s = String.format(DATA_FILE_TEMPLATE, objectMapper.writeValueAsString(data));
-        Files.write(dst, s.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        return String.format(FORMS_PATH_TEMPLATE, processInstanceId, formInstanceId);
     }
 
     @JsonInclude(Include.NON_EMPTY)

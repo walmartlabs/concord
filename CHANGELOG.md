@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: support for `shared` folders for custom forms;
 - ansible: static and dynamic inventory files can now be specified
 using `inventoryFile` and `dynamicInventoryFile` task parameters.
 

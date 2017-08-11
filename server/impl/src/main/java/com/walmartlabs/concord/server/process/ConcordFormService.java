@@ -26,6 +26,8 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.p
 @Singleton
 public class ConcordFormService {
 
+    public static final String FORMS_RESOURCES_PATH = "forms";
+
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final FormValidator validator;
@@ -70,8 +72,7 @@ public class ConcordFormService {
         return forms.stream().map(f -> {
             String name = f.getFormDefinition().getName();
 
-            // TODO constants
-            String s = "forms/" + f.getFormDefinition().getName();
+            String s = FORMS_RESOURCES_PATH + "/" + f.getFormDefinition().getName();
             boolean branding = stateManager.exists(processInstanceId, s);
 
             return new FormListEntry(f.getFormInstanceId().toString(), name, branding);
@@ -114,7 +115,7 @@ public class ConcordFormService {
 
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
-            m.put("arguments", args);
+            m.put(Constants.Request.ARGUMENTS_KEY, args);
             resume(UUID.fromString(f.getProcessBusinessKey()), f.getEventName(), m);
         };
 

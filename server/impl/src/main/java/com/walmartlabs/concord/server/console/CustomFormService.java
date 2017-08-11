@@ -9,10 +9,6 @@ import java.util.UUID;
 @Path("/api/service/custom_form")
 public interface CustomFormService {
 
-    String FORMS_PATH_PREFIX = "/forms/";
-    String FORMS_PATH_PATTERN = FORMS_PATH_PREFIX + "%s/%s/";
-    String DATA_FILE_TEMPLATE = "data = %s;";
-
     @POST
     @Path("{processInstanceId}/{formInstanceId}/start")
     @Produces(MediaType.APPLICATION_JSON)

@@ -33,7 +33,7 @@ public class FormServletConfigurer implements ServletConfigurer {
         h.setInitParameter("resourceBase", baseDir);
         h.setInitParameter("pathInfoOnly", "true");
         h.setInitParameter("redirectWelcome", "false");
-        servletHandler.addServlet(h, CustomFormService.FORMS_PATH_PREFIX + "*");
+        servletHandler.addServlet(h, CustomFormServiceImpl.FORMS_PATH_PREFIX + "*");
 
         log.info("Serving custom forms from {}", baseDir);
     }
