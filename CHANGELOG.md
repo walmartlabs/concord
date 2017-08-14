@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed an issue with custom forms and SSL.
+
+
+
 ## [0.34.0] - 2017-08-13
 
 ### Added

@@ -53,7 +53,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
     private static final String FORM_DIR_NAME = "form";
     private static final String SHARED_DIR_NAME = "shared";
-    private static final String FORMS_PATH_TEMPLATE = FORMS_PATH_PREFIX + "%s/%s/" + FORM_DIR_NAME;
+    private static final String FORMS_PATH_TEMPLATE = FORMS_PATH_PREFIX + "%s/%s/" + FORM_DIR_NAME + "/";
     private static final String DATA_FILE_TEMPLATE = "data = %s;";
 
     private static final String NON_BRANDED_FORM_URL_TEMPLATE = "/#/process/%s/form/%s?fullScreen=true&wizard=true";
