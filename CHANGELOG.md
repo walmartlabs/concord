@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent, concord-runner: keep a pool of JVM instances
+instead of starting a new one for each process.
+
+
+
 ## [0.34.1] - 2017-08-14
 
 ### Changed
