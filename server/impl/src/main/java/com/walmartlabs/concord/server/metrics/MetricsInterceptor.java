@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 
 public class MetricsInterceptor implements MethodInterceptor {
 
-    private static final String SHARED_PREFIX = "com.walmartlabs.concord";
+    private static final String SHARED_PREFIX = "com.walmartlabs.concord.";
 
     private final MetricRegistry metrics;
 
