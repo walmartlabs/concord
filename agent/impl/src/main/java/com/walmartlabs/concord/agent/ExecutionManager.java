@@ -16,8 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipInputStream;
 
@@ -47,10 +45,6 @@ public class ExecutionManager {
         this.jobExecutors = new HashMap<>();
 
         DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
-        ExecutorService executorService = Executors.newCachedThreadPool();
-
-//        jobExecutors.put(JobType.JAR, new JarJobExecutor(cfg, logManager, dependencyManager, executorService));
-//        jobExecutors.put(JobType.RUNNER, new RunnerJobExecutor(cfg, logManager, dependencyManager, executorService, client));
         jobExecutors.put(JobType.RUNNER, new DefaultJobExecutor(cfg, logManager, dependencyManager, client));
     }
 
