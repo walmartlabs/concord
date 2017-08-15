@@ -21,8 +21,6 @@ import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskResolver;
 import io.takari.bpm.task.UserTaskHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,8 +34,6 @@ import java.util.Map;
 
 @Named
 public class EngineFactory {
-
-    private static final Logger log = LoggerFactory.getLogger(EngineFactory.class);
 
     private final NamedTaskRegistry taskRegistry;
     private final RpcClient rpcClient;
@@ -63,8 +59,6 @@ public class EngineFactory {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        log.info("{}, directories have been created...", System.currentTimeMillis());
 
         ExpressionManager expressionManager = new DefaultExpressionManager(
                 new ServiceTaskResolver(taskRegistry),
