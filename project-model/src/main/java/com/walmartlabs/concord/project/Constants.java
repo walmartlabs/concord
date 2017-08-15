@@ -94,6 +94,8 @@ public final class Constants {
      */
     public static final class Files {
 
+        public static final String PAYLOAD_DIR_NAME = "payload";
+
         /**
          * Directory containing libraries (dependencies) of a payload.
          */
@@ -113,6 +115,8 @@ public final class Constants {
          * Directory containing process profiles.
          */
         public static final String PROFILES_DIR_NAME = "profiles";
+
+        public static final String INSTANCE_ID_FILE_NAME = "_instanceId";
 
         /**
          * File, containing request data of a payload: process arguments, entry point name, etc.

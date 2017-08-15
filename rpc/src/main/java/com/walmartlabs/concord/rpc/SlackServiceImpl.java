@@ -8,16 +8,14 @@ public class SlackServiceImpl implements SlackService {
 
     private static final long REQUEST_TIMEOUT = 5000;
 
-    private final String instanceId;
     private final ManagedChannel channel;
 
-    public SlackServiceImpl(String instanceId, ManagedChannel channel) {
-        this.instanceId = instanceId;
+    public SlackServiceImpl(ManagedChannel channel) {
         this.channel = channel;
     }
 
     @Override
-    public void notify(String channelId, String text) throws ClientException {
+    public void notify(String instanceId, String channelId, String text) throws ClientException {
         TSlackNotificationServiceGrpc.TSlackNotificationServiceBlockingStub blockingStub = TSlackNotificationServiceGrpc.newBlockingStub(channel)
                 .withDeadlineAfter(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
 

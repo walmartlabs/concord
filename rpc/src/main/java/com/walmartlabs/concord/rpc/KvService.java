@@ -6,11 +6,11 @@ package com.walmartlabs.concord.rpc;
  */
 public interface KvService {
 
-    void remove(String key) throws ClientException;
+    void remove(String instanceId, String key) throws ClientException;
 
-    void put(String key, String value) throws ClientException;
+    void put(String instanceId, String key, String value) throws ClientException;
 
-    String get(String key) throws ClientException;
+    String get(String instanceId, String key) throws ClientException;
 
-    long inc(String key) throws ClientException;
+    long inc(String instanceId, String key) throws ClientException;
 }

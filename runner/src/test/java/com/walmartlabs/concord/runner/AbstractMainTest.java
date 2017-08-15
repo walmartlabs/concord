@@ -5,7 +5,6 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
 import com.walmartlabs.concord.runner.engine.RpcClient;
-import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 
 import java.net.URI;
 import java.nio.file.Files;
@@ -20,12 +19,14 @@ public abstract class AbstractMainTest {
         NamedTaskRegistry taskRegistry = new NamedTaskRegistry(injector, null);
         EngineFactory engineFactory = new EngineFactory(taskRegistry, mock(RpcClient.class));
 
-        System.setProperty("instanceId", instanceId);
-
         URI baseDir = this.getClass().getResource(resource).toURI();
         Path tmpDir = Files.createTempDirectory("test");
         IOUtils.copy(Paths.get(baseDir), tmpDir);
         System.setProperty("user.dir", tmpDir.toString());
+
+        // TODO constants
+        Path idPath = tmpDir.resolve("_instanceId");
+        Files.write(idPath, instanceId.getBytes());
 
         return new Main(engineFactory);
     }

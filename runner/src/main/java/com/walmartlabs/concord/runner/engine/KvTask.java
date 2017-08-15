@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.runner.engine;
 
+import com.walmartlabs.concord.common.InjectVariable;
 import com.walmartlabs.concord.common.Task;
 
 import javax.inject.Inject;
@@ -15,19 +16,19 @@ public class KvTask implements Task {
         this.rpc = rpc;
     }
 
-    public void remove(String key) throws Exception {
-        rpc.getKvService().remove(key);
+    public void remove(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        rpc.getKvService().remove(instanceId, key);
     }
 
-    public void putString(String key, String value) throws Exception {
-        rpc.getKvService().put(key, value);
+    public void putString(@InjectVariable("txId") String instanceId, String key, String value) throws Exception {
+        rpc.getKvService().put(instanceId, key, value);
     }
 
-    public String getString(String key) throws Exception {
-        return rpc.getKvService().get(key);
+    public String getString(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        return rpc.getKvService().get(instanceId, key);
     }
 
-    public long inc(String key) throws Exception {
-        return rpc.getKvService().inc(key);
+    public long inc(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        return rpc.getKvService().inc(instanceId, key);
     }
 }

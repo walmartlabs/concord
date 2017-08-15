@@ -20,6 +20,7 @@ public class Configuration {
     public static final String DEPENDENCY_CACHE_DIR_KEY = "DEPS_CACHE_DIR";
     public static final String RUNNER_PATH = "RUNNER_PATH";
     public static final String WORKERS_COUNT_KEY = "WORKERS_COUNT";
+    public static final String MAX_PREFORK_AGE_KEY = "MAX_PREFORK_AGE";
 
     private final String agentId;
     private final String serverHost;
@@ -30,6 +31,7 @@ public class Configuration {
     private final Path dependencyCacheDir;
     private final Path runnerPath;
     private final int workersCount;
+    private final long maxPreforkAge;
 
     public Configuration() {
         this.agentId = UUID.randomUUID().toString();
@@ -53,6 +55,8 @@ public class Configuration {
             this.runnerPath = Paths.get(s);
 
             this.workersCount = Integer.parseInt(getEnv(WORKERS_COUNT_KEY, "2"));
+
+            this.maxPreforkAge = Long.parseLong(getEnv(MAX_PREFORK_AGE_KEY, "30000"));
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -92,6 +96,10 @@ public class Configuration {
 
     public int getWorkersCount() {
         return workersCount;
+    }
+
+    public long getMaxPreforkAge() {
+        return maxPreforkAge;
     }
 
     private static String getEnv(String key, String defaultValue) {

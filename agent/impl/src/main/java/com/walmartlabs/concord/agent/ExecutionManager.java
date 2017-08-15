@@ -49,8 +49,9 @@ public class ExecutionManager {
         DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
         ExecutorService executorService = Executors.newCachedThreadPool();
 
-        jobExecutors.put(JobType.JAR, new JarJobExecutor(cfg, logManager, dependencyManager, executorService));
-        jobExecutors.put(JobType.RUNNER, new RunnerJobExecutor(cfg, logManager, dependencyManager, executorService, client));
+//        jobExecutors.put(JobType.JAR, new JarJobExecutor(cfg, logManager, dependencyManager, executorService));
+//        jobExecutors.put(JobType.RUNNER, new RunnerJobExecutor(cfg, logManager, dependencyManager, executorService, client));
+        jobExecutors.put(JobType.RUNNER, new DefaultJobExecutor(cfg, logManager, dependencyManager, client));
     }
 
     public JobInstance start(String instanceId, JobType type, String entryPoint, InputStream payload) throws ExecutionException {

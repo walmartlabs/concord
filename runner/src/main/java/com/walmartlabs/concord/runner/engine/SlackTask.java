@@ -20,9 +20,9 @@ public class SlackTask implements Task {
         this.rpc = rpc;
     }
 
-    public void call(String channelId, String text) throws Exception {
+    public void call(String instanceId, String channelId, String text) throws Exception {
         try {
-            rpc.getSlackService().notify(channelId, text);
+            rpc.getSlackService().notify(instanceId, channelId, text);
             log.info("call ['{}', '{}'] -> done", channelId, text);
         } catch (Exception e) {
             log.error("call ['{}', '{}'] -> error", channelId, text, e);

@@ -11,6 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DependencyManager {
 
@@ -26,10 +29,12 @@ public class DependencyManager {
         }
     }
 
-    public void collectDependencies(Collection<String> urls, Path dstDir) throws IOException {
+    public Set<String> collectDependencies(Collection<String> urls, Path dstDir) throws IOException {
         if (urls == null || urls.isEmpty()) {
-            return;
+            return Collections.emptySet();
         }
+
+        Set<String> result = new HashSet<>();
 
         for (String s : urls) {
             URI uri = URI.create(s);
@@ -43,8 +48,12 @@ public class DependencyManager {
 
             Path payloadPath = dstDir.resolve(name);
             Files.createSymbolicLink(payloadPath, cachedPath);
+
+            result.add(name);
             continue;
         }
+
+        return result;
     }
 
     public Path resolve(URI uri) throws IOException {

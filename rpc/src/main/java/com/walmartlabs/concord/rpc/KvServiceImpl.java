@@ -9,16 +9,14 @@ public class KvServiceImpl implements KvService {
 
     private static final long UPDATE_TIMEOUT = 5000;
 
-    private final String instanceId;
     private final ManagedChannel channel;
 
-    public KvServiceImpl(String instanceId, ManagedChannel channel) {
-        this.instanceId = instanceId;
+    public KvServiceImpl(ManagedChannel channel) {
         this.channel = channel;
     }
 
     @Override
-    public void remove(String key) throws ClientException {
+    public void remove(String instanceId, String key) throws ClientException {
         TKvServiceBlockingStub blockingStub = TKvServiceGrpc.newBlockingStub(channel)
                 .withDeadlineAfter(UPDATE_TIMEOUT, TimeUnit.MILLISECONDS);
 
@@ -29,7 +27,7 @@ public class KvServiceImpl implements KvService {
     }
 
     @Override
-    public void put(String key, String value) throws ClientException {
+    public void put(String instanceId, String key, String value) throws ClientException {
         if (value == null) {
             throw new IllegalArgumentException("KV store: null values are not allowed. Got: " + key + " = " + value);
         }
@@ -47,7 +45,7 @@ public class KvServiceImpl implements KvService {
     }
 
     @Override
-    public String get(String key) throws ClientException {
+    public String get(String instanceId, String key) throws ClientException {
         TKvServiceBlockingStub blockingStub = TKvServiceGrpc.newBlockingStub(channel)
                 .withDeadlineAfter(UPDATE_TIMEOUT, TimeUnit.MILLISECONDS);
 
@@ -67,7 +65,7 @@ public class KvServiceImpl implements KvService {
     }
 
     @Override
-    public long inc(String key) throws ClientException {
+    public long inc(String instanceId, String key) throws ClientException {
         TKvServiceBlockingStub blockingStub = TKvServiceGrpc.newBlockingStub(channel)
                 .withDeadlineAfter(UPDATE_TIMEOUT, TimeUnit.MILLISECONDS);
 

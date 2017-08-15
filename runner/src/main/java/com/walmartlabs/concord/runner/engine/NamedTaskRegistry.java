@@ -3,13 +3,13 @@ package com.walmartlabs.concord.runner.engine;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.common.DynamicTaskRegistry;
 import io.takari.bpm.task.ServiceTaskRegistry;
+import org.eclipse.sisu.EagerSingleton;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 
 @Named
-@Singleton
+@EagerSingleton
 public class NamedTaskRegistry extends AbstractTaskRegistry implements ServiceTaskRegistry {
 
     private final DynamicTaskRegistry dynamicTasks;

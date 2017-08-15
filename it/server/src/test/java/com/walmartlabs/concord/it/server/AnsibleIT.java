@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AnsibleIT extends AbstractServerIT {
 
-    @Test
+    @Test(timeout = 30000)
     public void testHello() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansible").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);

@@ -2,6 +2,7 @@ package com.walmartlabs.concord.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -27,6 +28,54 @@ public final class Utils {
         } catch (IOException e) {
             throw new ExecutionException("Error while opening a JAR file: " + p, e);
         }
+    }
+
+    public static String createClassPath(String prefix, Collection<String> elements) {
+        if (elements == null || elements.isEmpty()) {
+            return null;
+        }
+
+        List<String> l = new ArrayList<>(elements);
+        Collections.sort(l);
+
+        StringBuilder b = new StringBuilder();
+
+        for (Iterator<String> i = l.iterator(); i.hasNext(); ) {
+            String e = i.next();
+            b.append(prefix).append(e);
+            if (i.hasNext()) {
+                b.append(":");
+            }
+        }
+
+        return b.toString();
+    }
+
+    public static boolean kill(Process proc) {
+        if (!proc.isAlive()) {
+            return false;
+        }
+
+        proc.destroy();
+
+        if (proc.isAlive()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+
+        while (proc.isAlive()) {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+            proc.destroyForcibly();
+        }
+
+        return true;
     }
 
     private Utils() {

@@ -15,17 +15,14 @@ public class EventServiceImpl implements EventService {
     private static final long REQUEST_TIMEOUT = 5000;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private final String instanceId;
     private final ManagedChannel channel;
 
-    public EventServiceImpl(String instanceId, ManagedChannel channel) {
-        this.instanceId = instanceId;
+    public EventServiceImpl(ManagedChannel channel) {
         this.channel = channel;
     }
 
     @Override
-    public void onEvent(Date date, EventType type, Serializable data) throws ClientException {
+    public void onEvent(String instanceId, Date date, EventType type, Serializable data) throws ClientException {
         byte[] jsonData;
         try {
             jsonData = objectMapper.writeValueAsBytes(data);

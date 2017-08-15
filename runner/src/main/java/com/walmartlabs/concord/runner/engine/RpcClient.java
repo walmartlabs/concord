@@ -12,11 +12,9 @@ public class RpcClient {
     private final RunnerApiClient client;
 
     public RpcClient() {
-        String instanceId = System.getProperty("instanceId");
         String host = System.getProperty("rpc.server.host", "localhost");
         int port = Integer.parseInt(System.getProperty("rpc.server.port", "8101"));
-
-        this.client = new RunnerApiClient(instanceId, host, port);
+        this.client = new RunnerApiClient(host, port);
     }
 
     public KvService getKvService() {

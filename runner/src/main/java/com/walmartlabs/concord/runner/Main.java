@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -34,11 +35,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Named
+@Singleton
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     private final EngineFactory engineFactory;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     public Main(EngineFactory engineFactory) {
@@ -46,14 +49,17 @@ public class Main {
     }
 
     public void run() throws Exception {
-        String instanceId = System.getProperty("instanceId");
-        if (instanceId == null) {
-            throw new IllegalArgumentException("Instance ID must be specified");
-        }
-
         // determine current working directory, it should contain the payload
         Path baseDir = Paths.get(System.getProperty("user.dir"));
         log.info("run -> working directory: {}", baseDir.toAbsolutePath());
+
+        // TODO constants
+        Path idPath = baseDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
+        while (!Files.exists(idPath)) {
+            // TODO replace with WatchService
+            Thread.sleep(100);
+        }
+        String instanceId = new String(Files.readAllBytes(idPath));
 
         String eventName = readResumeEvent(baseDir);
         if (eventName == null) {
@@ -147,12 +153,11 @@ public class Main {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> readRequest(Path baseDir) throws ExecutionException {
+    private Map<String, Object> readRequest(Path baseDir) throws ExecutionException {
         Path p = baseDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
 
         try (InputStream in = Files.newInputStream(p)) {
-            ObjectMapper om = new ObjectMapper();
-            return om.readValue(in, Map.class);
+            return objectMapper.readValue(in, Map.class);
         } catch (IOException e) {
             throw new ExecutionException("Error while reading request data", e);
         }

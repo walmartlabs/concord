@@ -11,16 +11,14 @@ public class SecretStoreServiceImpl implements SecretStoreService {
 
     private static final long UPDATE_TIMEOUT = 5000;
 
-    private final String instanceId;
     private final ManagedChannel channel;
 
-    public SecretStoreServiceImpl(String instanceId, ManagedChannel channel) {
-        this.instanceId = instanceId;
+    public SecretStoreServiceImpl(ManagedChannel channel) {
         this.channel = channel;
     }
 
     @Override
-    public String decryptString(String s) throws ClientException {
+    public String decryptString(String instanceId, String s) throws ClientException {
         byte[] input = DatatypeConverter.parseBase64Binary(s);
 
         TSecretStoreServiceBlockingStub blockingStub = TSecretStoreServiceGrpc.newBlockingStub(channel)

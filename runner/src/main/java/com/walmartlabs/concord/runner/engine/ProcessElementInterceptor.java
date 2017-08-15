@@ -49,8 +49,10 @@ public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
             return;
         }
 
+        String instanceId = ev.getProcessBusinessKey();
+
         try {
-            rpc.getEventService().onEvent(new Date(), EventType.PROCESS_ELEMENT, convert(ev, source));
+            rpc.getEventService().onEvent(instanceId, new Date(), EventType.PROCESS_ELEMENT, convert(ev, source));
         } catch (Exception e) {
             log.warn("onElement ['{}'] -> transfer error", ev.getProcessBusinessKey(), e);
         }

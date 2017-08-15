@@ -2,5 +2,5 @@ package com.walmartlabs.concord.rpc;
 
 public interface SecretStoreService {
 
-    String decryptString(String s) throws ClientException;
+    String decryptString(String instanceId, String s) throws ClientException;
 }
