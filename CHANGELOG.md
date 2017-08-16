@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-runner: upgrade the BPM engine version to 0.34. This add
+the support recursive value interpolation in `variables` or `in`
+blocks;
 - concord-agent, concord-runner: keep a pool of JVM instances
 instead of starting a new one for each process.
 

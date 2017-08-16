@@ -165,7 +165,7 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> createArgs(String instanceId, Path workDir, Map<String, Object> cfg) {
-        Map<String, Object> m = new HashMap<>();
+        Map<String, Object> m = new LinkedHashMap<>();
 
         // original arguments
         Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
