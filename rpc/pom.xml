@@ -14,7 +14,7 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <protoc.version>3.3.0</protoc.version>
+        <protoc.version>3.4.0</protoc.version>
     </properties>
 
     <dependencies>
