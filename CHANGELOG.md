@@ -10,6 +10,11 @@ blocks;
 - concord-agent, concord-runner: keep a pool of JVM instances
 instead of starting a new one for each process.
 
+## Changed
+
+- concord-server: preserve user input in `data.js` after a failed
+validation.
+
 
 
 ## [0.34.1] - 2017-08-14

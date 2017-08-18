@@ -113,8 +113,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
             }
 
             // create JS file containing the form's data
-            FormData d = prepareData(form, null, null);
-            writeData(formDir, d);
+            writeData(formDir, initialData(form));
 
             // copy shared resources (if present)
             copySharedResources(processInstanceId, formInstanceId, dst);
@@ -157,7 +156,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                     if (yield) {
                         // this was the last "interactive" form. The process will continue in "background"
                         // and users should get a success page.
-                        writeData(formDir, success(form, m, r.getErrors()));
+                        writeData(formDir, success(form, m));
                     } else {
                         while (true) {
                             ProcessEntry entry = queueDao.get(processInstanceId);
@@ -166,17 +165,17 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                             if (s == ProcessStatus.SUSPENDED) {
                                 String nextFormId = formService.nextFormId(processInstanceId);
                                 if (nextFormId == null) {
-                                    writeData(formDir, success(form, m, r.getErrors()));
+                                    writeData(formDir, success(form, m));
                                     break;
                                 } else {
                                     FormSessionResponse nextSession = startSession(processInstanceId, nextFormId);
                                     return redirectTo(nextSession.getUri());
                                 }
                             } else if (s == ProcessStatus.FAILED) {
-                                writeData(formDir, processFailed(form, m, r.getErrors()));
+                                writeData(formDir, processFailed(form, m));
                                 break;
                             } else if (s == ProcessStatus.FINISHED) {
-                                writeData(formDir, success(form, m, r.getErrors()));
+                                writeData(formDir, success(form, m));
                                 break;
                             }
 
@@ -212,21 +211,27 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         return form;
     }
 
-    private FormData success(Form form, Map<String, Object> overrides, List<ValidationError> errors) {
-        return prepareData(true, false, form, overrides, errors);
+    private FormData initialData(Form form) {
+        return prepareData(false, false, form, null, false, null);
     }
 
-    private FormData processFailed(Form form, Map<String, Object> overrides, List<ValidationError> errors) {
-        return prepareData(false, true, form, overrides, errors);
+    private FormData success(Form form, Map<String, Object> overrides) {
+        return prepareData(true, false, form, overrides, false, null);
+    }
+
+    private FormData processFailed(Form form, Map<String, Object> overrides) {
+        return prepareData(false, true, form, overrides, false, null);
     }
 
     private FormData prepareData(Form form, Map<String, Object> overrides, List<ValidationError> errors) {
-        return prepareData(false, false, form, overrides, errors);
+        return prepareData(false, false, form, overrides, true, errors);
     }
+
 
     @SuppressWarnings("unchecked")
     private FormData prepareData(boolean success, boolean processFailed, Form form,
-                                 Map<String, Object> overrides, List<ValidationError> errors) {
+                                 Map<String, Object> overrides, boolean skipMissingOverrides,
+                                 List<ValidationError> errors) {
 
         // TODO constants
         String processInstanceId = form.getProcessBusinessKey();
@@ -265,6 +270,10 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
             _definitions.put(f.getName(), new FormDataDefinition(f.getLabel(), f.getType(), f.getCardinality(), f.getAllowedValue()));
 
             Object v = overrides != null ? overrides.get(f.getName()) : null;
+            if (v == null && skipMissingOverrides) {
+                continue;
+            }
+
             if (v == null) {
                 v = data.get(f.getName());
             }
