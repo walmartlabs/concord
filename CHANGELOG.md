@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-sdk: new module;
 - concord-runner: upgrade the BPM engine version to 0.34. This add
 the support recursive value interpolation in `variables` or `in`
 blocks;
