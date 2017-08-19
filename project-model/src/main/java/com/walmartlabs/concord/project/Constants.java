@@ -13,9 +13,16 @@ public final class Constants {
     public static final class Context {
 
         /**
-         * Execution context.
+         * Execution context. Same as {@link #EXECUTION_CONTEXT_KEY}.
          */
-        public static final String CONTEXT_KEY = "execution";
+        public static final String CONTEXT_KEY = "context";
+
+        /**
+         * Execution context.
+         * @deprecated Use {@link #CONTEXT_KEY}
+         */
+        @Deprecated
+        public static final String EXECUTION_CONTEXT_KEY = "execution";
 
         /**
          * Process definition attribute: path to a local directory, containing agent's payload

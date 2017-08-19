@@ -1,8 +1,6 @@
 package com.walmartlabs.concord.runner.engine.el;
 
-import com.walmartlabs.concord.common.InjectVariable;
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.PropertyUtils;
+import com.walmartlabs.concord.sdk.InjectVariable;
 import org.junit.Before;
 import org.junit.Test;
 

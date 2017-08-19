@@ -1,7 +1,10 @@
 package com.walmartlabs.concord.common;
 
 /**
- * Marker interface for BPM tasks.
+ * @deprecated
+ * @see com.walmartlabs.concord.sdk.Task
  */
-public interface Task {
+@Deprecated
+public interface Task extends com.walmartlabs.concord.sdk.Task {
+
 }

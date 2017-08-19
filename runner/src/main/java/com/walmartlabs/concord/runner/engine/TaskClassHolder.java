@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.runner.engine;
 
-import com.walmartlabs.concord.common.Task;
+import com.walmartlabs.concord.sdk.Task;
 
 import java.util.HashMap;
 import java.util.Map;

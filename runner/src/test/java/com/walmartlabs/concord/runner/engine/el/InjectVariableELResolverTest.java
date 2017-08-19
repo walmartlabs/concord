@@ -1,16 +1,13 @@
 package com.walmartlabs.concord.runner.engine.el;
 
-import com.sun.el.lang.EvaluationContext;
-import com.walmartlabs.concord.common.InjectVariable;
-import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
+import com.walmartlabs.concord.sdk.InjectVariable;
 import io.takari.bpm.api.ExecutionContext;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.el.*;
+import javax.el.ELContext;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
 
 public class InjectVariableELResolverTest extends AbstractElResolverTest {
 
