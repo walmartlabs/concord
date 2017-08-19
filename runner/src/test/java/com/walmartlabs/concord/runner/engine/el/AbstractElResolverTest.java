@@ -24,6 +24,7 @@ public abstract class AbstractElResolverTest {
 
         VariableMapper varMapper = mock(VariableMapper.class);
         when(varMapper.resolveVariable("execution")).thenReturn(ve);
+        when(varMapper.resolveVariable("context")).thenReturn(ve);
 
         ELContext ctx = new ELContext() {
             @Override

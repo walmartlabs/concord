@@ -9,6 +9,8 @@ import io.takari.bpm.Configuration;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
+import io.takari.bpm.context.ExecutionContextFactory;
+import io.takari.bpm.context.ExecutionContextImpl;
 import io.takari.bpm.el.DefaultExpressionManager;
 import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.event.EventStorage;
@@ -61,19 +63,22 @@ public class EngineFactory {
         }
 
         ExpressionManager expressionManager = new DefaultExpressionManager(
+                new String[]{Constants.Context.CONTEXT_KEY, Constants.Context.EXECUTION_CONTEXT_KEY},
                 new ServiceTaskResolver(taskRegistry),
                 new InjectPropertiesELResolver(),
                 new InjectVariableELResolver());
+
+        ExecutionContextFactory<? extends ExecutionContextImpl> contextFactory = new ConcordExecutionContextFactory(expressionManager);
 
         EventStorage eventStorage = new FileEventStorage(eventsDir);
         PersistenceManager persistenceManager = new FilePersistenceManager(instancesDir);
 
         FormStorage formStorage = new FileFormStorage(formsDir);
-        FormService formService = new DefaultFormService(new NoopResumeHandler(), formStorage, expressionManager);
+        FormService formService = new DefaultFormService(contextFactory, new NoopResumeHandler(), formStorage);
 
         ProjectDefinitionAdapter adapter = new ProjectDefinitionAdapter(project, activeProfiles, baseDir);
 
-        UserTaskHandler uth = new FormTaskHandler(adapter.forms(), formService, expressionManager);
+        UserTaskHandler uth = new FormTaskHandler(contextFactory, adapter.forms(), formService);
 
         ResourceResolver resourceResolver = name -> {
             Path p = baseDir.resolve(name);
@@ -86,6 +91,7 @@ public class EngineFactory {
         cfg.setCopyAllCallActivityOutVariables(true);
 
         Engine result = new EngineBuilder()
+                .withContextFactory(contextFactory)
                 .withLockManager(new NoopLockManager())
                 .withExpressionManager(expressionManager)
                 .withDefinitionProvider(adapter.processes())

@@ -6,12 +6,12 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.*;
+import io.takari.bpm.context.DefaultExecutionContextFactory;
 import io.takari.bpm.el.DefaultExpressionManager;
 import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.model.ProcessDefinition;
-import io.takari.bpm.model.ProcessDefinitionHelper;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
@@ -49,15 +49,17 @@ public class YamlParserTest {
         FormStorage fs = new TestFormStorage(forms);
 
         ExpressionManager expressionManager = new DefaultExpressionManager(taskRegistry);
+        DefaultExecutionContextFactory contextFactory = new DefaultExecutionContextFactory(expressionManager);
+
         ResumeHandler rs = (form, args) -> getEngine().resume(form.getProcessBusinessKey(), form.getEventName(), args);
-        formService = new DefaultFormService(rs, fs, expressionManager);
+        formService = new DefaultFormService(contextFactory, rs, fs);
 
         ResourceResolver resourceResolver = name -> ClassLoader.getSystemResourceAsStream(name);
 
         engine = new EngineBuilder()
                 .withDefinitionProvider(workflowProvider.processes())
                 .withTaskRegistry(taskRegistry)
-                .withUserTaskHandler(new FormTaskHandler(workflowProvider.forms(), formService, expressionManager))
+                .withUserTaskHandler(new FormTaskHandler(contextFactory, workflowProvider.forms(), formService))
                 .withResourceResolver(resourceResolver)
                 .build();
     }

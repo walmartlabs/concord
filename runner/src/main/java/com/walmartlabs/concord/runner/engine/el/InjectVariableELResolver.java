@@ -1,13 +1,12 @@
 package com.walmartlabs.concord.runner.engine.el;
 
-import com.walmartlabs.concord.common.InjectVariable;
+import com.walmartlabs.concord.sdk.InjectVariable;
 
 import javax.el.BeanELResolver;
 import javax.el.ELContext;
 import javax.el.ELResolver;
 import javax.el.MethodNotFoundException;
 import java.beans.FeatureDescriptor;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
@@ -103,7 +102,7 @@ public class InjectVariableELResolver extends ELResolver {
         int paramIndex = 0;
         for(int i = 0; i < methodParams.length; i++) {
             Parameter mp = methodParams[i];
-            if(hasInjectedVariable(mp)) {
+            if (getInjectedVariableName(mp) != null) {
                 result[i] = mp.getType();
             } else {
                 if(paramIndex >= originalParamTypesLength) {
@@ -127,8 +126,9 @@ public class InjectVariableELResolver extends ELResolver {
         int originalParamsLength = originalParams != null ? originalParams.length : 0;
         for(int i = 0; i < methodParams.length; i++) {
             Parameter mp = methodParams[i];
-            if(hasInjectedVariable(mp)) {
-                result[i] = ResolverUtils.getVariable(context, getInjectedVariableName(mp));
+            String n = getInjectedVariableName(mp);
+            if (n != null) {
+                result[i] = ResolverUtils.getVariable(context, n);
             } else {
                 if(paramIndex >= originalParamsLength) {
                     return null;
@@ -146,7 +146,16 @@ public class InjectVariableELResolver extends ELResolver {
     }
 
     private static String getInjectedVariableName(Parameter p) {
-        return p.getAnnotation(InjectVariable.class).value();
+        InjectVariable iv = p.getAnnotation(InjectVariable.class);
+        if (iv != null) {
+            return iv.value();
+        } else {
+            com.walmartlabs.concord.common.InjectVariable iv2 = p.getAnnotation(com.walmartlabs.concord.common.InjectVariable.class);
+            if (iv2 != null) {
+                return iv2.value();
+            }
+        }
+        return null;
     }
 
     private static List<Method> findMethodWithInjections(Class<?> type, String name) {
@@ -208,14 +217,10 @@ public class InjectVariableELResolver extends ELResolver {
 
         int count = 0;
         for(Parameter p : params) {
-            if(hasInjectedVariable(p)) {
+            if (getInjectedVariableName(p) != null) {
                 count++;
             }
         }
         return count;
-    }
-
-    private static boolean hasInjectedVariable(AnnotatedElement element) {
-        return element.isAnnotationPresent(InjectVariable.class);
     }
 }

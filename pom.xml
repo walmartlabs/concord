@@ -17,6 +17,7 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <modules>
+        <module>sdk</module>
         <module>common</module>
         <module>project-model</module>
         <module>rpc</module>
@@ -49,7 +50,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aopalliance.version>1.0</aopalliance.version>
-        <bpm.version>0.34.0</bpm.version>
+        <bpm.version>0.35.0</bpm.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
         <commons.email.version>1.4</commons.email.version>
         <commons.lang.version>3.5</commons.lang.version>

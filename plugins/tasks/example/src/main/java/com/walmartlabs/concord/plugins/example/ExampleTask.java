@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.plugins.example;
 
-import com.walmartlabs.concord.common.InjectVariable;
-import com.walmartlabs.concord.common.Task;
-import io.takari.bpm.api.ExecutionContext;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +13,8 @@ public class ExampleTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(ExampleTask.class);
 
-    @InjectVariable("execution")
-    private ExecutionContext context;
+    @InjectVariable("context")
+    private Context context;
 
     public void hello() {
         log.info("Hello!");

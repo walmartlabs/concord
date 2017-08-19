@@ -1,9 +1,9 @@
 package com.walmartlabs.concord.runner;
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.runner.engine.TaskClassHolder;
+import com.walmartlabs.concord.sdk.Task;
 import org.junit.Test;
 
 import javax.inject.Named;

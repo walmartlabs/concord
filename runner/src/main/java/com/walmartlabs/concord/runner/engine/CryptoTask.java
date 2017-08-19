@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.runner.engine;
 
-import com.walmartlabs.concord.common.InjectVariable;
 import com.walmartlabs.concord.common.Task;
+import com.walmartlabs.concord.sdk.InjectVariable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
