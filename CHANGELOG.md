@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-agent: log local IPs before starting a process.
+
 ### Changed
 
 - concord-server: accept any type of attachment as a file, except
