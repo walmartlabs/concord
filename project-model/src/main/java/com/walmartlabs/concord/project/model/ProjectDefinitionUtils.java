@@ -6,7 +6,7 @@ import io.takari.bpm.model.form.FormDefinition;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -54,7 +54,7 @@ public final class ProjectDefinitionUtils {
                                               Function<Profile, Map<String, T>> selector,
                                               BiFunction<Map<String, T>, Map<String, T>, Map<String, T>> mergeFn) {
 
-        Map<String, T> view = new HashMap<>(initial != null ? initial : Collections.emptyMap());
+        Map<String, T> view = new LinkedHashMap<>(initial != null ? initial : Collections.emptyMap());
         if (profiles != null && activeProfiles != null) {
             for (String n : activeProfiles) {
                 Profile p = profiles.get(n);

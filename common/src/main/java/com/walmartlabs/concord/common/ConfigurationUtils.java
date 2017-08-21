@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.common;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class ConfigurationUtils {
@@ -73,11 +73,14 @@ public final class ConfigurationUtils {
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> deepMerge(Map<String, Object> a, Map<String, Object> b) {
-        Map<String, Object> result = new HashMap<>(a != null ? a : Collections.emptyMap());
+        Map<String, Object> result = new LinkedHashMap<>(a != null ? a : Collections.emptyMap());
 
         for (String k : b.keySet()) {
             Object av = result.get(k);
             Object bv = b.get(k);
+
+            // this is necessary to preserve the order of the keys
+            result.remove(k);
 
             if (av instanceof Map && bv instanceof Map) {
                 result.put(k, deepMerge((Map<String, Object>) av, (Map<String, Object>) bv));
@@ -94,7 +97,7 @@ public final class ConfigurationUtils {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> result = new HashMap<>(maps[0]);
+        Map<String, Object> result = new LinkedHashMap<>(maps[0]);
         for (int i = 1; i < maps.length; i++) {
             result = deepMerge(result, maps[i]);
         }
@@ -107,14 +110,14 @@ public final class ConfigurationUtils {
             return Collections.singletonMap(k, v);
         }
 
-        Map<String, Object> m = new HashMap<>();
+        Map<String, Object> m = new LinkedHashMap<>();
         Map<String, Object> root = m;
 
         for (int i = 0; i < as.length; i++) {
             if (i + 1 >= as.length) {
                 m.put(as[i], v);
             } else {
-                Map<String, Object> mm = new HashMap<>();
+                Map<String, Object> mm = new LinkedHashMap<>();
                 m.put(as[i], mm);
                 m = mm;
             }
