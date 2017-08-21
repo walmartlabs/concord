@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: accept any type of attachment as a file, except
+`text/plain`. This fixes the issue with the multipart requests with
+incorrect `Content-Type`.
+
+
+
 ## [0.35.0] - 2017-08-19
 
 ### Added

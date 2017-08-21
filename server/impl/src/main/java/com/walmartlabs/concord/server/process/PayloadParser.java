@@ -32,7 +32,11 @@ public final class PayloadParser {
                 throw new ProcessException(instanceId, "Invalid attachment name: " + name, Status.BAD_REQUEST);
             }
 
-            if (p.getMediaType().isCompatible(MediaType.APPLICATION_OCTET_STREAM_TYPE)) {
+            if (p.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE)) {
+                String v = p.getBodyAsString();
+                Map<String, Object> m = ConfigurationUtils.toNested(name, v);
+                req = ConfigurationUtils.deepMerge(req, m);
+            } else {
                 Path dst = baseDir.resolve(name);
                 try (InputStream in = p.getBody(InputStream.class, null);
                      OutputStream out = Files.newOutputStream(dst)) {
@@ -40,10 +44,6 @@ public final class PayloadParser {
                 }
 
                 attachments.put(name, dst);
-            } else if (p.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE)) {
-                String v = p.getBodyAsString();
-                Map<String, Object> m = ConfigurationUtils.toNested(name, v);
-                req = ConfigurationUtils.deepMerge(req, m);
             }
         }
 
