@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.runner.engine;
 
 import com.walmartlabs.concord.common.Task;
+import com.walmartlabs.concord.sdk.InjectVariable;
 import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,7 @@ public class SlackTask implements Task {
         this.rpc = rpc;
     }
 
-    public void call(String instanceId, String channelId, String text) throws Exception {
+    public void call(@InjectVariable("txId") String instanceId, String channelId, String text) throws Exception {
         try {
             rpc.getSlackService().notify(instanceId, channelId, text);
             log.info("call ['{}', '{}'] -> done", channelId, text);
