@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: REST API method for exporting process state;
 - concord-sdk: support for full-form tasks;
 - concord-agent: log local IPs before starting a process.
 
