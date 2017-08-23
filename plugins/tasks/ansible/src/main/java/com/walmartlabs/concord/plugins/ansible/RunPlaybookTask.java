@@ -1,8 +1,7 @@
 package com.walmartlabs.concord.plugins.ansible;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.common.Task;
-import io.takari.bpm.api.BpmnError;
+import com.walmartlabs.concord.sdk.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +78,7 @@ public class RunPlaybookTask implements Task {
         } else {
             log.warn("Playbook is finished with code {}", code);
             log.debug("execution -> finished with exit code {}", code);
-            throw new BpmnError("ansibleError", new IllegalStateException("Process finished with with exit code " + code));
+            throw new Exception("ansibleError", new IllegalStateException("Process finished with with exit code " + code));
         }
     }
 

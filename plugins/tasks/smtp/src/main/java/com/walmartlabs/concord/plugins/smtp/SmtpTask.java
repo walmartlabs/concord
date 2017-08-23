@@ -3,11 +3,8 @@ package com.walmartlabs.concord.plugins.smtp;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import com.walmartlabs.concord.common.Task;
-import com.walmartlabs.concord.project.Constants;
-import io.takari.bpm.api.BpmnError;
-import io.takari.bpm.api.ExecutionContext;
-import io.takari.bpm.api.JavaDelegate;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.Task;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.SimpleEmail;
 import org.slf4j.Logger;
@@ -21,20 +18,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Named("smtp")
-public class SmtpTask implements Task, JavaDelegate {
+public class SmtpTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(SmtpTask.class);
     private static final String TEMPLATE_APPLIED_MARKER = "__templateApplied";
 
     @Override
     @SuppressWarnings("unchecked")
-    public void execute(ExecutionContext ctx) throws Exception {
+    public void execute(Context ctx) throws Exception {
         Map<String, Object> smtpParams = (Map<String, Object>) ctx.getVariable("smtpParams");
         Map<String, Object> mailParams = (Map<String, Object>) ctx.getVariable("mailParams");
         call(smtpParams, mailParams);
     }
 
-    public void call(ExecutionContext ctx, Map<String, Object> smtpParams, Map<String, Object> mailParams) throws Exception {
+    public void call(Context ctx, Map<String, Object> smtpParams, Map<String, Object> mailParams) throws Exception {
         call(smtpParams, applyTemplate(ctx, mailParams));
     }
 
@@ -46,7 +43,7 @@ public class SmtpTask implements Task, JavaDelegate {
                 (String) mailParams.get("subject"), (String) mailParams.get("message"), (String) mailParams.get("bcc"));
     }
 
-    public void send(String hostName, int port, String from, String to, String subject, String message, String bcc) {
+    public void send(String hostName, int port, String from, String to, String subject, String message, String bcc) throws Exception {
         try {
             Email email = new SimpleEmail();
             email.setHostName(hostName);
@@ -62,11 +59,11 @@ public class SmtpTask implements Task, JavaDelegate {
             log.info("send ['{}', {}, '{}', '{}', '{}', '{}'] -> done, msgId: {}", hostName, port, from, to, subject, message, msgId);
         } catch (Exception e) {
             log.error("send ['{}', {}, '{}', '{}', '{}', '{}'] -> error", hostName, port, from, to, subject, message, e);
-            throw new BpmnError("smtpError", e);
+            throw e;
         }
     }
 
-    private static Map<String, Object> applyTemplate(ExecutionContext ctx, Map<String, Object> mailParams) throws Exception {
+    private static Map<String, Object> applyTemplate(Context ctx, Map<String, Object> mailParams) throws Exception {
         if (mailParams.containsKey(TEMPLATE_APPLIED_MARKER)) {
             return mailParams;
         }
@@ -82,7 +79,7 @@ public class SmtpTask implements Task, JavaDelegate {
         if (ctx == null) {
             baseDir = System.getProperty("user.dir");
         } else {
-            baseDir = (String) ctx.getVariable(Constants.Context.LOCAL_PATH_KEY);
+            baseDir = (String) ctx.getVariable("workDir");
         }
 
         try (FileReader in = new FileReader(baseDir + "/" + template)) {

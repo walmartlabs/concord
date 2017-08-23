@@ -15,19 +15,8 @@
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-project-model</artifactId>
+            <artifactId>concord-sdk</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-common</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
-            <artifactId>bpm-engine-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

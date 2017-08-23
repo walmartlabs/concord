@@ -5,10 +5,14 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.runner.engine.el.InjectPropertiesELResolver;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.Configuration;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
+import io.takari.bpm.api.ExecutionContext;
+import io.takari.bpm.api.JavaDelegate;
 import io.takari.bpm.context.ExecutionContextFactory;
 import io.takari.bpm.context.ExecutionContextImpl;
 import io.takari.bpm.el.DefaultExpressionManager;
@@ -21,6 +25,7 @@ import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.resource.ResourceResolver;
+import io.takari.bpm.task.JavaDelegateHandler;
 import io.takari.bpm.task.ServiceTaskResolver;
 import io.takari.bpm.task.UserTaskHandler;
 
@@ -152,6 +157,20 @@ public class EngineFactory {
                 return new SourceAwareProcessDefinition(pd.getId(), pd.getChildren(), m, spd.getSourceMaps());
             } else {
                 return new ProcessDefinition(pd, m);
+            }
+        }
+    }
+
+    private static final class JavaDelegateHandlerImpl implements JavaDelegateHandler {
+
+        @Override
+        public void execute(Object task, ExecutionContext ctx) throws Exception {
+            if (task instanceof Task) {
+                Task t = (Task) task;
+                t.execute((Context) ctx);
+            } else if (task instanceof JavaDelegate) {
+                JavaDelegate d = (JavaDelegate) task;
+                d.execute(ctx);
             }
         }
     }

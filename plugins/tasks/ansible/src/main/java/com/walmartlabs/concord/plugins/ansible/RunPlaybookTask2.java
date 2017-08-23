@@ -3,11 +3,10 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.Task;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
-import io.takari.bpm.api.ExecutionContext;
-import io.takari.bpm.api.JavaDelegate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Named("ansible2")
-public class RunPlaybookTask2 implements Task, JavaDelegate {
+public class RunPlaybookTask2 implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(RunPlaybookTask2.class);
 
@@ -99,7 +98,7 @@ public class RunPlaybookTask2 implements Task, JavaDelegate {
     }
 
     @Override
-    public void execute(ExecutionContext ctx) throws Exception {
+    public void execute(Context ctx) throws Exception {
         Map<String, Object> args = new HashMap<>();
 
         addIfPresent(ctx, args, AnsibleConstants.CONFIG_KEY);
@@ -112,7 +111,7 @@ public class RunPlaybookTask2 implements Task, JavaDelegate {
         addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
 
-        String payloadPath = (String) ctx.getVariable(Constants.Context.LOCAL_PATH_KEY);
+        String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
             payloadPath = (String) ctx.getVariable(AnsibleConstants.WORK_DIR_KEY);
         }
@@ -132,9 +131,10 @@ public class RunPlaybookTask2 implements Task, JavaDelegate {
         return p.toString();
     }
 
-    private static void addIfPresent(ExecutionContext src, Map<String, Object> dst, String k) {
-        if (src.hasVariable(k)) {
-            dst.put(k, src.getVariable(k));
+    private static void addIfPresent(Context src, Map<String, Object> dst, String k) {
+        Object v = src.getVariable(k);
+        if (v != null) {
+            dst.put(k, v);
         }
     }
 

@@ -5,6 +5,7 @@ import io.takari.bpm.model.ProcessDefinition;
 /**
  * Project and process constants.
  */
+@Deprecated
 public final class Constants {
 
     /**
@@ -15,7 +16,7 @@ public final class Constants {
         /**
          * Execution context. Same as {@link #EXECUTION_CONTEXT_KEY}.
          */
-        public static final String CONTEXT_KEY = "context";
+        public static final String CONTEXT_KEY = com.walmartlabs.concord.sdk.Constants.Context.CONTEXT_KEY;
 
         /**
          * Execution context.
@@ -46,7 +47,7 @@ public final class Constants {
         /**
          * ID of the current process instance.
          */
-        public static final String TX_ID_KEY = "txId";
+        public static final String TX_ID_KEY = com.walmartlabs.concord.sdk.Constants.Context.TX_ID_KEY;
 
         private Context() {
         }
@@ -60,37 +61,37 @@ public final class Constants {
         /**
          * Key of a process arguments object in a request data JSON.
          */
-        public static final String ARGUMENTS_KEY = "arguments";
+        public static final String ARGUMENTS_KEY = com.walmartlabs.concord.sdk.Constants.Request.ARGUMENTS_KEY;
 
         /**
          * Key of a process dependencies list in a request data JSON.
          */
-        public static final String DEPENDENCIES_KEY = "dependencies";
+        public static final String DEPENDENCIES_KEY = com.walmartlabs.concord.sdk.Constants.Request.DEPENDENCIES_KEY;
 
         /**
          * Process entry point.
          */
-        public static final String ENTRY_POINT_KEY = "entryPoint";
+        public static final String ENTRY_POINT_KEY = com.walmartlabs.concord.sdk.Constants.Request.ENTRY_POINT_KEY;
 
         /**
          * Active profiles.
          */
-        public static final String ACTIVE_PROFILES_KEY = "activeProfiles";
+        public static final String ACTIVE_PROFILES_KEY = com.walmartlabs.concord.sdk.Constants.Request.ACTIVE_PROFILES_KEY;
 
         /**
          * Template name.
          */
-        public static final String TEMPLATE_KEY = "template";
+        public static final String TEMPLATE_KEY = com.walmartlabs.concord.sdk.Constants.Request.TEMPLATE_KEY;
 
         /**
          * Process initiator's info.
          */
-        public static final String INITIATOR_KEY = "initiator";
+        public static final String INITIATOR_KEY = com.walmartlabs.concord.sdk.Constants.Request.INITIATOR_KEY;
 
         /**
          * User request's metadata.
          */
-        public static final String REQUEST_INFO_KEY = "requestInfo";
+        public static final String REQUEST_INFO_KEY = com.walmartlabs.concord.sdk.Constants.Request.REQUEST_INFO_KEY;
 
         private Request() {
         }
@@ -101,49 +102,49 @@ public final class Constants {
      */
     public static final class Files {
 
-        public static final String PAYLOAD_DIR_NAME = "payload";
+        public static final String PAYLOAD_DIR_NAME = com.walmartlabs.concord.sdk.Constants.Files.PAYLOAD_DIR_NAME;
 
         /**
          * Directory containing libraries (dependencies) of a payload.
          */
-        public static final String LIBRARIES_DIR_NAME = "lib";
+        public static final String LIBRARIES_DIR_NAME = com.walmartlabs.concord.sdk.Constants.Files.LIBRARIES_DIR_NAME;
 
         /**
          * (Default) directory containing process definitions of a payload.
          */
-        public static final String DEFINITIONS_DIR_NAME = "flows";
+        public static final String DEFINITIONS_DIR_NAME = com.walmartlabs.concord.sdk.Constants.Files.DEFINITIONS_DIR_NAME;
 
         /**
          * Directories containing process definitions of a payload.
          */
-        public static final String[] DEFINITIONS_DIR_NAMES = {"flows", "processes"};
+        public static final String[] DEFINITIONS_DIR_NAMES = com.walmartlabs.concord.sdk.Constants.Files.DEFINITIONS_DIR_NAMES;
 
         /**
          * Directory containing process profiles.
          */
-        public static final String PROFILES_DIR_NAME = "profiles";
+        public static final String PROFILES_DIR_NAME = com.walmartlabs.concord.sdk.Constants.Files.PROFILES_DIR_NAME;
 
         public static final String INSTANCE_ID_FILE_NAME = "_instanceId";
 
         /**
          * File, containing request data of a payload: process arguments, entry point name, etc.
          */
-        public static final String REQUEST_DATA_FILE_NAME = "_main.json";
+        public static final String REQUEST_DATA_FILE_NAME = com.walmartlabs.concord.sdk.Constants.Files.REQUEST_DATA_FILE_NAME;
 
         /**
          * Directory, containing job "attachments": reports, stats, etc.
          */
-        public static final String JOB_ATTACHMENTS_DIR_NAME = "_attachments";
+        public static final String JOB_ATTACHMENTS_DIR_NAME = com.walmartlabs.concord.sdk.Constants.Files.JOB_ATTACHMENTS_DIR_NAME;
 
         /**
          * Directory, containing process' state.
          */
-        public static final String JOB_STATE_DIR_NAME = "_state";
+        public static final String JOB_STATE_DIR_NAME = com.walmartlabs.concord.sdk.Constants.Files.JOB_STATE_DIR_NAME;
 
         /**
          * Directory, containing process' forms.
          */
-        public static final String JOB_FORMS_DIR_NAME = "forms";
+        public static final String JOB_FORMS_DIR_NAME = com.walmartlabs.concord.sdk.Constants.Files.JOB_FORMS_DIR_NAME;
 
         /**
          * Marker file, indicating that a process was suspended.

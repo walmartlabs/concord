@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.sdk;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface Context {
@@ -15,4 +16,6 @@ public interface Context {
     <T> T eval(String expr, Class<T> type);
 
     Object interpolate(Object v);
+
+    Map<String, Object> toMap();
 }
