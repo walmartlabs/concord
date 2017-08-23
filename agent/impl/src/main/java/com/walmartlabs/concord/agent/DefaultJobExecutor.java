@@ -228,6 +228,9 @@ public class DefaultJobExecutor implements JobExecutor {
             l.add("-Djavax.el.varArgs=true");
             l.add("-Djava.security.egd=file:/dev/./urandom");
             l.add("-Djava.net.preferIPv4Stack=true");
+
+            // workaround for JDK-8142508
+            l.add("-Dsun.zip.disableMemoryMapping=true");
         }
 
         // Concord properties
