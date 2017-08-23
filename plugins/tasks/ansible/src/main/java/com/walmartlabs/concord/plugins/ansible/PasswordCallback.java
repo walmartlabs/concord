@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.plugins.ansible;
 
-import io.takari.bpm.api.ExecutionContext;
+import com.walmartlabs.concord.sdk.Context;
 
 public interface PasswordCallback {
 
-    byte[] getPassword(ExecutionContext ctx);
+    byte[] getPassword(Context ctx);
 }

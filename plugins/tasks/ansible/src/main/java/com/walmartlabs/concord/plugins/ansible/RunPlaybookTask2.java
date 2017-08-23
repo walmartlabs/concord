@@ -6,7 +6,6 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
-import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +80,7 @@ public class RunPlaybookTask2 implements Task {
 
         if (code != SUCCESS_EXIT_CODE) {
             log.warn("Playbook is finished with code {}", code);
-            throw new BpmnError("ansibleError", new IllegalStateException("Process finished with with exit code " + code));
+            throw new IllegalStateException("Process finished with with exit code " + code);
         }
     }
 
