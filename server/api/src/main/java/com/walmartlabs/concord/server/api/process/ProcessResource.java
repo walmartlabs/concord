@@ -152,15 +152,36 @@ public interface ProcessResource {
     Response downloadAttachment(@ApiParam @PathParam("id") UUID instanceId,
                                 @PathParam("name") @NotNull @Size(min = 1) String attachmentName);
 
+    /**
+     * Returns entries from the process queue.
+     *
+     * @return
+     */
     @GET
     @ApiOperation("List processes")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> list();
 
+    /**
+     * Retrieves a process log.
+     *
+     * @param instanceId
+     * @param range
+     * @return
+     */
     @GET
     @ApiOperation("Retrieve the log")
     @Path("/{id}/log")
     @Produces(MediaType.TEXT_PLAIN)
     Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                     @HeaderParam("range") String range);
+
+    /**
+     * Downloads a process state snapshot.
+     */
+    @GET
+    @ApiOperation("Download a process state snapshot")
+    @Path("/{id}/state/snapshot")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    Response downloadState(@ApiParam @PathParam("id") UUID instanceId);
 }

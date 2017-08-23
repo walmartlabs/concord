@@ -32,6 +32,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -42,8 +43,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 public class ProcessResourceImpl implements ProcessResource, Resource {
@@ -399,8 +402,27 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             }
         };
 
-        return Response.ok((StreamingOutput) out)
+        return Response.ok(out)
                 .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
+                .build();
+    }
+
+    @Override
+    @Validate
+    @WithTimer
+    public Response downloadState(UUID instanceId) {
+        if (!stateManager.exists(instanceId)) {
+            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+
+        StreamingOutput out = output -> {
+            try (ZipOutputStream zip = new ZipOutputStream(output)) {
+                stateManager.export(instanceId, zipTo(zip));
+            }
+        };
+
+        return Response.ok(out)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + instanceId + ".zip\"")
                 .build();
     }
 

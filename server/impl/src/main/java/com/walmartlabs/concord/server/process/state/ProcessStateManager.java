@@ -140,7 +140,17 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     /**
-     * Checks is a value exists.
+     * Check if there any data for the given process ID.
+     */
+    public boolean exists(UUID instanceId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.fetchExists(tx.selectFrom(PROCESS_STATE)
+                    .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)));
+        }
+    }
+
+    /**
+     * Checks if a value exists.
      */
     public boolean exists(UUID instanceId, String path) {
         try (DSLContext tx = DSL.using(cfg)) {
@@ -149,6 +159,7 @@ public class ProcessStateManager extends AbstractDao {
                             .and(PROCESS_STATE.ITEM_PATH.startsWith(path))));
         }
     }
+
 
     /**
      * Removes all data of the specified process.
