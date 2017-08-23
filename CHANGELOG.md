@@ -10,8 +10,8 @@
 
 ### Changed
 
-- concord-server: fix variables merging when a variable references
-another variable in a different profile;
+- concord-server: fix evaluation of variables when one variable
+references another;
 - concord-server: accept any type of attachment as a file, except
 `text/plain`. This fixes the issue with the multipart requests with
 incorrect `Content-Type`.
