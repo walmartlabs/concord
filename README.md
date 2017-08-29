@@ -1,20 +1,12 @@
 # Concord
 [![Build Status](https://ci.walmart.com/buildStatus/icon?job=concord)](https://ci.walmart.com/job/concord/)
 
-## Prerequisites
-
-Prerequisites:
-- Docker;
-- Ansible must be installed and available in `$PATH`.
-  See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
-- Java must be available in `$PATH` as `java`.
-
 ## Building
 
 ```
 git clone ... 
 cd concord
-./mvnw clean install -DskipTests
+./mvnw clean install -DskipTests -Pwalmart
 ```
 
 ### Docker images
@@ -22,11 +14,20 @@ cd concord
 You can build docker images using this commands:
 
 ```
-./mvnw clean install -DskipTests -Pdocker
+./mvnw clean install -DskipTests -Pwalmart -Pdocker
 ```
 
 ### Integration tests
 
+#### Prerequisites
+
+Prerequisites:
+- Docker;
+- Ansible must be installed and available in `$PATH`.
+  See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
+- Java must be available in `$PATH` as `java`.
+
+#### Running tests
 
 Integration tests are disabled by default. Use the `it` profile to enable them:
 

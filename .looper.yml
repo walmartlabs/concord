@@ -21,15 +21,15 @@ tools:
 flows:
   runsonar:
     - sonar("Sonar"):
-      - (name sonar) mvn -Plooper -e -B -fae $SONAR_MAVEN_GOAL
+      - (name sonar) mvn -Plooper -Pwalmart -e -B -fae $SONAR_MAVEN_GOAL
 
   build:
     - call: cleanup
-    - (name build) mvn -U -B -s $MVN_SETTINGS clean install -Plooper
+    - (name build) mvn -U -B -s $MVN_SETTINGS clean install -Plooper -Pwalmart
 
   build_and_deploy:
     - call: cleanup
-    - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -Plooper
+    - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -Plooper -Pwalmart
 
   cleanup:
     - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
