@@ -12,6 +12,7 @@ import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.api.ExecutionContext;
+import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.api.JavaDelegate;
 import io.takari.bpm.context.ExecutionContextFactory;
 import io.takari.bpm.context.ExecutionContextImpl;
@@ -101,6 +102,7 @@ public class EngineFactory {
                 .withExpressionManager(expressionManager)
                 .withDefinitionProvider(adapter.processes())
                 .withTaskRegistry(taskRegistry)
+                .withJavaDelegateHandler(new JavaDelegateHandlerImpl())
                 .withEventStorage(eventStorage)
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
@@ -171,6 +173,9 @@ public class EngineFactory {
             } else if (task instanceof JavaDelegate) {
                 JavaDelegate d = (JavaDelegate) task;
                 d.execute(ctx);
+            } else {
+                throw new ExecutionException("Unsupported task type: " + task + ": tasks must implement either " +
+                        Task.class.getName() + " or " + JavaDelegate.class.getName() + " interfaces");
             }
         }
     }

@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-runner: fix the issue with tasks based on `concord-sdk`;
 - concord-project-model: fix serialization issues when `set` task
 used with nested structures.
 
