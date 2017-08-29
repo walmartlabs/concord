@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-project-model: fix serialization issues when `set` task
+used with nested structures.
+
+
+
 ## [0.36.0] - 2017-08-23
 
 ### Added
