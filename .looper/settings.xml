@@ -4,7 +4,7 @@
         <mirror>
             <id>walmart-gec</id>
             <mirrorOf>external:*</mirrorOf>
-            <url>http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/groups/devtools-public</url>
+	    <url>http://nexus.prod.walmart.com/nexus/content/groups/devtools-public</url>
         </mirror>
     </mirrors>
 
