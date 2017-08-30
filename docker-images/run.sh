@@ -19,7 +19,7 @@ docker.prod.walmart.com/walmartlabs/concord-server
 docker run -d \
 --privileged \
 --name dind \
--v /tmp/tmp \
+-v /tmp:/tmp \
 docker.prod.walmart.com/walmartlabs/concord-dind
 
 docker run -d \
