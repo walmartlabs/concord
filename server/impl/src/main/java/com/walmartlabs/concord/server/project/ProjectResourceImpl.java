@@ -20,6 +20,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.validation.Valid;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.util.HashMap;
@@ -316,6 +317,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Validate
     @RequiresAuthentication
     public EncryptValueResponse encrypt(String projectName, EncryptValueRequest req) {
+        if (req.getValue() == null) {
+            throw new ValidationErrorsException("Value is required");
+        }
+
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
