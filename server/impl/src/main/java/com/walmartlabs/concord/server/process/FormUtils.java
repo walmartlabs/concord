@@ -58,7 +58,8 @@ public final class FormUtils {
             }
 
             Object v = convert(locale, fd.getName(), f, null, e.getValue());
-            if (v == null) {
+            boolean isOptional = f.getCardinality() == FormField.Cardinality.ONE_OR_NONE || f.getCardinality() == FormField.Cardinality.ANY;
+            if (v == null && !isOptional) {
                 continue;
             }
 
