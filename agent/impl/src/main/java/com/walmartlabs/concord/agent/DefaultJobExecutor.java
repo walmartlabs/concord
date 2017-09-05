@@ -286,7 +286,7 @@ public class DefaultJobExecutor implements JobExecutor {
         for (String s : urls) {
             if (s.endsWith(".jar")) {
                 result.add(s);
-                log.info("normalizeUrl -> using as is {}", s);
+                log.info("normalizeUrls -> using as is: {}", s);
                 continue;
             }
 
@@ -308,12 +308,14 @@ public class DefaultJobExecutor implements JobExecutor {
 
                             String location = httpConn.getHeaderField("Location");
                             u = new URL(location);
-                            log.info("normalizeUrls -> using {}", location);
+                            log.info("normalizeUrls -> using: {}", location);
 
                             continue;
                         }
 
                         s = u.toString();
+                    } else {
+                        log.warn("normalizeUrls -> unexpected connection type: {} (for {})", conn.getClass(), s);
                     }
                 }
 
