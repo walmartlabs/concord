@@ -1,5 +1,11 @@
 # Change log
 
+## [Unreleased]
+
+- concord-server: fix key pair generation for non-API key users.
+
+
+
 ## [0.37.0] - 2017-09-04
 
 ### Changed
