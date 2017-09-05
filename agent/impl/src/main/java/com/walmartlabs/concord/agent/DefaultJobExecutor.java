@@ -19,6 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -57,7 +60,7 @@ public class DefaultJobExecutor implements JobExecutor {
     @Override
     public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
         try {
-            Set<String> dependencies = getDependencies(workDir);
+            Collection<String> dependencies = getDependencyUrls(workDir);
 
             ProcessEntry entry;
             if (canUsePrefork(workDir)) {
@@ -118,7 +121,7 @@ public class DefaultJobExecutor implements JobExecutor {
         }
     }
 
-    private ProcessEntry fork(String instanceId, Path workDir, Set<String> dependencies, String[] cmd) throws ExecutionException {
+    private ProcessEntry fork(String instanceId, Path workDir, Collection<String> dependencies, String[] cmd) throws ExecutionException {
         HashCode hc = hash(cmd);
 
         ProcessEntry entry = pool.take(hc, () -> {
@@ -262,7 +265,7 @@ public class DefaultJobExecutor implements JobExecutor {
         return l.toArray(new String[l.size()]);
     }
 
-    private Set<String> getDependencies(Path workDir) throws ExecutionException {
+    private Collection<String> getDependencyUrls(Path workDir) throws ExecutionException {
         Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {
             return Collections.emptySet();
@@ -271,10 +274,56 @@ public class DefaultJobExecutor implements JobExecutor {
         try (InputStream in = Files.newInputStream(p)) {
             Map<String, Object> m = objectMapper.readValue(in, Map.class);
             Collection<String> deps = (Collection<String>) m.get(Constants.Request.DEPENDENCIES_KEY);
-            return deps != null ? new HashSet<>(deps) : Collections.emptySet();
+            return normalizeUrls(deps != null ? new HashSet<>(deps) : Collections.emptySet());
         } catch (IOException e) {
             throw new ExecutionException("Error while reading a list of dependencies", e);
         }
+    }
+
+    private static Collection<String> normalizeUrls(Collection<String> urls) throws IOException {
+        Collection<String> result = new HashSet<>();
+
+        for (String s : urls) {
+            if (s.endsWith(".jar")) {
+                result.add(s);
+                log.info("normalizeUrl -> using as is {}", s);
+                continue;
+            }
+
+            URL u = new URL(s);
+
+            while (true) {
+                String proto = u.getProtocol();
+                if ("http".equalsIgnoreCase(proto) || "https".equalsIgnoreCase(proto)) {
+                    URLConnection conn = u.openConnection();
+                    if (conn instanceof HttpURLConnection) {
+                        HttpURLConnection httpConn = (HttpURLConnection) conn;
+                        httpConn.setInstanceFollowRedirects(false);
+
+                        int code = httpConn.getResponseCode();
+                        if (code == HttpURLConnection.HTTP_MOVED_TEMP ||
+                                code == HttpURLConnection.HTTP_MOVED_PERM ||
+                                code == HttpURLConnection.HTTP_SEE_OTHER ||
+                                code == 307) {
+
+                            String location = httpConn.getHeaderField("Location");
+                            u = new URL(location);
+                            log.info("normalizeUrls -> using {}", location);
+
+                            continue;
+                        }
+
+                        s = u.toString();
+                    }
+                }
+
+                break;
+            }
+
+            result.add(s);
+        }
+
+        return result;
     }
 
     private void postProcess(String instanceId, Path payloadDir) throws ExecutionException {
@@ -364,5 +413,14 @@ public class DefaultJobExecutor implements JobExecutor {
         return String.join(":", Arrays.stream(as)
                 .filter(s -> s != null && !s.trim().isEmpty())
                 .collect(Collectors.toList()));
+    }
+
+    public static String getLastPart(URL url) {
+        String p = url.getPath();
+        int idx = p.lastIndexOf('/');
+        if (idx >= 0 && idx + 1 < p.length()) {
+            return p.substring(idx + 1);
+        }
+        throw new IllegalArgumentException("Invalid URL: " + url);
     }
 }
