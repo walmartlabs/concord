@@ -3,7 +3,6 @@ package com.walmartlabs.concord.server.security.secret;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.*;
-import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -49,7 +48,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @Validate
     public PublicKeyResponse createKeyPair(String name) {
         assertUnique(name);
-        KeyPair k = secretManager.createKeypair(name, ApiKey.getCurrentKey());
+        KeyPair k = secretManager.createKeypair(name, "TODO");
         return toPublicKey(name, k.getPublicKey());
     }
 
