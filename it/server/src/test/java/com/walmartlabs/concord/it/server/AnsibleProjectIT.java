@@ -92,7 +92,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, repoSecretName);
+        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
         Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
         projectResource.createOrUpdate(new ProjectEntry(projectName, null, singletonMap(repoName, repo), cfg));
@@ -138,7 +138,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, repoSecretName);
+        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);

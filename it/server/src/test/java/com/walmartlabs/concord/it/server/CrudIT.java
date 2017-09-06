@@ -55,11 +55,11 @@ public class CrudIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(projectName, null,
-                Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null, null)), null));
+                Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null, null, null)), null));
 
         // ---
 
-        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, commitId, null));
+        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, commitId, null, null));
         assertTrue(urr.isOk());
 
         // ---
@@ -87,10 +87,10 @@ public class CrudIT extends AbstractServerIT {
         // ---
 
         String repoName = "repo_" + System.currentTimeMillis();
-        CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1, new CreateRepositoryRequest(repoName, "n/a", null, null, null));
+        CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1, new CreateRepositoryRequest(repoName, "n/a", null, null, null, null));
         assertTrue(crr1.isOk());
 
-        CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2, new CreateRepositoryRequest(repoName, "n/a", null, null, null));
+        CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2, new CreateRepositoryRequest(repoName, "n/a", null, null, null, null));
         assertTrue(crr2.isOk());
     }
 

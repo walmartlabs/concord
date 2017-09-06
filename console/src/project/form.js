@@ -33,6 +33,7 @@ const renderRepositories = (newRepositoryPopupFn, editRepositoryPopupFn) => ({fi
                     <Table.HeaderCell collapsing>Name</Table.HeaderCell>
                     <Table.HeaderCell>URL</Table.HeaderCell>
                     <Table.HeaderCell collapsing>Source</Table.HeaderCell>
+                    <Table.HeaderCell collapsing>Path</Table.HeaderCell>
                     <Table.HeaderCell collapsing>Secret</Table.HeaderCell>
                     <Table.HeaderCell collapsing/>
                 </Table.Row>
@@ -43,6 +44,7 @@ const renderRepositories = (newRepositoryPopupFn, editRepositoryPopupFn) => ({fi
                         <Table.Cell><a href="#edit" onClick={editFn(idx)}>{fields.get(idx).name}</a></Table.Cell>
                         <Table.Cell>{fields.get(idx).url}</Table.Cell>
                         <Table.Cell>{renderSourceText(f, fields.get(idx))}</Table.Cell>
+                        <Table.Cell>{fields.get(idx).path}</Table.Cell>
                         <Table.Cell>{fields.get(idx).secret}</Table.Cell>
                         <Table.Cell>
                             <Button basic icon="delete" onClick={() => fields.remove(idx)}/>

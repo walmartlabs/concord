@@ -112,7 +112,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertProject(projectName);
         assertSecret(request.getSecret());
 
-        tx(tx -> repositoryDao.insert(tx, projectName, request.getName(), request.getUrl(), request.getBranch(), request.getCommitId(), request.getSecret()));
+        tx(tx -> repositoryDao.insert(tx, projectName, request.getName(), request.getUrl(),
+                request.getBranch(), request.getCommitId(),
+                request.getPath(), request.getSecret()));
+
         return new CreateRepositoryResponse();
     }
 
@@ -205,7 +208,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertRepository(projectName, repositoryName);
         assertSecret(request.getSecret());
 
-        tx(tx -> repositoryDao.update(tx, repositoryName, request.getUrl(), request.getBranch(), request.getCommitId(), request.getSecret()));
+        tx(tx -> repositoryDao.update(tx, repositoryName, request.getUrl(),
+                request.getBranch(), request.getCommitId(),
+                request.getPath(), request.getSecret()));
+
         return new UpdateRepositoryResponse();
     }
 
@@ -369,7 +375,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     private void insert(DSLContext tx, String projectName, Map<String, UpdateRepositoryRequest> repos) {
         for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
             String name = r.getKey();
-            repositoryDao.insert(tx, projectName, name, r.getValue().getUrl(), r.getValue().getBranch(), r.getValue().getCommitId(), r.getValue().getSecret());
+            UpdateRepositoryRequest req = r.getValue();
+            repositoryDao.insert(tx, projectName, name, req.getUrl(),
+                    req.getBranch(), req.getCommitId(),
+                    req.getPath(), req.getSecret());
         }
     }
 

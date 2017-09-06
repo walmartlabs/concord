@@ -88,7 +88,7 @@ public class ConsoleService implements Resource {
     public boolean testRepository(RepositoryTestRequest req) {
         try {
             Secret secret = secretManager.getSecret(req.getSecret());
-            repositoryManager.testConnection(req.getUrl(), req.getBranch(), req.getCommitId(), secret);
+            repositoryManager.testConnection(req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), secret);
             return true;
         } catch (Exception e) {
             String msg;

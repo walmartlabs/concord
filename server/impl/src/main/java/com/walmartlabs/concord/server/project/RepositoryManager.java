@@ -44,7 +44,7 @@ public class RepositoryManager {
         this.cfg = cfg;
     }
 
-    public void testConnection(String uri, String branch, String commitId, Secret secret) {
+    public void testConnection(String uri, String branch, String commitId, String path, Secret secret) {
         Path tmpDir = null;
         try {
             tmpDir = Files.createTempDirectory("repository");
@@ -60,6 +60,8 @@ public class RepositoryManager {
                             .call();
                 }
             }
+
+            repoPath(tmpDir, path);
         } catch (GitAPIException | IOException e) {
             throw new RepositoryException(e);
         } finally {
@@ -73,7 +75,7 @@ public class RepositoryManager {
         }
     }
 
-    public Path fetchByCommit(String projectName, String uri, String commitId, Secret secret) {
+    public Path fetchByCommit(String projectName, String uri, String commitId, String path, Secret secret) {
         Path localPath = localPath(projectName, commitId);
 
         try (Git repo = openRepo(localPath)) {
@@ -93,10 +95,10 @@ public class RepositoryManager {
             throw new RepositoryException("Error while updating a repository", e);
         }
 
-        return localPath;
+        return repoPath(localPath, path);
     }
 
-    public Path fetch(String projectName, String uri, String branch, Secret secret) {
+    public Path fetch(String projectName, String uri, String branch, String path, Secret secret) {
         if (branch == null) {
             branch = DEFAULT_BRANCH;
         }
@@ -116,7 +118,7 @@ public class RepositoryManager {
 
                 log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectName, uri, branch);
 
-                return localPath;
+                return repoPath(localPath, path);
             }
         } catch (GitAPIException e) {
             throw new RepositoryException("Error while updating a repository", e);
@@ -124,7 +126,7 @@ public class RepositoryManager {
 
         try (Git ignored = cloneRepo(uri, localPath, branch, transportCallback)) {
             log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectName, uri, branch);
-            return localPath;
+            return repoPath(localPath, path);
         }
     }
 
@@ -293,5 +295,39 @@ public class RepositoryManager {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    private static String normalizePath(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        while (s.startsWith("/")) {
+            s = s.substring(1);
+        }
+
+        while (s.endsWith("/")) {
+            s = s.substring(0, s.length() - 1);
+        }
+
+        if (s.trim().isEmpty()) {
+            return null;
+        }
+
+        return s;
+    }
+
+    private static Path repoPath(Path baseDir, String p) {
+        String normalized = normalizePath(p);
+        if (normalized == null) {
+            return baseDir;
+        }
+
+        Path repoDir = baseDir.resolve(normalized);
+        if (!Files.exists(repoDir)) {
+            throw new RepositoryException("Invalid repository path: " + p);
+        }
+
+        return repoDir;
     }
 }

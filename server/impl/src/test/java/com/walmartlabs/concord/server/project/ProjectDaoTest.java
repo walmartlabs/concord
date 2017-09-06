@@ -42,7 +42,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         String repoName = "repo#" + System.currentTimeMillis();
         String repoUrl = "n/a";
-        repositoryDao.insert(projectName, repoName, repoUrl, null, null, null);
+        repositoryDao.insert(projectName, repoName, repoUrl, null, null, null, null);
 
         // ---
         Map<String, Object> newCfg1 = ImmutableMap.of("a1", "a1-v");
