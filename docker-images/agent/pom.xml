@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.docker</groupId>
         <artifactId>parent</artifactId>
-        <version>0.37.1-SNAPSHOT</version>
+        <version>0.37.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -69,8 +69,10 @@
                                 <runCmds>
                                     <run>yum -y install docker-client</run>
                                     <!-- for backwards compatibility with ansible projects w/o docker -->
-                                    <run>yum -y install ansible openssh-clients sshpass util-linux</run>
+                                    <run>yum -y install gcc python-devel python-pip libffi-devel openssl-devel krb5-devel krb5-libs krb5-workstation  openssh-clients sshpass util-linux python</run>
                                     <run>yum clean all</run>
+                                    <run>umask 0022</run>
+                                    <run>pip install --upgrade -i https://nexus.prod.walmart.com/nexus/content/repositories/pypi-proxy/simple pip pbr ansible ara pywinrm kerberos requests_kerberos ujson</run>
                                 </runCmds>
                                 <env>
                                     <DOCKER_HOST>tcp://dind:2375</DOCKER_HOST>

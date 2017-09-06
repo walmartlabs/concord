@@ -1,4 +1,4 @@
-import json
+import ujson as json
 import os
 import errno
 from ansible.plugins.callback import CallbackBase
