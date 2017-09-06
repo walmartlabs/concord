@@ -56,7 +56,8 @@ public class ProjectDao extends AbstractDao {
             Map<String, UpdateRepositoryRequest> m = new HashMap<>();
             for (RepositoriesRecord repo : repos) {
                 m.put(repo.getRepoName(), new UpdateRepositoryRequest(repo.getRepoUrl(),
-                        repo.getRepoBranch(), repo.getRepoCommitId(), repo.getSecretName()));
+                        repo.getRepoBranch(), repo.getRepoCommitId(),
+                        repo.getRepoPath(), repo.getSecretName()));
             }
 
             Map<String, Object> cfg = deserialize(r.value3());

@@ -15,9 +15,10 @@ public class CreateRepositoryRequest extends UpdateRepositoryRequest {
                                    @JsonProperty("url") String url,
                                    @JsonProperty("branch") String branch,
                                    @JsonProperty("commitId") String commitId,
+                                   @JsonProperty("path") String path,
                                    @JsonProperty("secret") String secret) {
 
-        super(url, branch, commitId, secret);
+        super(url, branch, commitId, path, secret);
         this.name = name;
     }
 
@@ -32,6 +33,7 @@ public class CreateRepositoryRequest extends UpdateRepositoryRequest {
                 ", url='" + getUrl() + '\'' +
                 ", branch='" + getBranch() + '\'' +
                 ", commitId='" + getCommitId() + '\'' +
+                ", path='" + getPath() + '\'' +
                 ", secret='" + getSecret() + '\'' +
                 '}';
     }
