@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- concord-server, concord-console: support for GIT repository paths.
 - concord-server: fix key pair generation for non-API key users.
 
 
