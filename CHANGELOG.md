@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [0.38.0] - 2017-09-07
 
 - concord-server, concord-console: support for GIT repository paths.
 - concord-server: fix key pair generation for non-API key users.
