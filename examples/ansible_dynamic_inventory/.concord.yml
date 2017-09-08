@@ -1,8 +1,7 @@
 variables:
   entryPoint: main
   dependencies:
-    - "file:///home/ibodrov/.m2/repository/com/walmartlabs/concord/plugins/basic/ansible-tasks/0.33.1-SNAPSHOT/ansible-tasks-0.33.1-SNAPSHOT.jar"
-#    - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/basic/ansible-tasks/0.20.0/ansible-tasks-0.20.0.jar"
+  - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/basic/ansible-tasks/0.38.0/ansible-tasks-0.38.0.jar"
   arguments:
     ansibleParams:
       playbook: playbook/hello.yml
