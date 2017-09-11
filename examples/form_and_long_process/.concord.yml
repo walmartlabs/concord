@@ -1,0 +1,22 @@
+flows:
+  main:
+
+  # "yield" makes the process to continue in background after this
+  # form. It will stop a UI "spinner" in redirects a user back to the
+  # process' page
+  - form: myForm
+    yield: true
+
+  - log: "Hello, ${myForm.name}! I'm starting a long-running task..."
+
+  # imitates a long-running task
+  - ${sleep.ms(30000)}
+
+  - log: "Done!"
+
+forms:
+  myForm:
+  - name: { type: "string" }
+
+variables:
+  entryPoint: main

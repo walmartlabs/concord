@@ -74,8 +74,9 @@ public class ConcordFormService {
 
             String s = FORMS_RESOURCES_PATH + "/" + f.getFormDefinition().getName();
             boolean branding = stateManager.exists(processInstanceId, s);
+            boolean yield = getBoolean(f.getOptions(), "yield", false);
 
-            return new FormListEntry(f.getFormInstanceId().toString(), name, branding);
+            return new FormListEntry(f.getFormInstanceId().toString(), name, branding, yield);
         }).collect(Collectors.toList());
     }
 
@@ -153,5 +154,22 @@ public class ConcordFormService {
         }
 
         resumePipeline.process(payload);
+    }
+
+    private static boolean getBoolean(Map<String, Object> options, String key, boolean defaultValue) {
+        if (options == null) {
+            return defaultValue;
+        }
+
+        Object v = options.get(key);
+        if (v == null) {
+            return defaultValue;
+        }
+
+        if (!(v instanceof Boolean)) {
+            throw new IllegalArgumentException("Expected a boolean value: " + key);
+        }
+
+        return (Boolean) v;
     }
 }

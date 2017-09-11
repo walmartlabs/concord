@@ -13,15 +13,18 @@ public class FormListEntry implements Serializable {
     private final String formInstanceId;
     private final String name;
     private final boolean custom;
+    private final boolean yield;
 
     @JsonCreator
     public FormListEntry(@JsonProperty("formInstanceId") String formInstanceId,
                          @JsonProperty("name") String name,
-                         @JsonProperty("custom") boolean custom) {
+                         @JsonProperty("custom") boolean custom,
+                         @JsonProperty("yield") boolean yield) {
 
         this.formInstanceId = formInstanceId;
         this.name = name;
         this.custom = custom;
+        this.yield = yield;
     }
 
     public String getFormInstanceId() {
@@ -36,12 +39,17 @@ public class FormListEntry implements Serializable {
         return custom;
     }
 
+    public boolean isYield() {
+        return yield;
+    }
+
     @Override
     public String toString() {
         return "FormListEntry{" +
                 "formInstanceId='" + formInstanceId + '\'' +
                 ", name='" + name + '\'' +
                 ", custom=" + custom +
+                ", yield=" + yield +
                 '}';
     }
 }

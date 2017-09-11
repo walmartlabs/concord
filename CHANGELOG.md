@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: support for `yield` for
+non-custom forms.
+
+
+
 ## [0.38.3] - 2017-09-10
 
 ### Changed

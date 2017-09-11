@@ -32,6 +32,8 @@ function* nextForm({instanceId}): Generator<*, *, *> {
         }
 
         const {formInstanceId, custom} = forms[0];
+        const yieldFlow = forms[0]["yield"];
+        console.log("[[[[", yieldFlow);
 
         if (custom) {
             // a form with branding
@@ -49,7 +51,7 @@ function* nextForm({instanceId}): Generator<*, *, *> {
             // regular form
             const path = {
                 pathname: `/process/${instanceId}/form/${formInstanceId}`,
-                query: {fullScreen: true, wizard: true}
+                query: {fullScreen: true, wizard: true, yieldFlow: yieldFlow}
             };
             yield put(replaceHistory(path));
         }

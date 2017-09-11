@@ -35,7 +35,7 @@ class ProcessForm extends Component {
             values = {};
         }
 
-        const {instanceId, formInstanceId, onSubmitFn, data: {fields}, wizard} = this.props;
+        const {instanceId, formInstanceId, onSubmitFn, data: {fields}, wizard, yieldFlow} = this.props;
 
         for (let i = 0; i < fields.length; i++) {
             const f = fields[i];
@@ -49,7 +49,7 @@ class ProcessForm extends Component {
             }
         }
 
-        onSubmitFn(instanceId, formInstanceId, values, wizard);
+        onSubmitFn(instanceId, formInstanceId, values, wizard, yieldFlow);
     }
 
     renderField(f) {
@@ -204,6 +204,7 @@ const mapStateToProps = ({processForm}, {params, location: {query}}) => ({
     instanceId: params.instanceId,
     formInstanceId: params.formInstanceId,
     wizard: query.wizard === "true",
+    yieldFlow: query.yieldFlow === "true",
     data: selectors.getData(processForm),
     loading: selectors.getIsLoading(processForm),
     submitting: selectors.getIsSubmitting(processForm),
@@ -214,7 +215,7 @@ const mapStateToProps = ({processForm}, {params, location: {query}}) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     loadData: (instanceId, formInstanceId) => dispatch(actions.loadData(instanceId, formInstanceId)),
-    onSubmitFn: (instanceId, formInstanceId, data, wizard) => dispatch(actions.submit(instanceId, formInstanceId, data, wizard)),
+    onSubmitFn: (instanceId, formInstanceId, data, wizard, yieldFlow) => dispatch(actions.submit(instanceId, formInstanceId, data, wizard, yieldFlow)),
     onReturnFn: (instanceId) => dispatch(pushHistory(`/process/${instanceId}`))
 });
 

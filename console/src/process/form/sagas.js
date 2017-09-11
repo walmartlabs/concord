@@ -1,4 +1,5 @@
 // @flow
+import {delay} from "redux-saga"
 import {call, fork, put, takeLatest} from "redux-saga/effects";
 import {push as pushHistory} from "react-router-redux";
 import types from "./actions";
@@ -37,10 +38,19 @@ function* submitForm(action: any): Generator<*, *, *> {
         });
 
         if (response.ok && action.wizard) {
-            const path = {
-                pathname: `/process/${instanceId}/wizard`,
-                query: {fullScreen: true}
-            };
+            let path;
+            if (action.yieldFlow) {
+                yield delay(1000);
+                path = {
+                    pathname: `/process/${instanceId}`,
+                    query: {fullScreen: false}
+                };
+            } else {
+                path = {
+                    pathname: `/process/${instanceId}/wizard`,
+                    query: {fullScreen: true}
+                };
+            }
             yield put(pushHistory(path));
         }
     } catch (e) {
