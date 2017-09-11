@@ -12,6 +12,8 @@ import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -72,5 +74,22 @@ public class VariablesIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*" + secretValue + ".*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testNexus() throws Exception {
+        byte[] payload = archive(VariablesIT.class.getResource("nexus").toURI());
+
+        Map<String, Object> req = new HashMap<>();
+        req.put("archive", payload);
+        req.put("arguments.nexusperf_configuration", "mvn_flood");
+
+        StartProcessResponse spr = start(req);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*test.duration=60.*", ab);
     }
 }

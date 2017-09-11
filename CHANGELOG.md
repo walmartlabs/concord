@@ -1,8 +1,22 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-runner: upgrade to the BPM engine 0.38.2. This fixes
+another variable interpolation issue.
+
+
+
 ## [0.38.0] - 2017-09-07
 
+### Added
+
 - concord-server, concord-console: support for GIT repository paths.
+
+### Changed
+
 - concord-server: fix key pair generation for non-API key users.
 
 
