@@ -1,0 +1,22 @@
+flows:
+  main:
+  # override "name" variable
+  - call: sayHello
+    in:
+      name: "${initiator.username}"
+
+  # the set value will be kept after the call is ended
+
+  # will log "Bye, admin"
+  - sayBye
+
+  sayHello:
+  - log: "Hello, ${name}"
+
+  sayBye:
+  - log: "Bye, ${name}"
+
+variables:
+  entryPoint: main
+  arguments:
+    name: "Concord"
