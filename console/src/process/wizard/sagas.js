@@ -33,7 +33,6 @@ function* nextForm({instanceId}): Generator<*, *, *> {
 
         const {formInstanceId, custom} = forms[0];
         const yieldFlow = forms[0]["yield"];
-        console.log("[[[[", yieldFlow);
 
         if (custom) {
             // a form with branding
