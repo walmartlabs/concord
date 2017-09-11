@@ -1,4 +1,4 @@
-FROM docker.prod.walmart.com/walmartlabs/concord-base
+FROM walmartlabs/concord-base
 MAINTAINER "Yury Brigadirenko" <ybrigadirenko@walmartlabs.com>
 
 RUN mkdir -p /workplace
