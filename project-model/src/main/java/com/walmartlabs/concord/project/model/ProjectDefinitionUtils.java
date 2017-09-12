@@ -55,19 +55,22 @@ public final class ProjectDefinitionUtils {
                                               BiFunction<Map<String, T>, Map<String, T>, Map<String, T>> mergeFn) {
 
         Map<String, T> view = new LinkedHashMap<>(initial != null ? initial : Collections.emptyMap());
-        if (profiles != null && activeProfiles != null) {
-            for (String n : activeProfiles) {
-                Profile p = profiles.get(n);
-                if (p == null) {
-                    continue;
-                }
+        if (profiles == null || activeProfiles == null) {
+            return view;
+        }
 
-                Map<String, T> overlays = selector.apply(p);
-                if (overlays != null) {
-                    view = mergeFn.apply(view, overlays);
-                }
+        for (String n : activeProfiles) {
+            Profile p = profiles.get(n);
+            if (p == null) {
+                continue;
+            }
+
+            Map<String, T> overlays = selector.apply(p);
+            if (overlays != null) {
+                view = mergeFn.apply(view, overlays);
             }
         }
+
         return view;
     }
 

@@ -88,8 +88,8 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     private Map<String, Object> getProfileCfg(Payload payload, List<String> activeProfiles) {
-        if (activeProfiles == null || activeProfiles.isEmpty()) {
-            return Collections.emptyMap();
+        if (activeProfiles == null) {
+            activeProfiles = Collections.emptyList();
         }
 
         ProjectDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);

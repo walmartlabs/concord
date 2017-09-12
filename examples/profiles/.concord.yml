@@ -1,0 +1,14 @@
+flows:
+  main:
+  - log: "Hello, ${name}"
+
+variables:
+  entryPoint: main
+  arguments:
+    name: "Concord"
+
+profiles:
+  stranger:
+    variables:
+      arguments:
+        name: "stranger"
