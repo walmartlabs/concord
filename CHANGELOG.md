@@ -5,7 +5,9 @@
 ### Added
 
 - concord-server, concord-console: support for `yield` for
-non-custom forms.
+non-custom forms;
+- ansible: support for external configuration files;
+- ansible: verbosity level can now be set using the task's arguments.
 
 ### Changed
 

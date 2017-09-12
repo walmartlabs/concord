@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.DockerProcessBuilder;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
@@ -25,6 +24,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     private String privateKey;
     private String vaultPasswordFile;
     private boolean debug;
+    private int verboseLevel = 0;
 
     public DockerPlaybookProcessBuilder(String dockerImageName, String workdir, String playbook, String inventory) {
         this.dockerImageName = dockerImageName;
@@ -82,6 +82,12 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     }
 
     @Override
+    public PlaybookProcessBuilder withVerboseLevel(int level) {
+        this.verboseLevel = level;
+        return this;
+    }
+
+    @Override
     public Process build() throws IOException {
         return new DockerProcessBuilder(dockerImageName)
                 .cleanup(true)
@@ -134,15 +140,24 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
             result.add(vaultPasswordFile);
         }
 
+        if (verboseLevel > 0) {
+            if (verboseLevel > 4) {
+                verboseLevel = 4;
+            }
+
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < verboseLevel; i++) {
+                b.append("v");
+            }
+
+            result.add("-" + b);
+        }
+
         return result;
     }
 
     private static String relativize(String base, String path) {
-//        if (path == null) {
-//            return null;
-//        }
         return path;
-//        return Paths.get(base).relativize(Paths.get(path)).toString();
     }
 
     private static String toJson(Map<String, String> m) throws IOException {

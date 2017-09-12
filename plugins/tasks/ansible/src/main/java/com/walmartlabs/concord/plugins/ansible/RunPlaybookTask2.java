@@ -41,10 +41,10 @@ public class RunPlaybookTask2 implements Task {
         }
         log.info("Using a playbook: {}", playbook);
 
-        Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
-        Path cfgFile = workDir.relativize(createCfgFile(tmpDir, makeCfg(cfg, ""), debug));
+        Path cfgFile = workDir.relativize(getCfgFile(args, workDir, tmpDir, debug));
 
         Path inventoryPath = workDir.relativize(getInventoryPath(args, workDir, tmpDir));
+
         Map<String, String> extraVars = (Map<String, String>) args.get(AnsibleConstants.EXTRA_VARS_KEY);
 
         Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
@@ -64,7 +64,8 @@ public class RunPlaybookTask2 implements Task {
                 .withUser(trim((String) args.get(AnsibleConstants.USER_KEY)))
                 .withTags(trim((String) args.get(AnsibleConstants.TAGS_KEY)))
                 .withExtraVars(extraVars)
-                .withDebug(debug);
+                .withDebug(debug)
+                .withVerboseLevel(getVerboseLevel(args));
 
         Process p = b.build();
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -237,6 +238,20 @@ public class RunPlaybookTask2 implements Task {
         return m;
     }
 
+    private static Path getCfgFile(Map<String, Object> args, Path workDir, Path tmpDir, boolean debug) throws IOException {
+        String s = (String) args.get(AnsibleConstants.CONFIG_FILE_KEY);
+        if (s != null) {
+            Path provided = workDir.resolve(s);
+            if (Files.exists(provided)) {
+                log.info("Using the provided configuration file: {}", provided);
+                return provided;
+            }
+        }
+
+        Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
+        return createCfgFile(tmpDir, makeCfg(cfg, ""), debug);
+    }
+
     @SuppressWarnings("unchecked")
     private static Path createCfgFile(Path tmpDir, Map<String, Object> cfg, boolean debug) throws IOException {
         StringBuilder b = new StringBuilder();
@@ -366,5 +381,22 @@ public class RunPlaybookTask2 implements Task {
         perms.add(PosixFilePermission.OWNER_EXECUTE);
         perms.add(PosixFilePermission.OWNER_WRITE);
         Files.setPosixFilePermissions(p, perms);
+    }
+
+    private static int getVerboseLevel(Map<String, Object> args) {
+        Object v = args.get(AnsibleConstants.VERBOSE_LEVEL_KEY);
+        if (v == null) {
+            return 0;
+        }
+
+        if (v instanceof Integer) {
+            return (Integer) v;
+        }
+
+        if (v instanceof Long) {
+            return ((Long) v).intValue();
+        }
+
+        throw new IllegalArgumentException("'" + AnsibleConstants.VERBOSE_LEVEL_KEY + "' should be an integer: " + v);
     }
 }

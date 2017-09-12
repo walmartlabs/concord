@@ -26,6 +26,7 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
     private String privateKey;
     private String vaultPasswordFile;
     private boolean debug;
+    private int verboseLevel = 0;
 
     public PlaybookProcessBuilderImpl(String workDir, String playbook, String inventory) {
         this.workDir = workDir;
@@ -78,6 +79,12 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
     @Override
     public PlaybookProcessBuilder withDebug(boolean debug) {
         this.debug = debug;
+        return this;
+    }
+
+    @Override
+    public PlaybookProcessBuilder withVerboseLevel(int level) {
+        this.verboseLevel = level;
         return this;
     }
 
@@ -144,6 +151,19 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
         if (vaultPasswordFile != null) {
             l.add("--vault-password-file");
             l.add(vaultPasswordFile);
+        }
+
+        if (verboseLevel > 0) {
+            if (verboseLevel > 4) {
+                verboseLevel = 4;
+            }
+
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < verboseLevel; i++) {
+                b.append("v");
+            }
+
+            l.add("-" + b);
         }
 
         return l.toArray(new String[l.size()]);
