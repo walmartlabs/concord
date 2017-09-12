@@ -51,7 +51,7 @@ public class RunPlaybookTask2 implements Task {
 
         Path vaultPasswordPath = getVaultPasswordFilePath(args, workDir, tmpDir);
 
-        Path privateKeyPath = getPrivateKeyPath(workDir);
+        Path privateKeyPath = getPrivateKeyPath(args, workDir);
         if (privateKeyPath != null) {
             privateKeyPath = workDir.relativize(privateKeyPath);
         }
@@ -294,11 +294,33 @@ public class RunPlaybookTask2 implements Task {
         return b;
     }
 
-    private static Path getPrivateKeyPath(Path workDir) throws IOException {
-        Path p = workDir.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
+    private static Path getPrivateKeyPath(Map<String, Object> args, Path workDir) throws IOException {
+        Path p = null;
+
+        Object v = args.get(AnsibleConstants.PRIVATE_KEY_FILE_KEY);
+        if (v != null) {
+            if (v instanceof String) {
+                p = workDir.resolve((String) v);
+            } else if (v instanceof Path) {
+                p = workDir.resolve((Path) v);
+            } else {
+                throw new IllegalArgumentException("'" + AnsibleConstants.PRIVATE_KEY_FILE_KEY + "' should be either a string value or a path: " + v);
+            }
+        }
+
+        if (p != null && !Files.exists(p)) {
+            throw new IllegalArgumentException("File not found: " + workDir.relativize(p));
+        }
+
+        if (p == null) {
+            p = workDir.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
+        }
+
         if (!Files.exists(p)) {
             return null;
         }
+
+        log.info("Using the private key: {}", p.toAbsolutePath());
 
         // ensure that the key has proper permissions (chmod 600)
         Set<PosixFilePermission> perms = new HashSet<>();

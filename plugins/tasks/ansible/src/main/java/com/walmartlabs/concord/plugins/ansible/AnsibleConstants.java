@@ -26,6 +26,8 @@ public final class AnsibleConstants {
 
     public static final String PLAYBOOK_KEY = "playbook";
 
+    public static final String PRIVATE_KEY_FILE_KEY = "privateKey";
+
     public static final String PRIVATE_KEY_FILE_NAME = "_privateKey";
 
     public static final String STATS_FILE_NAME = "ansible_stats.json";
