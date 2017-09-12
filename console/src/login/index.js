@@ -1,37 +1,40 @@
 import React from "react";
 import {connect} from "react-redux";
 import {reduxForm} from "redux-form";
-import {Dimmer, Form, Grid, Image, Loader, Message, Segment} from "semantic-ui-react";
+import {Dimmer, Form, Image, Loader, Message, Card, CardContent} from "semantic-ui-react";
 import {Field} from "../shared/forms";
 import * as actions from "./actions";
 import reducers, * as selectors from "./reducers";
 import sagas from "./sagas";
+import './styles.css';
 
 const isThere = (x) => x !== undefined && x !== null;
 
 let loginForm = (props) => {
     const {apiError, loading, handleSubmit} = props;
-    return <Grid centered verticalAlign="middle" className="maxHeight">
-        <Grid.Column width="4" textAlign="left">
-            <Segment>
+    return (
+        <div className="flexbox-container">
+            <Card centered>
+                <CardContent>
+                    <div className="crop">
+                        <Image src='/strati-logo.png' size='medium'/>
+                    </div>
+                    <Dimmer active={loading} inverted>
+                        <Loader/>
+                    </Dimmer>
 
-                <Image src='/strati-logo.png' size='small' centered/>
+                    <Form error={isThere(apiError)} onSubmit={handleSubmit}>
 
-                <Dimmer active={loading} inverted>
-                    <Loader/>
-                </Dimmer>
+                        <Field name="username" label="Username" icon="user" required/>
+                        <Field name="password" label="Password" type="password" icon="lock" required/>
 
-                <Form error={isThere(apiError)} onSubmit={handleSubmit}>
-
-                    <Field name="username" label="Username" icon="user" required/>
-                    <Field name="password" label="Password" type="password" icon="lock" required/>
-
-                    <Message error content={apiError}/>
-                    <Form.Button primary fluid>Login</Form.Button>
-                </Form>
-            </Segment>
-        </Grid.Column>
-    </Grid>;
+                        <Message error content={apiError}/>
+                        <Form.Button primary fluid>Login</Form.Button>
+                    </Form>
+                </CardContent>
+            </Card>
+        </div>
+    );
 };
 
 loginForm = reduxForm({form: "login"})(loginForm);

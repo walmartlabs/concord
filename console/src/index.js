@@ -37,9 +37,9 @@ const checkAuth = ({location: {pathname, query}}) => {
 ReactDOM.render(
     <Provider store={store}>
         <Router history={history}>
+            <Route path="login" component={LoginForm}/>
             <Route path="/" component={Layout}>
                 <IndexRedirect to="process"/>
-                <Route path="login" component={LoginForm}/>
                 <Route path="process" onEnter={checkAuth}>
                     <IndexRedirect to="queue"/>
                     <Route path="queue" component={ProcessQueue}/>
