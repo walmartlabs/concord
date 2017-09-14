@@ -9,6 +9,10 @@ non-custom forms.
 
 ### Changed
 
+- concord-agent: remove the working directory after the process
+finishes;
+- concord-runner: refresh the value of `${__attr_localPath}` after
+resuming a process;
 - concord-server: fixed variable merging when `activeProfiles` is
 an empty array or `null`.
 

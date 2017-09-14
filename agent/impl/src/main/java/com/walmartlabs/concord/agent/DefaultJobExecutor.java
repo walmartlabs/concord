@@ -75,7 +75,7 @@ public class DefaultJobExecutor implements JobExecutor {
             Path payloadDir = entry.getWorkDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
 
             Process proc = entry.getProcess();
-            CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> exec(instanceId, workDir, proc, payloadDir), executor);
+            CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> exec(instanceId, entry.getWorkDir(), proc, payloadDir), executor);
             return createJobInstance(instanceId, proc, f);
         } catch (Exception e) {
             log.warn("start ['{}', '{}'] -> process startup error: {}", instanceId, workDir, e.getMessage());
@@ -117,6 +117,13 @@ public class DefaultJobExecutor implements JobExecutor {
             } catch (ExecutionException e) {
                 log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
                 handleError(instanceId, workDir, proc, e.getMessage());
+            }
+
+            try {
+                log.info("exec ['{}'] -> removing the working directory: {}", instanceId, workDir);
+                IOUtils.deleteRecursively(workDir);
+            } catch (IOException e) {
+                log.warn("exec ['{}'] -> can't remove the working directory: {}", instanceId, e.getMessage());
             }
         }
     }

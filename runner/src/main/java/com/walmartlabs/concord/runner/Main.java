@@ -6,11 +6,11 @@ import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.TaskClassHolder;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.api.Event;
@@ -39,6 +39,8 @@ import java.util.stream.Collectors;
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
+    private static final String RESUME_MARKER = com.walmartlabs.concord.project.Constants.Files.RESUME_MARKER_FILE_NAME;
+    private static final String SUSPEND_MARKER = com.walmartlabs.concord.project.Constants.Files.SUSPEND_MARKER_FILE_NAME;
 
     private final EngineFactory engineFactory;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -54,7 +56,7 @@ public class Main {
         log.info("run -> working directory: {}", baseDir.toAbsolutePath());
 
         // TODO constants
-        Path idPath = baseDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
+        Path idPath = baseDir.resolve(com.walmartlabs.concord.project.Constants.Files.INSTANCE_ID_FILE_NAME);
         while (!Files.exists(idPath)) {
             // TODO replace with WatchService
             Thread.sleep(100);
@@ -143,7 +145,7 @@ public class Main {
     private static String readResumeEvent(Path baseDir) throws IOException {
         Path p = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
+                .resolve(com.walmartlabs.concord.project.Constants.Files.RESUME_MARKER_FILE_NAME);
 
         if (!Files.exists(p)) {
             return null;
@@ -177,7 +179,9 @@ public class Main {
         m.put(Constants.Context.TX_ID_KEY, instanceId);
 
         // workDir
-        m.put(Constants.Context.WORK_DIR_KEY, workDir.toAbsolutePath().toString());
+        String dir = workDir.toAbsolutePath().toString();
+        m.put(com.walmartlabs.concord.project.Constants.Context.LOCAL_PATH_KEY, dir);
+        m.put(Constants.Context.WORK_DIR_KEY, dir);
 
         // initiator's info
         Object initiator = cfg.get(Constants.Request.INITIATOR_KEY);
@@ -193,12 +197,12 @@ public class Main {
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
         try {
-            Path resumeMarker = stateDir.resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
+            Path resumeMarker = stateDir.resolve(RESUME_MARKER);
             if (Files.exists(resumeMarker)) {
                 Files.delete(resumeMarker);
             }
 
-            Path suspendMarker = stateDir.resolve(Constants.Files.SUSPEND_MARKER_FILE_NAME);
+            Path suspendMarker = stateDir.resolve(SUSPEND_MARKER);
             if (Files.exists(suspendMarker)) {
                 Files.delete(suspendMarker);
             }
@@ -220,7 +224,7 @@ public class Main {
 
                 Set<String> eventNames = events.stream().map(Event::getName).collect(Collectors.toSet());
 
-                Path marker = stateDir.resolve(Constants.Files.SUSPEND_MARKER_FILE_NAME);
+                Path marker = stateDir.resolve(SUSPEND_MARKER);
                 Files.write(marker, eventNames);
                 log.debug("finalizeState ['{}'] -> created the suspended marker", instanceId);
             }

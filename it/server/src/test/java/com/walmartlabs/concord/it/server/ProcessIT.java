@@ -1,16 +1,15 @@
 package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.process.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -192,5 +191,36 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*y=abc.*", ab);
         assertLog(".*z=" + zVal + ".*", ab);
         assertLog(".*myfile=" + myFileVal + ".*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testWorkDir() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("workDir").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        assertNotNull(spr.getInstanceId());
+
+        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello!", ab);
+        assertLog(".*Bye!", ab);
+
+        // ---
+
+        FormResource formResource = proxy(FormResource.class);
+        List<FormListEntry> forms = formResource.list(pir.getInstanceId());
+        assertEquals(1, forms.size());
+
+        FormListEntry f = forms.get(0);
+        FormSubmitResponse fsr = formResource.submit(pir.getInstanceId(), f.getFormInstanceId(), Collections.singletonMap("name", "test"));
+        assertNull(fsr.getErrors());
+
+        // ---
+
+        pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FINISHED);
+        ab = getLog(pir.getLogFileName());
+        assertLogAtLeast(".*Hello!", 2, ab);
+        assertLogAtLeast(".*Bye!", 2, ab);
     }
 }

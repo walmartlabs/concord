@@ -1,0 +1,14 @@
+flows:
+  main:
+  - log: ${resource.asString(__attr_localPath += '/test1.txt')}
+  - log: ${resource.asString(workDir += '/test2.txt')}
+  - form: myForm
+  - log: ${resource.asString(__attr_localPath += '/test1.txt')}
+  - log: ${resource.asString(workDir += '/test2.txt')}
+
+forms:
+  myForm:
+  - name: {type: "string"}
+
+variables:
+  entryPoint: "main"
