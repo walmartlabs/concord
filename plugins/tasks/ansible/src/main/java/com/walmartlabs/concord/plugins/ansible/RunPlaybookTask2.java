@@ -41,17 +41,17 @@ public class RunPlaybookTask2 implements Task {
         }
         log.info("Using a playbook: {}", playbook);
 
-        Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
-        Path cfgFile = workDir.relativize(createCfgFile(tmpDir, makeCfg(cfg, ""), debug));
+        Path cfgFile = workDir.relativize(getCfgFile(args, workDir, tmpDir, debug));
 
         Path inventoryPath = workDir.relativize(getInventoryPath(args, workDir, tmpDir));
+
         Map<String, String> extraVars = (Map<String, String>) args.get(AnsibleConstants.EXTRA_VARS_KEY);
 
         Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
 
         Path vaultPasswordPath = getVaultPasswordFilePath(args, workDir, tmpDir);
 
-        Path privateKeyPath = getPrivateKeyPath(workDir);
+        Path privateKeyPath = getPrivateKeyPath(args, workDir);
         if (privateKeyPath != null) {
             privateKeyPath = workDir.relativize(privateKeyPath);
         }
@@ -64,7 +64,8 @@ public class RunPlaybookTask2 implements Task {
                 .withUser(trim((String) args.get(AnsibleConstants.USER_KEY)))
                 .withTags(trim((String) args.get(AnsibleConstants.TAGS_KEY)))
                 .withExtraVars(extraVars)
-                .withDebug(debug);
+                .withDebug(debug)
+                .withVerboseLevel(getVerboseLevel(args));
 
         Process p = b.build();
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -247,6 +248,20 @@ public class RunPlaybookTask2 implements Task {
         return m;
     }
 
+    private static Path getCfgFile(Map<String, Object> args, Path workDir, Path tmpDir, boolean debug) throws IOException {
+        String s = (String) args.get(AnsibleConstants.CONFIG_FILE_KEY);
+        if (s != null) {
+            Path provided = workDir.resolve(s);
+            if (Files.exists(provided)) {
+                log.info("Using the provided configuration file: {}", provided);
+                return provided;
+            }
+        }
+
+        Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
+        return createCfgFile(tmpDir, makeCfg(cfg, ""), debug);
+    }
+
     @SuppressWarnings("unchecked")
     private static Path createCfgFile(Path tmpDir, Map<String, Object> cfg, boolean debug) throws IOException {
         StringBuilder b = new StringBuilder();
@@ -289,11 +304,33 @@ public class RunPlaybookTask2 implements Task {
         return b;
     }
 
-    private static Path getPrivateKeyPath(Path workDir) throws IOException {
-        Path p = workDir.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
+    private static Path getPrivateKeyPath(Map<String, Object> args, Path workDir) throws IOException {
+        Path p = null;
+
+        Object v = args.get(AnsibleConstants.PRIVATE_KEY_FILE_KEY);
+        if (v != null) {
+            if (v instanceof String) {
+                p = workDir.resolve((String) v);
+            } else if (v instanceof Path) {
+                p = workDir.resolve((Path) v);
+            } else {
+                throw new IllegalArgumentException("'" + AnsibleConstants.PRIVATE_KEY_FILE_KEY + "' should be either a string value or a path: " + v);
+            }
+        }
+
+        if (p != null && !Files.exists(p)) {
+            throw new IllegalArgumentException("File not found: " + workDir.relativize(p));
+        }
+
+        if (p == null) {
+            p = workDir.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
+        }
+
         if (!Files.exists(p)) {
             return null;
         }
+
+        log.info("Using the private key: {}", p.toAbsolutePath());
 
         // ensure that the key has proper permissions (chmod 600)
         Set<PosixFilePermission> perms = new HashSet<>();
@@ -376,5 +413,22 @@ public class RunPlaybookTask2 implements Task {
         perms.add(PosixFilePermission.OWNER_EXECUTE);
         perms.add(PosixFilePermission.OWNER_WRITE);
         Files.setPosixFilePermissions(p, perms);
+    }
+
+    private static int getVerboseLevel(Map<String, Object> args) {
+        Object v = args.get(AnsibleConstants.VERBOSE_LEVEL_KEY);
+        if (v == null) {
+            return 0;
+        }
+
+        if (v instanceof Integer) {
+            return (Integer) v;
+        }
+
+        if (v instanceof Long) {
+            return ((Long) v).intValue();
+        }
+
+        throw new IllegalArgumentException("'" + AnsibleConstants.VERBOSE_LEVEL_KEY + "' should be an integer: " + v);
     }
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public interface PlaybookProcessBuilder {
+
     PlaybookProcessBuilder withCfgFile(String cfgFile);
 
     PlaybookProcessBuilder withExtraVars(Map<String, String> extraVars);
@@ -19,6 +20,8 @@ public interface PlaybookProcessBuilder {
     PlaybookProcessBuilder withVaultPasswordFile(String vaultPasswordFile);
 
     PlaybookProcessBuilder withDebug(boolean debug);
+
+    PlaybookProcessBuilder withVerboseLevel(int level);
 
     Process build() throws IOException;
 }

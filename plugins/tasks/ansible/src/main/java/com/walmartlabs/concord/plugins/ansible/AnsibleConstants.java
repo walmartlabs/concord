@@ -4,6 +4,8 @@ public final class AnsibleConstants {
 
     public static final String CONFIG_KEY = "config";
 
+    public static final String CONFIG_FILE_KEY = "configFile";
+
     public static final String DEBUG_KEY = "debug";
 
     public static final String DOCKER_IMAGE_KEY = "dockerImage";
@@ -24,6 +26,8 @@ public final class AnsibleConstants {
 
     public static final String PLAYBOOK_KEY = "playbook";
 
+    public static final String PRIVATE_KEY_FILE_KEY = "privateKey";
+
     public static final String PRIVATE_KEY_FILE_NAME = "_privateKey";
 
     public static final String STATS_FILE_NAME = "ansible_stats.json";
@@ -37,6 +41,8 @@ public final class AnsibleConstants {
     public static final String VAULT_PASSWORD_KEY = "vaultPassword";
 
     public static final String WORK_DIR_KEY = "workDir";
+
+    public static final String VERBOSE_LEVEL_KEY = "verbose";
 
     private AnsibleConstants() {
     }
