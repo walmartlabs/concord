@@ -213,8 +213,15 @@ public class RunPlaybookTask2 implements Task {
     private static Map<String, Object> makeDefaults(String baseDir) {
         Map<String, Object> m = new HashMap<>();
 
+        // disable puppet / chef fact gathering, significant speed/performance increase - usually unneeded
+        // may eventually need !hardware for AIX/HPUX or set at runtime, Ansible 2.4 fixes many broken facts
+        m.put("gather_subset", "!facter,!ohai");
+
         // disable ssl host key checking by default
         m.put("host_key_checking", false);
+
+        //SSH timeout, default is 10 seconds and too slow for stores
+        m.put("timeout", "120");
 
         // use a shorter path to store temporary files
         m.put("remote_tmp", "/tmp/ansible/$USER");
@@ -233,6 +240,9 @@ public class RunPlaybookTask2 implements Task {
 
         // use a shorter control_path to prevent path length errors
         m.put("control_path", "%(directory)s/%%h-%%p-%%r");
+
+        // Default pipelining to True for better overall performance, compatibility
+        m.put("pipelining", "True");
 
         return m;
     }
