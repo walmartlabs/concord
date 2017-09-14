@@ -75,8 +75,8 @@ public class RepositoryManager {
         }
     }
 
-    public Path fetchByCommit(String projectName, String uri, String commitId, String path, Secret secret) {
-        Path localPath = localPath(projectName, commitId);
+    public Path fetchByCommit(String projectName, String repoName, String uri, String commitId, String path, Secret secret) {
+        Path localPath = localPath(projectName, repoName, commitId);
 
         try (Git repo = openRepo(localPath)) {
             if (repo != null) {
@@ -98,14 +98,14 @@ public class RepositoryManager {
         return repoPath(localPath, path);
     }
 
-    public Path fetch(String projectName, String uri, String branch, String path, Secret secret) {
+    public Path fetch(String projectName, String repoName, String uri, String branch, String path, Secret secret) {
         if (branch == null) {
             branch = DEFAULT_BRANCH;
         }
 
         TransportConfigCallback transportCallback = createTransportConfigCallback(secret);
 
-        Path localPath = localPath(projectName, branch);
+        Path localPath = localPath(projectName, repoName, branch);
         try (Git repo = openRepo(localPath)) {
             if (repo != null) {
                 repo.checkout()
@@ -130,8 +130,8 @@ public class RepositoryManager {
         }
     }
 
-    private Path localPath(String projectName, String branch) {
-        return cfg.getRepoCacheDir().resolve(projectName).resolve(branch);
+    private Path localPath(String projectName, String repoName, String branch) {
+        return cfg.getRepoCacheDir().resolve(projectName).resolve(repoName).resolve(branch);
     }
 
     private static Git openRepo(Path path) {

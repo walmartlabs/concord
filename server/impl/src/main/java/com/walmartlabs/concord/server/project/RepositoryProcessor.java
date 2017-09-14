@@ -94,9 +94,9 @@ public class RepositoryProcessor implements PayloadProcessor {
             log.info("process ['{}'] -> retrieving the repository files...", instanceId);
             Path src;
             if (repo.getCommitId() != null) {
-                src = repositoryManager.fetchByCommit(projectName, repo.getUrl(), repo.getCommitId(), repo.getPath(), secret);
+                src = repositoryManager.fetchByCommit(projectName, repo.getName(), repo.getUrl(), repo.getCommitId(), repo.getPath(), secret);
             } else {
-                src = repositoryManager.fetch(projectName, repo.getUrl(), branch, repo.getPath(), secret);
+                src = repositoryManager.fetch(projectName, repo.getName(), repo.getUrl(), branch, repo.getPath(), secret);
             }
 
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);

@@ -9,6 +9,7 @@ non-custom forms.
 
 ### Changed
 
+- concord-server: include GIT repository name into the cache key;
 - concord-agent: remove the working directory after the process
 finishes;
 - concord-runner: refresh the value of `${__attr_localPath}` after
