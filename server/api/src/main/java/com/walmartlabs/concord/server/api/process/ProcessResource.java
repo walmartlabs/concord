@@ -34,13 +34,27 @@ public interface ProcessResource {
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
-     * Starts a new process instance using a specified project.
+     * Starts a new process instance using the specified project and provided configuration.
      *
-     * @param req
+     * @param sync
      * @return
      */
     @POST
-    @ApiOperation("Start a new process using a specified project entry point")
+    @ApiOperation("Start a new process using a specified project")
+    @Path("/{entryPoint}")
+    StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+
+
+    /**
+     * Starts a new process instance using the specified project and provided configuration.
+     *
+     * @param req
+     * @param sync
+     * @return
+     */
+    @POST
+    @ApiOperation("Start a new process using a specified project and provided configuration")
     @Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -52,6 +66,7 @@ public interface ProcessResource {
      * Starts a new process instance.
      *
      * @param input
+     * @param sync
      * @return
      */
     @POST
@@ -66,6 +81,7 @@ public interface ProcessResource {
      *
      * @param entryPoint
      * @param input
+     * @param sync
      * @return
      */
     @POST
@@ -82,6 +98,7 @@ public interface ProcessResource {
      *
      * @param projectName
      * @param in
+     * @param sync
      * @return
      */
     @POST

@@ -10,7 +10,8 @@ import java.util.*;
 public class Payload {
 
     public static final HeaderKey<String> PROJECT_NAME = HeaderKey.register("_projectName", String.class);
-    public static final HeaderKey<String[]> ENTRY_POINT = HeaderKey.register("_entryPoint", String[].class);
+    public static final HeaderKey<String> REPOSITORY_NAME = HeaderKey.register("_repoName", String.class);
+    public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
     public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);

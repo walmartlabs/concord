@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-server: allow starting a process with a POST request using
+a project, a repository and an entry point specified in
+`.concord.yml` file;
+- concord-server: allow starting a process by sending an empty POST
+request;
 - concord-server, concord-console: support for `yield` for
 non-custom forms;
 - ansible: support for external private key files;

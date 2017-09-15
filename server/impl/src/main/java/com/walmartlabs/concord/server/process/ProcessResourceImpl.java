@@ -87,20 +87,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.formService = concordFormService;
     }
 
-    @Override
-    public StartProcessResponse start(InputStream in, boolean sync) {
-        UUID instanceId = UUID.randomUUID();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), in);
-        } catch (IOException e) {
-            log.error("start -> error creating a payload: {}", e);
-            throw new WebApplicationException("Error creating a payload", e);
-        }
+    private StartProcessResponse start(Chain pipeline, Payload payload, boolean sync) {
+        UUID instanceId = payload.getInstanceId();
 
         try {
-            archivePipeline.process(payload);
+            pipeline.process(payload);
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
@@ -114,6 +105,26 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         return new StartProcessResponse(instanceId);
+    }
+
+    @Override
+    public StartProcessResponse start(InputStream in, boolean sync) {
+        UUID instanceId = UUID.randomUUID();
+
+        Payload payload;
+        try {
+            payload = payloadManager.createPayload(instanceId, getInitiator(), in);
+        } catch (IOException e) {
+            log.error("start -> error creating a payload: {}", e);
+            throw new WebApplicationException("Error creating a payload", e);
+        }
+
+        return start(archivePipeline, payload, sync);
+    }
+
+    @Override
+    public StartProcessResponse start(String entryPoint, boolean sync) {
+        return start(entryPoint, Collections.emptyMap(), sync);
     }
 
     @Override
@@ -131,21 +142,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        try {
-            projectPipeline.process(payload);
-        } catch (ProcessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("start ['{}'] -> error starting the process", instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
-        }
-
-        if (sync) {
-            Map<String, Object> args = readArgs(instanceId);
-            process(instanceId, args);
-        }
-
-        return new StartProcessResponse(instanceId);
+        return start(projectPipeline, payload, sync);
     }
 
     @Override
@@ -170,21 +167,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        try {
-            projectPipeline.process(payload);
-        } catch (ProcessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("start ['{}'] -> error starting the process", instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
-        }
-
-        if (sync) {
-            Map<String, Object> args = readArgs(instanceId);
-            process(instanceId, args);
-        }
-
-        return new StartProcessResponse(instanceId);
+        return start(projectPipeline, payload, sync);
     }
 
     @Override
@@ -200,21 +183,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        try {
-            archivePipeline.process(payload);
-        } catch (ProcessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("start ['{}'] -> error starting the process", instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
-        }
-
-        if (sync) {
-            Map<String, Object> args = readArgs(instanceId);
-            process(instanceId, args);
-        }
-
-        return new StartProcessResponse(instanceId);
+        return start(archivePipeline, payload, sync);
     }
 
     @Override
