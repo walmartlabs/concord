@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.security.secret;
+package com.walmartlabs.concord.common.secret;
 
 import java.io.Serializable;
 

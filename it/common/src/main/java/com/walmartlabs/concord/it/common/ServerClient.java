@@ -1,9 +1,12 @@
 package com.walmartlabs.concord.it.common;
 
+import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.security.secret.SecretResource;
+import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
@@ -61,9 +64,11 @@ public class ServerClient {
     }
 
     public StartProcessResponse start(String entryPoint, Map<String, Object> input) {
-        WebTarget target = client.target(baseUrl + "/" + ProcessResource.class.getAnnotation(Path.class).value() +
-                (entryPoint != null ? "/" + entryPoint : ""));
+        return request(ProcessResource.class.getAnnotation(Path.class).value() + (entryPoint != null ? "/" + entryPoint : ""),
+                input, StartProcessResponse.class);
+    }
 
+    private MultipartFormDataOutput createMDO(Map<String, Object> input) {
         MultipartFormDataOutput mdo = new MultipartFormDataOutput();
         input.forEach((k, v) -> {
             if (v instanceof InputStream || v instanceof byte[]) {
@@ -74,7 +79,13 @@ public class ServerClient {
                 throw new IllegalArgumentException("Unknown input type: " + v);
             }
         });
+        return mdo;
+    }
 
+    private <T> T request(String uri, Map<String, Object> input, Class<T> entityType) {
+        WebTarget target = client.target(baseUrl + "/" + uri);
+
+        MultipartFormDataOutput mdo = createMDO(input);
         GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
         };
 
@@ -84,9 +95,21 @@ public class ServerClient {
             throw new WebApplicationException(resp);
         }
 
-        StartProcessResponse spr = resp.readEntity(StartProcessResponse.class);
+        T e = resp.readEntity(entityType);
         resp.close();
-        return spr;
+        return e;
+    }
+
+    public UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {
+        return request(SecretResource.class.getAnnotation(Path.class).value() + "/plain?name=" + name + "&generatePassword=" + generatePassword,
+                ImmutableMap.of("secret", secret, "storePassword", storePassword),
+                UploadSecretResponse.class);
+    }
+
+    public UploadSecretResponse addUsernamePassword(String name, boolean generatePassword, String storePassword, String username, String password) {
+        return request(SecretResource.class.getAnnotation(Path.class).value() + "/password?name=" + name + "&generatePassword=" + generatePassword,
+                ImmutableMap.of("username", username, "password", password, "storePassword", storePassword),
+                UploadSecretResponse.class);
     }
 
     public byte[] getLog(String logFileName) {

@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.server.security.secret;
 
+import com.walmartlabs.concord.common.secret.Secret;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.GeneralSecurityException;

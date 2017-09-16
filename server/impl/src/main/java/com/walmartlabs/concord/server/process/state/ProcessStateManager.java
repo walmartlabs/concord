@@ -59,6 +59,13 @@ public class ProcessStateManager extends AbstractDao {
         return txResult(tx);
     }
 
+    public void insert(UUID instanceId, String path, byte[] ab) {
+        tx(tx -> tx.insertInto(PROCESS_STATE)
+                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
+                .values(instanceId, path, ab)
+                .execute());
+    }
+
     /**
      * Fetches a single value specified by its path and applies a converter function.
      */

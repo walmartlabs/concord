@@ -1,12 +1,15 @@
 package com.walmartlabs.concord.server.api.security.secret;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
+@JsonInclude(Include.NON_NULL)
 public class PublicKeyResponse implements Serializable {
 
     private final boolean ok = true;
@@ -18,12 +21,16 @@ public class PublicKeyResponse implements Serializable {
     @NotNull
     private final String publicKey;
 
+    private final String exportPassword;
+
     @JsonCreator
     public PublicKeyResponse(@JsonProperty("name") String name,
-                             @JsonProperty("publicKey") String publicKey) {
+                             @JsonProperty("publicKey") String publicKey,
+                             @JsonProperty("exportPassword") String exportPassword) {
 
         this.name = name;
         this.publicKey = publicKey;
+        this.exportPassword = exportPassword;
     }
 
     public boolean isOk() {
@@ -36,6 +43,10 @@ public class PublicKeyResponse implements Serializable {
 
     public String getPublicKey() {
         return publicKey;
+    }
+
+    public String getExportPassword() {
+        return exportPassword;
     }
 
     @Override

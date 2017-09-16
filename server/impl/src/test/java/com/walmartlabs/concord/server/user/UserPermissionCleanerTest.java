@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.user;
 
+import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
@@ -29,7 +30,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         String secretName = "secret#" + System.currentTimeMillis();
-        secretDao.insert(secretName, SecretType.KEY_PAIR, new byte[]{0, 1, 2});
+        secretDao.insert(secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
 
         UUID userId = UUID.randomUUID();
         String username = "user#" + System.currentTimeMillis();

@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
+import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -34,7 +35,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORI
 public class ProjectResourceImpl extends AbstractDao implements ProjectResource, Resource {
 
     private final ProjectDao projectDao;
-    private final ProjectSecretManager projectSecretManager;
+    private final SecretManager secretManager;
     private final RepositoryDao repositoryDao;
     private final SecretDao secretDao;
     private final Set<ConfigurationValidator> cfgValidators;
@@ -45,7 +46,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Inject
     public ProjectResourceImpl(Configuration cfg,
                                ProjectDao projectDao,
-                               ProjectSecretManager projectSecretManager,
+                               SecretManager secretManager,
                                RepositoryDao repositoryDao,
                                SecretDao secretDao,
                                Set<ConfigurationValidator> cfgValidators) {
@@ -53,7 +54,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         super(cfg);
 
         this.projectDao = projectDao;
-        this.projectSecretManager = projectSecretManager;
+        this.secretManager = secretManager;
         this.repositoryDao = repositoryDao;
         this.secretDao = secretDao;
         this.cfgValidators = cfgValidators;
@@ -332,7 +333,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertProject(projectName);
 
         byte[] input = req.getValue().getBytes();
-        byte[] result = projectSecretManager.encrypt(projectName, input);
+        byte[] result = secretManager.encryptData(projectName, input);
 
         return new EncryptValueResponse(result);
     }

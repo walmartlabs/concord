@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -26,8 +26,9 @@ public class UserInfoProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        UserInfo info = getInfo();
+        // collect and store the initiator's data
 
+        UserInfo info = getInfo();
         payload = payload.mergeValues(Payload.REQUEST_DATA_MAP,
                 Collections.singletonMap(Constants.Request.INITIATOR_KEY, info));
 

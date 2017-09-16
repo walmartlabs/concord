@@ -4,7 +4,7 @@ import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
-import com.walmartlabs.concord.server.security.secret.Secret;
+import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -87,7 +87,7 @@ public class ConsoleService implements Resource {
     @RequiresAuthentication
     public boolean testRepository(RepositoryTestRequest req) {
         try {
-            Secret secret = secretManager.getSecret(req.getSecret());
+            Secret secret = secretManager.getSecret(req.getSecret(), null);
             repositoryManager.testConnection(req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), secret);
             return true;
         } catch (Exception e) {

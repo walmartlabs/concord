@@ -9,7 +9,7 @@ import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.project.RepositoryProcessor;
 import com.walmartlabs.concord.server.project.RepositoryProcessor.RepositoryInfo;
-import com.walmartlabs.concord.server.security.secret.KeyPair;
+import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
             throw new ProcessException(instanceId, "No matching secrets found");
         }
 
-        KeyPair keyPair = secretManager.getKeyPair(secret);
+        KeyPair keyPair = secretManager.getKeyPair(secret, null);
         if (keyPair == null) {
             logManager.error(instanceId, "Secret not found: " + secret);
             throw new ProcessException(instanceId, "Secret not found: " + secret);

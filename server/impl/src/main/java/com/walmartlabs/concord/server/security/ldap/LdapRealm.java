@@ -118,16 +118,19 @@ public class LdapRealm extends AbstractLdapRealm {
 
     @Override
     protected AuthorizationInfo queryForAuthorizationInfo(PrincipalCollection principals, LdapContextFactory ldapContextFactory) throws NamingException {
-        UserPrincipal u = (UserPrincipal) principals.getPrimaryPrincipal();
+        UserPrincipal p = (UserPrincipal) principals.getPrimaryPrincipal();
+        if (!"ldap".equals(p.getRealm())) {
+            return null;
+        }
 
-        LdapInfo i = u.getLdapInfo();
+        LdapInfo i = p.getLdapInfo();
         if (i == null) {
-            throw new AuthorizationException("LDAP data not found: " + u.getUsername());
+            throw new AuthorizationException("LDAP data not found: " + p.getUsername());
         }
 
         Collection<String> roles = new HashSet<>();
         roles.addAll(ldapDao.getRoles(i.getGroups()));
-        return authorizer.getAuthorizationInfo(u, roles);
+        return authorizer.getAuthorizationInfo(p, roles);
     }
 
     private static final String normalizeUsername(String s) {

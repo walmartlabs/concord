@@ -137,7 +137,8 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        UploadSecretResponse usr = secretResource.addUsernamePassword(keyName, new UsernamePasswordRequest("something", new char[]{'a', 'b', 'c'}));
+        UploadSecretResponse usr = secretResource.addUsernamePassword(keyName,
+                new UsernamePasswordRequest("something", new char[]{'a', 'b', 'c'}));
         assertTrue(usr.isOk());
 
         // ---

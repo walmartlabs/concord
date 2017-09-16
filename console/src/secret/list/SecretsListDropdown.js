@@ -4,6 +4,8 @@ import {Dropdown} from "semantic-ui-react";
 import * as selectors from "./reducers";
 import * as actions from "./actions";
 
+const LOCKED_SECRET_TYPE = "PASSWORD";
+
 class SecretsListDropdown extends Component {
 
     componentDidMount() {
@@ -12,11 +14,14 @@ class SecretsListDropdown extends Component {
     }
 
     render() {
-        const {data, isLoading, loadFn, ...rest} = this.props;
+        const {data, isLoading, ...rest} = this.props;
 
         let options = [];
         if (data) {
-            options = data.map(({name, type}) => ({text: `${name} (${type})`, value: name}));
+            options = data.map(({name, type, storageType}) => {
+                const icon = storageType == LOCKED_SECRET_TYPE ? "lock" : undefined;
+                return {text: `${name} (${type})`, value: name, icon: icon};
+            });
         }
 
         return <Dropdown loading={isLoading} options={options} {...rest} search/>;

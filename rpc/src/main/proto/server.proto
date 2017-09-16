@@ -121,7 +121,33 @@ message TKvIncResponse {
 
 service TSecretStoreService {
 
+    rpc fetch(TFetchSecretRequest) returns (TFetchSecretResponse);
     rpc decrypt(TDecryptRequest) returns (TDecryptResponse);
+}
+
+message TFetchSecretRequest {
+    string instanceId = 1;
+    string secretName = 2;
+    string password = 3;
+}
+
+enum TSecretType {
+    KEY_PAIR = 0;
+    USERNAME_PASSWORD = 1;
+    DATA = 2;
+}
+
+message TFetchSecretResponse {
+    TFetchSecretStatus status = 1;
+    TSecretType type = 2;
+    bytes data = 3;
+}
+
+enum TFetchSecretStatus {
+    SECRET_FOUND = 0;
+    SECRET_NOT_FOUND = 1;
+    SECRET_NOT_AUTHORIZED = 2;
+    SECRET_STORE_ERROR = 3;
 }
 
 message TDecryptRequest {
@@ -130,7 +156,7 @@ message TDecryptRequest {
 }
 
 enum TDecryptStatus {
-    SUCCESS = 0;
+    KEY_FOUND = 0;
     KEY_NOT_FOUND = 1;
 }
 

@@ -2,6 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.it.common.ServerClient;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
 import org.junit.After;
 import org.junit.Before;
 
@@ -28,6 +29,14 @@ public abstract class AbstractServerIT {
 
     protected StartProcessResponse start(String entryPoint, Map<String, Object> input) {
         return serverClient.start(entryPoint, input);
+    }
+
+    protected UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {
+        return serverClient.addPlainSecret(name, generatePassword, storePassword, secret);
+    }
+
+    protected UploadSecretResponse addUsernamePassword(String name, boolean generatePassword, String storePassword, String username, String password) {
+        return serverClient.addUsernamePassword(name, generatePassword, storePassword, username, password);
     }
 
     protected <T> T proxy(Class<T> klass) {

@@ -21,6 +21,7 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.FormSubmitResult;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -108,6 +109,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    @RequiresAuthentication
     public StartProcessResponse start(InputStream in, boolean sync) {
         UUID instanceId = UUID.randomUUID();
 
@@ -128,6 +130,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, Map<String, Object> req, boolean sync) {
         UUID instanceId = UUID.randomUUID();
 
@@ -146,11 +149,13 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    @RequiresAuthentication
     public StartProcessResponse start(MultipartInput input, boolean sync) {
         return start(null, input, sync);
     }
 
     @Override
+    @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, MultipartInput input, boolean sync) {
         UUID instanceId = UUID.randomUUID();
 
@@ -172,6 +177,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @RequiresAuthentication
     public StartProcessResponse start(String projectName, InputStream in, boolean sync) {
         UUID instanceId = UUID.randomUUID();
 
@@ -188,6 +194,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @RequiresAuthentication
     public ResumeProcessResponse resume(UUID instanceId, String eventName, Map<String, Object> req) {
         Payload payload;
         try {
@@ -209,6 +216,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @RequiresAuthentication
     public ProcessEntry waitForCompletion(UUID instanceId, long timeout) {
         log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId, timeout);
 
@@ -240,6 +248,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @RequiresAuthentication
     public void kill(UUID instanceId) {
         ProcessEntry entry = queueDao.get(instanceId);
         if (entry == null) {
@@ -258,6 +267,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @RequiresAuthentication
     public ProcessEntry get(UUID instanceId) {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
@@ -271,6 +281,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @WithTimer
+    @RequiresAuthentication
     public Response downloadAttachment(UUID instanceId, String attachmentName) {
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
@@ -315,6 +326,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @WithTimer
+    @RequiresAuthentication
     public List<ProcessEntry> list() {
         return queueDao.list();
     }
@@ -322,6 +334,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @WithTimer
+    @RequiresAuthentication
     public Response getLog(UUID instanceId, String range) {
         Integer start = null;
         Integer end = null;
@@ -379,6 +392,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @WithTimer
+    @RequiresAuthentication
     public Response downloadState(UUID instanceId) {
         if (!stateManager.exists(instanceId)) {
             throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);

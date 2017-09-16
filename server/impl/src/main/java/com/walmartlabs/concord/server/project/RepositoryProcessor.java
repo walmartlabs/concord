@@ -9,7 +9,7 @@ import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
-import com.walmartlabs.concord.server.security.secret.Secret;
+import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +77,7 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         Secret secret = null;
         if (repo.getSecret() != null) {
-            secret = secretManager.getSecret(repo.getSecret());
+            secret = secretManager.getSecret(repo.getSecret(), null);
             if (secret == null) {
                 logManager.error(instanceId, "Secret not found: " + repo.getSecret());
                 throw new ProcessException(instanceId, "Secret not found: " + repo.getSecret());

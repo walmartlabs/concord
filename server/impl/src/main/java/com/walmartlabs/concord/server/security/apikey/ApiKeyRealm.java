@@ -21,8 +21,6 @@ import java.util.Arrays;
 @Named
 public class ApiKeyRealm extends AuthorizingRealm {
 
-    private static final Logger log = LoggerFactory.getLogger(ApiKeyRealm.class);
-
     private final UserDao userDao;
     private final ConcordShiroAuthorizer authorizer;
 
@@ -54,6 +52,9 @@ public class ApiKeyRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         UserPrincipal p = (UserPrincipal) principals.getPrimaryPrincipal();
+        if (!"apikey".equals(p.getRealm())) {
+            return null;
+        }
         return authorizer.getAuthorizationInfo(p, null);
     }
 }
