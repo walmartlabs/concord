@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-runner: provide a way to access
+password-protected secrets from flows;
 - concord-server: allow starting a process with a POST request using
 a project, a repository and an entry point specified in
 `.concord.yml` file;
