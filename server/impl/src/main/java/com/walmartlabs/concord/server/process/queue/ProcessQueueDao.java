@@ -149,8 +149,16 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     private static ProcessEntry toEntry(ProcessQueueRecord r) {
+        ProcessKind kind;
+        String s = r.getProcessKind();
+        if (s != null) {
+            kind = ProcessKind.valueOf(s);
+        } else {
+            kind = ProcessKind.DEFAULT;
+        }
+
         return new ProcessEntry(r.getInstanceId(),
-                ProcessKind.valueOf(r.getProcessKind()),
+                kind,
                 r.getParentInstanceId(),
                 r.getProjectName(),
                 r.getCreatedAt(),

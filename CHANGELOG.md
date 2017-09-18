@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed a potential NPE while retrieving the process
+queue.
+
+
+
 ## [0.39.0] - 2017-09-17
 
 ### Added
