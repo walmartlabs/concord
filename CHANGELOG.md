@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- ansible: initial support for Ansible event streaming.
+
 ### Changed
 
 - concord-server: fixed a potential NPE while retrieving the process
