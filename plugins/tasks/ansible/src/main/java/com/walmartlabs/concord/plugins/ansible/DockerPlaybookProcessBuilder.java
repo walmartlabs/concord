@@ -23,6 +23,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     private String tags;
     private String privateKey;
     private String vaultPasswordFile;
+    private Map<String, String> extraEnv = Collections.emptyMap();
     private boolean debug;
     private int verboseLevel = 0;
 
@@ -76,6 +77,12 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     }
 
     @Override
+    public PlaybookProcessBuilder withEnv(Map<String, String> env) {
+        this.extraEnv = env;
+        return this;
+    }
+
+    @Override
     public PlaybookProcessBuilder withDebug(boolean debug) {
         this.debug = debug;
         return this;
@@ -110,6 +117,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
         if (attachmentsDir != null) {
             env.put("_CONCORD_ATTACHMENTS_DIR", attachmentsDir);
         }
+        env.putAll(extraEnv);
         return env;
     }
 

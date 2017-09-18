@@ -3,12 +3,11 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +27,18 @@ public class RunPlaybookTask2 implements Task {
     private static final Logger log = LoggerFactory.getLogger(RunPlaybookTask2.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
+    private static final String CALLBACK_DIR = "_callbacks";
+    private static final String PYTHON_LIB_DIR = "_python_lib";
+
+    private final RpcConfiguration rpcCfg;
+
+    @InjectVariable("context")
+    Context context;
+
+    @Inject
+    public RunPlaybookTask2(RpcConfiguration rpcCfg) {
+        this.rpcCfg = rpcCfg;
+    }
 
     private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilderFactory pb) throws Exception {
         boolean debug = toBoolean(args.get(AnsibleConstants.DEBUG_KEY));
@@ -56,6 +67,14 @@ public class RunPlaybookTask2 implements Task {
             privateKeyPath = workDir.relativize(privateKeyPath);
         }
 
+        Map<String, String> env = new HashMap<>();
+        env.put("PYTHONPATH", workDir.resolve(PYTHON_LIB_DIR).toString());
+        env.put("CONCORD_HOST", rpcCfg.getServerHost());
+        env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
+        env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
+
+        processCallback(workDir);
+
         PlaybookProcessBuilder b = pb.build(playbook, inventoryPath.toString())
                 .withAttachmentsDir(toString(attachmentsPath))
                 .withCfgFile(toString(cfgFile))
@@ -65,7 +84,8 @@ public class RunPlaybookTask2 implements Task {
                 .withTags(trim((String) args.get(AnsibleConstants.TAGS_KEY)))
                 .withExtraVars(extraVars)
                 .withDebug(debug)
-                .withVerboseLevel(getVerboseLevel(args));
+                .withVerboseLevel(getVerboseLevel(args))
+                .withEnv(env);
 
         Process p = b.build();
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -82,6 +102,24 @@ public class RunPlaybookTask2 implements Task {
         if (code != SUCCESS_EXIT_CODE) {
             log.warn("Playbook is finished with code {}", code);
             throw new IllegalStateException("Process finished with with exit code " + code);
+        }
+    }
+
+    private void processCallback(Path workDir) throws IOException {
+        Path libDir = workDir.resolve(PYTHON_LIB_DIR);
+        Files.createDirectories(libDir);
+
+        copyResourceToFile("/server_pb2.py", libDir.resolve("server_pb2.py"));
+        copyResourceToFile("/server_pb2_grpc.py", libDir.resolve("server_pb2_grpc.py"));
+
+        Path callbackDir = workDir.resolve(CALLBACK_DIR);
+        Files.createDirectories(callbackDir);
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
+    }
+
+    private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
+        try (InputStream is = RunPlaybookTask2.class.getResourceAsStream(resourceName)) {
+            Files.copy(is, dest);
         }
     }
 
@@ -231,7 +269,7 @@ public class RunPlaybookTask2 implements Task {
         if (!"".equals(baseDir) && !baseDir.endsWith("/")) {
             baseDir = baseDir + "/";
         }
-        m.put("callback_plugins", baseDir + "_callbacks");
+        m.put("callback_plugins", baseDir + CALLBACK_DIR);
 
         return m;
     }

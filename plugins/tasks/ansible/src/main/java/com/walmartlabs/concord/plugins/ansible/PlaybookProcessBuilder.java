@@ -19,6 +19,8 @@ public interface PlaybookProcessBuilder {
 
     PlaybookProcessBuilder withVaultPasswordFile(String vaultPasswordFile);
 
+    PlaybookProcessBuilder withEnv(Map<String, String> env);
+
     PlaybookProcessBuilder withDebug(boolean debug);
 
     PlaybookProcessBuilder withVerboseLevel(int level);

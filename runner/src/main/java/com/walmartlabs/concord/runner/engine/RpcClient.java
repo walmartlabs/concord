@@ -1,7 +1,9 @@
 package com.walmartlabs.concord.runner.engine;
 
 import com.walmartlabs.concord.rpc.*;
+import com.walmartlabs.concord.sdk.RpcConfiguration;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -11,10 +13,9 @@ public class RpcClient {
 
     private final RunnerApiClient client;
 
-    public RpcClient() {
-        String host = System.getProperty("rpc.server.host", "localhost");
-        int port = Integer.parseInt(System.getProperty("rpc.server.port", "8101"));
-        this.client = new RunnerApiClient(host, port);
+    @Inject
+    public RpcClient(RpcConfiguration cfg) {
+        this.client = new RunnerApiClient(cfg.getServerHost(), cfg.getServerPort());
     }
 
     public KvService getKvService() {

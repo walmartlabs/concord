@@ -42,6 +42,8 @@ public class EventServiceImpl extends TEventServiceGrpc.TEventServiceImplBase {
         switch (type) {
             case PROCESS_ELEMENT:
                 return ProcessEventType.ELEMENT;
+            case ANSIBLE_EVENT:
+                return ProcessEventType.ANSIBLE;
             default:
                 throw new IllegalArgumentException("Unsupported event type: " + type);
         }
