@@ -199,6 +199,15 @@ public class Grammar {
                                             .map(elseSteps -> new YamlIfExpr(a.location, (String) a.value, thenSteps, elseSteps)),
                                     new YamlIfExpr(a.location, (String) a.value, thenSteps, Seq.empty())))));
 
+    // switchExpr := FIELD_NAME "switch" expression (FIELD_NAME steps)* (FIELD_NAME "default" steps)?
+    private static final Parser<Atom, Seq<KV<String, Seq<YamlStep>>>> switchOptions = label("SWITCH options",
+            many1(satisfyToken(JsonToken.FIELD_NAME).bind(a -> steps.map(v -> new KV<>(a.name, v)))));
+
+    private static final Parser<Atom, YamlStep> switchExpr = label("SWITCH expression",
+            satisfyField("switch").then(expression).bind(a ->
+                    switchOptions.map(options ->
+                            new YamlSwitchExpr(a.location, (String) a.value, options))));
+
     // returnExpr := VALUE_STRING "return"
     private static final Parser<Atom, YamlStep> returnExpr = label("Return keyword",
             satisfy((Atom a) -> {
@@ -268,7 +277,7 @@ public class Grammar {
     // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(docker, group, ifExpr, exprFull, formCall, vars), taskFull, callFull, event, errorReturn, script, taskShort)));
+                    choice(choice(docker, group, switchExpr, ifExpr, exprFull, formCall, vars), taskFull, callFull, event, errorReturn, script, taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
     private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, callProc, stepObject);
