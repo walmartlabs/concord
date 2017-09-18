@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-runner: support for `onFailure`, `onCancel`
+flows;
 - concord-server, concord-runner: provide a way to access
 password-protected secrets from flows;
 - concord-server: allow starting a process with a POST request using
