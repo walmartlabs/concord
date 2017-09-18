@@ -24,9 +24,9 @@ public class CommandQueueImpl implements CommandQueue {
                 throw new ClientException(e.getMessage(), e);
             }
             return new CancelJobCommand(cmd.getInstanceId());
-        } else {
-            throw new IllegalArgumentException("Unsupported command type: " + any.getTypeUrl());
         }
+
+        throw new IllegalArgumentException("Unsupported command type: " + any.getTypeUrl());
     }
 
     @Override

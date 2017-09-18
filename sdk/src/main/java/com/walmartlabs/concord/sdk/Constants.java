@@ -78,6 +78,7 @@ public final class Constants {
      */
     public static final class Files {
 
+        @Deprecated
         public static final String PAYLOAD_DIR_NAME = "payload";
 
         /**
@@ -122,6 +123,19 @@ public final class Constants {
 
         private Files() {
         }
+    }
+
+    public static final class Flows {
+
+        /**
+         * Failure-handling flow.
+         */
+        public static final String ON_FAILURE_FLOW = "onFailure";
+
+        /**
+         * Cancel-handling flow.
+         */
+        public static final String ON_CANCEL_FLOW = "onCancel";
     }
 
     private Constants() {

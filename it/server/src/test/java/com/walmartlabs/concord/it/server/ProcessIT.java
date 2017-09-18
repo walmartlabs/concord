@@ -109,7 +109,7 @@ public class ProcessIT extends AbstractServerIT {
 
         processResource.kill(spr.getInstanceId());
 
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED, ProcessStatus.FINISHED);
+        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.CANCELLED, ProcessStatus.FAILED, ProcessStatus.FINISHED);
     }
 
     @Test(timeout = 30000)

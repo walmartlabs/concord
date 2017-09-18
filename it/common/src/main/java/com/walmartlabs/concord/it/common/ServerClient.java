@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
+import com.walmartlabs.concord.server.api.process.*;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
@@ -21,6 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -146,6 +148,35 @@ public class ServerClient {
             }
 
             Thread.sleep(500);
+        }
+    }
+
+    public static ProcessEntry waitForChild(ProcessResource processResource,
+                                            UUID parentInstanceId, ProcessKind kind,
+                                            ProcessStatus status, ProcessStatus... more) throws InterruptedException {
+
+        int retries = 5;
+        while (true) {
+            List<ProcessEntry> l = processResource.list(parentInstanceId);
+            for (ProcessEntry e : l) {
+                if (e.getKind() == kind) {
+                    if (e.getStatus() == status) {
+                        return e;
+                    }
+
+                    for (ProcessStatus s : more) {
+                        if (e.getStatus() == s) {
+                            return e;
+                        }
+                    }
+                }
+            }
+
+            if (--retries < 0) {
+                throw new IllegalStateException("Child process not found: " + kind);
+            }
+
+            Thread.sleep(1000);
         }
     }
 

@@ -1,0 +1,9 @@
+flows:
+  main:
+  - ${sleep.ms(30000)}
+
+  onCancel:
+  - log: "abc"
+
+variables:
+  entryPoint: main

@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import org.jooq.Configuration;
@@ -26,21 +27,29 @@ public class ProcessQueueDao extends AbstractDao {
         super(cfg);
     }
 
-    public void insertInitial(UUID instanceId, String projectName, String initiator) {
-        tx(tx -> tx.insertInto(PROCESS_QUEUE)
+    public void insertInitial(UUID instanceId, ProcessKind kind, UUID parentInstanceId, String projectName, String initiator) {
+        tx(tx -> insertInitial(tx, instanceId, kind, parentInstanceId, projectName, initiator));
+    }
+
+    public void insertInitial(DSLContext tx, UUID instanceId, ProcessKind kind, UUID parentInstanceId, String projectName, String initiator) {
+        tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
+                        PROCESS_QUEUE.PROCESS_KIND,
+                        PROCESS_QUEUE.PARENT_INSTANCE_ID,
                         PROCESS_QUEUE.PROJECT_NAME,
                         PROCESS_QUEUE.CREATED_AT,
                         PROCESS_QUEUE.INITIATOR,
                         PROCESS_QUEUE.CURRENT_STATUS,
                         PROCESS_QUEUE.LAST_UPDATED_AT)
                 .values(value(instanceId),
+                        value(kind.toString()),
+                        value(parentInstanceId),
                         value(projectName),
                         currentTimestamp(),
                         value(initiator),
                         value(ProcessStatus.PREPARING.toString()),
                         currentTimestamp())
-                .execute());
+                .execute();
     }
 
     public void update(UUID instanceId, String agentId, ProcessStatus status) {
@@ -59,17 +68,19 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void update(UUID instanceId, ProcessStatus status) {
-        tx(tx -> {
-            int i = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .execute();
+        tx(tx -> update(tx, instanceId, status));
+    }
 
-            if (i != 1) {
-                throw new DataAccessException("Invalid number of rows updated: " + i);
-            }
-        });
+    public void update(DSLContext tx, UUID instanceId, ProcessStatus status) {
+        int i = tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                .execute();
+
+        if (i != 1) {
+            throw new DataAccessException("Invalid number of rows updated: " + i);
+        }
     }
 
     public boolean update(UUID instanceId, ProcessStatus expected, ProcessStatus status) {
@@ -120,15 +131,27 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public List<ProcessEntry> list() {
-        DSLContext tx = DSL.using(cfg);
-        return tx.selectFrom(PROCESS_QUEUE)
-                .orderBy(PROCESS_QUEUE.CREATED_AT.desc())
-                .limit(30)
-                .fetch(ProcessQueueDao::toEntry);
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.selectFrom(PROCESS_QUEUE)
+                    .orderBy(PROCESS_QUEUE.CREATED_AT.desc())
+                    .limit(30)
+                    .fetch(ProcessQueueDao::toEntry);
+        }
+    }
+
+    public List<ProcessEntry> list(UUID parentInstanceId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.selectFrom(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId))
+                    .orderBy(PROCESS_QUEUE.CREATED_AT.desc())
+                    .fetch(ProcessQueueDao::toEntry);
+        }
     }
 
     private static ProcessEntry toEntry(ProcessQueueRecord r) {
         return new ProcessEntry(r.getInstanceId(),
+                ProcessKind.valueOf(r.getProcessKind()),
+                r.getParentInstanceId(),
                 r.getProjectName(),
                 r.getCreatedAt(),
                 r.getInitiator(),

@@ -30,7 +30,8 @@ public class ProcessStateCleaner {
 
     private static final String[] REMOVE_STATUSES = {
             ProcessStatus.FINISHED.toString(),
-            ProcessStatus.FAILED.toString()
+            ProcessStatus.FAILED.toString(),
+            ProcessStatus.CANCELLED.toString()
     };
 
     @Inject

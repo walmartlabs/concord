@@ -28,6 +28,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.value;
 
 @Named
 public class ProcessStateManager extends AbstractDao {
@@ -59,41 +61,38 @@ public class ProcessStateManager extends AbstractDao {
         return txResult(tx);
     }
 
-    public void insert(UUID instanceId, String path, byte[] ab) {
-        tx(tx -> tx.insertInto(PROCESS_STATE)
-                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
-                .values(instanceId, path, ab)
-                .execute());
-    }
-
     /**
      * Fetches a single value specified by its path and applies a converter function.
      */
     public <T> Optional<T> get(UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
-            String sql = tx.select(PROCESS_STATE.ITEM_DATA)
-                    .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
-                            .and(PROCESS_STATE.ITEM_PATH.eq((String) null)))
-                    .getSQL();
+            return get(tx, instanceId, path, converter);
+        }
+    }
 
-            return tx.connectionResult(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, instanceId);
-                    ps.setString(2, path);
+    public <T> Optional<T> get(DSLContext tx, UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
+        String sql = tx.select(PROCESS_STATE.ITEM_DATA)
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
+                        .and(PROCESS_STATE.ITEM_PATH.eq((String) null)))
+                .getSQL();
 
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (!rs.next()) {
-                            return Optional.empty();
-                        }
+        return tx.connectionResult(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, instanceId);
+                ps.setString(2, path);
 
-                        try (InputStream in = rs.getBinaryStream(1)) {
-                            return converter.apply(in);
-                        }
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        return Optional.empty();
+                    }
+
+                    try (InputStream in = rs.getBinaryStream(1)) {
+                        return converter.apply(in);
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -167,7 +166,6 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
-
     /**
      * Removes all data of the specified process.
      *
@@ -197,6 +195,17 @@ public class ProcessStateManager extends AbstractDao {
                 .execute();
 
         return rows > 0;
+    }
+
+    public void insert(UUID instanceId, String path, byte[] data) {
+        tx(tx -> insert(tx, instanceId, path, data));
+    }
+
+    public void insert(DSLContext tx, UUID instanceId, String path, byte[] data) {
+        tx.insertInto(PROCESS_STATE)
+                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
+                .values(instanceId, path, data)
+                .execute();
     }
 
     /**
@@ -355,6 +364,20 @@ public class ProcessStateManager extends AbstractDao {
                 }
             });
         }
+    }
+
+    public boolean copy(DSLContext tx, UUID src, UUID dst) {
+        int i = tx.insertInto(PROCESS_STATE)
+                .select(select(value(dst), PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
+                        .from(PROCESS_STATE)
+                        .where(PROCESS_STATE.INSTANCE_ID.eq(src)))
+                .execute();
+        return i > 0;
+    }
+
+    public void update(DSLContext tx, UUID instanceId, String path, byte[] data) {
+        delete(tx, instanceId, path);
+        insert(tx, instanceId, path, data);
     }
 
     private static String fixPath(String p) {

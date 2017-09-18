@@ -11,4 +11,21 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="39100" author="ibodrov@gmail.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="PARENT_INSTANCE_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PROCESS_KIND" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="39110" author="ibodrov@gmail.com">
+        <createIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_Q_PAR_ID">
+            <column name="PARENT_INSTANCE_ID"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

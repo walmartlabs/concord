@@ -180,6 +180,18 @@ public interface ProcessResource {
     List<ProcessEntry> list();
 
     /**
+     * Returns a list of child processes for a given parent process.
+     *
+     * @param parentInstanceId
+     * @return
+     */
+    @GET
+    @ApiOperation("List child processes of a parent process")
+    @Path("/{id}/children")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<ProcessEntry> list(@ApiParam @PathParam("id") UUID parentInstanceId);
+
+    /**
      * Retrieves a process log.
      *
      * @param instanceId

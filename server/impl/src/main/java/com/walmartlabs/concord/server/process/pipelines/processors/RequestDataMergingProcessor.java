@@ -3,9 +3,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
@@ -51,6 +51,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
         // determine the active profile names
         List<String> activeProfiles = getActiveProfiles(ImmutableList.of(req, attachedCfg, workspaceCfg, projectCfg));
+        payload = payload.putHeader(Payload.ACTIVE_PROFILES, activeProfiles);
 
         // merged profile data
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);

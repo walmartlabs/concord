@@ -225,7 +225,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         ProcessEntry r;
         while (true) {
             r = get(instanceId);
-            if (r.getStatus() == ProcessStatus.FINISHED || r.getStatus() == ProcessStatus.FAILED) {
+            if (r.getStatus() == ProcessStatus.FINISHED || r.getStatus() == ProcessStatus.FAILED || r.getStatus() == ProcessStatus.CANCELLED) {
                 break;
             }
 
@@ -257,7 +257,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         boolean stopped = false;
         if (entry.getStatus() == ProcessStatus.SUSPENDED) {
-            stopped = queueDao.update(instanceId, ProcessStatus.SUSPENDED, ProcessStatus.FAILED);
+            stopped = queueDao.update(instanceId, ProcessStatus.SUSPENDED, ProcessStatus.CANCELLED);
         }
 
         if (!stopped) {
@@ -274,8 +274,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             log.warn("get ['{}'] -> not found", instanceId);
             throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
         }
-        return new ProcessEntry(instanceId, e.getProjectName(), e.getCreatedAt(), e.getInitiator(),
-                e.getLastUpdatedAt(), e.getStatus(), e.getLastAgentId());
+        return e;
     }
 
     @Override
@@ -329,6 +328,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @RequiresAuthentication
     public List<ProcessEntry> list() {
         return queueDao.list();
+    }
+
+    @Override
+    @WithTimer
+    public List<ProcessEntry> list(UUID parentInstanceId) {
+        return queueDao.list(parentInstanceId);
     }
 
     @Override
@@ -434,7 +439,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
             if (status == ProcessStatus.SUSPENDED) {
                 wakeUpProcess(psr, params);
-            } else if (status == ProcessStatus.FAILED) {
+            } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
                 throw new ProcessException(instanceId, "Process error", Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
                 return;

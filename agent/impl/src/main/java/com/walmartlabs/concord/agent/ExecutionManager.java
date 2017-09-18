@@ -19,6 +19,7 @@ import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipInputStream;
 
@@ -83,7 +84,8 @@ public class ExecutionManager {
             instances.put(instanceId, i);
         }
 
-        i.future().thenRun(() -> {
+        CompletableFuture<?> f = i.future();
+        f.thenRun(() -> {
             synchronized (mutex) {
                 statuses.put(instanceId, JobStatus.COMPLETED);
             }

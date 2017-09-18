@@ -35,6 +35,7 @@ public class ArchivePipeline extends Pipeline {
                 UserInfoProcessor.class,
                 RequestDataStoringProcessor.class,
                 StateImportingProcessor.class,
+                FlowMetadataProcessor.class,
                 SecuritySubjectProcessor.class,
                 EnqueueingProcessor.class);
 
