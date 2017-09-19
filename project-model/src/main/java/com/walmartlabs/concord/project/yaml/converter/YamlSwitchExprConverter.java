@@ -69,6 +69,7 @@ public class YamlSwitchExprConverter implements StepConverter<YamlSwitchExpr> {
     private static void applyDefaultBlock(ConverterContext ctx, Chunk c, String gwId, Seq<YamlStep> steps) throws YamlConverterException {
         Chunk defaultChunk = steps != null ? ctx.convert(steps) : null;
         if (defaultChunk == null || defaultChunk.isEmpty()) {
+            c.addOutput(gwId);
             return;
         }
 

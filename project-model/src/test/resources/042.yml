@@ -4,3 +4,4 @@ main:
     - ${testBean.toString("do 1")}
   2:
     - ${testBean.toString("do 2")}
+- ${testBean.toString("after switch/case")}

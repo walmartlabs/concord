@@ -1363,7 +1363,7 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
-    @Test(expected = io.takari.bpm.api.ExecutionException.class)
+    @Test
     public void test042() throws Exception {
         deploy("042.yml");
 
@@ -1376,14 +1376,14 @@ public class YamlParserTest {
         Map<String, Object> args = new HashMap<>();
         args.put("switchValue", 42);
         engine.start(key, "main", args);
+
+        verify(testBean, times(1)).toString(eq("after switch/case"));
+        verifyNoMoreInteractions(testBean);
     }
 
     @Test
     public void test043() throws Exception {
         deploy("043.yml");
-
-        ProcessDefinition pd = workflowProvider.processes().getById("main");
-        DiagramPrint.process(pd);
 
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);
@@ -1398,6 +1398,24 @@ public class YamlParserTest {
         engine.start(key, "main", args);
 
         verify(testBean, times(1)).toString(eq("do 2"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test044() throws Exception {
+        deploy("044.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("switchValue", "default");
+        engine.start(key, "main", args);
+
+        verify(testBean, times(1)).toString(eq("do default as string"));
         verifyNoMoreInteractions(testBean);
     }
 

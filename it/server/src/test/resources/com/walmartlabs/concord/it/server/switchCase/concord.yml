@@ -1,0 +1,18 @@
+flows:
+  main:
+  - switch: ${myVar}
+    false:
+      - log: "123123"
+    default:
+      - log: "234234"
+
+  - switch: ${myVar}
+    true:
+      - log: "Hello, Concord"
+
+  - log: "Bye!"
+
+variables:
+  entryPoint: main
+  arguments:
+    myVar: true

@@ -223,4 +223,23 @@ public class ProcessIT extends AbstractServerIT {
         assertLogAtLeast(".*Hello!", 2, ab);
         assertLogAtLeast(".*Bye!", 2, ab);
     }
+
+    @Test(timeout = 30000)
+    public void testSwitch() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("switchCase").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*234234.*", ab);
+        assertLog(".*Hello, Concord.*", ab);
+        assertLog(".*Bye!.*", ab);
+    }
 }
