@@ -21,18 +21,9 @@ public interface SecretResource {
     @Path("/keypair")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    PublicKeyResponse createKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
-                                    @ApiParam @QueryParam("generatePassword") @DefaultValue("false") boolean generatePassword,
-                                    @ApiParam MultipartInput input);
-
-    @POST
-    @ApiOperation("Upload an existing key pair")
-    @Path("/keypair")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.APPLICATION_JSON)
-    UploadSecretResponse uploadKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
-                                       @ApiParam @QueryParam("generatePassword") @DefaultValue("false") boolean generatePassword,
-                                       @ApiParam MultipartInput input);
+    UploadSecretResponse createOrUploadKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                               @ApiParam @QueryParam("generatePassword") @DefaultValue("false") boolean generatePassword,
+                                               @ApiParam MultipartInput input);
 
     @POST
     @ApiOperation("Add a username and password secret")

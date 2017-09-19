@@ -9,6 +9,7 @@
 
 ### Changed
 
+- concord-server: fix SSH key pair upload/create endpoint;
 - concord-server: process events cleanup;
 - concord-server: fixed a potential NPE while retrieving the process
 queue.

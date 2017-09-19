@@ -73,34 +73,25 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @Override
     @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
     @Validate
-    public PublicKeyResponse createKeyPair(String name, boolean generatePassword, MultipartInput input) {
+    public UploadSecretResponse createOrUploadKeyPair(String name, boolean generatePassword, MultipartInput input) {
         assertUnique(name);
 
         String storePassword = getOrGenerateStorePassword(input, generatePassword);
 
-        KeyPair k = secretManager.createKeyPair(name, storePassword);
-        return toPublicKey(name, k.getPublicKey(), storePassword);
-    }
-
-    @Override
-    @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
-    @Validate
-    public UploadSecretResponse uploadKeyPair(String name, boolean generatePassword, MultipartInput input) {
-        assertUnique(name);
-
-        String storePassword = getOrGenerateStorePassword(input, generatePassword);
-
-        KeyPair k;
         try {
-            InputStream publicIn = assertStream(input, "public");
-            InputStream privateIn = assertStream(input, "private");
-            k = KeyPairUtils.create(publicIn, privateIn);
+            InputStream publicIn = getStream(input, "public");
+            if (publicIn != null) {
+                InputStream privateIn = assertStream(input, "private");
+                KeyPair k = KeyPairUtils.create(publicIn, privateIn);
+                secretManager.store(name, k, storePassword);
+                return new UploadSecretResponse(storePassword);
+            } else {
+                KeyPair k = secretManager.createKeyPair(name, storePassword);
+                return toPublicKey(name, k.getPublicKey(), storePassword);
+            }
         } catch (IOException e) {
-            throw new WebApplicationException("Error while uploading a key pair", e);
+            throw new WebApplicationException("Error while creating a new key pair secret", e);
         }
-        secretManager.store(name, k, storePassword);
-
-        return new UploadSecretResponse(storePassword);
     }
 
     @Override
@@ -221,13 +212,11 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     private static InputStream assertStream(MultipartInput input, String key) throws IOException {
-        for (InputPart p : input.getParts()) {
-            String name = MultipartUtils.extractName(p);
-            if (key.equals(name)) {
-                return p.getBody(InputStream.class, null);
-            }
+        InputStream in = getStream(input, key);
+        if (in == null) {
+            throw new ValidationErrorsException("Value not found: " + key);
         }
-        throw new ValidationErrorsException("Value not found: " + key);
+        return in;
     }
 
     private static String assertString(MultipartInput input, String key) throws IOException {
@@ -243,6 +232,16 @@ public class SecretResourceImpl implements SecretResource, Resource {
             String name = MultipartUtils.extractName(p);
             if (key.equals(name)) {
                 return p.getBodyAsString();
+            }
+        }
+        return null;
+    }
+
+    private static InputStream getStream(MultipartInput input, String key) throws IOException {
+        for (InputPart p : input.getParts()) {
+            String name = MultipartUtils.extractName(p);
+            if (key.equals(name)) {
+                return p.getBody(InputStream.class, null);
             }
         }
         return null;
