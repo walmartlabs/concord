@@ -18,6 +18,7 @@ import ProcessPortal from "./process/portal";
 import ProjectList from "./project/list";
 import Project from "./project";
 import SecretList from "./secret/list";
+import CreateSecret from "./secret/create";
 import {actions as session} from "./session";
 import "./index.css";
 
@@ -59,6 +60,7 @@ ReactDOM.render(
                 <Route path="secret" onEnter={checkAuth}>
                     <IndexRedirect to="list"/>
                     <Route path="list" component={SecretList}/>
+                    <Route path="_new" component={CreateSecret}/>
                 </Route>
 
                 <Route path="system" onEnter={checkAuth}>

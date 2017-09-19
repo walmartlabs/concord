@@ -33,5 +33,5 @@
     "dev": "babel-node --presets es2015 scripts/devServer.js",
     "server": "babel-node --presets es2015 scripts/server.js"
   },
-  "proxy": "http://localhost:8001/"
+  "proxy": "https://server.dev.concord.devtools.prod.walmart.com"
 }
