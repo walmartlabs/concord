@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.state;
+package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -15,31 +15,34 @@ import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessLogs.PROCESS_LOGS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 
 @Named
 @EagerSingleton
-public class ProcessStateCleaner {
+public class ProcessCleaner {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessStateCleaner.class);
+    private static final Logger log = LoggerFactory.getLogger(ProcessCleaner.class);
 
     private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toMillis(1);
     private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
-    private static final long AGE_CUTOFF = TimeUnit.DAYS.toMillis(3);
+    private static final long AGE_CUTOFF = TimeUnit.DAYS.toMillis(7);
 
     private static final String[] REMOVE_STATUSES = {
             ProcessStatus.FINISHED.toString(),
             ProcessStatus.FAILED.toString(),
-            ProcessStatus.CANCELLED.toString()
+            ProcessStatus.CANCELLED.toString(),
+            ProcessStatus.SUSPENDED.toString()
     };
 
     @Inject
-    public ProcessStateCleaner(CleanerDao cleanerDao) {
+    public ProcessCleaner(CleanerDao cleanerDao) {
         init(cleanerDao);
     }
 
-    private final void init(CleanerDao cleanerDao) {
+    private void init(CleanerDao cleanerDao) {
         Worker w = new Worker(cleanerDao);
 
         Thread t = new Thread(w, "process-state-cleaner");
@@ -92,11 +95,24 @@ public class ProcessStateCleaner {
                         .where(PROCESS_QUEUE.LAST_UPDATED_AT.lessThan(cutoff)
                                 .and(PROCESS_QUEUE.CURRENT_STATUS.in(REMOVE_STATUSES)));
 
-                int rows = tx.deleteFrom(PROCESS_STATE)
+                int queueEntries = tx.deleteFrom(PROCESS_QUEUE)
+                        .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
+                        .execute();
+
+                int stateRecords = tx.deleteFrom(PROCESS_STATE)
                         .where(PROCESS_STATE.INSTANCE_ID.in(ids))
                         .execute();
 
-                log.info("deleteOldState -> removed {} items(s) older than {}", rows, cutoff);
+                int events = tx.deleteFrom(PROCESS_EVENTS)
+                        .where(PROCESS_EVENTS.INSTANCE_ID.in(ids))
+                        .execute();
+
+                int logEntries = tx.deleteFrom(PROCESS_LOGS)
+                        .where(PROCESS_LOGS.INSTANCE_ID.in(ids))
+                        .execute();
+
+                log.info("deleteOldState -> removed older than {}: {} queue entries, {} log entries, {} state item(s), {} event(s)",
+                        cutoff, queueEntries, logEntries, stateRecords, events);
             });
         }
     }

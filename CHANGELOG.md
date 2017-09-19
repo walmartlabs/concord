@@ -8,6 +8,7 @@
 
 ### Changed
 
+- concord-server: process events cleanup;
 - concord-server: fixed a potential NPE while retrieving the process
 queue.
 
