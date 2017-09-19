@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-project-model: support for `switch`;
 - ansible: initial support for Ansible event streaming.
 
 ### Changed
