@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: pagination support for the process queue list;
 - concord-project-model: support for `switch`;
 - ansible: initial support for Ansible event streaming.
 

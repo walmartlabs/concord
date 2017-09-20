@@ -7,11 +7,13 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
+import org.jooq.SelectWhereStep;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,6 +23,8 @@ import static org.jooq.impl.DSL.value;
 
 @Named
 public class ProcessQueueDao extends AbstractDao {
+
+    private static final int DEFAULT_LIST_LIMIT = 30;
 
     @Inject
     protected ProcessQueueDao(Configuration cfg) {
@@ -131,10 +135,19 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public List<ProcessEntry> list() {
+        return list(null, DEFAULT_LIST_LIMIT);
+    }
+
+    public List<ProcessEntry> list(Timestamp beforeCreatedAt, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.selectFrom(PROCESS_QUEUE)
-                    .orderBy(PROCESS_QUEUE.CREATED_AT.desc())
-                    .limit(30)
+            SelectWhereStep<ProcessQueueRecord> q = tx.selectFrom(PROCESS_QUEUE);
+
+            if (beforeCreatedAt != null) {
+                q.where(PROCESS_QUEUE.CREATED_AT.lessThan(beforeCreatedAt));
+            }
+
+            return q.orderBy(PROCESS_QUEUE.CREATED_AT.desc())
+                    .limit(limit)
                     .fetch(ProcessQueueDao::toEntry);
         }
     }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
+import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
@@ -42,6 +43,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipOutputStream;
@@ -326,8 +328,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @WithTimer
     @RequiresAuthentication
-    public List<ProcessEntry> list() {
-        return queueDao.list();
+    public List<ProcessEntry> list(IsoDateParam beforeCreatedAt, int limit) {
+        return queueDao.list(toTimestamp(beforeCreatedAt), limit);
     }
 
     @Override
@@ -484,5 +486,14 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 throw new ProcessException(instanceId, "Form submit error: " + e.getMessage(), e);
             }
         }
+    }
+
+    private static Timestamp toTimestamp(IsoDateParam p) {
+        if (p == null) {
+            return null;
+        }
+
+        Calendar c = p.getValue();
+        return new Timestamp(c.getTimeInMillis());
     }
 }

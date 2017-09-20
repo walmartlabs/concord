@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.api.process;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.IsoDateParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -177,7 +178,8 @@ public interface ProcessResource {
     @GET
     @ApiOperation("List processes")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProcessEntry> list();
+    List<ProcessEntry> list(@ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                            @ApiParam @QueryParam("limit") @DefaultValue("30") int limit);
 
     /**
      * Returns a list of child processes for a given parent process.
