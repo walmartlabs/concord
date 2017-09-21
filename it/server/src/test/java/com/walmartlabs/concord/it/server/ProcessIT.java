@@ -248,7 +248,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
 
         // ---
 
@@ -265,7 +265,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
 
         // ---
 
