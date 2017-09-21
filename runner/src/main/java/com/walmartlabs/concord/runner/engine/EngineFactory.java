@@ -167,12 +167,13 @@ public class EngineFactory {
 
         @Override
         public void execute(Object task, ExecutionContext ctx) throws Exception {
-            if (task instanceof Task) {
-                Task t = (Task) task;
-                t.execute((Context) ctx);
-            } else if (task instanceof JavaDelegate) {
+            // check JavaDelegate first because tasks can implement both JavaDelegate and Task
+            if (task instanceof JavaDelegate) {
                 JavaDelegate d = (JavaDelegate) task;
                 d.execute(ctx);
+            } else if (task instanceof Task) {
+                Task t = (Task) task;
+                t.execute((Context) ctx);
             } else {
                 throw new ExecutionException("Unsupported task type: " + task + ": tasks must implement either " +
                         Task.class.getName() + " or " + JavaDelegate.class.getName() + " interfaces");

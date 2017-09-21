@@ -1,0 +1,9 @@
+flows:
+  main:
+  - task: example
+    out:
+      msg: ${exampleOutput}
+  - log: "I said: ${msg}"
+
+variables:
+  entryPoint: main

@@ -125,7 +125,7 @@ public class ServerClient {
 
     public static ProcessEntry waitForStatus(ProcessResource processResource, UUID instanceId,
                                              ProcessStatus status, ProcessStatus... more) throws InterruptedException {
-        int retries = 5;
+        int retries = 10;
 
         ProcessEntry pir;
         while (true) {
@@ -155,7 +155,7 @@ public class ServerClient {
                                             UUID parentInstanceId, ProcessKind kind,
                                             ProcessStatus status, ProcessStatus... more) throws InterruptedException {
 
-        int retries = 5;
+        int retries = 10;
         while (true) {
             List<ProcessEntry> l = processResource.list(parentInstanceId);
             for (ProcessEntry e : l) {

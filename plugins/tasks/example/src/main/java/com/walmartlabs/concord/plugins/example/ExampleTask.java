@@ -28,4 +28,9 @@ public class ExampleTask implements Task {
     public void helloButLouder(@InjectVariable("myName") String name) {
         log.info("Hello, {}!!!", name);
     }
+
+    @Override
+    public void execute(Context ctx) throws Exception {
+        ctx.setVariable("exampleOutput", "Hello!");
+    }
 }

@@ -242,4 +242,38 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
         assertLog(".*Bye!.*", ab);
     }
+
+    @Test(timeout = 30000)
+    public void testTaskOut() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*I said: Hello!.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testDelegateOut() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*I said: Hello!.*", ab);
+    }
 }
