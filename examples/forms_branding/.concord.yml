@@ -19,7 +19,7 @@ forms:
   - age: { label: "Age", type: "int", min: 21, max: 999 }
   - color: { label: "Favorite color", type: "string", allow: ["red", "green", "blue"] }
 
-variables:
+configuration:
   entryPoint: main
   arguments:
     myForm:

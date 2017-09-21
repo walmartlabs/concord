@@ -10,15 +10,15 @@ public class Profile implements Serializable {
 
     private final Map<String, ProcessDefinition> flows;
     private final Map<String, FormDefinition> forms;
-    private final Map<String, Object> variables;
+    private final Map<String, Object> configuration;
 
     public Profile(Map<String, ProcessDefinition> flows,
                    Map<String, FormDefinition> forms,
-                   Map<String, Object> variables) {
+                   Map<String, Object> configuration) {
 
         this.flows = flows;
         this.forms = forms;
-        this.variables = variables;
+        this.configuration = configuration;
     }
 
     public Map<String, ProcessDefinition> getFlows() {
@@ -29,8 +29,8 @@ public class Profile implements Serializable {
         return forms;
     }
 
-    public Map<String, Object> getVariables() {
-        return variables;
+    public Map<String, Object> getConfiguration() {
+        return configuration;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class Profile implements Serializable {
         return "Profile{" +
                 "flows=" + flows +
                 ", forms=" + forms +
-                ", variables=" + variables +
+                ", variables=" + configuration +
                 '}';
     }
 }

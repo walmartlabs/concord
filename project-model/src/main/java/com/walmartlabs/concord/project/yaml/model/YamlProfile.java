@@ -11,16 +11,23 @@ public class YamlProfile implements Serializable {
 
     private final Map<String, List<YamlStep>> flows;
     private final Map<String, List<YamlFormField>> forms;
-    private final Map<String, Object> variables;
+    private final Map<String, Object> configuration;
 
     @JsonCreator
     public YamlProfile(@JsonProperty("flows") Map<String, List<YamlStep>> flows,
                        @JsonProperty("forms") Map<String, List<YamlFormField>> forms,
+                       @JsonProperty("configuration") Map<String, Object> configuration,
                        @JsonProperty("variables") Map<String, Object> variables) {
 
         this.flows = flows;
         this.forms = forms;
-        this.variables = variables;
+
+        // alias "variables" to "configuration"
+        if (configuration != null) {
+            this.configuration = configuration;
+        } else {
+            this.configuration = variables;
+        }
     }
 
     public Map<String, List<YamlStep>> getFlows() {
@@ -31,8 +38,8 @@ public class YamlProfile implements Serializable {
         return forms;
     }
 
-    public Map<String, Object> getVariables() {
-        return variables;
+    public Map<String, Object> getConfiguration() {
+        return configuration;
     }
 
     @Override
@@ -40,7 +47,7 @@ public class YamlProfile implements Serializable {
         return "YamlProfile{" +
                 "flows=" + flows +
                 ", forms=" + forms +
-                ", variables=" + variables +
+                ", configuration=" + configuration +
                 '}';
     }
 }

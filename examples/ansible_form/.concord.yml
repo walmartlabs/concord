@@ -1,4 +1,4 @@
-variables:
+configuration:
   entryPoint: main
 
   # to use `ansible2` task

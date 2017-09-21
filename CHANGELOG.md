@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-project-model: alias `variables` to `configuration`;
 - concord-server: pagination support for the process queue list;
 - concord-project-model: support for `switch`;
 - ansible: initial support for Ansible event streaming.
@@ -14,7 +15,7 @@
 - concord-server: fix SSH key pair upload/create endpoint;
 - concord-server: process events cleanup;
 - concord-server: fixed a potential NPE while retrieving the process
-queue.
+queue data.
 
 
 

@@ -8,7 +8,7 @@ flows:
     }]
   - log: mail sent to ${recipient}
 
-variables:
+configuration:
   dependencies: [
     "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/smtp-tasks/0.6.0/smtp-tasks-0.6.0.jar"
   ]

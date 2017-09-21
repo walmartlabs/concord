@@ -5,5 +5,5 @@ flows:
   onFailure:
   - log: "Phew! That was close"
 
-variables:
+configuration:
   entryPoint: main

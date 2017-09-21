@@ -2,13 +2,13 @@ flows:
   main:
   - log: "Hello, ${name}"
 
-variables:
+configuration:
   entryPoint: main
   arguments:
     name: "Concord"
 
 profiles:
   stranger:
-    variables:
+    configuration:
       arguments:
         name: "stranger"

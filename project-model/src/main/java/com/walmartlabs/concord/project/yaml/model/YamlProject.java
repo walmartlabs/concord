@@ -13,10 +13,11 @@ public class YamlProject extends YamlProfile {
     @JsonCreator
     public YamlProject(@JsonProperty("flows") Map<String, List<YamlStep>> flows,
                        @JsonProperty("forms") Map<String, List<YamlFormField>> forms,
+                       @JsonProperty("configuration") Map<String, Object> configuration,
                        @JsonProperty("variables") Map<String, Object> variables,
                        @JsonProperty("profiles") Map<String, YamlProfile> profiles) {
 
-        super(flows, forms, variables);
+        super(flows, forms, configuration, variables);
         this.profiles = profiles;
     }
 

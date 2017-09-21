@@ -7,7 +7,7 @@ forms:
   myForm:
     - colors: {type: "string+"}
 
-variables:
+configuration:
   entryPoint: main
   arguments:
     myForm:

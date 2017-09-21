@@ -22,7 +22,7 @@ forms:
   - variableName: { label: "Variable name", type: "string" }
   - variableValue: { label: "Variable value", type: "string" }
 
-variables:
+configuration:
   entryPoint: main
   dependencies:
   - "http://nexus.prod.walmart.com/nexus/content/repositories/devtools/com/walmartlabs/concord/plugins/oneops-tasks/0.20.0/oneops-tasks-0.20.0.jar"

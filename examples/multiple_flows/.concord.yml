@@ -15,5 +15,5 @@ flows:
   sayHello:
   - log: "Hello, ${name}"
 
-variables:
+configuration:
   entryPoint: main

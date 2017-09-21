@@ -1,0 +1,18 @@
+flows:
+  main:
+  - log: Hello, ${name}
+  - log: ${nested.val}
+
+configuration:
+  arguments:
+    name: "stranger"
+    nested:
+      val: 12345
+
+profiles:
+  test:
+    configuration:
+      arguments:
+        name: "world"
+        nested:
+          val: 54321

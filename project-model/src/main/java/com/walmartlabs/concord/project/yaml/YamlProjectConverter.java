@@ -18,9 +18,9 @@ public final class YamlProjectConverter {
     public static ProjectDefinition convert(YamlProject project) throws YamlConverterException {
         Map<String, ProcessDefinition> flows = convertFlows(project.getFlows());
         Map<String, FormDefinition> forms = convertForms(project.getForms());
-        Map<String, Object> variables = project.getVariables();
+        Map<String, Object> cfg = project.getConfiguration();
         Map<String, Profile> profiles = convertProfiles(project.getProfiles());
-        return new ProjectDefinition(flows, forms, variables, profiles);
+        return new ProjectDefinition(flows, forms, cfg, profiles);
     }
 
     public static Profile convert(YamlProfile profile) throws YamlConverterException {
@@ -44,8 +44,8 @@ public final class YamlProjectConverter {
     private static Profile convertProfile(YamlProfile profile) throws YamlConverterException {
         Map<String, ProcessDefinition> flows = convertFlows(profile.getFlows());
         Map<String, FormDefinition> forms = convertForms(profile.getForms());
-        Map<String, Object> variables = profile.getVariables();
-        return new Profile(flows, forms, variables);
+        Map<String, Object> cfg = profile.getConfiguration();
+        return new Profile(flows, forms, cfg);
     }
 
     private static Map<String, ProcessDefinition> convertFlows(Map<String, List<YamlStep>> flows) throws YamlConverterException {

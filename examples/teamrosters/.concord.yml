@@ -5,7 +5,7 @@ flows:
   # getting a specific attribute
   - log: "CCID: ${teamRosters.getUserDetails(initiator.username)['CCID']}"
 
-variables:
+configuration:
   entryPoint: main
   dependencies:
   - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/teamrosters-task/0.25.0/teamrosters-task-0.25.0.jar"
