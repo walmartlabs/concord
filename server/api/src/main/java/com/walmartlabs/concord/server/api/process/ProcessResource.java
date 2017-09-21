@@ -32,6 +32,7 @@ public interface ProcessResource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam InputStream in,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
@@ -44,6 +45,7 @@ public interface ProcessResource {
     @ApiOperation("Start a new process using a specified project")
     @Path("/{entryPoint}")
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
 
@@ -61,6 +63,7 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam Map<String, Object> req,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
@@ -75,6 +78,7 @@ public interface ProcessResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam MultipartInput input,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
@@ -92,6 +96,7 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam MultipartInput input,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
@@ -109,6 +114,7 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                @ApiParam InputStream in,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     @POST

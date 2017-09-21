@@ -27,7 +27,7 @@ public class ProcessIT extends AbstractServerIT {
         // start the process
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
@@ -54,7 +54,7 @@ public class ProcessIT extends AbstractServerIT {
         int count = 100;
         for (int i = 0; i < count; i++) {
             ProcessResource processResource = proxy(ProcessResource.class);
-            processResource.start(new ByteArrayInputStream(payload), false);
+            processResource.start(new ByteArrayInputStream(payload), null, false);
         }
     }
 
@@ -67,7 +67,7 @@ public class ProcessIT extends AbstractServerIT {
         // start the process
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), true);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, true);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
@@ -96,7 +96,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("timeout").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
 
         try {
             processResource.waitForCompletion(spr.getInstanceId(), 3000);
@@ -119,7 +119,7 @@ public class ProcessIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         // ---
@@ -138,7 +138,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("errorHandling").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
@@ -154,7 +154,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("startupProblem").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
@@ -198,7 +198,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("workDir").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
@@ -229,7 +229,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("switchCase").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
 
         // ---
 

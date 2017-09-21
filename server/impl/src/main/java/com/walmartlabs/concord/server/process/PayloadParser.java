@@ -21,7 +21,7 @@ import java.util.UUID;
 
 public final class PayloadParser {
 
-    public static Payload parse(UUID instanceId, Path baseDir, MultipartInput input) throws IOException {
+    public static Payload parse(UUID instanceId, UUID parentInstanceId, Path baseDir, MultipartInput input) throws IOException {
         Map<String, Path> attachments = new HashMap<>();
         Map<String, Object> req = new HashMap<>();
 
@@ -46,7 +46,7 @@ public final class PayloadParser {
             }
         }
 
-        return new Payload(instanceId)
+        return new Payload(instanceId, parentInstanceId)
                 .putHeader(Payload.REQUEST_DATA_MAP, req)
                 .putAttachments(attachments);
     }

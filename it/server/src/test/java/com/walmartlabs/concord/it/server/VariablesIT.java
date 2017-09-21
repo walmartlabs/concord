@@ -38,7 +38,7 @@ public class VariablesIT extends AbstractServerIT {
         byte[] payload = archive(VariablesIT.class.getResource("variables").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false);
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
 
@@ -68,7 +68,7 @@ public class VariablesIT extends AbstractServerIT {
         byte[] payload = archive(VariablesIT.class.getResource("crypto").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false);
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
 

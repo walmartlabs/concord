@@ -53,7 +53,7 @@ public class SmtpIT extends AbstractServerIT {
         // --
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false);
 
         // ---
 

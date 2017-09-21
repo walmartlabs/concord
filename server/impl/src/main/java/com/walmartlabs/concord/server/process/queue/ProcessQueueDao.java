@@ -161,6 +161,13 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public boolean exists(UUID instanceId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.fetchExists(tx.selectFrom(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
+        }
+    }
+
     private static ProcessEntry toEntry(ProcessQueueRecord r) {
         ProcessKind kind;
         String s = r.getProcessKind();

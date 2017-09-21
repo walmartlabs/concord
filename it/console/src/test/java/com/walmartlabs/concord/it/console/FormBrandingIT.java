@@ -24,7 +24,7 @@ public class FormBrandingIT extends AbstractIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
 
         waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
 

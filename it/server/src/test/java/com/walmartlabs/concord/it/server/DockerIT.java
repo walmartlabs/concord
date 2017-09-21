@@ -21,7 +21,7 @@ public class DockerIT extends AbstractServerIT {
         byte[] payload = archive(DockerIT.class.getResource("docker").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());

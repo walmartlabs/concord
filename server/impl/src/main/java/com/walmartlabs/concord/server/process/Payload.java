@@ -23,23 +23,34 @@ public class Payload {
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 
     private final UUID instanceId;
+    private final UUID parentInstanceId;
     private final Map<String, Object> headers;
     private final Map<String, Path> attachments;
 
     public Payload(UUID instanceId) {
+        this(instanceId, null);
+    }
+
+    public Payload(UUID instanceId, UUID parentInstanceId) {
         this.instanceId = instanceId;
+        this.parentInstanceId = parentInstanceId;
         this.headers = Collections.emptyMap();
         this.attachments = Collections.emptyMap();
     }
 
     private Payload(Payload old, Map<String, Object> headers, Map<String, Path> attachments) {
         this.instanceId = old.instanceId;
+        this.parentInstanceId = old.parentInstanceId;
         this.headers = Objects.requireNonNull(headers, "Headers map cannot be null");
         this.attachments = Objects.requireNonNull(attachments, "Attachments map cannot be null");
     }
 
     public UUID getInstanceId() {
         return instanceId;
+    }
+
+    public UUID getParentInstanceId() {
+        return parentInstanceId;
     }
 
     public <T> T getHeader(HeaderKey<T> key) {

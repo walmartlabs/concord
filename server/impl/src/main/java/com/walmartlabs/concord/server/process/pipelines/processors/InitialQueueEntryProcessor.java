@@ -23,9 +23,10 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
+        UUID parentInstanceId = payload.getParentInstanceId();
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         String initiator = payload.getHeader(Payload.INITIATOR);
-        queueDao.insertInitial(instanceId, ProcessKind.DEFAULT, null, projectName, initiator);
+        queueDao.insertInitial(instanceId, ProcessKind.DEFAULT, parentInstanceId, projectName, initiator);
         return chain.process(payload);
     }
 }

@@ -112,12 +112,14 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(InputStream in, boolean sync) {
+    public StartProcessResponse start(InputStream in, UUID parentInstanceId, boolean sync) {
+        assertParentInstanceId(parentInstanceId);
+
         UUID instanceId = UUID.randomUUID();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), in);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), in);
         } catch (IOException e) {
             log.error("start -> error creating a payload: {}", e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -127,13 +129,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    public StartProcessResponse start(String entryPoint, boolean sync) {
-        return start(entryPoint, Collections.emptyMap(), sync);
+    public StartProcessResponse start(String entryPoint, UUID parentInstanceId, boolean sync) {
+        return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync);
     }
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(String entryPoint, Map<String, Object> req, boolean sync) {
+    public StartProcessResponse start(String entryPoint, Map<String, Object> req, UUID parentInstanceId, boolean sync) {
+        assertParentInstanceId(parentInstanceId);
+
         UUID instanceId = UUID.randomUUID();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
@@ -141,7 +145,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), ep, req);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, req);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -152,13 +156,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(MultipartInput input, boolean sync) {
-        return start(null, input, sync);
+    public StartProcessResponse start(MultipartInput input, UUID parentInstanceId, boolean sync) {
+        return start(null, input, parentInstanceId, sync);
     }
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(String entryPoint, MultipartInput input, boolean sync) {
+    public StartProcessResponse start(String entryPoint, MultipartInput input, UUID parentInstanceId, boolean sync) {
+        assertParentInstanceId(parentInstanceId);
+
         UUID instanceId = UUID.randomUUID();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
@@ -168,7 +174,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), ep, input);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, input);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -180,12 +186,14 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @RequiresAuthentication
-    public StartProcessResponse start(String projectName, InputStream in, boolean sync) {
+    public StartProcessResponse start(String projectName, InputStream in, UUID parentInstanceId, boolean sync) {
+        assertParentInstanceId(parentInstanceId);
+
         UUID instanceId = UUID.randomUUID();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), projectName, in);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), projectName, in);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", projectName, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -485,6 +493,16 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             } catch (ExecutionException e) {
                 throw new ProcessException(instanceId, "Form submit error: " + e.getMessage(), e);
             }
+        }
+    }
+
+    private void assertParentInstanceId(UUID id) {
+        if (id == null) {
+            return;
+        }
+
+        if (!queueDao.exists(id)) {
+            throw new ValidationErrorsException("Unknows parent instance ID: " + id);
         }
     }
 

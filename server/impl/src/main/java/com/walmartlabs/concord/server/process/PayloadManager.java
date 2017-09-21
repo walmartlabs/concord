@@ -35,15 +35,16 @@ public class PayloadManager {
      * supplied in the multipart data and/or provided by a project's repository or a template.
      *
      * @param instanceId
+     * @param parentInstanceId
      * @param initiator
      * @param input
      * @return
      */
-    public Payload createPayload(UUID instanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
-        Payload p = PayloadParser.parse(instanceId, baseDir, input)
+        Payload p = PayloadParser.parse(instanceId, parentInstanceId, baseDir, input)
                 .putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir);
 
@@ -55,15 +56,16 @@ public class PayloadManager {
      * Creates a payload from the supplied map of parameters.
      *
      * @param instanceId
+     * @param parentInstanceId
      * @param initiator
      * @param request
      * @return
      */
-    public Payload createPayload(UUID instanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
-        Payload p = new Payload(instanceId)
+        Payload p = new Payload(instanceId, parentInstanceId)
                 .putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
                 .putHeader(Payload.REQUEST_DATA_MAP, request);
@@ -76,18 +78,19 @@ public class PayloadManager {
      * Creates a payload from an archive, containing all necessary resources.
      *
      * @param instanceId
+     * @param parentInstanceId
      * @param initiator
      * @param in
      * @return
      */
-    public Payload createPayload(UUID instanceId, String initiator, InputStream in) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, InputStream in) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
         Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
         Files.copy(in, archive);
 
-        Payload p = new Payload(instanceId);
+        Payload p = new Payload(instanceId, parentInstanceId);
 
         p = addInitiator(p, initiator);
 
@@ -101,12 +104,13 @@ public class PayloadManager {
      * specified project name.
      *
      * @param instanceId
+     * @param parentInstanceId
      * @param initiator
      * @param in
      * @return
      */
-    public Payload createPayload(UUID instanceId, String initiator, String projectName, InputStream in) throws IOException {
-        Payload p = createPayload(instanceId, initiator, in);
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, String projectName, InputStream in) throws IOException {
+        Payload p = createPayload(instanceId, parentInstanceId, initiator, in);
         p = addInitiator(p, initiator);
         return p.putHeader(Payload.PROJECT_NAME, projectName);
     }
