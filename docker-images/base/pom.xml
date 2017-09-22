@@ -10,39 +10,24 @@
     </parent>
 
     <artifactId>concord-base</artifactId>
-    <packaging>docker</packaging>
+    <packaging>pom</packaging>
+
+    <properties>
+        <docker.tagbase>walmartlabs/concord-base</docker.tagbase>
+        <docker.file>docker-images/base/Dockerfile</docker.file>
+    </properties>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <extensions>true</extensions>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>build-images</id>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
+                        <id>docker-build</id>
+                        <phase>package</phase>
                     </execution>
                 </executions>
-                <configuration>
-                    <skipRun>true</skipRun>
-                    <images>
-                        <image>
-                            <name>walmartlabs/concord-base:%v</name>
-                            <alias>base</alias>
-                            <build>
-                                <tags>
-                                    <tag>latest</tag>
-                                    <tag>${project.version}</tag>
-                                </tags>
-                                <dockerFileDir>concord-base</dockerFileDir>
-                                <optimise>true</optimise>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -1,5 +1,5 @@
 #!/bin/bash
-APP_DIR="${concord.baseDir}/server"
+APP_DIR="/opt/concord/server/"
 
 if [ "$DB" == "postgresql" ]; then
     export DB_DIALECT="POSTGRES_9_5"
