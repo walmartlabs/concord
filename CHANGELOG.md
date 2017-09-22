@@ -11,6 +11,8 @@
 
 ### Changed
 
+- concord-runner: fix `InjectVariable` for `JavaDelegate`-style
+tasks;
 - concord-runner: fix `JavaDelegate` handling;
 - concord-server: fix SSH key pair upload/create endpoint;
 - concord-server: process events cleanup;
