@@ -3,8 +3,8 @@ package com.walmartlabs.concord.runner.engine;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
-import com.walmartlabs.concord.runner.engine.el.InjectPropertiesELResolver;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
+import com.walmartlabs.concord.runner.engine.el.TaskResolver;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.Configuration;
@@ -27,7 +27,6 @@ import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.JavaDelegateHandler;
-import io.takari.bpm.task.ServiceTaskResolver;
 import io.takari.bpm.task.UserTaskHandler;
 
 import javax.inject.Inject;
@@ -70,8 +69,7 @@ public class EngineFactory {
 
         ExpressionManager expressionManager = new DefaultExpressionManager(
                 new String[]{Constants.Context.CONTEXT_KEY, Constants.Context.EXECUTION_CONTEXT_KEY},
-                new ServiceTaskResolver(taskRegistry),
-                new InjectPropertiesELResolver(),
+                new TaskResolver(taskRegistry),
                 new InjectVariableELResolver());
 
         ExecutionContextFactory<? extends ExecutionContextImpl> contextFactory = new ConcordExecutionContextFactory(expressionManager);

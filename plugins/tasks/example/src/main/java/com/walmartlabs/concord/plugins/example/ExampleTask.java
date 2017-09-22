@@ -31,6 +31,8 @@ public class ExampleTask implements Task {
 
     @Override
     public void execute(Context ctx) throws Exception {
+        log.info("Hello, {}. (from method param)", ctx.getVariable("myName"));
+        log.info("Hello, {}. (from injected var)", context.getVariable("myName"));
         ctx.setVariable("exampleOutput", "Hello!");
     }
 }

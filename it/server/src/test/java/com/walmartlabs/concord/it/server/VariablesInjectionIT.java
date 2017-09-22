@@ -29,5 +29,7 @@ public class VariablesInjectionIT extends AbstractServerIT {
 
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello, world!!!.*", ab);
+        assertLog(".*Hello, world. \\(from method param\\).*", ab);
+        assertLog(".*Hello, world. \\(from injected var\\).*", ab);
     }
 }

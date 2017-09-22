@@ -6,6 +6,8 @@ flows:
       myName: "world"
   - ${example.helloButLouder()}
 
+  - task: example
+
 variables:
   entryPoint: main
   arguments:
