@@ -50,6 +50,11 @@ public final class Constants {
         public static final String ENTRY_POINT_KEY = "entryPoint";
 
         /**
+         * Name of the default entry point.
+         */
+        public static final String DEFAULT_ENTRY_POINT_NAME = "default";
+
+        /**
          * Active profiles.
          */
         public static final String ACTIVE_PROFILES_KEY = "activeProfiles";

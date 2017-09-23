@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: if entry point is not set, use `default`;
 - concord-project-model: alias `variables` to `configuration`;
 - concord-server: pagination support for the process queue list;
 - concord-project-model: support for `switch`;

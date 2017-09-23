@@ -9,6 +9,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.project.ProjectDao;
 
 import javax.inject.Inject;
@@ -21,6 +22,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Named
 public class RequestDataMergingProcessor implements PayloadProcessor {
@@ -29,10 +31,12 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     public static final List<String> DEFAULT_PROFILES = Collections.singletonList("default");
 
     private final ProjectDao projectDao;
+    private final LogManager logManager;
 
     @Inject
-    public RequestDataMergingProcessor(ProjectDao projectDao) {
+    public RequestDataMergingProcessor(ProjectDao projectDao, LogManager logManager) {
         this.projectDao = projectDao;
+        this.logManager = logManager;
     }
 
     @Override
@@ -58,6 +62,10 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
         // create the resulting configuration
         Map<String, Object> m = ConfigurationUtils.deepMerge(projectCfg, profileCfg, workspaceCfg, attachedCfg, req);
+
+        // check if we need to set an entry point
+        m = assertEntryPoint(payload.getInstanceId(), m);
+
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
 
         return chain.process(payload);
@@ -124,5 +132,16 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
             }
         }
         return DEFAULT_PROFILES;
+    }
+
+    private Map<String, Object> assertEntryPoint(UUID instanceId, Map<String, Object> m) {
+        String s = (String) m.get(Constants.Request.ENTRY_POINT_KEY);
+        if (s != null) {
+            return m;
+        }
+
+        logManager.info(instanceId, "Using the default entry point");
+        m.put(Constants.Request.ENTRY_POINT_KEY, Constants.Request.DEFAULT_ENTRY_POINT_NAME);
+        return m;
     }
 }

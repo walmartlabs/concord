@@ -46,6 +46,19 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Hello, local files!.*", ab);
     }
 
+    @Test(timeout = 30000)
+    public void testDefaultEntryPoint() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("defaultEntryPoint").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, Concord!.*", ab);
+    }
+
     @Test
     @Ignore
     public void testLotsOfProcesses() throws Exception {
