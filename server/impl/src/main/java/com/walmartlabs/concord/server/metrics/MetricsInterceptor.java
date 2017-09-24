@@ -38,6 +38,6 @@ public class MetricsInterceptor implements MethodInterceptor {
         if (n.startsWith(SHARED_PREFIX)) {
             n = n.substring(SHARED_PREFIX.length());
         }
-        return "timer:" + n + "." + m.getName();
+        return "timer," + n + "." + m.getName();
     }
 }

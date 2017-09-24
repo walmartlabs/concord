@@ -12,6 +12,7 @@
 
 ### Changed
 
+- concord-server: fix Jolokia JMX names;
 - concord-runner: fix `InjectVariable` for `JavaDelegate`-style
 tasks;
 - concord-runner: fix `JavaDelegate` handling;
