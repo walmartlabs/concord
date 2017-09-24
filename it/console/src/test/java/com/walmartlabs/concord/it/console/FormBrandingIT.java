@@ -5,6 +5,8 @@ import com.walmartlabs.concord.server.console.CustomFormService;
 import com.walmartlabs.concord.server.console.FormSessionResponse;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -13,8 +15,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 import static org.junit.Assert.*;
 
-// TODO make it work with a local webpack server
-// TODO make it work with auth
+@Ignore
 public class FormBrandingIT extends AbstractIT {
 
     @Test(timeout = 30000)
@@ -46,10 +47,7 @@ public class FormBrandingIT extends AbstractIT {
 
         // ---
 
-        /*
-        getDriver().navigate().to("http://localhost:8080" + fsr.getUri());
-        Alert alert = waitForAlert("Login");
-        alert.authenticateUsing(new UserAndPassword("user", "pwd"));
+        getDriver().navigate().to("http://" + ITConstants.REMOTE_USER + ":" + ITConstants.REMOTE_PASSWORD + "@localhost:8080" + fsr.getUri());
 
         // ---
 
@@ -62,9 +60,6 @@ public class FormBrandingIT extends AbstractIT {
         lastName.sendKeys("Smith");
 
         WebElement submitButton = waitFor("Submit button", By.cssSelector("[type=submit]"));
-
-        // TODO auth
-        // submitButton.click();
-        */
+        submitButton.click();
     }
 }

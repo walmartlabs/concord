@@ -16,7 +16,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public abstract class AbstractIT {
 
@@ -95,24 +96,6 @@ public abstract class AbstractIT {
             fail(message);
             return null;
         }
-    }
-
-    protected void click(String message, By selector) {
-        WebElement e = get(message, selector);
-        e.click();
-    }
-
-    protected void waitAndClick(String message, By selector) {
-        WebElement e = waitFor(message, selector);
-        e.click();
-    }
-
-    protected void assertElement(String message, By selector) {
-        assertFalse(message, getDriver().findElements(selector).isEmpty());
-    }
-
-    protected void assertNoElements(String message, By selector) {
-        assertTrue(message, getDriver().findElements(selector).isEmpty());
     }
 
     protected void assertNoErrors() {

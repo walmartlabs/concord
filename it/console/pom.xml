@@ -14,7 +14,7 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <selenium.version>3.4.0</selenium.version>
+        <selenium.version>3.5.3</selenium.version>
         <webdriver.version>0.9.7376</webdriver.version>
         <webdriver.type>local</webdriver.type>
     </properties>
@@ -68,20 +68,21 @@
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-chrome-driver</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-support</artifactId>
             <version>${selenium.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.seleniumhq.webdriver</groupId>
-            <artifactId>webdriver-chrome</artifactId>
-            <version>${webdriver.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>21.0</version>
+            <!-- required by selenium -->
+            <version>22.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
