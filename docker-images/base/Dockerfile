@@ -2,7 +2,7 @@ FROM hub.docker.prod.walmart.com/library/centos:centos7
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 RUN sed -i -e 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf
-COPY base.repo /etc/yum.repos.d/
+COPY docker-images/base/src/main/docker/base.repo /etc/yum.repos.d/
 
 RUN yum-config-manager --disable base extras updates && \
     yum -y update && \

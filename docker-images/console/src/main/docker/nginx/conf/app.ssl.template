@@ -1,7 +1,17 @@
 server {
-	listen                  8080;
+    listen                  8080;
+    return                  301 https://$host$request_uri;
+}
+
+server {
+	listen                  443 ssl;
 	server_name             _;
-	root                    /opt/concord/console/concord-console-${project.version};
+	root                    /opt/concord/console/dist;
+
+    ssl_certificate         /SSL_CERT_PATH/server.pem;
+    ssl_certificate_key     /SSL_CERT_PATH/server.key;
+    ssl_protocols           TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers             HIGH:!aNULL:!MD5;
 
 	proxy_read_timeout      600;
 

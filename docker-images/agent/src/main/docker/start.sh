@@ -1,5 +1,5 @@
 #!/bin/bash
-APP_DIR="${concord.baseDir}/agent"
+APP_DIR="/opt/concord/agent"
 
 if [ ! -z "$SERVER_PORT_8101_TCP_ADDR" ]; then
     export SERVER_HOST="$SERVER_PORT_8101_TCP_ADDR"

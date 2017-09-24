@@ -1,0 +1,5 @@
+<runtime>
+    <archive name="${project.artifactId}-${project.version}.tar.gz"/>
+
+    <artifactSet to="." ref="runtime.classpath"/>
+</runtime>

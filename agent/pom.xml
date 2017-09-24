@@ -16,5 +16,6 @@
 
     <modules>
         <module>impl</module>
+        <module>dist</module>
     </modules>
 </project>

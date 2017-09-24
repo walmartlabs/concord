@@ -10,53 +10,33 @@
     </parent>
 
     <artifactId>concord-server</artifactId>
-    <packaging>docker</packaging>
+    <packaging>pom</packaging>
+
+    <properties>
+        <docker.tagbase>walmartlabs/concord-server</docker.tagbase>
+        <docker.file>docker-images/server/Dockerfile</docker.file>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server</artifactId>
+            <artifactId>concord-server-dist</artifactId>
             <version>${project.version}</version>
+            <type>tar.gz</type>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <skipRun>true</skipRun>
-                    <images>
-                        <image>
-                            <name>walmartlabs/concord-server:%v</name>
-                            <alias>server</alias>
-                            <build>
-                                <skip>${docker.skip}</skip>
-                                <from>walmartlabs/concord-base</from>
-                                <maintainer>${docker.maintainer}</maintainer>
-                                <tags>
-                                    <tag>latest</tag>
-                                    <tag>${project.version}</tag>
-                                </tags>
-                                <optimise>true</optimise>
-                                <entryPoint>
-                                    <shell>${concord.baseDir}/server/start.sh</shell>
-                                </entryPoint>
-                                <ports>
-                                    <port>8001</port>
-                                    <port>8101</port>
-                                </ports>
-                                <assembly>
-                                    <mode>dir</mode>
-                                    <basedir>${concord.baseDir}/server</basedir>
-                                    <descriptor>assembly.xml</descriptor>
-                                </assembly>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>docker-build</id>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

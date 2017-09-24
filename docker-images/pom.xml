@@ -27,6 +27,46 @@
         <concord.baseDir>/opt/concord</concord.baseDir>
     </properties>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>docker-build</id>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <skip>${docker.skip}</skip>
+                                <executable>docker</executable>
+                                <workingDirectory>${project.basedir}/../../</workingDirectory>
+                                <arguments>
+                                    <argument>build</argument>
+
+                                    <argument>-t</argument>
+                                    <argument>${docker.tagbase}:latest</argument>
+                                    <argument>-t</argument>
+                                    <argument>${docker.tagbase}:${project.version}</argument>
+
+                                    <argument>-f</argument>
+                                    <argument>${docker.file}</argument>
+
+                                    <argument>--network</argument>
+                                    <argument>host</argument>
+
+                                    <argument>.</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
     <profiles>
         <profile>
             <id>docker</id>
