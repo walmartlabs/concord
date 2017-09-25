@@ -105,6 +105,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
+                            <skip>false</skip>
                             <outputDirectory>${basedir}/target/classes</outputDirectory>
                             <encoding>UTF-8</encoding>
                             <resources>
