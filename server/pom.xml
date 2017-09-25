@@ -19,6 +19,5 @@
         <module>db</module>
         <module>impl</module>
         <module>mock</module>
-        <module>dist</module>
     </modules>
 </project>

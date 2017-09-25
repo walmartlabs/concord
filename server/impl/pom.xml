@@ -268,24 +268,18 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-template-deps</id>
-                        <phase>process-resources</phase>
+                        <id>dist</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>copy</goal>
+                            <goal>single</goal>
                         </goals>
                         <configuration>
-                            <!-- TODO this should be automated somehow -->
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-                                    <artifactId>ansible-tasks</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.directory}/deps</outputDirectory>
+                            <descriptors>
+                                <descriptor>src/assembly/dist.xml</descriptor>
+                            </descriptors>
                         </configuration>
                     </execution>
                 </executions>

@@ -6,8 +6,7 @@ RUN yum -y install nginx && yum clean all
 EXPOSE 443
 EXPOSE 8080
 
-ADD console/target/concord-console-*-dist.tar.gz /opt/concord/console/dist/
-
+ADD docker-images/console/target/dist/console.tar.gz /opt/concord/console/dist/
 COPY docker-images/console/src/main/docker/start.sh /opt/concord/console/
 COPY docker-images/console/src/main/docker/nginx /opt/concord/console/nginx
 
