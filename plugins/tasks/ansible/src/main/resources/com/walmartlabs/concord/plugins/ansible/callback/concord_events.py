@@ -21,7 +21,7 @@ class CallbackModule(CallbackBase):
     def __init__(self):
         super(CallbackModule, self).__init__()
 
-        print("___concord_events_init___")
+        print("Ansible event recording started...")
 
         self.playbook = None
         concord_host = os.environ['CONCORD_HOST']

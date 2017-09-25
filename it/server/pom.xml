@@ -170,12 +170,12 @@
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-tasks</artifactId>
-                                    <version>0.38.3</version>
+                                    <version>${project.version}</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-template</artifactId>
-                                    <version>0.38.3</version>
+                                    <version>0.39.0</version>
                                     <destFileName>ansible-template.jar</destFileName>
                                 </artifactItem>
 
