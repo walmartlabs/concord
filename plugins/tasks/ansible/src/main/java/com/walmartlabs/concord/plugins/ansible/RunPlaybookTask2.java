@@ -216,6 +216,9 @@ public class RunPlaybookTask2 implements Task {
         v = args.get(AnsibleConstants.INVENTORY_FILE_KEY);
         if (v != null) {
             Path p = workDir.resolve(v.toString());
+            if (!Files.exists(p) || !Files.isRegularFile(p)) {
+                throw new IllegalArgumentException("File not found: " + v);
+            }
             log.info("Using a static inventory file: {}", p);
             return p;
         }
