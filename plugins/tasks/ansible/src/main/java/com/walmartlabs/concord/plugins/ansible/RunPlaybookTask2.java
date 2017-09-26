@@ -32,8 +32,11 @@ public class RunPlaybookTask2 implements Task {
 
     private final RpcConfiguration rpcCfg;
 
-    @InjectVariable("context")
+    @InjectVariable(Constants.Context.CONTEXT_KEY)
     Context context;
+
+    @InjectVariable(Constants.Context.TX_ID_KEY)
+    String txId;
 
     @Inject
     public RunPlaybookTask2(RpcConfiguration rpcCfg) {
@@ -61,6 +64,9 @@ public class RunPlaybookTask2 implements Task {
         Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
 
         Path vaultPasswordPath = getVaultPasswordFilePath(args, workDir, tmpDir);
+        if (vaultPasswordPath != null) {
+            vaultPasswordPath = workDir.relativize(vaultPasswordPath);
+        }
 
         Path privateKeyPath = getPrivateKeyPath(args, workDir);
         if (privateKeyPath != null) {
@@ -125,6 +131,7 @@ public class RunPlaybookTask2 implements Task {
 
     @SuppressWarnings("unchecked")
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
+        log.info("Using the docker image: {}", dockerImageName);
         run(args, payloadPath, (playbookPath, inventoryPath) ->
                 new DockerPlaybookProcessBuilder(dockerImageName, payloadPath, playbookPath, inventoryPath));
     }
@@ -148,6 +155,10 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
         addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_NAME);
+        addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
 
         String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
@@ -196,7 +207,7 @@ public class RunPlaybookTask2 implements Task {
         Object v = args.get(AnsibleConstants.INVENTORY_KEY);
         if (v instanceof Map) {
             Path p = createInventoryFile(tmpDir, (Map<String, Object>) v);
-            updateDynamicInventoryPermissions(p);
+            updateScriptPermissions(p);
             log.info("Using an inline inventory");
             return p;
         }
@@ -220,7 +231,7 @@ public class RunPlaybookTask2 implements Task {
         v = args.get(AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
         if (v != null) {
             p = workDir.resolve(v.toString());
-            updateDynamicInventoryPermissions(p);
+            updateScriptPermissions(p);
             log.info("Using a dynamic inventory script: {}", p);
             return p;
         }
@@ -228,7 +239,7 @@ public class RunPlaybookTask2 implements Task {
         // try an "old school" dynamic inventory script
         p = workDir.resolve(AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME);
         if (Files.exists(p)) {
-            updateDynamicInventoryPermissions(p);
+            updateScriptPermissions(p);
             log.info("Using a dynamic inventory script uploaded separately: {}", p);
             return p;
         }
@@ -342,23 +353,27 @@ public class RunPlaybookTask2 implements Task {
         return b;
     }
 
-    private static Path getPrivateKeyPath(Map<String, Object> args, Path workDir) throws IOException {
+    private static Path getPath(Map<String, Object> args, String key, Path workDir) throws IOException {
         Path p = null;
 
-        Object v = args.get(AnsibleConstants.PRIVATE_KEY_FILE_KEY);
-        if (v != null) {
-            if (v instanceof String) {
-                p = workDir.resolve((String) v);
-            } else if (v instanceof Path) {
-                p = workDir.resolve((Path) v);
-            } else {
-                throw new IllegalArgumentException("'" + AnsibleConstants.PRIVATE_KEY_FILE_KEY + "' should be either a string value or a path: " + v);
-            }
+        Object v = args.get(key);
+        if (v instanceof String) {
+            p = workDir.resolve((String) v);
+        } else if (v instanceof Path) {
+            p = workDir.resolve((Path) v);
+        } else if (v != null) {
+            throw new IllegalArgumentException("'" + key + "' should be either a relative path: " + v);
         }
 
         if (p != null && !Files.exists(p)) {
             throw new IllegalArgumentException("File not found: " + workDir.relativize(p));
         }
+
+        return p;
+    }
+
+    private static Path getPrivateKeyPath(Map<String, Object> args, Path workDir) throws IOException {
+        Path p = getPath(args, AnsibleConstants.PRIVATE_KEY_FILE_KEY, workDir);
 
         if (p == null) {
             p = workDir.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
@@ -380,20 +395,33 @@ public class RunPlaybookTask2 implements Task {
     }
 
     private static Path getVaultPasswordFilePath(Map<String, Object> args, Path workDir, Path tmpDir) throws IOException {
-        // try an "inline" password first
+        // check if there is a path to a vault password file
+        Path p = getPath(args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY, workDir);
+        if (p != null) {
+            if (isAScript(p)) {
+                updateScriptPermissions(p);
+            }
+
+            log.info("Using the provided vault password file: {}", workDir.relativize(p));
+            return p;
+        }
+
+        // try an "inline" password
         Object v = args.get(AnsibleConstants.VAULT_PASSWORD_KEY);
         if (v instanceof String) {
-            Path p = tmpDir.resolve("vault_password");
+            p = tmpDir.resolve("vault_password");
             Files.write(p, ((String) v).getBytes(), StandardOpenOption.CREATE);
+            log.info("Using the provided vault password.");
             return p;
         } else if (v != null) {
             throw new IllegalArgumentException("Invalid '" + AnsibleConstants.VAULT_PASSWORD_KEY + "' type: " + v);
         }
 
-        Path p = workDir.resolve(AnsibleConstants.VAULT_PASSWORD_FILE_PATH);
+        p = workDir.resolve(AnsibleConstants.VAULT_PASSWORD_FILE_PATH);
         if (!Files.exists(p)) {
             return null;
         }
+
         return p;
     }
 
@@ -444,8 +472,13 @@ public class RunPlaybookTask2 implements Task {
         return p;
     }
 
-    private static void updateDynamicInventoryPermissions(Path p) throws IOException {
-        // ensure that a dynamic inventory script has the executable bit set
+    private static boolean isAScript(Path p) {
+        String n = p.getFileName().toString().toLowerCase();
+        return n.endsWith(".sh") || n.endsWith(".py");
+    }
+
+    private static void updateScriptPermissions(Path p) throws IOException {
+        // ensure that the file has the executable bit set
         Set<PosixFilePermission> perms = new HashSet<>();
         perms.add(PosixFilePermission.OWNER_READ);
         perms.add(PosixFilePermission.OWNER_EXECUTE);

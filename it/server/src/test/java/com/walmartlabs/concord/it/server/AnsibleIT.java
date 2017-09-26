@@ -36,4 +36,25 @@ public class AnsibleIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*\"msg\":.*Hello, world.*", ab);
     }
+
+    @Test(timeout = 30000)
+    public void testVault() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleVault").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello, Concord.*", ab);
+    }
 }

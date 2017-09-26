@@ -36,9 +36,12 @@ public final class AnsibleConstants {
 
     public static final String USER_KEY = "user";
 
+    @Deprecated
     public static final String VAULT_PASSWORD_FILE_PATH = "_vaultPassword";
 
     public static final String VAULT_PASSWORD_KEY = "vaultPassword";
+
+    public static final String VAULT_PASSWORD_FILE_KEY = "vaultPasswordFile";
 
     public static final String WORK_DIR_KEY = "workDir";
 
