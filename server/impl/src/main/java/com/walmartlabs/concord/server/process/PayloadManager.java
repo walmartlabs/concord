@@ -83,6 +83,33 @@ public class PayloadManager {
      * @param in
      * @return
      */
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, InputStream in) throws IOException {
+        Path baseDir = createPayloadDir();
+        Path workspaceDir = ensureWorkspace(baseDir);
+
+        Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
+        Files.copy(in, archive);
+
+        Payload p = new Payload(instanceId, parentInstanceId);
+
+        p = addInitiator(p, initiator);
+
+        p = p.putHeader(Payload.BASE_DIR, baseDir)
+                .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
+                .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
+
+        return addEntryPoint(p, entryPoint);
+    }
+
+    /**
+     * Creates a payload from an archive, containing all necessary resources.
+     *
+     * @param instanceId
+     * @param parentInstanceId
+     * @param initiator
+     * @param in
+     * @return
+     */
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, InputStream in) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
@@ -97,22 +124,6 @@ public class PayloadManager {
         return p.putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
                 .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
-    }
-
-    /**
-     * Creates a payload from an archive, containing all necessary resources and the
-     * specified project name.
-     *
-     * @param instanceId
-     * @param parentInstanceId
-     * @param initiator
-     * @param in
-     * @return
-     */
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, String projectName, InputStream in) throws IOException {
-        Payload p = createPayload(instanceId, parentInstanceId, initiator, in);
-        p = addInitiator(p, initiator);
-        return p.putHeader(Payload.PROJECT_NAME, projectName);
     }
 
     /**
@@ -173,7 +184,9 @@ public class PayloadManager {
         // JSON data
         if (entryPoint == null) {
             Map<String, Object> req = p.getHeader(Payload.REQUEST_DATA_MAP);
-            entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
+            if (req != null) {
+                entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
+            }
         }
 
         if (entryPoint != null) {

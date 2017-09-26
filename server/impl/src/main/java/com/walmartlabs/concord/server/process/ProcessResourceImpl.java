@@ -129,6 +129,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, UUID parentInstanceId, boolean sync) {
         return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync);
     }
@@ -186,16 +187,21 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @RequiresAuthentication
-    public StartProcessResponse start(String projectName, InputStream in, UUID parentInstanceId, boolean sync) {
+    public StartProcessResponse start(String entryPoint, InputStream in, UUID parentInstanceId, boolean sync) {
         assertParentInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
 
+        EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
+        if (ep != null) {
+            assertProject(ep.getProjectName());
+        }
+
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), projectName, in);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, in);
         } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", projectName, e);
+            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
         }
 
@@ -321,16 +327,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 IOUtils.copy(in, out);
             }
         }).build();
-    }
-
-    private static String getInitiator() {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject == null || !subject.isAuthenticated()) {
-            return null;
-        }
-
-        UserPrincipal u = (UserPrincipal) subject.getPrincipal();
-        return u.getUsername();
     }
 
     @Override
@@ -502,7 +498,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         if (!queueDao.exists(id)) {
-            throw new ValidationErrorsException("Unknows parent instance ID: " + id);
+            throw new ValidationErrorsException("Unknown parent instance ID: " + id);
         }
     }
 
@@ -513,5 +509,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Calendar c = p.getValue();
         return new Timestamp(c.getTimeInMillis());
+    }
+
+    private static String getInitiator() {
+        Subject subject = SecurityUtils.getSubject();
+        if (subject == null || !subject.isAuthenticated()) {
+            return null;
+        }
+
+        UserPrincipal u = (UserPrincipal) subject.getPrincipal();
+        return u.getUsername();
     }
 }
