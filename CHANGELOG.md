@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: support for GIT submodules;
 - concord-server, concord-console: process tags.
 
 
