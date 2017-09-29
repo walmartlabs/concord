@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: process tags.
+
+
+
 ## [0.40.2] - 2017-09-24
 
 ### Added

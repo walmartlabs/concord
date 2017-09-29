@@ -11,8 +11,7 @@ import KillProcessPopup from "./KillProcessPopup";
 import {actions as modal} from "../shared/Modal";
 import * as constants from "./constants";
 import * as actions from "./actions";
-import reducers from "./reducers";
-import * as selectors from "./reducers";
+import reducers, * as selectors from "./reducers";
 import sagas from "./sagas";
 
 const enableFormsStatuses = [constants.status.suspendedStatus];
@@ -67,7 +66,7 @@ class ProcessStatusPage extends Component {
         return <div>
             <Header as="h3">
                 Process {instanceId}
-                { showRefresh && <RefreshButton loading={loading} onClick={() => this.load()}/>}
+                {showRefresh && <RefreshButton loading={loading} onClick={() => this.load()}/>}
             </Header>
 
             <Table definition collapsing>
@@ -75,7 +74,8 @@ class ProcessStatusPage extends Component {
                     <Table.Row>
                         <Table.Cell>Parent process</Table.Cell>
                         <Table.Cell>
-                            { data.parentInstanceId ? <Link to={`/process/${data.parentInstanceId}`}>{data.parentInstanceId}</Link> : "-" }
+                            {data.parentInstanceId ?
+                                <Link to={`/process/${data.parentInstanceId}`}>{data.parentInstanceId}</Link> : "-"}
                         </Table.Cell>
                     </Table.Row>
                     <Table.Row>
@@ -102,17 +102,21 @@ class ProcessStatusPage extends Component {
                         <Table.Cell>Last update</Table.Cell>
                         <Table.Cell>{formatTimestamp(data.lastUpdatedAt)}</Table.Cell>
                     </Table.Row>
+                    <Table.Row>
+                        <Table.Cell>Tags</Table.Cell>
+                        <Table.Cell>{data.tags ? data.tags.sort().join(", ") : "-"}</Table.Cell>
+                    </Table.Row>
                 </Table.Body>
             </Table>
 
             <Button disabled={!enableLogButton} onClick={() => this.openLog()}>View Log</Button>
 
-            { showKillButton &&
-            <Button icon="delete" color="red" content="Kill" onClick={() => openKillPopup(instanceId)}/> }
+            {showKillButton &&
+            <Button icon="delete" color="red" content="Kill" onClick={() => openKillPopup(instanceId)}/>}
 
-            { showWizard && <Button onClick={() => this.openWizard()}>Wizard</Button> }
+            {showWizard && <Button onClick={() => this.openWizard()}>Wizard</Button>}
 
-            { showForms && <div>
+            {showForms && <div>
                 <Divider/>
 
                 <Header as="h4">Required actions</Header>
@@ -125,12 +129,12 @@ class ProcessStatusPage extends Component {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        { data.forms.map(({formInstanceId, name}) => <Table.Row key={formInstanceId}>
+                        {data.forms.map(({formInstanceId, name}) => <Table.Row key={formInstanceId}>
                             <Table.Cell>
                                 <Link to={`/process/${instanceId}/form/${formInstanceId}`}>{name}</Link>
                             </Table.Cell>
                             <Table.Cell>Form</Table.Cell>
-                        </Table.Row>) }
+                        </Table.Row>)}
                     </Table.Body>
                 </Table>
             </div>

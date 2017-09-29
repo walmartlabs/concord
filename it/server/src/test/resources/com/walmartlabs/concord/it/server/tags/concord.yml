@@ -1,0 +1,9 @@
+flows:
+  default:
+  - log: "Hello!"
+
+configuration:
+  tags:
+    - "test"
+    - "IT"
+    - "tagging"

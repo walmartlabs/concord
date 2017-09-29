@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Api("Process")
@@ -202,19 +203,22 @@ public interface ProcessResource {
     @ApiOperation("List processes")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> list(@ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                            @ApiParam @QueryParam("tags") Set<String> tags,
                             @ApiParam @QueryParam("limit") @DefaultValue("30") int limit);
 
     /**
      * Returns a list of child processes for a given parent process.
      *
      * @param parentInstanceId
+     * @param tags
      * @return
      */
     @GET
     @ApiOperation("List child processes of a parent process")
     @Path("/{id}/children")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProcessEntry> list(@ApiParam @PathParam("id") UUID parentInstanceId);
+    List<ProcessEntry> list(@ApiParam @PathParam("id") UUID parentInstanceId,
+                            @ApiParam @QueryParam("tags") Set<String> tags);
 
     /**
      * Retrieves a process log.

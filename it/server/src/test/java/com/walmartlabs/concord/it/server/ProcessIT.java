@@ -289,4 +289,47 @@ public class ProcessIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*I said: Hello!.*", ab);
     }
+
+    @Test(timeout = 30000)
+    public void testTags() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse parentSpr = processResource.start(new ByteArrayInputStream(payload), null, false);
+
+        // ---
+
+        waitForCompletion(processResource, parentSpr.getInstanceId());
+
+        // ---
+
+        payload = archive(ProcessIT.class.getResource("tags").toURI());
+        StartProcessResponse childSpr = processResource.start(new ByteArrayInputStream(payload), parentSpr.getInstanceId(), false);
+
+        // ---
+
+        waitForCompletion(processResource, childSpr.getInstanceId());
+
+        // ---
+
+        List<ProcessEntry> l = processResource.list(parentSpr.getInstanceId(), Collections.singleton("abc"));
+        assertTrue(l.isEmpty());
+
+        l = processResource.list(parentSpr.getInstanceId(), Collections.singleton("test"));
+        assertEquals(1, l.size());
+
+        ProcessEntry e = l.get(0);
+        assertEquals(childSpr.getInstanceId(), e.getInstanceId());
+
+        // ---
+
+        l = processResource.list(null, Collections.singleton("xyz"), 1);
+        assertTrue(l.isEmpty());
+
+        l = processResource.list(null, Collections.singleton("IT"), 1);
+        assertEquals(1, l.size());
+
+        e = l.get(0);
+        assertEquals(childSpr.getInstanceId(), e.getInstanceId());
+    }
 }

@@ -74,6 +74,11 @@ public final class Constants {
          */
         public static final String REQUEST_INFO_KEY = "requestInfo";
 
+        /**
+         * Process tags.
+         */
+        public static final String TAGS_KEY = "tags";
+
         private Request() {
         }
     }

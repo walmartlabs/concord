@@ -1,13 +1,9 @@
 package com.walmartlabs.concord.it.common;
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
-import com.walmartlabs.concord.server.api.process.*;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
@@ -157,7 +153,7 @@ public class ServerClient {
 
         int retries = 10;
         while (true) {
-            List<ProcessEntry> l = processResource.list(parentInstanceId);
+            List<ProcessEntry> l = processResource.list(parentInstanceId, null);
             for (ProcessEntry e : l) {
                 if (e.getKind() == kind) {
                     if (e.getStatus() == status) {
