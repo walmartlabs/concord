@@ -145,6 +145,23 @@ public interface ProcessResource {
                                  @ApiParam Map<String, Object> req);
 
     /**
+     * Starts a new child process by forking the start of the specified parent process.
+     *
+     * @param parentInstanceId
+     * @param req
+     * @param sync
+     * @return
+     */
+    @POST
+    @ApiOperation("Fork a process")
+    @Path("/{id}/fork")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    StartProcessResponse fork(@ApiParam @PathParam("id") UUID parentInstanceId,
+                              @ApiParam Map<String, Object> req,
+                              @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+
+    /**
      * Waits for completion of a process.
      *
      * @param instanceId
@@ -207,15 +224,15 @@ public interface ProcessResource {
                             @ApiParam @QueryParam("limit") @DefaultValue("30") int limit);
 
     /**
-     * Returns a list of child processes for a given parent process.
+     * Returns a list of subprocesses for a given parent process.
      *
      * @param parentInstanceId
      * @param tags
      * @return
      */
     @GET
-    @ApiOperation("List child processes of a parent process")
-    @Path("/{id}/children")
+    @ApiOperation("List subprocesses of a parent process")
+    @Path("/{id}/subprocesses")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> list(@ApiParam @PathParam("id") UUID parentInstanceId,
                             @ApiParam @QueryParam("tags") Set<String> tags);

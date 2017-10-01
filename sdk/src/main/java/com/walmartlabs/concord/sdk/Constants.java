@@ -79,6 +79,21 @@ public final class Constants {
          */
         public static final String TAGS_KEY = "tags";
 
+        /**
+         * ID of a parent process instance.
+         */
+        public static final String PARENT_INSTANCE_ID_KEY = "parentInstanceId";
+
+        /**
+         * If {@code true}, then `onCancel` flow will be ignored.
+         */
+        public static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
+
+        /**
+         * If {@code true}, then `onFailure` flow will be ignored.
+         */
+        public static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
+
         private Request() {
         }
     }

@@ -4,6 +4,10 @@
 
 ### Added
 
+- concord-sdk: new provided variable `parentInstanceId`;
+- concord-server: ability to suppress the execution of `onCancel` or
+`onFailure` flows;
+- concord-server: new API method to fork a process as its subprocess;
 - concord-server: support for GIT submodules;
 - concord-server, concord-console: process tags.
 

@@ -1,0 +1,39 @@
+flows:
+  default:
+  # "forks" the current process as a child process
+  - task: concord
+    in:
+      action: fork
+
+      # if not specified, the parent's entry point will be used
+      entryPoint: sayHello
+
+      # wait for completion
+      sync: true
+
+      # additional arguments
+      arguments:
+        otherName: "${initiator.username}"
+
+  - log: "Done! ${jobs} is completed"
+
+  sayHello:
+  # forked processes can access the latest snapshot of the parent's
+  # state in addition to the arguments provided by the parent task
+  - log: "FORK: Hello, ${otherName}. I'm ${myName}"
+
+  # simulate a long-running process, sleep for 10s
+  - ${sleep.ms(10000)}
+
+configuration:
+  dependencies:
+  - "file:///home/ibodrov/.m2/repository/com/walmartlabs/concord/plugins/concord-tasks/0.28.1-SNAPSHOT/concord-tasks-0.28.1-SNAPSHOT.jar"
+
+  arguments:
+    concord:
+      # default parameters, can be overridden with `in` parameters of
+      # the task
+      baseUrl: "http://localhost:8001"
+      apiKey: "auBy4eDWrKWsyhiDp3AQiw"
+
+    myName: "Concord"

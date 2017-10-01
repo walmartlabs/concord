@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -145,6 +146,34 @@ public class PayloadManager {
                 .putHeader(Payload.WORKSPACE_DIR, tmpDir)
                 .putHeader(Payload.REQUEST_DATA_MAP, req)
                 .putHeader(Payload.RESUME_EVENT_NAME, eventName);
+    }
+
+    /**
+     * Creates a payload to fork an existing process.
+     *
+     * @param instanceId
+     * @param parentInstanceId
+     * @param projectName
+     * @param req
+     * @return
+     */
+    public Payload createFork(UUID instanceId, UUID parentInstanceId, ProcessKind kind,
+                              String initiator, String projectName, Map<String, Object> req) throws IOException {
+        Path tmpDir = Files.createTempDirectory("payload");
+
+        if (!stateManager.export(parentInstanceId, copyTo(tmpDir))) {
+            throw new ProcessException(instanceId, "Can't fork '" + instanceId + "', parent state snapshot not found");
+        }
+
+        Payload p = new Payload(instanceId, parentInstanceId)
+                .putHeader(Payload.PROCESS_KIND, kind)
+                .putHeader(Payload.WORKSPACE_DIR, tmpDir)
+                .putHeader(Payload.PROJECT_NAME, projectName)
+                .putHeader(Payload.REQUEST_DATA_MAP, req);
+
+        p = addInitiator(p, initiator);
+
+        return p;
     }
 
     private Path createPayloadDir() throws IOException {

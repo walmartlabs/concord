@@ -16,6 +16,6 @@ public class ResumePipeline extends Pipeline {
                 ResumeDataMergingProcessor.class,
                 RequestDataStoringProcessor.class,
                 StateImportingProcessor.class,
-                EnqueueingResumeProcessor.class);
+                EnqueueingProcessor.class);
     }
 }

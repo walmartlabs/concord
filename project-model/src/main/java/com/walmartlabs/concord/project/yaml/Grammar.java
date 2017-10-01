@@ -219,7 +219,7 @@ public class Grammar {
                 return "return".equals(s);
             }).map(a -> new YamlReturn(a.location)));
 
-    // event := FIELD_NAME "return" VALUE_STRING
+    // errorReturn := FIELD_NAME "return" VALUE_STRING
     private static final Parser<Atom, YamlStep> errorReturn = label("Error end event",
             satisfyField("return").then(satisfyToken(JsonToken.VALUE_STRING))
                     .map(a -> new YamlReturn(a.location, (String) a.value)));

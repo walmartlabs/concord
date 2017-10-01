@@ -60,8 +60,8 @@ class ProcessStatusPage extends Component {
         const showRefresh = constants.activeStatuses.includes(data.status);
         const enableLogButton = constants.hasLogStatuses.includes(data.status) && data.logFileName;
         const showKillButton = constants.canBeKilledStatuses.includes(data.status);
-        const showWizard = enableFormsStatuses.includes(data.status);
         const showForms = data.forms && data.forms.length > 0 && enableFormsStatuses.includes(data.status);
+        const showWizard = showForms;
 
         return <div>
             <Header as="h3">
@@ -77,6 +77,10 @@ class ProcessStatusPage extends Component {
                             {data.parentInstanceId ?
                                 <Link to={`/process/${data.parentInstanceId}`}>{data.parentInstanceId}</Link> : "-"}
                         </Table.Cell>
+                    </Table.Row>
+                    <Table.Row>
+                        <Table.Cell>Kind</Table.Cell>
+                        <Table.Cell>{data.kind ? data.kind : "-"}</Table.Cell>
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Project</Table.Cell>

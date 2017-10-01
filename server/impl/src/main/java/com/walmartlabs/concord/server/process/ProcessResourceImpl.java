@@ -12,6 +12,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
+import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
@@ -62,6 +63,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final Chain archivePipeline;
     private final Chain projectPipeline;
     private final Chain resumePipeline;
+    private final Chain forkPipeline;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final AgentManager agentManager;
@@ -73,6 +75,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProcessLogsDao logsDao, ArchivePipeline archivePipeline,
                                ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
+                               ForkPipeline forkPipeline,
                                PayloadManager payloadManager,
                                ProcessStateManager stateManager,
                                AgentManager agentManager,
@@ -84,6 +87,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.archivePipeline = archivePipeline;
         this.projectPipeline = projectPipeline;
         this.resumePipeline = resumePipeline;
+        this.forkPipeline = forkPipeline;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.agentManager = agentManager;
@@ -224,6 +228,29 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return new ResumeProcessResponse();
     }
 
+    @Override
+    @Validate
+    @RequiresAuthentication
+    public StartProcessResponse fork(UUID parentInstanceId, Map<String, Object> req, boolean sync) {
+        ProcessEntry parent = queueDao.get(parentInstanceId);
+        if (parent == null) {
+            throw new ValidationErrorsException("Unknown parent instance ID: " + parentInstanceId);
+        }
+
+        UUID instanceId = UUID.randomUUID();
+        String projectName = parent.getProjectName();
+
+        Payload payload;
+        try {
+            payload = payloadManager.createFork(instanceId, parentInstanceId, ProcessKind.DEFAULT, getInitiator(), projectName, req);
+        } catch (IOException e) {
+            log.error("fork ['{}', '{}'] -> error creating a payload: {}", instanceId, parentInstanceId, e);
+            throw new WebApplicationException("Error creating a payload", e);
+        }
+
+        return start(forkPipeline, payload, sync);
+    }
+
     private void assertProject(String projectName) {
         if (!projectDao.exists(projectName)) {
             throw new ValidationErrorsException("Unknown project name: " + projectName);
@@ -271,14 +298,28 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Process not found: " + instanceId, Status.NOT_FOUND);
         }
 
-        boolean stopped = false;
-        if (entry.getStatus() == ProcessStatus.SUSPENDED) {
-            stopped = queueDao.update(instanceId, ProcessStatus.SUSPENDED, ProcessStatus.CANCELLED);
+        ProcessStatus s = entry.getStatus();
+        if (s == ProcessStatus.CANCELLED || s == ProcessStatus.FINISHED) {
+            return;
         }
 
-        if (!stopped) {
-            agentManager.killProcess(instanceId);
+        if (cancel(instanceId, s, ProcessStatus.ENQUEUED, ProcessStatus.PREPARING)) {
+            return;
         }
+
+        agentManager.killProcess(instanceId);
+    }
+
+    private boolean cancel(UUID instanceId, ProcessStatus current, ProcessStatus... expected) {
+        boolean found = false;
+        for (ProcessStatus s : expected) {
+            if (current == s) {
+                found = true;
+                break;
+            }
+        }
+
+        return found && queueDao.update(instanceId, current, ProcessStatus.CANCELLED);
     }
 
     @Override

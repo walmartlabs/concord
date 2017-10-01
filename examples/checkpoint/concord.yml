@@ -1,0 +1,9 @@
+flows:
+  default:
+  - set:
+      aValue: "Hello, Concord!"
+  - event: "test"
+  - ${sleep.ms(30000)}
+
+  onCancel:
+  - log: "${aValue}"

@@ -1,15 +1,15 @@
 package com.walmartlabs.concord.server.process.queue;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.PayloadManager;
+import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
+import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.state.ProcessMetadataManager;
-import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.eclipse.sisu.EagerSingleton;
 import org.jooq.*;
 import org.slf4j.Logger;
@@ -17,12 +17,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -47,11 +46,16 @@ public class ProcessQueueWatchdog {
                     ProcessKind.CANCEL_HANDLER, 3)
     };
 
-    private static final long POLL_DELAY = 3000;
+    private static final long POLL_DELAY = 2000;
     private static final long ERROR_DELAY = 10000;
 
     private static final ProcessKind[] HANDLED_PROCESS_KINDS = {
             ProcessKind.DEFAULT
+    };
+
+    private static final ProcessKind[] SPECIAL_HANDLERS = {
+            ProcessKind.FAILURE_HANDLER,
+            ProcessKind.CANCEL_HANDLER
     };
 
     private static final ProcessStatus[] ACTIVE_PROCESS_STATUSES = {
@@ -63,18 +67,14 @@ public class ProcessQueueWatchdog {
     };
 
     private final WatchdogDao watchdogDao;
-    private final ProcessStateManager stateManager;
-    private final ProcessQueueDao queueDao;
-    private final ObjectMapper objectMapper;
+    private final PayloadManager payloadManager;
+    private final Chain forkPipeline;
 
     @Inject
-    public ProcessQueueWatchdog(WatchdogDao watchdogDao, ProcessStateManager stateManager, ProcessQueueDao queueDao) {
+    public ProcessQueueWatchdog(WatchdogDao watchdogDao, PayloadManager payloadManager, ForkPipeline forkPipeline) {
         this.watchdogDao = watchdogDao;
-        this.stateManager = stateManager;
-        this.queueDao = queueDao;
-
-        this.objectMapper = new ObjectMapper();
-
+        this.payloadManager = payloadManager;
+        this.forkPipeline = forkPipeline;
         init();
     }
 
@@ -109,12 +109,16 @@ public class ProcessQueueWatchdog {
 
                     for (ProcessEntry parent : parents) {
                         UUID childId = UUID.randomUUID();
-                        queueDao.insertInitial(tx, childId, e.handlerKind, parent.instanceId, parent.projectName, parent.initiator);
 
-                        stateManager.copy(tx, parent.instanceId, childId);
-                        updateRequestData(tx, childId, e.flow);
+                        Map<String, Object> req = new HashMap<>();
+                        req.put(Constants.Request.ENTRY_POINT_KEY, e.flow);
+                        req.put(Constants.Request.TAGS_KEY, null); // clear tags
 
-                        queueDao.update(tx, childId, ProcessStatus.ENQUEUED);
+                        Payload payload = payloadManager.createFork(childId, parent.instanceId, e.handlerKind,
+                                parent.initiator, parent.projectName, req);
+
+                        forkPipeline.process(payload);
+
                         log.info("run -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                                 childId, parent.instanceId, e.flow);
                     }
@@ -128,32 +132,6 @@ public class ProcessQueueWatchdog {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-        }
-    }
-
-    private void updateRequestData(DSLContext tx, UUID instanceId, String entryPoint) {
-        String resource = Constants.Files.REQUEST_DATA_FILE_NAME;
-
-        Optional<Map<String, Object>> o = stateManager.get(tx, instanceId, resource, in -> {
-            try {
-                return Optional.of(objectMapper.readValue(in, Map.class));
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
-            }
-        });
-
-        Map<String, Object> m = o.orElseThrow(() -> {
-            String msg = "Can't update the entry point for " + instanceId + ": request data not found";
-            return new ProcessException(instanceId, msg);
-        });
-
-        m.put(Constants.Request.ENTRY_POINT_KEY, entryPoint);
-
-        try {
-            byte[] ab = objectMapper.writeValueAsBytes(m);
-            stateManager.update(tx, instanceId, resource, ab);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
         }
     }
 
@@ -197,7 +175,7 @@ public class ProcessQueueWatchdog {
                             .and(existsMarker(q.INSTANCE_ID, entry.marker))
                             .and(notExistsSuccess(tx, q.INSTANCE_ID, entry.handlerKind))
                             .and(count(tx, q.INSTANCE_ID, entry.handlerKind).lessThan(entry.maxTries))
-                            .and(noRunningChildren(tx, q.INSTANCE_ID)))
+                            .and(noRunningHandlers(tx, q.INSTANCE_ID)))
                     .limit(maxEntries)
                     .forUpdate()
                     .fetch(WatchdogDao::toEntry);
@@ -218,10 +196,11 @@ public class ProcessQueueWatchdog {
                             .and(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.FINISHED.toString()))));
         }
 
-        private Condition noRunningChildren(DSLContext tx, Field<UUID> parentInstanceId) {
+        private Condition noRunningHandlers(DSLContext tx, Field<UUID> parentInstanceId) {
             return notExists(tx.selectFrom(PROCESS_QUEUE)
                     .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
-                            .and(PROCESS_QUEUE.CURRENT_STATUS.in(toArray(ACTIVE_PROCESS_STATUSES)))));
+                            .and(PROCESS_QUEUE.CURRENT_STATUS.in(toArray(ACTIVE_PROCESS_STATUSES)))
+                            .and(PROCESS_QUEUE.PROCESS_KIND.in(toArray(SPECIAL_HANDLERS)))));
         }
 
         private Condition existsMarker(Field<UUID> instanceId, String marker) {
