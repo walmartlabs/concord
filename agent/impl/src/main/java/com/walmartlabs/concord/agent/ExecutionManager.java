@@ -135,6 +135,19 @@ public class ExecutionManager {
         return s;
     }
 
+    public boolean isRunning(String id) {
+        JobStatus s;
+        synchronized (mutex) {
+            s = statuses.getIfPresent(id);
+        }
+
+        if (s == null) {
+             return false;
+        }
+
+        return s == JobStatus.RUNNING;
+    }
+
     private Path extract(InputStream in) throws ExecutionException {
         Path baseDir = cfg.getPayloadDir();
         try {

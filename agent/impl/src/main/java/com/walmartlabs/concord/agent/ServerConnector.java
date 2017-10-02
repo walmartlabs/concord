@@ -19,6 +19,7 @@ public class ServerConnector {
     private AgentApiClient client;
     private Future<?> commandHandler;
     private List<Future<?>> workers;
+    private Future<?> dockerSweeper;
 
     public ServerConnector(ExecutorService executor) {
         this.executor = executor;
@@ -41,21 +42,33 @@ public class ServerConnector {
             Future<?> f = executor.submit(new Worker(client, executionManager));
             workers.add(f);
         }
+
+        if (cfg.isDockerSweeperEnabled()) {
+            dockerSweeper = executor.submit(new DockerSweeper(executionManager));
+        }
     }
 
     public void stop() {
+        if (dockerSweeper != null) {
+            dockerSweeper.cancel(true);
+            dockerSweeper = null;
+        }
+
         if (commandHandler != null) {
             commandHandler.cancel(true);
+            commandHandler = null;
         }
 
         if (workers != null) {
             for (Future<?> f : workers) {
                 f.cancel(true);
             }
+            workers = null;
         }
 
         if (client != null) {
             client.stop();
+            client = null;
         }
     }
 }

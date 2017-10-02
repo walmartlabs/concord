@@ -134,7 +134,7 @@ public class RunPlaybookTask2 implements Task {
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Using the docker image: {}", dockerImageName);
         run(args, payloadPath, (playbookPath, inventoryPath) ->
-                new DockerPlaybookProcessBuilder(dockerImageName, payloadPath, playbookPath, inventoryPath));
+                new DockerPlaybookProcessBuilder(txId, dockerImageName, payloadPath, playbookPath, inventoryPath));
     }
 
     @SuppressWarnings("unchecked")

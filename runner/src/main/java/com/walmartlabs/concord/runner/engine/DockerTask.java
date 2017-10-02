@@ -1,7 +1,9 @@
 package com.walmartlabs.concord.runner.engine;
 
 import com.walmartlabs.concord.common.DockerProcessBuilder;
-import com.walmartlabs.concord.common.Task;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,11 +27,15 @@ public class DockerTask implements Task {
     private static final int SUCCESS_EXIT_CODE = 0;
     private static final String VOLUME_CONTAINER_DEST = "/workspace";
 
+    @InjectVariable(Constants.Context.TX_ID_KEY)
+    String txId;
+
     public void call(String dockerImage, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
         try {
             createRunScript(payloadPath, cmd);
 
             Process p = new DockerProcessBuilder(dockerImage)
+                    .addLabel(DockerProcessBuilder.CONCORD_TX_ID_LABEL, txId)
                     .cleanup(true)
                     .volume(payloadPath, VOLUME_CONTAINER_DEST)
                     .arg("/workspace/.docker_cmd.sh")
