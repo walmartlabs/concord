@@ -78,6 +78,7 @@ public class RunPlaybookTask2 implements Task {
         env.put("CONCORD_HOST", rpcCfg.getServerHost());
         env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
+        env = addExtraEnv(env, args);
 
         processCallback(workDir);
 
@@ -504,5 +505,17 @@ public class RunPlaybookTask2 implements Task {
         }
 
         throw new IllegalArgumentException("'" + AnsibleConstants.VERBOSE_LEVEL_KEY + "' should be an integer: " + v);
+    }
+
+    private static Map<String, String> addExtraEnv(Map<String, String> env, Map<String, Object> m) {
+        Map<String, String> extraEnv = (Map<String, String>) m.get(AnsibleConstants.EXTRA_ENV);
+        if (extraEnv == null || extraEnv.isEmpty()) {
+            return env;
+        }
+
+        Map<String, String> result = new HashMap<>(env);
+        result.putAll(extraEnv);
+
+        return result;
     }
 }

@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- ansible: support for additional enviroment variables.
+
+
+
 ## [0.42.0] - 2017-10-01
 
 ### Added
