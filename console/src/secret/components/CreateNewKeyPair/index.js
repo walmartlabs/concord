@@ -1,26 +1,26 @@
 import React from 'react';
 import { Field, reduxForm } from 'redux-form';
 
-import { Form, Card, Button, Segment } from 'semantic-ui-react';
+import { Form, Segment } from 'semantic-ui-react';
 
 const CreateNewKeyPair = props => {
-  const { handleSubmit, pristine, reset, submitting } = props;
-  return (
-    <Segment>
-      <h2>Create New Key Pair</h2>
-      <form onSubmit={ handleSubmit }>
+    const { handleSubmit, pristine, submitting } = props;
+    return (
+        <Segment>
+            <h2>Create New Key Pair</h2>
+            <Form onSubmit={handleSubmit}>
 
-            <div>
-                <label>Concord ID</label>
-                <Field
-                    name="ConcordId"
-                    component={Form.Input}
-                    type="text"
-                    placeholder="Concord ID"
-                />
-            </div>
-
-            {/* <div>
+                <Form.Field required>
+                    <label>Concord ID</label>
+                    <Field
+                        required
+                        name="ConcordId"
+                        component={Form.Input}
+                        type="text"
+                        placeholder="Concord ID"
+                    />
+                </Form.Field>
+                {/* <div>
                 <label>Generate Password</label>
                 <Field
                     name="generatePassword"
@@ -29,7 +29,7 @@ const CreateNewKeyPair = props => {
                 />
             </div> */}
 
-            {/* <div>
+                {/* <div>
                 <label>Store password</label>
                 <Field
                     name="storePassword"
@@ -38,16 +38,14 @@ const CreateNewKeyPair = props => {
                     placeholder="Store Password"
                 />
             </div> */}
+                <br></br>
+                <Form.Button primary type="submit" disabled={pristine || submitting}>Submit</Form.Button>
 
-            <div>
-                <Button type="submit" disabled={pristine || submitting}>Submit</Button>
-            </div>
-
-      </form>
-    </Segment>
-  );
+            </Form>
+        </Segment>
+    );
 };
 
 export default reduxForm({
-  form: 'CreateNewKeyPair',
+    form: 'CreateNewKeyPair',
 })(CreateNewKeyPair);

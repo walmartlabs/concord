@@ -1,32 +1,32 @@
 import React from 'react';
 import { Field, reduxForm } from 'redux-form';
 
-import { Form, Card, Button, Segment } from 'semantic-ui-react';
+import { Form, Segment } from 'semantic-ui-react';
 
 const CreatePlainSecret = props => {
-  const { handleSubmit, pristine, reset, submitting } = props;
+  const { handleSubmit, pristine, submitting } = props;
   return (
-    <Segment> 
+    <Segment>
       <h2>Create Plain Secret</h2>
-      <form onSubmit={ handleSubmit }>
-        <div>
+      <Form onSubmit={handleSubmit}>
+        <Form.Field required>
           <label>Concord ID</label>
-            <Field
-              name="ConcordId"
-              component={Form.Input}
-              type="text"
-              placeholder="Concord ID"
-            />
-        </div>
-        <div>
+          <Field
+            name="ConcordId"
+            component={Form.Input}
+            type="text"
+            placeholder="Concord ID"
+          />
+        </Form.Field>
+        <Form.Field required>
           <label>Secret Phrase</label>
-            <Field
-              name="secret"
-              component={Form.Input}
-              type="text"
-              placeholder="Plain Secret Text"
-            />
-        </div>
+          <Field
+            name="secret"
+            component={Form.Input}
+            type="text"
+            placeholder="Plain Secret Text"
+          />
+        </Form.Field>
         {/* <div>
           <label>Generate Password</label>
             <Field
@@ -45,11 +45,10 @@ const CreatePlainSecret = props => {
           />
         </div>
          */}
-        <div>
-          <Button type="submit" disabled={pristine || submitting}>Submit</Button>
-        </div>
+        <br></br>
+        <Form.Button primary type="submit" disabled={pristine || submitting}>Submit</Form.Button>
 
-      </form>
+      </Form>
     </Segment>
   );
 };

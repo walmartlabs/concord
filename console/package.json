@@ -14,9 +14,10 @@
     "jest": "^21.1.0",
     "jest-cli": "^21.1.0",
     "jest-enzyme": "^4.0.0",
+    "raf": "^3.4.0",
     "react-scripts": "1.0.13",
     "react-semantic-redux-form": "^1.1.4",
-    "react-test-renderer": "^15.6.1",
+    "react-test-renderer": "^16.0.0",
     "redux-devtools-extension": "^2.13.2",
     "watchman": "^0.1.8"
   },

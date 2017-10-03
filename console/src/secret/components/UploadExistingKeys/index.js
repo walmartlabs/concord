@@ -2,21 +2,16 @@ import React from 'react';
 import { Field, reduxForm } from 'redux-form';
 import FileInput from "../FileInput";
 
-import { Form, Card, Button, Segment } from 'semantic-ui-react';
-
-const customFileInput = (field) => {
-  delete field.input.value; // <-- just delete the value property
-  return <input type="file" id="file" {...field.input} />;
-};
+import { Form, Segment } from 'semantic-ui-react';
 
 const UploadExistingKeys = props => {
-  const { handleSubmit, pristine, reset, submitting } = props;
+  const { handleSubmit, pristine, submitting } = props;
   return (
     <Segment> 
       <h2>Upload Existing Keys</h2>
-      <form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
         
-        <div>
+        <Form.Field required>
           <label>Concord ID</label>
             <Field
               name="ConcordId"
@@ -24,34 +19,33 @@ const UploadExistingKeys = props => {
               type="text"
               placeholder="Concord ID"
             />
-        </div>
+        </Form.Field>
 
         {/* 
             Styling File Inputs
             http://jsfiddle.net/Dr_Dev/2nu1ngk5/ 
         */}
 
-        <div>
+        <Form.Field required>
           <label>Public Key: </label>
             <Field
               name="publicKey"
               component={ FileInput }
             />
-        </div>
+        </Form.Field>
 
-        <div>
+        <Form.Field required>
           <label>Private Key: </label>
             <Field
               name="privateKey"
               component={ FileInput }
             />
-        </div>
+        </Form.Field>
 
-        <div>
-          <Button type="submit" disabled={pristine || submitting}>Submit</Button>
-        </div>
+        <br></br>
+        <Form.Button primary type="submit" disabled={pristine || submitting}>Submit</Form.Button>
 
-      </form>
+      </Form>
     </Segment>
   );
 };

@@ -198,7 +198,7 @@ export function* uploadExistingKey( action ) {
 
         const response = yield call( api.uploadExistingKeyPair, action.payload );
 
-        yield put( actions.CreateSuccess( `Successfully Uploaded Existing Keypair` ) );
+        yield put( actions.CreateSuccess( `Successfully Uploaded Existing Keypair! ${JSON.stringify(response) || ''}` ) );
 
     } catch (e) {
 
@@ -214,7 +214,7 @@ export function* createUserCredentials( action ) {
 
         const response = yield call( api.createUserCredentials, action.payload );
 
-        yield put( actions.CreateSuccess( "Successfully created User Credentials Secret!" ) );
+        yield put( actions.CreateSuccess( `Successfully created User Credentials Secret! ${JSON.stringify(response) || ''}` ) );
 
     } catch (e) {
 
