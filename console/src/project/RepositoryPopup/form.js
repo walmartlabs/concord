@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
 import {formValueSelector, getFormValues, reduxForm, submit as submitForm} from "redux-form";
-import {Button, Form, Modal, Popup} from "semantic-ui-react";
+import {Button, Form, Modal, Popup, Message, Icon} from "semantic-ui-react";
 import {Dropdown, Field} from "../../shared/forms";
 import SecretListDropdown from "../../secret/list/SecretsListDropdown";
 import * as v from "../../shared/validation";
@@ -50,6 +50,10 @@ let repositoryForm = (props) => {
                 <Field name="path" label="Path"/>
 
                 <Dropdown widget={SecretListDropdown} name="secret" label="Credentials" required/>
+
+                <Message size="tiny">
+                    <Icon name="lock"/> "Locked" secrets require a password to use.
+                </Message>
             </Form>
         </Modal.Content>
         <Modal.Actions>

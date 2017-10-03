@@ -12,7 +12,7 @@ export const failedStatuses = ["FAILED"];
 export const canBeKilledStatuses = ["RUNNING", "SUSPENDED"];
 
 // statuses that can have a log file
-export const hasLogStatuses = ["RUNNING", "SUSPENDED", "RESUMING", "FINISHED", "FAILED"];
+export const hasLogStatuses = ["STARTING", "RUNNING", "SUSPENDED", "RESUMING", "FINISHED", "FAILED", "CANCELLED"];
 
 export const status = {
     preparingStatus: "PREPARING",
@@ -32,7 +32,8 @@ export const statusIcons = {
     "SUSPENDED": "wait",
     "RESUMING": "hourglass end",
     "FINISHED": "checkmark",
-    "FAILED": "remove"
+    "FAILED": "remove",
+    "CANCELLED": "cancel"
 };
 
 export const statusColors = {

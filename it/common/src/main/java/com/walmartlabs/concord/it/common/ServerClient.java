@@ -1,9 +1,13 @@
 package com.walmartlabs.concord.it.common;
 
+import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.security.secret.SecretResource;
+import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
+import com.walmartlabs.concord.server.api.process.*;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
@@ -18,6 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -61,9 +66,11 @@ public class ServerClient {
     }
 
     public StartProcessResponse start(String entryPoint, Map<String, Object> input) {
-        WebTarget target = client.target(baseUrl + "/" + ProcessResource.class.getAnnotation(Path.class).value() +
-                (entryPoint != null ? "/" + entryPoint : ""));
+        return request(ProcessResource.class.getAnnotation(Path.class).value() + (entryPoint != null ? "/" + entryPoint : ""),
+                input, StartProcessResponse.class);
+    }
 
+    private MultipartFormDataOutput createMDO(Map<String, Object> input) {
         MultipartFormDataOutput mdo = new MultipartFormDataOutput();
         input.forEach((k, v) -> {
             if (v instanceof InputStream || v instanceof byte[]) {
@@ -74,7 +81,13 @@ public class ServerClient {
                 throw new IllegalArgumentException("Unknown input type: " + v);
             }
         });
+        return mdo;
+    }
 
+    private <T> T request(String uri, Map<String, Object> input, Class<T> entityType) {
+        WebTarget target = client.target(baseUrl + "/" + uri);
+
+        MultipartFormDataOutput mdo = createMDO(input);
         GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
         };
 
@@ -84,9 +97,21 @@ public class ServerClient {
             throw new WebApplicationException(resp);
         }
 
-        StartProcessResponse spr = resp.readEntity(StartProcessResponse.class);
+        T e = resp.readEntity(entityType);
         resp.close();
-        return spr;
+        return e;
+    }
+
+    public UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {
+        return request(SecretResource.class.getAnnotation(Path.class).value() + "/plain?name=" + name + "&generatePassword=" + generatePassword,
+                ImmutableMap.of("secret", secret, "storePassword", storePassword),
+                UploadSecretResponse.class);
+    }
+
+    public UploadSecretResponse addUsernamePassword(String name, boolean generatePassword, String storePassword, String username, String password) {
+        return request(SecretResource.class.getAnnotation(Path.class).value() + "/password?name=" + name + "&generatePassword=" + generatePassword,
+                ImmutableMap.of("username", username, "password", password, "storePassword", storePassword),
+                UploadSecretResponse.class);
     }
 
     public byte[] getLog(String logFileName) {
@@ -123,6 +148,35 @@ public class ServerClient {
             }
 
             Thread.sleep(500);
+        }
+    }
+
+    public static ProcessEntry waitForChild(ProcessResource processResource,
+                                            UUID parentInstanceId, ProcessKind kind,
+                                            ProcessStatus status, ProcessStatus... more) throws InterruptedException {
+
+        int retries = 5;
+        while (true) {
+            List<ProcessEntry> l = processResource.list(parentInstanceId);
+            for (ProcessEntry e : l) {
+                if (e.getKind() == kind) {
+                    if (e.getStatus() == status) {
+                        return e;
+                    }
+
+                    for (ProcessStatus s : more) {
+                        if (e.getStatus() == s) {
+                            return e;
+                        }
+                    }
+                }
+            }
+
+            if (--retries < 0) {
+                throw new IllegalStateException("Child process not found: " + kind);
+            }
+
+            Thread.sleep(1000);
         }
     }
 

@@ -10,13 +10,15 @@ import java.util.*;
 public class Payload {
 
     public static final HeaderKey<String> PROJECT_NAME = HeaderKey.register("_projectName", String.class);
-    public static final HeaderKey<String[]> ENTRY_POINT = HeaderKey.register("_entryPoint", String[].class);
+    public static final HeaderKey<String> REPOSITORY_NAME = HeaderKey.register("_repoName", String.class);
+    public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
     public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);
     public static final HeaderKey<Map> REQUEST_DATA_MAP = HeaderKey.register("_meta", Map.class);
     public static final HeaderKey<String> RESUME_EVENT_NAME = HeaderKey.register("_resumeEventName", String.class);
     public static final HeaderKey<ProjectDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProjectDefinition.class);
+    public static final HeaderKey<Collection<String>> ACTIVE_PROFILES = HeaderKey.registerCollection("_activeProfiles");
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 

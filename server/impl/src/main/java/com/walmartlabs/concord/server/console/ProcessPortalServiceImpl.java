@@ -65,7 +65,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
 
             if (status == ProcessStatus.SUSPENDED) {
                 break;
-            } else if (status == ProcessStatus.FAILED) {
+            } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
                 throw new WebApplicationException("Process error", Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
                 // TODO redirect to a success page?

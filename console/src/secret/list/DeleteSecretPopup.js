@@ -27,9 +27,9 @@ const deleteSecretPopup = ({open, name, error, onSuccess, onCloseFn, onConfirmFn
 
 deleteSecretPopup.MODAL_TYPE = MODAL_TYPE;
 
-const mapStateToProps = ({secret}) => ({
-    error: selectors.getDeleteError(secret),
-    inFlightFn: (name) => selectors.isInFlight(secret, name)
+const mapStateToProps = ({secretList}) => ({
+    error: selectors.getDeleteError(secretList),
+    inFlightFn: (name) => selectors.isInFlight(secretList, name)
 });
 
 const mapDispatchToProps = (dispatch) => ({

@@ -67,10 +67,10 @@ SecretTable.propTypes = {
     deletePopupFn: PropTypes.func,
 };
 
-const mapStateToProps = ({secret}) => ({
-    error: selectors.getError(secret),
-    loading: selectors.getIsLoading(secret),
-    data: selectors.getRows(secret)
+const mapStateToProps = ({secretList}) => ({
+    error: selectors.getError(secretList),
+    loading: selectors.getIsLoading(secretList),
+    data: selectors.getRows(secretList)
 });
 
 const mapDispatchToProps = (dispatch) => ({

@@ -64,7 +64,7 @@ public abstract class AbstractDao {
         }
     }
 
-    public void executeUpdate(DSLContext create, Function<DSLContext, String> sqlFn, PreparedStatementHandler h) {
+    private void executeUpdate(DSLContext create, Function<DSLContext, String> sqlFn, PreparedStatementHandler h) {
         String sql = sqlFn.apply(create);
         create.connection(conn -> {
             try (PreparedStatement ps = conn.prepareCall(sql)) {

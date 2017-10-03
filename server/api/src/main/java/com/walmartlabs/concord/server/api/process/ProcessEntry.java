@@ -13,6 +13,8 @@ import java.util.UUID;
 public class ProcessEntry implements Serializable {
 
     private final UUID instanceId;
+    private final ProcessKind kind;
+    private final UUID parentInstanceId;
     private final String projectName;
     private final Date createdAt;
     private final String initiator;
@@ -23,6 +25,8 @@ public class ProcessEntry implements Serializable {
 
     @JsonCreator
     public ProcessEntry(@JsonProperty("instanceId") UUID instanceId,
+                        @JsonProperty("kind") ProcessKind kind,
+                        @JsonProperty("parentInstanceId") UUID parentInstanceId,
                         @JsonProperty("projectName") String projectName,
                         @JsonProperty("createdAt") Date createdAt,
                         @JsonProperty("initiator") String initiator,
@@ -31,6 +35,8 @@ public class ProcessEntry implements Serializable {
                         @JsonProperty("lastAgentId") String lastAgentId) {
 
         this.instanceId = instanceId;
+        this.kind = kind;
+        this.parentInstanceId = parentInstanceId;
         this.projectName = projectName;
         this.createdAt = createdAt;
         this.initiator = initiator;
@@ -44,6 +50,14 @@ public class ProcessEntry implements Serializable {
 
     public UUID getInstanceId() {
         return instanceId;
+    }
+
+    public ProcessKind getKind() {
+        return kind;
+    }
+
+    public UUID getParentInstanceId() {
+        return parentInstanceId;
     }
 
     public String getProjectName() {
@@ -78,6 +92,8 @@ public class ProcessEntry implements Serializable {
     public String toString() {
         return "ProcessEntry{" +
                 "instanceId=" + instanceId +
+                ", kind=" + kind + '\'' +
+                ", parentInstanceId=" + parentInstanceId + '\'' +
                 ", projectName='" + projectName + '\'' +
                 ", createdAt=" + createdAt +
                 ", initiator='" + initiator + '\'' +

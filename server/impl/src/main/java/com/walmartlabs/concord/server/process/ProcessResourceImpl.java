@@ -21,6 +21,7 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.FormSubmitResult;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -87,20 +88,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.formService = concordFormService;
     }
 
-    @Override
-    public StartProcessResponse start(InputStream in, boolean sync) {
-        UUID instanceId = UUID.randomUUID();
-
-        Payload payload;
-        try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), in);
-        } catch (IOException e) {
-            log.error("start -> error creating a payload: {}", e);
-            throw new WebApplicationException("Error creating a payload", e);
-        }
+    private StartProcessResponse start(Chain pipeline, Payload payload, boolean sync) {
+        UUID instanceId = payload.getInstanceId();
 
         try {
-            archivePipeline.process(payload);
+            pipeline.process(payload);
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
@@ -117,6 +109,28 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    @RequiresAuthentication
+    public StartProcessResponse start(InputStream in, boolean sync) {
+        UUID instanceId = UUID.randomUUID();
+
+        Payload payload;
+        try {
+            payload = payloadManager.createPayload(instanceId, getInitiator(), in);
+        } catch (IOException e) {
+            log.error("start -> error creating a payload: {}", e);
+            throw new WebApplicationException("Error creating a payload", e);
+        }
+
+        return start(archivePipeline, payload, sync);
+    }
+
+    @Override
+    public StartProcessResponse start(String entryPoint, boolean sync) {
+        return start(entryPoint, Collections.emptyMap(), sync);
+    }
+
+    @Override
+    @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, Map<String, Object> req, boolean sync) {
         UUID instanceId = UUID.randomUUID();
 
@@ -131,29 +145,17 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        try {
-            projectPipeline.process(payload);
-        } catch (ProcessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("start ['{}'] -> error starting the process", instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
-        }
-
-        if (sync) {
-            Map<String, Object> args = readArgs(instanceId);
-            process(instanceId, args);
-        }
-
-        return new StartProcessResponse(instanceId);
+        return start(projectPipeline, payload, sync);
     }
 
     @Override
+    @RequiresAuthentication
     public StartProcessResponse start(MultipartInput input, boolean sync) {
         return start(null, input, sync);
     }
 
     @Override
+    @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, MultipartInput input, boolean sync) {
         UUID instanceId = UUID.randomUUID();
 
@@ -170,25 +172,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        try {
-            projectPipeline.process(payload);
-        } catch (ProcessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("start ['{}'] -> error starting the process", instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
-        }
-
-        if (sync) {
-            Map<String, Object> args = readArgs(instanceId);
-            process(instanceId, args);
-        }
-
-        return new StartProcessResponse(instanceId);
+        return start(projectPipeline, payload, sync);
     }
 
     @Override
     @Validate
+    @RequiresAuthentication
     public StartProcessResponse start(String projectName, InputStream in, boolean sync) {
         UUID instanceId = UUID.randomUUID();
 
@@ -200,25 +189,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        try {
-            archivePipeline.process(payload);
-        } catch (ProcessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("start ['{}'] -> error starting the process", instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
-        }
-
-        if (sync) {
-            Map<String, Object> args = readArgs(instanceId);
-            process(instanceId, args);
-        }
-
-        return new StartProcessResponse(instanceId);
+        return start(archivePipeline, payload, sync);
     }
 
     @Override
     @Validate
+    @RequiresAuthentication
     public ResumeProcessResponse resume(UUID instanceId, String eventName, Map<String, Object> req) {
         Payload payload;
         try {
@@ -240,6 +216,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @RequiresAuthentication
     public ProcessEntry waitForCompletion(UUID instanceId, long timeout) {
         log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId, timeout);
 
@@ -248,7 +225,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         ProcessEntry r;
         while (true) {
             r = get(instanceId);
-            if (r.getStatus() == ProcessStatus.FINISHED || r.getStatus() == ProcessStatus.FAILED) {
+            if (r.getStatus() == ProcessStatus.FINISHED || r.getStatus() == ProcessStatus.FAILED || r.getStatus() == ProcessStatus.CANCELLED) {
                 break;
             }
 
@@ -271,6 +248,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @RequiresAuthentication
     public void kill(UUID instanceId) {
         ProcessEntry entry = queueDao.get(instanceId);
         if (entry == null) {
@@ -279,7 +257,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         boolean stopped = false;
         if (entry.getStatus() == ProcessStatus.SUSPENDED) {
-            stopped = queueDao.update(instanceId, ProcessStatus.SUSPENDED, ProcessStatus.FAILED);
+            stopped = queueDao.update(instanceId, ProcessStatus.SUSPENDED, ProcessStatus.CANCELLED);
         }
 
         if (!stopped) {
@@ -289,19 +267,20 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
+    @RequiresAuthentication
     public ProcessEntry get(UUID instanceId) {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
             throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
         }
-        return new ProcessEntry(instanceId, e.getProjectName(), e.getCreatedAt(), e.getInitiator(),
-                e.getLastUpdatedAt(), e.getStatus(), e.getLastAgentId());
+        return e;
     }
 
     @Override
     @Validate
     @WithTimer
+    @RequiresAuthentication
     public Response downloadAttachment(UUID instanceId, String attachmentName) {
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
@@ -346,13 +325,21 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @WithTimer
+    @RequiresAuthentication
     public List<ProcessEntry> list() {
         return queueDao.list();
     }
 
     @Override
+    @WithTimer
+    public List<ProcessEntry> list(UUID parentInstanceId) {
+        return queueDao.list(parentInstanceId);
+    }
+
+    @Override
     @Validate
     @WithTimer
+    @RequiresAuthentication
     public Response getLog(UUID instanceId, String range) {
         Integer start = null;
         Integer end = null;
@@ -410,6 +397,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @WithTimer
+    @RequiresAuthentication
     public Response downloadState(UUID instanceId) {
         if (!stateManager.exists(instanceId)) {
             throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
@@ -451,7 +439,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
             if (status == ProcessStatus.SUSPENDED) {
                 wakeUpProcess(psr, params);
-            } else if (status == ProcessStatus.FAILED) {
+            } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
                 throw new ProcessException(instanceId, "Process error", Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
                 return;

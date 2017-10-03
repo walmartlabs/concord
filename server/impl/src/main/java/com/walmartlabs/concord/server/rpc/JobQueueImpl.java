@@ -164,8 +164,9 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
             case COMPLETED:
                 return ProcessStatus.FINISHED;
             case FAILED:
-            case CANCELLED:
                 return ProcessStatus.FAILED;
+            case CANCELLED:
+                return ProcessStatus.CANCELLED;
             default:
                 throw new IllegalArgumentException("Unsupported job status type: " + s);
         }

@@ -1,0 +1,9 @@
+flows:
+  main:
+  - ${misc.throwBpmnError("boom!")}
+
+  onFailure:
+  - ${misc.throwBpmnError("kapow!")}
+
+variables:
+  entryPoint: main

@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>0.38.4-SNAPSHOT</version>
+        <version>0.39.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -170,12 +170,12 @@
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-tasks</artifactId>
-                                    <version>0.35.0</version>
+                                    <version>0.38.3</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-template</artifactId>
-                                    <version>0.35.0</version>
+                                    <version>0.38.3</version>
                                     <destFileName>ansible-template.jar</destFileName>
                                 </artifactItem>
 

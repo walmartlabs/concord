@@ -171,7 +171,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                                     FormSessionResponse nextSession = startSession(processInstanceId, nextFormId);
                                     return redirectTo(nextSession.getUri());
                                 }
-                            } else if (s == ProcessStatus.FAILED) {
+                            } else if (s == ProcessStatus.FAILED || s == ProcessStatus.CANCELLED) {
                                 writeData(formDir, processFailed(form, m));
                                 break;
                             } else if (s == ProcessStatus.FINISHED) {

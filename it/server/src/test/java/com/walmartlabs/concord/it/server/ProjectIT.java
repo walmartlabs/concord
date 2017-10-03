@@ -69,6 +69,37 @@ public class ProjectIT extends AbstractServerIT {
     }
 
     @Test(timeout = 30000)
+    public void testEntryPointFromYml() throws Exception {
+        File tmpDir = Files.createTempDirectory("test").toFile();
+        File src = new File(ProjectIT.class.getResource("projectEntryPoint").toURI());
+        IOUtils.copy(src.toPath(), tmpDir.toPath());
+
+        Git repo = Git.init().setDirectory(tmpDir).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.getAbsolutePath();
+
+        // ---
+
+        String projectName = "myProject_" + System.currentTimeMillis();
+        String userName = "myUser_" + System.currentTimeMillis();
+        Set<String> permissions = Sets.newHashSet(
+                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
+                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoUrl = gitUrl;
+        String entryPoint = projectName + ":" + repoName;
+
+        // ---
+
+        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, Collections.emptyMap(), false);
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*Hello, Concord.*", ab);
+    }
+
+    @Test(timeout = 30000)
     public void testWithCommitId() throws Exception {
         File tmpDir = Files.createTempDirectory("testWithCommitId").toFile();
         File src = new File(ProjectIT.class.getResource("project").toURI());

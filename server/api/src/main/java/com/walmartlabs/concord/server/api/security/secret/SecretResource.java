@@ -19,8 +19,11 @@ public interface SecretResource {
     @POST
     @ApiOperation("Create a new key pair")
     @Path("/keypair")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    PublicKeyResponse createKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name);
+    PublicKeyResponse createKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                    @ApiParam @QueryParam("generatePassword") @DefaultValue("false") boolean generatePassword,
+                                    @ApiParam MultipartInput input);
 
     @POST
     @ApiOperation("Upload an existing key pair")
@@ -28,13 +31,41 @@ public interface SecretResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     UploadSecretResponse uploadKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                       @ApiParam @QueryParam("generatePassword") @DefaultValue("false") boolean generatePassword,
                                        @ApiParam MultipartInput input);
+
+    @POST
+    @ApiOperation("Add a username and password secret")
+    @Path("/password")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
+    UploadSecretResponse addUsernamePassword(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                             @ApiParam @QueryParam("generatePassword") @DefaultValue("false") boolean generatePassword,
+                                             @ApiParam MultipartInput input);
+
+    @POST
+    @ApiOperation("Add a plain value secret")
+    @Path("/plain")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    UploadSecretResponse addPlainSecret(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                        @ApiParam @QueryParam("generatePassword") @DefaultValue("false") boolean generatePassword,
+                                        @ApiParam MultipartInput input);
+
+    @POST
+    @ApiOperation("Create a new key pair")
+    @Path("/keypair")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
+    PublicKeyResponse createKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name);
 
     @POST
     @ApiOperation("Add a username and password secret")
     @Path("/password")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     UploadSecretResponse addUsernamePassword(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
                                              @ApiParam @Valid UsernamePasswordRequest request);
 
@@ -42,6 +73,7 @@ public interface SecretResource {
     @ApiOperation("Get an existing public key")
     @Path("/{secretName}/public")
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     PublicKeyResponse getPublicKey(@ApiParam @PathParam("secretName") @ConcordKey String secretName);
 
     @GET

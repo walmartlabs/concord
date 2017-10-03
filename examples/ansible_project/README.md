@@ -63,7 +63,7 @@ Use `mySecret` as a name of the key pair, it will be used on the next step.
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "name": "myRepo", "url": "ssh://git@github.com:my/repo.git", "secret": "mySecret" }' \
+-d '{ "name": "myRepo", "url": "git@github.com:my/repo.git", "secret": "mySecret" }' \
 http://localhost:8001/api/v1/project/myProject/repository
 ```
 

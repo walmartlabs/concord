@@ -11,7 +11,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>0.38.4-SNAPSHOT</version>
+    <version>0.39.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -55,7 +55,7 @@
         <commons.email.version>1.4</commons.email.version>
         <commons.lang.version>3.5</commons.lang.version>
         <commons.pool.version>2.4.2</commons.pool.version>
-        <docker.plugin.version>0.20.1</docker.plugin.version>
+        <docker.plugin.version>0.22.1</docker.plugin.version>
         <glassfish.el.version>3.0.1-b08</glassfish.el.version>
         <greenmail.version>1.5.5</greenmail.version>
         <groovy.version>2.4.7</groovy.version>
@@ -225,12 +225,16 @@
                 <version>${siesta.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>sisu-guice</artifactId>
                         <groupId>org.sonatype.sisu</groupId>
+                        <artifactId>sisu-guice</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>guice-servlet</artifactId>
                         <groupId>org.sonatype.sisu.inject</groupId>
+                        <artifactId>guice-servlet</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.web</groupId>
+                        <artifactId>javax.el</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

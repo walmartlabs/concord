@@ -25,6 +25,13 @@ class ProcessStatusPage extends Component {
         this.load();
     }
 
+    componentDidUpdate(prevProps) {
+        const {instanceId} = this.props;
+        if (prevProps.instanceId !== instanceId) {
+            this.load();
+        }
+    }
+
     load() {
         const {instanceId, loadData} = this.props;
         loadData(instanceId);
@@ -66,8 +73,14 @@ class ProcessStatusPage extends Component {
             <Table definition collapsing>
                 <Table.Body>
                     <Table.Row>
+                        <Table.Cell>Parent process</Table.Cell>
+                        <Table.Cell>
+                            { data.parentInstanceId ? <Link to={`/process/${data.parentInstanceId}`}>{data.parentInstanceId}</Link> : "-" }
+                        </Table.Cell>
+                    </Table.Row>
+                    <Table.Row>
                         <Table.Cell>Project</Table.Cell>
-                        <Table.Cell>{data.projectName}</Table.Cell>
+                        <Table.Cell>{data.projectName ? data.projectName : "-"}</Table.Cell>
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Status</Table.Cell>

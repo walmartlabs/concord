@@ -9,7 +9,7 @@ import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
-import com.walmartlabs.concord.server.security.secret.Secret;
+import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -61,15 +60,10 @@ public class RepositoryProcessor implements PayloadProcessor {
         UUID instanceId = payload.getInstanceId();
 
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
-        String[] entryPoint = payload.getHeader(Payload.ENTRY_POINT);
-        if (projectName == null || entryPoint == null || entryPoint.length < 1) {
+        String repoName = payload.getHeader(Payload.REPOSITORY_NAME);
+        if (projectName == null || repoName == null) {
             return chain.process(payload);
         }
-
-        // the name of a repository is always a second part in an entry point, but
-        // we extracted project's name earlier
-        // TODO remove when the support for default repositories will be implemented?
-        String repoName = entryPoint[0];
 
         RepositoryEntry repo = repositoryDao.get(projectName, repoName);
         if (repo == null) {
@@ -83,7 +77,7 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         Secret secret = null;
         if (repo.getSecret() != null) {
-            secret = secretManager.getSecret(repo.getSecret());
+            secret = secretManager.getSecret(repo.getSecret(), null);
             if (secret == null) {
                 logManager.error(instanceId, "Secret not found: " + repo.getSecret());
                 throw new ProcessException(instanceId, "Secret not found: " + repo.getSecret());
@@ -107,11 +101,7 @@ public class RepositoryProcessor implements PayloadProcessor {
             throw new ProcessException(instanceId, "Error while pulling a repository: " + repo.getUrl(), e);
         }
 
-        // TODO replace with a queue/stack/linkedlist?
-        entryPoint = entryPoint.length > 1 ? Arrays.copyOfRange(entryPoint, 1, entryPoint.length) : new String[0];
-
-        payload = payload.putHeader(Payload.ENTRY_POINT, entryPoint)
-                .putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch, repo.getCommitId()));
+        payload = payload.putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch, repo.getCommitId()));
 
         return chain.process(payload);
     }

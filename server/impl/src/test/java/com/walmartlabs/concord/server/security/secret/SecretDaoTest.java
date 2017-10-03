@@ -1,5 +1,6 @@
-package com.walmartlabs.concord.server.security;
+package com.walmartlabs.concord.server.security.secret;
 
+import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
@@ -28,7 +29,7 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        secretDao.insert(secretName, SecretType.KEY_PAIR, new byte[]{0, 1, 2});
+        secretDao.insert(secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());

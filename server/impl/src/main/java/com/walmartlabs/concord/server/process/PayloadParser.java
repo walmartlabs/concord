@@ -15,7 +15,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -58,13 +57,23 @@ public final class PayloadParser {
         }
 
         String[] as = entryPoint.split(":");
-        if (as.length < 1) {
+        if (as.length < 1 || as.length > 3) {
             throw new ValidationErrorsException("Invalid entry point format: " + entryPoint);
         }
 
         String projectName = as[0].trim();
-        String[] rest = as.length > 1 ? Arrays.copyOfRange(as, 1, as.length) : new String[0];
-        return new EntryPoint(projectName, rest);
+
+        String repositoryName = null;
+        if (as.length > 1) {
+            repositoryName = as[1].trim();
+        }
+
+        String flow = null;
+        if (as.length > 2) {
+            flow = as[2].trim();
+        }
+
+        return new EntryPoint(projectName, repositoryName, flow);
     }
 
     private PayloadParser() {
@@ -73,19 +82,25 @@ public final class PayloadParser {
     public static class EntryPoint implements Serializable {
 
         private final String projectName;
-        private final String[] entryPoint;
+        private final String repositoryName;
+        private final String flow;
 
-        public EntryPoint(String projectName, String[] entryPoint) {
+        public EntryPoint(String projectName, String repositoryName, String flow) {
             this.projectName = projectName;
-            this.entryPoint = entryPoint;
+            this.repositoryName = repositoryName;
+            this.flow = flow;
         }
 
         public String getProjectName() {
             return projectName;
         }
 
-        public String[] getEntryPoint() {
-            return entryPoint;
+        public String getRepositoryName() {
+            return repositoryName;
+        }
+
+        public String getFlow() {
+            return flow;
         }
     }
 }

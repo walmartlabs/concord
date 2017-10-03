@@ -1,0 +1,6 @@
+flows:
+  main:
+  - log: "value=${crypto.exportCredentials(secretName, pwd)}"
+
+variables:
+  entryPoint: main

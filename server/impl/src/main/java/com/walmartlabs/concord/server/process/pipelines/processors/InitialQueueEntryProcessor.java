@@ -1,9 +1,8 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
+import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
-import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
@@ -26,7 +25,7 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
         UUID instanceId = payload.getInstanceId();
         String projectName = payload.getHeader(Payload.PROJECT_NAME);
         String initiator = payload.getHeader(Payload.INITIATOR);
-        queueDao.insertInitial(instanceId, projectName, initiator);
+        queueDao.insertInitial(instanceId, ProcessKind.DEFAULT, null, projectName, initiator);
         return chain.process(payload);
     }
 }

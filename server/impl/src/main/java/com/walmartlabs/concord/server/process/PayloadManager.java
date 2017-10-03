@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process;
 
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -156,10 +156,28 @@ public class PayloadManager {
             return p;
         }
 
-        String[] rest = e.getEntryPoint();
-        String realEntryPoint = rest.length > 0 ? rest[rest.length - 1] : null;
+        // entry point specified in the request has the priority
+        String entryPoint = e.getFlow();
+
+        // if it wasn't specified in the request, we should check for
+        // the existing entry point value
+        if (entryPoint == null) {
+            entryPoint = p.getHeader(Payload.ENTRY_POINT);
+        }
+
+        // we can also receive the entry point name in the request's
+        // JSON data
+        if (entryPoint == null) {
+            Map<String, Object> req = p.getHeader(Payload.REQUEST_DATA_MAP);
+            entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
+        }
+
+        if (entryPoint != null) {
+            p = p.putHeader(Payload.ENTRY_POINT, entryPoint)
+                    .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(Constants.Request.ENTRY_POINT_KEY, entryPoint));
+        }
+
         return p.putHeader(Payload.PROJECT_NAME, e.getProjectName())
-                .putHeader(Payload.ENTRY_POINT, e.getEntryPoint())
-                .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(Constants.Request.ENTRY_POINT_KEY, realEntryPoint));
+                .putHeader(Payload.REPOSITORY_NAME, e.getRepositoryName());
     }
 }

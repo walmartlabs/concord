@@ -2,8 +2,26 @@
 
 ## [Unreleased]
 
+### Changed
+
+- concord-server: fixed a potential NPE while retrieving the process
+queue.
+
+
+
+## [0.39.0] - 2017-09-17
+
 ### Added
 
+- concord-server, concord-runner: support for `onFailure`, `onCancel`
+flows;
+- concord-server, concord-runner: provide a way to access
+password-protected secrets from flows;
+- concord-server: allow starting a process with a POST request using
+a project, a repository and an entry point specified in
+`.concord.yml` file;
+- concord-server: allow starting a process by sending an empty POST
+request;
 - concord-server, concord-console: support for `yield` for
 non-custom forms;
 - ansible: support for external private key files;

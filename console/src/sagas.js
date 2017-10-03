@@ -13,6 +13,7 @@ import {sagas as project} from "./project";
 import {sagas as projectList} from "./project/list";
 import {sagas as repository} from "./project/repository";
 import {sagas as secret} from "./secret/list";
+import {sagas as secretNew} from "./secret/create"
 
 export default function*(): Generator<*, *, *> {
     yield [
@@ -28,6 +29,7 @@ export default function*(): Generator<*, *, *> {
         fork(project),
         fork(projectList),
         fork(repository),
-        fork(secret)
+        fork(secret),
+        fork(secretNew)
     ];
 }

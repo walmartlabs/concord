@@ -13,7 +13,8 @@ import {reducers as portal} from "../process/portal";
 import {reducers as project} from "../project";
 import {reducers as projectList} from "../project/list";
 import {reducers as repository} from "../project/repository";
-import {reducers as secret} from "../secret/list";
+import {reducers as secretList} from "../secret/list";
+import {reducers as secretForm} from "../secret/create";
 import {reducers as modal} from "../shared/Modal";
 
 export default {
@@ -29,8 +30,9 @@ export default {
     project,
     projectList,
     repository,
-    secret,
+    secretList,
+    secretForm,
     modal,
-
+    
     form: formReducer
 };
