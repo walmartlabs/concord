@@ -6,7 +6,7 @@
 
 - concord-server: update repositories using GitHub webhooks;
 - concord-agent: automatic cleanup of orphaned Docker containers;
-- ansible: support for additional enviroment variables.
+- ansible: support for additional environment variables.
 
 
 
