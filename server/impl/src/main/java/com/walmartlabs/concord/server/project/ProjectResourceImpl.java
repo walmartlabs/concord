@@ -6,6 +6,7 @@ import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
+import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.apache.shiro.SecurityUtils;
@@ -39,6 +40,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     private final RepositoryDao repositoryDao;
     private final SecretDao secretDao;
     private final Set<ConfigurationValidator> cfgValidators;
+    private final GithubWebhookService githubWebhookService;
 
     private final Map<String, Field<?>> key2ProjectField;
     private final Map<String, Field<?>> key2RepositoryField;
@@ -49,7 +51,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                                SecretManager secretManager,
                                RepositoryDao repositoryDao,
                                SecretDao secretDao,
-                               Set<ConfigurationValidator> cfgValidators) {
+                               Set<ConfigurationValidator> cfgValidators,
+                               GithubWebhookService githubWebhookService) {
 
         super(cfg);
 
@@ -58,6 +61,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         this.repositoryDao = repositoryDao;
         this.secretDao = secretDao;
         this.cfgValidators = cfgValidators;
+        this.githubWebhookService = githubWebhookService;
 
         this.key2ProjectField = new HashMap<>();
         key2ProjectField.put("name", PROJECTS.PROJECT_NAME);
@@ -101,6 +105,11 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 insert(tx, projectName, repos);
             }
         });
+
+        if (repos != null) {
+            repos.forEach((k, v) -> githubWebhookService.register(projectName, k, v.getUrl()));
+        }
+
         return new CreateProjectResponse(PerformedActionType.CREATED);
     }
 
@@ -116,6 +125,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         tx(tx -> repositoryDao.insert(tx, projectName, request.getName(), request.getUrl(),
                 request.getBranch(), request.getCommitId(),
                 request.getPath(), request.getSecret()));
+
+        githubWebhookService.register(projectName, request.getName(), request.getUrl());
 
         return new CreateRepositoryResponse();
     }
@@ -186,6 +197,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 String secret = r.getValue().getSecret();
                 assertSecret(secret);
             }
+
+            githubWebhookService.unregister(projectName);
         }
 
         tx(tx -> {
@@ -196,6 +209,11 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 insert(tx, projectName, repos);
             }
         });
+
+        if(repos != null) {
+            repos.forEach((repoName, updateRepositoryRequest) ->
+                            githubWebhookService.register(projectName, repoName, updateRepositoryRequest.getUrl()));
+        }
 
         return new UpdateProjectResponse();
     }
@@ -209,9 +227,13 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertRepository(projectName, repositoryName);
         assertSecret(request.getSecret());
 
+        githubWebhookService.unregister(projectName, repositoryName);
+
         tx(tx -> repositoryDao.update(tx, repositoryName, request.getUrl(),
                 request.getBranch(), request.getCommitId(),
                 request.getPath(), request.getSecret()));
+
+        githubWebhookService.register(projectName, repositoryName, request.getUrl());
 
         return new UpdateRepositoryResponse();
     }
@@ -303,6 +325,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified project");
 
+        githubWebhookService.unregister(projectName);
+
         tx(tx -> projectDao.delete(tx, projectName));
         return new DeleteProjectResponse();
     }
@@ -315,7 +339,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         assertRepository(projectName, repositoryName);
 
+        githubWebhookService.unregister(projectName, repositoryName);
+
         tx(tx -> repositoryDao.delete(tx, repositoryName));
+
         return new DeleteRepositoryResponse();
     }
 

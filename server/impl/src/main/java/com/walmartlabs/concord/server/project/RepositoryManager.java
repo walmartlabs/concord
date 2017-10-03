@@ -36,7 +36,7 @@ import static org.eclipse.jgit.transport.CredentialItem.Username;
 public class RepositoryManager {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryManager.class);
-    private static final String DEFAULT_BRANCH = "master";
+    public static final String DEFAULT_BRANCH = "master";
 
     private final RepositoryConfiguration cfg;
 
@@ -96,6 +96,15 @@ public class RepositoryManager {
             throw new RepositoryException("Error while updating a repository", e);
         }
 
+        return repoPath(localPath, path);
+    }
+
+    public Path getRepoPath(String projectName, String repoName, String branch,  String path) {
+        if (branch == null) {
+            branch = DEFAULT_BRANCH;
+        }
+
+        Path localPath = localPath(projectName, repoName, branch);
         return repoPath(localPath, path);
     }
 

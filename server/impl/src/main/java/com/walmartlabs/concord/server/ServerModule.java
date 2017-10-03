@@ -30,7 +30,7 @@ public class ServerModule extends AbstractModule {
         install(new ServletModule() {
             @Override
             protected void configureServlets() {
-                serve("/api/*").with(SiestaServlet.class, Collections.singletonMap("resteasy.servlet.mapping.prefix", "/"));
+                serve("/api/*", "/events/github/*").with(SiestaServlet.class, Collections.singletonMap("resteasy.servlet.mapping.prefix", "/"));
                 install(configureAdditionalServlets());
             }
         });

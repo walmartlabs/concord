@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
@@ -9,7 +10,6 @@ import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
-import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
@@ -34,8 +35,6 @@ public class RepositoryProcessor implements PayloadProcessor {
      * Repository effective parameters.
      */
     public static final HeaderKey<RepositoryInfo> REPOSITORY_INFO_KEY = HeaderKey.register("_repositoryInfo", RepositoryInfo.class);
-
-    private static final String DEFAULT_BRANCH = "master";
 
     private final RepositoryDao repositoryDao;
     private final SecretManager secretManager;
@@ -70,11 +69,39 @@ public class RepositoryProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        String branch = repo.getBranch();
-        if (branch == null || branch.trim().isEmpty()) {
-            branch = DEFAULT_BRANCH;
+        try {
+            Path src;
+            if (repo.getCommitId() != null) {
+                src = repositoryManager.getRepoPath(projectName, repo.getName(), repo.getCommitId(), repo.getPath());
+            } else {
+                src = repositoryManager.getRepoPath(projectName, repo.getName(), repo.getBranch(), repo.getPath());
+            }
+
+            if (!Files.exists(src)) {
+                log.warn("process ['{}'] -> no prefetched repository");
+                fetchRepository(instanceId, projectName, repo);
+            }
+
+            Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
+            IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+            log.info("process ['{}'] -> copy from {} to {}", instanceId, src, dst);
+        } catch (IOException | RepositoryException e) {
+            log.error("process ['{}'] -> repository error", instanceId, e);
+            logManager.error(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
+            throw new ProcessException(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
         }
 
+        String branch = repo.getBranch();
+        if (branch == null || branch.trim().isEmpty()) {
+            branch = RepositoryManager.DEFAULT_BRANCH;
+        }
+
+        payload = payload.putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch, repo.getCommitId()));
+
+        return chain.process(payload);
+    }
+
+    private void fetchRepository(UUID instanceId, String projectName, RepositoryEntry repo) {
         Secret secret = null;
         if (repo.getSecret() != null) {
             secret = secretManager.getSecret(repo.getSecret(), null);
@@ -84,26 +111,11 @@ public class RepositoryProcessor implements PayloadProcessor {
             }
         }
 
-        try {
-            log.info("process ['{}'] -> retrieving the repository files...", instanceId);
-            Path src;
-            if (repo.getCommitId() != null) {
-                src = repositoryManager.fetchByCommit(projectName, repo.getName(), repo.getUrl(), repo.getCommitId(), repo.getPath(), secret);
-            } else {
-                src = repositoryManager.fetch(projectName, repo.getName(), repo.getUrl(), branch, repo.getPath(), secret);
-            }
-
-            Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
-            IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException | RepositoryException e) {
-            log.error("process ['{}'] -> repository error", instanceId, e);
-            logManager.error(instanceId, "Error while pulling a repository: " + repo.getUrl(), e);
-            throw new ProcessException(instanceId, "Error while pulling a repository: " + repo.getUrl(), e);
+        if (repo.getCommitId() != null) {
+            repositoryManager.fetchByCommit(projectName, repo.getName(), repo.getUrl(), repo.getCommitId(), repo.getPath(), secret);
+        } else {
+            repositoryManager.fetch(projectName, repo.getName(), repo.getUrl(), repo.getBranch(), repo.getPath(), secret);
         }
-
-        payload = payload.putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch, repo.getCommitId()));
-
-        return chain.process(payload);
     }
 
     public static final class RepositoryInfo implements Serializable {

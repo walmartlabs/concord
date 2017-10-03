@@ -73,6 +73,10 @@ public class RepositoryDao extends AbstractDao {
                 .execute();
     }
 
+    public List<RepositoryEntry> list(String projectName) {
+        return list(projectName, null, false);
+    }
+
     public List<RepositoryEntry> list(String projectName, Field<?> sortField, boolean asc) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectConditionStep<Record6<String, String, String, String, String, String>> query = selectRepositoryEntry(tx)
