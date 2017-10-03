@@ -16,7 +16,7 @@ flows:
   sayBye:
   - log: "Bye, ${name}"
 
-variables:
+configuration:
   entryPoint: main
   arguments:
     name: "Concord"

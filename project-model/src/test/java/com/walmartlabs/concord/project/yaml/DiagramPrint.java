@@ -90,7 +90,7 @@ public class DiagramPrint {
             result += "GW (" + gw.getDefaultFlow() + ")";
         } else if(node instanceof SequenceFlow) {
             SequenceFlow f = (SequenceFlow) node;
-            result += f.getFrom() + " -> " + f.getTo();
+            result += f.getFrom() + " -> " + f.getTo() + " (" + f.getExpression() + ")";
         } else {
             result += node.getClass().getName();
         }

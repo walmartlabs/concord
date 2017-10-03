@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.console;
 
 public final class ITConstants {
 
-    public static final int LOCAL_CONSOLE_PORT = 3000;
+    public static final int LOCAL_CONSOLE_PORT = 8080;
     public static final int REMOTE_CONSOLE_PORT = 8080;
 
     public static final int SERVER_PORT;
@@ -12,6 +12,9 @@ public final class ITConstants {
 
     public static final String WEBDRIVER_TYPE;
     public static final String SCREENSHOTS_DIR;
+
+    public static final String REMOTE_USER = "_test";
+    public static final String REMOTE_PASSWORD = "_q1";
 
     static {
         SERVER_PORT = Integer.parseInt(env("IT_SERVER_PORT", "8001"));

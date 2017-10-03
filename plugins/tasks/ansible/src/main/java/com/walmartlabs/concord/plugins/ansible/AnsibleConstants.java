@@ -18,6 +18,8 @@ public final class AnsibleConstants {
 
     public static final String EXTRA_VARS_KEY = "extraVars";
 
+    public static final String EXTRA_ENV = "extraEnv";
+
     public static final String INVENTORY_FILE_KEY = "inventoryFile";
 
     public static final String INVENTORY_FILE_NAME = "_inventory";
@@ -36,9 +38,12 @@ public final class AnsibleConstants {
 
     public static final String USER_KEY = "user";
 
+    @Deprecated
     public static final String VAULT_PASSWORD_FILE_PATH = "_vaultPassword";
 
     public static final String VAULT_PASSWORD_KEY = "vaultPassword";
+
+    public static final String VAULT_PASSWORD_FILE_KEY = "vaultPasswordFile";
 
     public static final String WORK_DIR_KEY = "workDir";
 

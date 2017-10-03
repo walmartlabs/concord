@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.api.process;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.IsoDateParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -14,6 +15,7 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Api("Process")
@@ -24,48 +26,58 @@ public interface ProcessResource {
      * Starts a new process instance.
      *
      * @param in
+     * @param parentInstanceId
+     * @param sync
      * @return
      */
     @POST
-    @ApiOperation("Starts a new process instance using a supplied payload archive")
+    @ApiOperation("Starts a new process instance using the supplied payload archive")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam InputStream in,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
-     * Starts a new process instance using the specified project and provided configuration.
+     * Starts a new process instance using the specified entry point and provided configuration.
      *
+     * @param entryPoint
+     * @param parentInstanceId
      * @param sync
      * @return
      */
     @POST
-    @ApiOperation("Start a new process using a specified project")
+    @ApiOperation("Start a new process using the specified entry point")
     @Path("/{entryPoint}")
+    @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
-
     /**
-     * Starts a new process instance using the specified project and provided configuration.
+     * Starts a new process instance using the specified entry point and provided configuration.
      *
+     * @param entryPoint
      * @param req
+     * @param parentInstanceId
      * @param sync
      * @return
      */
     @POST
-    @ApiOperation("Start a new process using a specified project and provided configuration")
+    @ApiOperation("Start a new process using the specified entry point and provided configuration")
     @Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam Map<String, Object> req,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
      * Starts a new process instance.
      *
      * @param input
+     * @param parentInstanceId
      * @param sync
      * @return
      */
@@ -74,42 +86,55 @@ public interface ProcessResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam MultipartInput input,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
-     * Starts a new process instance using a specified project.
+     * Starts a new process instance using the specified entry point and multipart request data.
      *
      * @param entryPoint
      * @param input
+     * @param parentInstanceId
      * @param sync
      * @return
      */
     @POST
-    @ApiOperation("Start a new process using a specified project entry point and multipart request data")
+    @ApiOperation("Start a new process using the specified entry point and multipart request data")
     @Path("/{entryPoint}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam MultipartInput input,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
-     * Starts a new process instance using a specified project and a payload archive.
+     * Starts a new process instance using the specified entry point and payload archive.
      *
-     * @param projectName
+     * @param entryPoint
      * @param in
+     * @param parentInstanceId
      * @param sync
      * @return
      */
     @POST
-    @ApiOperation("Start a new process using a project name and a payload archive")
-    @Path("/{projectName}")
+    @ApiOperation("Start a new process using the specified entry point and payload archive")
+    @Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
-    StartProcessResponse start(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+    StartProcessResponse start(@ApiParam @PathParam("entryPoint") @ConcordKey String entryPoint,
                                @ApiParam InputStream in,
+                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
+    /**
+     * Resumes an existing process.
+     *
+     * @param instanceId
+     * @param eventName
+     * @param req
+     * @return
+     */
     @POST
     @ApiOperation("Resume a process")
     @Path("/{id}/resume/{eventName}")
@@ -118,6 +143,23 @@ public interface ProcessResource {
     ResumeProcessResponse resume(@ApiParam @PathParam("id") UUID instanceId,
                                  @ApiParam @PathParam("eventName") @NotNull String eventName,
                                  @ApiParam Map<String, Object> req);
+
+    /**
+     * Starts a new child process by forking the start of the specified parent process.
+     *
+     * @param parentInstanceId
+     * @param req
+     * @param sync
+     * @return
+     */
+    @POST
+    @ApiOperation("Fork a process")
+    @Path("/{id}/fork")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    StartProcessResponse fork(@ApiParam @PathParam("id") UUID parentInstanceId,
+                              @ApiParam Map<String, Object> req,
+                              @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
 
     /**
      * Waits for completion of a process.
@@ -177,19 +219,23 @@ public interface ProcessResource {
     @GET
     @ApiOperation("List processes")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProcessEntry> list();
+    List<ProcessEntry> list(@ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                            @ApiParam @QueryParam("tags") Set<String> tags,
+                            @ApiParam @QueryParam("limit") @DefaultValue("30") int limit);
 
     /**
-     * Returns a list of child processes for a given parent process.
+     * Returns a list of subprocesses for a given parent process.
      *
      * @param parentInstanceId
+     * @param tags
      * @return
      */
     @GET
-    @ApiOperation("List child processes of a parent process")
-    @Path("/{id}/children")
+    @ApiOperation("List subprocesses of a parent process")
+    @Path("/{id}/subprocesses")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProcessEntry> list(@ApiParam @PathParam("id") UUID parentInstanceId);
+    List<ProcessEntry> list(@ApiParam @PathParam("id") UUID parentInstanceId,
+                            @ApiParam @QueryParam("tags") Set<String> tags);
 
     /**
      * Retrieves a process log.

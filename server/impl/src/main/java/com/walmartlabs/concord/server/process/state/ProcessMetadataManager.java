@@ -21,7 +21,15 @@ public class ProcessMetadataManager {
         stateManager.insert(instanceId, ON_FAILURE_MARKER_PATH, "true".getBytes());
     }
 
+    public void deleteOnFailureMarker(UUID instanceId) {
+        stateManager.delete(instanceId, ON_FAILURE_MARKER_PATH);
+    }
+
     public void addOnCancelMarker(UUID instanceId) {
         stateManager.insert(instanceId, ON_CANCEL_MARKER_PATH, "true".getBytes());
+    }
+
+    public void deleteOnCancelMarker(UUID instanceId) {
+        stateManager.delete(instanceId, ON_CANCEL_MARKER_PATH);
     }
 }

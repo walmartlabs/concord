@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -35,15 +36,16 @@ public class PayloadManager {
      * supplied in the multipart data and/or provided by a project's repository or a template.
      *
      * @param instanceId
+     * @param parentInstanceId
      * @param initiator
      * @param input
      * @return
      */
-    public Payload createPayload(UUID instanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
-        Payload p = PayloadParser.parse(instanceId, baseDir, input)
+        Payload p = PayloadParser.parse(instanceId, parentInstanceId, baseDir, input)
                 .putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir);
 
@@ -55,15 +57,16 @@ public class PayloadManager {
      * Creates a payload from the supplied map of parameters.
      *
      * @param instanceId
+     * @param parentInstanceId
      * @param initiator
      * @param request
      * @return
      */
-    public Payload createPayload(UUID instanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
-        Payload p = new Payload(instanceId)
+        Payload p = new Payload(instanceId, parentInstanceId)
                 .putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
                 .putHeader(Payload.REQUEST_DATA_MAP, request);
@@ -76,39 +79,52 @@ public class PayloadManager {
      * Creates a payload from an archive, containing all necessary resources.
      *
      * @param instanceId
+     * @param parentInstanceId
      * @param initiator
      * @param in
      * @return
      */
-    public Payload createPayload(UUID instanceId, String initiator, InputStream in) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, InputStream in) throws IOException {
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
         Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
         Files.copy(in, archive);
 
-        Payload p = new Payload(instanceId);
+        Payload p = new Payload(instanceId, parentInstanceId);
+
+        p = addInitiator(p, initiator);
+
+        p = p.putHeader(Payload.BASE_DIR, baseDir)
+                .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
+                .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
+
+        return addEntryPoint(p, entryPoint);
+    }
+
+    /**
+     * Creates a payload from an archive, containing all necessary resources.
+     *
+     * @param instanceId
+     * @param parentInstanceId
+     * @param initiator
+     * @param in
+     * @return
+     */
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, InputStream in) throws IOException {
+        Path baseDir = createPayloadDir();
+        Path workspaceDir = ensureWorkspace(baseDir);
+
+        Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
+        Files.copy(in, archive);
+
+        Payload p = new Payload(instanceId, parentInstanceId);
 
         p = addInitiator(p, initiator);
 
         return p.putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
                 .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
-    }
-
-    /**
-     * Creates a payload from an archive, containing all necessary resources and the
-     * specified project name.
-     *
-     * @param instanceId
-     * @param initiator
-     * @param in
-     * @return
-     */
-    public Payload createPayload(UUID instanceId, String initiator, String projectName, InputStream in) throws IOException {
-        Payload p = createPayload(instanceId, initiator, in);
-        p = addInitiator(p, initiator);
-        return p.putHeader(Payload.PROJECT_NAME, projectName);
     }
 
     /**
@@ -130,6 +146,34 @@ public class PayloadManager {
                 .putHeader(Payload.WORKSPACE_DIR, tmpDir)
                 .putHeader(Payload.REQUEST_DATA_MAP, req)
                 .putHeader(Payload.RESUME_EVENT_NAME, eventName);
+    }
+
+    /**
+     * Creates a payload to fork an existing process.
+     *
+     * @param instanceId
+     * @param parentInstanceId
+     * @param projectName
+     * @param req
+     * @return
+     */
+    public Payload createFork(UUID instanceId, UUID parentInstanceId, ProcessKind kind,
+                              String initiator, String projectName, Map<String, Object> req) throws IOException {
+        Path tmpDir = Files.createTempDirectory("payload");
+
+        if (!stateManager.export(parentInstanceId, copyTo(tmpDir))) {
+            throw new ProcessException(instanceId, "Can't fork '" + instanceId + "', parent state snapshot not found");
+        }
+
+        Payload p = new Payload(instanceId, parentInstanceId)
+                .putHeader(Payload.PROCESS_KIND, kind)
+                .putHeader(Payload.WORKSPACE_DIR, tmpDir)
+                .putHeader(Payload.PROJECT_NAME, projectName)
+                .putHeader(Payload.REQUEST_DATA_MAP, req);
+
+        p = addInitiator(p, initiator);
+
+        return p;
     }
 
     private Path createPayloadDir() throws IOException {
@@ -169,7 +213,9 @@ public class PayloadManager {
         // JSON data
         if (entryPoint == null) {
             Map<String, Object> req = p.getHeader(Payload.REQUEST_DATA_MAP);
-            entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
+            if (req != null) {
+                entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
+            }
         }
 
         if (entryPoint != null) {

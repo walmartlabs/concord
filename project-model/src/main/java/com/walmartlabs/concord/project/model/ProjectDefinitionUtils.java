@@ -30,10 +30,10 @@ public final class ProjectDefinitionUtils {
     }
 
     public static Map<String, Object> getVariables(ProjectDefinition project, Collection<String> activeProfiles) {
-        Map<String, Object> variables = project.getVariables();
+        Map<String, Object> variables = project.getConfiguration();
         Map<String, Profile> profiles = project.getProfiles();
 
-        Map<String, Object> view = overlay(variables, profiles, activeProfiles, p -> p.getVariables(),
+        Map<String, Object> view = overlay(variables, profiles, activeProfiles, p -> p.getConfiguration(),
                 (a, b) -> ConfigurationUtils.deepMerge(a, b));
         return view;
     }

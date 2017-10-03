@@ -1276,6 +1276,149 @@ public class YamlParserTest {
         verify(testBean, times(1)).toString(eq("3"));
     }
 
+    @Test
+    public void test040() throws Exception {
+        deploy("040.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+        //                   /--> taskA1 -> taskA2 -\
+        // start -> task -> gw -> taskB ------------> end
+        //                   \--> taskD ------------/
+        assertEquals(17, pd.getChildren().size());
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("switchValue", "a");
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("do a"));
+        verify(testBean, times(1)).toString(eq("do a2"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test040_2() throws Exception {
+        deploy("040.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("switchValue", "b");
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("do b"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test040_3() throws Exception {
+        deploy("040.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("switchValue", "123");
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("do default"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test041() throws Exception {
+        deploy("041.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("switchValue", 1);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("do 1"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test042() throws Exception {
+        deploy("042.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("switchValue", 42);
+        engine.start(key, "main", args);
+
+        verify(testBean, times(1)).toString(eq("after switch/case"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test043() throws Exception {
+        deploy("043.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("switchValue", 2);
+        args.put("caseValue1", 10);
+        args.put("caseValue2", 2);
+        engine.start(key, "main", args);
+
+        verify(testBean, times(1)).toString(eq("do 2"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test044() throws Exception {
+        deploy("044.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("switchValue", "default");
+        engine.start(key, "main", args);
+
+        verify(testBean, times(1)).toString(eq("do default as string"));
+        verifyNoMoreInteractions(testBean);
+    }
+
     // FORMS (100 - 199)
 
     @Test

@@ -31,7 +31,7 @@ forms:
 
 ## DEFAULT VARIABLES
 
-variables:
+configuration:
   entryPoint: main
   arguments:
     myForm:

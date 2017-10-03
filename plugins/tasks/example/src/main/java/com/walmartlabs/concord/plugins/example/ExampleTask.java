@@ -28,4 +28,11 @@ public class ExampleTask implements Task {
     public void helloButLouder(@InjectVariable("myName") String name) {
         log.info("Hello, {}!!!", name);
     }
+
+    @Override
+    public void execute(Context ctx) throws Exception {
+        log.info("Hello, {}. (from method param)", ctx.getVariable("myName"));
+        log.info("Hello, {}. (from injected var)", context.getVariable("myName"));
+        ctx.setVariable("exampleOutput", "Hello!");
+    }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
+import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
@@ -11,6 +12,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
+import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
@@ -42,6 +44,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipOutputStream;
@@ -60,6 +63,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final Chain archivePipeline;
     private final Chain projectPipeline;
     private final Chain resumePipeline;
+    private final Chain forkPipeline;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final AgentManager agentManager;
@@ -71,6 +75,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProcessLogsDao logsDao, ArchivePipeline archivePipeline,
                                ProjectPipeline projectPipeline,
                                ResumePipeline resumePipeline,
+                               ForkPipeline forkPipeline,
                                PayloadManager payloadManager,
                                ProcessStateManager stateManager,
                                AgentManager agentManager,
@@ -82,6 +87,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.archivePipeline = archivePipeline;
         this.projectPipeline = projectPipeline;
         this.resumePipeline = resumePipeline;
+        this.forkPipeline = forkPipeline;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.agentManager = agentManager;
@@ -110,12 +116,14 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(InputStream in, boolean sync) {
+    public StartProcessResponse start(InputStream in, UUID parentInstanceId, boolean sync) {
+        assertParentInstanceId(parentInstanceId);
+
         UUID instanceId = UUID.randomUUID();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), in);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), in);
         } catch (IOException e) {
             log.error("start -> error creating a payload: {}", e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -125,13 +133,16 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    public StartProcessResponse start(String entryPoint, boolean sync) {
-        return start(entryPoint, Collections.emptyMap(), sync);
+    @RequiresAuthentication
+    public StartProcessResponse start(String entryPoint, UUID parentInstanceId, boolean sync) {
+        return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync);
     }
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(String entryPoint, Map<String, Object> req, boolean sync) {
+    public StartProcessResponse start(String entryPoint, Map<String, Object> req, UUID parentInstanceId, boolean sync) {
+        assertParentInstanceId(parentInstanceId);
+
         UUID instanceId = UUID.randomUUID();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
@@ -139,7 +150,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), ep, req);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, req);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -150,13 +161,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(MultipartInput input, boolean sync) {
-        return start(null, input, sync);
+    public StartProcessResponse start(MultipartInput input, UUID parentInstanceId, boolean sync) {
+        return start(null, input, parentInstanceId, sync);
     }
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(String entryPoint, MultipartInput input, boolean sync) {
+    public StartProcessResponse start(String entryPoint, MultipartInput input, UUID parentInstanceId, boolean sync) {
+        assertParentInstanceId(parentInstanceId);
+
         UUID instanceId = UUID.randomUUID();
 
         EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
@@ -166,7 +179,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), ep, input);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, input);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -178,14 +191,21 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @RequiresAuthentication
-    public StartProcessResponse start(String projectName, InputStream in, boolean sync) {
+    public StartProcessResponse start(String entryPoint, InputStream in, UUID parentInstanceId, boolean sync) {
+        assertParentInstanceId(parentInstanceId);
+
         UUID instanceId = UUID.randomUUID();
+
+        EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
+        if (ep != null) {
+            assertProject(ep.getProjectName());
+        }
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, getInitiator(), projectName, in);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, in);
         } catch (IOException e) {
-            log.error("start ['{}'] -> error creating a payload: {}", projectName, e);
+            log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
         }
 
@@ -206,6 +226,29 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         resumePipeline.process(payload);
         return new ResumeProcessResponse();
+    }
+
+    @Override
+    @Validate
+    @RequiresAuthentication
+    public StartProcessResponse fork(UUID parentInstanceId, Map<String, Object> req, boolean sync) {
+        ProcessEntry parent = queueDao.get(parentInstanceId);
+        if (parent == null) {
+            throw new ValidationErrorsException("Unknown parent instance ID: " + parentInstanceId);
+        }
+
+        UUID instanceId = UUID.randomUUID();
+        String projectName = parent.getProjectName();
+
+        Payload payload;
+        try {
+            payload = payloadManager.createFork(instanceId, parentInstanceId, ProcessKind.DEFAULT, getInitiator(), projectName, req);
+        } catch (IOException e) {
+            log.error("fork ['{}', '{}'] -> error creating a payload: {}", instanceId, parentInstanceId, e);
+            throw new WebApplicationException("Error creating a payload", e);
+        }
+
+        return start(forkPipeline, payload, sync);
     }
 
     private void assertProject(String projectName) {
@@ -255,14 +298,28 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Process not found: " + instanceId, Status.NOT_FOUND);
         }
 
-        boolean stopped = false;
-        if (entry.getStatus() == ProcessStatus.SUSPENDED) {
-            stopped = queueDao.update(instanceId, ProcessStatus.SUSPENDED, ProcessStatus.CANCELLED);
+        ProcessStatus s = entry.getStatus();
+        if (s == ProcessStatus.CANCELLED || s == ProcessStatus.FINISHED) {
+            return;
         }
 
-        if (!stopped) {
-            agentManager.killProcess(instanceId);
+        if (cancel(instanceId, s, ProcessStatus.ENQUEUED, ProcessStatus.PREPARING)) {
+            return;
         }
+
+        agentManager.killProcess(instanceId);
+    }
+
+    private boolean cancel(UUID instanceId, ProcessStatus current, ProcessStatus... expected) {
+        boolean found = false;
+        for (ProcessStatus s : expected) {
+            if (current == s) {
+                found = true;
+                break;
+            }
+        }
+
+        return found && queueDao.update(instanceId, current, ProcessStatus.CANCELLED);
     }
 
     @Override
@@ -313,27 +370,18 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }).build();
     }
 
-    private static String getInitiator() {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject == null || !subject.isAuthenticated()) {
-            return null;
-        }
-
-        UserPrincipal u = (UserPrincipal) subject.getPrincipal();
-        return u.getUsername();
-    }
-
     @Override
     @WithTimer
     @RequiresAuthentication
-    public List<ProcessEntry> list() {
-        return queueDao.list();
+    public List<ProcessEntry> list(IsoDateParam beforeCreatedAt, Set<String> tags, int limit) {
+        return queueDao.list(toTimestamp(beforeCreatedAt), tags, limit);
     }
 
     @Override
     @WithTimer
-    public List<ProcessEntry> list(UUID parentInstanceId) {
-        return queueDao.list(parentInstanceId);
+    public List<ProcessEntry> list(UUID parentInstanceId, Set<String> tags) {
+        assertParentInstanceId(parentInstanceId);
+        return queueDao.list(parentInstanceId, tags);
     }
 
     @Override
@@ -484,5 +532,34 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 throw new ProcessException(instanceId, "Form submit error: " + e.getMessage(), e);
             }
         }
+    }
+
+    private void assertParentInstanceId(UUID id) {
+        if (id == null) {
+            return;
+        }
+
+        if (!queueDao.exists(id)) {
+            throw new ValidationErrorsException("Unknown parent instance ID: " + id);
+        }
+    }
+
+    private static Timestamp toTimestamp(IsoDateParam p) {
+        if (p == null) {
+            return null;
+        }
+
+        Calendar c = p.getValue();
+        return new Timestamp(c.getTimeInMillis());
+    }
+
+    private static String getInitiator() {
+        Subject subject = SecurityUtils.getSubject();
+        if (subject == null || !subject.isAuthenticated()) {
+            return null;
+        }
+
+        UserPrincipal u = (UserPrincipal) subject.getPrincipal();
+        return u.getUsername();
     }
 }

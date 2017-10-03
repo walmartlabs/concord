@@ -50,6 +50,11 @@ public final class Constants {
         public static final String ENTRY_POINT_KEY = "entryPoint";
 
         /**
+         * Name of the default entry point.
+         */
+        public static final String DEFAULT_ENTRY_POINT_NAME = "default";
+
+        /**
          * Active profiles.
          */
         public static final String ACTIVE_PROFILES_KEY = "activeProfiles";
@@ -68,6 +73,26 @@ public final class Constants {
          * User request's metadata.
          */
         public static final String REQUEST_INFO_KEY = "requestInfo";
+
+        /**
+         * Process tags.
+         */
+        public static final String TAGS_KEY = "tags";
+
+        /**
+         * ID of a parent process instance.
+         */
+        public static final String PARENT_INSTANCE_ID_KEY = "parentInstanceId";
+
+        /**
+         * If {@code true}, then `onCancel` flow will be ignored.
+         */
+        public static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
+
+        /**
+         * If {@code true}, then `onFailure` flow will be ignored.
+         */
+        public static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
 
         private Request() {
         }

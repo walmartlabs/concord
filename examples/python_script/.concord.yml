@@ -3,7 +3,7 @@ flows:
   - script: example.py
   - log: "The result: ${y}"
 
-variables:
+configuration:
   entryPoint: main
   dependencies:
   - "http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/repositories/public/org/python/jython-standalone/2.7.0/jython-standalone-2.7.0.jar"

@@ -1,0 +1,30 @@
+server {
+	listen                  8080;
+	server_name             _;
+	root                    /opt/concord/console/dist;
+
+	proxy_read_timeout      600;
+
+	location ~ ^/(api|logs|forms)/ {
+        expires             off;
+	    proxy_pass          http://SERVER_ADDR:SERVER_PORT;
+	    proxy_redirect      off;
+	    proxy_set_header    Host $http_host;
+	    proxy_set_header    X-Real-IP $remote_addr;
+        proxy_set_header    X-Forwarded-For $remote_addr;
+	}
+
+	location ~ ^/landing/(.*)$ {
+	    alias               /opt/concord/console/landing/$1;
+	}
+
+	location ~* \.(?:manifest|appcache|html?|xml|json)$ {
+        expires             -1;
+    }
+
+	location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
+        expires             30d;
+        add_header          Pragma public;
+        add_header          Cache-Control "public";
+    }
+}

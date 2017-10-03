@@ -2,10 +2,45 @@
 
 ## [Unreleased]
 
+### Added
+
+- ansible: support for additional enviroment variables.
+
+
+
+## [0.42.0] - 2017-10-01
+
+### Added
+
+- concord-sdk: new provided variable `parentInstanceId`;
+- concord-server: ability to suppress the execution of `onCancel` or
+`onFailure` flows;
+- concord-server: new API method to fork a process as its subprocess;
+- concord-server: support for GIT submodules;
+- concord-server, concord-console: process tags.
+
+
+
+## [0.40.2] - 2017-09-24
+
+### Added
+
+- concord-server: if entry point is not set, use `default`;
+- concord-project-model: alias `variables` to `configuration`;
+- concord-server: pagination support for the process queue list;
+- concord-project-model: support for `switch`;
+- ansible: initial support for Ansible event streaming.
+
 ### Changed
 
+- concord-server: fix Jolokia JMX names;
+- concord-runner: fix `InjectVariable` for `JavaDelegate`-style
+tasks;
+- concord-runner: fix `JavaDelegate` handling;
+- concord-server: fix SSH key pair upload/create endpoint;
+- concord-server: process events cleanup;
 - concord-server: fixed a potential NPE while retrieving the process
-queue.
+queue data.
 
 
 

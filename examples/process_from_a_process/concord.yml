@@ -1,0 +1,24 @@
+flows:
+  default:
+  # executes the provided payload archive as a child process
+  - task: concord
+    in:
+      action: start
+      archive: example.zip
+      # wait for completion
+      sync: true
+      arguments:
+        name: "${initiator.username}"
+
+  - log: "Done! ${jobs[0]} is completed"
+
+configuration:
+  dependencies:
+  - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/concord-tasks/0.30.0/concord-tasks-0.30.0.jar"
+
+  arguments:
+    concord:
+      # default parameters, can be overridden with `in` parameters of
+      # the task
+      baseUrl: "http://localhost:8001"
+      apiKey: "auBy4eDWrKWsyhiDp3AQiw"

@@ -1,0 +1,8 @@
+main:
+- switch: ${switchValue}
+  1:
+    - ${testBean.toString("do 1")}
+  2:
+    - ${testBean.toString("do 2")}
+  default:
+    - ${testBean.toString("do default")}

@@ -2,12 +2,12 @@ flows:
   main:
   - log: Hello, ${name}
 
-variables:
+configuration:
   arguments:
     name: stranger
 
 profiles:
   example:
-    variables:
+    configuration:
       arguments:
         name: world

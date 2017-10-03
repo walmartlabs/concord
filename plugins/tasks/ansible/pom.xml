@@ -5,13 +5,17 @@
     <parent>
         <groupId>com.walmartlabs.concord.plugins.basic</groupId>
         <artifactId>parent</artifactId>
-        <version>0.39.1-SNAPSHOT</version>
+        <version>0.42.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>ansible-tasks</artifactId>
 
     <packaging>takari-jar</packaging>
+
+    <properties>
+        <grpc.out>${project.build.directory}/generated-sources/python</grpc.out>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -48,6 +52,73 @@
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${grpc.out}" />
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>grpc-python</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>python</executable>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>grpc_tools.protoc</argument>
+                                <argument>-I${basedir}/../../../rpc/src/main/proto</argument>
+                                <argument>--python_out=${grpc.out}</argument>
+                                <argument>--grpc_python_out=${grpc.out}</argument>
+                                <argument>${basedir}/../../../rpc/src/main/proto/server.proto</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <outputDirectory>${basedir}/target/classes</outputDirectory>
+                            <encoding>UTF-8</encoding>
+                            <resources>
+                                <resource>
+                                    <directory>${grpc.out}</directory>
+                                    <includes>
+                                        <include>**/*.py</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

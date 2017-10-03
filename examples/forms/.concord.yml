@@ -9,5 +9,5 @@ forms:
   - lastName: { label: "Last name", type: "string" }
   - password:  { label: "Password", type: "string", inputType: 'password' }
 
-variables:
+configuration:
   entryPoint: main

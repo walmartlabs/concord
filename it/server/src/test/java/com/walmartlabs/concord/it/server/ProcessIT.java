@@ -27,7 +27,7 @@ public class ProcessIT extends AbstractServerIT {
         // start the process
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
@@ -46,6 +46,19 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Hello, local files!.*", ab);
     }
 
+    @Test(timeout = 30000)
+    public void testDefaultEntryPoint() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("defaultEntryPoint").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, Concord!.*", ab);
+    }
+
     @Test
     @Ignore
     public void testLotsOfProcesses() throws Exception {
@@ -54,7 +67,7 @@ public class ProcessIT extends AbstractServerIT {
         int count = 100;
         for (int i = 0; i < count; i++) {
             ProcessResource processResource = proxy(ProcessResource.class);
-            processResource.start(new ByteArrayInputStream(payload), false);
+            processResource.start(new ByteArrayInputStream(payload), null, false);
         }
     }
 
@@ -67,7 +80,7 @@ public class ProcessIT extends AbstractServerIT {
         // start the process
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), true);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, true);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
@@ -96,7 +109,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("timeout").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
 
         try {
             processResource.waitForCompletion(spr.getInstanceId(), 3000);
@@ -119,7 +132,7 @@ public class ProcessIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         // ---
@@ -138,7 +151,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("errorHandling").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
@@ -154,7 +167,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("startupProblem").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
@@ -198,7 +211,7 @@ public class ProcessIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("workDir").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
@@ -222,5 +235,101 @@ public class ProcessIT extends AbstractServerIT {
         ab = getLog(pir.getLogFileName());
         assertLogAtLeast(".*Hello!", 2, ab);
         assertLogAtLeast(".*Bye!", 2, ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testSwitch() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("switchCase").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*234234.*", ab);
+        assertLog(".*Hello, Concord.*", ab);
+        assertLog(".*Bye!.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testTaskOut() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*I said: Hello!.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testDelegateOut() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*I said: Hello!.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testTags() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse parentSpr = processResource.start(new ByteArrayInputStream(payload), null, false);
+
+        // ---
+
+        waitForCompletion(processResource, parentSpr.getInstanceId());
+
+        // ---
+
+        payload = archive(ProcessIT.class.getResource("tags").toURI());
+        StartProcessResponse childSpr = processResource.start(new ByteArrayInputStream(payload), parentSpr.getInstanceId(), false);
+
+        // ---
+
+        waitForCompletion(processResource, childSpr.getInstanceId());
+
+        // ---
+
+        List<ProcessEntry> l = processResource.list(parentSpr.getInstanceId(), Collections.singleton("abc"));
+        assertTrue(l.isEmpty());
+
+        l = processResource.list(parentSpr.getInstanceId(), Collections.singleton("test"));
+        assertEquals(1, l.size());
+
+        ProcessEntry e = l.get(0);
+        assertEquals(childSpr.getInstanceId(), e.getInstanceId());
+
+        // ---
+
+        l = processResource.list(null, Collections.singleton("xyz"), 1);
+        assertTrue(l.isEmpty());
+
+        l = processResource.list(null, Collections.singleton("IT"), 1);
+        assertEquals(1, l.size());
+
+        e = l.get(0);
+        assertEquals(childSpr.getInstanceId(), e.getInstanceId());
     }
 }

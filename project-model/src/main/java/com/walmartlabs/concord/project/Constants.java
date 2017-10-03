@@ -93,6 +93,11 @@ public final class Constants {
          */
         public static final String REQUEST_INFO_KEY = com.walmartlabs.concord.sdk.Constants.Request.REQUEST_INFO_KEY;
 
+        /**
+         * ID of a parent process instance.
+         */
+        public static final String PARENT_INSTANCE_ID_KEY = com.walmartlabs.concord.sdk.Constants.Request.PARENT_INSTANCE_ID_KEY;
+
         private Request() {
         }
     }

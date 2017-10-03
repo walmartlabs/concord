@@ -36,6 +36,11 @@ public class ProjectFileIT extends AbstractServerIT {
     }
 
     @Test(timeout = 30000)
+    public void testSingleProfileUsingConfiguration() throws Exception {
+        simpleTest("projectfile/singleprofilecfg", ".*Hello, world.*", ".*54321.*");
+    }
+
+    @Test(timeout = 30000)
     public void testExternalProfile() throws Exception {
         simpleTest("projectfile/externalprofile", ".*Hello, world.*");
     }
@@ -98,7 +103,7 @@ public class ProjectFileIT extends AbstractServerIT {
         // send the request
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
@@ -131,7 +136,7 @@ public class ProjectFileIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
@@ -164,7 +169,7 @@ public class ProjectFileIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), true);
+        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, true);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = processResource.get(spr.getInstanceId());
@@ -186,7 +191,7 @@ public class ProjectFileIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());

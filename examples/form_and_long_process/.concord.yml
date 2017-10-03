@@ -18,5 +18,5 @@ forms:
   myForm:
   - name: { type: "string" }
 
-variables:
+configuration:
   entryPoint: main

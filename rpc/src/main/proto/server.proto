@@ -173,6 +173,7 @@ service TEventService {
 
 enum TEventType {
     PROCESS_ELEMENT = 0;
+    ANSIBLE_EVENT = 1;
 }
 
 message TEventRequest {

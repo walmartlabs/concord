@@ -1,9 +1,11 @@
 package com.walmartlabs.concord.server.api.project;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -194,12 +196,15 @@ public interface ProjectResource {
 
     /**
      * Encrypts a string with the project's key.
+     *
+     * @deprecated use {@link SecretResource#addPlainSecret(String, boolean, MultipartInput)}
      */
     @POST
     @ApiOperation("Encrypts a string with the project's key")
     @Path("/{projectName}/encrypt")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     EncryptValueResponse encrypt(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                  @ApiParam EncryptValueRequest req);
 }

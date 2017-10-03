@@ -14,6 +14,7 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
+import org.eclipse.jgit.lib.SubmoduleConfig;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.util.FS;
 import org.slf4j.Logger;
@@ -113,6 +114,7 @@ public class RepositoryManager {
                         .call();
 
                 repo.pull()
+                        .setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.YES)
                         .setTransportConfigCallback(transportCallback)
                         .call();
 
@@ -163,6 +165,7 @@ public class RepositoryManager {
         try {
             Git repo = Git.cloneRepository()
                     .setURI(uri)
+                    .setCloneSubmodules(true)
                     .setBranch(branch)
                     .setBranchesToClone(branch != null ? Collections.singleton(branch) : null)
                     .setDirectory(path.toFile())

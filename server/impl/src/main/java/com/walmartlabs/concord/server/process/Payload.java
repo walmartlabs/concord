@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 
@@ -19,27 +20,40 @@ public class Payload {
     public static final HeaderKey<String> RESUME_EVENT_NAME = HeaderKey.register("_resumeEventName", String.class);
     public static final HeaderKey<ProjectDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProjectDefinition.class);
     public static final HeaderKey<Collection<String>> ACTIVE_PROFILES = HeaderKey.registerCollection("_activeProfiles");
+    public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
+    public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 
     private final UUID instanceId;
+    private final UUID parentInstanceId;
     private final Map<String, Object> headers;
     private final Map<String, Path> attachments;
 
     public Payload(UUID instanceId) {
+        this(instanceId, null);
+    }
+
+    public Payload(UUID instanceId, UUID parentInstanceId) {
         this.instanceId = instanceId;
+        this.parentInstanceId = parentInstanceId;
         this.headers = Collections.emptyMap();
         this.attachments = Collections.emptyMap();
     }
 
     private Payload(Payload old, Map<String, Object> headers, Map<String, Path> attachments) {
         this.instanceId = old.instanceId;
+        this.parentInstanceId = old.parentInstanceId;
         this.headers = Objects.requireNonNull(headers, "Headers map cannot be null");
         this.attachments = Objects.requireNonNull(attachments, "Attachments map cannot be null");
     }
 
     public UUID getInstanceId() {
         return instanceId;
+    }
+
+    public UUID getParentInstanceId() {
+        return parentInstanceId;
     }
 
     public <T> T getHeader(HeaderKey<T> key) {

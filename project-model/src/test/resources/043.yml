@@ -1,0 +1,6 @@
+main:
+- switch: ${switchValue}
+  ${caseValue1}:
+    - ${testBean.toString("do 1")}
+  ${caseValue2}:
+    - ${testBean.toString("do 2")}

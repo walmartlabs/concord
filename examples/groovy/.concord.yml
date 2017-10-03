@@ -12,7 +12,7 @@ flows:
       // ...or used directly
       println x
 
-variables:
+configuration:
   entryPoint: main
   dependencies:
   - "http://nexus.prod.walmart.com/nexus/content/repositories/public/org/codehaus/groovy/groovy-all/2.4.11/groovy-all-2.4.11.jar"

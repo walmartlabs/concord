@@ -182,8 +182,8 @@ public class ProjectLoader {
                     forms.putAll(projectDefinition.getForms());
                 }
 
-                if (projectDefinition.getVariables() != null) {
-                    variables.putAll(projectDefinition.getVariables());
+                if (projectDefinition.getConfiguration() != null) {
+                    variables.putAll(projectDefinition.getConfiguration());
                 }
 
                 if (projectDefinition.getProfiles() != null) {

@@ -5,44 +5,29 @@
     <parent>
         <groupId>com.walmartlabs.concord.docker</groupId>
         <artifactId>parent</artifactId>
-        <version>0.39.1-SNAPSHOT</version>
+        <version>0.42.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-ansible</artifactId>
-    <packaging>docker</packaging>
+    <packaging>pom</packaging>
+
+    <properties>
+        <docker.tagbase>walmartlabs/concord-ansible</docker.tagbase>
+        <docker.file>docker-images/ansible/Dockerfile</docker.file>
+    </properties>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <extensions>true</extensions>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>build-images</id>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
+                        <id>docker-build</id>
+                        <phase>package</phase>
                     </execution>
                 </executions>
-                <configuration>
-                    <skipRun>true</skipRun>
-                    <images>
-                        <image>
-                            <name>walmartlabs/concord-ansible:%v</name>
-                            <alias>concord-ansible</alias>
-                            <build>
-                                <tags>
-                                    <tag>latest</tag>
-                                    <tag>${project.version}</tag>
-                                </tags>
-                                <dockerFileDir>concord-ansible</dockerFileDir>
-                                <optimise>true</optimise>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
             </plugin>
         </plugins>
     </build>

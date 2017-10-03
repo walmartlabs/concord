@@ -20,7 +20,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // start the process and wait for it to fail
 
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
 
         // check the logs for the error message
@@ -43,7 +43,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         ProcessResource processResource = proxy(ProcessResource.class);
         byte[] payload = archive(ProcessIT.class.getResource("failureHandlingError").toURI());
 
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
 
         // find the child processes
@@ -61,7 +61,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // start the process and wait for it to fail
 
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
         waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.RUNNING);
 
         // cancel the running process

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
@@ -22,6 +23,7 @@ public class ProcessEntry implements Serializable {
     private final String lastAgentId;
     private final Date lastUpdatedAt;
     private final String logFileName;
+    private final Set<String> tags;
 
     @JsonCreator
     public ProcessEntry(@JsonProperty("instanceId") UUID instanceId,
@@ -32,7 +34,8 @@ public class ProcessEntry implements Serializable {
                         @JsonProperty("initiator") String initiator,
                         @JsonProperty("lastUpdatedAt") Date lastUpdatedAt,
                         @JsonProperty("status") ProcessStatus status,
-                        @JsonProperty("lastAgentId") String lastAgentId) {
+                        @JsonProperty("lastAgentId") String lastAgentId,
+                        @JsonProperty("tags") Set<String> tags) {
 
         this.instanceId = instanceId;
         this.kind = kind;
@@ -46,6 +49,8 @@ public class ProcessEntry implements Serializable {
 
         // TODO left for backwards compatibility
         this.logFileName = instanceId + ".log";
+
+        this.tags = tags;
     }
 
     public UUID getInstanceId() {
@@ -88,12 +93,16 @@ public class ProcessEntry implements Serializable {
         return logFileName;
     }
 
+    public Set<String> getTags() {
+        return tags;
+    }
+
     @Override
     public String toString() {
         return "ProcessEntry{" +
                 "instanceId=" + instanceId +
-                ", kind=" + kind + '\'' +
-                ", parentInstanceId=" + parentInstanceId + '\'' +
+                ", kind=" + kind +
+                ", parentInstanceId=" + parentInstanceId +
                 ", projectName='" + projectName + '\'' +
                 ", createdAt=" + createdAt +
                 ", initiator='" + initiator + '\'' +
@@ -101,6 +110,7 @@ public class ProcessEntry implements Serializable {
                 ", lastAgentId='" + lastAgentId + '\'' +
                 ", lastUpdatedAt=" + lastUpdatedAt +
                 ", logFileName='" + logFileName + '\'' +
+                ", tags=" + tags +
                 '}';
     }
 }

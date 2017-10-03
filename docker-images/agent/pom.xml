@@ -5,20 +5,17 @@
     <parent>
         <groupId>com.walmartlabs.concord.docker</groupId>
         <artifactId>parent</artifactId>
-        <version>0.39.1-SNAPSHOT</version>
+        <version>0.42.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>concord-agent</artifactId>
-    <packaging>docker</packaging>
+    <packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.walmartlabs.concord.agent</groupId>
-            <artifactId>concord-agent</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
+    <properties>
+        <docker.tagbase>walmartlabs/concord-agent</docker.tagbase>
+        <docker.file>docker-images/agent/Dockerfile</docker.file>
+    </properties>
 
     <build>
         <plugins>
@@ -27,82 +24,45 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-runner</id>
-                        <phase>generate-resources</phase>
+                        <id>copy-dist</id>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>copy</goal>
                         </goals>
+                        <configuration>
+                            <skip>${docker.skip}</skip>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.agent</groupId>
+                                    <artifactId>concord-agent</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>tar.gz</type>
+                                    <classifier>dist</classifier>
+                                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                                    <destFileName>agent.tar.gz</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord</groupId>
+                                    <artifactId>concord-runner</artifactId>
+                                    <version>${project.version}</version>
+                                    <classifier>jar-with-dependencies</classifier>
+                                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                                    <destFileName>runner.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <artifactItems>
-                        <artifactItem>
-                            <groupId>com.walmartlabs.concord</groupId>
-                            <artifactId>concord-runner</artifactId>
-                            <version>${project.version}</version>
-                            <classifier>jar-with-dependencies</classifier>
-                            <destFileName>runner.jar</destFileName>
-                        </artifactItem>
-                    </artifactItems>
-                    <outputDirectory>${project.basedir}/target/runner</outputDirectory>
-                </configuration>
             </plugin>
             <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <skipRun>true</skipRun>
-                    <images>
-                        <image>
-                            <name>walmartlabs/concord-agent-base:%v</name>
-                            <alias>agent-base</alias>
-                            <build>
-                                <skip>${docker.skip}</skip>
-                                <from>walmartlabs/concord-base</from>
-                                <maintainer>${docker.maintainer}</maintainer>
-                                <tags>
-                                    <tag>latest</tag>
-                                    <tag>${project.version}</tag>
-                                </tags>
-                                <optimise>true</optimise>
-                                <runCmds>
-                                    <run>yum -y install docker-client</run>
-                                    <!-- for backwards compatibility with ansible projects w/o docker -->
-                                    <run>yum -y install gcc python-devel python-pip libffi-devel openssl-devel krb5-devel krb5-libs krb5-workstation  openssh-clients sshpass util-linux python</run>
-                                    <run>yum clean all</run>
-                                    <run>umask 0022</run>
-                                    <run>pip install --upgrade -i https://nexus.prod.walmart.com/nexus/content/repositories/pypi-proxy/simple pip pbr ansible ara pywinrm kerberos requests_kerberos ujson</run>
-                                </runCmds>
-                                <env>
-                                    <DOCKER_HOST>tcp://dind:2375</DOCKER_HOST>
-                                </env>
-                            </build>
-                        </image>
-                        <image>
-                            <name>walmartlabs/concord-agent:%v</name>
-                            <alias>agent</alias>
-                            <build>
-                                <skip>${docker.skip}</skip>
-                                <from>walmartlabs/concord-agent-base</from>
-                                <maintainer>${docker.maintainer}</maintainer>
-                                <tags>
-                                    <tag>latest</tag>
-                                    <tag>${project.version}</tag>
-                                </tags>
-                                <optimise>true</optimise>
-                                <entryPoint>
-                                    <shell>${concord.baseDir}/agent/start.sh</shell>
-                                </entryPoint>
-                                <assembly>
-                                    <mode>dir</mode>
-                                    <basedir>${concord.baseDir}/agent</basedir>
-                                    <descriptor>assembly.xml</descriptor>
-                                </assembly>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>docker-build</id>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

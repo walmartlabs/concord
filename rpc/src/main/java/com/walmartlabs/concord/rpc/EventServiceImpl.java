@@ -48,6 +48,8 @@ public class EventServiceImpl implements EventService {
         switch (type) {
             case PROCESS_ELEMENT:
                 return TEventType.PROCESS_ELEMENT;
+            case ANSIBLE:
+                return TEventType.ANSIBLE_EVENT;
             default:
                 throw new IllegalArgumentException("Unsupported event type: " + type);
         }

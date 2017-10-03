@@ -3,8 +3,8 @@ package com.walmartlabs.concord.runner.engine;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
-import com.walmartlabs.concord.runner.engine.el.InjectPropertiesELResolver;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
+import com.walmartlabs.concord.runner.engine.el.TaskResolver;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.Configuration;
@@ -27,7 +27,6 @@ import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.JavaDelegateHandler;
-import io.takari.bpm.task.ServiceTaskResolver;
 import io.takari.bpm.task.UserTaskHandler;
 
 import javax.inject.Inject;
@@ -70,8 +69,7 @@ public class EngineFactory {
 
         ExpressionManager expressionManager = new DefaultExpressionManager(
                 new String[]{Constants.Context.CONTEXT_KEY, Constants.Context.EXECUTION_CONTEXT_KEY},
-                new ServiceTaskResolver(taskRegistry),
-                new InjectPropertiesELResolver(),
+                new TaskResolver(taskRegistry),
                 new InjectVariableELResolver());
 
         ExecutionContextFactory<? extends ExecutionContextImpl> contextFactory = new ConcordExecutionContextFactory(expressionManager);
@@ -167,12 +165,13 @@ public class EngineFactory {
 
         @Override
         public void execute(Object task, ExecutionContext ctx) throws Exception {
-            if (task instanceof Task) {
-                Task t = (Task) task;
-                t.execute((Context) ctx);
-            } else if (task instanceof JavaDelegate) {
+            // check JavaDelegate first because tasks can implement both JavaDelegate and Task
+            if (task instanceof JavaDelegate) {
                 JavaDelegate d = (JavaDelegate) task;
                 d.execute(ctx);
+            } else if (task instanceof Task) {
+                Task t = (Task) task;
+                t.execute((Context) ctx);
             } else {
                 throw new ExecutionException("Unsupported task type: " + task + ": tasks must implement either " +
                         Task.class.getName() + " or " + JavaDelegate.class.getName() + " interfaces");

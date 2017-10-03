@@ -1,4 +1,4 @@
-variables:
+configuration:
   entryPoint: main
 
 flows:

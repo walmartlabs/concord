@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process.keys;
 
 import java.util.Collection;
+import java.util.Set;
 
 public class HeaderKey<T> extends Key<T> {
 
@@ -13,6 +14,10 @@ public class HeaderKey<T> extends Key<T> {
 
     public static <T> HeaderKey<Collection<T>> registerCollection(String name) {
         return (HeaderKey<Collection<T>>) index.register(name, Collection.class);
+    }
+
+    public static <T> HeaderKey<Set<T>> registerSet(String name) {
+        return (HeaderKey<Set<T>>) index.register(name, Set.class);
     }
 
     private HeaderKey(String key, Class<T> type) {

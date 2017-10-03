@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <title>Wizard</title>
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.6/handlebars.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css"/>
+
+    <script src="data.js"></script>
+    <script src="../shared/common.js"></script>
+</head>
+<body>
+
+<h1 class="ui center aligned header">Wizard</h1>
+
+<div class="ui text center aligned container">
+    Form wizard example.
+</div>
+
+<div class="ui text container">
+    <div class="ui segment">
+        <div id="container">
+            <script id="formTemplate" type="text/x-handlebars-template">
+                {{#if success}}
+                <h3 id="success" class="ui header">Success</h3>
+                {{else}}
+                <form class="ui form {{#if errors}}error{{/if}}" method="post" action="{{submitUrl}}">
+
+                    {{#if errors}}
+                    <div class="ui error message">
+                        <ul class='list'>
+                            {{#each errors}}
+                            <li>{{this}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                    {{/if}}
+
+                    <p>Please enter the amount of items to reserve:</p>
+
+                    <div class="field {{#if errors.firstName}}error{{/if}}">
+                        <label>Amount:</label>
+                        <input name="amount" value="{{values.amount}}" type="number"/>
+                    </div>
+
+                    <button class="ui button" type="reset">Reset</button>
+                    <button class="ui primary button" type="submit" onclick="handleSubmit(event)">Submit</button>
+                </form>
+                {{/if}}
+            </script>
+        </div>
+    </div>
+
+    <img class="ui centered image small" src="../shared/logo.png"/>
+</div>
+
+<script>
+    init();
+</script>
+
+</body>
+</html>

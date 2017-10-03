@@ -25,6 +25,7 @@ public class ConverterContext implements Serializable {
         converters.put(YamlSetVariablesStep.class, new YamlSetVariablesStepConverter());
         converters.put(YamlDockerStep.class, new YamlDockerStepConverter());
         converters.put(YamlFormCall.class, new YamlFormCallConverter());
+        converters.put(YamlSwitchExpr.class, new YamlSwitchExprConverter());
     }
 
     public static SourceAwareProcessDefinition convert(String name, Seq<YamlStep> steps) throws YamlConverterException {
