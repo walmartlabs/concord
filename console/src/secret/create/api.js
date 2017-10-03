@@ -38,6 +38,9 @@ export const createPlainSecret = ( { name, generatePassword = false, secret } ) 
 
     return fetch(`/api/v1/secret/plain?${query}`, {method: "POST", credentials: "same-origin", body: MultipartFormData })
         .then( response => {
+            if (!response.ok) {
+                throw common.defaultError(response);
+            }
             return response.json();
         });
 }
@@ -60,7 +63,10 @@ export const uploadExistingKeyPair = ( { name, generatePassword = false, publicK
 
     return fetch(`/api/v1/secret/keypair?${query}`, {method: "POST", credentials: "same-origin", body: MultipartFormData })
         .then( response => {
-            console.log( response );
+            if (!response.ok) {
+                throw common.defaultError(response);
+            }
+            return response.json();
         });
 }
 
@@ -80,6 +86,9 @@ export const createUserCredentials = ( { name, generatePassword = false, usernam
 
     return fetch(`/api/v1/secret/password?${query}`, {method: "POST", credentials: "same-origin", body: MultipartFormData })
         .then( response => {
-            console.log( response );
+            if (!response.ok) {
+                throw common.defaultError(response);
+            }
+            return response.json();
         });
 }
