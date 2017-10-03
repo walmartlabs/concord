@@ -19,7 +19,7 @@ class SecretsListDropdown extends Component {
         let options = [];
         if (data) {
             options = data.map(({name, type, storageType}) => {
-                const icon = storageType == LOCKED_SECRET_TYPE ? "lock" : undefined;
+                const icon = storageType === LOCKED_SECRET_TYPE ? "lock" : undefined;
                 return {text: `${name} (${type})`, value: name, icon: icon};
             });
         }
@@ -28,9 +28,9 @@ class SecretsListDropdown extends Component {
     }
 }
 
-const mapStateToProps = ({secret}) => ({
-    data: selectors.getRows(secret),
-    isLoading: selectors.getIsLoading(secret)
+const mapStateToProps = ({secretList}) => ({
+    data: selectors.getRows(secretList),
+    isLoading: selectors.getIsLoading(secretList)
 });
 
 const mapDispatchToProps = (dispatch) => ({
