@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.project;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
+import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -36,6 +37,7 @@ public class RepositoryProcessor implements PayloadProcessor {
      */
     public static final HeaderKey<RepositoryInfo> REPOSITORY_INFO_KEY = HeaderKey.register("_repositoryInfo", RepositoryInfo.class);
 
+    private final GithubConfiguration githubConfiguration;
     private final RepositoryDao repositoryDao;
     private final SecretManager secretManager;
     private final RepositoryManager repositoryManager;
@@ -45,12 +47,14 @@ public class RepositoryProcessor implements PayloadProcessor {
     public RepositoryProcessor(RepositoryDao repositoryDao,
                                SecretManager secretManager,
                                RepositoryManager repositoryManager,
-                               LogManager logManager) {
+                               LogManager logManager,
+                               GithubConfiguration githubConfiguration) {
 
         this.repositoryDao = repositoryDao;
         this.secretManager = secretManager;
         this.repositoryManager = repositoryManager;
         this.logManager = logManager;
+        this.githubConfiguration = githubConfiguration;
     }
 
     @Override
@@ -71,15 +75,12 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         try {
             Path src;
-            if (repo.getCommitId() != null) {
-                src = repositoryManager.getRepoPath(projectName, repo.getName(), repo.getCommitId(), repo.getPath());
-            } else {
-                src = repositoryManager.getRepoPath(projectName, repo.getName(), repo.getBranch(), repo.getPath());
-            }
-
-            if (!Files.exists(src)) {
+            if (githubConfiguration.getApiUrl() == null) {
+                // no github webhooks configured -> fetch repository
                 log.warn("process ['{}'] -> no prefetched repository");
-                fetchRepository(instanceId, projectName, repo);
+                src = fetchRepository(instanceId, projectName, repo);
+            } else {
+                src = getRepository(instanceId, projectName, repo);
             }
 
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
@@ -101,7 +102,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private void fetchRepository(UUID instanceId, String projectName, RepositoryEntry repo) {
+    private Path fetchRepository(UUID instanceId, String projectName, RepositoryEntry repo) {
         Secret secret = null;
         if (repo.getSecret() != null) {
             secret = secretManager.getSecret(repo.getSecret(), null);
@@ -111,11 +112,27 @@ public class RepositoryProcessor implements PayloadProcessor {
             }
         }
 
+        Path result;
         if (repo.getCommitId() != null) {
-            repositoryManager.fetchByCommit(projectName, repo.getName(), repo.getUrl(), repo.getCommitId(), repo.getPath(), secret);
+            result = repositoryManager.fetchByCommit(projectName, repo.getName(), repo.getUrl(), repo.getCommitId(), repo.getPath(), secret);
         } else {
-            repositoryManager.fetch(projectName, repo.getName(), repo.getUrl(), repo.getBranch(), repo.getPath(), secret);
+            result = repositoryManager.fetch(projectName, repo.getName(), repo.getUrl(), repo.getBranch(), repo.getPath(), secret);
         }
+        return result;
+    }
+
+    private Path getRepository(UUID instanceId, String projectName, RepositoryEntry repo) {
+        Path result;
+        if (repo.getCommitId() != null) {
+            result = repositoryManager.getRepoPath(projectName, repo.getName(), repo.getCommitId(), repo.getPath());
+        } else {
+            result = repositoryManager.getRepoPath(projectName, repo.getName(), repo.getBranch(), repo.getPath());
+        }
+
+        if (!Files.exists(result)) {
+            result = fetchRepository(instanceId, projectName, repo);
+        }
+        return result;
     }
 
     public static final class RepositoryInfo implements Serializable {

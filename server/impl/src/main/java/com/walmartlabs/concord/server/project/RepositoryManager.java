@@ -12,9 +12,17 @@ import com.walmartlabs.concord.common.secret.UsernamePassword;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidConfigurationException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.SubmoduleConfig;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.util.FS;
 import org.slf4j.Logger;
@@ -123,9 +131,11 @@ public class RepositoryManager {
                         .call();
 
                 repo.pull()
-                        .setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.YES)
+                        .setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.NO)
                         .setTransportConfigCallback(transportCallback)
                         .call();
+
+                fetchSubmodules(projectName, repo.getRepository(), transportCallback);
 
                 log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectName, uri, branch);
 
@@ -196,6 +206,43 @@ public class RepositoryManager {
                 log.warn("cloneRepo ['{}', '{}'] -> cleanup error: {}", uri, branch, ee.getMessage());
             }
             throw new RepositoryException("Error while cloning a repository", e);
+        }
+    }
+
+    private void fetchSubmodules(String projectName, Repository repo, TransportConfigCallback transportCallback)
+            throws GitAPIException {
+        try (SubmoduleWalk walk = new SubmoduleWalk(repo);
+             RevWalk revWalk = new RevWalk(repo)) {
+            // Walk over submodules in the parent repository's FETCH_HEAD.
+            ObjectId fetchHead = repo.resolve(Constants.FETCH_HEAD);
+            if (fetchHead == null) {
+                return;
+            }
+            walk.setTree(revWalk.parseTree(fetchHead));
+            while (walk.next()) {
+                Repository submoduleRepo = walk.getRepository();
+
+                // Skip submodules that don't exist locally (have not been
+                // cloned), are not registered in the .gitmodules file, or
+                // not registered in the parent repository's config.
+                if (submoduleRepo == null || walk.getModulesPath() == null
+                        || walk.getConfigUrl() == null) {
+                    continue;
+                }
+
+                new Git(submoduleRepo).fetch()
+                        .setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.NO)
+                        .setTransportConfigCallback(transportCallback)
+                        .call();
+
+                fetchSubmodules(projectName, submoduleRepo, transportCallback);
+
+                log.info("fetchSubmodules ['{}', '{}'] -> done", projectName, submoduleRepo.getDirectory());
+            }
+        } catch (IOException e) {
+            throw new JGitInternalException(e.getMessage(), e);
+        } catch (ConfigInvalidException e) {
+            throw new InvalidConfigurationException(e.getMessage(), e);
         }
     }
 
