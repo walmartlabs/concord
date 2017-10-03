@@ -5,6 +5,7 @@ import {createLogger} from "redux-logger";
 import {routerMiddleware, routerReducer} from "react-router-redux";
 import createSagaMiddleware from "redux-saga";
 import sagas from "./sagas";
+import { composeWithDevTools } from "redux-devtools-extension";
 
 export default (history: any, reducers: any) => {
     const sagaMw = createSagaMiddleware();
@@ -17,10 +18,12 @@ export default (history: any, reducers: any) => {
 
     const combined = combineReducers({
         ...reducers,
-        routing: routerReducer,
+        routing: routerReducer
     });
 
-    const store = createStore(combined, applyMiddleware(...middleware));
+    const store = createStore(combined, composeWithDevTools(
+        applyMiddleware(...middleware)
+    ));
 
     sagaMw.run(sagas);
 
