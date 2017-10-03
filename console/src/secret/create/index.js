@@ -37,12 +37,13 @@ export class SecretCreate extends Component {
 
                         <UploadExistingKeys onSubmit={ Submit_ExistingKeyPair } />
 
-                        <Message success 
+                        <Message success
+                            style={ { overflowWrap: "break-word" } }
                             hidden={ !success }
                             header={ message }
                             content={ publicKey } />
 
-                        <Message error 
+                        <Message error
                             hidden={ !error }
                             header={ message } />
                     </Segment>
