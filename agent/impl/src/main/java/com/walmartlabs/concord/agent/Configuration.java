@@ -21,6 +21,7 @@ public class Configuration {
     public static final String RUNNER_PATH = "RUNNER_PATH";
     public static final String WORKERS_COUNT_KEY = "WORKERS_COUNT";
     public static final String MAX_PREFORK_AGE_KEY = "MAX_PREFORK_AGE";
+    public static final String DOCKER_SWEEPER_ENABLED_KEY = "DOCKER_SWEEPER_ENABLED";
 
     private final String agentId;
     private final String serverHost;
@@ -32,6 +33,7 @@ public class Configuration {
     private final Path runnerPath;
     private final int workersCount;
     private final long maxPreforkAge;
+    private final boolean dockerSweeperEnabled;
 
     public Configuration() {
         this.agentId = UUID.randomUUID().toString();
@@ -57,6 +59,8 @@ public class Configuration {
             this.workersCount = Integer.parseInt(getEnv(WORKERS_COUNT_KEY, "2"));
 
             this.maxPreforkAge = Long.parseLong(getEnv(MAX_PREFORK_AGE_KEY, "30000"));
+
+            this.dockerSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_SWEEPER_ENABLED_KEY, "false"));
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -100,6 +104,10 @@ public class Configuration {
 
     public long getMaxPreforkAge() {
         return maxPreforkAge;
+    }
+
+    public boolean isDockerSweeperEnabled() {
+        return dockerSweeperEnabled;
     }
 
     private static String getEnv(String key, String defaultValue) {

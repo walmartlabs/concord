@@ -4,16 +4,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DockerProcessBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(DockerProcessBuilder.class);
+    public static final String CONCORD_TX_ID_LABEL = "concordTxId";
 
     private final String image;
+
+    private String name;
+    private Map<String, String> labels;
     private String workdir;
     private List<String> args = new ArrayList<>();
     private Map<String, String> env;
@@ -41,6 +42,10 @@ public class DockerProcessBuilder {
         List<String> c = new ArrayList<>();
         c.add("docker");
         c.add("run");
+        if (name != null) {
+            c.add("--name");
+            c.add(name);
+        }
         if (cleanup) {
             c.add("--rm");
         }
@@ -61,9 +66,31 @@ public class DockerProcessBuilder {
             c.add("-w");
             c.add(workdir);
         }
+        if (labels != null) {
+            for (Map.Entry<String, String> l : labels.entrySet()) {
+                String k = l.getKey();
+                String v = l.getValue();
+
+                c.add("--label");
+                c.add(k + (v != null ? "=" + v : ""));
+            }
+        }
         c.add(image);
         c.addAll(args);
         return c;
+    }
+
+    public DockerProcessBuilder name(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public DockerProcessBuilder addLabel(String k, String v) {
+        if (labels == null) {
+            labels = new HashMap<>();
+        }
+        labels.put(k, v);
+        return this;
     }
 
     public DockerProcessBuilder debug(boolean debug) {
