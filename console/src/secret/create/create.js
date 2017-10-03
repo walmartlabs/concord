@@ -85,7 +85,7 @@ export const reducers = combineReducers({ error, isLoading, message, publicKey, 
 // Action Creators
 
 export const actions = {
-    CreateNewKeyPair: ( values ) => {
+    createNewKeyPair: ( values ) => {
         return ({
             type: types.CREATE_KEYPAIR,
             payload: {
@@ -95,7 +95,7 @@ export const actions = {
             }
         });
     },
-    CreateWithExistingKeys: ( values ) => {
+    createWithExistingKeys: ( values ) => {
         return ({
             type: types.CREATE_WITH_EXISTING_KEYPAIR,
             payload: {
@@ -107,7 +107,7 @@ export const actions = {
             }
         });
     },
-    CreateWithUserCredentials: ( values ) => {
+    createWithUserCredentials: ( values ) => {
         return ({
             type: types.CREATE_WITH_USER_CREDENTIALS,
             payload: {
@@ -119,7 +119,7 @@ export const actions = {
             }
         });
     },
-    CreatePlainSecret: ( values ) => {
+    createPlainSecret: ( values ) => {
         return ({
             type: types.CREATE_PLAIN,
             payload: {
@@ -130,25 +130,25 @@ export const actions = {
             }
         });
     },
-    CreateSuccess: ( message = "CREATE SUCCESS" ) => {
+    createSuccess: ( message = "CREATE SUCCESS" ) => {
         return ({
             type: types.CREATE_SUCCESS,
             message
         });
     },
-    CreateFailed: ( message = "CREATE FAILED" ) => {
+    createFailed: ( message = "CREATE FAILED" ) => {
         return ({
             type: types.CREATE_FAILED,
             message
         });
     },
-    SavePublicKey: ( publicKey ) => {
+    savePublicKey: ( publicKey ) => {
         return ({
             type: types.SAVE_PUBKEY,
             publicKey
         });
     },
-    StartLoading: () => {
+    startLoading: () => {
         return ({
             type: types.START_LOADING
         });
@@ -160,17 +160,17 @@ export const actions = {
 export function* createNewKeyPair( action ) {
     try {
 
-        yield put( actions.StartLoading() );
+        yield put( actions.startLoading() );
 
         const response = yield call( api.createNewKeyPair, action.payload );
 
-        yield put( actions.SavePublicKey( response.publicKey ) );
+        yield put( actions.savePublicKey( response.publicKey ) );
 
-        yield put( actions.CreateSuccess("Successfully Generated a New Secret Key Pair!  Save your public Key!") );
+        yield put( actions.createSuccess("Successfully Generated a New Secret Key Pair!  Save your public Key!") );
 
     } catch (e) {
 
-        yield put( actions.CreateFailed( "Issues encountered while creating a new KeyPair.  Name may already be taken or Data may be malformed." ) );
+        yield put( actions.createFailed( "Issues encountered while creating a new KeyPair.  Name may already be taken or Data may be malformed." ) );
     
     }
 }
@@ -178,15 +178,15 @@ export function* createNewKeyPair( action ) {
 export function* createPlainSecret( action ) {
     try {
 
-        yield put( actions.StartLoading() );
+        yield put( actions.startLoading() );
 
         const response = yield call( api.createPlainSecret, action.payload );
 
-        yield put( actions.CreateSuccess( `Successfully Created Plain Secret: ${JSON.stringify(response)}` ) );
+        yield put( actions.createSuccess( `Successfully Created Plain Secret: ${JSON.stringify(response)}` ) );
 
     } catch (e) {
 
-        yield put( actions.CreateFailed( `Issues Encountered while creating new Plain Secret: ${e.message}` ) );
+        yield put( actions.createFailed( `Issues Encountered while creating new Plain Secret: ${e.message}` ) );
 
     }
 }
@@ -194,15 +194,15 @@ export function* createPlainSecret( action ) {
 export function* uploadExistingKey( action ) {
     try {
 
-        yield put( actions.StartLoading() );
+        yield put( actions.startLoading() );
 
         const response = yield call( api.uploadExistingKeyPair, action.payload );
 
-        yield put( actions.CreateSuccess( `Successfully Uploaded Existing Keypair! ${JSON.stringify(response) || ''}` ) );
+        yield put( actions.createSuccess( `Successfully Uploaded Existing Keypair! ${JSON.stringify(response) || ''}` ) );
 
     } catch (e) {
 
-        yield put( actions.CreateFailed( `Issues encountered while uploading your Keypair: ${e.message}` ) );
+        yield put( actions.createFailed( `Issues encountered while uploading your Keypair: ${e.message}` ) );
 
     }
 }
@@ -210,15 +210,15 @@ export function* uploadExistingKey( action ) {
 export function* createUserCredentials( action ) {
     try {
 
-        yield put( actions.StartLoading() );
+        yield put( actions.startLoading() );
 
         const response = yield call( api.createUserCredentials, action.payload );
 
-        yield put( actions.CreateSuccess( `Successfully created User Credentials Secret! ${JSON.stringify(response) || ''}` ) );
+        yield put( actions.createSuccess( `Successfully created User Credentials Secret! ${JSON.stringify(response) || ''}` ) );
 
     } catch (e) {
 
-        yield put( actions.CreateFailed( `Issues encountered while creating new User Credentials ${e.message}` ) );
+        yield put( actions.createFailed( `Issues encountered while creating new User Credentials ${e.message}` ) );
     
     }
 }

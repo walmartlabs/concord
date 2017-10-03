@@ -21,17 +21,17 @@ describe('Secret Create', () => {
         });
 
         it('should match snapshot for CreateSuccess Action', () => {
-            const resultState = reducers( undefined, actions.CreateSuccess() );
+            const resultState = reducers( undefined, actions.createSuccess() );
             expect( resultState ).toMatchSnapshot();
         });
 
         it('should match snapshot for CreateFailed Action', () => {
-            const resultState = reducers( undefined, actions.CreateFailed() );
+            const resultState = reducers( undefined, actions.createFailed() );
             expect( resultState ).toMatchSnapshot();
         });
 
         it('should match snapshot for CreateNewKeyPair', () => {
-            const resultState = reducers( undefined, actions.CreateNewKeyPair( "doop", false ) );
+            const resultState = reducers( undefined, actions.createNewKeyPair( "doop", false ) );
             expect ( resultState ).toMatchSnapshot();
         });
 

@@ -63,10 +63,10 @@ const mapStateToProps = ( state ) => {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-    Submit_NewKeyPair: ( values ) => dispatch( actions.CreateNewKeyPair( values ) ),
-    Submit_PlainSecret: ( values ) => dispatch( actions.CreatePlainSecret( values ) ),
-    Submit_UserCredentials: ( values ) => dispatch( actions.CreateWithUserCredentials( values ) ),
-    Submit_ExistingKeyPair: ( values ) => dispatch( actions.CreateWithExistingKeys( values ) )
+    Submit_NewKeyPair: ( values ) => dispatch( actions.createNewKeyPair( values ) ),
+    Submit_PlainSecret: ( values ) => dispatch( actions.createPlainSecret( values ) ),
+    Submit_UserCredentials: ( values ) => dispatch( actions.createWithUserCredentials( values ) ),
+    Submit_ExistingKeyPair: ( values ) => dispatch( actions.createWithExistingKeys( values ) )
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(SecretCreate);
