@@ -1,7 +1,13 @@
 import React from 'react';
 import { Field, reduxForm } from 'redux-form';
+import FileInput from "../FileInput";
 
 import { Form, Card, Button, Segment } from 'semantic-ui-react';
+
+const customFileInput = (field) => {
+  delete field.input.value; // <-- just delete the value property
+  return <input type="file" id="file" {...field.input} />;
+};
 
 const UploadExistingKeys = props => {
   const { handleSubmit, pristine, reset, submitting } = props;
@@ -26,22 +32,18 @@ const UploadExistingKeys = props => {
         */}
 
         <div>
-          <label>Public Key</label>
+          <label>Public Key: </label>
             <Field
-              name="public"
-              component={Form.Input}
-              type="file"
-              placeholder="Public Key"
+              name="publicKey"
+              component={ FileInput }
             />
         </div>
 
         <div>
-          <label>Private Key</label>
+          <label>Private Key: </label>
             <Field
-              name="private"
-              component={Form.Input}
-              type="file"
-              placeholder="Private Key"
+              name="privateKey"
+              component={ FileInput }
             />
         </div>
 

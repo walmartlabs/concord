@@ -20,7 +20,7 @@ export const types = {
 
 // Reducers 
 
-const success = ( state: boolean = false, action: Object ): boolean => {
+const success = ( state: boolean = false, action ): boolean => {
     switch (action.type) {
         case types.CREATE_SUCCESS:
             return true;
@@ -31,7 +31,7 @@ const success = ( state: boolean = false, action: Object ): boolean => {
     }
 }
 
-const error = ( state: boolean = false, action: Object ): boolean => {
+const error = ( state: boolean = false, action ): boolean => {
     switch (action.type) {
         case types.CREATE_SUCCESS:
             return false;
@@ -43,10 +43,12 @@ const error = ( state: boolean = false, action: Object ): boolean => {
 }
 
 const publicKey = ( state = null, action ) => {
-    console.log( " PUBLIC KEY REDUCER " + JSON.stringify(action) );
     switch (action.type) {
         case types.SAVE_PUBKEY:
             return action.publicKey || null;
+        case types.CREATE_PLAIN:
+        case types.CREATE_WITH_USER_CREDENTIALS:
+        case types.CREATE_WITH_EXISTING_KEYPAIR:
         case types.CREATE_FAILED:
             return null;
         default:
@@ -54,7 +56,7 @@ const publicKey = ( state = null, action ) => {
     }
 }
 
-const message = ( state: string = '', action: Object ): string => {
+const message = ( state: string = '', action ): string => {
     switch (action.type) {
         case types.CREATE_SUCCESS:
             return action.message || "CREATE SUCCESS";
@@ -66,7 +68,6 @@ const message = ( state: string = '', action: Object ): string => {
 }
 
 const isLoading = ( state = false, action ) => {
-    console.log("REDUCER ISLOADING: " + JSON.stringify( action ) );
     switch (action.type) {
         case types.START_LOADING:
             return true
@@ -90,6 +91,7 @@ export const actions = {
             payload: {
                 name: values.ConcordId, 
                 generatePassword: values.generatePassword
+                // storePassword: values.storePassword
             }
         });
     },
@@ -97,8 +99,11 @@ export const actions = {
         return ({
             type: types.CREATE_WITH_EXISTING_KEYPAIR,
             payload: {
-                name: values.ConcordId
-                // generatePassword: values.generatePassword, << Should we suppor this?
+                name: values.ConcordId,
+                publicKey: values.publicKey,
+                privateKey: values.privateKey
+                // generatePassword: values.generatePassword
+                // storePassword: values.storePassword
             }
         });
     },
@@ -107,31 +112,34 @@ export const actions = {
             type: types.CREATE_WITH_USER_CREDENTIALS,
             payload: {
                 name: values.ConcordId,
-                generatePassword: values.generatePassword
+                generatePassword: values.generatePassword,
+                username: values.username,
+                password: values.password
+                // storePassword: values.storePassword
             }
         });
     },
     CreatePlainSecret: ( values ) => {
-        console.log("Action Creator" + JSON.stringify( values ) );
         return ({
             type: types.CREATE_PLAIN,
             payload: {
                 name: values.ConcordId,
-                secret: values.secret
+                secret: values.secret,
+                generatePassword: values.generatePassword
+                // storePassword: values.storePassword
             }
         });
     },
-    CreateSuccess: ( message: string = "CREATE SUCCESS" ) => {
+    CreateSuccess: ( message = "CREATE SUCCESS" ) => {
         return ({
             type: types.CREATE_SUCCESS,
             message
         });
     },
-    CreateFailed: ( message: string = "CREATE FAILED" ) => {
+    CreateFailed: ( message = "CREATE FAILED" ) => {
         return ({
             type: types.CREATE_FAILED,
-            message,
-            error: error.message
+            message
         });
     },
     SavePublicKey: ( publicKey ) => {
@@ -149,116 +157,73 @@ export const actions = {
 
 // Side Effects: Sagas
 
-export function* createNewKeyPair(action: any): Generator<*, *, *> {
+export function* createNewKeyPair( action ) {
     try {
+
         yield put( actions.StartLoading() );
-        const response = yield call(api.createNewKeyPair, action.payload.name, action.payload.generatePassword, action.payload.storePassword);        
-        yield put( actions.SavePublicKey( response.publicKey ));
+
+        const response = yield call( api.createNewKeyPair, action.payload );
+
+        yield put( actions.SavePublicKey( response.publicKey ) );
+
         yield put( actions.CreateSuccess("Successfully Generated a New Secret Key Pair!  Save your public Key!") );
+
     } catch (e) {
-        yield put( actions.CreateFailed( "Failed to create a new KeyPair.  Name may already be taken or Data may be malformed." ) );
+
+        yield put( actions.CreateFailed( "Issues encountered while creating a new KeyPair.  Name may already be taken or Data may be malformed." ) );
+    
     }
 }
 
-export function* createPlainSecret(action: any): Generator<*, *, *> {
+export function* createPlainSecret( action ) {
     try {
-        console.log( action.payload, JSON.stringify( action ) ); 
 
-        const response = yield call(api.createPlainSecret, 
-            action.payload.name, 
-            action.payload.generatePassword, 
-            action.payload.secret );
-        
-        console.log("API RESPONSE " + JSON.stringify(response) );
+        yield put( actions.StartLoading() );
 
-        yield put({
-            type: types.CREATE_SUCCESS,
-            response
-        });
+        const response = yield call( api.createPlainSecret, action.payload );
+
+        yield put( actions.CreateSuccess( `Successfully Created Plain Secret: ${JSON.stringify(response)}` ) );
 
     } catch (e) {
 
-        yield put({
-            type: types.CREATE_FAILED,
-            error: true,
-            message: e.message || "Error while creating new Plain Secret"
-        });
+        yield put( actions.CreateFailed( `Issues Encountered while creating new Plain Secret: ${e.message}` ) );
 
     }
 }
 
-export function* uploadExistingKey(action: any): Generator<*, *, *> {
+export function* uploadExistingKey( action ) {
     try {
-        
-        console.log( action.payload, JSON.stringify(action))
 
-        const response = yield call(api.uploadExistingKeyPair, 
-            action.payload.name, 
-            action.payload.generatePassword, 
-            action.payload.publicKey,
-            action.payload.privateKey,
-            action.payload.storePassword );
-        
-        console.debug(response)
+        yield put( actions.StartLoading() );
 
-        yield put({
-            type: types.CREATE_SUCCESS,
-            response
-        });
+        const response = yield call( api.uploadExistingKeyPair, action.payload );
+
+        yield put( actions.CreateSuccess( `Successfully Uploaded Existing Keypair` ) );
 
     } catch (e) {
 
-        yield put({
-            type: types.CREATE_FAILED,
-            error: true,
-            message: e.message || "Error while creating new Plain Secret"
-        });
+        yield put( actions.CreateFailed( `Issues encountered while uploading your Keypair: ${e.message}` ) );
 
     }
 }
 
-export function* createUserCredentials(action: any): Generator<*, *, *> {
+export function* createUserCredentials( action ) {
     try {
-        console.log( action.payload, JSON.stringify(action))
-        
-        const response = yield call(api.uploadExistingKeyPair, 
-            action.payload.name, 
-            action.payload.generatePassword, 
-            action.payload.username,
-            action.payload.password,
-            action.payload.storePassword );
-        
-        console.debug(response)
 
-        yield put({
-            type: types.CREATE_SUCCESS,
-            response
-        });
+        yield put( actions.StartLoading() );
+
+        const response = yield call( api.createUserCredentials, action.payload );
+
+        yield put( actions.CreateSuccess( "Successfully created User Credentials Secret!" ) );
 
     } catch (e) {
 
-        yield put({
-            type: types.CREATE_FAILED,
-            error: true,
-            message: e.message || "Error while creating new Plain Secret"
-        });
-
+        yield put( actions.CreateFailed( `Issues encountered while creating new User Credentials ${e.message}` ) );
+    
     }
 }
 
-// export function* uploadExistingKeyPair( action: any ): Generator<*, *, *> {
-//     try {
-//         const response = yeild call()
-//     } catch ( error ) {
-//         yield put({
-//             type: types.CREATE_WITH_EXISTING_KEYPAIR_RESPONSE,
-//             error: true,
-//             message: error.message || "Error while uploading your keypair"
-//         })
-//     }
-// }
-
-export const sagas = function*(): Generator<*, *, *> {
+export const sagas = function*() {
 
     yield [
         fork(takeLatest, types.CREATE_KEYPAIR, createNewKeyPair),

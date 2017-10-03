@@ -1,6 +1,6 @@
 import * as common from "../../api";
 
-export const createNewKeyPair = ( name, generatePassword = false, storePassword = "" ) => {
+export const createNewKeyPair = ( { name, generatePassword = false, storePassword = null } ) => {
 
     // Todo: Verify that query params are not added if they are null or undefined
     const query = common.queryParams({
@@ -26,10 +26,7 @@ export const createNewKeyPair = ( name, generatePassword = false, storePassword 
         });
 };
 
-export const createPlainSecret = ( name, generatePassword = false, secret ) => {
-
-    console.log( "API! CREATE PLAIN SECRET CALLED" );
-    console.log(`name: ${name} , generatePassword ${generatePassword} , secret ${secret}`);
+export const createPlainSecret = ( { name, generatePassword = false, secret } ) => {
 
     const query = common.queryParams({
         name,
@@ -45,9 +42,9 @@ export const createPlainSecret = ( name, generatePassword = false, secret ) => {
         });
 }
 
-export const uploadExistingKeyPair = ( name, generatePassword = false, publicKey, privateKey, storePassword  ) => {
+export const uploadExistingKeyPair = ( { name, generatePassword = false, publicKey, privateKey, storePassword } ) => {
     
-    console.log( "API! UPLOAD ExistingKeyPair" );
+    console.log( "API! UPLOAD ExistingKeyPair: " + publicKey );
 
     const query = common.queryParams({
         name,
@@ -67,9 +64,7 @@ export const uploadExistingKeyPair = ( name, generatePassword = false, publicKey
         });
 }
 
-export const createUserCredentials = ( name, generatePassword = false, username, password, storePassword  ) => {
-    
-    console.log( "API! CreateUser Credentials " );
+export const createUserCredentials = ( { name, generatePassword = false, username, password, storePassword } ) => {
 
     const query = common.queryParams({
         name,
@@ -88,27 +83,3 @@ export const createUserCredentials = ( name, generatePassword = false, username,
             console.log( response );
         });
 }
-
-// TODO: UserCredentials
-
-// export const uploadNewKeyPair = ( name ) => {
-    
-//     const query = common.queryParams({
-//         name
-//     });
-
-//     return fetch(`/api/v1/secret/keypair?${query}`, { method: "POST", credentials: "same-origin"})
-//         .then(response => {
-//             console.log(response);
-//             if (!response.ok) {
-//                 throw common.defaultError(response);
-//             }
-//             return response.json();
-//         })
-//         .then(json => {
-//             console.log(json);
-//             return json;
-//         });
-// };
-
-
