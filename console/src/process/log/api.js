@@ -11,7 +11,7 @@ const parseRange = (s: string): FetchRange => {
     const regex = /^bytes (\d*)-(\d*)\/(\d*)$/;
     const m = regex.exec(s);
     if (!m) {
-        throw Object({error: true, message: ``});
+        throw Object({error: true, message: `Invalid Content-Range header: ${s}`});
     }
 
     return {
