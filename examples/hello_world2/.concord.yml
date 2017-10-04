@@ -1,3 +1,0 @@
-flows:
-  main:
-  - log: "Hello, ${hello.name}"

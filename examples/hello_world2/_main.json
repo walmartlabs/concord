@@ -1,5 +1,4 @@
 {
-  "entryPoint": "main",
   "arguments": {
     "hello": {
        "name": "Concord"

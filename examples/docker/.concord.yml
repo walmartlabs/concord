@@ -1,9 +1,0 @@
-configuration:
-  entryPoint: main
-
-flows:
-  main:
-    - docker: docker.prod.walmart.com/walmartlabs/concord-ansible
-      env:
-        ANSIBLE_CONFIG: ansible.cfg
-      cmd: ansible-playbook playbook/hello.yml -i inventory.ini -e greetings=Hi

@@ -1,0 +1,16 @@
+flows:
+  default:
+    - form: myForm
+    - log: "I've chosen those colors: ${myForm.colors}"
+
+forms:
+  myForm:
+    - colors: {type: "string+"}
+
+configuration:
+  arguments:
+    myForm:
+      colors:
+        - red
+        - green
+        - blue

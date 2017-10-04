@@ -1,9 +1,0 @@
-flows:
-  main:
-  - ${misc.throwBpmnError('kaboom!')}
-
-  onFailure:
-  - log: "Phew! That was close"
-
-configuration:
-  entryPoint: main

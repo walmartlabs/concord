@@ -1,0 +1,16 @@
+flows:
+  default:
+  - script: javascript
+    body: |
+      execution.setVariable("name", "Concord");
+
+  # call another flow
+  - sayHello
+
+  # call another flow and add/override its variables
+  - call: sayHello
+    in:
+      name: "world"
+
+  sayHello:
+  - log: "Hello, ${name}"
