@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-agent: support for pulling dependencies
+from Maven repositories;
 - concord-server: update repositories using GitHub webhooks;
 - concord-agent: automatic cleanup of orphaned Docker containers;
 - ansible: support for additional environment variables.

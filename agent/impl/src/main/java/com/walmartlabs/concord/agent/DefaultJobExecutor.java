@@ -8,8 +8,8 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ProcessPool.ProcessEntry;
-import com.walmartlabs.concord.common.DependencyManager;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.rpc.AgentApiClient;
 import com.walmartlabs.concord.rpc.ClientException;
@@ -19,9 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -60,16 +58,16 @@ public class DefaultJobExecutor implements JobExecutor {
     @Override
     public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
         try {
-            Collection<String> dependencies = getDependencyUrls(workDir);
+            Collection<Path> dependencies = dependencyManager.resolve(getDependencyUris(workDir));
 
             ProcessEntry entry;
             if (canUsePrefork(workDir)) {
                 String[] cmd = createCommand(dependencies, workDir);
-                entry = fork(instanceId, workDir, dependencies, cmd);
+                entry = fork(instanceId, workDir, cmd);
             } else {
                 log.info("start ['{}'] -> can't use a pre-forked instance", instanceId);
                 String[] cmd = createCommand(dependencies, workDir);
-                entry = startOneTime(instanceId, workDir, dependencies, cmd);
+                entry = startOneTime(instanceId, workDir, cmd);
             }
 
             Path payloadDir = entry.getWorkDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
@@ -128,12 +126,12 @@ public class DefaultJobExecutor implements JobExecutor {
         }
     }
 
-    private ProcessEntry fork(String instanceId, Path workDir, Collection<String> dependencies, String[] cmd) throws ExecutionException {
+    private ProcessEntry fork(String instanceId, Path workDir, String[] cmd) throws ExecutionException {
         HashCode hc = hash(cmd);
 
         ProcessEntry entry = pool.take(hc, () -> {
             Path forkDir = Files.createTempDirectory("prefork");
-            return start(forkDir, dependencies, cmd);
+            return start(forkDir, cmd);
         });
 
         try {
@@ -175,20 +173,17 @@ public class DefaultJobExecutor implements JobExecutor {
         };
     }
 
-    private ProcessEntry startOneTime(String instanceId, Path workDir, Collection<String> dependencies, String[] cmd) throws IOException {
+    private ProcessEntry startOneTime(String instanceId, Path workDir, String[] cmd) throws IOException {
         Path procDir = Files.createTempDirectory("onetime");
 
         Path payloadDir = procDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
         Files.move(workDir, payloadDir, StandardCopyOption.ATOMIC_MOVE);
         writeInstanceId(instanceId, payloadDir);
 
-        return start(procDir, dependencies, cmd);
+        return start(procDir, cmd);
     }
 
-    private ProcessEntry start(Path workDir, Collection<String> dependencies, String[] cmd) throws IOException {
-        Path depsDir = workDir.resolve(Constants.Files.LIBRARIES_DIR_NAME);
-        dependencyManager.collectDependencies(dependencies, depsDir);
-
+    private ProcessEntry start(Path workDir, String[] cmd) throws IOException {
         Path payloadDir = workDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
         if (!Files.exists(payloadDir)) {
             Files.createDirectories(payloadDir);
@@ -221,7 +216,7 @@ public class DefaultJobExecutor implements JobExecutor {
         throw new JobExecutorException("Error while executing a job: " + error);
     }
 
-    private String[] createCommand(Collection<String> dependencies, Path workDir) {
+    private String[] createCommand(Collection<Path> dependencies, Path workDir) {
         List<String> l = new ArrayList<>();
 
         l.add(cfg.getAgentJavaCmd());
@@ -249,14 +244,15 @@ public class DefaultJobExecutor implements JobExecutor {
         l.add("-Drpc.server.port=" + cfg.getServerPort());
 
         // classpath
-        Collection<String> dependencyNames = dependencies.stream()
-                .map(DefaultJobExecutor::getDependencyName)
+        Collection<String> dependencyFiles = dependencies.stream()
+                .map(p -> p.toAbsolutePath().toString())
+                .sorted()
                 .collect(Collectors.toSet());
 
         l.add("-cp");
 
         // dependencies are stored in a '../lib/' directory relative to the working directory (payload)
-        String deps = Utils.createClassPath("../" + Constants.Files.LIBRARIES_DIR_NAME + "/", dependencyNames);
+        String deps = String.join(":", dependencyFiles);
 
         // payload's own libraries are stored in `./lib/` directory in the working directory
         String libs = Constants.Files.LIBRARIES_DIR_NAME + "/*";
@@ -272,7 +268,7 @@ public class DefaultJobExecutor implements JobExecutor {
         return l.toArray(new String[l.size()]);
     }
 
-    private Collection<String> getDependencyUrls(Path workDir) throws ExecutionException {
+    private Collection<URI> getDependencyUris(Path workDir) throws ExecutionException {
         Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {
             return Collections.emptySet();
@@ -281,28 +277,41 @@ public class DefaultJobExecutor implements JobExecutor {
         try (InputStream in = Files.newInputStream(p)) {
             Map<String, Object> m = objectMapper.readValue(in, Map.class);
             Collection<String> deps = (Collection<String>) m.get(Constants.Request.DEPENDENCIES_KEY);
-            return normalizeUrls(deps != null ? new HashSet<>(deps) : Collections.emptySet());
-        } catch (IOException e) {
-            throw new ExecutionException("Error while reading a list of dependencies", e);
+            return normalizeUrls(deps);
+        } catch (URISyntaxException | IOException e) {
+            throw new ExecutionException("Error while reading the list of dependencies", e);
         }
     }
 
-    private static Collection<String> normalizeUrls(Collection<String> urls) throws IOException {
-        Collection<String> result = new HashSet<>();
+    private static Collection<URI> normalizeUrls(Collection<String> urls) throws IOException, URISyntaxException {
+        if (urls == null || urls.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Collection<URI> result = new HashSet<>();
 
         for (String s : urls) {
-            if (s.endsWith(".jar")) {
-                result.add(s);
-                log.info("normalizeUrls -> using as is: {}", s);
+            URI u = new URI(s);
+            String scheme = u.getScheme();
+
+            if (DependencyManager.MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
+                result.add(u);
                 continue;
             }
 
-            URL u = new URL(s);
+            if (scheme == null || scheme.trim().isEmpty()) {
+                throw new IOException("Invalid dependency URL: " + s);
+            }
 
+            if (s.endsWith(".jar")) {
+                result.add(u);
+                continue;
+            }
+
+            URL url = u.toURL();
             while (true) {
-                String proto = u.getProtocol();
-                if ("http".equalsIgnoreCase(proto) || "https".equalsIgnoreCase(proto)) {
-                    URLConnection conn = u.openConnection();
+                if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+                    URLConnection conn = url.openConnection();
                     if (conn instanceof HttpURLConnection) {
                         HttpURLConnection httpConn = (HttpURLConnection) conn;
                         httpConn.setInstanceFollowRedirects(false);
@@ -314,13 +323,13 @@ public class DefaultJobExecutor implements JobExecutor {
                                 code == 307) {
 
                             String location = httpConn.getHeaderField("Location");
-                            u = new URL(location);
+                            url = new URL(location);
                             log.info("normalizeUrls -> using: {}", location);
 
                             continue;
                         }
 
-                        s = u.toString();
+                        u = url.toURI();
                     } else {
                         log.warn("normalizeUrls -> unexpected connection type: {} (for {})", conn.getClass(), s);
                     }
@@ -329,7 +338,7 @@ public class DefaultJobExecutor implements JobExecutor {
                 break;
             }
 
-            result.add(s);
+            result.add(u);
         }
 
         return result;
@@ -403,19 +412,6 @@ public class DefaultJobExecutor implements JobExecutor {
             h.putString(s, Charsets.UTF_8);
         }
         return h.hash();
-    }
-
-    private static String getDependencyName(String s) {
-        if (s == null) {
-            return null;
-        }
-
-        int i = s.lastIndexOf("/");
-        if (i >= 0 && i + 1 < s.length()) {
-            return s.substring(i + 1);
-        }
-
-        return s;
     }
 
     private static String joinClassPath(String... as) {

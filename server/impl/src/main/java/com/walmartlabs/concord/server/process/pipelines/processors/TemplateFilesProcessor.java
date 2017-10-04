@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.common.DependencyManager;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.cfg.TemplateConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
@@ -15,10 +15,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -61,7 +59,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
 
         try {
             URI uri = getUri(instanceId, s);
-            Path template = dependencyManager.resolve(uri);
+            Path template = dependencyManager.resolveSingle(uri);
             payload = process(payload, template);
 
             return chain.process(payload);
@@ -73,17 +71,27 @@ public class TemplateFilesProcessor implements PayloadProcessor {
 
     private URI getUri(UUID instanceId, String template) throws URISyntaxException {
         try {
-            return new URL(template).toURI();
-        } catch (MalformedURLException e) {
-            // doesn't look like a URI, let's try find an alias
+            URI u = new URI(template);
 
-            Optional<String> o = aliasDao.get(template);
-            if (!o.isPresent()) {
-                throw new ProcessException(instanceId, "Invalid template URL or alias: " + template);
+            String scheme = u.getScheme();
+            // doesn't look like a URI, let's try find an alias
+            if (scheme == null || scheme.trim().isEmpty()) {
+                return getByAlias(instanceId, template);
             }
 
-            return new URI(o.get());
+            return u;
+        } catch (URISyntaxException e) {
+            return getByAlias(instanceId, template);
         }
+    }
+
+    private URI getByAlias(UUID instanceId, String s) throws URISyntaxException {
+        Optional<String> o = aliasDao.get(s);
+        if (!o.isPresent()) {
+            throw new ProcessException(instanceId, "Invalid template URL or alias: " + s);
+        }
+
+        return new URI(o.get());
     }
 
     private Payload process(Payload payload, Path template) throws IOException {

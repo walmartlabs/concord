@@ -135,6 +135,10 @@
             <artifactId>logback-classic</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -276,6 +280,7 @@
                                                 <volume>/tmp:/tmp</volume>
                                                 <!-- allows the server to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}</volume>
+                                                <volume>${settings.localRepository}:/root/.m2/repository</volume>
                                             </bind>
                                         </volumes>
                                         <env>
@@ -318,6 +323,7 @@
                                             <bind>
                                                 <!-- allows the agent to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}</volume>
+                                                <volume>${settings.localRepository}:/root/.m2/repository</volume>
                                             </bind>
                                         </volumes>
                                     </run>
