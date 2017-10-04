@@ -48,6 +48,11 @@ public final class KeyPairUtils {
         return out.toByteArray();
     }
 
+    public static void validateKeyPair(byte[] pub, byte[] priv) throws Exception {
+        JSch j = new JSch();
+        com.jcraft.jsch.KeyPair.load(j, priv, pub);
+    }
+
     private KeyPairUtils() {
     }
 }

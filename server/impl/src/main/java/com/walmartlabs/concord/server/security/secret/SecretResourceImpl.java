@@ -82,7 +82,10 @@ public class SecretResourceImpl implements SecretResource, Resource {
             InputStream publicIn = getStream(input, "public");
             if (publicIn != null) {
                 InputStream privateIn = assertStream(input, "private");
+
                 KeyPair k = KeyPairUtils.create(publicIn, privateIn);
+                validate(k);
+
                 secretManager.store(name, k, storePassword);
                 return new UploadSecretResponse(storePassword);
             } else {
@@ -245,5 +248,26 @@ public class SecretResourceImpl implements SecretResource, Resource {
             }
         }
         return null;
+    }
+
+    private static void validate(KeyPair k) {
+        byte[] pub = k.getPublicKey();
+        byte[] priv = k.getPrivateKey();
+
+        // with a 1024 bit key, the minimum size of a public RSA key file is 226 bytes
+        if (pub == null || pub.length < 226) {
+            throw new ValidationErrorsException("Invalid public key file size");
+        }
+
+        // 887 bytes is the minimum file size of a 1024 bit RSA private key
+        if (priv == null || priv.length < 800) {
+            throw new ValidationErrorsException("Invalid private key file size");
+        }
+
+        try {
+            KeyPairUtils.validateKeyPair(pub, priv);
+        } catch (Exception e) {
+            throw new ValidationErrorsException("Invalid key pair data");
+        }
     }
 }
