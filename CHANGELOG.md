@@ -8,6 +8,11 @@
 - concord-agent: automatic cleanup of orphaned Docker containers;
 - ansible: support for additional environment variables.
 
+### Changed
+
+- concord-server: fixed the issue with incorrect credentials
+configuration when retrieving GIT submodules.
+
 
 
 ## [0.42.0] - 2017-10-01
