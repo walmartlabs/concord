@@ -74,7 +74,7 @@ public class RunPlaybookTask2 implements Task {
         }
 
         Map<String, String> env = new HashMap<>();
-        env.put("PYTHONPATH", workDir.resolve(PYTHON_LIB_DIR).toString());
+        env.put("PYTHONPATH", PYTHON_LIB_DIR);
         env.put("CONCORD_HOST", rpcCfg.getServerHost());
         env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
