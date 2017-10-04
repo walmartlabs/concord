@@ -15,7 +15,7 @@ public class YamlDockerStepConverter implements StepConverter<YamlDockerStep> {
         Chunk c = new Chunk();
 
         String id = ctx.nextId();
-        ELCall call = createELCall("docker", Arrays.asList(s.getImage(), s.getCmd(), s.getEnv(), "${" + Constants.Context.LOCAL_PATH_KEY + "}"));
+        ELCall call = createELCall("docker", Arrays.asList(s.getImage(), s.isForcePull(), s.getCmd(), s.getEnv(), "${" + Constants.Context.LOCAL_PATH_KEY + "}"));
         c.addElement(new ServiceTask(id, ExpressionType.SIMPLE, call.getExpression(), call.getArgs(), null, true));
         c.addOutput(id);
         c.addSourceMap(id, toSourceMap(s, "Docker: " + s.getImage()));

@@ -28,6 +28,7 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.isNull;
@@ -1180,7 +1181,7 @@ public class YamlParserTest {
 
         // ---
         ArgumentCaptor<Map<String, Object>> c = ArgumentCaptor.forClass(Map.class);
-        verify(task, times(1)).call(eq("test-image"), eq("test-cmd"), c.capture(), eq("/tmp"));
+        verify(task, times(1)).call(eq("test-image"), anyBoolean(), eq("test-cmd"), c.capture(), eq("/tmp"));
 
         Map<String, Object> m = c.getValue();
         assertNotNull(m);
@@ -1745,7 +1746,7 @@ public class YamlParserTest {
 
     private static class DockerTask implements Task {
 
-        public void call(String dockerImage, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
+        public void call(String dockerImage, boolean forcePull, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
         }
     }
 

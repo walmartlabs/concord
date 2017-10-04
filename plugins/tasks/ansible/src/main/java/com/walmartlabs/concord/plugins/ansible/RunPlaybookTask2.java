@@ -134,7 +134,8 @@ public class RunPlaybookTask2 implements Task {
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Using the docker image: {}", dockerImageName);
         run(args, payloadPath, (playbookPath, inventoryPath) ->
-                new DockerPlaybookProcessBuilder(txId, dockerImageName, payloadPath, playbookPath, inventoryPath));
+                new DockerPlaybookProcessBuilder(txId, dockerImageName, payloadPath, playbookPath, inventoryPath)
+                        .withForcePull((boolean) args.getOrDefault(AnsibleConstants.FORCE_PULL_KEY, true)));
     }
 
     @SuppressWarnings("unchecked")
@@ -160,6 +161,7 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_NAME);
         addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.FORCE_PULL_KEY);
 
         String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {

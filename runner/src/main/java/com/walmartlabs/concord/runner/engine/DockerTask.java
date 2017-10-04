@@ -30,7 +30,7 @@ public class DockerTask implements Task {
     @InjectVariable(Constants.Context.TX_ID_KEY)
     String txId;
 
-    public void call(String dockerImage, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
+    public void call(String dockerImage, boolean forcePull, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
         try {
             createRunScript(payloadPath, cmd);
 
@@ -40,6 +40,7 @@ public class DockerTask implements Task {
                     .volume(payloadPath, VOLUME_CONTAINER_DEST)
                     .arg("/workspace/.docker_cmd.sh")
                     .env(stringify(env))
+                    .forcePull(forcePull)
                     .build();
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));

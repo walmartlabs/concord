@@ -20,17 +20,23 @@ public class DockerProcessBuilder {
     private Map<String, String> env;
     private List<AbstractMap.SimpleEntry<String, String>> volumes = new ArrayList<>();
     private boolean cleanup = true;
-    private boolean debug;
+    private boolean debug = false;
+    private boolean forcePull = true;
 
     public DockerProcessBuilder(String image) {
         this.image = image;
     }
 
     public Process build() throws IOException {
-        List<String> cmd = buildCmd();
+        String[] cmd;
+        if (forcePull) {
+            cmd = new String[]{"/bin/sh", "-c", "docker pull " + q(image) + " && " + buildCmd()};
+        } else {
+            cmd = new String[]{"/bin/sh", "-c", buildCmd()};
+        }
 
         if (debug) {
-            log.info("CMD: {}", cmd);
+            log.info("CMD: {}", (Object) cmd);
         }
 
         return new ProcessBuilder(cmd)
@@ -38,13 +44,13 @@ public class DockerProcessBuilder {
                 .start();
     }
 
-    private List<String> buildCmd() {
+    private String buildCmd() {
         List<String> c = new ArrayList<>();
         c.add("docker");
         c.add("run");
         if (name != null) {
             c.add("--name");
-            c.add(name);
+            c.add(q(name));
         }
         if (cleanup) {
             c.add("--rm");
@@ -53,18 +59,18 @@ public class DockerProcessBuilder {
         if (volumes != null) {
             volumes.forEach(v -> {
                 c.add("-v");
-                c.add(v.getKey() + ":" + v.getValue());
+                c.add(q(v.getKey() + ":" + v.getValue()));
             });
         }
         if (env != null) {
             env.forEach((k, v) -> {
                 c.add("-e");
-                c.add(k + "=" + v);
+                c.add(q(k + "=" + v));
             });
         }
         if (workdir != null) {
             c.add("-w");
-            c.add(workdir);
+            c.add(q(workdir));
         }
         if (labels != null) {
             for (Map.Entry<String, String> l : labels.entrySet()) {
@@ -72,12 +78,14 @@ public class DockerProcessBuilder {
                 String v = l.getValue();
 
                 c.add("--label");
-                c.add(k + (v != null ? "=" + v : ""));
+                c.add(q(k + (v != null ? "=" + v : "")));
             }
         }
-        c.add(image);
-        c.addAll(args);
-        return c;
+        c.add(q(image));
+        if (args != null) {
+            args.forEach(a -> c.add(q(a)));
+        }
+        return String.join(" ", c);
     }
 
     public DockerProcessBuilder name(String name) {
@@ -132,5 +140,18 @@ public class DockerProcessBuilder {
     public DockerProcessBuilder env(Map<String, String> env) {
         this.env = env;
         return this;
+    }
+
+    public DockerProcessBuilder forcePull(boolean forcePull) {
+        this.forcePull = forcePull;
+        return this;
+    }
+
+    private static String q(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        return "'" + s + "'";
     }
 }

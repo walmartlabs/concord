@@ -25,7 +25,8 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     private String privateKey;
     private String vaultPasswordFile;
     private Map<String, String> extraEnv = Collections.emptyMap();
-    private boolean debug;
+    private boolean debug = false;
+    private boolean forcePull = true;
     private int verboseLevel = 0;
 
     public DockerPlaybookProcessBuilder(String txId, String imageName, String workdir, String playbook, String inventory) {
@@ -96,6 +97,11 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
         return this;
     }
 
+    public PlaybookProcessBuilder withForcePull(boolean forcePull) {
+        this.forcePull = forcePull;
+        return this;
+    }
+
     @Override
     public Process build() throws IOException {
         return new DockerProcessBuilder(imageName)
@@ -109,6 +115,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
                 .arg("-i", inventory)
                 .args(buildAdditionalArgs())
                 .debug(debug)
+                .forcePull(forcePull)
                 .build();
     }
 
