@@ -1,0 +1,29 @@
+flows:
+  default:
+  - form: credentialsForm
+    yield: true
+
+  - script: js
+    body: |
+      booCfg.apiKey = credentialsForm.apiKey;
+      booCfg.org = credentialsForm.org;
+      booCfg.asm = credentialsForm.asm;
+      booCfg.env = credentialsForm.env;
+
+  - ${boo.run(context, booCfg, workDir)}
+
+forms:
+  credentialsForm:
+  - apiKey: {type: "string", inputType: "password", label: "OneOps API key"}
+  - org: {type: "string", label: "OneOps Organization", value: "devtools"}
+  - asm: {type: "string", label: "OneOps Assembly", value: "concord-boo-example"}
+  - env: {type: "string", label: "OneOps Environment", value: "test01"}
+
+configuration:
+  dependencies:
+  - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/boo-task/0.30.0/boo-task-0.30.0.jar"
+  arguments:
+    booCfg:
+      host: "https://oneops.prod.walmart.com"
+      booTemplateLocation: "example.yml"
+      email: ${initiator.attributes.mail}
