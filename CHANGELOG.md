@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: a form to create secrets;
 - concord-server: validate uploaded SSH key pairs;
 - concord-server, concord-agent: support for pulling dependencies
 from Maven repositories;
