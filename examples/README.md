@@ -4,6 +4,7 @@
 
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
 * [ansible_remote](ansible_remote) - running an Ansible playbook an a remote host;
+* [boo](boo) - using OneOps Boo;
 * [forms](forms) - using basic forms;
 * [hello_world](hello_world) - a simple example demostrating how to pass a variable to a process;
 * [hello_world2](hello_world2) - how to send external parameters;

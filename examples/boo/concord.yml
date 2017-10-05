@@ -3,14 +3,15 @@ flows:
   - form: credentialsForm
     yield: true
 
-  - script: js
-    body: |
-      booCfg.apiKey = credentialsForm.apiKey;
-      booCfg.org = credentialsForm.org;
-      booCfg.asm = credentialsForm.asm;
-      booCfg.env = credentialsForm.env;
-
-  - ${boo.run(context, booCfg, workDir)}
+  - task: boo
+    in:
+      booTemplateLocation: "example.yml"
+      host: "https://oneops.prod.walmart.com"
+      apiKey: ${credentialsForm.apiKey}
+      org: ${credentialsForm.org}
+      asm: ${credentialsForm.asm}
+      env: ${credentialsForm.env}
+      email: ${initiator.attributes.mail}
 
 forms:
   credentialsForm:
@@ -21,9 +22,4 @@ forms:
 
 configuration:
   dependencies:
-  - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/boo-task/0.30.0/boo-task-0.30.0.jar"
-  arguments:
-    booCfg:
-      host: "https://oneops.prod.walmart.com"
-      booTemplateLocation: "example.yml"
-      email: ${initiator.attributes.mail}
+  - "mvn://com.walmartlabs.concord.plugins:boo-task:0.31.0"
