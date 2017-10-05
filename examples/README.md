@@ -10,7 +10,7 @@
 * [in_variables](in_variables) - how to use IN-variables when calling a flow;
 * [multiple_flows](multiple_flows) - multiple flows in a single YAML file;
 * [oneops](oneops) - OneOps integration example;
-* [project_file](project_file) - basic usage of a `.concord.yml` project file;
+* [project_file](project_file) - basic usage of a `concord.yml` project file;
 * [slack](slack) - sending a message to a Slack channel;
 * [smtp](smtp) - using SMTP task;
 * [teamrosters](teamrosters) - getting data from Team Rosters.
