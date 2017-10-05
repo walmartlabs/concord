@@ -22,5 +22,6 @@ public class SecurityModule extends ShiroWebModule {
         addFilterChain("/api/**", Key.get(ConcordAuthenticatingFilter.class));
         addFilterChain("/forms/**", Key.get(ConcordAuthenticatingFilter.class));
         addFilterChain("/jolokia/**", Key.get(ConcordAuthenticatingFilter.class));
+        addFilterChain("/events/github/**", Key.get(GithubAuthenticatingFilter.class));
     }
 }

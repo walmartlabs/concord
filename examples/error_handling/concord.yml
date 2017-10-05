@@ -1,0 +1,6 @@
+flows:
+  default:
+  - ${misc.throwBpmnError('kaboom!')}
+
+  onFailure:
+  - log: "Phew! That was close"

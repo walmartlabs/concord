@@ -1,8 +1,0 @@
-flows:
-  main:
-  - log: "Hello, ${name}"
-
-configuration:
-  entryPoint: main
-  arguments:
-    name: "Concord"

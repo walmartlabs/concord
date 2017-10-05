@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ProjectLoader {
@@ -171,7 +172,7 @@ public class ProjectLoader {
                 profiles = new HashMap<>();
             }
 
-            Map<String, Object> variables = new HashMap<>();
+            Map<String, Object> variables = new LinkedHashMap<>();
 
             if (projectDefinition != null) {
                 if (projectDefinition.getFlows() != null) {

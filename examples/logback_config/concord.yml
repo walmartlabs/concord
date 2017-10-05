@@ -1,0 +1,12 @@
+flows:
+  default:
+    - script: groovy
+      body: |
+        import org.slf4j.*
+
+        def logger = org.slf4j.LoggerFactory.getLogger("test")
+        logger.debug("Hi there")
+
+configuration:
+  dependencies:
+    - "http://nexus.prod.walmart.com/nexus/content/repositories/public/org/codehaus/groovy/groovy-all/2.4.11/groovy-all-2.4.11.jar"

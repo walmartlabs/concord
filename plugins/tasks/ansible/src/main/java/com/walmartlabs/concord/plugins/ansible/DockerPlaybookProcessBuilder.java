@@ -12,7 +12,8 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
 
     private String attachmentsDir;
 
-    private final String dockerImageName;
+    private final String txId;
+    private final String imageName;
     private final String workdir;
     private final String playbook;
     private final String inventory;
@@ -24,11 +25,13 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     private String privateKey;
     private String vaultPasswordFile;
     private Map<String, String> extraEnv = Collections.emptyMap();
-    private boolean debug;
+    private boolean debug = false;
+    private boolean forcePull = true;
     private int verboseLevel = 0;
 
-    public DockerPlaybookProcessBuilder(String dockerImageName, String workdir, String playbook, String inventory) {
-        this.dockerImageName = dockerImageName;
+    public DockerPlaybookProcessBuilder(String txId, String imageName, String workdir, String playbook, String inventory) {
+        this.txId = txId;
+        this.imageName = imageName;
         this.workdir = workdir;
         this.playbook = relativize(workdir, playbook);
         this.inventory = relativize(workdir, inventory);
@@ -94,9 +97,15 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
         return this;
     }
 
+    public PlaybookProcessBuilder withForcePull(boolean forcePull) {
+        this.forcePull = forcePull;
+        return this;
+    }
+
     @Override
     public Process build() throws IOException {
-        return new DockerProcessBuilder(dockerImageName)
+        return new DockerProcessBuilder(imageName)
+                .addLabel(DockerProcessBuilder.CONCORD_TX_ID_LABEL, txId)
                 .cleanup(true)
                 .env(buildEnv())
                 .volume(workdir, VOLUME_CONTAINER_DEST)
@@ -106,6 +115,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
                 .arg("-i", inventory)
                 .args(buildAdditionalArgs())
                 .debug(debug)
+                .forcePull(forcePull)
                 .build();
     }
 

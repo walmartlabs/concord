@@ -1,10 +1,23 @@
 # Change log
 
-## [Unreleased]
+## [0.43.0] - 2017-10-05
 
 ### Added
 
-- ansible: support for additional enviroment variables.
+- ansible: ability to specify a secret name and password as a
+`privateFile` value;
+- concord-console: a form to create secrets;
+- concord-server: validate uploaded SSH key pairs;
+- concord-server, concord-agent: support for pulling dependencies
+from Maven repositories;
+- concord-server: update repositories using GitHub webhooks;
+- concord-agent: automatic cleanup of orphaned Docker containers;
+- ansible: support for additional environment variables.
+
+### Changed
+
+- concord-server: fixed the issue with incorrect credentials
+configuration when retrieving GIT submodules.
 
 
 

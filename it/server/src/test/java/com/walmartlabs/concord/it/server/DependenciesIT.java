@@ -6,6 +6,7 @@ import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -16,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.zip.ZipOutputStream;
 
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertEquals;
@@ -54,5 +56,19 @@ public class DependenciesIT extends AbstractServerIT {
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*Hello!.*", ab);
+    }
+
+    @Test(timeout = 180000)
+    public void testMaven() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("mvnDeps").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+        assertNotNull(spr.getInstanceId());
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, Concord.*", ab);
     }
 }

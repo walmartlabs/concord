@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.server</groupId>
         <artifactId>parent</artifactId>
-        <version>0.42.1-SNAPSHOT</version>
+        <version>0.43.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -27,6 +27,11 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-rpc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-dependency-manager</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -221,6 +226,10 @@
         <dependency>
             <groupId>org.jolokia</groupId>
             <artifactId>jolokia-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kohsuke</groupId>
+            <artifactId>github-api</artifactId>
         </dependency>
 
         <dependency>

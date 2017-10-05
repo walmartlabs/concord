@@ -4,6 +4,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.Task;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.SimpleEmail;
@@ -27,11 +28,19 @@ public class SmtpTask implements Task {
     @SuppressWarnings("unchecked")
     public void execute(Context ctx) throws Exception {
         Map<String, Object> smtpParams = (Map<String, Object>) ctx.getVariable("smtpParams");
+        if (smtpParams == null) {
+            smtpParams = (Map<String, Object>) ctx.getVariable("smtp");
+        }
+
         Map<String, Object> mailParams = (Map<String, Object>) ctx.getVariable("mailParams");
+        if (mailParams == null) {
+            mailParams = (Map<String, Object>) ctx.getVariable("mail");
+        }
+
         call(smtpParams, mailParams);
     }
 
-    public void call(Context ctx, Map<String, Object> smtpParams, Map<String, Object> mailParams) throws Exception {
+    public void call(@InjectVariable("context") Context ctx, Map<String, Object> smtpParams, Map<String, Object> mailParams) throws Exception {
         call(smtpParams, applyTemplate(ctx, mailParams));
     }
 

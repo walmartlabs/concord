@@ -303,7 +303,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             return;
         }
 
-        if (cancel(instanceId, s, ProcessStatus.ENQUEUED, ProcessStatus.PREPARING)) {
+        if (cancel(instanceId, s, ProcessStatus.ENQUEUED, ProcessStatus.PREPARING, ProcessStatus.SUSPENDED)) {
             return;
         }
 

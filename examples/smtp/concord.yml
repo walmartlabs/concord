@@ -1,0 +1,20 @@
+flows:
+  default:
+  - task: smtp
+    in:
+      smtp: ${smtpServer}
+      mail:
+        from: ${initiator.attributes.mail}
+        to: ${initiator.attributes.mail}
+        subject: "Howdy!"
+        template: "mail.mustache"
+  - log: mail sent to ${initiator.attributes.mail}
+
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:0.43.0"
+  arguments:
+    smtpServer:
+      host: "localhost"
+      port: 25
+

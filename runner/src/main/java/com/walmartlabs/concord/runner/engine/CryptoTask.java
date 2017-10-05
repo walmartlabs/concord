@@ -1,11 +1,14 @@
 package com.walmartlabs.concord.runner.engine;
 
-import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.sdk.SecretStore;
 import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,7 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Named("crypto")
-public class CryptoTask implements Task {
+public class CryptoTask implements Task, SecretStore {
+
+    private static final Logger log = LoggerFactory.getLogger(CryptoTask.class);
 
     private final RpcClient rpcClient;
 
@@ -26,6 +31,7 @@ public class CryptoTask implements Task {
         this.rpcClient = rpcClient;
     }
 
+    @Override
     public String exportAsString(@InjectVariable("txId") String instanceId,
                                  String name,
                                  String password) throws Exception {
@@ -40,10 +46,13 @@ public class CryptoTask implements Task {
         return new String(bds.getData());
     }
 
+    @Override
     public Map<String, String> exportKeyAsFile(@InjectVariable("txId") String instanceId,
                                                @InjectVariable("workDir") String workDir,
                                                String name,
                                                String password) throws Exception {
+
+        log.info("Exporting a key pair: {}", name);
 
         Secret s = get(instanceId, name, password);
         if (!(s instanceof KeyPair)) {
@@ -64,9 +73,11 @@ public class CryptoTask implements Task {
         Map<String, String> m = new HashMap<>();
         m.put("private", baseDir.relativize(privateKey).toString());
         m.put("public", baseDir.relativize(publicKey).toString());
+
         return m;
     }
 
+    @Override
     public Map<String, String> exportCredentials(@InjectVariable("txId") String instanceId,
                                                  @InjectVariable("workDir") String workDir,
                                                  String name,
@@ -84,6 +95,7 @@ public class CryptoTask implements Task {
         return m;
     }
 
+    @Override
     public String decryptString(@InjectVariable("txId") String instanceId, String s) throws Exception {
         return rpcClient.getSecretStoreService().decryptString(instanceId, s);
     }

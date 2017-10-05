@@ -11,6 +11,8 @@ export RUNNER_PATH="$APP_DIR/runner/runner.jar"
 # 16 * 60 * 60 * 1000ms
 export MAX_PREFORK_AGE="57600000"
 
+export DOCKER_SWEEPER_ENABLED="true"
+
 exec java \
 -Xmx256m \
 -server \

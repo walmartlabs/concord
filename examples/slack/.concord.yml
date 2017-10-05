@@ -1,4 +1,0 @@
-flows:
-  main:
-  - slack: [ "C5W9ELY7Q", "build ${txId} completed"]
-  - log: notified

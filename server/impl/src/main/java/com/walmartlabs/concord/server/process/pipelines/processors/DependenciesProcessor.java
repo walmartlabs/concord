@@ -1,152 +1,65 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.google.common.collect.Sets;
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
-import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.cfg.DependencyStoreConfiguration;
-import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.UUID;
 
 @Named
 public class DependenciesProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(DependenciesProcessor.class);
-    private static final String SYSTEM_PREFIX = "concord://";
-
-    // TODO externalize
-    private static final Set<String> BLACKLISTED_ARTIFACTS = Sets.newHashSet(
-            "bpm-engine-api.*",
-            "bpm-engine-impl.*",
-            "jackson-databind.*",
-            "jackson-annotations.*",
-            "jackson-core.*",
-            "concord-common.*",
-            "javax.inject.*",
-            "slf4j-api.*"
-    );
 
     private final LogManager logManager;
-    private final DependencyStoreConfiguration cfg;
-    private final Map<String, String> substituteData;
 
     @Inject
-    public DependenciesProcessor(LogManager logManager, DependencyStoreConfiguration cfg) {
+    public DependenciesProcessor(LogManager logManager) {
         this.logManager = logManager;
-        this.cfg = cfg;
-
-        Properties props = new Properties();
-        try {
-            props.load(DependenciesProcessor.class.getResourceAsStream("dependencies.properties"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        this.substituteData = props.entrySet().stream()
-                .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (String) e.getValue()));
     }
 
     @Override
-    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
-        Map<String, Object> request = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
-        // get a list of dependencies from the request data
-        Collection<String> deps = deps(instanceId, request);
+        // get a list of dependencies from the req data
+        Collection<String> deps = deps(instanceId, req);
         if (deps == null) {
             return chain.process(payload);
         }
 
-        // filter all valid dependencies
-        Collection<String> validDeps = deps.stream()
-                .filter(e -> valid(path(instanceId, e)))
-                .collect(Collectors.toSet());
-
-        // collect "system" dependencies
-        Collection<String> systemDeps = validDeps.stream()
-                .filter(DependenciesProcessor::system)
-                .collect(Collectors.toSet());
-
-        // copy "system" dependencies into the workspace's lib directory
-        Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        try {
-            processSystemDependencies(instanceId, workspace, cfg.getDepsDir(), systemDeps);
-        } catch (IOException e) {
-            log.error("process ['{}'] -> error while processing system dependencies", instanceId, e);
-            logManager.error(instanceId, "Error while processing system dependencies", e);
-            throw new ProcessException(instanceId, "Error while processing system dependencies", e);
+        boolean failed = false;
+        for (String d : deps) {
+            try {
+                new URI(d);
+            } catch (URISyntaxException e) {
+                logManager.error(instanceId, "Invalid dependency URL: " + d);
+                failed = true;
+            }
         }
 
-        // the rest of the dependencies will be resolved by an agent
-        Collection<String> rest = new HashSet<>(validDeps);
-        rest.removeAll(systemDeps);
+        if (failed) {
+            throw new ProcessException(instanceId, "Invalid dependency list");
+        }
 
-        request.put(Constants.Request.DEPENDENCIES_KEY, rest);
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, request);
+        req.put(Constants.Request.DEPENDENCIES_KEY, deps);
+        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, req);
 
         log.info("process ['{}'] -> done", instanceId);
         return chain.process(payload);
-    }
-
-    private void processSystemDependencies(UUID instanceId, Path workspace, Path depsDir,
-                                           Collection<String> deps) throws IOException {
-
-        if (deps.isEmpty()) {
-            return;
-        }
-
-        if (depsDir == null) {
-            log.warn("processSystemDependencies ['{}'] -> dependencies directory not set, skipping", instanceId);
-            return;
-        }
-
-        Path libDir = workspace.resolve(Constants.Files.LIBRARIES_DIR_NAME);
-        if (!Files.exists(libDir)) {
-            Files.createDirectories(libDir);
-        }
-
-        for (String d : deps) {
-            String s = substitute(path(instanceId, d));
-
-            Path src = depsDir.resolve(s);
-            if (!Files.exists(src)) {
-                throw new ProcessException(instanceId, "Dependency not found: " + d);
-            }
-
-            Path dst = libDir.resolve(s);
-            IOUtils.copy(src, dst);
-        }
-    }
-
-    private static String path(UUID instanceId, String a) {
-        URI uri = URI.create(a);
-        String s = uri.getPath();
-
-        if (s == null || s.trim().isEmpty()) {
-            throw new ProcessException(instanceId, "Invalid dependency URI path: " + a);
-        }
-
-        if (s.startsWith("/")) {
-            s = s.substring(1);
-        }
-
-        return s;
     }
 
     @SuppressWarnings("unchecked")
@@ -173,18 +86,5 @@ public class DependenciesProcessor implements PayloadProcessor {
 
         logManager.error(instanceId, "Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
         throw new ProcessException(instanceId, "Invalid dependencies object type. Expected an array or a collection, got: " + o.getClass());
-    }
-
-    private String substitute(String s) {
-        StrSubstitutor subs = new StrSubstitutor(substituteData);
-        return subs.replace(s);
-    }
-
-    private static boolean valid(String a) {
-        return BLACKLISTED_ARTIFACTS.stream().noneMatch(a::matches);
-    }
-
-    private static boolean system(String a) {
-        return a.startsWith(SYSTEM_PREFIX);
     }
 }

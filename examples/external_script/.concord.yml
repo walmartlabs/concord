@@ -1,5 +1,0 @@
-flows:
-  main:
-  - script: example.js
-  - log: Hello, ${x}
-

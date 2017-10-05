@@ -1,0 +1,25 @@
+flows:
+  default:
+  - form: credentialsForm
+    yield: true
+
+  - task: boo
+    in:
+      booTemplateLocation: "example.yml"
+      host: "https://oneops.prod.walmart.com"
+      apiKey: ${credentialsForm.apiKey}
+      org: ${credentialsForm.org}
+      asm: ${credentialsForm.asm}
+      env: ${credentialsForm.env}
+      email: ${initiator.attributes.mail}
+
+forms:
+  credentialsForm:
+  - apiKey: {type: "string", inputType: "password", label: "OneOps API key"}
+  - org: {type: "string", label: "OneOps Organization", value: "devtools"}
+  - asm: {type: "string", label: "OneOps Assembly", value: "concord-boo-example"}
+  - env: {type: "string", label: "OneOps Environment", value: "test01"}
+
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:boo-task:0.31.0"

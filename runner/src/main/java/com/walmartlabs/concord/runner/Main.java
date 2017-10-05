@@ -12,10 +12,7 @@ import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Task;
-import io.takari.bpm.api.Engine;
-import io.takari.bpm.api.Event;
-import io.takari.bpm.api.EventService;
-import io.takari.bpm.api.ExecutionException;
+import io.takari.bpm.api.*;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
@@ -242,9 +239,27 @@ public class Main {
             // force exit
             System.exit(0);
         } catch (Throwable e) {
+            // try to unroll nested exceptions to get a meaningful one
+            e = unroll(e);
             log.error("main -> unhandled exception", e);
             System.exit(1);
         }
+    }
+
+    private static Throwable unroll(Throwable e) {
+        if (e instanceof ExecutionException) {
+            if (e.getCause() != null) {
+                e = e.getCause();
+            }
+        }
+
+        if (e instanceof BpmnError) {
+            if (e.getCause() != null) {
+                e = e.getCause();
+            }
+        }
+
+        return e;
     }
 
     private static Injector createInjector() {

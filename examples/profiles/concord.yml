@@ -1,0 +1,13 @@
+flows:
+  default:
+  - log: "Hello, ${name}"
+
+configuration:
+  arguments:
+    name: "Concord"
+
+profiles:
+  stranger:
+    configuration:
+      arguments:
+        name: "stranger"

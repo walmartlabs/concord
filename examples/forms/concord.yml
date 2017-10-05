@@ -1,0 +1,10 @@
+flows:
+  default:
+  - form: myForm
+  - log: "Hello, ${myForm.firstName} ${myForm.lastName}"
+
+forms:
+  myForm:
+  - firstName: { label: "First name", type: "string" }
+  - lastName: { label: "Last name", type: "string" }
+  - password:  { label: "Password", type: "string", inputType: 'password' }

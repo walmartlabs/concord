@@ -30,27 +30,6 @@ public final class Utils {
         }
     }
 
-    public static String createClassPath(String prefix, Collection<String> elements) {
-        if (elements == null || elements.isEmpty()) {
-            return null;
-        }
-
-        List<String> l = new ArrayList<>(elements);
-        Collections.sort(l);
-
-        StringBuilder b = new StringBuilder();
-
-        for (Iterator<String> i = l.iterator(); i.hasNext(); ) {
-            String e = i.next();
-            b.append(prefix).append(e);
-            if (i.hasNext()) {
-                b.append(":");
-            }
-        }
-
-        return b.toString();
-    }
-
     public static boolean kill(Process proc) {
         if (!proc.isAlive()) {
             return false;

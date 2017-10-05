@@ -79,13 +79,16 @@ public final class ConfigurationUtils {
             Object av = result.get(k);
             Object bv = b.get(k);
 
-            // this is necessary to preserve the order of the keys
-            result.remove(k);
-
+            Object o = bv;
             if (av instanceof Map && bv instanceof Map) {
-                result.put(k, deepMerge((Map<String, Object>) av, (Map<String, Object>) bv));
+                o = deepMerge((Map<String, Object>) av, (Map<String, Object>) bv);
+            }
+
+            // preserve the order of the keys
+            if (result.containsKey(k)) {
+                result.replace(k, o);
             } else {
-                result.put(k, bv);
+                result.put(k, o);
             }
         }
         return result;

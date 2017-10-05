@@ -2,8 +2,8 @@ package com.walmartlabs.concord.agent;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.walmartlabs.concord.common.DependencyManager;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.rpc.AgentApiClient;
 import com.walmartlabs.concord.rpc.JobStatus;
 import com.walmartlabs.concord.rpc.JobType;
@@ -133,6 +133,19 @@ public class ExecutionManager {
         }
 
         return s;
+    }
+
+    public boolean isRunning(String id) {
+        JobStatus s;
+        synchronized (mutex) {
+            s = statuses.getIfPresent(id);
+        }
+
+        if (s == null) {
+             return false;
+        }
+
+        return s == JobStatus.RUNNING;
     }
 
     private Path extract(InputStream in) throws ExecutionException {

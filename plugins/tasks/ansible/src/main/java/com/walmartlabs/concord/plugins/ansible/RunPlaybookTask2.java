@@ -31,6 +31,7 @@ public class RunPlaybookTask2 implements Task {
     private static final String PYTHON_LIB_DIR = "_python_lib";
 
     private final RpcConfiguration rpcCfg;
+    private final SecretStore secretStore;
 
     @InjectVariable(Constants.Context.CONTEXT_KEY)
     Context context;
@@ -39,8 +40,9 @@ public class RunPlaybookTask2 implements Task {
     String txId;
 
     @Inject
-    public RunPlaybookTask2(RpcConfiguration rpcCfg) {
+    public RunPlaybookTask2(RpcConfiguration rpcCfg, SecretStore secretStore) {
         this.rpcCfg = rpcCfg;
+        this.secretStore = secretStore;
     }
 
     private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilderFactory pb) throws Exception {
@@ -74,7 +76,7 @@ public class RunPlaybookTask2 implements Task {
         }
 
         Map<String, String> env = new HashMap<>();
-        env.put("PYTHONPATH", workDir.resolve(PYTHON_LIB_DIR).toString());
+        env.put("PYTHONPATH", PYTHON_LIB_DIR);
         env.put("CONCORD_HOST", rpcCfg.getServerHost());
         env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
@@ -134,7 +136,8 @@ public class RunPlaybookTask2 implements Task {
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Using the docker image: {}", dockerImageName);
         run(args, payloadPath, (playbookPath, inventoryPath) ->
-                new DockerPlaybookProcessBuilder(dockerImageName, payloadPath, playbookPath, inventoryPath));
+                new DockerPlaybookProcessBuilder(txId, dockerImageName, payloadPath, playbookPath, inventoryPath)
+                        .withForcePull((boolean) args.getOrDefault(AnsibleConstants.FORCE_PULL_KEY, true)));
     }
 
     @SuppressWarnings("unchecked")
@@ -158,8 +161,9 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
         addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_KEY);
         addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_NAME);
         addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.FORCE_PULL_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_KEY);
 
         String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
@@ -376,18 +380,38 @@ public class RunPlaybookTask2 implements Task {
         return p;
     }
 
-    private static Path getPrivateKeyPath(Map<String, Object> args, Path workDir) throws IOException {
-        Path p = getPath(args, AnsibleConstants.PRIVATE_KEY_FILE_KEY, workDir);
+    private Path getPrivateKeyPath(Map<String, Object> args, Path workDir) throws Exception {
+        Path p;
+
+        Object o = args.get(AnsibleConstants.PRIVATE_KEY_FILE_KEY);
+        if (o instanceof Map) {
+            Map<String, Object> m = (Map<String, Object>) o;
+            String name = (String) m.get("secretName");
+            if (name == null) {
+                throw new IllegalArgumentException("Secret name is required to export a private key");
+            }
+
+            String password = (String) m.get("password");
+            if (password == null) {
+                throw new IllegalArgumentException("Password is required to export a private key");
+            }
+
+            Map<String, String> keyPair = secretStore.exportKeyAsFile(txId, workDir.toAbsolutePath().toString(), name, password);
+            p = Paths.get(keyPair.get("private"));
+        } else {
+            p = getPath(args, AnsibleConstants.PRIVATE_KEY_FILE_KEY, workDir);
+        }
 
         if (p == null) {
             p = workDir.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
         }
 
         if (!Files.exists(p)) {
+            log.warn("File not found: {}. Will continue without a private key...", p);
             return null;
         }
 
-        log.info("Using the private key: {}", p.toAbsolutePath());
+        log.info("Using the private key: {}", p);
 
         // ensure that the key has proper permissions (chmod 600)
         Set<PosixFilePermission> perms = new HashSet<>();
@@ -395,7 +419,7 @@ public class RunPlaybookTask2 implements Task {
         perms.add(PosixFilePermission.OWNER_WRITE);
         Files.setPosixFilePermissions(p, perms);
 
-        return p;
+        return p.toAbsolutePath();
     }
 
     private static Path getVaultPasswordFilePath(Map<String, Object> args, Path workDir, Path tmpDir) throws IOException {

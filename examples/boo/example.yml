@@ -1,0 +1,35 @@
+---
+boo:
+  oneops_host: '{{host}}'
+  organization: '{{org}}'
+  api_key: '{{apiKey}}'
+  email: '{{email}}'
+  environment_name: '{{env}}'
+  ip_output: 'json'
+
+assembly:
+  name: '{{asm}}'
+  auto_gen: false
+
+platforms:
+  myPlatform:
+    pack: oneops/custom
+    pack_version: '1'
+    components:
+      os:
+        ostype: 'centos-7.3'
+
+environment:
+  subdomain: '{{env}}.{{asm}}.{{org}}'
+  availability: single
+  profile: 'PROD'
+  debug: false
+  autoscale: false
+  autorepair: false
+  autoreplace: false
+  clouds:
+    prod-cdc6:
+      priority: '1'
+      dpmt_order: '1'
+      pct_scale: '100'
+

@@ -10,6 +10,8 @@ public final class AnsibleConstants {
 
     public static final String DOCKER_IMAGE_KEY = "dockerImage";
 
+    public static final String FORCE_PULL_KEY = "forcePull";
+
     public static final String DYNAMIC_INVENTORY_FILE_KEY = "dynamicInventoryFile";
 
     public static final String DYNAMIC_INVENTORY_FILE_NAME = "_dynamicInventory";
