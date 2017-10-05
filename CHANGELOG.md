@@ -4,6 +4,8 @@
 
 ### Added
 
+- ansible: ability to specify a secret name and password as a
+`privateFile` value;
 - concord-console: a form to create secrets;
 - concord-server: validate uploaded SSH key pairs;
 - concord-server, concord-agent: support for pulling dependencies
