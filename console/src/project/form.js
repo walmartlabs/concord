@@ -104,7 +104,7 @@ const asyncValidate = ({name}, dispatch, {originalName}) => {
 
     return api.isProjectExists(name).then(exists => {
         if (exists) {
-            throw {name: v.projectAlreadyExistsError(name)}
+            throw Object({name: v.projectAlreadyExistsError(name)});
         }
     });
 };

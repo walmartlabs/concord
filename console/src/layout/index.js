@@ -55,10 +55,13 @@ const layout = ({fullScreen, user: {displayName, loggedIn}, title, children, doL
                     </Menu.Menu>
                 </Menu.Item>
                 <Menu.Item active={router.isActive("/secret")}>
-                    <Menu.Header><Icon name="users"/>Secrets</Menu.Header>
+                    <Menu.Header><Icon name="lock"/>Secrets</Menu.Header>
                     <Menu.Menu>
                         <Menu.Item active={router.isActive("/secret/list")}>
                             <Link to="/secret/list">List</Link>
+                        </Menu.Item>
+                        <Menu.Item active={router.isActive("/secret/list")}>
+                            <Link to="/secret/_new">Create New</Link>
                         </Menu.Item>
                     </Menu.Menu>
                 </Menu.Item>
