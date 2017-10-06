@@ -3,7 +3,6 @@
 ## Basic
 
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
-* [ansible_remote](ansible_remote) - running an Ansible playbook an a remote host;
 * [boo](boo) - using OneOps Boo;
 * [forms](forms) - using basic forms;
 * [hello_world](hello_world) - a simple example demostrating how to pass a variable to a process;
@@ -22,6 +21,7 @@
 * [ansible_dynamic_inventory](ansible_dynamic_inventory) - using dynamic inventory scripts in Ansible;
 * [ansible_form](ansible_form) - using forms and Ansible in a single flow;
 * [ansible_project](ansible_project) - an example of creating an running an Ansible project;
+* [ansible_remote](ansible_remote) - running an Ansible playbook an a remote host;
 * [ansible_template](ansible_template) - running an Ansible playbook using the Ansible template;
 * [ansible_vault](ansible_vault) - using Ansible Vault to store encrypted data;
 * [docker](docker) - running a docker image with custom environment and arguments;
