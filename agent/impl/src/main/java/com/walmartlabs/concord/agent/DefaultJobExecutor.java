@@ -300,7 +300,7 @@ public class DefaultJobExecutor implements JobExecutor {
             }
 
             if (scheme == null || scheme.trim().isEmpty()) {
-                throw new IOException("Invalid dependency URL: " + s);
+                throw new IOException("Invalid dependency URL. Missing URL scheme: " + s);
             }
 
             if (s.endsWith(".jar")) {
