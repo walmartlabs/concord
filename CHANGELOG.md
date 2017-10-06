@@ -6,6 +6,10 @@
 
 - concord-server: automatically remove orphaned data.
 
+### Changed
+
+- ansible: throw an exception if a private key file was not found.
+
 
 
 ## [0.43.0] - 2017-10-05

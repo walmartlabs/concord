@@ -404,11 +404,13 @@ public class RunPlaybookTask2 implements Task {
 
         if (p == null) {
             p = workDir.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
+            if (!Files.exists(p)) {
+                return null;
+            }
         }
 
         if (!Files.exists(p)) {
-            log.warn("File not found: {}. Will continue without a private key...", p);
-            return null;
+            throw new IllegalArgumentException("Private key file not found: " + p);
         }
 
         log.info("Using the private key: {}", p);
