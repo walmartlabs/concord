@@ -6,6 +6,7 @@ import org.eclipse.sisu.EagerSingleton;
 import org.jooq.Configuration;
 import org.jooq.Record1;
 import org.jooq.SelectConditionStep;
+import org.jooq.SelectJoinStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,7 @@ public class ProcessCleaner {
                 try {
                     Timestamp cutoff = new Timestamp(System.currentTimeMillis() - AGE_CUTOFF);
                     cleanerDao.deleteOldState(cutoff);
+                    cleanerDao.deleteOrphans();
                     sleep(CLEANUP_INTERVAL);
                 } catch (Exception e) {
                     log.warn("run -> state cleaning error: {}. Will retry in {}ms...", e.getMessage(), RETRY_INTERVAL);
@@ -89,6 +91,8 @@ public class ProcessCleaner {
         }
 
         void deleteOldState(Timestamp cutoff) {
+            long t1 = System.currentTimeMillis();
+
             tx(tx -> {
                 SelectConditionStep<Record1<UUID>> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
                         .from(PROCESS_QUEUE)
@@ -114,6 +118,35 @@ public class ProcessCleaner {
                 log.info("deleteOldState -> removed older than {}: {} queue entries, {} log entries, {} state item(s), {} event(s)",
                         cutoff, queueEntries, logEntries, stateRecords, events);
             });
+
+            long t2 = System.currentTimeMillis();
+            log.info("deleteOldState -> took {}ms", (t2 - t1));
+        }
+
+        void deleteOrphans() {
+            long t1 = System.currentTimeMillis();
+
+            tx(tx -> {
+                SelectJoinStep<Record1<UUID>> alive = tx.select(PROCESS_QUEUE.INSTANCE_ID).from(PROCESS_QUEUE);
+
+                int stateRecords = tx.deleteFrom(PROCESS_STATE)
+                        .where(PROCESS_STATE.INSTANCE_ID.notIn(alive))
+                        .execute();
+
+                int events = tx.deleteFrom(PROCESS_EVENTS)
+                        .where(PROCESS_EVENTS.INSTANCE_ID.notIn(alive))
+                        .execute();
+
+                int logEntries = tx.deleteFrom(PROCESS_LOGS)
+                        .where(PROCESS_LOGS.INSTANCE_ID.notIn(alive))
+                        .execute();
+
+                log.info("deleteOrphans -> removed orphan data: {} log entries, {} state item(s), {} event(s)",
+                        logEntries, stateRecords, events);
+            });
+
+            long t2 = System.currentTimeMillis();
+            log.info("deleteOrphans -> took {}ms", (t2 - t1));
         }
     }
 }

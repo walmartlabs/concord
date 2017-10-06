@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: automatically remove orphaned data.
+
+
+
 ## [0.43.0] - 2017-10-05
 
 ### Added
