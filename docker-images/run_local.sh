@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ -z $LDAP_PROPERTIES ]; then
+    LDAP_PROPERTIES="/opt/concord/conf/ldap.properties"
+fi
+echo "LDAP_PROPERTIES: ${LDAP_PROPERTIES}"
+
 docker rm -f db dind agent server console
 
 docker run -d \
@@ -11,11 +16,11 @@ hub.docker.prod.walmart.com/library/postgres:latest
 docker run -d \
 --name server \
 -v /tmp:/tmp \
--v /opt/concord/conf/ldap.properties:/opt/concord/conf/ldap.properties:ro \
+-v ${LDAP_PROPERTIES}:/opt/concord/conf/ldap.properties:ro \
 -e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
 -e 'DB_URL=jdbc:postgresql://localhost:5432/postgres' \
 --network=host \
-walmartlabs/concord-server
+docker.prod.walmart.com/walmartlabs/concord-server
 
 docker run -d \
 --privileged \
@@ -29,11 +34,11 @@ docker run -d \
 -v /tmp:/tmp \
 -e 'DOCKER_HOST=tcp://localhost:2375' \
 --network=host \
-walmartlabs/concord-agent
+docker.prod.walmart.com/walmartlabs/concord-agent
 
 docker run -d \
 --name console \
 -e 'SERVER_ADDR=localhost' \
 -e 'SERVER_PORT=8001' \
 --network=host \
-walmartlabs/concord-console
+docker.prod.walmart.com/walmartlabs/concord-console
