@@ -1,27 +1,36 @@
-configuration:
-  # to use `ansible2` task
-  dependencies:
-  - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/basic/ansible-tasks/0.38.0/ansible-tasks-0.38.0.jar"
+flows:
+  default:
+  - form: authForm
+    yield: true
 
-  # global ansible configuration
-  ansible:
-    privateKeys:
-      - repository: ".*"
-        secret: "mySecret"
-
-  arguments:
-    # local ansible arguments
-    ansibleParams:
+  - task: ansible2
+    in:
       # remote user
       user: "app"
+
+      # export the secret using the provided name and password
+      privateKey: ${authForm}
+
+      # location of the playbook
       playbook: playbook/hello.yml
+
+      # inventory data, should match the playbook's host groups
       inventory:
         local:
           hosts:
-            - "192.168.0.108"
+          - "127.0.0.1"
+
+      # pass additional variables to the playbook
       extraVars:
         greetings: "Hi there!"
 
-flows:
-  default:
-    - ${ansible2.run(ansibleParams, __attr_localPath)}
+forms:
+  authForm:
+  # the secret's password
+  - secretName: {type: "string", label: "Secret name"}
+  - password: {type: "string", inputType: "password", label: "Password"}
+
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.43.0"
+

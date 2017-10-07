@@ -551,7 +551,7 @@
                 <plugin>
                     <groupId>io.takari.maven.plugins</groupId>
                     <artifactId>takari-lifecycle-plugin</artifactId>
-                    <version>1.13.0</version>
+                    <version>1.13.1</version>
                     <extensions>true</extensions>
                     <configuration>
                         <source>${maven.compiler.source}</source>
@@ -615,7 +615,7 @@
                 <plugin>
                     <groupId>com.github.kongchen</groupId>
                     <artifactId>swagger-maven-plugin</artifactId>
-                    <version>3.1.4</version>
+                    <version>3.1.5</version>
                 </plugin>
                 <plugin>
                     <groupId>org.eclipse.sisu</groupId>
@@ -665,12 +665,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>3.0.2</version>
-                </plugin>
-                <plugin>
-                    <groupId>io.takari.maven.plugins</groupId>
-                    <artifactId>provisio-maven-plugin</artifactId>
-                    <version>0.1.49</version>
-                    <extensions>true</extensions>
                 </plugin>
             </plugins>
         </pluginManagement>
