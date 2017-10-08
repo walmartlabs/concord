@@ -133,6 +133,7 @@ public class ProcessQueueDao extends AbstractDao {
                     .orderBy(PROCESS_QUEUE.CREATED_AT)
                     .limit(1)
                     .forUpdate()
+                    .skipLocked()
                     .fetchOne();
 
             if (r == null) {

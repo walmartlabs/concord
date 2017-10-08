@@ -178,6 +178,7 @@ public class ProcessQueueWatchdog {
                             .and(noRunningHandlers(tx, q.INSTANCE_ID)))
                     .limit(maxEntries)
                     .forUpdate()
+                    .skipLocked()
                     .fetch(WatchdogDao::toEntry);
         }
 

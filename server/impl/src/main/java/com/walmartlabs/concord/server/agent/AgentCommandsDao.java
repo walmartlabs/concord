@@ -49,6 +49,7 @@ public class AgentCommandsDao extends AbstractDao {
                     .orderBy(AGENT_COMMANDS.CREATED_AT)
                     .limit(1)
                     .forUpdate()
+                    .skipLocked()
                     .fetchOne();
 
             if (r == null) {
