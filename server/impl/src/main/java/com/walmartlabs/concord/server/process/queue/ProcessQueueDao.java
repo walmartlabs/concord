@@ -70,24 +70,24 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void update(UUID instanceId, ProcessStatus status) {
-        update(instanceId, status, Optional.empty());
+        update(instanceId, status, (Set<String>) null);
     }
 
-    public void update(UUID instanceId, ProcessStatus status, Optional<Set<String>> tags) {
+    public void update(UUID instanceId, ProcessStatus status, Set<String> tags) {
         tx(tx -> update(tx, instanceId, status, tags));
     }
 
     public void update(DSLContext tx, UUID instanceId, ProcessStatus status) {
-        update(tx, instanceId, status, Optional.empty());
+        update(tx, instanceId, status, null);
     }
 
-    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Optional<Set<String>> tags) {
+    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags) {
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
 
-        if (tags.isPresent()) {
-            q.set(PROCESS_QUEUE.PROCESS_TAGS, toArray(tags.get()));
+        if (tags != null) {
+            q.set(PROCESS_QUEUE.PROCESS_TAGS, toArray(tags));
         }
 
         int i = q

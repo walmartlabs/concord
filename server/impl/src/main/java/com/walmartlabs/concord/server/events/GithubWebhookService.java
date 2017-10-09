@@ -118,11 +118,7 @@ public class GithubWebhookService {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     List<Entity> repositories = dao.list();
-
-                    repositories.forEach(r -> {
-                        refreshWebhook(r.getProjectName(), r.getRepoName(), r.getRepoUrl());
-                    });
-
+                    repositories.forEach(r -> refreshWebhook(r.getProjectName(), r.getRepoName(), r.getRepoUrl()));
                     log.info("run -> {} repositories processed", repositories.size());
 
                     sleep(REFRESH_INTERVAL);

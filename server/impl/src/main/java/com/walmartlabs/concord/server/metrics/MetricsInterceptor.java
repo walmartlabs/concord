@@ -26,8 +26,7 @@ public class MetricsInterceptor implements MethodInterceptor {
         Timer t = metrics.timer(timerName(invocation.getMethod()));
         Timer.Context ctx = t.time();
         try {
-            Object result = invocation.proceed();
-            return result;
+            return invocation.proceed();
         } finally {
             ctx.stop();
         }

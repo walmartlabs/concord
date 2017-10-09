@@ -9,7 +9,6 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,7 +38,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
             throw new ProcessException(instanceId, "Invalid process status: " + s);
         }
 
-        queueDao.update(instanceId, ProcessStatus.ENQUEUED, Optional.ofNullable(tags));
+        queueDao.update(instanceId, ProcessStatus.ENQUEUED, tags);
         return chain.process(payload);
     }
 }

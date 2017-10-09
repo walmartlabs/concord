@@ -133,7 +133,7 @@ public class LdapRealm extends AbstractLdapRealm {
         return authorizer.getAuthorizationInfo(p, roles);
     }
 
-    private static final String normalizeUsername(String s) {
+    private static String normalizeUsername(String s) {
         if (s == null) {
             return s;
         }

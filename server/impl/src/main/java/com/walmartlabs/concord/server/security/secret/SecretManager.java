@@ -156,7 +156,7 @@ public class SecretManager {
                 deserializer = UsernamePassword::deserialize;
                 break;
             case DATA:
-                deserializer = (data) -> new BinaryDataSecret(data);
+                deserializer = BinaryDataSecret::new;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown secret type: " + type);

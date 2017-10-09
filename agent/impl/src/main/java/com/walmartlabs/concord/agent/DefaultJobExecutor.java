@@ -114,7 +114,7 @@ public class DefaultJobExecutor implements JobExecutor {
                 postProcess(instanceId, payloadDir);
             } catch (ExecutionException e) {
                 log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
-                handleError(instanceId, workDir, proc, e.getMessage());
+                throw handleError(instanceId, workDir, proc, e.getMessage());
             }
 
             try {

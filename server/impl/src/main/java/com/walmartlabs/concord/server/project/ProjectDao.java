@@ -6,7 +6,6 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
-import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.RepositoriesRecord;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;

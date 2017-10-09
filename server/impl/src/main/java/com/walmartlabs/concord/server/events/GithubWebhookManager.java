@@ -2,7 +2,6 @@ package com.walmartlabs.concord.server.events;
 
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
-import org.eclipse.sisu.EagerSingleton;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHHook;
 import org.kohsuke.github.GHRepository;

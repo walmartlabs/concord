@@ -1,8 +1,6 @@
 package com.walmartlabs.concord.server.rpc;
 
 import com.walmartlabs.concord.rpc.ClientException;
-import com.walmartlabs.concord.rpc.EventService;
-import com.walmartlabs.concord.rpc.SlackService;
 import io.grpc.*;
 import org.eclipse.sisu.EagerSingleton;
 import org.slf4j.Logger;
@@ -10,12 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.SocketAddress;
 
 @Named
 @EagerSingleton
-public class RpcServer {
+public class RpcServer implements Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(RpcServer.class);
 
@@ -50,6 +49,13 @@ public class RpcServer {
         }
 
         log.info("init -> server started on {}", port);
+    }
+
+    @Override
+    public void close() {
+        if (this.server != null) {
+            this.server.shutdownNow();
+        }
     }
 
     private static final class LoggingTransportFilter extends ServerTransportFilter {

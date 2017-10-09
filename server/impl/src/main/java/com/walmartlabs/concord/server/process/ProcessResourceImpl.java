@@ -117,7 +117,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @RequiresAuthentication
     public StartProcessResponse start(InputStream in, UUID parentInstanceId, boolean sync) {
-        assertParentInstanceId(parentInstanceId);
+        assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
 
@@ -141,7 +141,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, Map<String, Object> req, UUID parentInstanceId, boolean sync) {
-        assertParentInstanceId(parentInstanceId);
+        assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
 
@@ -168,7 +168,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, MultipartInput input, UUID parentInstanceId, boolean sync) {
-        assertParentInstanceId(parentInstanceId);
+        assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
 
@@ -192,7 +192,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Validate
     @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, InputStream in, UUID parentInstanceId, boolean sync) {
-        assertParentInstanceId(parentInstanceId);
+        assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
 
@@ -380,7 +380,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @WithTimer
     public List<ProcessEntry> list(UUID parentInstanceId, Set<String> tags) {
-        assertParentInstanceId(parentInstanceId);
+        assertInstanceId(parentInstanceId);
         return queueDao.list(parentInstanceId, tags);
     }
 
@@ -389,6 +389,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @WithTimer
     @RequiresAuthentication
     public Response getLog(UUID instanceId, String range) {
+        assertInstanceId(instanceId);
+
         Integer start = null;
         Integer end = null;
 
@@ -401,14 +403,14 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             if (as.length > 0) {
                 try {
                     start = Integer.parseInt(as[0]);
-                } catch (NumberFormatException e) {
+                } catch (NumberFormatException ignored) {
                 }
             }
 
             if (as.length > 1) {
                 try {
                     end = Integer.parseInt(as[1]);
-                } catch (NumberFormatException e) {
+                } catch (NumberFormatException ignored) {
                 }
             }
         }
@@ -534,7 +536,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
     }
 
-    private void assertParentInstanceId(UUID id) {
+    private void assertInstanceId(UUID id) {
         if (id == null) {
             return;
         }

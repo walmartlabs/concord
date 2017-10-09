@@ -45,6 +45,7 @@ public class RunPlaybookTask2 implements Task {
         this.secretStore = secretStore;
     }
 
+    @SuppressWarnings("unchecked")
     private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilderFactory pb) throws Exception {
         boolean debug = toBoolean(args.get(AnsibleConstants.DEBUG_KEY));
 

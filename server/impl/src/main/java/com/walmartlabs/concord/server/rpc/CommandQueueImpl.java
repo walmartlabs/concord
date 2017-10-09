@@ -49,8 +49,6 @@ public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-
-            continue;
         }
     }
 

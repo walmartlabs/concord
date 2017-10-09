@@ -183,9 +183,9 @@ public class InjectVariableELResolver extends ELResolver {
 
         Class<?>[] inf = type.getInterfaces();
         Method mp;
-        for (int i = 0; i < inf.length; i++) {
+        for (Class<?> anInf : inf) {
             try {
-                mp = inf[i].getMethod(m.getName(), m.getParameterTypes());
+                mp = anInf.getMethod(m.getName(), m.getParameterTypes());
                 mp = findMethodWithInjections(mp.getDeclaringClass(), mp);
                 if (mp != null) {
                     return mp;

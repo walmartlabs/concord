@@ -6,10 +6,10 @@ import java.io.InputStream;
 public abstract class Tailer {
 
     public static final long DEFAULT_DELAY = 500;
+    private static final byte DELIMETER = '\n';
 
     private final InputStream src;
     private final long delay;
-    private final byte delimiter = '\n';
 
     private byte[] line;
     private int pos;
@@ -65,7 +65,7 @@ public abstract class Tailer {
                 // find the last delimiter
                 int x = -1;
                 for (int i = read - 1; i >= 0; i--) {
-                    if (buf[i] == delimiter) {
+                    if (buf[i] == DELIMETER) {
                         x = i;
                         break;
                     }

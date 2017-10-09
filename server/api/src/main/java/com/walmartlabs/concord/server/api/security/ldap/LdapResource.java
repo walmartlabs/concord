@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.api.security.ldap;
 
-import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.common.validation.ConcordUsername;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
