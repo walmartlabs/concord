@@ -1,4 +1,7 @@
 flows:
   default:
-  - slack: [ "C5W9ELY7Q", "build ${txId} completed"]
+  - task: slack
+    in:
+      channelId: "C6EJA181Y"
+      text: "Process ${txId} is completed"
   - log: notified

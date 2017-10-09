@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-runner: Slack task can now be called using the full form;
 - concord-server: automatically remove orphaned data.
 
 ### Changed
