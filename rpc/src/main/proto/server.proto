@@ -15,7 +15,7 @@ import "google/protobuf/timestamp.proto";
 
 service TCommandQueue {
 
-    rpc take (TCommandRequest) returns (TCommandResponse) {}
+    rpc take (TCommandRequest) returns (stream TCommandResponse);
 }
 
 message TCommandRequest {

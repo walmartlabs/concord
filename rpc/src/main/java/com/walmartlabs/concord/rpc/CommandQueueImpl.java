@@ -2,8 +2,10 @@ package com.walmartlabs.concord.rpc;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.walmartlabs.concord.rpc.TCommandQueueGrpc.TCommandQueueBlockingStub;
 import io.grpc.ManagedChannel;
+import io.grpc.stub.StreamObserver;
+
+import java.util.concurrent.CountDownLatch;
 
 public class CommandQueueImpl implements CommandQueue {
 
@@ -30,14 +32,41 @@ public class CommandQueueImpl implements CommandQueue {
     }
 
     @Override
-    public Command take() throws ClientException {
-        TCommandQueueBlockingStub stub = TCommandQueueGrpc.newBlockingStub(channel);
+    public void stream(CommandHandler handler) throws ClientException {
+        TCommandQueueGrpc.TCommandQueueStub stub = TCommandQueueGrpc.newStub(channel);
 
         TCommandRequest req = TCommandRequest.newBuilder()
                 .setAgentId(agentId)
                 .build();
 
-        TCommandResponse resp = stub.take(req);
-        return convert(resp.getCommand());
+        CountDownLatch latch = new CountDownLatch(1);
+        stub.take(req, new StreamObserver<TCommandResponse>() {
+            @Override
+            public void onNext(TCommandResponse value) {
+                try {
+                    Command cmd = convert(value.getCommand());
+                    handler.onCommand(cmd);
+                } catch (ClientException e) {
+                    handler.onError(e);
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                handler.onError(t);
+                latch.countDown();
+            }
+
+            @Override
+            public void onCompleted() {
+                latch.countDown();
+            }
+        });
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

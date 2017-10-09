@@ -4,17 +4,21 @@ import com.walmartlabs.concord.rpc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+
 public class CommandHandler implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
-    private static final long ERROR_DELAY = 5000;
+    private static final long RETRY_DELAY = 5000;
 
     private final AgentApiClient client;
     private final ExecutionManager executionManager;
+    private final ExecutorService executor;
 
-    public CommandHandler(AgentApiClient client, ExecutionManager executionManager) {
+    public CommandHandler(AgentApiClient client, ExecutionManager executionManager, ExecutorService executor) {
         this.client = client;
         this.executionManager = executionManager;
+        this.executor = executor;
     }
 
     @Override
@@ -22,16 +26,23 @@ public class CommandHandler implements Runnable {
         CommandQueue ch = client.getCommandQueue();
 
         while (!Thread.currentThread().isInterrupted()) {
-            Command cmd;
             try {
-                cmd = ch.take();
+                ch.stream(new com.walmartlabs.concord.rpc.CommandHandler() {
+                    @Override
+                    public void onCommand(Command cmd) {
+                        executor.submit(() -> execute(cmd));
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        log.warn("run -> error while streaming commands from the server: {}", t.getMessage());
+                    }
+                });
             } catch (ClientException e) {
                 log.warn("run -> transport error: {}", e.getMessage());
-                sleep(ERROR_DELAY);
-                continue;
             }
 
-            execute(cmd);
+            sleep(RETRY_DELAY);
         }
     }
 
