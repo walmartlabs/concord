@@ -40,6 +40,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
+    "coverage": "npm test -- --coverage",
     "eject": "react-scripts eject",
     "dev": "babel-node --presets es2015 scripts/devServer.js",
     "server": "babel-node --presets es2015 scripts/server.js"
