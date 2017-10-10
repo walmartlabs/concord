@@ -54,9 +54,9 @@ public class Worker implements Runnable {
         log.info("execute ['{}', '{}', '{}'] -> starting", instanceId, type, payload);
 
         JobInstance i;
-        try (InputStream in = Files.newInputStream(payload)) {
-            i = executionManager.start(instanceId, type, "n/a", in);
-        } catch (IOException | ExecutionException e) {
+        try {
+            i = executionManager.start(instanceId, type, "n/a", payload);
+        } catch (ExecutionException e) {
             log.error("execute ['{}', '{}', '{}'] -> start error", instanceId, type, payload, e);
             // TODO handle error
             return;

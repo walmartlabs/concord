@@ -17,12 +17,10 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.zip.ZipInputStream;
 
 @Named
 @Singleton
@@ -99,9 +97,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload, skipping the existing files
-        try (ZipInputStream zip = new ZipInputStream(Files.newInputStream(template))) {
-            IOUtils.unzip(zip, workspacePath, true);
-        }
+        IOUtils.unzip(template, workspacePath, true);
 
         log.debug("process ['{}', '{}'] -> done", instanceId, template);
         return payload;

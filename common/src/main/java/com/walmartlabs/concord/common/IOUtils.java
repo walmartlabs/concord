@@ -1,13 +1,17 @@
 package com.walmartlabs.concord.common;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+import java.util.Set;
 
 public final class IOUtils {
 
@@ -21,18 +25,24 @@ public final class IOUtils {
         return false;
     }
 
-    public static void zipFile(ZipOutputStream zip, Path src, String name) throws IOException {
-        zip.putNextEntry(new ZipEntry(name));
-        try (InputStream in = Files.newInputStream(src)) {
-            copy(in, zip);
-        }
+    public static void zipFile(ZipArchiveOutputStream zip, Path src, String name) throws IOException {
+        ZipArchiveEntry e = new ZipArchiveEntry(name);
+
+        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(src);
+        e.setUnixMode(Posix.unixMode(permissions));
+
+        e.setSize(Files.size(src));
+
+        zip.putArchiveEntry(e);
+        Files.copy(src, zip);
+        zip.closeArchiveEntry();
     }
 
-    public static void zip(ZipOutputStream zip, Path srcDir, String... filters) throws IOException {
+    public static void zip(ZipArchiveOutputStream zip, Path srcDir, String... filters) throws IOException {
         zip(zip, null, srcDir, filters);
     }
 
-    public static void zip(ZipOutputStream zip, String dstPrefix, Path srcDir, String... filters) throws IOException {
+    public static void zip(ZipArchiveOutputStream zip, String dstPrefix, Path srcDir, String... filters) throws IOException {
         Files.walkFileTree(srcDir, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
@@ -65,28 +75,40 @@ public final class IOUtils {
         });
     }
 
-    public static void unzip(ZipInputStream in, Path targetDir, OpenOption... options) throws IOException {
+    public static void unzip(Path in, Path targetDir, CopyOption... options) throws IOException {
         unzip(in, targetDir, false, options);
     }
 
-    public static void unzip(ZipInputStream in, Path targetDir, boolean skipExisting, OpenOption... options) throws IOException {
-        ZipEntry e;
-        while ((e = in.getNextEntry()) != null) {
-            Path p = targetDir.resolve(e.getName());
-            if (skipExisting && Files.exists(p)) {
-                continue;
-            }
+    public static void unzip(Path in, Path targetDir, boolean skipExisting, CopyOption... options) throws IOException {
+        try (ZipFile zip = new ZipFile(in.toFile())) {
+            Enumeration<ZipArchiveEntry> entries = zip.getEntries();
 
-            if (e.isDirectory()) {
-                Files.createDirectories(p);
-            } else {
-                Path parent = p.getParent();
-                if (!Files.exists(parent)) {
-                    Files.createDirectories(parent);
+            while (entries.hasMoreElements()) {
+                ZipArchiveEntry e = entries.nextElement();
+
+                Path p = targetDir.resolve(e.getName());
+                if (skipExisting && Files.exists(p)) {
+                    continue;
                 }
 
-                try (OutputStream out = Files.newOutputStream(p, options)) {
-                    copy(in, out);
+                if (e.isDirectory()) {
+                    Files.createDirectories(p);
+                } else {
+                    Path parent = p.getParent();
+                    if (!Files.exists(parent)) {
+                        Files.createDirectories(parent);
+                    }
+
+                    try (InputStream src = zip.getInputStream(e)) {
+                        Files.copy(src, p, options);
+                    }
+
+                    int unixMode = e.getUnixMode();
+                    if (unixMode <= 0) {
+                        unixMode = Posix.DEFAULT_UNIX_MODE;
+                    }
+
+                    Files.setPosixFilePermissions(p, Posix.posix(unixMode));
                 }
             }
         }

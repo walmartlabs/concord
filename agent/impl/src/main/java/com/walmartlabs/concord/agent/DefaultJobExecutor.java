@@ -14,6 +14,7 @@ import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.rpc.AgentApiClient;
 import com.walmartlabs.concord.rpc.ClientException;
 import com.walmartlabs.concord.rpc.JobQueue;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.zip.ZipOutputStream;
 
 public class DefaultJobExecutor implements JobExecutor {
 
@@ -358,7 +358,7 @@ public class DefaultJobExecutor implements JobExecutor {
         try {
             // TODO cfg
             tmp = Files.createTempFile("attachments", ".zip");
-            try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmp))) {
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
                 IOUtils.zip(zip, attachmentsDir);
             }
         } catch (IOException e) {

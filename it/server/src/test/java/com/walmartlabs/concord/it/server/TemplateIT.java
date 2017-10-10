@@ -11,6 +11,7 @@ import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.TemplateAliasEntry;
 import com.walmartlabs.concord.server.api.project.TemplateAliasResource;
 import com.walmartlabs.concord.server.process.pipelines.processors.TemplateScriptProcessor;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,7 +20,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
@@ -79,7 +79,7 @@ public class TemplateIT extends AbstractServerIT {
         Files.write(procPath, PROCESS_YAML.getBytes());
 
         Path tmpZip = Files.createTempFile("template", ".zip");
-        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmpZip))) {
+        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmpZip))) {
             IOUtils.zip(zip, tmpDir);
         }
 

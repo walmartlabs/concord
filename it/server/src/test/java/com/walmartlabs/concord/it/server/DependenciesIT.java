@@ -2,11 +2,11 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import org.junit.Ignore;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -15,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -36,7 +35,7 @@ public class DependenciesIT extends AbstractServerIT {
 
         Path src = Paths.get(DependenciesIT.class.getResource("deps").toURI());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zip = new ZipOutputStream(baos)) {
+        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(baos)) {
             IOUtils.zip(zip, src);
             IOUtils.zip(zip, tmpDir);
         }

@@ -11,6 +11,7 @@ import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 
 import java.io.*;
@@ -21,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -93,7 +93,7 @@ public class ProjectFileIT extends AbstractServerIT {
 
         Path src = Paths.get(DependenciesIT.class.getResource("projectfile/deps").toURI());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zip = new ZipOutputStream(baos)) {
+        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(baos)) {
             IOUtils.zip(zip, src);
             IOUtils.zip(zip, tmpDir);
         }

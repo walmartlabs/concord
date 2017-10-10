@@ -1,0 +1,21 @@
+flows:
+  default:
+  - script: groovy
+    body: |
+      import java.nio.file.*
+      import java.nio.file.attribute.*
+
+      def p = Paths.get("test.sh")
+      def ps = Files.getPosixFilePermissions(p)
+
+      println ps
+
+      if (!ps.contains(PosixFilePermission.OWNER_EXECUTE)) {
+        throw new RuntimeException("whoops")
+      }
+
+  - log: "Hello!"
+
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"
