@@ -31,6 +31,7 @@ public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
     @Override
     public void take(TCommandRequest request, StreamObserver<TCommandResponse> responseObserver) {
         String agentId = request.getAgentId();
+
         while (!Thread.currentThread().isInterrupted()) {
             Optional<AgentCommand> o = commandsDao.poll(agentId);
 
@@ -40,8 +41,6 @@ public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
                         .build();
 
                 responseObserver.onNext(resp);
-                responseObserver.onCompleted();
-                return;
             }
 
             try {
@@ -50,6 +49,8 @@ public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
                 Thread.currentThread().interrupt();
             }
         }
+
+        responseObserver.onCompleted();
     }
 
     private Any convert(AgentCommand cmd) {

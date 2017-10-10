@@ -35,7 +35,7 @@ public class ServerConnector {
         log.info("start -> connecting to {}:{}", host, port);
 
         ExecutionManager executionManager = new ExecutionManager(client, cfg);
-        commandHandler = executor.submit(new CommandHandler(client, executionManager));
+        commandHandler = executor.submit(new CommandHandler(client, executionManager, executor));
 
         workers = new ArrayList<>();
         for (int i = 0; i < workersCount; i++) {

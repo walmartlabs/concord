@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-rpc: fix receiving of commands by the agent when the server
+is restarted;
 - ansible: throw an exception if a private key file was not found.
 
 
