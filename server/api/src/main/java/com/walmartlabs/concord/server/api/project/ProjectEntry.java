@@ -10,9 +10,12 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
 public class ProjectEntry implements Serializable {
+
+    private final UUID id;
 
     @NotNull
     @ConcordKey
@@ -26,15 +29,21 @@ public class ProjectEntry implements Serializable {
     private final Map<String, Object> cfg;
 
     @JsonCreator
-    public ProjectEntry(@JsonProperty("name") String name,
+    public ProjectEntry(@JsonProperty("id") UUID id,
+                        @JsonProperty("name") String name,
                         @JsonProperty("description") String description,
                         @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
                         @JsonProperty("cfg") Map<String, Object> cfg) {
 
+        this.id = id;
         this.name = name;
         this.description = description;
         this.repositories = repositories;
         this.cfg = cfg;
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public String getName() {
@@ -55,8 +64,9 @@ public class ProjectEntry implements Serializable {
 
     @Override
     public String toString() {
-        return "CreateProjectRequest{" +
-                "name='" + name + '\'' +
+        return "ProjectEntry{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", repositories=" + repositories +
                 ", cfg=" + cfg +

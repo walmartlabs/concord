@@ -5,10 +5,10 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.UUID;
 
 import static org.eclipse.jgit.transport.CredentialItem.Password;
 import static org.eclipse.jgit.transport.CredentialItem.Username;
@@ -84,12 +85,12 @@ public class RepositoryManager {
         }
     }
 
-    public Path fetchByCommit(String projectName, String repoName, String uri, String commitId, String path, Secret secret) {
-        Path localPath = localPath(projectName, repoName, commitId);
+    public Path fetchByCommit(UUID projectId, String repoName, String uri, String commitId, String path, Secret secret) {
+        Path localPath = localPath(projectId, repoName, commitId);
 
         try (Git repo = openRepo(localPath)) {
             if (repo != null) {
-                log.info("fetch ['{}', '{}', '{}'] -> repository exists", projectName, uri, commitId);
+                log.info("fetch ['{}', '{}', '{}'] -> repository exists", projectId, uri, commitId);
                 return localPath;
             }
         }
@@ -99,7 +100,7 @@ public class RepositoryManager {
                     .setName(commitId)
                     .call();
 
-            log.info("fetchByCommit ['{}', '{}', '{}'] -> initial clone completed", projectName, uri, commitId);
+            log.info("fetchByCommit ['{}', '{}', '{}'] -> initial clone completed", projectId, uri, commitId);
         } catch (GitAPIException e) {
             throw new RepositoryException("Error while updating a repository", e);
         }
@@ -107,23 +108,23 @@ public class RepositoryManager {
         return repoPath(localPath, path);
     }
 
-    public Path getRepoPath(String projectName, String repoName, String branch,  String path) {
+    public Path getRepoPath(UUID projectId, String repoName, String branch, String path) {
         if (branch == null) {
             branch = DEFAULT_BRANCH;
         }
 
-        Path localPath = localPath(projectName, repoName, branch);
+        Path localPath = localPath(projectId, repoName, branch);
         return repoPath(localPath, path);
     }
 
-    public Path fetch(String projectName, String repoName, String uri, String branch, String path, Secret secret) {
+    public Path fetch(UUID projectId, String repoName, String uri, String branch, String path, Secret secret) {
         if (branch == null) {
             branch = DEFAULT_BRANCH;
         }
 
         TransportConfigCallback transportCallback = createTransportConfigCallback(secret);
 
-        Path localPath = localPath(projectName, repoName, branch);
+        Path localPath = localPath(projectId, repoName, branch);
         try (Git repo = openRepo(localPath)) {
             if (repo != null) {
                 repo.checkout()
@@ -135,9 +136,9 @@ public class RepositoryManager {
                         .setTransportConfigCallback(transportCallback)
                         .call();
 
-                fetchSubmodules(projectName, repo.getRepository(), transportCallback);
+                fetchSubmodules(projectId, repo.getRepository(), transportCallback);
 
-                log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectName, uri, branch);
+                log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectId, uri, branch);
 
                 return repoPath(localPath, path);
             }
@@ -146,13 +147,16 @@ public class RepositoryManager {
         }
 
         try (Git ignored = cloneRepo(uri, localPath, branch, transportCallback)) {
-            log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectName, uri, branch);
+            log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectId, uri, branch);
             return repoPath(localPath, path);
         }
     }
 
-    private Path localPath(String projectName, String repoName, String branch) {
-        return cfg.getRepoCacheDir().resolve(projectName).resolve(repoName).resolve(branch);
+    private Path localPath(UUID projectId, String repoName, String branch) {
+        return cfg.getRepoCacheDir()
+                .resolve(String.valueOf(projectId))
+                .resolve(repoName)
+                .resolve(branch);
     }
 
     private static Git openRepo(Path path) {
@@ -209,7 +213,7 @@ public class RepositoryManager {
         }
     }
 
-    private void fetchSubmodules(String projectName, Repository repo, TransportConfigCallback transportCallback)
+    private void fetchSubmodules(UUID projectId, Repository repo, TransportConfigCallback transportCallback)
             throws GitAPIException {
         try (SubmoduleWalk walk = new SubmoduleWalk(repo);
              RevWalk revWalk = new RevWalk(repo)) {
@@ -235,9 +239,9 @@ public class RepositoryManager {
                         .setTransportConfigCallback(transportCallback)
                         .call();
 
-                fetchSubmodules(projectName, submoduleRepo, transportCallback);
+                fetchSubmodules(projectId, submoduleRepo, transportCallback);
 
-                log.info("fetchSubmodules ['{}', '{}'] -> done", projectName, submoduleRepo.getDirectory());
+                log.info("fetchSubmodules ['{}', '{}'] -> done", projectId, submoduleRepo.getDirectory());
             }
         } catch (IOException e) {
             throw new JGitInternalException(e.getMessage(), e);

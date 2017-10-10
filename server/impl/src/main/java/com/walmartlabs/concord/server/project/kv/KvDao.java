@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.project.kv;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.server.jooq.tables.ProjectKvStore;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record1;
@@ -9,6 +10,7 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
 
@@ -29,20 +31,22 @@ public class KvDao extends AbstractDao {
         }
     }
 
-    public void remove(String projectName, String key) {
-        tx(tx -> tx.deleteFrom(PROJECT_KV_STORE)
-                .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
-                        .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
+    public void remove(UUID projectId, String key) {
+        ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
+        tx(tx -> tx.deleteFrom(kv)
+                .where(kv.PROJECT_ID.eq(projectId)
+                        .and(kv.VALUE_KEY.eq(key)))
                 .execute());
     }
 
-    public synchronized void put(String projectName, String key, String value) {
+    public synchronized void put(UUID projectId, String key, String value) {
+        ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
         tx(tx -> {
-            int rows = tx.insertInto(PROJECT_KV_STORE)
-                    .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_STRING)
-                    .values(projectName, key, value)
-                    .onConflict(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY)
-                    .doUpdate().set(PROJECT_KV_STORE.VALUE_STRING, value)
+            int rows = tx.insertInto(kv)
+                    .columns(kv.PROJECT_ID, kv.VALUE_KEY, kv.VALUE_STRING)
+                    .values(projectId, key, value)
+                    .onConflict(kv.PROJECT_ID, kv.VALUE_KEY)
+                    .doUpdate().set(kv.VALUE_STRING, value)
                     .execute();
 
             if (rows != 1) {
@@ -51,22 +55,24 @@ public class KvDao extends AbstractDao {
         });
     }
 
-    public String getString(String projectName, String key) {
+    public String getString(UUID projectId, String key) {
+        ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROJECT_KV_STORE.VALUE_STRING)
-                    .from(PROJECT_KV_STORE)
-                    .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
-                            .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
-                    .fetchOne(PROJECT_KV_STORE.VALUE_STRING);
+            return tx.select(kv.VALUE_STRING)
+                    .from(kv)
+                    .where(kv.PROJECT_ID.eq(projectId)
+                            .and(kv.VALUE_KEY.eq(key)))
+                    .fetchOne(kv.VALUE_STRING);
         }
     }
 
-    public Long getLong(String projectName, String key) {
+    public Long getLong(UUID projectId, String key) {
+        ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
         try (DSLContext tx = DSL.using(cfg)) {
-            Record1<Long> r = tx.select(PROJECT_KV_STORE.VALUE_LONG)
-                    .from(PROJECT_KV_STORE)
-                    .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
-                            .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
+            Record1<Long> r = tx.select(kv.VALUE_LONG)
+                    .from(kv)
+                    .where(kv.PROJECT_ID.eq(projectId)
+                            .and(kv.VALUE_KEY.eq(key)))
                     .fetchOne();
 
             if (r == null) {
@@ -77,31 +83,32 @@ public class KvDao extends AbstractDao {
         }
     }
 
-    public synchronized long inc(String projectName, String key) {
+    public synchronized long inc(UUID projectId, String key) {
+        ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
         return txResult(tx -> {
             // grab a lock, it will be released when the transaction ends
-            tx.execute("select from pg_advisory_xact_lock(?)", hash(projectName, key));
+            tx.execute("select from pg_advisory_xact_lock(?)", hash(projectId, key));
 
             // "upsert" the record
-            tx.insertInto(PROJECT_KV_STORE)
-                    .columns(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY, PROJECT_KV_STORE.VALUE_LONG)
-                    .values(projectName, key, 1L)
-                    .onConflict(PROJECT_KV_STORE.PROJECT_NAME, PROJECT_KV_STORE.VALUE_KEY)
-                    .doUpdate().set(PROJECT_KV_STORE.VALUE_LONG, PROJECT_KV_STORE.VALUE_LONG.plus(1))
+            tx.insertInto(kv)
+                    .columns(kv.PROJECT_ID, kv.VALUE_KEY, kv.VALUE_LONG)
+                    .values(projectId, key, 1L)
+                    .onConflict(kv.PROJECT_ID, kv.VALUE_KEY)
+                    .doUpdate().set(kv.VALUE_LONG, kv.VALUE_LONG.plus(1))
                     .execute();
 
             // get an updated value
-            return tx.select(PROJECT_KV_STORE.VALUE_LONG)
-                    .from(PROJECT_KV_STORE)
-                    .where(PROJECT_KV_STORE.PROJECT_NAME.eq(projectName)
-                            .and(PROJECT_KV_STORE.VALUE_KEY.eq(key)))
-                    .fetchOne(PROJECT_KV_STORE.VALUE_LONG);
+            return tx.select(kv.VALUE_LONG)
+                    .from(kv)
+                    .where(kv.PROJECT_ID.eq(projectId)
+                            .and(kv.VALUE_KEY.eq(key)))
+                    .fetchOne(kv.VALUE_LONG);
         });
     }
 
-    private static long hash(String projectName, String key) {
+    private static long hash(UUID projectId, String key) {
         // should be "good enough" (tm) for advisory locking
-        String s = projectName + "/" + key;
+        String s = projectId + "/" + key;
         long hash = 7;
         for (int i = 0; i < s.length(); i++) {
             hash = hash * 31 + s.charAt(i);

@@ -4,6 +4,8 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -11,28 +13,34 @@ import org.junit.Test;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 @Ignore("requires a local DB instance")
 public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     private ProcessQueueDao queueDao;
+    private ProjectDao projectDao;
 
     @Before
     public void setUp() throws Exception {
         queueDao = new ProcessQueueDao(getConfiguration());
+        projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
     }
 
     @Test
     public void test() throws Exception {
+        String projectName = "project_" + System.currentTimeMillis();
+        UUID projectId = projectDao.insert(projectName, null, null);
+
         UUID instanceA = UUID.randomUUID();
-        queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, "testProject", "testInitiator");
+        queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, "testInitiator");
         queueDao.update(instanceA, ProcessStatus.ENQUEUED);
 
         // add a small delay between two jobs
         Thread.sleep(100);
 
         UUID instanceB = UUID.randomUUID();
-        queueDao.insertInitial(instanceB, ProcessKind.DEFAULT, null, "testProject", "testInitiator");
+        queueDao.insertInitial(instanceB, ProcessKind.DEFAULT, null, projectId, "testInitiator");
         queueDao.update(instanceB, ProcessStatus.ENQUEUED);
 
         // ---

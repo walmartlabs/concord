@@ -26,7 +26,7 @@ public class VariablesIT extends AbstractServerIT {
         String projectName = "project_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null,
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null,
                 ImmutableMap.of("arguments",
                         ImmutableMap.of("nested",
                                 ImmutableMap.of(
@@ -55,7 +55,7 @@ public class VariablesIT extends AbstractServerIT {
         String secretValue = "secret_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null));
 
         EncryptValueResponse evr = projectResource.encrypt(projectName, new EncryptValueRequest(secretValue));
         String encryptedValue = DatatypeConverter.printBase64Binary(evr.getData());

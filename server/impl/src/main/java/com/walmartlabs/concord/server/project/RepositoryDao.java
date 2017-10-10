@@ -8,6 +8,7 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
@@ -20,67 +21,72 @@ public class RepositoryDao extends AbstractDao {
         super(cfg);
     }
 
-    public boolean exists(String projectName, String repositoryName) {
+    public UUID getId(UUID projectId, String repoName) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.fetchExists(tx.selectFrom(REPOSITORIES)
-                    .where(REPOSITORIES.PROJECT_NAME.eq(projectName)
-                            .and(REPOSITORIES.REPO_NAME.eq(repositoryName))));
+            return tx.select(REPOSITORIES.REPO_ID)
+                    .from(REPOSITORIES)
+                    .where(REPOSITORIES.PROJECT_ID.eq(projectId)
+                            .and(REPOSITORIES.REPO_NAME.eq(repoName)))
+                    .fetchOne(REPOSITORIES.REPO_ID);
         }
     }
 
-    public RepositoryEntry get(String projectName, String repositoryName) {
+    public RepositoryEntry get(UUID projectId, UUID repoId) {
         try (DSLContext tx = DSL.using(cfg)) {
             return selectRepositoryEntry(tx)
-                    .where(REPOSITORIES.PROJECT_NAME.eq(projectName)
-                            .and(REPOSITORIES.REPO_NAME.eq(repositoryName)))
+                    .where(REPOSITORIES.PROJECT_ID.eq(projectId)
+                            .and(REPOSITORIES.REPO_ID.eq(repoId)))
                     .fetchOne(RepositoryDao::toEntry);
         }
     }
 
-    public void insert(String projectName, String repositoryName, String url, String branch, String commitId, String path, String secretName) {
-        tx(tx -> insert(tx, projectName, repositoryName, url, branch, commitId, path, secretName));
+    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
+        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId));
     }
 
-    public void insert(DSLContext tx, String projectName, String repositoryName, String url, String branch, String commitId, String path, String secretName) {
-        tx.insertInto(REPOSITORIES)
-                .columns(REPOSITORIES.PROJECT_NAME, REPOSITORIES.REPO_NAME,
+    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
+        return tx.insertInto(REPOSITORIES)
+                .columns(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
                         REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
-                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_NAME)
-                .values(projectName, repositoryName, url, branch, commitId, path, secretName)
-                .execute();
+                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID)
+                .values(projectId, repositoryName, url, branch, commitId, path, secretId)
+                .returning(REPOSITORIES.REPO_ID)
+                .fetchOne()
+                .getRepoId();
     }
 
-    public void update(DSLContext tx, String repositoryName, String url, String branch, String commitId, String path, String secretName) {
+    public void update(DSLContext tx, UUID repoId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
         tx.update(REPOSITORIES)
+                .set(REPOSITORIES.REPO_NAME, repositoryName)
                 .set(REPOSITORIES.REPO_URL, url)
-                .set(REPOSITORIES.SECRET_NAME, secretName)
+                .set(REPOSITORIES.SECRET_ID, secretId)
                 .set(REPOSITORIES.REPO_BRANCH, branch)
                 .set(REPOSITORIES.REPO_COMMIT_ID, commitId)
                 .set(REPOSITORIES.REPO_PATH, path)
-                .where(REPOSITORIES.REPO_NAME.eq(repositoryName))
+                .where(REPOSITORIES.REPO_ID.eq(repoId))
                 .execute();
     }
 
-    public void delete(DSLContext tx, String repositoryName) {
+    public void delete(DSLContext tx, UUID repoId) {
         tx.deleteFrom(REPOSITORIES)
-                .where(REPOSITORIES.REPO_NAME.eq(repositoryName))
+                .where(REPOSITORIES.REPO_ID.eq(repoId))
                 .execute();
     }
 
-    public void deleteAll(DSLContext tx, String projectName) {
+    public void deleteAll(DSLContext tx, UUID projectId) {
         tx.deleteFrom(REPOSITORIES)
-                .where(REPOSITORIES.PROJECT_NAME.eq(projectName))
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId))
                 .execute();
     }
 
-    public List<RepositoryEntry> list(String projectName) {
-        return list(projectName, null, false);
+    public List<RepositoryEntry> list(UUID projectId) {
+        return list(projectId, null, false);
     }
 
-    public List<RepositoryEntry> list(String projectName, Field<?> sortField, boolean asc) {
+    public List<RepositoryEntry> list(UUID projectId, Field<?> sortField, boolean asc) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record6<String, String, String, String, String, String>> query = selectRepositoryEntry(tx)
-                    .where(REPOSITORIES.PROJECT_NAME.eq(projectName));
+            SelectConditionStep<Record7<UUID, String, String, String, String, String, String>> query = selectRepositoryEntry(tx)
+                    .where(REPOSITORIES.PROJECT_ID.eq(projectId));
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
@@ -90,23 +96,25 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    private static SelectJoinStep<Record6<String, String, String, String, String, String>> selectRepositoryEntry(DSLContext tx) {
-        return tx.select(REPOSITORIES.REPO_NAME,
+    private static SelectJoinStep<Record7<UUID, String, String, String, String, String, String>> selectRepositoryEntry(DSLContext tx) {
+        return tx.select(REPOSITORIES.REPO_ID,
+                REPOSITORIES.REPO_NAME,
                 REPOSITORIES.REPO_URL,
                 REPOSITORIES.REPO_BRANCH,
                 REPOSITORIES.REPO_COMMIT_ID,
                 REPOSITORIES.REPO_PATH,
                 SECRETS.SECRET_NAME)
                 .from(REPOSITORIES)
-                .leftOuterJoin(SECRETS).on(SECRETS.SECRET_NAME.eq(REPOSITORIES.SECRET_NAME));
+                .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
     }
 
-    private static RepositoryEntry toEntry(Record6<String, String, String, String, String, String> r) {
-        return new RepositoryEntry(r.get(REPOSITORIES.REPO_NAME),
+    private static RepositoryEntry toEntry(Record7<UUID, String, String, String, String, String, String> r) {
+        return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
+                r.get(REPOSITORIES.REPO_NAME),
                 r.get(REPOSITORIES.REPO_URL),
                 r.get(REPOSITORIES.REPO_BRANCH),
                 r.get(REPOSITORIES.REPO_COMMIT_ID),
                 r.get(REPOSITORIES.REPO_PATH),
-                r.get(REPOSITORIES.SECRET_NAME));
+                r.get(SECRETS.SECRET_NAME));
     }
 }

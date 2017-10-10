@@ -44,7 +44,7 @@ public class AnsibleConfigurationValidator implements ConfigurationValidator {
                 continue;
             }
 
-            if (!secretDao.exists(secret)) {
+            if (secretDao.getId(secret) == null) {
                 throw new ValidationErrorsException("Secret not found: " + secret);
             }
 

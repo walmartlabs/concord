@@ -6,6 +6,7 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -16,6 +17,7 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.VProcessQueue.V_PROCESS_QUEUE;
 import static org.jooq.impl.DSL.currentTimestamp;
 import static org.jooq.impl.DSL.value;
 
@@ -29,16 +31,20 @@ public class ProcessQueueDao extends AbstractDao {
         super(cfg);
     }
 
-    public void insertInitial(UUID instanceId, ProcessKind kind, UUID parentInstanceId, String projectName, String initiator) {
-        tx(tx -> insertInitial(tx, instanceId, kind, parentInstanceId, projectName, initiator));
+    public void insertInitial(UUID instanceId, ProcessKind kind, UUID parentInstanceId,
+                              UUID projectId, String initiator) {
+
+        tx(tx -> insertInitial(tx, instanceId, kind, parentInstanceId, projectId, initiator));
     }
 
-    public void insertInitial(DSLContext tx, UUID instanceId, ProcessKind kind, UUID parentInstanceId, String projectName, String initiator) {
+    public void insertInitial(DSLContext tx, UUID instanceId, ProcessKind kind, UUID parentInstanceId,
+                              UUID projectId, String initiator) {
+
         tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
                         PROCESS_QUEUE.PROCESS_KIND,
                         PROCESS_QUEUE.PARENT_INSTANCE_ID,
-                        PROCESS_QUEUE.PROJECT_NAME,
+                        PROCESS_QUEUE.PROJECT_ID,
                         PROCESS_QUEUE.CREATED_AT,
                         PROCESS_QUEUE.INITIATOR,
                         PROCESS_QUEUE.CURRENT_STATUS,
@@ -46,7 +52,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .values(value(instanceId),
                         value(kind.toString()),
                         value(parentInstanceId),
-                        value(projectName),
+                        value(projectId),
                         currentTimestamp(),
                         value(initiator),
                         value(ProcessStatus.PREPARING.toString()),
@@ -115,8 +121,8 @@ public class ProcessQueueDao extends AbstractDao {
     public ProcessEntry get(UUID instanceId) {
         DSLContext tx = DSL.using(cfg);
 
-        ProcessQueueRecord r = tx.selectFrom(PROCESS_QUEUE)
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+        VProcessQueueRecord r = tx.selectFrom(V_PROCESS_QUEUE)
+                .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .fetchOne();
 
         if (r == null) {
@@ -128,9 +134,9 @@ public class ProcessQueueDao extends AbstractDao {
 
     public ProcessEntry poll() {
         return txResult(tx -> {
-            ProcessQueueRecord r = tx.selectFrom(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString()))
-                    .orderBy(PROCESS_QUEUE.CREATED_AT)
+            VProcessQueueRecord r = tx.selectFrom(V_PROCESS_QUEUE)
+                    .where(V_PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString()))
+                    .orderBy(V_PROCESS_QUEUE.CREATED_AT)
                     .limit(1)
                     .forUpdate()
                     .skipLocked()
@@ -140,8 +146,7 @@ public class ProcessQueueDao extends AbstractDao {
                 return null;
             }
 
-            r.setCurrentStatus(ProcessStatus.STARTING.toString());
-            tx.executeUpdate(r);
+            update(tx, r.getInstanceId(), ProcessStatus.STARTING);
 
             return toEntry(r);
         });
@@ -153,15 +158,15 @@ public class ProcessQueueDao extends AbstractDao {
 
     public List<ProcessEntry> list(Timestamp beforeCreatedAt, Set<String> tags, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectWhereStep<ProcessQueueRecord> q = tx.selectFrom(PROCESS_QUEUE);
+            SelectWhereStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE);
 
             if (beforeCreatedAt != null) {
-                q.where(PROCESS_QUEUE.CREATED_AT.lessThan(beforeCreatedAt));
+                s.where(V_PROCESS_QUEUE.CREATED_AT.lessThan(beforeCreatedAt));
             }
 
-            filterByTags(q, tags);
+            filterByTags(s, tags);
 
-            return q.orderBy(PROCESS_QUEUE.CREATED_AT.desc())
+            return s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
                     .limit(limit)
                     .fetch(ProcessQueueDao::toEntry);
         }
@@ -169,32 +174,32 @@ public class ProcessQueueDao extends AbstractDao {
 
     public List<ProcessEntry> list(UUID parentInstanceId, Set<String> tags) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<ProcessQueueRecord> q = tx.selectFrom(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId));
+            SelectConditionStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE)
+                    .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId));
 
-            filterByTags(q, tags);
+            filterByTags(s, tags);
 
-            return q.orderBy(PROCESS_QUEUE.CREATED_AT.desc())
+            return s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
                     .fetch(ProcessQueueDao::toEntry);
         }
     }
 
-    private Select<ProcessQueueRecord> filterByTags(SelectWhereStep<ProcessQueueRecord> q, Set<String> tags) {
+    private Select<VProcessQueueRecord> filterByTags(SelectWhereStep<VProcessQueueRecord> q, Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return q;
         }
 
         String[] as = tags.toArray(new String[tags.size()]);
-        return q.where(PgUtils.contains(PROCESS_QUEUE.PROCESS_TAGS, as));
+        return q.where(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
     }
 
-    private SelectConditionStep<ProcessQueueRecord> filterByTags(SelectConditionStep<ProcessQueueRecord> q, Set<String> tags) {
+    private SelectConditionStep<VProcessQueueRecord> filterByTags(SelectConditionStep<VProcessQueueRecord> q, Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return q;
         }
 
         String[] as = tags.toArray(new String[tags.size()]);
-        return q.and(PgUtils.contains(PROCESS_QUEUE.PROCESS_TAGS, as));
+        return q.and(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
     }
 
     public boolean exists(UUID instanceId) {
@@ -204,7 +209,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    private static ProcessEntry toEntry(ProcessQueueRecord r) {
+    private static ProcessEntry toEntry(VProcessQueueRecord r) {
         ProcessKind kind;
         String s = r.getProcessKind();
         if (s != null) {
@@ -223,6 +228,7 @@ public class ProcessQueueDao extends AbstractDao {
         return new ProcessEntry(r.getInstanceId(),
                 kind,
                 r.getParentInstanceId(),
+                r.getProjectId(),
                 r.getProjectName(),
                 r.getCreatedAt(),
                 r.getInitiator(),

@@ -62,13 +62,13 @@ public class RepositoryProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
 
-        String projectName = payload.getHeader(Payload.PROJECT_NAME);
-        String repoName = payload.getHeader(Payload.REPOSITORY_NAME);
-        if (projectName == null || repoName == null) {
+        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
+        UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
+        if (projectId == null || repoId == null) {
             return chain.process(payload);
         }
 
-        RepositoryEntry repo = repositoryDao.get(projectName, repoName);
+        RepositoryEntry repo = repositoryDao.get(projectId, repoId);
         if (repo == null) {
             return chain.process(payload);
         }
@@ -78,9 +78,9 @@ public class RepositoryProcessor implements PayloadProcessor {
             if (githubConfiguration.getApiUrl() == null) {
                 // no github webhooks configured -> fetch repository
                 log.warn("process ['{}'] -> no prefetched repository");
-                src = fetchRepository(instanceId, projectName, repo);
+                src = fetchRepository(instanceId, projectId, repo);
             } else {
-                src = getRepository(instanceId, projectName, repo);
+                src = getRepository(instanceId, projectId, repo);
             }
 
             Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
@@ -102,7 +102,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private Path fetchRepository(UUID instanceId, String projectName, RepositoryEntry repo) {
+    private Path fetchRepository(UUID instanceId, UUID projectId, RepositoryEntry repo) {
         Secret secret = null;
         if (repo.getSecret() != null) {
             secret = secretManager.getSecret(repo.getSecret(), null);
@@ -114,23 +114,23 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         Path result;
         if (repo.getCommitId() != null) {
-            result = repositoryManager.fetchByCommit(projectName, repo.getName(), repo.getUrl(), repo.getCommitId(), repo.getPath(), secret);
+            result = repositoryManager.fetchByCommit(projectId, repo.getName(), repo.getUrl(), repo.getCommitId(), repo.getPath(), secret);
         } else {
-            result = repositoryManager.fetch(projectName, repo.getName(), repo.getUrl(), repo.getBranch(), repo.getPath(), secret);
+            result = repositoryManager.fetch(projectId, repo.getName(), repo.getUrl(), repo.getBranch(), repo.getPath(), secret);
         }
         return result;
     }
 
-    private Path getRepository(UUID instanceId, String projectName, RepositoryEntry repo) {
+    private Path getRepository(UUID instanceId, UUID projectId, RepositoryEntry repo) {
         Path result;
         if (repo.getCommitId() != null) {
-            result = repositoryManager.getRepoPath(projectName, repo.getName(), repo.getCommitId(), repo.getPath());
+            result = repositoryManager.getRepoPath(projectId, repo.getName(), repo.getCommitId(), repo.getPath());
         } else {
-            result = repositoryManager.getRepoPath(projectName, repo.getName(), repo.getBranch(), repo.getPath());
+            result = repositoryManager.getRepoPath(projectId, repo.getName(), repo.getBranch(), repo.getPath());
         }
 
         if (!Files.exists(result)) {
-            result = fetchRepository(instanceId, projectName, repo);
+            result = fetchRepository(instanceId, projectId, repo);
         }
         return result;
     }

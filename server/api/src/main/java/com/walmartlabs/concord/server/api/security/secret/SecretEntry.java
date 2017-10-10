@@ -7,8 +7,11 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.UUID;
 
 public class SecretEntry implements Serializable {
+
+    private final UUID id;
 
     @NotNull
     @ConcordKey
@@ -20,13 +23,19 @@ public class SecretEntry implements Serializable {
     private final SecretStoreType storeType;
 
     @JsonCreator
-    public SecretEntry(@JsonProperty("name") String name,
+    public SecretEntry(@JsonProperty("id") UUID id,
+                       @JsonProperty("name") String name,
                        @JsonProperty("type") SecretType type,
                        @JsonProperty("storeType") SecretStoreType storeType) {
 
+        this.id = id;
         this.name = name;
         this.type = type;
         this.storeType = storeType;
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public String getName() {
@@ -44,7 +53,8 @@ public class SecretEntry implements Serializable {
     @Override
     public String toString() {
         return "SecretEntry{" +
-                "name='" + name + '\'' +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 ", type=" + type +
                 ", storeType=" + storeType +
                 '}';

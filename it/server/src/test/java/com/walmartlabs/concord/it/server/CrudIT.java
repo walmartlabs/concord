@@ -24,10 +24,10 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project_" + System.currentTimeMillis();
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, null));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null));
         assertTrue(cpr.isOk());
 
-        cpr = projectResource.createOrUpdate(new ProjectEntry(projectName, null, null, null));
+        cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null));
         assertTrue(cpr.isOk());
 
         // ---
@@ -54,7 +54,7 @@ public class CrudIT extends AbstractServerIT {
         String commitId = "commitId_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, null,
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null,
                 Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null, null, null)), null));
 
         // ---
@@ -81,8 +81,8 @@ public class CrudIT extends AbstractServerIT {
         String projectName2 = "project2_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName1, null, null, null));
-        projectResource.createOrUpdate(new ProjectEntry(projectName2, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName1, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName2, null, null, null));
 
         // ---
 

@@ -4,7 +4,7 @@ import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
+import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static org.jooq.impl.DSL.*;
 
@@ -115,7 +115,7 @@ public class ProcessQueueWatchdog {
                         req.put(Constants.Request.TAGS_KEY, null); // clear tags
 
                         Payload payload = payloadManager.createFork(childId, parent.instanceId, e.handlerKind,
-                                parent.initiator, parent.projectName, req);
+                                parent.initiator, parent.projectId, req);
 
                         forkPipeline.process(payload);
 
@@ -165,9 +165,9 @@ public class ProcessQueueWatchdog {
         }
 
         public List<ProcessEntry> poll(DSLContext tx, PollEntry entry, Field<Timestamp> maxAge, int maxEntries) {
-            ProcessQueue q = PROCESS_QUEUE.as("q");
+            VProcessQueue q = V_PROCESS_QUEUE.as("q");
 
-            return tx.select(q.INSTANCE_ID, q.CURRENT_STATUS, q.PROJECT_NAME, q.INITIATOR)
+            return tx.select(q.INSTANCE_ID, q.PROJECT_ID, q.INITIATOR)
                     .from(q)
                     .where(q.PROCESS_KIND.in(toArray(HANDLED_PROCESS_KINDS))
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
@@ -184,24 +184,24 @@ public class ProcessQueueWatchdog {
 
         private Field<Number> count(DSLContext tx, Field<UUID> parentInstanceId, ProcessKind kind) {
             return tx.selectCount()
-                    .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
-                            .and(PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString())))
+                    .from(V_PROCESS_QUEUE)
+                    .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
+                            .and(V_PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString())))
                     .asField();
         }
 
         private Condition notExistsSuccess(DSLContext tx, Field<UUID> parentInstanceId, ProcessKind kind) {
-            return notExists(tx.selectFrom(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
-                            .and(PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString()))
-                            .and(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.FINISHED.toString()))));
+            return notExists(tx.selectFrom(V_PROCESS_QUEUE)
+                    .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
+                            .and(V_PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString()))
+                            .and(V_PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.FINISHED.toString()))));
         }
 
         private Condition noRunningHandlers(DSLContext tx, Field<UUID> parentInstanceId) {
-            return notExists(tx.selectFrom(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
-                            .and(PROCESS_QUEUE.CURRENT_STATUS.in(toArray(ACTIVE_PROCESS_STATUSES)))
-                            .and(PROCESS_QUEUE.PROCESS_KIND.in(toArray(SPECIAL_HANDLERS)))));
+            return notExists(tx.selectFrom(V_PROCESS_QUEUE)
+                    .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
+                            .and(V_PROCESS_QUEUE.CURRENT_STATUS.in(toArray(ACTIVE_PROCESS_STATUSES)))
+                            .and(V_PROCESS_QUEUE.PROCESS_KIND.in(toArray(SPECIAL_HANDLERS)))));
         }
 
         private Condition existsMarker(Field<UUID> instanceId, String marker) {
@@ -217,25 +217,22 @@ public class ProcessQueueWatchdog {
             return as;
         }
 
-        private static ProcessEntry toEntry(Record4<UUID, String, String, String> r) {
-            return new ProcessEntry(r.get(PROCESS_QUEUE.INSTANCE_ID),
-                    ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)),
-                    r.get(PROCESS_QUEUE.PROJECT_NAME),
-                    r.get(PROCESS_QUEUE.INITIATOR));
+        private static ProcessEntry toEntry(Record3<UUID, UUID, String> r) {
+            return new ProcessEntry(r.get(V_PROCESS_QUEUE.INSTANCE_ID),
+                    r.get(V_PROCESS_QUEUE.PROJECT_ID),
+                    r.get(V_PROCESS_QUEUE.INITIATOR));
         }
     }
 
     private static final class ProcessEntry implements Serializable {
 
         private final UUID instanceId;
-        private final ProcessStatus status;
-        private final String projectName;
+        private final UUID projectId;
         private final String initiator;
 
-        private ProcessEntry(UUID instanceId, ProcessStatus status, String projectName, String initiator) {
+        private ProcessEntry(UUID instanceId, UUID projectId, String initiator) {
             this.instanceId = instanceId;
-            this.status = status;
-            this.projectName = projectName;
+            this.projectId = projectId;
             this.initiator = initiator;
         }
     }

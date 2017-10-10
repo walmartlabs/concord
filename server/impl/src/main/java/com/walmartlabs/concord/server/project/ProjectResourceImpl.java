@@ -24,10 +24,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
@@ -80,7 +77,9 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         validateCfg(cfg);
 
         String projectName = request.getName();
-        if (projectDao.exists(projectName)) {
+        UUID projectId = projectDao.getId(projectName);
+
+        if (projectId != null) {
             UpdateProjectRequest req = new UpdateProjectRequest(request.getDescription(),
                     request.getRepositories(), request.getCfg());
             update(projectName, req);
@@ -98,16 +97,23 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             }
         }
 
-        tx(tx -> {
-            projectDao.insert(tx, projectName, request.getDescription(), cfg);
+        InsertResult r = txResult(tx -> {
+            UUID pId = projectDao.insert(tx, projectName, request.getDescription(), cfg);
 
+            Map<String, UUID> rIds = Collections.emptyMap();
             if (repos != null) {
-                insert(tx, projectName, repos);
+                rIds = insert(tx, pId, repos);
             }
+
+            return new InsertResult(pId, rIds);
         });
 
         if (repos != null) {
-            repos.forEach((k, v) -> githubWebhookService.register(projectName, k, v.getUrl()));
+            UUID pId = r.projectId;
+            repos.forEach((k, v) -> {
+                UUID rId = r.repoIds.get(k);
+                githubWebhookService.register(pId, rId, v.getUrl());
+            });
         }
 
         return new CreateProjectResponse(PerformedActionType.CREATED);
@@ -120,13 +126,14 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 "The current user does not have permissions to update the specified project");
 
         assertProject(projectName);
-        assertSecret(request.getSecret());
+        UUID secretId = assertSecret(request.getSecret());
+        UUID projectId = projectDao.getId(projectName);
 
-        tx(tx -> repositoryDao.insert(tx, projectName, request.getName(), request.getUrl(),
+        UUID repoId = txResult(tx -> repositoryDao.insert(tx, projectId, request.getName(), request.getUrl(),
                 request.getBranch(), request.getCommitId(),
-                request.getPath(), request.getSecret()));
+                request.getPath(), secretId));
 
-        githubWebhookService.register(projectName, request.getName(), request.getUrl());
+        githubWebhookService.register(projectId, repoId, request.getUrl());
 
         return new CreateRepositoryResponse();
     }
@@ -137,7 +144,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
-        ProjectEntry e = projectDao.get(projectName);
+        ProjectEntry e = projectDao.getByName(projectName);
         if (e == null) {
             throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
@@ -150,9 +157,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
-        assertProject(projectName);
+        UUID projectId = assertProject(projectName);
+        UUID repoId = assertRepository(projectId, repositoryName);
 
-        return repositoryDao.get(projectName, repositoryName);
+        return repositoryDao.get(projectId, repoId);
     }
 
     @Override
@@ -171,13 +179,13 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
-        assertProject(projectName);
+        UUID projectId = assertProject(projectName);
 
         Field<?> sortField = key2RepositoryField.get(sortBy);
         if (sortField == null) {
             throw new ValidationErrorsException("Unknown sort field: " + sortBy);
         }
-        return repositoryDao.list(projectName, sortField, asc);
+        return repositoryDao.list(projectId, sortField, asc);
     }
 
     @Override
@@ -186,7 +194,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        assertProject(projectName);
+        UUID projectId = assertProject(projectName);
 
         Map<String, Object> cfg = request.getCfg();
         validateCfg(cfg);
@@ -198,21 +206,23 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 assertSecret(secret);
             }
 
-            githubWebhookService.unregister(projectName);
+            githubWebhookService.unregister(projectId);
         }
 
-        tx(tx -> {
-            projectDao.update(tx, projectName, request.getDescription(), cfg);
+        Map<String, UUID> rIds = txResult(tx -> {
+            projectDao.update(tx, projectId, projectName, request.getDescription(), cfg);
 
+            Map<String, UUID> m = Collections.emptyMap();
             if (repos != null) {
-                repositoryDao.deleteAll(tx, projectName);
-                insert(tx, projectName, repos);
+                repositoryDao.deleteAll(tx, projectId);
+                m = insert(tx, projectId, repos);
             }
+            return m;
         });
 
         if(repos != null) {
             repos.forEach((repoName, updateRepositoryRequest) ->
-                            githubWebhookService.register(projectName, repoName, updateRepositoryRequest.getUrl()));
+                    githubWebhookService.register(projectId, rIds.get(repoName), updateRepositoryRequest.getUrl()));
         }
 
         return new UpdateProjectResponse();
@@ -224,16 +234,18 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        assertRepository(projectName, repositoryName);
-        assertSecret(request.getSecret());
+        UUID projectId = assertProject(projectName);
+        UUID repoId = assertRepository(projectId, repositoryName);
+        UUID secretId = assertSecret(request.getSecret());
 
-        githubWebhookService.unregister(projectName, repositoryName);
+        githubWebhookService.unregister(projectId, repoId);
 
-        tx(tx -> repositoryDao.update(tx, repositoryName, request.getUrl(),
+        tx(tx -> repositoryDao.update(tx, repoId,
+                repositoryName, request.getUrl(),
                 request.getBranch(), request.getCommitId(),
-                request.getPath(), request.getSecret()));
+                request.getPath(), secretId));
 
-        githubWebhookService.register(projectName, repositoryName, request.getUrl());
+        githubWebhookService.register(projectId, repoId, request.getUrl());
 
         return new UpdateRepositoryResponse();
     }
@@ -245,10 +257,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_READ_INSTANCE,
                 "The current user does not have permissions to read the specified project");
 
-        assertProject(projectName);
+        UUID projectId = assertProject(projectName);
 
         String[] ps = cfgPath(path);
-        Object v = projectDao.getConfigurationValue(projectName, ps);
+        Object v = projectDao.getConfigurationValue(projectId, ps);
 
         if (v == null) {
             throw new WebApplicationException("Value not found: " + path, Status.NOT_FOUND);
@@ -263,9 +275,9 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        assertProject(projectName);
+        UUID projectId = assertProject(projectName);
 
-        Map<String, Object> cfg = projectDao.getConfiguration(projectName);
+        Map<String, Object> cfg = projectDao.getConfiguration(projectId);
         if (cfg == null) {
             cfg = new HashMap<>();
         }
@@ -283,7 +295,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         validateCfg(cfg);
 
         Map<String, Object> newCfg = cfg;
-        tx(tx -> projectDao.update(tx, projectName, newCfg));
+        tx(tx -> projectDao.update(tx, projectId, newCfg));
         return new UpdateProjectConfigurationResponse();
     }
 
@@ -298,9 +310,9 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        assertProject(projectName);
+        UUID projectId = assertProject(projectName);
 
-        Map<String, Object> cfg = projectDao.getConfiguration(projectName);
+        Map<String, Object> cfg = projectDao.getConfiguration(projectId);
         if (cfg == null) {
             cfg = new HashMap<>();
         }
@@ -315,7 +327,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         validateCfg(cfg);
 
         Map<String, Object> newCfg = cfg;
-        tx(tx -> projectDao.update(tx, projectName, newCfg));
+        tx(tx -> projectDao.update(tx, projectId, newCfg));
         return new DeleteProjectConfigurationResponse();
     }
 
@@ -325,9 +337,11 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified project");
 
-        githubWebhookService.unregister(projectName);
+        UUID projectId = assertProject(projectName);
 
-        tx(tx -> projectDao.delete(tx, projectName));
+        githubWebhookService.unregister(projectId);
+
+        tx(tx -> projectDao.delete(tx, projectId));
         return new DeleteProjectResponse();
     }
 
@@ -337,11 +351,12 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
-        assertRepository(projectName, repositoryName);
+        UUID projectId = assertProject(projectName);
+        UUID repoId = assertRepository(projectId, repositoryName);
 
-        githubWebhookService.unregister(projectName, repositoryName);
+        githubWebhookService.unregister(projectId, repoId);
 
-        tx(tx -> repositoryDao.delete(tx, repositoryName));
+        tx(tx -> repositoryDao.delete(tx, repoId));
 
         return new DeleteRepositoryResponse();
     }
@@ -373,12 +388,13 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
     }
 
-    private void assertSecret(String name) {
+    private UUID assertSecret(String name) {
         if (name == null) {
-            return;
+            return null;
         }
 
-        if (!secretDao.exists(name)) {
+        UUID id = secretDao.getId(name);
+        if (id == null) {
             throw new ValidationErrorsException("Secret not found: " + name);
         }
 
@@ -386,28 +402,51 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         if (!subject.isPermitted(String.format(Permissions.SECRET_READ_INSTANCE, name))) {
             throw new UnauthorizedException("The current user does not have permissions to use the specified secret");
         }
+
+        return id;
     }
 
-    private void assertProject(String projectName) {
-        if (!projectDao.exists(projectName)) {
+    private UUID assertProject(String projectName) {
+        if (projectName == null) {
+            throw new ValidationErrorsException("Invalid project name");
+        }
+
+        UUID id = projectDao.getId(projectName);
+        if (id == null) {
             throw new ValidationErrorsException("Project not found: " + projectName);
         }
+        return id;
     }
 
-    private void assertRepository(String projectName, String repositoryName) {
-        if (!repositoryDao.exists(projectName, repositoryName)) {
+    private UUID assertRepository(UUID projectId, String repositoryName) {
+        if (repositoryName == null) {
+            throw new ValidationErrorsException("Invalid repository name");
+        }
+
+        UUID id = repositoryDao.getId(projectId, repositoryName);
+        if (id == null) {
             throw new ValidationErrorsException("Repository not found: " + repositoryName);
         }
+        return id;
     }
 
-    private void insert(DSLContext tx, String projectName, Map<String, UpdateRepositoryRequest> repos) {
+    private Map<String, UUID> insert(DSLContext tx, UUID projectId, Map<String, UpdateRepositoryRequest> repos) {
+        Map<String, UUID> ids = new HashMap<>();
+
         for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
             String name = r.getKey();
             UpdateRepositoryRequest req = r.getValue();
-            repositoryDao.insert(tx, projectName, name, req.getUrl(),
+
+            UUID secretId = assertSecret(req.getSecret());
+
+            UUID id = repositoryDao.insert(tx, projectId, name, req.getUrl(),
                     req.getBranch(), req.getCommitId(),
-                    req.getPath(), req.getSecret());
+                    req.getPath(), secretId);
+
+            ids.put(name, id);
         }
+
+        return ids;
     }
 
     private void validateCfg(Map<String, Object> cfg) {
@@ -427,5 +466,16 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         List<String> l = Splitter.on("/").omitEmptyStrings().splitToList(s);
         return l.toArray(new String[l.size()]);
+    }
+
+    private static final class InsertResult {
+
+        private final UUID projectId;
+        private final Map<String, UUID> repoIds;
+
+        private InsertResult(UUID projectId, Map<String, UUID> repoIds) {
+            this.projectId = projectId;
+            this.repoIds = repoIds;
+        }
     }
 }

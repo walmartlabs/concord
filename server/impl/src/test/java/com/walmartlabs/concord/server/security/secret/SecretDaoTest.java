@@ -6,12 +6,11 @@ import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
-import com.walmartlabs.concord.server.security.secret.SecretDao;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Collections;
+import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -25,23 +24,23 @@ public class SecretDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        projectDao.insert(projectName, "test", null);
+        UUID projectId = projectDao.insert(projectName, "test", null);
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        secretDao.insert(secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
+        UUID secretId = secretDao.insert(secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());
-        repositoryDao.insert(projectName, repoName, "n/a", null, null, null, secretName);
+        UUID repoId = repositoryDao.insert(projectId, repoName, "n/a", null, null, null, secretId);
 
         // ---
 
-        secretDao.delete(secretName);
+        secretDao.delete(secretId);
 
         // ---
 
-        RepositoryEntry r = repositoryDao.get(projectName, repoName);
+        RepositoryEntry r = repositoryDao.get(projectId, repoId);
         assertNotNull(r);
         assertNull(r.getSecret());
     }

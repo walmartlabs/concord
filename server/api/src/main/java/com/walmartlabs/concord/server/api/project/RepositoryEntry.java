@@ -8,9 +8,12 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RepositoryEntry implements Serializable {
+
+    private final UUID id;
 
     @NotNull
     @ConcordKey
@@ -33,19 +36,25 @@ public class RepositoryEntry implements Serializable {
     private final String secret;
 
     @JsonCreator
-    public RepositoryEntry(@JsonProperty("name") String name,
+    public RepositoryEntry(@JsonProperty("id") UUID id,
+                           @JsonProperty("name") String name,
                            @JsonProperty("url") String url,
                            @JsonProperty("branch") String branch,
                            @JsonProperty("commitId") String commitId,
                            @JsonProperty("path") String path,
                            @JsonProperty("secret") String secret) {
 
+        this.id = id;
         this.name = name;
         this.url = url;
         this.branch = branch;
         this.commitId = commitId;
         this.path = path;
         this.secret = secret;
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public String getName() {
@@ -75,6 +84,7 @@ public class RepositoryEntry implements Serializable {
     @Override
     public String toString() {
         return "RepositoryEntry{" +
+                "id=" + id +
                 ", name='" + name + '\'' +
                 ", url='" + url + '\'' +
                 ", branch='" + branch + '\'' +

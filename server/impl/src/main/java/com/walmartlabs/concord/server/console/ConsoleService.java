@@ -1,10 +1,10 @@
 package com.walmartlabs.concord.server.console;
 
+import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
-import com.walmartlabs.concord.common.secret.Secret;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -77,7 +77,7 @@ public class ConsoleService implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @RequiresAuthentication
     public boolean isProjectExist(@PathParam("projectName") String projectName) {
-        return projectDao.exists(projectName);
+        return projectDao.getId(projectName) != null;
     }
 
     @POST

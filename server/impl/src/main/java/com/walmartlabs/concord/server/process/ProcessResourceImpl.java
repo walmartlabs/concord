@@ -238,11 +238,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         UUID instanceId = UUID.randomUUID();
-        String projectName = parent.getProjectName();
+        UUID projectId = parent.getProjectId();
 
         Payload payload;
         try {
-            payload = payloadManager.createFork(instanceId, parentInstanceId, ProcessKind.DEFAULT, getInitiator(), projectName, req);
+            payload = payloadManager.createFork(instanceId, parentInstanceId,
+                    ProcessKind.DEFAULT, getInitiator(), projectId, req);
         } catch (IOException e) {
             log.error("fork ['{}', '{}'] -> error creating a payload: {}", instanceId, parentInstanceId, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -251,10 +252,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return start(forkPipeline, payload, sync);
     }
 
-    private void assertProject(String projectName) {
-        if (!projectDao.exists(projectName)) {
+    private UUID assertProject(String projectName) {
+        UUID id = projectDao.getId(projectName);
+        if (id == null) {
             throw new ValidationErrorsException("Unknown project name: " + projectName);
         }
+        return id;
     }
 
     @Override

@@ -72,12 +72,12 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     private Map<String, Object> getProjectCfg(Payload payload) {
-        String n = payload.getHeader(Payload.PROJECT_NAME);
-        if (n == null) {
+        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
+        if (projectId == null) {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> m = projectDao.getConfiguration(n);
+        Map<String, Object> m = projectDao.getConfiguration(projectId);
         return m != null ? m : Collections.emptyMap();
     }
 

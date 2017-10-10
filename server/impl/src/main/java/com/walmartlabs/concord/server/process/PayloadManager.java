@@ -4,6 +4,8 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.project.RepositoryDao;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
@@ -25,10 +27,17 @@ public class PayloadManager {
     private static final String INPUT_ARCHIVE_NAME = "_input.zip";
 
     private final ProcessStateManager stateManager;
+    private final ProjectDao projectDao;
+    private final RepositoryDao repositoryDao;
 
     @Inject
-    public PayloadManager(ProcessStateManager stateManager) {
+    public PayloadManager(ProcessStateManager stateManager,
+                          ProjectDao projectDao,
+                          RepositoryDao repositoryDao) {
+
         this.stateManager = stateManager;
+        this.projectDao = projectDao;
+        this.repositoryDao = repositoryDao;
     }
 
     /**
@@ -153,12 +162,13 @@ public class PayloadManager {
      *
      * @param instanceId
      * @param parentInstanceId
-     * @param projectName
+     * @param projectId
      * @param req
      * @return
      */
     public Payload createFork(UUID instanceId, UUID parentInstanceId, ProcessKind kind,
-                              String initiator, String projectName, Map<String, Object> req) throws IOException {
+                              String initiator, UUID projectId, Map<String, Object> req) throws IOException {
+
         Path tmpDir = Files.createTempDirectory("payload");
 
         if (!stateManager.export(parentInstanceId, copyTo(tmpDir))) {
@@ -168,7 +178,7 @@ public class PayloadManager {
         Payload p = new Payload(instanceId, parentInstanceId)
                 .putHeader(Payload.PROCESS_KIND, kind)
                 .putHeader(Payload.WORKSPACE_DIR, tmpDir)
-                .putHeader(Payload.PROJECT_NAME, projectName)
+                .putHeader(Payload.PROJECT_ID, projectId)
                 .putHeader(Payload.REQUEST_DATA_MAP, req);
 
         p = addInitiator(p, initiator);
@@ -195,7 +205,7 @@ public class PayloadManager {
         return p.putHeader(Payload.INITIATOR, initiator);
     }
 
-    private static Payload addEntryPoint(Payload p, EntryPoint e) {
+    private Payload addEntryPoint(Payload p, EntryPoint e) {
         if (e == null) {
             return p;
         }
@@ -223,7 +233,23 @@ public class PayloadManager {
                     .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(Constants.Request.ENTRY_POINT_KEY, entryPoint));
         }
 
-        return p.putHeader(Payload.PROJECT_NAME, e.getProjectName())
-                .putHeader(Payload.REPOSITORY_NAME, e.getRepositoryName());
+        UUID projectId = null;
+        if (e.getProjectName() != null) {
+            projectId = projectDao.getId(e.getProjectName());
+            if (projectId == null) {
+                throw new ProcessException(p.getInstanceId(), "Project not found: " + e.getProjectName());
+            }
+        }
+
+        UUID repoId = null;
+        if (projectId != null && e.getRepositoryName() != null) {
+            repoId = repositoryDao.getId(projectId, e.getRepositoryName());
+            if (repoId == null) {
+                throw new ProcessException(p.getInstanceId(), "Repository not found: " + e.getRepositoryName());
+            }
+        }
+
+        return p.putHeader(Payload.PROJECT_ID, projectId)
+                .putHeader(Payload.REPOSITORY_ID, repoId);
     }
 }

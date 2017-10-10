@@ -4,6 +4,7 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
@@ -15,7 +16,7 @@ public class KvDaoTest extends AbstractDaoTest {
     public void test() throws Exception {
         KvDao kvDao = new KvDao(getConfiguration());
 
-        String projectName = "project_" + System.currentTimeMillis();
+        UUID projectId = UUID.randomUUID();
         String key = "key_" + System.currentTimeMillis();
 
         int threads = 3;
@@ -25,7 +26,7 @@ public class KvDaoTest extends AbstractDaoTest {
 
         Runnable r = () -> {
             for (int i = 0; i < iterations; i++) {
-                kvDao.inc(projectName, key);
+                kvDao.inc(projectId, key);
                 counter.incrementAndGet();
             }
         };
@@ -41,6 +42,6 @@ public class KvDaoTest extends AbstractDaoTest {
         }
 
         Long total = counter.get();
-        assertEquals(total, kvDao.getLong(projectName, key));
+        assertEquals(total, kvDao.getLong(projectId, key));
     }
 }

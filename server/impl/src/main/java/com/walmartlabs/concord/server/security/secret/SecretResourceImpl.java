@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 
@@ -184,22 +185,24 @@ public class SecretResourceImpl implements SecretResource, Resource {
         assertPermissions(name, Permissions.SECRET_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified secret");
 
-        assertSecret(name);
+        UUID secretId = assertSecret(name);
 
-        secretDao.delete(name);
+        secretDao.delete(secretId);
         return new DeleteSecretResponse();
     }
 
     private void assertUnique(String name) {
-        if (secretDao.exists(name)) {
+        if (secretDao.getId(name) != null) {
             throw new ValidationErrorsException("Secret already exists: " + name);
         }
     }
 
-    private void assertSecret(String name) {
-        if (!secretDao.exists(name)) {
+    private UUID assertSecret(String name) {
+        UUID id = secretDao.getId(name);
+        if (id == null) {
             throw new ValidationErrorsException("Secret not found: " + name);
         }
+        return id;
     }
 
     private void assertPermissions(String name, String wildcard, String message) {

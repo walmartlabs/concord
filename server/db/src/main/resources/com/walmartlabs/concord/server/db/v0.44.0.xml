@@ -4,6 +4,208 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- enable UUID generation -->
+    <changeSet id="44000-init" author="ibodrov@gmail.com">
+        <sql>
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+        </sql>
+    </changeSet>
+
+    <!-- remove old gunk -->
+    <changeSet id="44000-cleanup" author="ibodrov@gmail.com">
+        <sql>
+            drop table if exists PROJECT_ATTACHMENTS
+        </sql>
+        <sql>
+            drop table if exists PROJECT_TEMPLATES
+        </sql>
+    </changeSet>
+
+    <!-- PROJECTS -->
+
+    <!-- add new PK column for PROJECTS -->
+    <changeSet id="44000" author="ibodrov@gmail.com">
+        <addColumn tableName="PROJECTS">
+            <column name="PROJECT_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- migrate REPOSITORIES to the new PROJECTS FK -->
+    <changeSet id="44010" author="ibodrov@gmail.com">
+        <addColumn tableName="REPOSITORIES">
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <sql>
+            update REPOSITORIES set PROJECT_ID = (select P.PROJECT_ID from PROJECTS as P where P.PROJECT_NAME = REPOSITORIES.PROJECT_NAME)
+        </sql>
+
+        <addNotNullConstraint tableName="REPOSITORIES" columnName="PROJECT_ID"/>
+
+        <dropColumn tableName="REPOSITORIES">
+            <column name="PROJECT_NAME"/>
+        </dropColumn>
+    </changeSet>
+
+    <!-- migrate PROCESS_QUEUE to the new PROJECTS FK -->
+    <changeSet id="44020" author="ibodrov@gmail.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <sql>
+            update PROCESS_QUEUE set PROJECT_ID = (select P.PROJECT_ID from PROJECTS as P where P.PROJECT_NAME = PROCESS_QUEUE.PROJECT_NAME)
+        </sql>
+
+        <dropColumn tableName="PROCESS_QUEUE">
+            <column name="PROJECT_NAME"/>
+        </dropColumn>
+    </changeSet>
+
+    <!-- create a PROCESS_QUEUE view to simplify queries -->
+    <changeSet id="44025" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
+            select
+                INSTANCE_ID,
+                PROCESS_KIND,
+                PARENT_INSTANCE_ID,
+                PROJECT_ID,
+                (select PROJECT_NAME from PROJECTS where PROJECTS.PROJECT_ID = PROCESS_QUEUE.PROJECT_ID) as PROJECT_NAME,
+                CREATED_AT,
+                INITIATOR,
+                CURRENT_STATUS,
+                LAST_AGENT_ID,
+                LAST_UPDATED_AT,
+                PROCESS_TAGS
+            from PROCESS_QUEUE
+        </createView>
+    </changeSet>
+
+    <!-- migrate PROJECT_KV_STORE to the new PROJECTS FK -->
+    <changeSet id="44030" author="ibodrov@gmail.com">
+        <addColumn tableName="PROJECT_KV_STORE">
+            <column name="PROJECT_ID" type="uuid" defaultValueComputed="'00000000-0000-0000-0000-000000000000'::uuid">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <sql>
+            update PROJECT_KV_STORE set PROJECT_ID =
+                coalesce(
+                    (select P.PROJECT_ID from PROJECTS as P where P.PROJECT_NAME = PROJECT_KV_STORE.PROJECT_NAME),
+                    '00000000-0000-0000-0000-000000000000'::uuid)
+        </sql>
+
+        <dropColumn tableName="PROJECT_KV_STORE">
+            <column name="PROJECT_NAME"/>
+        </dropColumn>
+
+        <addPrimaryKey constraintName="PK_PROJECT_KV" tableName="PROJECT_KV_STORE" columnNames="PROJECT_ID, VALUE_KEY"/>
+    </changeSet>
+
+    <!-- set PROJECT_ID as a PK -->
+    <changeSet id="44050" author="ibodrov@gmail.com">
+        <sql>
+            alter table PROJECTS drop constraint PROJECTS_PROJECT_ID_KEY
+        </sql>
+        <dropPrimaryKey tableName="PROJECTS"/>
+        <addPrimaryKey constraintName="PK_PROJECTS" tableName="PROJECTS" columnNames="PROJECT_ID"/>
+    </changeSet>
+
+    <!-- make PROJECT_NAME unique -->
+    <changeSet id="44060" author="ibodrov@gmail.com">
+        <addUniqueConstraint tableName="PROJECTS" columnNames="PROJECT_NAME"/>
+    </changeSet>
+
+    <!-- REPOSITORIES -->
+
+    <!-- add new PK column for REPOSITORIES -->
+    <changeSet id="44100" author="ibodrov@gmail.com">
+        <addColumn tableName="REPOSITORIES">
+            <column name="REPO_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </addColumn>
+
+        <addPrimaryKey constraintName="PK_REPOSITORIES" tableName="REPOSITORIES" columnNames="REPO_ID"/>
+
+        <sql>
+            alter table REPOSITORIES drop constraint REPOSITORIES_REPO_ID_KEY
+        </sql>
+
+        <addUniqueConstraint tableName="REPOSITORIES" columnNames="PROJECT_ID, REPO_NAME"/>
+    </changeSet>
+
+    <!-- SECRETS -->
+
+    <!-- add new PK column for PROJECTS -->
+    <changeSet id="44200" author="ibodrov@gmail.com">
+        <addColumn tableName="SECRETS">
+            <column name="SECRET_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- migrate REPOSITORIES to the new SECRETS FK -->
+    <changeSet id="44210" author="ibodrov@gmail.com">
+        <addColumn tableName="REPOSITORIES">
+            <column name="SECRET_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <sql>
+            update REPOSITORIES set SECRET_ID = (select S.SECRET_ID from SECRETS as S where S.SECRET_NAME = REPOSITORIES.SECRET_NAME)
+        </sql>
+
+        <dropColumn tableName="REPOSITORIES">
+            <column name="SECRET_NAME"/>
+        </dropColumn>
+
+        <addUniqueConstraint tableName="SECRETS" columnNames="SECRET_NAME"/>
+    </changeSet>
+
+    <!-- set SECRET_ID as a PK -->
+    <changeSet id="44220" author="ibodrov@gmail.com">
+        <sql>
+            alter table SECRETS drop constraint SECRETS_SECRET_ID_KEY
+        </sql>
+        <dropPrimaryKey tableName="SECRETS"/>
+        <addPrimaryKey constraintName="PK_SECRETS" tableName="SECRETS" columnNames="SECRET_ID"/>
+    </changeSet>
+
+    <changeSet id="44300" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint baseTableName="REPOSITORIES"
+                                 baseColumnNames="SECRET_ID"
+                                 constraintName="FK_RP_SCR_ID"
+                                 referencedTableName="SECRETS"
+                                 referencedColumnNames="SECRET_ID"/>
+
+    </changeSet>
+
+    <changeSet id="44310" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint baseTableName="PROCESS_QUEUE"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_PQ_RPJ_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"/>
+    </changeSet>
+
+    <changeSet id="44320" author="ibodrov@gmail.com">
+        <addForeignKeyConstraint baseTableName="REPOSITORIES"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_REPO_RPJ_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"/>
+    </changeSet>
+
     <changeSet id="44500" author="ibodrov@gmail.com">
         <addColumn tableName="PROCESS_STATE">
             <column name="UNIX_MODE" type="number(4)" defaultValueNumeric="420"> <!-- 420 (hehe) is octal 0644 -->

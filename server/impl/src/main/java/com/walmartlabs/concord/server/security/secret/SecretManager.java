@@ -37,7 +37,7 @@ public class SecretManager {
     }
 
     public Secret getSecret(String name, String password) {
-        SecretDataEntry s = secretDao.get(name);
+        SecretDataEntry s = secretDao.getByName(name);
         if (s == null) {
             return null;
         }
@@ -52,7 +52,7 @@ public class SecretManager {
     }
 
     public SecretDataEntry getRaw(String name, String password) {
-        SecretDataEntry s = secretDao.get(name);
+        SecretDataEntry s = secretDao.getByName(name);
         if (s == null) {
             return null;
         }
