@@ -53,6 +53,7 @@
         <aopalliance.version>1.0</aopalliance.version>
         <bpm.version>0.36.2</bpm.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
+        <commons.compress.version>1.14</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
         <commons.lang.version>3.6</commons.lang.version>
         <commons.pool.version>2.4.2</commons.pool.version>
@@ -500,6 +501,11 @@
                 <groupId>org.kohsuke</groupId>
                 <artifactId>github-api</artifactId>
                 <version>${github.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons.compress.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

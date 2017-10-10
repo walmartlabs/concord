@@ -7,6 +7,7 @@ import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -15,7 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
@@ -70,7 +70,7 @@ public class KvServiceIT extends AbstractServerIT {
         om.writeValue(reqFile.toFile(), req);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zip = new ZipOutputStream(baos)) {
+        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(baos)) {
             IOUtils.zip(zip, tmpDir);
         }
 

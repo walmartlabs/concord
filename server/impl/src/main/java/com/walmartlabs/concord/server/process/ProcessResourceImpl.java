@@ -22,6 +22,7 @@ import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.FormSubmitResult;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.subject.Subject;
@@ -47,7 +48,6 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
@@ -454,7 +454,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         StreamingOutput out = output -> {
-            try (ZipOutputStream zip = new ZipOutputStream(output)) {
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(output)) {
                 stateManager.export(instanceId, zipTo(zip));
             }
         };

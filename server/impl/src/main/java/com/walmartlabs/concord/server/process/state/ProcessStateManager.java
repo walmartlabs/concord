@@ -2,7 +2,10 @@ package com.walmartlabs.concord.server.process.state;
 
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.common.db.AbstractDao;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -14,18 +17,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.BiConsumer;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static org.jooq.impl.DSL.select;
@@ -247,8 +245,8 @@ public class ProcessStateManager extends AbstractDao {
         String prefix = fixPath(path);
 
         String sql = tx.insertInto(PROCESS_STATE)
-                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
-                .values((UUID) null, null, null)
+                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA)
+                .values((UUID) null, null, null, null)
                 .getSQL();
 
         tx.connection(conn -> {
@@ -267,11 +265,15 @@ public class ProcessStateManager extends AbstractDao {
                             n = prefix + n;
                         }
 
+                        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file);
+                        int unixMode = Posix.unixMode(permissions);
+
                         try {
                             ps.setObject(1, instanceId);
                             ps.setString(2, n);
+                            ps.setInt(3, unixMode);
                             try (InputStream in = Files.newInputStream(file)) {
-                                ps.setBinaryStream(3, in);
+                                ps.setBinaryStream(4, in);
                             }
                             ps.addBatch();
                         } catch (SQLException e) {
@@ -294,10 +296,10 @@ public class ProcessStateManager extends AbstractDao {
      * @param consumer   a function that receives the name of a file and a data stream
      * @return {@code true} if at least a single element was exported.
      */
-    public boolean export(UUID instanceId, BiConsumer<String, InputStream> consumer) {
+    public boolean export(UUID instanceId, ItemConsumer consumer) {
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx
-                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
+                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null))
                     .getSQL();
@@ -312,8 +314,9 @@ public class ProcessStateManager extends AbstractDao {
                             found = true;
 
                             String n = rs.getString(1);
-                            try (InputStream in = rs.getBinaryStream(2)) {
-                                consumer.accept(n, in);
+                            int unixMode = rs.getInt(2);
+                            try (InputStream in = rs.getBinaryStream(3)) {
+                                consumer.accept(n, unixMode, in);
                             }
                         }
                     }
@@ -332,12 +335,12 @@ public class ProcessStateManager extends AbstractDao {
      * @param consumer   a function that receives the name of a file and a data stream
      * @return {@code true} if at least a single element was exported.
      */
-    public boolean exportDirectory(UUID instanceId, String path, BiConsumer<String, InputStream> consumer) {
+    public boolean exportDirectory(UUID instanceId, String path, ItemConsumer consumer) {
         String dir = fixPath(path);
 
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx
-                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
+                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
                             .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
@@ -354,8 +357,9 @@ public class ProcessStateManager extends AbstractDao {
                             found = true;
 
                             String n = relativize(dir, rs.getString(1));
-                            try (InputStream in = rs.getBinaryStream(2)) {
-                                consumer.accept(n, in);
+                            int unixMode = rs.getInt(2);
+                            try (InputStream in = rs.getBinaryStream(3)) {
+                                consumer.accept(n, unixMode, in);
                             }
                         }
                     }
@@ -407,7 +411,7 @@ public class ProcessStateManager extends AbstractDao {
      * @param options optional copy options
      * @return
      */
-    public static BiConsumer<String, InputStream> copyTo(Path dst, OpenOption... options) {
+    public static ItemConsumer copyTo(Path dst, OpenOption... options) {
         return new CopyConsumer(dst, null, options);
     }
 
@@ -419,7 +423,7 @@ public class ProcessStateManager extends AbstractDao {
      * @param options optional copy options
      * @return
      */
-    public static BiConsumer<String, InputStream> copyTo(Path dst, String[] ignored, OpenOption... options) {
+    public static ItemConsumer copyTo(Path dst, String[] ignored, OpenOption... options) {
         return new CopyConsumer(dst, ignored, options);
     }
 
@@ -429,7 +433,7 @@ public class ProcessStateManager extends AbstractDao {
      * @param dst archive stream.
      * @return
      */
-    public static BiConsumer<String, InputStream> zipTo(ZipOutputStream dst) {
+    public static ItemConsumer zipTo(ZipArchiveOutputStream dst) {
         return new ZipConsumer(dst);
     }
 
@@ -443,7 +447,7 @@ public class ProcessStateManager extends AbstractDao {
         return String.join(PATH_SEPARATOR, elements);
     }
 
-    private static final class CopyConsumer implements BiConsumer<String, InputStream> {
+    private static final class CopyConsumer implements ItemConsumer {
 
         private final Path dst;
         private final String[] ignored;
@@ -456,7 +460,7 @@ public class ProcessStateManager extends AbstractDao {
         }
 
         @Override
-        public void accept(String name, InputStream src) {
+        public void accept(String name, int unixMode, InputStream src) {
             if (ignored != null) {
                 for (String i : ignored) {
                     if (name.matches(i)) {
@@ -476,28 +480,39 @@ public class ProcessStateManager extends AbstractDao {
                 try (OutputStream dst = Files.newOutputStream(p, options)) {
                     IOUtils.copy(src, dst);
                 }
+
+                Files.setPosixFilePermissions(p, Posix.posix(unixMode));
             } catch (IOException e) {
                 throw Throwables.propagate(e);
             }
         }
     }
 
-    private static final class ZipConsumer implements BiConsumer<String, InputStream> {
+    private static final class ZipConsumer implements ItemConsumer {
 
-        private final ZipOutputStream dst;
+        private final ZipArchiveOutputStream dst;
 
-        private ZipConsumer(ZipOutputStream dst) {
+        private ZipConsumer(ZipArchiveOutputStream dst) {
             this.dst = dst;
         }
 
         @Override
-        public void accept(String name, InputStream src) {
+        public void accept(String name, int unixMode, InputStream src) {
+            ZipArchiveEntry entry = new ZipArchiveEntry(name);
+            entry.setUnixMode(unixMode);
+
             try {
-                dst.putNextEntry(new ZipEntry(name));
+                dst.putArchiveEntry(entry);
                 IOUtils.copy(src, dst);
+                dst.closeArchiveEntry();
             } catch (IOException e) {
                 throw Throwables.propagate(e);
             }
         }
+    }
+
+    private interface ItemConsumer {
+
+        void accept(String name, int unixMode, InputStream src);
     }
 }

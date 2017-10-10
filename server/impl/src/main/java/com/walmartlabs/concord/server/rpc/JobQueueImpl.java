@@ -12,19 +12,17 @@ import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.grpc.stub.StreamObserver;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
@@ -59,7 +57,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         try {
             // TODO this probably can be replaced with an in-memory buffer
             Path tmp = Files.createTempFile("payload", ".zip");
-            try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(tmp))) {
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
                 stateManager.export(instanceId, zipTo(zip));
             }
 
@@ -128,11 +126,13 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         UUID instanceId = UUID.fromString(request.getInstanceId());
         try {
             // TODO cfg
-            Path tmpDir = Files.createTempDirectory("attachments");
             byte[] data = request.getData().toByteArray();
-            try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(data))) {
-                IOUtils.unzip(zip, tmpDir);
-            }
+
+            Path tmpIn = Files.createTempFile("attachments", ".zip");
+            Files.write(tmpIn, data);
+
+            Path tmpDir = Files.createTempDirectory("attachments");
+            IOUtils.unzip(tmpIn, tmpDir);
 
             stateManager.transaction(tx -> {
                 stateManager.delete(tx, instanceId, path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_STATE_DIR_NAME));
