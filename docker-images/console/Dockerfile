@@ -3,6 +3,7 @@ MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 RUN yum -y install nginx && yum clean all
 
+EXPOSE 80
 EXPOSE 443
 EXPOSE 8080
 
