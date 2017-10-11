@@ -158,6 +158,8 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
+                    <parallel>all</parallel>
+                    <threadCount>2</threadCount>
                     <environmentVariables>
                         <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
