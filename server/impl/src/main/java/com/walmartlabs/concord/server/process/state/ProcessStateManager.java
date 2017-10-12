@@ -97,7 +97,7 @@ public class ProcessStateManager extends AbstractDao {
      * Fetches multiple values whose path begins with the specified value and applies a converter function
      * to each value.
      */
-    public <T> List<T> list(UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
+    public <T> List<T> forEach(UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx.select(PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
@@ -124,6 +124,19 @@ public class ProcessStateManager extends AbstractDao {
                     return result;
                 }
             });
+        }
+    }
+
+    /**
+     * Retrieves a list of resources whose path begins with the specified value.
+     */
+    public List<String> list(UUID instanceId, String path) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_STATE.ITEM_PATH)
+                    .from(PROCESS_STATE)
+                    .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
+                            .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
+                    .fetch(PROCESS_STATE.ITEM_PATH);
         }
     }
 
