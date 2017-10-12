@@ -13,6 +13,11 @@
 is restarted;
 - ansible: throw an exception if a private key file was not found.
 
+### Breaking
+
+- concord-server: `/api/v1/process/{id}/subprocesses` changed to
+`/api/v1/process/{id}/subprocess`.
+
 
 
 ## [0.43.0] - 2017-10-05

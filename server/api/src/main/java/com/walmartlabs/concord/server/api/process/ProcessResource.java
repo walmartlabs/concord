@@ -232,7 +232,7 @@ public interface ProcessResource {
      */
     @GET
     @ApiOperation("List subprocesses of a parent process")
-    @Path("/{id}/subprocesses")
+    @Path("/{id}/subprocess")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> list(@ApiParam @PathParam("id") UUID parentInstanceId,
                             @ApiParam @QueryParam("tags") Set<String> tags);
