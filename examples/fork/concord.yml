@@ -27,13 +27,13 @@ flows:
 
 configuration:
   dependencies:
-  - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/concord-tasks/0.30.0/concord-tasks-0.30.0.jar"
+  - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.32.0"
 
   arguments:
     concord:
       # default parameters, can be overridden with `in` parameters of
       # the task
-      baseUrl: "http://localhost:8001"
-      apiKey: "auBy4eDWrKWsyhiDp3AQiw"
+      baseUrl: "http://server.dev.concord.devtools.prod.walmart.com:8001"
+      apiKey: "lzfJQL4u2gsH7toQveFYSQ"
 
     myName: "Concord"
