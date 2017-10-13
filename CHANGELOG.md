@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: an endpoint to retrieve a list of attachments.
+
+
+
 ## [0.44.0] - 2017-10-12
 
 ### Added
