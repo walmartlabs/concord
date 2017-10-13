@@ -68,7 +68,7 @@ public class ConcordFormService {
                 Constants.Files.JOB_STATE_DIR_NAME,
                 Constants.Files.JOB_FORMS_DIR_NAME);
 
-        List<Form> forms = stateManager.list(processInstanceId, resource, ConcordFormService::deserialize);
+        List<Form> forms = stateManager.forEach(processInstanceId, resource, ConcordFormService::deserialize);
         return forms.stream().map(f -> {
             String name = f.getFormDefinition().getName();
 

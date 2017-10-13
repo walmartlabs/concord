@@ -342,6 +342,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @WithTimer
     @RequiresAuthentication
     public Response downloadAttachment(UUID instanceId, String attachmentName) {
+        assertInstanceId(instanceId);
+
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
             throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
@@ -371,6 +373,19 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 IOUtils.copy(in, out);
             }
         }).build();
+    }
+
+    @Override
+    @WithTimer
+    @RequiresAuthentication
+    public List<String> listAttachments(UUID instanceId) {
+        assertInstanceId(instanceId);
+
+        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
+        List<String> l = stateManager.list(instanceId, resource);
+        return l.stream()
+                .map(s -> s.substring(resource.length()))
+                .collect(Collectors.toList());
     }
 
     @Override

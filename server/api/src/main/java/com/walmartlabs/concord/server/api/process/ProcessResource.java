@@ -212,6 +212,18 @@ public interface ProcessResource {
                                 @PathParam("name") @NotNull @Size(min = 1) String attachmentName);
 
     /**
+     * Lists process attachments.
+     *
+     * @param instanceId
+     * @return
+     */
+    @GET
+    @ApiOperation("List attachments")
+    @Path("/{id}/attachment")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<String> listAttachments(@ApiParam @PathParam("id") UUID instanceId);
+
+    /**
      * Returns entries from the process queue.
      *
      * @return
