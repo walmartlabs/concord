@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -47,7 +47,7 @@ public class TemplateIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         Map<String, Object> cfg = new HashMap<>();
-        cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
+        cfg.put(InternalConstants.Request.TEMPLATE_KEY, templateAlias);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, cfg));
 
         // ---
@@ -72,7 +72,7 @@ public class TemplateIT extends AbstractServerIT {
         Path metaPath = tmpDir.resolve(TemplateScriptProcessor.REQUEST_DATA_TEMPLATE_FILE_NAME);
         Files.write(metaPath, META_JS.getBytes());
 
-        Path processesPath = tmpDir.resolve(Constants.Files.DEFINITIONS_DIR_NAME);
+        Path processesPath = tmpDir.resolve(InternalConstants.Files.DEFINITIONS_DIR_NAME);
         Files.createDirectories(processesPath);
 
         Path procPath = processesPath.resolve("hello.yml");

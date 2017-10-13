@@ -10,10 +10,10 @@ import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.rpc.AgentApiClient;
-import com.walmartlabs.concord.sdk.ClientException;
 import com.walmartlabs.concord.rpc.JobQueue;
+import com.walmartlabs.concord.sdk.ClientException;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +70,7 @@ public class DefaultJobExecutor implements JobExecutor {
                 entry = startOneTime(instanceId, workDir, cmd);
             }
 
-            Path payloadDir = entry.getWorkDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
+            Path payloadDir = entry.getWorkDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
 
             Process proc = entry.getProcess();
             CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> exec(instanceId, entry.getWorkDir(), proc, payloadDir), executor);
@@ -135,7 +135,7 @@ public class DefaultJobExecutor implements JobExecutor {
         });
 
         try {
-            Path payloadDir = entry.getWorkDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
+            Path payloadDir = entry.getWorkDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
             // TODO use move
             IOUtils.copy(workDir, payloadDir);
             writeInstanceId(instanceId, payloadDir);
@@ -176,7 +176,7 @@ public class DefaultJobExecutor implements JobExecutor {
     private ProcessEntry startOneTime(String instanceId, Path workDir, String[] cmd) throws IOException {
         Path procDir = Files.createTempDirectory("onetime");
 
-        Path payloadDir = procDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
+        Path payloadDir = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
         Files.move(workDir, payloadDir, StandardCopyOption.ATOMIC_MOVE);
         writeInstanceId(instanceId, payloadDir);
 
@@ -184,7 +184,7 @@ public class DefaultJobExecutor implements JobExecutor {
     }
 
     private ProcessEntry start(Path workDir, String[] cmd) throws IOException {
-        Path payloadDir = workDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
+        Path payloadDir = workDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
         if (!Files.exists(payloadDir)) {
             Files.createDirectories(payloadDir);
         }
@@ -198,7 +198,7 @@ public class DefaultJobExecutor implements JobExecutor {
 
         // TODO constants
         Map<String, String> env = b.environment();
-        env.put("_CONCORD_ATTACHMENTS_DIR", payloadDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+        env.put("_CONCORD_ATTACHMENTS_DIR", payloadDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .toAbsolutePath().toString());
 
         Process p = b.start();
@@ -255,7 +255,7 @@ public class DefaultJobExecutor implements JobExecutor {
         String deps = String.join(":", dependencyFiles);
 
         // payload's own libraries are stored in `./lib/` directory in the working directory
-        String libs = Constants.Files.LIBRARIES_DIR_NAME + "/*";
+        String libs = InternalConstants.Files.LIBRARIES_DIR_NAME + "/*";
 
         // the runner's runtime is stored somewhere in the agent's libraries
         String runner = cfg.getRunnerPath().toAbsolutePath().toString();
@@ -269,14 +269,14 @@ public class DefaultJobExecutor implements JobExecutor {
     }
 
     private Collection<URI> getDependencyUris(Path workDir) throws ExecutionException {
-        Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {
             return Collections.emptySet();
         }
 
         try (InputStream in = Files.newInputStream(p)) {
             Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            Collection<String> deps = (Collection<String>) m.get(Constants.Request.DEPENDENCIES_KEY);
+            Collection<String> deps = (Collection<String>) m.get(InternalConstants.Request.DEPENDENCIES_KEY);
             return normalizeUrls(deps);
         } catch (URISyntaxException | IOException e) {
             throw new ExecutionException("Error while reading the list of dependencies", e);
@@ -345,7 +345,7 @@ public class DefaultJobExecutor implements JobExecutor {
     }
 
     private void postProcess(String instanceId, Path payloadDir) throws ExecutionException {
-        Path attachmentsDir = payloadDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+        Path attachmentsDir = payloadDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
         if (!Files.exists(attachmentsDir)) {
             return;
         }
@@ -373,26 +373,26 @@ public class DefaultJobExecutor implements JobExecutor {
     }
 
     private List<String> getAgentJvmParams(Path workDir) {
-        Path p = workDir.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME);
+        Path p = workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME);
         if (!Files.exists(p)) {
             return null;
         }
 
         try (InputStream in = Files.newInputStream(p)) {
             Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            return (List<String>) m.get(Constants.Agent.JVM_ARGS_KEY);
+            return (List<String>) m.get(InternalConstants.Agent.JVM_ARGS_KEY);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
 
     private static boolean canUsePrefork(Path workDir) {
-        if (Files.exists(workDir.resolve(Constants.Files.LIBRARIES_DIR_NAME))) {
+        if (Files.exists(workDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME))) {
             // payload supplied its own libraries
             return false;
         }
 
-        if (Files.exists(workDir.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME))) {
+        if (Files.exists(workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME))) {
             // payload supplied its own JVM parameters
             return false;
         }
@@ -401,7 +401,7 @@ public class DefaultJobExecutor implements JobExecutor {
     }
 
     private static void writeInstanceId(String instanceId, Path dst) throws IOException {
-        Path idPath = dst.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
+        Path idPath = dst.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
         Files.write(idPath, instanceId.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.SYNC);
     }
 

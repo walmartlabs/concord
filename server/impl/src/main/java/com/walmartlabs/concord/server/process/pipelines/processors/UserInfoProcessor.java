@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -30,7 +30,7 @@ public class UserInfoProcessor implements PayloadProcessor {
 
         UserInfo info = getInfo();
         payload = payload.mergeValues(Payload.REQUEST_DATA_MAP,
-                Collections.singletonMap(Constants.Request.INITIATOR_KEY, info));
+                Collections.singletonMap(InternalConstants.Request.INITIATOR_KEY, info));
 
         log.info("process ['{}'] -> done", payload.getInstanceId());
         return chain.process(payload);

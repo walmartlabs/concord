@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
@@ -42,7 +42,7 @@ public class SuspendIT extends AbstractServerIT {
 
         String testValue = "test#" + System.currentTimeMillis();
         Map<String, Object> args = Collections.singletonMap("testValue", testValue);
-        Map<String, Object> req = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
+        Map<String, Object> req = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY, args);
 
         processResource.resume(spr.getInstanceId(), "ev1", req);
 

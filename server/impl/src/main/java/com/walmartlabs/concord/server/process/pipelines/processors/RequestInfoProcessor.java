@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 
 import javax.inject.Named;
@@ -19,17 +19,17 @@ public class RequestInfoProcessor implements PayloadProcessor {
             req = new HashMap<>();
         }
 
-        Map<String, Object> args = (Map<String, Object>) req.get(Constants.Request.ARGUMENTS_KEY);
+        Map<String, Object> args = (Map<String, Object>) req.get(InternalConstants.Request.ARGUMENTS_KEY);
         if (args == null) {
             args = new HashMap<>();
-            req.put(Constants.Request.ARGUMENTS_KEY, args);
+            req.put(InternalConstants.Request.ARGUMENTS_KEY, args);
         }
 
-        if (args.containsKey(Constants.Request.REQUEST_INFO_KEY)) {
+        if (args.containsKey(InternalConstants.Request.REQUEST_INFO_KEY)) {
             return chain.process(payload);
         }
 
-        args.put(Constants.Request.REQUEST_INFO_KEY, new HashMap<>());
+        args.put(InternalConstants.Request.REQUEST_INFO_KEY, new HashMap<>());
 
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, req);
         return chain.process(payload);

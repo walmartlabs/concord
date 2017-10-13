@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.runner.engine;
 
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
@@ -53,12 +53,12 @@ public class EngineFactory {
     }
 
     public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles) {
-        Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
+        Path stateDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
 
         Path eventsDir = stateDir.resolve("events");
         Path instancesDir = stateDir.resolve("instances");
-        Path formsDir = stateDir.resolve(Constants.Files.JOB_FORMS_DIR_NAME);
+        Path formsDir = stateDir.resolve(InternalConstants.Files.JOB_FORMS_DIR_NAME);
 
         try {
             Files.createDirectories(eventsDir);
@@ -69,7 +69,7 @@ public class EngineFactory {
         }
 
         ExpressionManager expressionManager = new DefaultExpressionManager(
-                new String[]{Constants.Context.CONTEXT_KEY, Constants.Context.EXECUTION_CONTEXT_KEY},
+                new String[]{InternalConstants.Context.CONTEXT_KEY, InternalConstants.Context.EXECUTION_CONTEXT_KEY},
                 new TaskResolver(taskRegistry),
                 new InjectVariableELResolver());
 
@@ -126,7 +126,7 @@ public class EngineFactory {
 
             // TODO this should be replaces with a project attribute
             String localPath = baseDir.toAbsolutePath().toString();
-            this.attributes = Collections.singletonMap(Constants.Context.LOCAL_PATH_ATTR, localPath);
+            this.attributes = Collections.singletonMap(InternalConstants.Context.LOCAL_PATH_ATTR, localPath);
         }
 
         ProcessDefinitionProvider processes() {

@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
@@ -40,7 +40,7 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
 
     private Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path src = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path src = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(src)) {
             return Collections.emptyMap();
         }
@@ -58,7 +58,7 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
             return Collections.emptyMap();
         }
 
-        return Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
-                Collections.singletonMap(Constants.Request.PARENT_INSTANCE_ID_KEY, id.toString()));
+        return Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
+                Collections.singletonMap(InternalConstants.Request.PARENT_INSTANCE_ID_KEY, id.toString()));
     }
 }

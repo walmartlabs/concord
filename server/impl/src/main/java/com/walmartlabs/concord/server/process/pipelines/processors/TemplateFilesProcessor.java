@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.cfg.TemplateConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -50,7 +50,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         UUID instanceId = payload.getInstanceId();
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
-        String s = (String) req.get(Constants.Request.TEMPLATE_KEY);
+        String s = (String) req.get(InternalConstants.Request.TEMPLATE_KEY);
         if (s == null) {
             return chain.process(payload);
         }

@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.ServerSetup;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
@@ -45,7 +45,7 @@ public class SmtpIT extends AbstractServerIT {
         args.put("smtpParams", smtpParams);
 
         Map<String, Object> cfg = new HashMap<>();
-        cfg.put(Constants.Request.ARGUMENTS_KEY, args);
+        cfg.put(InternalConstants.Request.ARGUMENTS_KEY, args);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, cfg));

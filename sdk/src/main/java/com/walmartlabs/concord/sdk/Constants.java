@@ -3,12 +3,12 @@ package com.walmartlabs.concord.sdk;
 /**
  * Project and process constants.
  */
-public final class Constants {
+public class Constants {
 
     /**
      * Process context variables.
      */
-    public static final class Context {
+    public static class Context {
 
         /**
          * Execution context.
@@ -16,7 +16,7 @@ public final class Constants {
         public static final String CONTEXT_KEY = "context";
 
         /**
-         * Path (a string) to a local directory, containing agent's payload.
+         * Path (a string) to a local directory which contains agent's payload.
          */
         public static final String WORK_DIR_KEY = "workDir";
 
@@ -24,15 +24,12 @@ public final class Constants {
          * ID of the current process instance.
          */
         public static final String TX_ID_KEY = "txId";
-
-        private Context() {
-        }
     }
 
     /**
      * Request data keys.
      */
-    public static final class Request {
+    public static class Request {
 
         /**
          * Key of a process arguments object in a request data JSON.
@@ -93,18 +90,12 @@ public final class Constants {
          * If {@code true}, then `onFailure` flow will be ignored.
          */
         public static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
-
-        private Request() {
-        }
     }
 
     /**
      * Project files and directories.
      */
-    public static final class Files {
-
-        @Deprecated
-        public static final String PAYLOAD_DIR_NAME = "payload";
+    public static class Files {
 
         /**
          * Directory containing libraries (dependencies) of a payload.
@@ -112,12 +103,12 @@ public final class Constants {
         public static final String LIBRARIES_DIR_NAME = "lib";
 
         /**
-         * (Default) directory containing process definitions of a payload.
+         * (Default) directory which contains process definitions of a payload.
          */
         public static final String DEFINITIONS_DIR_NAME = "flows";
 
         /**
-         * Directories containing process definitions of a payload.
+         * Directories which contain process definitions of a payload.
          */
         public static final String[] DEFINITIONS_DIR_NAMES = {"flows", "processes"};
 
@@ -127,30 +118,27 @@ public final class Constants {
         public static final String PROFILES_DIR_NAME = "profiles";
 
         /**
-         * File, containing request data of a payload: process arguments, entry point name, etc.
+         * File which contains request data of a payload: process arguments, entry point name, etc.
          */
         public static final String REQUEST_DATA_FILE_NAME = "_main.json";
 
         /**
-         * Directory, containing job "attachments": reports, stats, etc.
+         * Directory which contains job "attachments": reports, stats, etc.
          */
         public static final String JOB_ATTACHMENTS_DIR_NAME = "_attachments";
 
         /**
-         * Directory, containing process' state.
+         * Directory which contains process' state.
          */
         public static final String JOB_STATE_DIR_NAME = "_state";
 
         /**
-         * Directory, containing process' forms.
+         * Directory which contains process' forms.
          */
         public static final String JOB_FORMS_DIR_NAME = "forms";
-
-        private Files() {
-        }
     }
 
-    public static final class Flows {
+    public static class Flows {
 
         /**
          * Failure-handling flow.
@@ -161,8 +149,5 @@ public final class Constants {
          * Cancel-handling flow.
          */
         public static final String ON_CANCEL_FLOW = "onCancel";
-    }
-
-    private Constants() {
     }
 }

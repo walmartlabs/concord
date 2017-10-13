@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -31,7 +31,7 @@ public class TemplateMergeIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null,
-                Collections.singletonMap(Constants.Request.TEMPLATE_KEY, template.toUri().toString())));
+                Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, template.toUri().toString())));
 
         // ---
 

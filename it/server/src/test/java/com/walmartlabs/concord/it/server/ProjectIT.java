@@ -3,7 +3,7 @@ package com.walmartlabs.concord.it.server;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -57,7 +57,7 @@ public class ProjectIT extends AbstractServerIT {
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
         String greeting = "Hello, _" + System.currentTimeMillis();
-        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
         // ---
@@ -137,7 +137,7 @@ public class ProjectIT extends AbstractServerIT {
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
         String greeting = "Hello, _" + System.currentTimeMillis();
-        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
         // ---
@@ -189,7 +189,7 @@ public class ProjectIT extends AbstractServerIT {
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
         String greeting = "Hello, _" + System.currentTimeMillis();
-        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
         // ---
@@ -222,7 +222,7 @@ public class ProjectIT extends AbstractServerIT {
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
         String greeting = "Hello, _" + System.currentTimeMillis();
-        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
                 ImmutableMap.of(
                         "myForm1", ImmutableMap.of(
                                 "x", 100123, "firstName", "Boo"),

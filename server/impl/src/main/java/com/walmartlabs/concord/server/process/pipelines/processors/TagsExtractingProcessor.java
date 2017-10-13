@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
@@ -14,7 +14,7 @@ public class TagsExtractingProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
-        Object v = req.get(Constants.Request.TAGS_KEY);
+        Object v = req.get(InternalConstants.Request.TAGS_KEY);
         if (v == null) {
             return chain.process(payload);
         }

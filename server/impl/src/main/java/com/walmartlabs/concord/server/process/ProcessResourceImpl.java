@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
@@ -349,7 +349,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
         }
 
-        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
+        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
         Optional<Path> o = stateManager.get(instanceId, resource, src -> {
             try {
                 Path tmp = Files.createTempFile("attachment", ".bin");
@@ -484,13 +484,13 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> readArgs(UUID instanceId) {
-        String resource = Constants.Files.REQUEST_DATA_FILE_NAME;
+        String resource = InternalConstants.Files.REQUEST_DATA_FILE_NAME;
         Optional<Map<String, Object>> o = stateManager.get(instanceId, resource, in -> {
             try {
                 ObjectMapper om = new ObjectMapper();
 
                 Map<String, Object> cfg = om.readValue(in, Map.class);
-                Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
+                Map<String, Object> args = (Map<String, Object>) cfg.get(InternalConstants.Request.ARGUMENTS_KEY);
 
                 return Optional.ofNullable(args);
             } catch (IOException e) {

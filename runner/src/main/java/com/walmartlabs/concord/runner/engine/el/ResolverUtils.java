@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.runner.engine.el;
 
 import com.sun.el.lang.EvaluationContext;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import io.takari.bpm.api.ExecutionContext;
 
 import javax.el.ELContext;
@@ -16,7 +16,7 @@ public final class ResolverUtils {
         if(v != null) {
             return v.getValue(context);
         }
-        v = varMapper.resolveVariable(Constants.Context.CONTEXT_KEY);
+        v = varMapper.resolveVariable(InternalConstants.Context.CONTEXT_KEY);
         if(v != null) {
             ExecutionContext ctx = (ExecutionContext) v.getValue(context);
             return ctx.getVariable(name);

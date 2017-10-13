@@ -37,14 +37,14 @@ public class ProjectLoader {
             }
         }
 
-        for (String n : Constants.Files.DEFINITIONS_DIR_NAMES) {
+        for (String n : InternalConstants.Files.DEFINITIONS_DIR_NAMES) {
             Path defsDir = baseDir.resolve(n);
             if (Files.exists(defsDir)) {
                 b.addDefinitions(defsDir);
             }
         }
 
-        Path profilesDir = baseDir.resolve(Constants.Files.PROFILES_DIR_NAME);
+        Path profilesDir = baseDir.resolve(InternalConstants.Files.PROFILES_DIR_NAME);
         if (Files.exists(profilesDir)) {
             b.addProfiles(profilesDir);
         }

@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.console;
 
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
@@ -47,13 +47,13 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
         Map<String, Object> req = new HashMap<>();
         if (activeProfiles != null) {
             String[] as = activeProfiles.split(",");
-            req.put(Constants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
+            req.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
         }
 
         if (uriInfo != null) {
             Map<String, Object> args = new HashMap<>();
             args.put("requestInfo", RequestInfoProcessor.createRequestInfo(uriInfo));
-            req.put(Constants.Request.ARGUMENTS_KEY, args);
+            req.put(InternalConstants.Request.ARGUMENTS_KEY, args);
         }
 
         StartProcessResponse resp = processResource.start(entryPoint, req, null, false);

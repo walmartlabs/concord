@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
@@ -46,9 +46,9 @@ public class ConcordFormService {
     }
 
     public Form get(UUID processInstanceId, String formInstanceId) {
-        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                Constants.Files.JOB_STATE_DIR_NAME,
-                Constants.Files.JOB_FORMS_DIR_NAME,
+        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                InternalConstants.Files.JOB_STATE_DIR_NAME,
+                InternalConstants.Files.JOB_FORMS_DIR_NAME,
                 formInstanceId);
 
         Optional<Form> o = stateManager.get(processInstanceId, resource, ConcordFormService::deserialize);
@@ -64,9 +64,9 @@ public class ConcordFormService {
     }
 
     public List<FormListEntry> list(UUID processInstanceId) throws ExecutionException {
-        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                Constants.Files.JOB_STATE_DIR_NAME,
-                Constants.Files.JOB_FORMS_DIR_NAME);
+        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                InternalConstants.Files.JOB_STATE_DIR_NAME,
+                InternalConstants.Files.JOB_FORMS_DIR_NAME);
 
         List<Form> forms = stateManager.forEach(processInstanceId, resource, ConcordFormService::deserialize);
         return forms.stream().map(f -> {
@@ -81,9 +81,9 @@ public class ConcordFormService {
     }
 
     public String nextFormId(UUID processInstanceId) throws ExecutionException {
-        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                Constants.Files.JOB_STATE_DIR_NAME,
-                Constants.Files.JOB_FORMS_DIR_NAME);
+        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                InternalConstants.Files.JOB_STATE_DIR_NAME,
+                InternalConstants.Files.JOB_FORMS_DIR_NAME);
 
         Function<String, Optional<String>> getId = s -> {
             int i = s.lastIndexOf("/");
@@ -107,16 +107,16 @@ public class ConcordFormService {
         }
 
         ResumeHandler resumeHandler = (f, args) -> {
-            String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                    Constants.Files.JOB_STATE_DIR_NAME,
-                    Constants.Files.JOB_FORMS_DIR_NAME,
+            String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                    InternalConstants.Files.JOB_STATE_DIR_NAME,
+                    InternalConstants.Files.JOB_FORMS_DIR_NAME,
                     formInstanceId);
 
             stateManager.delete(processInstanceId, resource);
 
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
-            m.put(Constants.Request.ARGUMENTS_KEY, args);
+            m.put(InternalConstants.Request.ARGUMENTS_KEY, args);
             resume(UUID.fromString(f.getProcessBusinessKey()), f.getEventName(), m);
         };
 

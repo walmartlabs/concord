@@ -3,7 +3,7 @@ package com.walmartlabs.concord.it.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
@@ -65,7 +65,7 @@ public class KvServiceIT extends AbstractServerIT {
         Map<String, Object> req = ImmutableMap.of("entryPoint", entryPoint,
                 "arguments", args);
 
-        Path reqFile = tmpDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path reqFile = tmpDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         ObjectMapper om = new ObjectMapper();
         om.writeValue(reqFile.toFile(), req);
 

@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
@@ -27,7 +27,7 @@ public class ResumeDataMergingProcessor implements PayloadProcessor {
         Map<String, Object> workspaceCfg = getWorkspaceCfg(payload);
 
         // we'll use the arguments only from the request
-        workspaceCfg.remove(Constants.Request.ARGUMENTS_KEY);
+        workspaceCfg.remove(InternalConstants.Request.ARGUMENTS_KEY);
 
         // create the resulting configuration
         Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, req);
@@ -38,7 +38,7 @@ public class ResumeDataMergingProcessor implements PayloadProcessor {
 
     private Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path src = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path src = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(src)) {
             return Collections.emptyMap();
         }

@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
@@ -35,15 +35,15 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path stateDir = workspace.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
+        Path stateDir = workspace.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
 
         try {
             if (!Files.exists(stateDir)) {
                 Files.createDirectories(stateDir);
             }
 
-            Path resumeMarker = stateDir.resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
+            Path resumeMarker = stateDir.resolve(InternalConstants.Files.RESUME_MARKER_FILE_NAME);
             Files.write(resumeMarker, eventName.getBytes());
         } catch (IOException e) {
             logManager.error(instanceId, "Error while saving resume state", e);

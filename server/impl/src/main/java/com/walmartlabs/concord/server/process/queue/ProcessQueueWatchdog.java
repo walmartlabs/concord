@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
@@ -37,12 +37,12 @@ public class ProcessQueueWatchdog {
     private static final PollEntry POLL_ENTRIES[] = {
             new PollEntry(ProcessStatus.FAILED,
                     ProcessMetadataManager.ON_FAILURE_MARKER_PATH,
-                    Constants.Flows.ON_FAILURE_FLOW,
+                    InternalConstants.Flows.ON_FAILURE_FLOW,
                     ProcessKind.FAILURE_HANDLER, 3),
 
             new PollEntry(ProcessStatus.CANCELLED,
                     ProcessMetadataManager.ON_CANCEL_MARKER_PATH,
-                    Constants.Flows.ON_CANCEL_FLOW,
+                    InternalConstants.Flows.ON_CANCEL_FLOW,
                     ProcessKind.CANCEL_HANDLER, 3)
     };
 
@@ -111,8 +111,8 @@ public class ProcessQueueWatchdog {
                         UUID childId = UUID.randomUUID();
 
                         Map<String, Object> req = new HashMap<>();
-                        req.put(Constants.Request.ENTRY_POINT_KEY, e.flow);
-                        req.put(Constants.Request.TAGS_KEY, null); // clear tags
+                        req.put(InternalConstants.Request.ENTRY_POINT_KEY, e.flow);
+                        req.put(InternalConstants.Request.TAGS_KEY, null); // clear tags
 
                         Payload payload = payloadManager.createFork(childId, parent.instanceId, e.handlerKind,
                                 parent.initiator, parent.projectId, req);

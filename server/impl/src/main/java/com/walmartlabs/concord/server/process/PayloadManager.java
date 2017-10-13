@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process;
 
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
@@ -224,13 +224,13 @@ public class PayloadManager {
         if (entryPoint == null) {
             Map<String, Object> req = p.getHeader(Payload.REQUEST_DATA_MAP);
             if (req != null) {
-                entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
+                entryPoint = (String) req.get(InternalConstants.Request.ENTRY_POINT_KEY);
             }
         }
 
         if (entryPoint != null) {
             p = p.putHeader(Payload.ENTRY_POINT, entryPoint)
-                    .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(Constants.Request.ENTRY_POINT_KEY, entryPoint));
+                    .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(InternalConstants.Request.ENTRY_POINT_KEY, entryPoint));
         }
 
         UUID projectId = null;

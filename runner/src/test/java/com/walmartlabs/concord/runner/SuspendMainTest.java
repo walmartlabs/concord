@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.runner;
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 import com.walmartlabs.concord.sdk.Task;
 import org.junit.Test;
@@ -36,9 +36,9 @@ public class SuspendMainTest extends AbstractMainTest {
         // ---
 
         Path baseDir = Paths.get(System.getProperty("user.dir"));
-        Path evFile = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(Constants.Files.RESUME_MARKER_FILE_NAME);
+        Path evFile = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME)
+                .resolve(InternalConstants.Files.RESUME_MARKER_FILE_NAME);
         Files.write(evFile, "ev1".getBytes());
 
         main.run();

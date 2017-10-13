@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.rpc;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -135,8 +135,8 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
             IOUtils.unzip(tmpIn, tmpDir);
 
             stateManager.transaction(tx -> {
-                stateManager.delete(tx, instanceId, path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_STATE_DIR_NAME));
-                stateManager.importPath(tx, instanceId, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
+                stateManager.delete(tx, instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
+                stateManager.importPath(tx, instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
             });
         } catch (IOException e) {
             responseObserver.onError(e);
@@ -150,9 +150,9 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     }
 
     private boolean isSuspended(UUID instanceId) {
-        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                Constants.Files.JOB_STATE_DIR_NAME,
-                Constants.Files.SUSPEND_MARKER_FILE_NAME);
+        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                InternalConstants.Files.JOB_STATE_DIR_NAME,
+                InternalConstants.Files.SUSPEND_MARKER_FILE_NAME);
 
         return stateManager.exists(instanceId, resource);
     }

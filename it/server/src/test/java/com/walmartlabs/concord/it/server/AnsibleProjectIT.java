@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.it.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -94,7 +94,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
-        Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
+        Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, singletonMap(repoName, repo), cfg));
 
         // ---
@@ -141,7 +141,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
 
-        Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
+        Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, singletonMap(repoName, repo), cfg));
 
         // ---

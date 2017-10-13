@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -55,7 +55,7 @@ public class DependenciesProcessor implements PayloadProcessor {
             throw new ProcessException(instanceId, "Invalid dependency list");
         }
 
-        req.put(Constants.Request.DEPENDENCIES_KEY, deps);
+        req.put(InternalConstants.Request.DEPENDENCIES_KEY, deps);
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, req);
 
         log.info("process ['{}'] -> done", instanceId);
@@ -64,7 +64,7 @@ public class DependenciesProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private Collection<String> deps(UUID instanceId, Map<String, Object> req) {
-        Object o = req.get(Constants.Request.DEPENDENCIES_KEY);
+        Object o = req.get(InternalConstants.Request.DEPENDENCIES_KEY);
         if (o == null) {
             return null;
         }

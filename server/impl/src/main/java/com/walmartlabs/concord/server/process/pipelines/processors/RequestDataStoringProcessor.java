@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -43,7 +43,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path dst = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path dst = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
 
         try (OutputStream out = Files.newOutputStream(dst)) {
             ObjectMapper om = new ObjectMapper();

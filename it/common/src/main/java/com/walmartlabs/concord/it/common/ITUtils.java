@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.it.common;
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import java.io.ByteArrayOutputStream;
@@ -20,7 +20,7 @@ public final class ITUtils {
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
             IOUtils.zip(zip, Paths.get(uri));
             if (depsDir != null) {
-                IOUtils.zip(zip, Constants.Files.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
+                IOUtils.zip(zip, InternalConstants.Files.LIBRARIES_DIR_NAME + "/", Paths.get(depsDir));
             }
         }
         return out.toByteArray();

@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
@@ -17,10 +17,10 @@ public class ForkCleanupProcessor implements PayloadProcessor {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         try {
-            Path markerDir = workspace.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                    .resolve(Constants.Files.JOB_STATE_DIR_NAME);
+            Path markerDir = workspace.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                    .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
 
-            String[] markers = {Constants.Files.SUSPEND_MARKER_FILE_NAME, Constants.Files.RESUME_MARKER_FILE_NAME};
+            String[] markers = {InternalConstants.Files.SUSPEND_MARKER_FILE_NAME, InternalConstants.Files.RESUME_MARKER_FILE_NAME};
             for (String m : markers) {
                 Path suspendMarker = markerDir.resolve(m);
                 Files.deleteIfExists(suspendMarker);

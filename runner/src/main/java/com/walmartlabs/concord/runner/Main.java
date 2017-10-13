@@ -6,11 +6,11 @@ import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.TaskClassHolder;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
 import org.eclipse.sisu.space.BeanScanning;
@@ -36,8 +36,8 @@ import java.util.stream.Collectors;
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static final String RESUME_MARKER = com.walmartlabs.concord.project.Constants.Files.RESUME_MARKER_FILE_NAME;
-    private static final String SUSPEND_MARKER = com.walmartlabs.concord.project.Constants.Files.SUSPEND_MARKER_FILE_NAME;
+    private static final String RESUME_MARKER = InternalConstants.Files.RESUME_MARKER_FILE_NAME;
+    private static final String SUSPEND_MARKER = InternalConstants.Files.SUSPEND_MARKER_FILE_NAME;
 
     private final EngineFactory engineFactory;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -53,7 +53,7 @@ public class Main {
         log.info("run -> working directory: {}", baseDir.toAbsolutePath());
 
         // TODO constants
-        Path idPath = baseDir.resolve(com.walmartlabs.concord.project.Constants.Files.INSTANCE_ID_FILE_NAME);
+        Path idPath = baseDir.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
         while (!Files.exists(idPath)) {
             // TODO replace with WatchService
             Thread.sleep(100);
@@ -79,7 +79,7 @@ public class Main {
         ProjectDefinition project = loadProject(baseDir);
 
         // get the entry point
-        String entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
+        String entryPoint = (String) req.get(InternalConstants.Request.ENTRY_POINT_KEY);
         if (entryPoint == null) {
             throw new ExecutionException("Entry point must be set");
         }
@@ -123,7 +123,7 @@ public class Main {
             return Collections.emptyList();
         }
 
-        Object v = cfg.get(Constants.Request.ACTIVE_PROFILES_KEY);
+        Object v = cfg.get(InternalConstants.Request.ACTIVE_PROFILES_KEY);
         if (v == null) {
             return Collections.emptyList();
         }
@@ -140,9 +140,9 @@ public class Main {
     }
 
     private static String readResumeEvent(Path baseDir) throws IOException {
-        Path p = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME)
-                .resolve(com.walmartlabs.concord.project.Constants.Files.RESUME_MARKER_FILE_NAME);
+        Path p = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME)
+                .resolve(InternalConstants.Files.RESUME_MARKER_FILE_NAME);
 
         if (!Files.exists(p)) {
             return null;
@@ -153,7 +153,7 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> readRequest(Path baseDir) throws ExecutionException {
-        Path p = baseDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = baseDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
 
         try (InputStream in = Files.newInputStream(p)) {
             return objectMapper.readValue(in, Map.class);
@@ -167,31 +167,31 @@ public class Main {
         Map<String, Object> m = new LinkedHashMap<>();
 
         // original arguments
-        Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
+        Map<String, Object> args = (Map<String, Object>) cfg.get(InternalConstants.Request.ARGUMENTS_KEY);
         if (args != null) {
             m.putAll(args);
         }
 
         // instance ID
-        m.put(Constants.Context.TX_ID_KEY, instanceId);
+        m.put(InternalConstants.Context.TX_ID_KEY, instanceId);
 
         // workDir
         String dir = workDir.toAbsolutePath().toString();
-        m.put(com.walmartlabs.concord.project.Constants.Context.LOCAL_PATH_KEY, dir);
-        m.put(Constants.Context.WORK_DIR_KEY, dir);
+        m.put(InternalConstants.Context.LOCAL_PATH_KEY, dir);
+        m.put(InternalConstants.Context.WORK_DIR_KEY, dir);
 
         // initiator's info
-        Object initiator = cfg.get(Constants.Request.INITIATOR_KEY);
+        Object initiator = cfg.get(InternalConstants.Request.INITIATOR_KEY);
         if (initiator != null) {
-            m.put(Constants.Request.INITIATOR_KEY, initiator);
+            m.put(InternalConstants.Request.INITIATOR_KEY, initiator);
         }
 
         return m;
     }
 
     private static void finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {
-        Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
+        Path stateDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
 
         try {
             Path resumeMarker = stateDir.resolve(RESUME_MARKER);

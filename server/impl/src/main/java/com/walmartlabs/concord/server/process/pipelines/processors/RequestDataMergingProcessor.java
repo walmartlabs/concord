@@ -3,9 +3,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
@@ -83,7 +83,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
     private Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path src = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path src = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(src)) {
             return Collections.emptyMap();
         }
@@ -126,7 +126,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
     private List<String> getActiveProfiles(List<Map<String, Object>> mm) {
         for (Map<String, Object> m : mm) {
-            List<String> v = (List<String>) m.get(Constants.Request.ACTIVE_PROFILES_KEY);
+            List<String> v = (List<String>) m.get(InternalConstants.Request.ACTIVE_PROFILES_KEY);
             if (v != null) {
                 return v;
             }
@@ -135,13 +135,13 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     private Map<String, Object> assertEntryPoint(UUID instanceId, Map<String, Object> m) {
-        String s = (String) m.get(Constants.Request.ENTRY_POINT_KEY);
+        String s = (String) m.get(InternalConstants.Request.ENTRY_POINT_KEY);
         if (s != null) {
             return m;
         }
 
         logManager.info(instanceId, "Using the default entry point");
-        m.put(Constants.Request.ENTRY_POINT_KEY, Constants.Request.DEFAULT_ENTRY_POINT_NAME);
+        m.put(InternalConstants.Request.ENTRY_POINT_KEY, InternalConstants.Request.DEFAULT_ENTRY_POINT_NAME);
         return m;
     }
 }

@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.state.ProcessMetadataManager;
@@ -42,8 +42,8 @@ public class FlowMetadataProcessor implements PayloadProcessor {
 
         Collection<String> profiles = payload.getHeader(Payload.ACTIVE_PROFILES);
 
-        if (hasFlow(pd, profiles, Constants.Flows.ON_FAILURE_FLOW)) {
-            boolean suppressed = getBoolean(payload, Constants.Request.DISABLE_ON_FAILURE_KEY);
+        if (hasFlow(pd, profiles, InternalConstants.Flows.ON_FAILURE_FLOW)) {
+            boolean suppressed = getBoolean(payload, InternalConstants.Request.DISABLE_ON_FAILURE_KEY);
             if (suppressed) {
                 log.info("process ['{}'] -> onFailure is suppressed, skipping...", instanceId);
             } else {
@@ -52,8 +52,8 @@ public class FlowMetadataProcessor implements PayloadProcessor {
             }
         }
 
-        if (hasFlow(pd, profiles, Constants.Flows.ON_CANCEL_FLOW)) {
-            boolean suppressed = getBoolean(payload, Constants.Request.DISABLE_ON_CANCEL_KEY);
+        if (hasFlow(pd, profiles, InternalConstants.Flows.ON_CANCEL_FLOW)) {
+            boolean suppressed = getBoolean(payload, InternalConstants.Request.DISABLE_ON_CANCEL_KEY);
             if (suppressed) {
                 log.info("process ['{}'] -> onCancel is suppressed, skipping...", instanceId);
             } else {

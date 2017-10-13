@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.slf4j.Logger;
@@ -57,7 +57,7 @@ public class StateImportingProcessor implements PayloadProcessor {
         }
 
         String n = p.toString();
-        for (String i : Constants.Files.IGNORED_FILES) {
+        for (String i : InternalConstants.Files.IGNORED_FILES) {
             if (n.matches(i)) {
                 return false;
             }

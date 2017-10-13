@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.Constants;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -30,7 +30,7 @@ public class DependenciesIT extends AbstractServerIT {
 
         String request = "{ \"entryPoint\": \"main\", \"dependencies\": [ \"" + dep + "\" ] }";
         Path tmpDir = Files.createTempDirectory("test");
-        Path requestFile = tmpDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path requestFile = tmpDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         Files.write(requestFile, Arrays.asList(request));
 
         Path src = Paths.get(DependenciesIT.class.getResource("deps").toURI());
