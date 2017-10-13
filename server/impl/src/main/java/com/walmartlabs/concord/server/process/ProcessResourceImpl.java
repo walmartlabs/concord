@@ -381,7 +381,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     public List<String> listAttachments(UUID instanceId) {
         assertInstanceId(instanceId);
 
-        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
+        String resource = InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
         List<String> l = stateManager.list(instanceId, resource);
         return l.stream()
                 .map(s -> s.substring(resource.length()))
