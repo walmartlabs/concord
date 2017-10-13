@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.common.secret;
 
+import com.walmartlabs.concord.sdk.Secret;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;

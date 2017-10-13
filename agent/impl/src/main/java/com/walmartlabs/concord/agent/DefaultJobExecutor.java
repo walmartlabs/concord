@@ -12,7 +12,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.project.Constants;
 import com.walmartlabs.concord.rpc.AgentApiClient;
-import com.walmartlabs.concord.rpc.ClientException;
+import com.walmartlabs.concord.sdk.ClientException;
 import com.walmartlabs.concord.rpc.JobQueue;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;

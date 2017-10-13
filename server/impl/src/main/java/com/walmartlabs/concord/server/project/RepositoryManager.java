@@ -6,7 +6,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
-import com.walmartlabs.concord.common.secret.Secret;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
 import org.eclipse.jgit.api.Git;

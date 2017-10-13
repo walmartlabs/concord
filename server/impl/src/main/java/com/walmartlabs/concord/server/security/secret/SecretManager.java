@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.security.secret;
 
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.secret.*;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.security.ServerKeyManager;

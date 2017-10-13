@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.rpc;
 
 import com.google.protobuf.ByteString;
 import com.walmartlabs.concord.rpc.*;
+import com.walmartlabs.concord.sdk.SecretStoreService;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;

@@ -2,6 +2,7 @@ package com.walmartlabs.concord.rpc;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.walmartlabs.concord.sdk.ClientException;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 

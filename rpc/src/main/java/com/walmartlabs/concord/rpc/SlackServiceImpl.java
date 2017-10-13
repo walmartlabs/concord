@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.rpc;
 
+import com.walmartlabs.concord.sdk.ClientException;
+import com.walmartlabs.concord.sdk.SlackService;
 import io.grpc.ManagedChannel;
 
 import java.util.concurrent.TimeUnit;

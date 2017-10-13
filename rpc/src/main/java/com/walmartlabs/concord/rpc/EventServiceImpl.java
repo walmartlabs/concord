@@ -3,6 +3,9 @@ package com.walmartlabs.concord.rpc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
+import com.walmartlabs.concord.sdk.ClientException;
+import com.walmartlabs.concord.sdk.EventService;
+import com.walmartlabs.concord.sdk.EventType;
 import io.grpc.ManagedChannel;
 
 import java.io.Serializable;

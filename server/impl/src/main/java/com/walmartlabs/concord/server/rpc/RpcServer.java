@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.rpc;
 
-import com.walmartlabs.concord.rpc.ClientException;
+import com.walmartlabs.concord.sdk.ClientException;
 import io.grpc.*;
 import org.eclipse.sisu.EagerSingleton;
 import org.slf4j.Logger;

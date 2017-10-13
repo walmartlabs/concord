@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.events;
 
-import com.walmartlabs.concord.common.secret.Secret;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.project.RepositoryDao;
 import com.walmartlabs.concord.server.project.RepositoryManager;

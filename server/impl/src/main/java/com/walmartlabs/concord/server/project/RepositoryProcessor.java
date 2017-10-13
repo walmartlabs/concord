@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.project;
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.common.secret.Secret;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;

@@ -1,6 +1,8 @@
 package com.walmartlabs.concord.rpc;
 
 import com.walmartlabs.concord.rpc.TKvServiceGrpc.TKvServiceBlockingStub;
+import com.walmartlabs.concord.sdk.ClientException;
+import com.walmartlabs.concord.sdk.KvService;
 import io.grpc.ManagedChannel;
 
 import java.util.concurrent.TimeUnit;

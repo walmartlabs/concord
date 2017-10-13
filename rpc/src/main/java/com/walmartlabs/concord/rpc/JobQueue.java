@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.rpc;
 
+import com.walmartlabs.concord.sdk.ClientException;
+
 import java.nio.file.Path;
 
 public interface JobQueue {

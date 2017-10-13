@@ -20,10 +20,6 @@ public class RpcConfigurationImpl implements RpcConfiguration {
         this.rpcServerPort = Integer.parseInt(getEnv(SERVER_PORT_KEY, "8101"));
     }
 
-    private static String getEnv(String key) {
-        return getEnv(key, null);
-    }
-
     private static String getEnv(String key, String def) {
         String value = System.getProperty(key);
         if (value != null) {

@@ -1,5 +1,7 @@
 package com.walmartlabs.concord.common.secret;
 
+import com.walmartlabs.concord.sdk.Secret;
+
 import java.io.*;
 
 public class KeyPair implements Secret {

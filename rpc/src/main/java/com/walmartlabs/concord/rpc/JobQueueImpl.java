@@ -3,6 +3,7 @@ package com.walmartlabs.concord.rpc;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import com.walmartlabs.concord.rpc.TJobQueueGrpc.TJobQueueBlockingStub;
+import com.walmartlabs.concord.sdk.ClientException;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;

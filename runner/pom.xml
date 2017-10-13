@@ -84,6 +84,58 @@
             <artifactId>commons-compress</artifactId>
         </dependency>
 
+        <!-- tasks -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>log-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>locale-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>kv-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>misc-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>resource-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>sleep-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>variables-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>crypto-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>docker-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>slack-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

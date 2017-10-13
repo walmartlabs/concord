@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.rpc.*;
+import com.walmartlabs.concord.sdk.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

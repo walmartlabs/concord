@@ -6,6 +6,7 @@ import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
 import com.walmartlabs.concord.runner.engine.el.TaskResolver;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.RpcClient;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.Configuration;
 import io.takari.bpm.EngineBuilder;

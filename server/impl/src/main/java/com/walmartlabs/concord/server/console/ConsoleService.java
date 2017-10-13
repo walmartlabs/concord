@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.console;
 
-import com.walmartlabs.concord.common.secret.Secret;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;

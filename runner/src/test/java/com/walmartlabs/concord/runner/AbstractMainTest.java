@@ -4,7 +4,7 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
-import com.walmartlabs.concord.runner.engine.RpcClient;
+import com.walmartlabs.concord.sdk.RpcClient;
 
 import java.net.URI;
 import java.nio.file.Files;

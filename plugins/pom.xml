@@ -16,9 +16,19 @@
 
     <modules>
         <module>tasks/ansible</module>
-        <module>tasks/smtp</module>
-        <module>tasks/example</module>
+        <module>tasks/crypto</module>
+        <module>tasks/docker</module>
         <module>tasks/dynamic-tasks</module>
+        <module>tasks/example</module>
+        <module>tasks/kv</module>
+        <module>tasks/locale</module>
+        <module>tasks/log</module>
+        <module>tasks/misc</module>
+        <module>tasks/resource</module>
+        <module>tasks/slack</module>
+        <module>tasks/sleep</module>
+        <module>tasks/smtp</module>
+        <module>tasks/variables</module>
         <module>templates/ansible</module>
     </modules>
 </project>

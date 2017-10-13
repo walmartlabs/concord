@@ -1,5 +1,9 @@
 package com.walmartlabs.concord.rpc;
 
+import com.walmartlabs.concord.sdk.EventService;
+import com.walmartlabs.concord.sdk.KvService;
+import com.walmartlabs.concord.sdk.SecretStoreService;
+import com.walmartlabs.concord.sdk.SlackService;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
