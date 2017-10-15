@@ -7,4 +7,4 @@ flows:
 
 configuration:
   dependencies:
-  - "http://nexus.prod.walmart.com/nexus/service/local/repo_groups/devtools-public/content/com/walmartlabs/concord/plugins/teamrosters-task/0.25.0/teamrosters-task-0.25.0.jar"
+  - "mvn://com.walmartlabs.concord.plugins:teamrosters-task:0.32.0"

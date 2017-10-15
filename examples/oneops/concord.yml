@@ -24,7 +24,7 @@ forms:
 
 configuration:
   dependencies:
-  - "http://nexus.prod.walmart.com/nexus/content/repositories/devtools/com/walmartlabs/concord/plugins/oneops-tasks/0.20.0/oneops-tasks-0.20.0.jar"
+  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.32.0"
   arguments:
     # form defaults
     cfg:

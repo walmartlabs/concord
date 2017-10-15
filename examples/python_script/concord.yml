@@ -5,7 +5,7 @@ flows:
 
 configuration:
   dependencies:
-  - "http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/repositories/public/org/python/jython-standalone/2.7.0/jython-standalone-2.7.0.jar"
+  - "mvn://org.python:jython-standalone:2.7.0"
   arguments:
     x: 2
 

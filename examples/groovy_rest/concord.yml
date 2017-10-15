@@ -18,6 +18,7 @@ flows:
 
 configuration:
   dependencies:
-  - "http://nexus.prod.walmart.com/nexus/content/repositories/public/org/codehaus/groovy/groovy-all/2.4.11/groovy-all-2.4.11.jar"
-  - "http://nexus.prod.walmart.com/nexus/content/repositories/public/io/github/http-builder-ng/http-builder-ng-core/0.16.1/http-builder-ng-core-0.16.1.jar"
-  - "http://nexus.prod.walmart.com/nexus/content/repositories/public/xml-resolver/xml-resolver/1.2/xml-resolver-1.2.jar"
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"
+  - "mvn://io.github.http-builder-ng:http-builder-ng-core:0.16.1"
+  - "mvn://xml-resolver:xml-resolver:1.2"
+
