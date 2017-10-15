@@ -24,7 +24,7 @@ public class SerializationIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
         assertNotNull(spr.getInstanceId());
 
         // ---

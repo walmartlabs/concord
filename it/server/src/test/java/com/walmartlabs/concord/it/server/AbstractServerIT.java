@@ -24,11 +24,15 @@ public abstract class AbstractServerIT {
     }
 
     protected StartProcessResponse start(Map<String, Object> input) {
-        return serverClient.start(input);
+        return start(input, false);
+    }
+
+    protected StartProcessResponse start(Map<String, Object> input, boolean sync) {
+        return serverClient.start(input, sync);
     }
 
     protected StartProcessResponse start(String entryPoint, Map<String, Object> input) {
-        return serverClient.start(entryPoint, input);
+        return serverClient.start(entryPoint, input, false);
     }
 
     protected UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {

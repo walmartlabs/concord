@@ -23,7 +23,7 @@ public class FormIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
 
         waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
 
@@ -81,7 +81,7 @@ public class FormIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
 
         waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
 

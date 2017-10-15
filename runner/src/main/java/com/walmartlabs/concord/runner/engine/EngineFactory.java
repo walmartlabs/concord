@@ -53,8 +53,8 @@ public class EngineFactory {
     }
 
     public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles) {
-        Path stateDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
+        Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
+        Path stateDir = attachmentsDir.resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
 
         Path eventsDir = stateDir.resolve("events");
         Path instancesDir = stateDir.resolve("instances");
@@ -107,6 +107,7 @@ public class EngineFactory {
                 .withUserTaskHandler(uth)
                 .withResourceResolver(resourceResolver)
                 .withConfiguration(cfg)
+                .withListener(new ProcessOutVariablesListener(contextFactory, attachmentsDir))
                 .build();
 
         result.addInterceptor(new ProcessElementInterceptor(rpcClient, adapter.processes()));
@@ -179,4 +180,6 @@ public class EngineFactory {
             }
         }
     }
+
+    ;
 }

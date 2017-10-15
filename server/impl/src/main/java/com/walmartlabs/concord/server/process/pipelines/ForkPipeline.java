@@ -18,6 +18,7 @@ public class ForkPipeline extends Pipeline {
                 ForkCleanupProcessor.class,
                 ForkDataMergingProcessor.class,
                 TagsExtractingProcessor.class,
+                OutVariablesSettingProcessor.class,
                 RequestDataStoringProcessor.class,
                 StateImportingProcessor.class,
                 FlowMetadataProcessor.class,

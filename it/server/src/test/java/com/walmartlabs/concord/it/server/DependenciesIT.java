@@ -45,7 +45,7 @@ public class DependenciesIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
@@ -62,7 +62,7 @@ public class DependenciesIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("mvnDeps").toURI());
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
         assertNotNull(spr.getInstanceId());
 
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());

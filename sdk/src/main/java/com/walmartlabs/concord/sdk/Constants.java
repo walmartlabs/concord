@@ -24,6 +24,11 @@ public class Constants {
          * ID of the current process instance.
          */
         public static final String TX_ID_KEY = "txId";
+
+        /**
+         * List of OUT variables of a process.
+         */
+        public static final String OUT_EXPRESSIONS_KEY = "_out";
     }
 
     /**
@@ -90,6 +95,11 @@ public class Constants {
          * If {@code true}, then `onFailure` flow will be ignored.
          */
         public static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
+
+        /**
+         * Declares a list of OUT variables or expressions.
+         */
+        public static final String OUT_EXPRESSIONS_KEY = "out";
     }
 
     /**

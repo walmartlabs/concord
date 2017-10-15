@@ -37,6 +37,7 @@ public class ProjectPipeline extends Pipeline {
                 RequestInfoProcessor.class,
                 DependenciesProcessor.class,
                 UserInfoProcessor.class,
+                OutVariablesSettingProcessor.class,
                 RequestDataStoringProcessor.class,
                 StateImportingProcessor.class,
                 FlowMetadataProcessor.class,

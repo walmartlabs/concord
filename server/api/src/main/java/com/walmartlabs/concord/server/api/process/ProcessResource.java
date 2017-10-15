@@ -36,7 +36,8 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam InputStream in,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                               @ApiParam @QueryParam("out") String[] out);
 
     /**
      * Starts a new process instance using the specified entry point and provided configuration.
@@ -52,7 +53,8 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                               @ApiParam @QueryParam("out") String[] out);
 
     /**
      * Starts a new process instance using the specified entry point and provided configuration.
@@ -71,7 +73,8 @@ public interface ProcessResource {
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam Map<String, Object> req,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                               @ApiParam @QueryParam("out") String[] out);
 
     /**
      * Starts a new process instance.
@@ -87,7 +90,8 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam MultipartInput input,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                               @ApiParam @QueryParam("out") String[] out);
 
     /**
      * Starts a new process instance using the specified entry point and multipart request data.
@@ -106,7 +110,8 @@ public interface ProcessResource {
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam MultipartInput input,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                               @ApiParam @QueryParam("out") String[] out);
 
     /**
      * Starts a new process instance using the specified entry point and payload archive.
@@ -125,7 +130,8 @@ public interface ProcessResource {
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") @ConcordKey String entryPoint,
                                @ApiParam InputStream in,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                               @ApiParam @QueryParam("out") String[] out);
 
     /**
      * Resumes an existing process.
@@ -159,7 +165,8 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse fork(@ApiParam @PathParam("id") UUID parentInstanceId,
                               @ApiParam Map<String, Object> req,
-                              @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync);
+                              @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                              @ApiParam @QueryParam("out") String[] out);
 
     /**
      * Waits for completion of a process.

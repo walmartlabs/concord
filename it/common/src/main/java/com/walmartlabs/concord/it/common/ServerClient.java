@@ -57,12 +57,13 @@ public class ServerClient {
         this.apiKey = apiKey;
     }
 
-    public StartProcessResponse start(Map<String, Object> input) {
-        return start(null, input);
+    public StartProcessResponse start(Map<String, Object> input, boolean sync) {
+        return start(null, input, sync);
     }
 
-    public StartProcessResponse start(String entryPoint, Map<String, Object> input) {
-        return request(ProcessResource.class.getAnnotation(Path.class).value() + (entryPoint != null ? "/" + entryPoint : ""),
+    public StartProcessResponse start(String entryPoint, Map<String, Object> input, boolean sync) {
+        return request(ProcessResource.class.getAnnotation(Path.class).value() + (entryPoint != null ? "/" + entryPoint : "")
+                + "?sync=" + sync,
                 input, StartProcessResponse.class);
     }
 
@@ -73,6 +74,8 @@ public class ServerClient {
                 mdo.addFormData(k, v, MediaType.APPLICATION_OCTET_STREAM_TYPE);
             } else if (v instanceof String) {
                 mdo.addFormData(k, v, MediaType.TEXT_PLAIN_TYPE);
+            } else if (v instanceof Map) {
+                mdo.addFormData(k, v, MediaType.APPLICATION_JSON_TYPE);
             } else {
                 throw new IllegalArgumentException("Unknown input type: " + v);
             }

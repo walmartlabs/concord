@@ -186,6 +186,11 @@ public class Main {
             m.put(InternalConstants.Request.INITIATOR_KEY, initiator);
         }
 
+        Object outExpr = cfg.get(InternalConstants.Request.OUT_EXPRESSIONS_KEY);
+        if (outExpr != null) {
+            m.put(InternalConstants.Context.OUT_EXPRESSIONS_KEY, outExpr);
+        }
+
         return m;
     }
 

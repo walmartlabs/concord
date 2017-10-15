@@ -43,6 +43,9 @@ public final class InternalConstants extends Constants {
      */
     public static final class Files extends Constants.Files {
 
+        /**
+         * Directory which contains payload data.
+         */
         public static final String PAYLOAD_DIR_NAME = "payload";
 
         /**
@@ -66,6 +69,11 @@ public final class InternalConstants extends Constants {
          * Files, that won't be added to a payload or saved in the state store.
          */
         public static final String[] IGNORED_FILES = {"^\\.git.*"};
+
+        /**
+         * File which contains data of process' OUT variables.
+         */
+        public static final String OUT_VALUES_FILE_NAME = "out.json";
     }
 
     public static final class Flows extends Constants.Flows {

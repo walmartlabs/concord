@@ -56,7 +56,7 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
             req.put(InternalConstants.Request.ARGUMENTS_KEY, args);
         }
 
-        StartProcessResponse resp = processResource.start(entryPoint, req, null, false);
+        StartProcessResponse resp = processResource.start(entryPoint, req, null, false, null);
 
         UUID instanceId = resp.getInstanceId();
         while (true) {

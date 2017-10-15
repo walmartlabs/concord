@@ -288,7 +288,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(entryPoint, args, null, sync);
+        StartProcessResponse spr = processResource.start(entryPoint, args, null, sync, null);
         assertTrue(spr.isOk());
 
         UUID instanceId = spr.getInstanceId();

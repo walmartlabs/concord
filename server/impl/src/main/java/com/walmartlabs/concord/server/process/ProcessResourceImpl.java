@@ -68,6 +68,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final ProcessStateManager stateManager;
     private final AgentManager agentManager;
     private final ConcordFormService formService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     public ProcessResourceImpl(ProjectDao projectDao,
@@ -106,24 +107,27 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
+        Map<String, Object> out = null;
         if (sync) {
             Map<String, Object> args = readArgs(instanceId);
-            process(instanceId, args);
+            out = process(instanceId, args);
         }
 
-        return new StartProcessResponse(instanceId);
+        return new StartProcessResponse(instanceId, out);
     }
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(InputStream in, UUID parentInstanceId, boolean sync) {
+    public StartProcessResponse start(InputStream in, UUID parentInstanceId,
+                                      boolean sync, String[] out) {
+
         assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), in);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), in, out);
         } catch (IOException e) {
             log.error("start -> error creating a payload: {}", e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -134,13 +138,17 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(String entryPoint, UUID parentInstanceId, boolean sync) {
-        return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync);
+    public StartProcessResponse start(String entryPoint, UUID parentInstanceId,
+                                      boolean sync, String[] out) {
+
+        return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync, out);
     }
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(String entryPoint, Map<String, Object> req, UUID parentInstanceId, boolean sync) {
+    public StartProcessResponse start(String entryPoint, Map<String, Object> req, UUID parentInstanceId,
+                                      boolean sync, String[] out) {
+
         assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
@@ -150,7 +158,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, req);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, req, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -161,13 +169,17 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(MultipartInput input, UUID parentInstanceId, boolean sync) {
-        return start(null, input, parentInstanceId, sync);
+    public StartProcessResponse start(MultipartInput input, UUID parentInstanceId,
+                                      boolean sync, String[] out) {
+
+        return start(null, input, parentInstanceId, sync, out);
     }
 
     @Override
     @RequiresAuthentication
-    public StartProcessResponse start(String entryPoint, MultipartInput input, UUID parentInstanceId, boolean sync) {
+    public StartProcessResponse start(String entryPoint, MultipartInput input, UUID parentInstanceId,
+                                      boolean sync, String[] out) {
+
         assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
@@ -179,7 +191,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, input);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, input, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -191,7 +203,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @RequiresAuthentication
-    public StartProcessResponse start(String entryPoint, InputStream in, UUID parentInstanceId, boolean sync) {
+    public StartProcessResponse start(String entryPoint, InputStream in, UUID parentInstanceId,
+                                      boolean sync, String[] out) {
+
         assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
@@ -203,7 +217,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, in);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, in, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -231,7 +245,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @RequiresAuthentication
-    public StartProcessResponse fork(UUID parentInstanceId, Map<String, Object> req, boolean sync) {
+    public StartProcessResponse fork(UUID parentInstanceId, Map<String, Object> req, boolean sync, String[] out) {
         ProcessEntry parent = queueDao.get(parentInstanceId);
         if (parent == null) {
             throw new ValidationErrorsException("Unknown parent instance ID: " + parentInstanceId);
@@ -242,8 +256,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createFork(instanceId, parentInstanceId,
-                    ProcessKind.DEFAULT, getInitiator(), projectId, req);
+            payload = payloadManager.createFork(instanceId, parentInstanceId, ProcessKind.DEFAULT,
+                    getInitiator(), projectId, req, out);
         } catch (IOException e) {
             log.error("fork ['{}', '{}'] -> error creating a payload: {}", instanceId, parentInstanceId, e);
             throw new WebApplicationException("Error creating a payload", e);
@@ -500,7 +514,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return o.orElse(Collections.emptyMap());
     }
 
-    private void process(UUID instanceId, Map<String, Object> params) {
+    private Map<String, Object> process(UUID instanceId, Map<String, Object> params) {
         while (true) {
             ProcessEntry psr = get(instanceId);
             ProcessStatus status = psr.getStatus();
@@ -510,7 +524,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
                 throw new ProcessException(instanceId, "Process error", Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
-                return;
+                return readOutValues(instanceId);
             }
 
             try {
@@ -519,6 +533,20 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    private Map<String, Object> readOutValues(UUID instanceId) {
+        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.OUT_VALUES_FILE_NAME);
+
+        Optional<Map<String, Object>> o = stateManager.get(instanceId, resource, in -> {
+            try {
+                return Optional.of(objectMapper.readValue(in, Map.class));
+            } catch (IOException e) {
+                throw new ProcessException(instanceId, "Error while reading OUT variables data", e);
+            }
+        });
+
+        return o.orElse(null);
     }
 
     @SuppressWarnings("unchecked")

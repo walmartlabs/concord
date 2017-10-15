@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-runner: support for process OUT
+variables;
 - concord-server: log process status updates;
 - concord-server: initial support for Teams;
 - concord-server: an endpoint to retrieve a list of attachments.

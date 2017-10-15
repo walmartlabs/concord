@@ -14,9 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
@@ -50,7 +48,9 @@ public class PayloadManager {
      * @param input
      * @return
      */
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, MultipartInput input) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
+                                 EntryPoint entryPoint, MultipartInput input, String[] out) throws IOException {
+
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
@@ -59,6 +59,8 @@ public class PayloadManager {
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir);
 
         p = addInitiator(p, initiator);
+        p = addOut(p, out);
+
         return addEntryPoint(p, entryPoint);
     }
 
@@ -71,7 +73,9 @@ public class PayloadManager {
      * @param request
      * @return
      */
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, Map<String, Object> request) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
+                                 EntryPoint entryPoint, Map<String, Object> request, String[] out) throws IOException {
+
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
@@ -81,6 +85,8 @@ public class PayloadManager {
                 .putHeader(Payload.REQUEST_DATA_MAP, request);
 
         p = addInitiator(p, initiator);
+        p = addOut(p, out);
+
         return addEntryPoint(p, entryPoint);
     }
 
@@ -93,7 +99,9 @@ public class PayloadManager {
      * @param in
      * @return
      */
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, EntryPoint entryPoint, InputStream in) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
+                                 EntryPoint entryPoint, InputStream in, String[] out) throws IOException {
+
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
@@ -103,6 +111,7 @@ public class PayloadManager {
         Payload p = new Payload(instanceId, parentInstanceId);
 
         p = addInitiator(p, initiator);
+        p = addOut(p, out);
 
         p = p.putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
@@ -120,7 +129,9 @@ public class PayloadManager {
      * @param in
      * @return
      */
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator, InputStream in) throws IOException {
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
+                                 InputStream in, String[] out) throws IOException {
+
         Path baseDir = createPayloadDir();
         Path workspaceDir = ensureWorkspace(baseDir);
 
@@ -130,6 +141,7 @@ public class PayloadManager {
         Payload p = new Payload(instanceId, parentInstanceId);
 
         p = addInitiator(p, initiator);
+        p = addOut(p, out);
 
         return p.putHeader(Payload.BASE_DIR, baseDir)
                 .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
@@ -167,7 +179,7 @@ public class PayloadManager {
      * @return
      */
     public Payload createFork(UUID instanceId, UUID parentInstanceId, ProcessKind kind,
-                              String initiator, UUID projectId, Map<String, Object> req) throws IOException {
+                              String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
 
         Path tmpDir = Files.createTempDirectory("payload");
 
@@ -182,6 +194,7 @@ public class PayloadManager {
                 .putHeader(Payload.REQUEST_DATA_MAP, req);
 
         p = addInitiator(p, initiator);
+        p = addOut(p, out);
 
         return p;
     }
@@ -203,6 +216,15 @@ public class PayloadManager {
             return p;
         }
         return p.putHeader(Payload.INITIATOR, initiator);
+    }
+
+    private static Payload addOut(Payload p, String[] out) {
+        if (out == null || out.length == 0) {
+            return p;
+        }
+
+        Set<String> s = new HashSet<>(Arrays.asList(out));
+        return p.putHeader(Payload.OUT_EXPRESSIONS, s);
     }
 
     private Payload addEntryPoint(Payload p, EntryPoint e) {

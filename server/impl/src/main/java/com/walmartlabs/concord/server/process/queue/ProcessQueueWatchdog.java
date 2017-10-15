@@ -115,7 +115,7 @@ public class ProcessQueueWatchdog {
                         req.put(InternalConstants.Request.TAGS_KEY, null); // clear tags
 
                         Payload payload = payloadManager.createFork(childId, parent.instanceId, e.handlerKind,
-                                parent.initiator, parent.projectId, req);
+                                parent.initiator, parent.projectId, req, null);
 
                         forkPipeline.process(payload);
 
