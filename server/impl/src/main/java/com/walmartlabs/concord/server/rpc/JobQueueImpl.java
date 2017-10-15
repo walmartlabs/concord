@@ -5,14 +5,14 @@ import com.google.protobuf.Empty;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.rpc.*;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.ProcessManager.PayloadEntry;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.grpc.stub.StreamObserver;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
-import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
@@ -36,31 +35,28 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     private final ProcessQueueDao queueDao;
     private final ProcessStateManager stateManager;
     private final LogManager logManager;
+    private final ProcessManager processManager;
 
     @Inject
-    public JobQueueImpl(ProcessQueueDao queueDao, ProcessStateManager stateManager, LogManager logManager) {
+    public JobQueueImpl(ProcessQueueDao queueDao, ProcessStateManager stateManager, LogManager logManager, ProcessManager processManager) {
         this.queueDao = queueDao;
         this.stateManager = stateManager;
         this.logManager = logManager;
+        this.processManager = processManager;
     }
 
     @Override
     public void poll(TJobRequest request, StreamObserver<TJobResponse> responseObserver) {
-        ProcessEntry entry = queueDao.poll();
-        if (entry == null) {
-            responseObserver.onCompleted();
-            return;
-        }
-
-        UUID instanceId = entry.getInstanceId();
-
         try {
-            // TODO this probably can be replaced with an in-memory buffer
-            Path tmp = Files.createTempFile("payload", ".zip");
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-                stateManager.export(instanceId, zipTo(zip));
+            PayloadEntry p = processManager.nextPayload();
+            if (p == null) {
+                responseObserver.onCompleted();
+                return;
             }
 
+            UUID instanceId = p.getProcessEntry().getInstanceId();
+
+            Path tmp = p.getPayloadArchive();
             try (InputStream in = Files.newInputStream(tmp)) {
                 int read;
                 byte[] ab = new byte[PAYLOAD_CHUNK_SIZE];
@@ -89,16 +85,10 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         UUID instanceId = UUID.fromString(request.getInstanceId());
         ProcessStatus status = convert(request.getStatus());
 
-        if (status == ProcessStatus.FINISHED && isSuspended(instanceId)) {
-            status = ProcessStatus.SUSPENDED;
-        }
-
-        queueDao.update(instanceId, agentId, status);
+        processManager.updateStatus(instanceId, agentId, status);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
-
-        log.info("updateStatus ['{}', '{}', {}] -> done", agentId, instanceId, status);
     }
 
     @Override
@@ -147,14 +137,6 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         responseObserver.onCompleted();
 
         log.info("uploadAttachments ['{}'] -> done", instanceId);
-    }
-
-    private boolean isSuspended(UUID instanceId) {
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                InternalConstants.Files.JOB_STATE_DIR_NAME,
-                InternalConstants.Files.SUSPEND_MARKER_FILE_NAME);
-
-        return stateManager.exists(instanceId, resource);
     }
 
     private static ProcessStatus convert(TJobStatus s) {
