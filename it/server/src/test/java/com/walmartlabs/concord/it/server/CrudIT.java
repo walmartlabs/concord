@@ -7,11 +7,15 @@ import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRespons
 import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
 import com.walmartlabs.concord.server.api.security.ldap.LdapResource;
 import com.walmartlabs.concord.server.api.security.secret.*;
-import com.walmartlabs.concord.server.api.user.RoleEntry;
-import com.walmartlabs.concord.server.api.user.RoleResource;
+import com.walmartlabs.concord.server.api.team.CreateTeamResponse;
+import com.walmartlabs.concord.server.api.team.TeamEntry;
+import com.walmartlabs.concord.server.api.team.TeamResource;
+import com.walmartlabs.concord.server.api.team.TeamUserEntry;
+import com.walmartlabs.concord.server.api.user.*;
 import org.junit.Test;
 
 import javax.ws.rs.BadRequestException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,14 +24,62 @@ import static org.junit.Assert.*;
 public class CrudIT extends AbstractServerIT {
 
     @Test
+    public void testTeams() {
+        TeamResource teamResource = proxy(TeamResource.class);
+
+        String teamName = "team_" + System.currentTimeMillis();
+        CreateTeamResponse ctr = teamResource.createOrUpdate(new TeamEntry(null, teamName, null, null));
+        assertNotNull(ctr.getId());
+
+        TeamEntry te = teamResource.get(teamName);
+        assertNotNull(te);
+        assertEquals(ctr.getId(), te.getId());
+
+        List<TeamEntry> list = teamResource.list();
+        te = findTeam(list, teamName);
+        assertNotNull(te);
+        assertEquals(ctr.getId(), te.getId());
+
+        // ---
+
+        UserResource userResource = proxy(UserResource.class);
+
+        String userA = "userA_" + System.currentTimeMillis();
+        CreateUserResponse curA = userResource.createOrUpdate(new CreateUserRequest(userA, null));
+
+
+        String userB = "userB_" + System.currentTimeMillis();
+        CreateUserResponse curB = userResource.createOrUpdate(new CreateUserRequest(userB, null));
+
+        // ---
+
+        teamResource.addUsers(teamName, Arrays.asList(userA, userB));
+
+        List<TeamUserEntry> teamUserEntries = teamResource.listUsers(teamName);
+        TeamUserEntry entryA = findTeamUser(teamUserEntries, userA);
+        assertEquals(curA.getId(), entryA.getId());
+
+        TeamUserEntry entryB = findTeamUser(teamUserEntries, userB);
+        assertEquals(curB.getId(), entryB.getId());
+
+        // ---
+
+        teamResource.removeUsers(teamName, Arrays.asList(userA));
+
+        teamUserEntries = teamResource.listUsers(teamName);
+        entryA = findTeamUser(teamUserEntries, userA);
+        assertNull(entryA);
+    }
+
+    @Test
     public void testProject() {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project_" + System.currentTimeMillis();
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, null));
         assertTrue(cpr.isOk());
 
-        cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null));
+        cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, null));
         assertTrue(cpr.isOk());
 
         // ---
@@ -35,7 +87,7 @@ public class CrudIT extends AbstractServerIT {
         ProjectEntry e1 = projectResource.get(projectName);
         assertNotNull(e1);
 
-        UpdateProjectResponse upr = projectResource.update(projectName, new UpdateProjectRequest(null));
+        UpdateProjectResponse upr = projectResource.update(projectName, new UpdateProjectRequest(null, null, null, null, Collections.emptyMap()));
         assertTrue(upr.isOk());
 
         List<ProjectEntry> l = projectResource.list(null, false);
@@ -54,7 +106,7 @@ public class CrudIT extends AbstractServerIT {
         String commitId = "commitId_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null,
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
                 Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null, null, null)), null));
 
         // ---
@@ -81,8 +133,8 @@ public class CrudIT extends AbstractServerIT {
         String projectName2 = "project2_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName1, null, null, null));
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName2, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName1, null, null, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName2, null, null, null, null, null));
 
         // ---
 
@@ -101,7 +153,7 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        PublicKeyResponse pkr = secretResource.createKeyPair(keyName);
+        PublicKeyResponse pkr = secretResource.createKeyPair(keyName, null, null);
         assertTrue(pkr.isOk());
         assertNotNull(pkr.getPublicKey());
 
@@ -137,7 +189,7 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        UploadSecretResponse usr = secretResource.addUsernamePassword(keyName,
+        UploadSecretResponse usr = secretResource.addUsernamePassword(keyName, null, null,
                 new UsernamePasswordRequest("something", new char[]{'a', 'b', 'c'}));
         assertTrue(usr.isOk());
 
@@ -191,5 +243,13 @@ public class CrudIT extends AbstractServerIT {
 
     private static SecretEntry findSecret(List<SecretEntry> l, String name) {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
+    }
+
+    private static TeamEntry findTeam(List<TeamEntry> l, String name) {
+        return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
+    }
+
+    private static TeamUserEntry findTeamUser(List<TeamUserEntry> l, String name) {
+        return l.stream().filter(e -> name.equals(e.getUsername())).findAny().orElse(null);
     }
 }

@@ -123,10 +123,10 @@ public class ProjectFileIT extends AbstractServerIT {
         String secretName = "secret_" + System.currentTimeMillis();
 
         SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(secretName);
+        secretResource.createKeyPair(secretName, null, null);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null,
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
                 Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, null, secretName)), null));
 
         // ---
@@ -156,10 +156,10 @@ public class ProjectFileIT extends AbstractServerIT {
         String secretName = "secret_" + System.currentTimeMillis();
 
         SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(secretName);
+        secretResource.createKeyPair(secretName, null, null);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null,
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
                 Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, null, secretName)), null));
 
         // ---

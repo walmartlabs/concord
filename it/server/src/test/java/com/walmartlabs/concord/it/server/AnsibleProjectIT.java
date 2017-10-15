@@ -88,14 +88,14 @@ public class AnsibleProjectIT extends AbstractServerIT {
         // ---
 
         SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(repoSecretName);
+        secretResource.createKeyPair(repoSecretName, null, null);
 
         // ---
 
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
         Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, singletonMap(repoName, repo), cfg));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg));
 
         // ---
 
@@ -134,7 +134,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         // ---
 
         SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(repoSecretName);
+        secretResource.createKeyPair(repoSecretName, null, null);
 
         // ---
 
@@ -142,7 +142,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, singletonMap(repoName, repo), cfg));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg));
 
         // ---
 

@@ -9,6 +9,7 @@ import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
+import com.walmartlabs.concord.server.team.TeamDao;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -32,6 +33,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORI
 @Named
 public class ProjectResourceImpl extends AbstractDao implements ProjectResource, Resource {
 
+    private final TeamDao teamDao;
     private final ProjectDao projectDao;
     private final SecretManager secretManager;
     private final RepositoryDao repositoryDao;
@@ -44,7 +46,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Inject
     public ProjectResourceImpl(Configuration cfg,
-                               ProjectDao projectDao,
+                               TeamDao teamDao, ProjectDao projectDao,
                                SecretManager secretManager,
                                RepositoryDao repositoryDao,
                                SecretDao secretDao,
@@ -53,6 +55,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         super(cfg);
 
+        this.teamDao = teamDao;
         this.projectDao = projectDao;
         this.secretManager = secretManager;
         this.repositoryDao = repositoryDao;
@@ -72,24 +75,25 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
-    public CreateProjectResponse createOrUpdate(ProjectEntry request) {
-        Map<String, Object> cfg = request.getCfg();
+    public CreateProjectResponse createOrUpdate(ProjectEntry req) {
+        UUID teamId = assertOptionalTeam(req.getTeamId(), req.getTeamName());
+
+        Map<String, Object> cfg = req.getCfg();
         validateCfg(cfg);
 
-        String projectName = request.getName();
+        String projectName = req.getName();
         UUID projectId = projectDao.getId(projectName);
 
         if (projectId != null) {
-            UpdateProjectRequest req = new UpdateProjectRequest(request.getDescription(),
-                    request.getRepositories(), request.getCfg());
-            update(projectName, req);
+            UpdateProjectRequest up = new UpdateProjectRequest(req);
+            update(projectName, up);
             return new CreateProjectResponse(PerformedActionType.UPDATED);
         }
 
         assertPermissions(projectName, Permissions.PROJECT_CREATE_NEW,
                 "The current user does not have permissions to create a new project");
 
-        Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
+        Map<String, UpdateRepositoryRequest> repos = req.getRepositories();
         if (repos != null) {
             for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
                 String secret = r.getValue().getSecret();
@@ -97,8 +101,9 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             }
         }
 
+        UUID tId = teamId;
         InsertResult r = txResult(tx -> {
-            UUID pId = projectDao.insert(tx, projectName, request.getDescription(), cfg);
+            UUID pId = projectDao.insert(tx, projectName, req.getDescription(), tId, cfg);
 
             Map<String, UUID> rIds = Collections.emptyMap();
             if (repos != null) {
@@ -117,6 +122,23 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         return new CreateProjectResponse(PerformedActionType.CREATED);
+    }
+
+    private UUID assertOptionalTeam(UUID teamId, String teamName) {
+        if (teamId != null) {
+            if (teamDao.get(teamId) == null) {
+                throw new ValidationErrorsException("Team not found: " + teamId);
+            }
+        }
+
+        if (teamId == null && teamName != null) {
+            teamId = teamDao.getId(teamName);
+            if (teamId == null) {
+                throw new ValidationErrorsException("Team not found: " + teamName);
+            }
+        }
+
+        return teamId;
     }
 
     @Override
@@ -190,16 +212,18 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
-    public UpdateProjectResponse update(String projectName, UpdateProjectRequest request) {
+    public UpdateProjectResponse update(String projectName, UpdateProjectRequest req) {
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
+        UUID teamId = assertOptionalTeam(req.getTeamId(), req.getTeamName());
+
         UUID projectId = assertProject(projectName);
 
-        Map<String, Object> cfg = request.getCfg();
+        Map<String, Object> cfg = req.getCfg();
         validateCfg(cfg);
 
-        Map<String, UpdateRepositoryRequest> repos = request.getRepositories();
+        Map<String, UpdateRepositoryRequest> repos = req.getRepositories();
         if (repos != null) {
             for (Map.Entry<String, UpdateRepositoryRequest> r : repos.entrySet()) {
                 String secret = r.getValue().getSecret();
@@ -210,7 +234,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         }
 
         Map<String, UUID> rIds = txResult(tx -> {
-            projectDao.update(tx, projectId, projectName, request.getDescription(), cfg);
+            projectDao.update(tx, projectId, projectName, req.getDescription(), teamId, cfg);
 
             Map<String, UUID> m = Collections.emptyMap();
             if (repos != null) {

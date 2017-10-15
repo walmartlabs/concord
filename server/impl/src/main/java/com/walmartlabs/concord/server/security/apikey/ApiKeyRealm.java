@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.security.apikey;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.TeamEntry;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -15,6 +16,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Arrays;
+import java.util.Set;
 
 @Named
 public class ApiKeyRealm extends AuthorizingRealm {
@@ -43,7 +45,8 @@ public class ApiKeyRealm extends AuthorizingRealm {
         }
 
         // TODO roles?
-        UserPrincipal p = new UserPrincipal("apikey", t.getUserId(), u.getName());
+        Set<TeamEntry> teams = userDao.getUserTeams(t.getUserId());
+        UserPrincipal p = new UserPrincipal("apikey", t.getUserId(), u.getName(), teams);
         return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
     }
 

@@ -24,11 +24,11 @@ public class SecretDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        UUID projectId = projectDao.insert(projectName, "test", null);
+        UUID projectId = projectDao.insert(projectName, "test", null, null);
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        UUID secretId = secretDao.insert(secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
+        UUID secretId = secretDao.insert(secretName, SecretType.KEY_PAIR, null, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());

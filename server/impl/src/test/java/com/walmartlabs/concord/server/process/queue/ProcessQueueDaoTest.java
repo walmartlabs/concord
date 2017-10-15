@@ -30,7 +30,7 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
     @Test
     public void test() throws Exception {
         String projectName = "project_" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(projectName, null, null);
+        UUID projectId = projectDao.insert(projectName, null, null, null);
 
         UUID instanceA = UUID.randomUUID();
         queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, "testInitiator");

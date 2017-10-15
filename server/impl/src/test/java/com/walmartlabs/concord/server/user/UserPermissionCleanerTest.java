@@ -30,7 +30,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         String secretName = "secret#" + System.currentTimeMillis();
-        UUID secretId = secretDao.insert(secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
+        UUID secretId = secretDao.insert(secretName, SecretType.KEY_PAIR, null, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
 
         UUID userId = UUID.randomUUID();
         String username = "user#" + System.currentTimeMillis();
@@ -55,7 +55,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(projectName, "test", null);
+        UUID projectId = projectDao.insert(projectName, "test", null, null);
 
         // ---
 

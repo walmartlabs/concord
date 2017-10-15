@@ -2,10 +2,7 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.server.api.user.UserEntry;
-import org.jooq.BatchBindStep;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Record2;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -14,9 +11,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PERMISSIONS;
+import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static org.jooq.impl.DSL.select;
 
 @Named
 public class UserDao extends AbstractDao {
@@ -95,6 +96,19 @@ public class UserDao extends AbstractDao {
                     .where(USERS.USER_ID.eq(id)));
 
             return cnt > 0;
+        }
+    }
+
+    public Set<TeamEntry> getUserTeams(UUID userId) {
+        Field<String> teamName = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID)).asField();
+
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(USER_TEAMS.TEAM_ID, teamName)
+                    .from(USER_TEAMS)
+                    .where(USER_TEAMS.USER_ID.eq(userId))
+                    .fetch(r -> new TeamEntry(r.get(0, UUID.class), r.get(1, String.class)))
+                    .stream()
+                    .collect(Collectors.toSet());
         }
     }
 

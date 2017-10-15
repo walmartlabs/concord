@@ -24,6 +24,11 @@ public class ProjectEntry implements Serializable {
     @Size(max = 1024)
     private final String description;
 
+    private final UUID teamId;
+
+    @ConcordKey
+    private final String teamName;
+
     private final Map<String, UpdateRepositoryRequest> repositories;
 
     private final Map<String, Object> cfg;
@@ -32,12 +37,16 @@ public class ProjectEntry implements Serializable {
     public ProjectEntry(@JsonProperty("id") UUID id,
                         @JsonProperty("name") String name,
                         @JsonProperty("description") String description,
+                        @JsonProperty("teamId") UUID teamId,
+                        @JsonProperty("teamName") String teamName,
                         @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
                         @JsonProperty("cfg") Map<String, Object> cfg) {
 
         this.id = id;
         this.name = name;
         this.description = description;
+        this.teamId = teamId;
+        this.teamName = teamName;
         this.repositories = repositories;
         this.cfg = cfg;
     }
@@ -54,6 +63,14 @@ public class ProjectEntry implements Serializable {
         return description;
     }
 
+    public UUID getTeamId() {
+        return teamId;
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
     public Map<String, UpdateRepositoryRequest> getRepositories() {
         return repositories;
     }
@@ -68,6 +85,8 @@ public class ProjectEntry implements Serializable {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
+                ", teamId=" + teamId +
+                ", teamName='" + teamName + '\'' +
                 ", repositories=" + repositories +
                 ", cfg=" + cfg +
                 '}';

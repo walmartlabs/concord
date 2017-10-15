@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.security.ldap;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.TeamEntry;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationException;
@@ -18,10 +19,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 public class LdapRealm extends AbstractLdapRealm {
@@ -111,7 +109,8 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         UUID id = userDao.getId(username);
-        UserPrincipal p = new UserPrincipal(REALM_NAME, id, username, ldapInfo);
+        Set<TeamEntry> teams = userDao.getUserTeams(id);
+        UserPrincipal p = new UserPrincipal(REALM_NAME, id, username, teams, ldapInfo);
 
         return new SimpleAccount(Arrays.asList(p, t), t, getName());
     }

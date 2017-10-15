@@ -33,7 +33,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
     public void testInsertDelete() throws Exception {
         Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(projectName, "test", cfg);
+        UUID projectId = projectDao.insert(projectName, "test", null, cfg);
 
         // ---
         Map<String, Object> actualCfg = projectDao.getConfiguration(projectId);
@@ -54,7 +54,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
         Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
-        tx(tx -> projectDao.update(tx, projectId, projectName, "new-description", newCfg2));
+        tx(tx -> projectDao.update(tx, projectId, projectName, "new-description", null, newCfg2));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg2, actualCfg);
@@ -81,8 +81,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String aName = "aProject#" + System.currentTimeMillis();
         String bName = "bProject#" + System.currentTimeMillis();
 
-        projectDao.insert(aName, "test", null);
-        projectDao.insert(bName, "test", null);
+        projectDao.insert(aName, "test", null, null);
+        projectDao.insert(bName, "test", null, null);
 
         // ---
 

@@ -263,7 +263,7 @@ public class ProjectIT extends AbstractServerIT {
                                   boolean sync) throws InterruptedException, IOException {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, null));
         assertTrue(cpr.isOk());
 
         UserResource userResource = proxy(UserResource.class);

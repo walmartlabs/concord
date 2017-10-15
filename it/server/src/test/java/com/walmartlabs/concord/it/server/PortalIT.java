@@ -49,13 +49,13 @@ public class PortalIT extends AbstractServerIT {
         // ---
 
         SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(repoSecretName);
+        secretResource.createKeyPair(repoSecretName, null, null);
 
         // ---
 
         UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, singletonMap(repoName, repo), null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), null));
 
         // ---
 

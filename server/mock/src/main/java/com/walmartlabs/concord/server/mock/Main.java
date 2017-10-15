@@ -18,7 +18,7 @@ public class Main {
     }
 
     private static void mockWhoAmI(WireMockServer mock) {
-        UserResponse response = new UserResponse("ldap", "test", "Mock User");
+        UserResponse response = new UserResponse("ldap", "test", "Mock User", null);
 
         mock.stubFor(get(urlPathEqualTo("/api/service/console/whoami"))
                 .willReturn(aResponse()

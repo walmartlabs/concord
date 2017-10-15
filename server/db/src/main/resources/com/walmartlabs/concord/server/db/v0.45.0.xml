@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <!-- TEAMS -->
+
+    <changeSet id="45000" author="ibodrov@gmail.com">
+        <createTable tableName="TEAMS" remarks="User teams">
+            <column name="TEAM_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TEAM_NAME" type="varchar(128)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="DESCRIPTION" type="varchar(2048)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="IS_ACTIVE" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="45010" author="ibodrov@gmail.com">
+        <insert tableName="TEAMS">
+            <column name="TEAM_ID">00000000-0000-0000-0000-000000000000</column>
+            <column name="TEAM_NAME">Default</column>
+            <column name="DESCRIPTION">Default team</column>
+        </insert>
+    </changeSet>
+
+    <changeSet id="45020" author="ibodrov@gmail.com">
+        <addColumn tableName="PROJECTS">
+            <column name="TEAM_ID" type="uuid" defaultValueComputed="'00000000-0000-0000-0000-000000000000'::uuid">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="PROJECTS"
+                                 baseColumnNames="TEAM_ID"
+                                 constraintName="FK_PRJ_TEAM_ID"
+                                 referencedTableName="TEAMS"
+                                 referencedColumnNames="TEAM_ID"/>
+    </changeSet>
+
+    <changeSet id="45030" author="ibodrov@gmail.com">
+        <addColumn tableName="SECRETS">
+            <column name="TEAM_ID" type="uuid" defaultValueComputed="'00000000-0000-0000-0000-000000000000'::uuid">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="SECRETS"
+                                 baseColumnNames="TEAM_ID"
+                                 constraintName="FK_PRJ_TEAM_ID"
+                                 referencedTableName="TEAMS"
+                                 referencedColumnNames="TEAM_ID"/>
+    </changeSet>
+
+    <changeSet id="45040" author="ibodrov@gmail.com">
+        <createTable tableName="USER_TEAMS">
+            <column name="USER_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TEAM_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="USER_TEAMS"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="FK_USR_TEAMS_USR"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"/>
+
+        <addForeignKeyConstraint baseTableName="USER_TEAMS"
+                                 baseColumnNames="TEAM_ID"
+                                 constraintName="FK_USR_TEAMS_TEAM"
+                                 referencedTableName="TEAMS"
+                                 referencedColumnNames="TEAM_ID"/>
+
+        <sql>
+            insert into USER_TEAMS
+            select USER_ID, '00000000-0000-0000-0000-000000000000'::uuid as TEAM_ID from USERS
+        </sql>
+    </changeSet>
+</databaseChangeLog>

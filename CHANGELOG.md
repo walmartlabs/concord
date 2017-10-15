@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: initial support for Teams;
 - concord-server: an endpoint to retrieve a list of attachments.
 
 
@@ -12,7 +13,6 @@
 
 ### Added
 
-- concord-server: an endpoint to list process attachments;
 - concord-runner: Slack task can now be called using the full form;
 - concord-server: automatically remove orphaned data.
 

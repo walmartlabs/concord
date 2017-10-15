@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.UUID;
 
 @Api("Secrets")
 @Path("/api/v1/secret")
@@ -49,7 +50,9 @@ public interface SecretResource {
     @Path("/keypair")
     @Produces(MediaType.APPLICATION_JSON)
     @Deprecated
-    PublicKeyResponse createKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name);
+    PublicKeyResponse createKeyPair(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                    @ApiParam @QueryParam("teamId") UUID teamId,
+                                    @ApiParam @QueryParam("teamName") String teamName);
 
     @POST
     @ApiOperation("Add a username and password secret")
@@ -58,6 +61,8 @@ public interface SecretResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Deprecated
     UploadSecretResponse addUsernamePassword(@ApiParam @QueryParam("name") @ConcordKey @NotNull String name,
+                                             @ApiParam @QueryParam("teamId") UUID teamId,
+                                             @ApiParam @QueryParam("teamName") String teamName,
                                              @ApiParam @Valid UsernamePasswordRequest request);
 
     @GET

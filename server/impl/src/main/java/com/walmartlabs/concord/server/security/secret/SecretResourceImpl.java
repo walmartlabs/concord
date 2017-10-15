@@ -7,6 +7,7 @@ import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.*;
+import com.walmartlabs.concord.server.team.TeamDao;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -39,13 +40,15 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
     private final SecretDao secretDao;
     private final SecretManager secretManager;
+    private final TeamDao teamDao;
 
     private final Map<String, Field<?>> key2Field;
 
     @Inject
-    public SecretResourceImpl(SecretDao secretDao, SecretManager secretManager) {
+    public SecretResourceImpl(SecretDao secretDao, SecretManager secretManager, TeamDao teamDao) {
         this.secretDao = secretDao;
         this.secretManager = secretManager;
+        this.teamDao = teamDao;
 
         this.key2Field = new HashMap<>();
         key2Field.put("name", SECRETS.SECRET_NAME);
@@ -75,11 +78,13 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
     @Validate
     public UploadSecretResponse createOrUploadKeyPair(String name, boolean generatePassword, MultipartInput input) {
-        assertUnique(name);
-
-        String storePassword = getOrGenerateStorePassword(input, generatePassword);
-
         try {
+            UUID teamId = assertOptionalTeam(input);
+
+            assertUnique(name);
+
+            String storePassword = getOrGenerateStorePassword(input, generatePassword);
+
             InputStream publicIn = getStream(input, "public");
             if (publicIn != null) {
                 InputStream privateIn = assertStream(input, "private");
@@ -87,10 +92,10 @@ public class SecretResourceImpl implements SecretResource, Resource {
                 KeyPair k = KeyPairUtils.create(publicIn, privateIn);
                 validate(k);
 
-                secretManager.store(name, k, storePassword);
+                secretManager.store(name, teamId, k, storePassword);
                 return new UploadSecretResponse(storePassword);
             } else {
-                KeyPair k = secretManager.createKeyPair(name, storePassword);
+                KeyPair k = secretManager.createKeyPair(name, teamId, storePassword);
                 return toPublicKey(name, k.getPublicKey(), storePassword);
             }
         } catch (IOException e) {
@@ -100,49 +105,53 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
     @Override
     public UploadSecretResponse addUsernamePassword(String name, boolean generatePassword, MultipartInput input) {
-        assertUnique(name);
-
-        String storePassword = getOrGenerateStorePassword(input, generatePassword);
-
-        UsernamePassword k;
         try {
+            UUID teamId = assertOptionalTeam(input);
+
+            assertUnique(name);
+
+            String storePassword = getOrGenerateStorePassword(input, generatePassword);
+
             String username = assertString(input, "username");
             String password = assertString(input, "password");
-            k = new UsernamePassword(username, password.toCharArray());
+            UsernamePassword k = new UsernamePassword(username, password.toCharArray());
+            secretManager.store(name, teamId, k, storePassword);
+
+            return new UploadSecretResponse(storePassword);
         } catch (IOException e) {
             throw new WebApplicationException("Error while adding a new username/password secret", e);
         }
-        secretManager.store(name, k, storePassword);
-
-        return new UploadSecretResponse(storePassword);
     }
 
     @Override
     @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
     @Validate
     public UploadSecretResponse addPlainSecret(String name, boolean generatePassword, MultipartInput input) {
-        assertUnique(name);
-
-        String password = getOrGenerateStorePassword(input, generatePassword);
-
-        BinaryDataSecret k;
         try {
+            UUID teamId = assertOptionalTeam(input);
+
+            assertUnique(name);
+
+            String password = getOrGenerateStorePassword(input, generatePassword);
+
             InputStream secret = assertStream(input, "secret");
-            k = new BinaryDataSecret(ByteStreams.toByteArray(secret));
+            BinaryDataSecret k = new BinaryDataSecret(ByteStreams.toByteArray(secret));
+            secretManager.store(name, teamId, k, password);
+
+            return new UploadSecretResponse(password);
         } catch (IOException e) {
             throw new WebApplicationException("Error processing a plain secret", e);
         }
-        secretManager.store(name, k, password);
-
-        return new UploadSecretResponse(password);
     }
 
     @Override
-    public PublicKeyResponse createKeyPair(String name) {
+    public PublicKeyResponse createKeyPair(String name, UUID teamId, String teamName) {
+        teamId = assertOptionalTeam(teamId, teamName);
+
         assertUnique(name);
 
         String password = null;
-        KeyPair k = secretManager.createKeyPair(name, password);
+        KeyPair k = secretManager.createKeyPair(name, teamId, password);
         return toPublicKey(name, k.getPublicKey(), password);
     }
 
@@ -150,12 +159,14 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @RequiresPermissions(Permissions.SECRET_CREATE_NEW)
     @Validate
     @Deprecated
-    public UploadSecretResponse addUsernamePassword(String name, UsernamePasswordRequest request) {
+    public UploadSecretResponse addUsernamePassword(String name, UUID teamId, String teamName, UsernamePasswordRequest request) {
+        teamId = assertOptionalTeam(teamId, teamName);
+
         assertUnique(name);
 
         UsernamePassword k = new UsernamePassword(request.getUsername(), request.getPassword());
         String password = null;
-        secretManager.store(name, k, password);
+        secretManager.store(name, teamId, k, password);
 
         return new UploadSecretResponse(password);
     }
@@ -210,6 +221,45 @@ public class SecretResourceImpl implements SecretResource, Resource {
         if (!subject.isPermitted(String.format(wildcard, name))) {
             throw new UnauthorizedException(message);
         }
+    }
+
+    private UUID assertOptionalTeam(MultipartInput input) throws IOException {
+        UUID teamId = null;
+
+        String s = getString(input, "teamId");
+        if (s != null) {
+            teamId = UUID.fromString(s);
+            if (teamDao.get(teamId) == null) {
+                throw new ValidationErrorsException("Team not found: " + s);
+            }
+        } else {
+            s = getString(input, "teamName");
+            if (s != null) {
+                teamId = teamDao.getId(s);
+                if (teamDao.get(teamId) == null) {
+                    throw new ValidationErrorsException("Team not found: " + s);
+                }
+            }
+        }
+
+        return teamId;
+    }
+
+    private UUID assertOptionalTeam(UUID teamId, String teamName) {
+        if (teamId != null) {
+            if (teamDao.get(teamId) == null) {
+                throw new ValidationErrorsException("Team not found: " + teamId);
+            }
+        }
+
+        if (teamName != null) {
+            teamId = teamDao.getId(teamName);
+            if (teamId == null) {
+                throw new ValidationErrorsException("Team not found: " + teamName);
+            }
+        }
+
+        return teamId;
     }
 
     private static PublicKeyResponse toPublicKey(String name, byte[] ab, String password) {

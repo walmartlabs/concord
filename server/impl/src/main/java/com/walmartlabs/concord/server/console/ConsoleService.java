@@ -58,7 +58,7 @@ public class ConsoleService implements Resource {
             displayName = u.getUsername();
         }
 
-        return new UserResponse(u.getRealm(), u.getUsername(), displayName);
+        return new UserResponse(u.getRealm(), u.getUsername(), displayName, u.getTeams());
     }
 
     @POST

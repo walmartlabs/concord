@@ -4,6 +4,7 @@ import com.walmartlabs.concord.common.db.AbstractDao;
 import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
+import com.walmartlabs.concord.server.team.TeamDao;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
+import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
+import static org.jooq.impl.DSL.select;
 
 @Named
 public class SecretDao extends AbstractDao {
@@ -44,14 +47,18 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public UUID insert(String name, SecretType type, SecretStoreType storeType, byte[] data) {
-        return txResult(tx -> insert(tx, name, type, storeType, data));
+    public UUID insert(String name, SecretType type, UUID teamId, SecretStoreType storeType, byte[] data) {
+        return txResult(tx -> insert(tx, name, type, teamId, storeType, data));
     }
 
-    public UUID insert(DSLContext tx, String name, SecretType type, SecretStoreType storeType, byte[] data) {
+    public UUID insert(DSLContext tx, String name, SecretType type, UUID teamId, SecretStoreType storeType, byte[] data) {
+        if (teamId == null) {
+            teamId = TeamDao.DEFAULT_TEAM_ID;
+        }
+
         return tx.insertInto(SECRETS)
-                .columns(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_STORE_TYPE, SECRETS.SECRET_DATA)
-                .values(name, type.toString(), storeType.toString(), data)
+                .columns(SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.TEAM_ID, SECRETS.SECRET_STORE_TYPE, SECRETS.SECRET_DATA)
+                .values(name, type.toString(), teamId, storeType.toString(), data)
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
                 .getSecretId();
@@ -66,9 +73,16 @@ public class SecretDao extends AbstractDao {
     }
 
     public List<SecretEntry> list(Field<?> sortField, boolean asc) {
+        Field<String> teamName = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(SECRETS.TEAM_ID)).asField();
+
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record4<UUID, String, String, String>> query = tx
-                    .select(SECRETS.SECRET_ID, SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_STORE_TYPE)
+            SelectJoinStep<Record6<UUID, String, UUID, String, String, String>> query = tx
+                    .select(SECRETS.SECRET_ID,
+                            SECRETS.SECRET_NAME,
+                            SECRETS.TEAM_ID,
+                            teamName,
+                            SECRETS.SECRET_TYPE,
+                            SECRETS.SECRET_STORE_TYPE)
                     .from(SECRETS);
 
             if (sortField != null) {
@@ -77,6 +91,8 @@ public class SecretDao extends AbstractDao {
 
             return query.fetch(r -> new SecretEntry(r.get(SECRETS.SECRET_ID),
                     r.get(SECRETS.SECRET_NAME),
+                    r.get(SECRETS.TEAM_ID),
+                    r.get(teamName),
                     SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
                     SecretStoreType.valueOf(r.get(SECRETS.SECRET_STORE_TYPE))));
         }
@@ -91,14 +107,24 @@ public class SecretDao extends AbstractDao {
         });
     }
 
-    private static SelectJoinStep<Record5<UUID, String, String, String, byte[]>> selectSecretDataEntry(DSLContext tx) {
-        return tx.select(SECRETS.SECRET_ID, SECRETS.SECRET_NAME, SECRETS.SECRET_TYPE, SECRETS.SECRET_STORE_TYPE, SECRETS.SECRET_DATA)
+    private static SelectJoinStep<Record7<UUID, String, UUID, String, String, String, byte[]>> selectSecretDataEntry(DSLContext tx) {
+        Field<String> teamName = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(SECRETS.TEAM_ID)).asField();
+        return tx.select(
+                SECRETS.SECRET_ID,
+                SECRETS.SECRET_NAME,
+                SECRETS.TEAM_ID,
+                teamName,
+                SECRETS.SECRET_TYPE,
+                SECRETS.SECRET_STORE_TYPE,
+                SECRETS.SECRET_DATA)
                 .from(SECRETS);
     }
 
-    private static SecretDataEntry toDataEntry(Record5<UUID, String, String, String, byte[]> r) {
+    private static SecretDataEntry toDataEntry(Record7<UUID, String, UUID, String, String, String, byte[]> r) {
         return new SecretDataEntry(r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
+                r.get(SECRETS.TEAM_ID),
+                r.get(3, String.class),
                 SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
                 SecretStoreType.valueOf(r.get(SECRETS.SECRET_STORE_TYPE)),
                 r.get(SECRETS.SECRET_DATA));
@@ -110,11 +136,11 @@ public class SecretDao extends AbstractDao {
         private final byte[] data;
 
         public SecretDataEntry(SecretDataEntry s, byte[] data) {
-            this(s.getId(), s.getName(), s.getType(), s.getStoreType(), data);
+            this(s.getId(), s.getName(), s.getTeamId(), s.getTeamName(), s.getType(), s.getStoreType(), data);
         }
 
-        public SecretDataEntry(UUID id, String name, SecretType type, SecretStoreType storeType, byte[] data) {
-            super(id, name, type, storeType);
+        public SecretDataEntry(UUID id, String name, UUID teamId, String teamName, SecretType type, SecretStoreType storeType, byte[] data) {
+            super(id, name, teamId, teamName, type, storeType);
             this.storeType = storeType;
             this.data = data;
         }

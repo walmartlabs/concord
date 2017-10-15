@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Named
@@ -31,9 +32,9 @@ public class SecretManager {
         this.serverKeyManager = serverKeyManager;
     }
 
-    public KeyPair createKeyPair(String name, String password) {
+    public KeyPair createKeyPair(String name, UUID teamId, String password) {
         KeyPair k = KeyPairUtils.create();
-        store(name, k, password);
+        store(name, teamId, k, password);
         return k;
     }
 
@@ -82,7 +83,7 @@ public class SecretManager {
         return (KeyPair) s;
     }
 
-    public void store(String name, Secret s, String password) {
+    public void store(String name, UUID teamId, Secret s, String password) {
         byte[] data;
 
         SecretType type;
@@ -111,7 +112,7 @@ public class SecretManager {
             throw Throwables.propagate(e);
         }
 
-        secretDao.insert(name, type, storeType, ab);
+        secretDao.insert(name, type, teamId, storeType, ab);
     }
 
     public byte[] encryptData(String projectName, byte[] data) {
