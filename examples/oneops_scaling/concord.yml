@@ -4,10 +4,12 @@ flows:
   - form: cfg
     yield: true
 
-  # call OneOps to update the specified variable
-  - ${oneops.updatePlatformVariable(cfg, cfg.platform, cfg.variableName, cfg.variableValue)}
-  # we can't just deploy a single variable change - we need to "touch" some components
+  # min, current, max, step up, step down, deployment percentage
+  - ${oneops.updatePlatformScale(cfg, cfg.platform, "compute", cfg.minScale, cfg.currScale, cfg.maxScale, 1, 1, 100)}
+
+  # we need to "touch" some components so that OneOps can generate a deployment plan
   - ${oneops.touchComponent(cfg, cfg.platform, "fqdn")}
+
   # commit and deploy the changes
   - ${oneops.commitAndDeploy(cfg)}
 
@@ -20,19 +22,22 @@ forms:
   - asm: { label: "Assembly", type: "string" }
   - env: { label: "Environment", type: "string" }
   - platform: { label: "Platform", type: "string" }
-  - variableName: { label: "Variable name", type: "string" }
-  - variableValue: { label: "Variable value", type: "string" }
+  - minScale: { label: "Minumum scale", type: "int" }
+  - currScale: { label: "Current scale", type: "int" }
+  - maxScale: { label: "Maximum scale", type: "int" }
 
 configuration:
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.33.0"
+
   arguments:
     # form defaults
     cfg:
       baseUrl: "https://oneops.prod.walmart.com/"
       org: "devtools"
-      asm: "concord-example"
-      env: "test1"
-      platform: "myPlatform"
-      variableName: "myVar"
-      variableValue: "myVal"
+      asm: "concord-oo-example"
+      env: "test"
+      platform: "test"
+      minScale: 1
+      currScale: 1
+      maxScale: 2

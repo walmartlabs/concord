@@ -10,6 +10,7 @@
 * [in_variables](in_variables) - how to use IN-variables when calling a flow;
 * [multiple_flows](multiple_flows) - multiple flows in a single YAML file;
 * [oneops](oneops) - OneOps integration example;
+* [out](out) - how to use process OUT variables;
 * [project_file](project_file) - basic usage of a `concord.yml` project file;
 * [slack](slack) - sending a message to a Slack channel;
 * [smtp](smtp) - using SMTP task;
@@ -33,8 +34,10 @@
 * [forms_override](forms_override) - how to override default values in forms;
 * [groovy](groovy) - running a Groovy script from a flow;
 * [groovy_rest](groovy_rest) - calling a REST endpoint from a flow using Groovy;
-* [python_script](python_script) - running a Python script from a flow;
+* [oneops_scaling](oneops_scaling) - how to scaling up or down a platform in OneOps;
 * [profiles](profiles) - how to use profiles;
+* [python_script](python_script) - running a Python script from a flow;
+
 
 ## Advanced
 
