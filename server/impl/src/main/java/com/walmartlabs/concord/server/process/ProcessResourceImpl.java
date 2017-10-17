@@ -6,6 +6,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
+import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
@@ -607,7 +608,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             return null;
         }
 
-        UserPrincipal u = (UserPrincipal) subject.getPrincipal();
-        return u.getUsername();
+        UserPrincipal p = (UserPrincipal) subject.getPrincipal();
+        return p.getUsername();
     }
 }

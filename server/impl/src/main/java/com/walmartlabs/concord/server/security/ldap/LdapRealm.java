@@ -1,10 +1,10 @@
 package com.walmartlabs.concord.server.security.ldap;
 
+import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.user.TeamEntry;
-import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -19,7 +19,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 
 @Named
 public class LdapRealm extends AbstractLdapRealm {
@@ -27,7 +29,7 @@ public class LdapRealm extends AbstractLdapRealm {
     private static final Logger log = LoggerFactory.getLogger(LdapRealm.class);
     public static final String REALM_NAME = "ldap";
 
-    private final UserDao userDao;
+    private final UserManager userManager;
     private final LdapDao ldapDao;
     private final LdapManager ldapManager;
     private final ConcordShiroAuthorizer authorizer;
@@ -36,13 +38,13 @@ public class LdapRealm extends AbstractLdapRealm {
 
     @Inject
     public LdapRealm(LdapConfiguration cfg,
-                     UserDao userDao,
+                     UserManager userManager,
                      LdapDao ldapDao,
                      ConcordLdapContextFactory ctxFactory,
                      LdapManager ldapManager,
                      ConcordShiroAuthorizer authorizer) {
 
-        this.userDao = userDao;
+        this.userManager = userManager;
         this.ldapDao = ldapDao;
         this.ldapManager = ldapManager;
         this.authorizer = authorizer;
@@ -108,9 +110,8 @@ public class LdapRealm extends AbstractLdapRealm {
             throw new AuthenticationException("LDAP data not found: " + username);
         }
 
-        UUID id = userDao.getId(username);
-        Set<TeamEntry> teams = userDao.getUserTeams(id);
-        UserPrincipal p = new UserPrincipal(REALM_NAME, id, username, teams, ldapInfo);
+        UserEntry user = userManager.getOrCreate(username);
+        UserPrincipal p = new UserPrincipal(REALM_NAME, user.getId(), user.getName(), ldapInfo);
 
         return new SimpleAccount(Arrays.asList(p, t), t, getName());
     }

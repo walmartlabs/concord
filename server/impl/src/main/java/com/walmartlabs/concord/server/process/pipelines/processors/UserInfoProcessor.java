@@ -42,21 +42,17 @@ public class UserInfoProcessor implements PayloadProcessor {
             return null;
         }
 
-        UserPrincipal u = (UserPrincipal) subject.getPrincipal();
-        if (u == null) {
+        UserPrincipal p = (UserPrincipal) subject.getPrincipal();
+        if (p == null) {
             return null;
         }
 
-        UserInfo info;
-
-        LdapInfo ldap = u.getLdapInfo();
+        LdapInfo ldap = p.getLdapInfo();
         if (ldap != null) {
-            info = new UserInfo(ldap.getUsername(), ldap.getDisplayName(), ldap.getGroups(), ldap.getAttributes());
+            return new UserInfo(p.getUsername(), ldap.getDisplayName(), ldap.getGroups(), ldap.getAttributes());
         } else {
-            info = new UserInfo(u.getUsername(), u.getUsername(), Collections.emptySet(), Collections.emptyMap());
+            return new UserInfo(p.getUsername(), p.getUsername(), Collections.emptySet(), Collections.emptyMap());
         }
-
-        return info;
     }
 
     @JsonInclude(Include.NON_NULL)

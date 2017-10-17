@@ -3,9 +3,10 @@ package com.walmartlabs.concord.server.team;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.team.*;
+import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
-import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.sonatype.siesta.Resource;
@@ -28,13 +29,13 @@ import java.util.stream.Stream;
 public class TeamResourceImpl implements TeamResource, Resource {
 
     private final TeamDao teamDao;
-    private final UserDao userDao;
+    private final UserManager userManager;
     private final LdapManager ldapManager;
 
     @Inject
-    public TeamResourceImpl(TeamDao teamDao, UserDao userDao, LdapManager ldapManager) {
+    public TeamResourceImpl(TeamDao teamDao, UserManager userManager, LdapManager ldapManager) {
         this.teamDao = teamDao;
-        this.userDao = userDao;
+        this.userManager = userManager;
         this.ldapManager = ldapManager;
     }
 
@@ -104,7 +105,7 @@ public class TeamResourceImpl implements TeamResource, Resource {
         UUID teamId = assertTeam(teamName);
 
         Collection<UUID> userIds = usernames.stream()
-                .map(this::getUserId)
+                .map(userManager::getId)
                 .flatMap(id -> id.map(Stream::of).orElseGet(Stream::empty))
                 .collect(Collectors.toSet());
 
@@ -122,27 +123,21 @@ public class TeamResourceImpl implements TeamResource, Resource {
     }
 
     private UUID getOrCreateUserId(String username) {
-        UUID userId = userDao.getId(username);
+        UserEntry user = userManager.getOrCreate(username);
 
-        if (userId == null) {
+        if (user == null) {
             try {
                 LdapInfo i = ldapManager.getInfo(username);
                 if (i == null) {
                     throw new WebApplicationException("User not found: " + username);
                 }
-
-                userId = UUID.randomUUID();
-                userDao.insert(userId, username, null);
             } catch (NamingException e) {
                 throw new WebApplicationException("Error while retrieving LDAP data: " + e.getMessage(), e);
             }
+
+            user = userManager.getOrCreate(username);
         }
 
-        return userId;
-    }
-
-    private Optional<UUID> getUserId(String username) {
-        UUID userId = userDao.getId(username);
-        return Optional.ofNullable(userId);
+        return user.getId();
     }
 }

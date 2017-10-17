@@ -18,7 +18,7 @@ MODAL_TYPES[DeleteSecretPopup.MODAL_TYPE] = DeleteSecretPopup;
 MODAL_TYPES[RepositoryPopup.MODAL_TYPE] = RepositoryPopup;
 MODAL_TYPES[DeleteProjectPopup.MODAL_TYPE] = DeleteProjectPopup;
 
-const layout = ({fullScreen, user: {displayName, loggedIn}, title, children, doLogout, router}) => {
+const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, children, doLogout, router}) => {
     if (fullScreen) {
         return <Grid className="maxHeight tight">
             <Grid.Column id="mainContent" width={16} className="mainContent">
@@ -34,7 +34,7 @@ const layout = ({fullScreen, user: {displayName, loggedIn}, title, children, doL
                 <Menu.Item>
                     <Header id="logo" as="h2" inverted>{title}</Header>
                 </Menu.Item>
-                {loggedIn && <SessionWidget displayName={displayName} onLogout={doLogout}/>}
+                {loggedIn && <SessionWidget displayName={displayName} teamName={teamName} onLogout={doLogout}/>}
                 <Menu.Item active={router.isActive("/process")}>
                     <Menu.Header><Icon name="tasks"/>Processes</Menu.Header>
                     <Menu.Menu>
@@ -96,7 +96,8 @@ const mapStateToProps = (state, {location: {query}}) => ({
     fullScreen: query.fullScreen === "true",
     user: {
         displayName: selectors.getDisplayName(state.session),
-        loggedIn: selectors.isLoggedIn(state.session)
+        loggedIn: selectors.isLoggedIn(state.session),
+        teamName: selectors.getCurrentTeamName(state.session)
     }
 });
 

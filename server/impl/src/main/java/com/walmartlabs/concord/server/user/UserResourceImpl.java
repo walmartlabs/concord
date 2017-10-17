@@ -20,25 +20,25 @@ import java.util.UUID;
 @Named
 public class UserResourceImpl implements UserResource, Resource {
 
+    private final UserManager userManager;
     private final UserDao userDao;
 
     @Inject
-    public UserResourceImpl(UserDao userDao) {
+    public UserResourceImpl(UserManager userManager, UserDao userDao) {
+        this.userManager = userManager;
         this.userDao = userDao;
     }
 
     @Override
     @Validate
     public CreateUserResponse createOrUpdate(CreateUserRequest request) {
-
         String username = request.getUsername();
 
         UUID id = userDao.getId(username);
         if (id == null) {
             assertPermissions(Permissions.USER_CREATE_NEW, "The current user does not have permissions to create a new user");
-            id = UUID.randomUUID();
-            userDao.insert(id, username, request.getPermissions());
-            return new CreateUserResponse(id, PerformedActionType.CREATED);
+            UserEntry e = userManager.create(username, request.getPermissions());
+            return new CreateUserResponse(e.getId(), PerformedActionType.CREATED);
         } else {
             // TODO check per-entry permissions?
             assertPermissions(Permissions.USER_UPDATE_ANY, "The current user does not have permissions to update an existing user");

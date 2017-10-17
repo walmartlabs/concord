@@ -28,11 +28,10 @@ public class UserDaoTest extends AbstractDaoTest {
 
     @Test
     public void testInsertDelete() throws Exception {
-        UUID userId = UUID.randomUUID();
         String username = "user#" + System.currentTimeMillis();
         Set<String> permissions = Collections.singleton("*");
 
-        userDao.insert(userId, username, permissions);
+        UUID userId = userDao.insert(username, permissions);
 
         UUID id = UUID.randomUUID();
         String s = "key#" + System.currentTimeMillis();

@@ -17,7 +17,7 @@
             <column name="DESCRIPTION" type="varchar(2048)">
                 <constraints nullable="true"/>
             </column>
-            <column name="IS_ACTIVE" type="boolean" defaultValueBoolean="false">
+            <column name="IS_ACTIVE" type="boolean" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -73,17 +73,25 @@
                                  baseColumnNames="USER_ID"
                                  constraintName="FK_USR_TEAMS_USR"
                                  referencedTableName="USERS"
-                                 referencedColumnNames="USER_ID"/>
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
 
         <addForeignKeyConstraint baseTableName="USER_TEAMS"
                                  baseColumnNames="TEAM_ID"
                                  constraintName="FK_USR_TEAMS_TEAM"
                                  referencedTableName="TEAMS"
-                                 referencedColumnNames="TEAM_ID"/>
+                                 referencedColumnNames="TEAM_ID"
+                                 onDelete="CASCADE"/>
 
         <sql>
             insert into USER_TEAMS
             select USER_ID, '00000000-0000-0000-0000-000000000000'::uuid as TEAM_ID from USERS
         </sql>
+    </changeSet>
+
+    <!-- USERS -->
+
+    <changeSet id="45500" author="ibodrov@gmail.com">
+        <addDefaultValue tableName="USERS" columnName="USER_ID" defaultValueComputed="uuid_generate_v1()"/>
     </changeSet>
 </databaseChangeLog>

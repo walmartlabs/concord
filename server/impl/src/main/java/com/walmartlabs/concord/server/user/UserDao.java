@@ -1,8 +1,12 @@
 package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.server.api.team.TeamEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
-import org.jooq.*;
+import org.jooq.BatchBindStep;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.Record2;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -11,13 +15,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PERMISSIONS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
-import static org.jooq.impl.DSL.select;
 
 @Named
 public class UserDao extends AbstractDao {
@@ -27,15 +29,20 @@ public class UserDao extends AbstractDao {
         super(cfg);
     }
 
-    public void insert(UUID id, String username, Set<String> permissions) {
-        tx(tx -> {
-            tx.insertInto(USERS)
-                    .columns(USERS.USER_ID, USERS.USERNAME)
-                    .values(id, username)
-                    .execute();
+    public UUID insert(String username, Set<String> permissions) {
+        return txResult(tx -> insert(tx, username, permissions));
+    }
 
-            insertPermissions(tx, id, permissions);
-        });
+    public UUID insert(DSLContext tx, String username, Set<String> permissions) {
+        UUID id = tx.insertInto(USERS)
+                .columns(USERS.USERNAME)
+                .values(username)
+                .returning(USERS.USER_ID)
+                .fetchOne().getUserId();
+
+        insertPermissions(tx, id, permissions);
+
+        return id;
     }
 
     public void delete(UUID id) {
@@ -68,7 +75,14 @@ public class UserDao extends AbstractDao {
                     .where(USER_PERMISSIONS.USER_ID.eq(id))
                     .fetchInto(String.class);
 
-            return new UserEntry(r.get(USERS.USER_ID), r.get(USERS.USERNAME), new HashSet<>(perms));
+            List<TeamEntry> teams = tx.select(TEAMS.TEAM_ID, TEAMS.TEAM_NAME, TEAMS.IS_ACTIVE)
+                    .from(USER_TEAMS)
+                    .join(TEAMS).on(TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID))
+                    .where(USER_TEAMS.USER_ID.eq(id).and(TEAMS.IS_ACTIVE.isTrue()))
+                    .fetch(e -> new TeamEntry(e.value1(), e.value2(), null, e.value3()));
+
+            return new UserEntry(r.get(USERS.USER_ID), r.get(USERS.USERNAME),
+                    new HashSet<>(perms), new HashSet<>(teams));
         }
     }
 
@@ -96,19 +110,6 @@ public class UserDao extends AbstractDao {
                     .where(USERS.USER_ID.eq(id)));
 
             return cnt > 0;
-        }
-    }
-
-    public Set<TeamEntry> getUserTeams(UUID userId) {
-        Field<String> teamName = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID)).asField();
-
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(USER_TEAMS.TEAM_ID, teamName)
-                    .from(USER_TEAMS)
-                    .where(USER_TEAMS.USER_ID.eq(userId))
-                    .fetch(r -> new TeamEntry(r.get(0, UUID.class), r.get(1, String.class)))
-                    .stream()
-                    .collect(Collectors.toSet());
         }
     }
 

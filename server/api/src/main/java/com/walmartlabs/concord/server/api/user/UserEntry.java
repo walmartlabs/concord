@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.api.team.TeamEntry;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -15,15 +16,18 @@ public class UserEntry implements Serializable {
     private final UUID id;
     private final String name;
     private final Set<String> permissions;
+    private final Set<TeamEntry> teams;
 
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
-                     @JsonProperty("permissions") Set<String> permissions) {
-        this.id = id;
+                     @JsonProperty("permissions") Set<String> permissions,
+                     @JsonProperty("teams") Set<TeamEntry> teams) {
 
+        this.id = id;
         this.name = name;
         this.permissions = permissions;
+        this.teams = teams;
     }
 
     public UUID getId() {
@@ -38,12 +42,17 @@ public class UserEntry implements Serializable {
         return permissions;
     }
 
+    public Set<TeamEntry> getTeams() {
+        return teams;
+    }
+
     @Override
     public String toString() {
         return "UserEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", permissions=" + permissions +
+                ", teams=" + teams +
                 '}';
     }
 }
