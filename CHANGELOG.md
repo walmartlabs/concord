@@ -10,6 +10,14 @@ variables;
 - concord-server: initial support for Teams;
 - concord-server: an endpoint to retrieve a list of attachments.
 
+### Breaking
+
+- concord-dependency-manager: remove support for `includeOptional`.
+
+### Changed
+
+- concord-dependency-manager: batch resolution of Maven dependencies.
+
 
 
 ## [0.44.0] - 2017-10-12

@@ -8,7 +8,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -20,7 +19,6 @@ import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.artifact.JavaScopes;
-import org.eclipse.aether.util.filter.DependencyFilterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,46 +71,64 @@ public class DependencyManager {
             return Collections.emptySet();
         }
 
-        Collection<Path> result = new HashSet<>();
-        for (URI item : items) {
-            Collection<Path> deps = resolve(item);
-            log.debug("collectDependencies ['{}'] -> resolved into: {}", item, deps);
-            for (Path d : deps) {
-                result.add(d.toAbsolutePath());
-            }
-        }
-        return result;
+        DependencyList deps = categorize(items);
+
+        Collection<Path> paths = new HashSet<>();
+        paths.addAll(resolveDirectLinks(deps.directLinks));
+        paths.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies));
+        paths.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies));
+
+        return paths;
     }
 
-    public Collection<Path> resolve(URI item) throws IOException {
-        String scheme = item.getScheme();
-        if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
-            Map<String, String> cfg = splitQuery(item);
-            String id = item.getAuthority();
-            boolean transitive = Boolean.parseBoolean(cfg.getOrDefault("transitive", "true"));
-            if (transitive) {
-                boolean includeOptional = Boolean.parseBoolean(cfg.getOrDefault("includeOptional", "false"));
+    private DependencyList categorize(Collection<URI> items) throws IOException {
+        Set<MavenDependency> mavenTransitiveDependencies = new HashSet<>();
+        Set<MavenDependency> mavenSingleDependencies = new HashSet<>();
+        Set<URI> directLinks = new HashSet<>();
+
+        for (URI item : items) {
+            String scheme = item.getScheme();
+            if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
+                String id = item.getAuthority();
+                Artifact artifact = new DefaultArtifact(id);
+
+                Map<String, String> cfg = splitQuery(item);
                 String scope = cfg.getOrDefault("scope", JavaScopes.COMPILE);
-                return resolveMavenTransitively(id, scope, includeOptional);
+                boolean transitive = Boolean.parseBoolean(cfg.getOrDefault("transitive", "true"));
+
+                if (transitive) {
+                    mavenTransitiveDependencies.add(new MavenDependency(artifact, scope));
+                } else {
+                    mavenSingleDependencies.add(new MavenDependency(artifact, scope));
+                }
             } else {
-                return Collections.singleton(resolveMavenSingle(id));
+                directLinks.add(item);
             }
-        } else {
-            return Collections.singleton(resolveFile(item));
         }
+
+        return new DependencyList(mavenTransitiveDependencies, mavenSingleDependencies, directLinks);
     }
 
     public Path resolveSingle(URI item) throws IOException {
         String scheme = item.getScheme();
         if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
             String id = item.getAuthority();
-            return resolveMavenSingle(id);
+            Artifact artifact = new DefaultArtifact(id);
+            return resolveMavenSingle(new MavenDependency(artifact, JavaScopes.COMPILE));
         } else {
             return resolveFile(item);
         }
     }
 
-    public Path resolveFile(URI uri) throws IOException {
+    private Collection<Path> resolveDirectLinks(Collection<URI> items) throws IOException {
+        Collection<Path> paths = new HashSet<>();
+        for (URI item : items) {
+            paths.add(resolveFile(item));
+        }
+        return paths;
+    }
+
+    private Path resolveFile(URI uri) throws IOException {
         boolean skipCache = shouldSkipCache(uri);
         String name = getLastPart(uri);
 
@@ -133,13 +149,11 @@ public class DependencyManager {
         }
     }
 
-    private Path resolveMavenSingle(String id) throws IOException {
+    private Path resolveMavenSingle(MavenDependency dep) throws IOException {
         RepositorySystemSession session = newRepositorySystemSession(maven);
 
-        Artifact artifact = new DefaultArtifact(id);
-
         ArtifactRequest req = new ArtifactRequest();
-        req.setArtifact(artifact);
+        req.setArtifact(dep.artifact);
         req.setRepositories(repositories);
 
         synchronized (mutex) {
@@ -152,24 +166,25 @@ public class DependencyManager {
         }
     }
 
-    private Collection<Path> resolveMavenTransitively(String id, String scope, boolean includeOptional) throws IOException {
+    private Collection<Path> resolveMavenSingleDependencies(Collection<MavenDependency> deps) throws IOException {
+        Collection<Path> paths = new HashSet<>();
+        for (MavenDependency dep : deps) {
+            paths.add(resolveMavenSingle(dep));
+        }
+        return paths;
+    }
+
+    private Collection<Path> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps) throws IOException {
         RepositorySystem system = newMavenRepositorySystem();
         RepositorySystemSession session = newRepositorySystemSession(system);
 
-        Artifact artifact = new DefaultArtifact(id);
-
-        DependencyFilter filter = DependencyFilterUtils.classpathFilter(scope);
-
-        if (!includeOptional) {
-            filter = DependencyFilterUtils.andFilter(filter,
-                    (node, parents) -> !node.getDependency().isOptional());
-        }
-
         CollectRequest req = new CollectRequest();
-        req.setRoot(new Dependency(artifact, scope));
+        req.setDependencies(deps.stream()
+                .map(d -> new Dependency(d.artifact, d.scope))
+                .collect(Collectors.toList()));
         req.setRepositories(repositories);
 
-        DependencyRequest dependencyRequest = new DependencyRequest(req, filter);
+        DependencyRequest dependencyRequest = new DependencyRequest(req, null);
 
         synchronized (mutex) {
             try {
@@ -328,5 +343,32 @@ public class DependencyManager {
             l.add(new MavenRepository(id, contentType, url));
         }
         return l;
+    }
+
+    private static final class DependencyList {
+
+        private final Set<MavenDependency> mavenTransitiveDependencies;
+        private final Set<MavenDependency> mavenSingleDependencies;
+        private final Set<URI> directLinks;
+
+        private DependencyList(Set<MavenDependency> mavenTransitiveDependencies,
+                               Set<MavenDependency> mavenSingleDependencies,
+                               Set<URI> directLinks) {
+
+            this.mavenTransitiveDependencies = mavenTransitiveDependencies;
+            this.mavenSingleDependencies = mavenSingleDependencies;
+            this.directLinks = directLinks;
+        }
+    }
+
+    private static final class MavenDependency {
+
+        private final Artifact artifact;
+        private final String scope;
+
+        private MavenDependency(Artifact artifact, String scope) {
+            this.artifact = artifact;
+            this.scope = scope;
+        }
     }
 }
