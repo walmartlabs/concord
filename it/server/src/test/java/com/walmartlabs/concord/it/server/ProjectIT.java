@@ -273,7 +273,7 @@ public class ProjectIT extends AbstractServerIT {
         UUID userId = cur.getId();
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(userId));
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(userId, null));
         assertTrue(cakr.isOk());
 
         String apiKey = cakr.getKey();

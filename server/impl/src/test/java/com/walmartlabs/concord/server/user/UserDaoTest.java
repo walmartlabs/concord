@@ -33,10 +33,9 @@ public class UserDaoTest extends AbstractDaoTest {
 
         UUID userId = userDao.insert(username, permissions);
 
-        UUID id = UUID.randomUUID();
         String s = "key#" + System.currentTimeMillis();
         String apiKey = Base64.getEncoder().encodeToString(s.getBytes());
-        apiKeyDao.insert(id, userId, apiKey);
+        apiKeyDao.insert(userId, apiKey);
 
         // ---
 

@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: the API keys endpoint now accepts LDAP usernames
+as well as user UUIDs;
 - concord-server, concord-runner: support for process OUT
 variables;
 - concord-server: log process status updates;

@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
 
@@ -29,7 +28,7 @@ public class UserManagementIT extends AbstractServerIT {
         // ---
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(cur.getId()));
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(cur.getId(), username));
         assertTrue(cakr.isOk());
 
         // ---

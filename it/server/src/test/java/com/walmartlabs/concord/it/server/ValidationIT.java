@@ -18,7 +18,7 @@ public class ValidationIT extends AbstractServerIT {
     public void testApiKeys() {
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
 
-        CreateApiKeyRequest req = new CreateApiKeyRequest(null);
+        CreateApiKeyRequest req = new CreateApiKeyRequest(null, null);
         apiKeyResource.create(req);
     }
 

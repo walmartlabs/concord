@@ -94,4 +94,10 @@
     <changeSet id="45500" author="ibodrov@gmail.com">
         <addDefaultValue tableName="USERS" columnName="USER_ID" defaultValueComputed="uuid_generate_v1()"/>
     </changeSet>
+
+    <!-- API_KEYS -->
+
+    <changeSet id="45600" author="ibodrov@gmail.com">
+        <addDefaultValue tableName="API_KEYS" columnName="KEY_ID" defaultValueComputed="uuid_generate_v1()"/>
+    </changeSet>
 </databaseChangeLog>

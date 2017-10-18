@@ -36,11 +36,13 @@ public class ApiKeyDao extends AbstractDao {
         return e.encodeToString(ab);
     }
 
-    public void insert(UUID id, UUID userId, String key) {
-        tx(tx -> tx.insertInto(API_KEYS)
-                .columns(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.API_KEY)
-                .values(id, userId, hash(key))
-                .execute());
+    public UUID insert(UUID userId, String key) {
+        return txResult(tx -> tx.insertInto(API_KEYS)
+                .columns(API_KEYS.USER_ID, API_KEYS.API_KEY)
+                .values(userId, hash(key))
+                .returning(API_KEYS.KEY_ID)
+                .fetchOne()
+                .getKeyId());
     }
 
     public void delete(UUID id) {
