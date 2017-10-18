@@ -19,6 +19,9 @@
     "react-semantic-redux-form": "^1.1.4",
     "react-test-renderer": "^16.0.0",
     "redux-devtools-extension": "^2.13.2",
+    "@storybook/react": "^3.2.12",
+    "@storybook/addon-actions": "^3.2.12",
+    "@storybook/addon-links": "^3.2.12",
     "watchman": "^0.1.8"
   },
   "dependencies": {
@@ -34,6 +37,7 @@
     "redux": "3.7.2",
     "redux-logger": "3.0.6",
     "redux-saga": "0.15.6",
+    "semantic-ui-css": "^2.2.12",
     "semantic-ui-react": "0.74.2"
   },
   "scripts": {
@@ -43,7 +47,9 @@
     "coverage": "npm test -- --coverage",
     "eject": "react-scripts eject",
     "dev": "babel-node --presets es2015 scripts/devServer.js",
-    "server": "babel-node --presets es2015 scripts/server.js"
+    "server": "babel-node --presets es2015 scripts/server.js",
+    "storybook": "start-storybook -p 9009 -s public",
+    "build-storybook": "build-storybook -s public"
   },
   "proxy": "http://localhost:8001/"
 }

@@ -52,6 +52,20 @@ It will visualize the current state of the store when you have the application r
 
 <b>NOTE:</b> The concord Project is already configured to work with the extension.
 
+### Live Isolated Component Development
+
+[React Storybook](https://github.com/storybooks/storybook)
+Storybook is a live sandbox editor that allows you to completely isolate your components from one another.
+
+Run in development mode with the following command:
+```
+npm run storybook
+```
+Build a project snapshot with 
+```
+npm run build-storybook
+```
+
 ## Production
 
 ```

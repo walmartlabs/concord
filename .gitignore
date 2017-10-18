@@ -16,6 +16,7 @@ node_modules/
 nb-configuration.xml
 pom.xml.bak
 console/build
+console/storybook-static
 yarn.lock
 flow-typed/
 npm-debug.log

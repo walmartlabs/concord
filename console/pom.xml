@@ -58,6 +58,20 @@
                             <arguments>run build</arguments>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>build storybook</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <REACT_APP_CONCORD_VERSION>${project.version}</REACT_APP_CONCORD_VERSION>
+                            </environmentVariables>
+                            <skip>${skipNpmBuild}</skip>
+                            <arguments>run build-storybook</arguments>
+                        </configuration>
+                    </execution>
                 </executions>
                 <configuration>
                     <installDirectory>target</installDirectory>
@@ -80,6 +94,7 @@
                 <configuration>
                     <descriptors>
                         <descriptor>${basedir}/assembly/dist.xml</descriptor>
+                        <descriptor>${basedir}/assembly/storybook.xml</descriptor>
                     </descriptors>
                 </configuration>
             </plugin>

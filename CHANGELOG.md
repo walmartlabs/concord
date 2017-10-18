@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: storybook integration;
 - concord-server: retrieve user's LDAP info when API key
 authentication is used;
 - concord-server: the API keys endpoint now accepts LDAP usernames

@@ -33,6 +33,10 @@ server {
 	    alias               /opt/concord/console/landing/$1;
 	}
 
+	location ~ ^/public/(.*)$ {
+	    alias               /opt/concord/console/public/$1;
+	}
+
 	location ~* \.(?:manifest|appcache|html?|xml|json)$ {
         expires             -1;
     }
