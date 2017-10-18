@@ -7,12 +7,15 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
+import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Named;
+import javax.naming.NamingException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
@@ -22,6 +25,13 @@ import java.util.Set;
 public class UserInfoProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(UserInfoProcessor.class);
+
+    private final LdapManager ldapManager;
+
+    @Inject
+    public UserInfoProcessor(LdapManager ldapManager) {
+        this.ldapManager = ldapManager;
+    }
 
     @Override
     @WithTimer
@@ -36,7 +46,7 @@ public class UserInfoProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private static UserInfo getInfo() {
+    private UserInfo getInfo() {
         Subject subject = SecurityUtils.getSubject();
         if (subject == null || !subject.isAuthenticated()) {
             return null;
@@ -47,9 +57,17 @@ public class UserInfoProcessor implements PayloadProcessor {
             return null;
         }
 
-        LdapInfo ldap = p.getLdapInfo();
-        if (ldap != null) {
-            return new UserInfo(p.getUsername(), ldap.getDisplayName(), ldap.getGroups(), ldap.getAttributes());
+        LdapInfo ldapInfo = p.getLdapInfo();
+        if (ldapInfo == null) {
+            try {
+                ldapInfo = ldapManager.getInfo(p.getUsername());
+            } catch (NamingException e) {
+                log.warn("getInfo -> error while retrieving LDAP information for '{}': {}", p.getUsername(), e.getMessage());
+            }
+        }
+
+        if (ldapInfo != null) {
+            return new UserInfo(p.getUsername(), ldapInfo.getDisplayName(), ldapInfo.getGroups(), ldapInfo.getAttributes());
         } else {
             return new UserInfo(p.getUsername(), p.getUsername(), Collections.emptySet(), Collections.emptyMap());
         }
