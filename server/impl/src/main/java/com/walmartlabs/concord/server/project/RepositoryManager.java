@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.project;
 
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.Striped;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -42,6 +43,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import static org.eclipse.jgit.transport.CredentialItem.Password;
 import static org.eclipse.jgit.transport.CredentialItem.Username;
@@ -50,8 +54,11 @@ import static org.eclipse.jgit.transport.CredentialItem.Username;
 public class RepositoryManager {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryManager.class);
-    public static final String DEFAULT_BRANCH = "master";
 
+    public static final String DEFAULT_BRANCH = "master";
+    private static final long LOCK_TIMEOUT = 30000;
+
+    private final Striped<Lock> locks = Striped.lock(32);
     private final RepositoryConfiguration cfg;
 
     @Inject
@@ -90,27 +97,41 @@ public class RepositoryManager {
         }
     }
 
+    public <T> T withLock(UUID projectId, String repoName, Callable<T> f) {
+        Lock l = locks.get(projectId + "/" + repoName);
+        try {
+            l.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            return f.call();
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        } finally {
+            l.unlock();
+        }
+    }
+
     public Path fetchByCommit(UUID projectId, String repoName, String uri, String commitId, String path, Secret secret) {
-        Path localPath = localPath(projectId, repoName, commitId);
+        return withLock(projectId, repoName, () -> {
+            Path localPath = localPath(projectId, repoName, commitId);
 
-        try (Git repo = openRepo(localPath)) {
-            if (repo != null) {
-                log.info("fetch ['{}', '{}', '{}'] -> repository exists", projectId, uri, commitId);
-                return localPath;
+            try (Git repo = openRepo(localPath)) {
+                if (repo != null) {
+                    log.info("fetch ['{}', '{}', '{}'] -> repository exists", projectId, uri, commitId);
+                    return localPath;
+                }
             }
-        }
 
-        try (Git repo = cloneRepo(uri, localPath, null, createTransportConfigCallback(secret))) {
-            repo.checkout()
-                    .setName(commitId)
-                    .call();
+            try (Git repo = cloneRepo(uri, localPath, null, createTransportConfigCallback(secret))) {
+                repo.checkout()
+                        .setName(commitId)
+                        .call();
 
-            log.info("fetchByCommit ['{}', '{}', '{}'] -> initial clone completed", projectId, uri, commitId);
-        } catch (GitAPIException e) {
-            throw new RepositoryException("Error while updating a repository", e);
-        }
+                log.info("fetchByCommit ['{}', '{}', '{}'] -> initial clone completed", projectId, uri, commitId);
+            } catch (GitAPIException e) {
+                throw new RepositoryException("Error while updating a repository", e);
+            }
 
-        return repoPath(localPath, path);
+            return repoPath(localPath, path);
+        });
     }
 
     public Path getRepoPath(UUID projectId, String repoName, String branch, String path) {
@@ -122,39 +143,42 @@ public class RepositoryManager {
         return repoPath(localPath, path);
     }
 
-    public Path fetch(UUID projectId, String repoName, String uri, String branch, String path, Secret secret) {
-        if (branch == null) {
-            branch = DEFAULT_BRANCH;
-        }
+    public Path fetch(UUID projectId, String repoName, String uri, String branchName, String path, Secret secret) {
+        return withLock(projectId, repoName, () -> {
+            String branch = branchName;
+            if (branch == null) {
+                branch = DEFAULT_BRANCH;
+            }
 
-        TransportConfigCallback transportCallback = createTransportConfigCallback(secret);
+            TransportConfigCallback transportCallback = createTransportConfigCallback(secret);
 
-        Path localPath = localPath(projectId, repoName, branch);
-        try (Git repo = openRepo(localPath)) {
-            if (repo != null) {
-                repo.checkout()
-                        .setName(branch)
-                        .call();
+            Path localPath = localPath(projectId, repoName, branch);
+            try (Git repo = openRepo(localPath)) {
+                if (repo != null) {
+                    repo.checkout()
+                            .setName(branch)
+                            .call();
 
-                repo.pull()
-                        .setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.NO)
-                        .setTransportConfigCallback(transportCallback)
-                        .call();
+                    repo.pull()
+                            .setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.NO)
+                            .setTransportConfigCallback(transportCallback)
+                            .call();
 
-                fetchSubmodules(projectId, repo.getRepository(), transportCallback);
+                    fetchSubmodules(projectId, repo.getRepository(), transportCallback);
 
-                log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectId, uri, branch);
+                    log.info("fetch ['{}', '{}', '{}'] -> repository updated", projectId, uri, branch);
 
+                    return repoPath(localPath, path);
+                }
+            } catch (GitAPIException e) {
+                throw new RepositoryException("Error while updating a repository", e);
+            }
+
+            try (Git ignored = cloneRepo(uri, localPath, branch, transportCallback)) {
+                log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectId, uri, branch);
                 return repoPath(localPath, path);
             }
-        } catch (GitAPIException e) {
-            throw new RepositoryException("Error while updating a repository", e);
-        }
-
-        try (Git ignored = cloneRepo(uri, localPath, branch, transportCallback)) {
-            log.info("fetch ['{}', '{}', '{}'] -> initial clone completed", projectId, uri, branch);
-            return repoPath(localPath, path);
-        }
+        });
     }
 
     private Path localPath(UUID projectId, String repoName, String branch) {
