@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: Inventory API initial support;
 - concord-console: storybook integration;
 - concord-server: retrieve user's LDAP info when API key
 authentication is used;

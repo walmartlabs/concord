@@ -13,8 +13,7 @@ import javax.sql.DataSource;
 public class InventoryJooqConfigurationProvider extends JooqConfigurationProvider {
 
     @Inject
-    public InventoryJooqConfigurationProvider(
-            @Named("inventory") DataSource dataSource, DatabaseConfiguration cfg) {
+    public InventoryJooqConfigurationProvider(@Named("inventory") DataSource dataSource, DatabaseConfiguration cfg) {
         super(dataSource, cfg);
     }
 }

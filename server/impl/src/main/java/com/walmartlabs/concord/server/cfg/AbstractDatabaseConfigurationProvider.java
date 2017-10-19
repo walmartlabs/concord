@@ -25,13 +25,14 @@ public abstract class AbstractDatabaseConfigurationProvider implements Provider<
     private final String passwordKey;
     private final String defaultPassword;
 
-    public AbstractDatabaseConfigurationProvider(
-            String userNameKey, String defaultUserName,
-            String passwordKey, String defaultPassword) {
+    public AbstractDatabaseConfigurationProvider(String userNameKey, String defaultUserName,
+                                                 String passwordKey, String defaultPassword) {
+
         this.userNameKey = userNameKey;
         this.defaultUserName = defaultUserName;
         this.passwordKey = passwordKey;
         this.defaultPassword = defaultPassword;
+
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
