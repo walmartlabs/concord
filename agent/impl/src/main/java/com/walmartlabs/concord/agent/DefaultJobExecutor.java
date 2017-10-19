@@ -420,13 +420,4 @@ public class DefaultJobExecutor implements JobExecutor {
                 .filter(s -> s != null && !s.trim().isEmpty())
                 .collect(Collectors.toList()));
     }
-
-    public static String getLastPart(URL url) {
-        String p = url.getPath();
-        int idx = p.lastIndexOf('/');
-        if (idx >= 0 && idx + 1 < p.length()) {
-            return p.substring(idx + 1);
-        }
-        throw new IllegalArgumentException("Invalid URL: " + url);
-    }
 }

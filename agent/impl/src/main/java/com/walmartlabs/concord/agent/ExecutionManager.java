@@ -11,13 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -61,7 +58,7 @@ public class ExecutionManager {
         logManager.delete(instanceId);
         logManager.touch(instanceId);
 
-        logManager.log(instanceId, "Agent IPs: %s", String.join(", ", getLocalIPs()));
+        logManager.log(instanceId, "Agent ID: %s", cfg.getAgentId());
 
         Path tmpDir = extract(payload);
 
@@ -156,30 +153,5 @@ public class ExecutionManager {
         } catch (IOException e) {
             throw new ExecutionException("Error while unpacking a payload", e);
         }
-    }
-
-    private static Set<String> getLocalIPs() {
-        Set<String> result = new HashSet<>();
-
-        try {
-            Enumeration<NetworkInterface> ifs = NetworkInterface.getNetworkInterfaces();
-            while (ifs.hasMoreElements()) {
-                NetworkInterface i = ifs.nextElement();
-                Enumeration<InetAddress> addrs = i.getInetAddresses();
-                while (addrs.hasMoreElements()) {
-                    InetAddress a = addrs.nextElement();
-                    if (a instanceof Inet6Address) {
-                        // skip IPv6 addresses
-                        continue;
-                    }
-                    result.add(a.getHostAddress());
-                }
-            }
-        } catch (SocketException e) {
-            log.warn("getLocalIPs -> can't determine the local IP addresses: {}", e.getMessage());
-            return Collections.singleton("n/a");
-        }
-
-        return result;
     }
 }

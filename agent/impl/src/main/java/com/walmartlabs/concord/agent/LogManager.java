@@ -47,7 +47,7 @@ public class LogManager {
             out.write(s.getBytes());
             out.flush();
         } catch (IOException e) {
-            throw new RuntimeException("Error writting to a log file: " + f, e);
+            throw new RuntimeException("Error writing to a log file: " + f, e);
         }
     }
 
