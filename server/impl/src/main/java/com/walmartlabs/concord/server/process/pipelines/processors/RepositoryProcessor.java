@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.project;
+package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Secret;
@@ -9,8 +9,9 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
-import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
+import com.walmartlabs.concord.server.project.RepositoryDao;
+import com.walmartlabs.concord.server.project.RepositoryException;
+import com.walmartlabs.concord.server.project.RepositoryManager;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,8 @@ public class RepositoryProcessor implements PayloadProcessor {
         if (repo == null) {
             return chain.process(payload);
         }
+
+        logManager.info(instanceId, "Using the repository: {}", repo);
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
         copyRepositoryData(instanceId, projectId, repo, dst);
@@ -140,6 +143,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         if (!Files.exists(result)) {
             result = fetchRepository(instanceId, projectId, repo);
         }
+
         return result;
     }
 
