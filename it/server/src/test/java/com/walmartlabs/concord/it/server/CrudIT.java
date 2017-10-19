@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.PerformedActionType;
+import com.walmartlabs.concord.server.api.inventory.*;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
@@ -18,7 +19,9 @@ import javax.ws.rs.BadRequestException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import static com.walmartlabs.concord.server.team.TeamDao.DEFAULT_TEAM_ID;
 import static org.junit.Assert.*;
 
 public class CrudIT extends AbstractServerIT {
@@ -231,6 +234,116 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(found);
 
         ldapResource.deleteMapping(clmr.getId());
+    }
+
+    @Test
+    public void testInventory() throws Exception {
+        InventoryResource inventoryResource = proxy(InventoryResource.class);
+
+        String inventoryName = "inventory_" + System.currentTimeMillis();
+        String teamName = "Default";
+
+        // --- create
+
+        CreateInventoryResponse cir = inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, teamName, null));
+        assertTrue(cir.isOk());
+        assertNotNull(cir.getId());
+
+        // --- update
+
+        CreateInventoryResponse uir = inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, DEFAULT_TEAM_ID, null, null));
+        assertTrue(uir.isOk());
+        assertNotNull(uir.getId());
+
+        // --- get
+
+        InventoryEntry i1 = inventoryResource.get(inventoryName);
+        assertNotNull(i1);
+        assertNotNull(i1.getId());
+        assertEquals(uir.getId(), i1.getId());
+        assertEquals(inventoryName, i1.getName());
+        assertEquals(teamName, i1.getTeamName());
+        assertNull(i1.getParent());
+
+        // --- delete
+
+        DeleteInventoryResponse dpr = inventoryResource.delete(inventoryName);
+        assertTrue(dpr.isOk());
+    }
+
+    @Test
+    public void testInventoryData() throws Exception {
+        InventoryDataResource resource = proxy(InventoryDataResource.class);
+
+        String inventoryName = "inventory_" + System.currentTimeMillis();
+        String itemPath = "/a";
+        Map<String, Object> data = Collections.singletonMap("k", "v");
+
+        InventoryResource inventoryResource = proxy(InventoryResource.class);
+        inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null,null));
+
+        // --- create
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) resource.data(inventoryName, itemPath, data);
+        assertNotNull(result);
+        assertEquals(Collections.singletonMap("a", data), result);
+
+        // --- get
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result2 = (Map<String, Object>) resource.get(inventoryName, itemPath);
+        assertNotNull(result2);
+        assertEquals(Collections.singletonMap("a", data), result);
+
+        // --- delete
+
+        DeleteInventoryDataResponse didr = resource.delete(inventoryName, itemPath);
+        assertNotNull(didr);
+        assertTrue(didr.isOk());
+    }
+
+    @Test
+    public void testInventoryQuery() throws Exception {
+        InventoryQueryResource resource = proxy(InventoryQueryResource.class);
+
+        String inventoryName = "inventory_" + System.currentTimeMillis();
+        String queryName = "queryName_" + System.currentTimeMillis();
+        String text = "text_" + System.currentTimeMillis();;
+
+        InventoryResource inventoryResource = proxy(InventoryResource.class);
+        inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null,null));
+
+        // --- create
+
+        CreateInventoryQueryResponse cqr = resource.createOrUpdate(inventoryName, queryName, text);
+        assertTrue(cqr.isOk());
+        assertNotNull(cqr.getId());
+
+        // --- update
+        String updatedText = "select cast(json_build_object('k', 'v') as varchar)";
+        CreateInventoryQueryResponse uqr = resource.createOrUpdate(inventoryName, queryName, updatedText);
+        assertTrue(uqr.isOk());
+        assertNotNull(uqr.getId());
+
+        // --- get
+        InventoryQueryEntry e1 = resource.get(inventoryName, queryName);
+        assertNotNull(e1);
+        assertNotNull(e1.getId());
+        assertEquals(inventoryName, e1.getInventoryName());
+        assertEquals(queryName, e1.getName());
+        assertEquals(updatedText, e1.getText());
+
+        // --- exec
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) resource.exec(inventoryName, queryName, null);
+        assertNotNull(result);
+        assertEquals(Collections.singletonMap("k", "v"), result);
+
+        // --- delete
+        DeleteInventoryQueryResponse dqr = resource.delete(inventoryName, queryName);
+        assertNotNull(dqr);
+        assertTrue(dqr.isOk());
     }
 
     private static ProjectEntry findProject(List<ProjectEntry> l, String name) {
