@@ -73,24 +73,8 @@ public class RepositoryProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        try {
-            Path src;
-            if (githubConfiguration.getApiUrl() == null) {
-                // no github webhooks configured -> fetch repository
-                log.warn("process ['{}'] -> no prefetched repository");
-                src = fetchRepository(instanceId, projectId, repo);
-            } else {
-                src = getRepository(instanceId, projectId, repo);
-            }
-
-            Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
-            IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-            log.info("process ['{}'] -> copy from {} to {}", instanceId, src, dst);
-        } catch (IOException | RepositoryException e) {
-            log.error("process ['{}'] -> repository error", instanceId, e);
-            logManager.error(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
-            throw new ProcessException(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
-        }
+        Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
+        copyRepositoryData(instanceId, projectId, repo, dst);
 
         String branch = repo.getBranch();
         if (branch == null || branch.trim().isEmpty()) {
@@ -100,6 +84,30 @@ public class RepositoryProcessor implements PayloadProcessor {
         payload = payload.putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch, repo.getCommitId()));
 
         return chain.process(payload);
+    }
+
+    private void copyRepositoryData(UUID instanceId, UUID projectId, RepositoryEntry repo, Path dst) {
+        repositoryManager.withLock(projectId, repo.getName(), () -> {
+            try {
+                Path src;
+                if (githubConfiguration.getApiUrl() == null) {
+                    // no github webhooks configured -> fetch repository
+                    log.warn("process ['{}'] -> no prefetched repository");
+                    src = fetchRepository(instanceId, projectId, repo);
+                } else {
+                    src = getRepository(instanceId, projectId, repo);
+                }
+
+                IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+                log.info("process ['{}'] -> copy from {} to {}", instanceId, src, dst);
+            } catch (IOException | RepositoryException e) {
+                log.error("process ['{}'] -> repository error", instanceId, e);
+                logManager.error(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
+                throw new ProcessException(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
+            }
+
+            return null;
+        });
     }
 
     private Path fetchRepository(UUID instanceId, UUID projectId, RepositoryEntry repo) {
