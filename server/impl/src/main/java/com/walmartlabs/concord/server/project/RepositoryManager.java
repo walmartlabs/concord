@@ -6,10 +6,12 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
-import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.SubmoduleInitCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidConfigurationException;
@@ -21,6 +23,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.SubmoduleConfig;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.*;
@@ -30,10 +33,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.UUID;
@@ -188,7 +193,6 @@ public class RepositoryManager {
         try {
             Git repo = Git.cloneRepository()
                     .setURI(uri)
-                    .setCloneSubmodules(true)
                     .setBranch(branch)
                     .setBranchesToClone(branch != null ? Collections.singleton(branch) : null)
                     .setDirectory(path.toFile())
@@ -202,14 +206,75 @@ public class RepositoryManager {
                         .call();
             }
 
+            cloneSubmodules(uri, repo, transportCallback);
+
             return repo;
-        } catch (GitAPIException e) {
+        } catch (ConfigInvalidException | IOException | GitAPIException e) {
             try {
                 IOUtils.deleteRecursively(path);
             } catch (IOException ee) {
                 log.warn("cloneRepo ['{}', '{}'] -> cleanup error: {}", uri, branch, ee.getMessage());
             }
             throw new RepositoryException("Error while cloning a repository", e);
+        }
+    }
+
+    private static void cloneSubmodules(String mainRepoUrl, Git repo, TransportConfigCallback transportConfigCallback) throws IOException, GitAPIException, ConfigInvalidException {
+        SubmoduleInitCommand init = repo.submoduleInit();
+        Collection<String> submodules = init.call();
+        if (submodules.isEmpty()) {
+            return;
+        }
+
+        cloneSubmodules(mainRepoUrl, repo.getRepository(), transportConfigCallback);
+
+        // process sub-submodules
+        SubmoduleWalk walk = SubmoduleWalk.forIndex(repo.getRepository());
+        while (walk.next()) {
+            try (Repository subRepo = walk.getRepository()) {
+                if (subRepo != null) {
+                    cloneSubmodules(mainRepoUrl, subRepo, transportConfigCallback);
+                }
+            }
+        }
+    }
+
+    private static void cloneSubmodules(String mainRepoUrl, Repository repo, TransportConfigCallback transportConfigCallback) throws IOException, ConfigInvalidException, GitAPIException {
+        try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repo)) {
+            while (walk.next()) {
+                // Skip submodules not registered in .gitmodules file
+                if (walk.getModulesPath() == null)
+                    continue;
+                // Skip submodules not registered in parent repository's config
+                String url = walk.getConfigUrl();
+                if (url == null)
+                    continue;
+
+                Repository submoduleRepo = walk.getRepository();
+                // Clone repository if not present
+                if (submoduleRepo == null) {
+                    CloneCommand clone = Git.cloneRepository();
+                    clone.setTransportConfigCallback(transportConfigCallback);
+
+                    clone.setURI(url);
+                    clone.setDirectory(walk.getDirectory());
+                    clone.setGitDir(new File(new File(repo.getDirectory(), Constants.MODULES), walk.getPath()));
+                    submoduleRepo = clone.call().getRepository();
+                }
+
+                try (RevWalk revWalk = new RevWalk(submoduleRepo)) {
+                    RevCommit commit = revWalk.parseCommit(walk.getObjectId());
+                    Git.wrap(submoduleRepo).checkout()
+                            .setName(commit.getName())
+                            .call();
+
+                    log.info("cloneSubmodules ['{}'] -> '{}'@{}", mainRepoUrl, url, commit.getName());
+                } finally {
+                    if (submoduleRepo != null) {
+                        submoduleRepo.close();
+                    }
+                }
+            }
         }
     }
 
@@ -234,7 +299,7 @@ public class RepositoryManager {
                     continue;
                 }
 
-                new Git(submoduleRepo).fetch()
+                Git.wrap(submoduleRepo).fetch()
                         .setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.NO)
                         .setTransportConfigCallback(transportCallback)
                         .call();
