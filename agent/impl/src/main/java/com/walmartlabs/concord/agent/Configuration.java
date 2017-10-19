@@ -13,7 +13,8 @@ import java.util.UUID;
 public class Configuration {
 
     public static final String SERVER_HOST_KEY = "SERVER_HOST";
-    public static final String SERVER_PORT_KEY = "SERVER_PORT";
+    public static final String SERVER_RPC_PORT_KEY = "SERVER_RPC_PORT";
+    public static final String SERVER_API_PORT_KEY = "SERVER_RPC_PORT";
     public static final String LOG_DIR_KEY = "AGENT_LOG_DIR";
     public static final String PAYLOAD_DIR_KEY = "AGENT_PAYLOAD_DIR";
     public static final String JAVA_CMD_KEY = "AGENT_JAVA_CMD";
@@ -25,7 +26,8 @@ public class Configuration {
 
     private final String agentId;
     private final String serverHost;
-    private final int serverPort;
+    private final int serverRpcPort;
+    private final int serverApiPort;
     private final Path logDir;
     private final Path payloadDir;
     private final String agentJavaCmd;
@@ -40,7 +42,8 @@ public class Configuration {
 
         try {
             this.serverHost = getEnv(SERVER_HOST_KEY, "localhost");
-            this.serverPort = Integer.parseInt(getEnv(SERVER_PORT_KEY, "8101"));
+            this.serverRpcPort = Integer.parseInt(getEnv(SERVER_RPC_PORT_KEY, "8101"));
+            this.serverApiPort = Integer.parseInt(getEnv(SERVER_API_PORT_KEY, "8001"));
 
             this.logDir = getDir(LOG_DIR_KEY, "logDir");
             this.payloadDir = getDir(PAYLOAD_DIR_KEY, "payloadDir");
@@ -74,8 +77,12 @@ public class Configuration {
         return serverHost;
     }
 
-    public int getServerPort() {
-        return serverPort;
+    public int getServerRpcPort() {
+        return serverRpcPort;
+    }
+
+    public int getServerApiPort() {
+        return serverApiPort;
     }
 
     public Path getLogDir() {

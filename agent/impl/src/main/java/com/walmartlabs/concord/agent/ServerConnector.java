@@ -28,7 +28,7 @@ public class ServerConnector {
     public void start(Configuration cfg) throws IOException {
         String agentId = cfg.getAgentId();
         String host = cfg.getServerHost();
-        int port = cfg.getServerPort();
+        int port = cfg.getServerRpcPort();
         int workersCount = cfg.getWorkersCount();
 
         client = new AgentApiClient(agentId, host, port);

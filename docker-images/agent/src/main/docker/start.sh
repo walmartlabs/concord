@@ -3,7 +3,8 @@ APP_DIR="/opt/concord/agent"
 
 if [ ! -z "$SERVER_PORT_8101_TCP_ADDR" ]; then
     export SERVER_HOST="$SERVER_PORT_8101_TCP_ADDR"
-    export SERVER_PORT="$SERVER_PORT_8101_TCP_PORT"
+    export SERVER_RPC_PORT="$SERVER_PORT_8101_TCP_PORT"
+    export SERVER_API_PORT="$SERVER_PORT_8001_TCP_PORT"
 fi
 
 export RUNNER_PATH="$APP_DIR/runner/runner.jar"

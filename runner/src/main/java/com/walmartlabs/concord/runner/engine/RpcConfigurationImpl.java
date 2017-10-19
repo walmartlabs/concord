@@ -5,6 +5,8 @@ import com.walmartlabs.concord.sdk.RpcConfiguration;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import static com.walmartlabs.concord.runner.ConfigurationUtils.getEnv;
+
 @Named
 @Singleton
 public class RpcConfigurationImpl implements RpcConfiguration {
@@ -18,17 +20,6 @@ public class RpcConfigurationImpl implements RpcConfiguration {
     public RpcConfigurationImpl() {
         this.rpcServerHost = getEnv(SERVER_HOST_KEY, "localhost");
         this.rpcServerPort = Integer.parseInt(getEnv(SERVER_PORT_KEY, "8101"));
-    }
-
-    private static String getEnv(String key, String def) {
-        String value = System.getProperty(key);
-        if (value != null) {
-            return value;
-        }
-        if (def != null) {
-            return def;
-        }
-        throw new IllegalArgumentException(key + " must be specified");
     }
 
     @Override
