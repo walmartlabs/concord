@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.inventory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.inventory.InventoryQueryEntry;
 import com.walmartlabs.concord.server.jooq.tables.InventoryQueries;
 import org.jooq.*;

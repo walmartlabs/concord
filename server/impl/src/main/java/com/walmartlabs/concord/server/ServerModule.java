@@ -2,7 +2,6 @@ package com.walmartlabs.concord.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.servlet.ServletModule;
-import com.walmartlabs.concord.common.db.DatabaseModule;
 import com.walmartlabs.concord.server.metrics.JolokiaRestrictor;
 import com.walmartlabs.concord.server.metrics.MetricsModule;
 import org.apache.shiro.guice.web.ShiroWebModule;

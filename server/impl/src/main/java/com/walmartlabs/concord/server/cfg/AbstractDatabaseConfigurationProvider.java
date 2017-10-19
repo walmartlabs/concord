@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.cfg;
 
-import com.walmartlabs.concord.common.db.DatabaseConfiguration;
+import com.walmartlabs.concord.db.DatabaseConfiguration;
 import org.jooq.SQLDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.user;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.team.TeamEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import org.jooq.BatchBindStep;

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.common.db;
+package com.walmartlabs.concord.db;
 
 import java.io.IOException;
 import java.io.InputStream;

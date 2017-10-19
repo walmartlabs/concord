@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.user;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.user.RoleEntry;
 import org.jooq.*;
 import org.jooq.impl.DSL;

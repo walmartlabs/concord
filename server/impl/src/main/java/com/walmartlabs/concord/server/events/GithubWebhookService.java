@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.events;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.project.RepositoryDao;

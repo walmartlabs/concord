@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.security.ldap;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
 import org.jooq.*;
 import org.jooq.impl.DSL;

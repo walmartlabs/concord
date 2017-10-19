@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.eclipse.sisu.EagerSingleton;
 import org.jooq.Configuration;

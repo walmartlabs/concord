@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.project;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
 import com.walmartlabs.concord.server.jooq.tables.Projects;

@@ -1,7 +1,4 @@
-package com.walmartlabs.concord.common.db;
-
-import com.walmartlabs.concord.common.db.DatabaseConfiguration;
-import com.walmartlabs.concord.common.db.JooqConfigurationProvider;
+package com.walmartlabs.concord.db;
 
 import javax.inject.Inject;
 import javax.inject.Named;

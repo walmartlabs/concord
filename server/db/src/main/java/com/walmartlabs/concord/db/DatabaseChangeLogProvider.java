@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.common.db;
+package com.walmartlabs.concord.db;
 
 public interface DatabaseChangeLogProvider {
 

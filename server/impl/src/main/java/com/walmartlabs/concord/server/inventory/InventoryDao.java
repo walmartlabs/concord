@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.inventory;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.inventory.InventoryEntry;
 import com.walmartlabs.concord.server.jooq.tables.Inventories;
 import org.jooq.*;

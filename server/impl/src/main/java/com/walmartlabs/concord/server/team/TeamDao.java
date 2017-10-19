@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.team;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.team.TeamEntry;
 import com.walmartlabs.concord.server.api.team.TeamUserEntry;
 import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;

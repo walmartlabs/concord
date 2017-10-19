@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.logs;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record2;

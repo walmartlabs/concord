@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.process.queue;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;

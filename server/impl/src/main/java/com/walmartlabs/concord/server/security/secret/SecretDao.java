@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.security.secret;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;

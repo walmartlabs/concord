@@ -1,9 +1,9 @@
 package com.walmartlabs.concord.server;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
-import com.walmartlabs.concord.common.db.DataSourceProvider;
-import com.walmartlabs.concord.common.db.DatabaseConfiguration;
-import com.walmartlabs.concord.common.db.JooqConfigurationProvider;
+import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.CommonDataSourceProvider;
+import com.walmartlabs.concord.db.DatabaseConfiguration;
+import com.walmartlabs.concord.db.JooqConfigurationProvider;
 import com.walmartlabs.concord.db.DatabaseChangeLogProviderImpl;
 import com.walmartlabs.concord.server.cfg.DatabaseConfigurationProvider;
 import org.jooq.Configuration;
@@ -23,7 +23,7 @@ public abstract class AbstractDaoTest {
 
     @Before
     public void initDataSource() {
-        DataSourceProvider dsp = new DataSourceProvider(new DatabaseConfigurationProvider().get(),
+        CommonDataSourceProvider dsp = new CommonDataSourceProvider(new DatabaseConfigurationProvider().get(),
                 Collections.singleton(new DatabaseChangeLogProviderImpl()));
 
         dataSource = dsp.get();

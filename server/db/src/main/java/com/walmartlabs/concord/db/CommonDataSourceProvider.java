@@ -1,6 +1,5 @@
-package com.walmartlabs.concord.common.db;
+package com.walmartlabs.concord.db;
 
-import com.zaxxer.hikari.HikariDataSource;
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -12,45 +11,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Set;
 
 @Singleton
-public class DataSourceProvider implements Provider<DataSource> {
+public class CommonDataSourceProvider extends AbstractDataSourceProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(DataSourceProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(CommonDataSourceProvider.class);
+
     private static final int MIGRATION_MAX_RETRIES = 10;
     private static final int MIGRATION_RETRY_DELAY = 10000;
 
-    private final DatabaseConfiguration cfg;
     private final Set<DatabaseChangeLogProvider> changeLogs;
 
     @Inject
-    public DataSourceProvider(DatabaseConfiguration cfg, Set<DatabaseChangeLogProvider> changeLogs) {
-        this.cfg = cfg;
+    public CommonDataSourceProvider(DatabaseConfiguration cfg, Set<DatabaseChangeLogProvider> changeLogs) {
+        super(cfg.getUrl(), cfg.getDriverClassName(), cfg.getUsername(), cfg.getPassword());
         this.changeLogs = changeLogs;
     }
 
     @Override
     public DataSource get() {
-        log.info("get -> creating a new datasource...");
-
-        HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl(cfg.getUrl());
-        ds.setDriverClassName(cfg.getDriverClassName());
-        ds.setUsername(cfg.getUsername());
-        ds.setPassword(cfg.getPassword());
-
-        ds.setAutoCommit(false);
-        ds.setMaxLifetime(Long.MAX_VALUE);
-
-        ds.setMinimumIdle(1);
-        ds.setMaximumPoolSize(10);
-
-        ds.setLeakDetectionThreshold(10000);
+        DataSource ds = super.get();
 
         for (DatabaseChangeLogProvider p : changeLogs) {
             int retries = MIGRATION_MAX_RETRIES;

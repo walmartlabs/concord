@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.common.db;
+package com.walmartlabs.concord.db;
 
 import org.jooq.Condition;
 import org.jooq.Field;

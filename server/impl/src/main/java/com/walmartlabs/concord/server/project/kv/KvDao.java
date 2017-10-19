@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.project.kv;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.ProjectKvStore;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;

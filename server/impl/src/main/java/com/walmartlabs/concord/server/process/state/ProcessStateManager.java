@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.process.state;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.jooq.Configuration;

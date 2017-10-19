@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.project;
 
-import com.walmartlabs.concord.common.db.AbstractDao;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.TemplateAliasEntry;
 import com.walmartlabs.concord.server.api.project.TemplateAliasResource;
 import com.walmartlabs.concord.server.api.project.TemplateAliasResponse;
