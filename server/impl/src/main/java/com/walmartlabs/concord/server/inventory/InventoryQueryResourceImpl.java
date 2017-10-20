@@ -9,6 +9,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -56,7 +57,7 @@ public class InventoryQueryResourceImpl implements InventoryQueryResource, Resou
     }
 
     @Override
-    public Object exec(String inventoryName, String queryName, Map<String, Object> params) {
+    public List<Object> exec(String inventoryName, String queryName, Map<String, Object> params) {
         UUID inventoryId = assertInventory(inventoryName);
         UUID queryId = assertQuery(inventoryId, queryName);
         return inventoryQueryDao.exec(queryId, params);

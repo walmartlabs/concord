@@ -336,9 +336,10 @@ public class CrudIT extends AbstractServerIT {
 
         // --- exec
         @SuppressWarnings("unchecked")
-        Map<String, Object> result = (Map<String, Object>) resource.exec(inventoryName, queryName, null);
+        List<Object> result = resource.exec(inventoryName, queryName, null);
         assertNotNull(result);
-        assertEquals(Collections.singletonMap("k", "v"), result);
+        Map<String, Object> m = (Map<String, Object>) result.get(0);
+        assertEquals(Collections.singletonMap("k", "v"), m);
 
         // --- delete
         DeleteInventoryQueryResponse dqr = resource.delete(inventoryName, queryName);

@@ -11,6 +11,7 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -75,7 +76,7 @@ public class InventoryQueryDao extends AbstractDao {
         tx(tx -> delete(tx, queryId));
     }
 
-    public Object exec(UUID queryId, Map<String, Object> params) {
+    public List<Object> exec(UUID queryId, Map<String, Object> params) {
         InventoryQueryEntry q = get(queryId);
         if (q == null) {
             return null;

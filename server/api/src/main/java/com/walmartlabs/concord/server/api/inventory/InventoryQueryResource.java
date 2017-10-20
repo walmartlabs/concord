@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiParam;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 import java.util.Map;
 
 @Api("Inventory")
@@ -72,7 +73,7 @@ public interface InventoryQueryResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{inventoryName}/query/{queryName}/exec")
-    Object exec(@ApiParam @PathParam("inventoryName")String inventoryName,
-                @ApiParam @PathParam("queryName")String queryName,
-                @ApiParam @Valid Map<String, Object> params);
+    List<Object> exec(@ApiParam @PathParam("inventoryName") String inventoryName,
+                      @ApiParam @PathParam("queryName")String queryName,
+                      @ApiParam @Valid Map<String, Object> params);
 }
