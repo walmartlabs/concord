@@ -1,5 +1,5 @@
 ---
-- hosts: local
+- hosts: myHostsGroup
   tasks:
   - debug:
       msg: "{{ greetings }}"

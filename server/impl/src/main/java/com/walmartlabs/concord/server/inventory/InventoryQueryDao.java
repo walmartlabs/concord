@@ -82,10 +82,13 @@ public class InventoryQueryDao extends AbstractDao {
         }
 
         try (DSLContext tx = DSL.using(cfg)) {
-            Result<Record> r = tx.resultQuery(q.getText(), val(serialize(params)))
-                    .fetch();
-            return deserialize((String)r.getValue(0, 0));
+            return tx.resultQuery(q.getText(), val(serialize(params)))
+                    .fetch(this::toExecResult);
         }
+    }
+
+    private Object toExecResult(Record record) {
+        return deserialize((String) record.getValue(0));
     }
 
     private UUID insert(DSLContext tx, UUID inventoryId, String queryName, String text) {

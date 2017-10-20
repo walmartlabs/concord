@@ -1,28 +1,24 @@
 #!/bin/bash
 
 read -p "Username: " CURL_USER
+read -p "Password:" -s CURL_PASSOWRD
 
 INVENTORY_NAME="myInventory"
+QUERY_NAME="endpointsByZypperVersion"
+SERVER_ADDR="$1"
 
 # create inventory
-echo "creating inventory"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d "{\"name\": \"$INVENTORY_NAME\"}" "http://localhost:8001/api/v1/inventory"
+echo -e "\ncreating inventory ..."
+curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: application/json" -d "{\"name\": \"$INVENTORY_NAME\"}" "http://${SERVER_ADDR}/api/v1/inventory"
 
 # create inventory data
-echo "creating inventory (host1) data-1"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d @inventory_hw.json "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/data/hosts/host1/hw"
-echo "creating inventory (host1) data-2"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d @inventory_network.json "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/data/hosts/host1/net"
-echo "creating inventory (host1) data-3"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d @inventory_sw.json "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/data/hosts/host1/sw"
-echo "creating inventory (host1) data-4"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d @inventory_app.json "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/data/hosts/host1/sw/app"
+echo -e "\ncreating inventory data isp.s01160.ca_ansiblefacts ..."
+curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: application/json" -d @isp.s01160.ca_ansiblefacts.json "http://${SERVER_ADDR}/api/v1/inventory/$INVENTORY_NAME/data/s01160/ansible_facts"
+echo -e "\ncreating inventory data s05505.us_ansiblefacts ..."
+curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: application/json" -d @isp.s05505.us_ansiblefacts.json "http://${SERVER_ADDR}/api/v1/inventory/$INVENTORY_NAME/data/s05505/ansible_facts"
+echo -e "\ncreating inventory data s00524.us_ansiblefacts ..."
+curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: application/json" -d @rxp.s00524.us_ansiblefacts.json "http://${SERVER_ADDR}/api/v1/inventory/$INVENTORY_NAME/data/s00524/ansible_facts"
 
-echo "creating inventory (host2) data-1"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d @inventory_hw.json "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/data/hosts/host2/hw"
-echo "creating inventory (host2) data-2"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d '{"ip": "128.10.10.11", "name": "xxx"}' "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/data/hosts/host2/net"
-echo "creating inventory (host2) data-3"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d @inventory_sw.json "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/data/hosts/host2/sw"
-echo "creating inventory (host2) data-4"
-curl -f -u ${CURL_USER} -H "Content-Type: application/json" -d '{"name": "my-app", "version": "1.1.0"}' "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/data/hosts/host2/sw/app"
+# create query
+echo -e "\ncreating query ..."
+curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: text/plain" --data-binary @query.sql "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/query/${QUERY_NAME}"

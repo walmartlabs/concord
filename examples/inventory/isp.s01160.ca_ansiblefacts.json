@@ -1,0 +1,1799 @@
+{
+    "ansible_all_ipv4_addresses": [
+        "55.193.40.129",
+        "192.168.58.2"
+    ],
+    "ansible_all_ipv6_addresses": [
+        "fe80::250:56ff:fe35:9a10",
+        "fe80::250:56ff:fe0b:7a11"
+    ],
+    "ansible_apparmor": {
+        "status": "disabled"
+    },
+    "ansible_architecture": "x86_64",
+    "ansible_bios_date": "04/05/2016",
+    "ansible_bios_version": "6.00",
+    "ansible_cmdline": {
+        "console": "tty1",
+        "crashkernel": "512M-12G:256M,12G-48G:512M,48G-:768M",
+        "resume": "/dev/vg00/lvol01",
+        "root": "/dev/vg00/lvol00",
+        "splash": "silent"
+    },
+    "ansible_date_time": {
+        "date": "2017-10-13",
+        "day": "13",
+        "epoch": "1507927539",
+        "hour": "15",
+        "iso8601": "2017-10-13T20:45:39Z",
+        "iso8601_basic": "20171013T154539420526",
+        "iso8601_basic_short": "20171013T154539",
+        "iso8601_micro": "2017-10-13T20:45:39.420611Z",
+        "minute": "45",
+        "month": "10",
+        "second": "39",
+        "time": "15:45:39",
+        "tz": "CDT",
+        "tz_offset": "-0500",
+        "weekday": "Friday",
+        "weekday_number": "5",
+        "weeknumber": "41",
+        "year": "2017"
+    },
+    "ansible_default_ipv4": {
+        "address": "55.193.40.129",
+        "alias": "eth0",
+        "broadcast": "55.193.40.255",
+        "gateway": "55.193.40.1",
+        "interface": "eth0",
+        "macaddress": "00:50:56:35:9a:10",
+        "mtu": 1500,
+        "netmask": "255.255.255.0",
+        "network": "55.193.40.0",
+        "type": "ether"
+    },
+    "ansible_default_ipv6": {},
+    "ansible_devices": {
+        "fd0": {
+            "holders": [],
+            "host": "",
+            "model": null,
+            "partitions": {},
+            "removable": "1",
+            "rotational": "1",
+            "sas_address": null,
+            "sas_device_handle": null,
+            "scheduler_mode": "cfq",
+            "sectors": "8",
+            "sectorsize": "512",
+            "size": "4.00 KB",
+            "support_discard": "0",
+            "vendor": null
+        },
+        "sda": {
+            "holders": [],
+            "host": "SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 01)",
+            "model": "Virtual disk",
+            "partitions": {
+                "sda1": {
+                    "holders": [],
+                    "sectors": "624640",
+                    "sectorsize": 512,
+                    "size": "305.00 MB",
+                    "start": "2048",
+                    "uuid": "e7e777a7-a48a-4030-8fe5-b1ecbf40563f"
+                },
+                "sda2": {
+                    "holders": [
+                        "vg00-lvol00",
+                        "vg00-lvol01",
+                        "vg00-lvol02",
+                        "vg00-lvol03",
+                        "vg00-lvol04",
+                        "vg00-lvol05",
+                        "vg00-lvol06",
+                        "vg00-lvol07",
+                        "vg00-lvol08",
+                        "vg00-lvol09",
+                        "vg00-lvol10",
+                        "vg00-lvol11",
+                        "vg00-lvol12",
+                        "vg00-lvol13",
+                        "vg00-lvol14",
+                        "vg00-raw01",
+                        "vg00-raw02",
+                        "vg00-raw03",
+                        "vg00-raw04",
+                        "vg00-raw05",
+                        "vg00-raw06",
+                        "vg00-raw07",
+                        "vg00-raw08",
+                        "vg00-raw09",
+                        "vg00-raw10",
+                        "vg00-raw11",
+                        "vg00-raw12",
+                        "vg00-raw13",
+                        "vg00-raw14",
+                        "vg00-raw15",
+                        "vg00-raw16",
+                        "vg00-raw17",
+                        "vg00-raw18",
+                        "vg00-raw19",
+                        "vg00-raw20",
+                        "vg00-raw21",
+                        "vg00-raw22",
+                        "vg00-raw23",
+                        "vg00-raw24",
+                        "vg00-raw25",
+                        "vg00-raw26",
+                        "vg00-raw27",
+                        "vg00-lvolche"
+                    ],
+                    "sectors": "628518912",
+                    "sectorsize": 512,
+                    "size": "299.70 GB",
+                    "start": "626688",
+                    "uuid": null
+                }
+            },
+            "removable": "0",
+            "rotational": "1",
+            "sas_address": null,
+            "sas_device_handle": null,
+            "scheduler_mode": "noop",
+            "sectors": "629145600",
+            "sectorsize": "512",
+            "size": "300.00 GB",
+            "support_discard": "0",
+            "vendor": "VMware"
+        },
+        "sr0": {
+            "holders": [],
+            "host": "IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)",
+            "model": "VMware IDE CDR00",
+            "partitions": {},
+            "removable": "1",
+            "rotational": "1",
+            "sas_address": null,
+            "sas_device_handle": null,
+            "scheduler_mode": "cfq",
+            "sectors": "2097151",
+            "sectorsize": "512",
+            "size": "1024.00 MB",
+            "support_discard": "0",
+            "vendor": "NECVMWar"
+        }
+    },
+    "ansible_distribution": "SLES",
+    "ansible_distribution_major_version": "11",
+    "ansible_distribution_release": "3",
+    "ansible_distribution_version": "11.3",
+    "ansible_dns": {
+        "nameservers": [
+            "55.193.40.129",
+            "55.193.40.132",
+            "161.173.7.20"
+        ],
+        "options": {
+            "ndots": "3",
+            "timeout": "2"
+        },
+        "search": [
+            "s01160.ca.wal-mart.com",
+            "wal-mart.com"
+        ]
+    },
+    "ansible_domain": "s01160.ca.wal-mart.com",
+    "ansible_effective_group_id": 0,
+    "ansible_effective_user_id": 0,
+    "ansible_env": {
+        "HOME": "/root",
+        "LANG": "en_US.UTF-8",
+        "LOGNAME": "root",
+        "LS_COLORS": "",
+        "LS_OPTIONS": "-A -N --color=none -T 0",
+        "MAIL": "/var/spool/mail/root",
+        "PATH": "/usr/bin:/bin",
+        "PS_PERSONALITY": "posix",
+        "PWD": "/root",
+        "SHELL": "/bin/bash",
+        "SHLVL": "2",
+        "SSH2_CLIENT": "10.24.1.184 38156 55.193.40.129 22",
+        "SSH_RHOST": "oser501262.wal-mart.com",
+        "SSH_SESSION_ID": "45873",
+        "TZ": "CST6CDT",
+        "USER": "root",
+        "_": "/usr/bin/python"
+    },
+    "ansible_eth0": {
+        "active": true,
+        "device": "eth0",
+        "features": {
+            "generic_receive_offload": "on",
+            "generic_segmentation_offload": "on",
+            "large_receive_offload": "on",
+            "ntuple_filters": "off",
+            "receive_hashing": "off",
+            "rx_checksumming": "on",
+            "rx_vlan_offload": "on",
+            "scatter_gather": "on",
+            "tcp_segmentation_offload": "on",
+            "tx_checksumming": "on",
+            "tx_vlan_offload": "on",
+            "udp_fragmentation_offload": "off"
+        },
+        "ipv4": {
+            "address": "55.193.40.129",
+            "broadcast": "55.193.40.255",
+            "netmask": "255.255.255.0",
+            "network": "55.193.40.0"
+        },
+        "ipv6": [
+            {
+                "address": "fe80::250:56ff:fe35:9a10",
+                "prefix": "64",
+                "scope": "link"
+            }
+        ],
+        "macaddress": "00:50:56:35:9a:10",
+        "module": "vmxnet3",
+        "mtu": 1500,
+        "pciid": "0000:03:00.0",
+        "promisc": true,
+        "speed": 10000,
+        "type": "ether"
+    },
+    "ansible_eth1": {
+        "active": true,
+        "device": "eth1",
+        "features": {
+            "generic_receive_offload": "on",
+            "generic_segmentation_offload": "on",
+            "large_receive_offload": "on",
+            "ntuple_filters": "off",
+            "receive_hashing": "off",
+            "rx_checksumming": "on",
+            "rx_vlan_offload": "on",
+            "scatter_gather": "on",
+            "tcp_segmentation_offload": "on",
+            "tx_checksumming": "on",
+            "tx_vlan_offload": "on",
+            "udp_fragmentation_offload": "off"
+        },
+        "ipv4": {
+            "address": "192.168.58.2",
+            "broadcast": "192.168.58.255",
+            "netmask": "255.255.255.0",
+            "network": "192.168.58.0"
+        },
+        "ipv6": [
+            {
+                "address": "fe80::250:56ff:fe0b:7a11",
+                "prefix": "64",
+                "scope": "link"
+            }
+        ],
+        "macaddress": "00:50:56:0b:7a:11",
+        "module": "vmxnet3",
+        "mtu": 1500,
+        "pciid": "0000:0b:00.0",
+        "promisc": false,
+        "speed": 10000,
+        "type": "ether"
+    },
+    "ansible_fips": false,
+    "ansible_form_factor": "Other",
+    "ansible_fqdn": "isp.s01160.ca.wal-mart.com",
+    "ansible_gather_subset": [
+        "hardware",
+        "network",
+        "virtual"
+    ],
+    "ansible_hostname": "isp1160",
+    "ansible_interfaces": [
+        "lo",
+        "eth1",
+        "eth0"
+    ],
+    "ansible_kernel": "3.0.101-0.46-default",
+    "ansible_lo": {
+        "active": true,
+        "device": "lo",
+        "features": {
+            "generic_receive_offload": "on",
+            "generic_segmentation_offload": "on",
+            "large_receive_offload": "off",
+            "ntuple_filters": "off",
+            "receive_hashing": "off",
+            "rx_checksumming": "on",
+            "rx_vlan_offload": "off",
+            "scatter_gather": "on",
+            "tcp_segmentation_offload": "on",
+            "tx_checksumming": "on",
+            "tx_vlan_offload": "off",
+            "udp_fragmentation_offload": "on"
+        },
+        "ipv4": {
+            "address": "127.0.0.1",
+            "broadcast": "127.255.255.255",
+            "netmask": "255.0.0.0",
+            "network": "127.0.0.0"
+        },
+        "ipv4_secondaries": [
+            {
+                "address": "127.0.0.2",
+                "broadcast": "127.255.255.255",
+                "netmask": "255.0.0.0",
+                "network": "127.0.0.0"
+            },
+            {
+                "address": "127.0.0.2",
+                "broadcast": "127.255.255.255",
+                "netmask": "255.0.0.0",
+                "network": "127.0.0.0"
+            }
+        ],
+        "ipv6": [
+            {
+                "address": "::1",
+                "prefix": "128",
+                "scope": "host"
+            }
+        ],
+        "mtu": 16436,
+        "promisc": false,
+        "type": "loopback"
+    },
+    "ansible_lvm": {
+        "lvs": {
+            "lvol00": {
+                "size_g": "4.00",
+                "vg": "vg00"
+            },
+            "lvol01": {
+                "size_g": "4.00",
+                "vg": "vg00"
+            },
+            "lvol02": {
+                "size_g": "5.00",
+                "vg": "vg00"
+            },
+            "lvol03": {
+                "size_g": "5.00",
+                "vg": "vg00"
+            },
+            "lvol04": {
+                "size_g": "5.00",
+                "vg": "vg00"
+            },
+            "lvol05": {
+                "size_g": "5.00",
+                "vg": "vg00"
+            },
+            "lvol06": {
+                "size_g": "12.00",
+                "vg": "vg00"
+            },
+            "lvol07": {
+                "size_g": "16.00",
+                "vg": "vg00"
+            },
+            "lvol08": {
+                "size_g": "4.00",
+                "vg": "vg00"
+            },
+            "lvol09": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "lvol10": {
+                "size_g": "6.00",
+                "vg": "vg00"
+            },
+            "lvol11": {
+                "size_g": "5.00",
+                "vg": "vg00"
+            },
+            "lvol12": {
+                "size_g": "4.00",
+                "vg": "vg00"
+            },
+            "lvol13": {
+                "size_g": "20.00",
+                "vg": "vg00"
+            },
+            "lvol14": {
+                "size_g": "25.00",
+                "vg": "vg00"
+            },
+            "lvolche": {
+                "size_g": "5.00",
+                "vg": "vg00"
+            },
+            "raw01": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw02": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw03": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw04": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw05": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw06": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw07": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw08": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw09": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw10": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw11": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw12": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw13": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw14": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw15": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw16": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw17": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw18": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw19": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw20": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw21": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw22": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw23": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw24": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw25": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw26": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            },
+            "raw27": {
+                "size_g": "2.00",
+                "vg": "vg00"
+            }
+        },
+        "vgs": {
+            "vg00": {
+                "free_g": "118.70",
+                "num_lvs": "43",
+                "num_pvs": "1",
+                "size_g": "299.70"
+            }
+        }
+    },
+    "ansible_machine": "x86_64",
+    "ansible_machine_id": "3e50c970ec98e06848fec31a4bce0a17",
+    "ansible_memfree_mb": 770,
+    "ansible_memory_mb": {
+        "nocache": {
+            "free": 6305,
+            "used": 1440
+        },
+        "real": {
+            "free": 770,
+            "total": 7745,
+            "used": 6975
+        },
+        "swap": {
+            "cached": 5,
+            "free": 4016,
+            "total": 4095,
+            "used": 79
+        }
+    },
+    "ansible_memtotal_mb": 7745,
+    "ansible_mounts": [
+        {
+            "device": "/dev/mapper/vg00-lvol00",
+            "fstype": "ext3",
+            "mount": "/",
+            "options": "rw,acl,user_xattr",
+            "size_available": 3408351232,
+            "size_total": 4227530752,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/sda1",
+            "fstype": "ext2",
+            "mount": "/boot",
+            "options": "rw,acl,user_xattr",
+            "size_available": 112909312,
+            "size_total": 309686272,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol04",
+            "fstype": "ext3",
+            "mount": "/opt",
+            "options": "rw,acl,user_xattr",
+            "size_available": 2286985216,
+            "size_total": 5284429824,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol14",
+            "fstype": "ext3",
+            "mount": "/tlogarch",
+            "options": "rw",
+            "size_available": 23314890752,
+            "size_total": 26422341632,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol05",
+            "fstype": "ext3",
+            "mount": "/tmp",
+            "options": "rw,acl,user_xattr",
+            "size_available": 4674117632,
+            "size_total": 5284429824,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol02",
+            "fstype": "ext3",
+            "mount": "/usr",
+            "options": "rw,acl,user_xattr",
+            "size_available": 3487842304,
+            "size_total": 5284429824,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol03",
+            "fstype": "ext3",
+            "mount": "/var",
+            "options": "rw,acl,user_xattr",
+            "size_available": 4067840000,
+            "size_total": 5284429824,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvolche",
+            "fstype": "ext3",
+            "mount": "/var/cache",
+            "options": "rw,acl,user_xattr",
+            "size_available": 4633063424,
+            "size_total": 5284429824,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol08",
+            "fstype": "ext3",
+            "mount": "/a1",
+            "options": "rw,_netdev,acl,user_xattr",
+            "size_available": 2438086656,
+            "size_total": 4227530752,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol09",
+            "fstype": "ext3",
+            "mount": "/a2",
+            "options": "rw,_netdev,acl,user_xattr",
+            "size_available": 1733496832,
+            "size_total": 2113748992,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol10",
+            "fstype": "ext3",
+            "mount": "/informix",
+            "options": "rw,_netdev,acl,user_xattr",
+            "size_available": 4297023488,
+            "size_total": 6341328896,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol12",
+            "fstype": "ext3",
+            "mount": "/informix_tmp",
+            "options": "rw,_netdev,acl,user_xattr",
+            "size_available": 3870052352,
+            "size_total": 4227530752,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol11",
+            "fstype": "ext3",
+            "mount": "/mqseries",
+            "options": "rw,_netdev,acl,user_xattr",
+            "size_available": 4779479040,
+            "size_total": 5284429824,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol06",
+            "fstype": "ext3",
+            "mount": "/tftpboot",
+            "options": "rw,_netdev,acl,user_xattr",
+            "size_available": 10842927104,
+            "size_total": 12682706944,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol07",
+            "fstype": "ext3",
+            "mount": "/u",
+            "options": "rw,_netdev,acl,user_xattr",
+            "size_available": 11017252864,
+            "size_total": 16910295040,
+            "uuid": "N/A"
+        },
+        {
+            "device": "/dev/mapper/vg00-lvol13",
+            "fstype": "ext3",
+            "mount": "/usr/sys/inst.images",
+            "options": "rw,_netdev,acl,user_xattr",
+            "size_available": 18798227456,
+            "size_total": 21137846272,
+            "uuid": "N/A"
+        }
+    ],
+    "ansible_nodename": "isp1160",
+    "ansible_os_family": "Suse",
+    "ansible_pkg_mgr": "zypper",
+    "ansible_processor": [
+        "GenuineIntel",
+        "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz",
+        "GenuineIntel",
+        "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz"
+    ],
+    "ansible_processor_cores": 1,
+    "ansible_processor_count": 2,
+    "ansible_processor_threads_per_core": 1,
+    "ansible_processor_vcpus": 2,
+    "ansible_product_name": "VMware Virtual Platform",
+    "ansible_product_serial": "VMware-42 09 50 bf 9d 03 ea ee-12 9a 3f dc 0c a2 6a 9c",
+    "ansible_product_uuid": "420950BF-9D03-EAEE-129A-3FDC0CA26A9C",
+    "ansible_product_version": "None",
+    "ansible_python": {
+        "executable": "/usr/bin/python",
+        "has_sslcontext": false,
+        "type": "CPython",
+        "version": {
+            "major": 2,
+            "micro": 9,
+            "minor": 6,
+            "releaselevel": "final",
+            "serial": 0
+        },
+        "version_info": [
+            2,
+            6,
+            9,
+            "final",
+            0
+        ]
+    },
+    "ansible_python_version": "2.6.9",
+    "ansible_real_group_id": 0,
+    "ansible_real_user_id": 0,
+    "ansible_selinux": false,
+    "ansible_service_mgr": "sysvinit",
+    "ansible_ssh_host_key_dsa_public": "AAAAB3NzaC1kc3MAAACBAK7LqEG/DElyJoj/7Muy/EfJ5X9tCM4XyeWyr2FXuxk5OkQ8wZn39vfbzooGC7tsSQJz5scFLd2BRkvgpoOzhjT/ohW8/EEyPm7FAO1+sESYor0vmVZD1ApN4yZYBMiq5hheQS+ckvCwgt0nMRN9r7kYpbEP7MPnwR8ffEK6jcg3AAAAFQDyCwf3dMf8lVLgjkevWIobwihOhwAAAIEAifdyl8Iq+U2aS33OV8BszMbL+6WJ8T3+PVzVmvfURJGoXLxk3gW8pFT7do5widlZQv+IMuuP5iJLQPmiJZ+hz9/dWOP4gGOgPyCWLtwjhcnRXDqHEC/v8gQPCwBmdoB/ZzdPAV6hdP3O1HrD6HeMALQjvEvZ7kGZ3qDKfH0ToicAAACBAJS2dklA0Clgs9VoeDAp9FqxikAq8UOBl3v2Kc+0+FiDYzJxLsvIQU+6j0cNf0jlrhqJK2qza3oy2oAfJkpDhUnjGNXVauIlIITKwlXedFQdUse+3ZWMpXeWMwW39Z0ZM7iWQiTGx/ISjqMgttnS8hw0DawnW36C+ZS6F9xcLpjJ",
+    "ansible_ssh_host_key_ecdsa_public": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFxTHTy8o3Y/nO3KMCq7n4aMvz3NiBTJsL9il5S0SZQdMHSlNn8A06Z22MWbiauv+ujxL4309dnAdOPxTXaYzPw=",
+    "ansible_ssh_host_key_rsa_public": "AAAAB3NzaC1yc2EAAAABIwAAAIEAt+bSAN+mGDfQYfrToWIgkfVBL2XeboQ+gX0Y+cRri5ohw/CejOYayPuFRXVbJdCIq0/VcXRE+P5/B/oyeECCY+2h2Lp/fTA83N4PaOolBDIC4QyIxaRARa+z2v9bFcI+3ZEdSFTE07RodFmJq0d2y5AjERKpwZFDMCUd611QS5U=",
+    "ansible_swapfree_mb": 4016,
+    "ansible_swaptotal_mb": 4095,
+    "ansible_system": "Linux",
+    "ansible_system_vendor": "VMware, Inc.",
+    "ansible_uptime_seconds": 2984760,
+    "ansible_user_dir": "/root",
+    "ansible_user_gecos": "System Administrator",
+    "ansible_user_gid": 0,
+    "ansible_user_id": "root",
+    "ansible_user_shell": "/bin/bash",
+    "ansible_user_uid": 0,
+    "ansible_userspace_architecture": "x86_64",
+    "ansible_userspace_bits": "64",
+    "ansible_virtualization_role": "guest",
+    "ansible_virtualization_type": "VMware",
+    "facter_aio_agent_build": "1.10.4",
+    "facter_aio_agent_version": "1.10.4",
+    "facter_apply_nifi": "isp.01.CA",
+    "facter_at_allow_exists": false,
+    "facter_at_deny_exists": true,
+    "facter_augeas": {
+        "version": "1.4.0"
+    },
+    "facter_backup_sles_version": "1.5-4",
+    "facter_blockdevice_sda_timeout": "180",
+    "facter_blockdevice_sr0_timeout": "30",
+    "facter_buildtype": "store",
+    "facter_centrifydc_installed": true,
+    "facter_centrifydc_version": "5.3.0-213",
+    "facter_check_certificate_ws": "isp.011.CA",
+    "facter_clustering_enabled": false,
+    "facter_clustering_type": "absent",
+    "facter_collectd_version": "",
+    "facter_cpu_family": 6,
+    "facter_cpu_vendor": "Intel",
+    "facter_cron_allow_exists": false,
+    "facter_cron_deny_exists": true,
+    "facter_dfxinbound_client_apply": "isp.11.CA",
+    "facter_disks": {
+        "fd0": {
+            "size": "4.00 KiB",
+            "size_bytes": 4096
+        },
+        "sda": {
+            "model": "Virtual disk",
+            "size": "300.00 GiB",
+            "size_bytes": 322122547200,
+            "vendor": "VMware"
+        },
+        "sr0": {
+            "model": "VMware IDE CDR00",
+            "size": "1.00 GiB",
+            "size_bytes": 1073741312,
+            "vendor": "NECVMWar"
+        }
+    },
+    "facter_dmi": {
+        "bios": {
+            "release_date": "04/05/2016",
+            "vendor": "Phoenix Technologies LTD",
+            "version": "6.00"
+        },
+        "board": {
+            "manufacturer": "Intel Corporation",
+            "product": "440BX Desktop Reference Platform",
+            "serial_number": "None"
+        },
+        "chassis": {
+            "asset_tag": "No Asset Tag",
+            "type": "Other"
+        },
+        "manufacturer": "VMware, Inc.",
+        "product": {
+            "name": "VMware Virtual Platform",
+            "serial_number": "VMware-42 09 50 bf 9d 03 ea ee-12 9a 3f dc 0c a2 6a 9c",
+            "uuid": "420950BF-9D03-EAEE-129A-3FDC0CA26A9C"
+        }
+    },
+    "facter_duplex_eth0": "Full",
+    "facter_duplex_eth1": "Full",
+    "facter_env_temp_variable": "\\tmp",
+    "facter_esm_version": "2.19.7",
+    "facter_facterversion": "3.6.5",
+    "facter_filesystems": "ext2,ext3,iso9660",
+    "facter_geronimo_put_site": false,
+    "facter_gnupg_command": "/usr/bin/gpg",
+    "facter_gnupg_installed": true,
+    "facter_grub_default": 1,
+    "facter_hosts_equiv_exists": true,
+    "facter_identity": {
+        "gid": 0,
+        "group": "root",
+        "privileged": true,
+        "uid": 0,
+        "user": "root"
+    },
+    "facter_iibowner": false,
+    "facter_installed_jdk_rpm": "package jdk is not installed",
+    "facter_ip6tables_version": "1.4.6",
+    "facter_ipaddress": "55.193.40.129",
+    "facter_iptables_version": "1.4.6",
+    "facter_ipv4_default_gateway": "55.193.40.1",
+    "facter_ipv4_default_interface": "eth0",
+    "facter_ipv4_static_routes": "none",
+    "facter_is_azure": false,
+    "facter_is_pe": false,
+    "facter_is_virtual": true,
+    "facter_kernel": "Linux",
+    "facter_kernel_data": {
+        "architecture": "default",
+        "sub_version": [
+            "0",
+            "46"
+        ],
+        "version": {
+            "major": "3",
+            "minor": "0",
+            "patch": "101"
+        }
+    },
+    "facter_kernelmajversion": "3.0",
+    "facter_kernelrelease": "3.0.101-0.46-default",
+    "facter_kernelversion": "3.0.101",
+    "facter_load_averages": {
+        "15m": 0.82,
+        "1m": 0.72,
+        "5m": 0.62
+    },
+    "facter_location_data": {
+        "city": "",
+        "full": "",
+        "state": ""
+    },
+    "facter_locked_packages": "",
+    "facter_mco_client_config": "/etc/puppetlabs/mcollective/client.cfg",
+    "facter_mco_client_settings": {
+        "libdir": "/opt/puppetlabs/mcollective/plugins:/usr/share/mcollective/plugins:/usr/libexec/mcollective"
+    },
+    "facter_mco_confdir": "/etc/mcollective/etc",
+    "facter_mco_server_config": "/etc/puppetlabs/mcollective/server.cfg",
+    "facter_mco_server_settings": {
+        "libdir": "/opt/puppetlabs/mcollective/plugins:/usr/share/mcollective/plugins:/usr/libexec/mcollective",
+        "plugin.yaml": "/etc/puppetlabs/mcollective/facts.yaml"
+    },
+    "facter_memory": {
+        "swap": {
+            "available": "3.93 GiB",
+            "available_bytes": 4218929152,
+            "capacity": "1.77%",
+            "total": "4.00 GiB",
+            "total_bytes": 4294963200,
+            "used": "72.51 MiB",
+            "used_bytes": 76034048
+        },
+        "system": {
+            "available": "5.84 GiB",
+            "available_bytes": 6268100608,
+            "capacity": "22.83%",
+            "total": "7.56 GiB",
+            "total_bytes": 8122232832,
+            "used": "1.73 GiB",
+            "used_bytes": 1854132224
+        }
+    },
+    "facter_memoryfree": "5.84 GiB",
+    "facter_memoryfree_mb": 5977.7265625,
+    "facter_memorysize": "7.56 GiB",
+    "facter_memorysize_mb": 7745.96484375,
+    "facter_mountpoints": {
+        "/": {
+            "available": "3.37 GiB",
+            "available_bytes": 3623104512,
+            "capacity": "14.30%",
+            "device": "/dev/mapper/vg00-lvol00",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "3.94 GiB",
+            "size_bytes": 4227530752,
+            "used": "576.43 MiB",
+            "used_bytes": 604426240
+        },
+        "/a1": {
+            "available": "2.48 GiB",
+            "available_bytes": 2666987520,
+            "capacity": "36.91%",
+            "device": "/dev/mapper/vg00-lvol08",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "_netdev",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "3.94 GiB",
+            "size_bytes": 4227530752,
+            "used": "1.45 GiB",
+            "used_bytes": 1560543232
+        },
+        "/a2": {
+            "available": "1.71 GiB",
+            "available_bytes": 1840869376,
+            "capacity": "12.91%",
+            "device": "/dev/mapper/vg00-lvol09",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "_netdev",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "1.97 GiB",
+            "size_bytes": 2113748992,
+            "used": "260.24 MiB",
+            "used_bytes": 272879616
+        },
+        "/boot": {
+            "available": "122.93 MiB",
+            "available_bytes": 128900096,
+            "capacity": "58.38%",
+            "device": "/dev/sda1",
+            "filesystem": "ext2",
+            "options": [
+                "rw",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "295.34 MiB",
+            "size_bytes": 309686272,
+            "used": "172.41 MiB",
+            "used_bytes": 180786176
+        },
+        "/dev": {
+            "available": "3.78 GiB",
+            "available_bytes": 4060827648,
+            "capacity": "0.01%",
+            "device": "udev",
+            "filesystem": "tmpfs",
+            "options": [
+                "rw",
+                "mode=0755"
+            ],
+            "size": "3.78 GiB",
+            "size_bytes": 4061114368,
+            "used": "280.00 KiB",
+            "used_bytes": 286720
+        },
+        "/dev/shm": {
+            "available": "3.78 GiB",
+            "available_bytes": 4061110272,
+            "capacity": "0.00%",
+            "device": "tmpfs",
+            "filesystem": "tmpfs",
+            "options": [
+                "rw",
+                "mode=1777"
+            ],
+            "size": "3.78 GiB",
+            "size_bytes": 4061114368,
+            "used": "4.00 KiB",
+            "used_bytes": 4096
+        },
+        "/informix": {
+            "available": "4.30 GiB",
+            "available_bytes": 4619190272,
+            "capacity": "27.16%",
+            "device": "/dev/mapper/vg00-lvol10",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "_netdev",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "5.91 GiB",
+            "size_bytes": 6341328896,
+            "used": "1.60 GiB",
+            "used_bytes": 1722138624
+        },
+        "/informix_tmp": {
+            "available": "3.80 GiB",
+            "available_bytes": 4084797440,
+            "capacity": "3.38%",
+            "device": "/dev/mapper/vg00-lvol12",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "_netdev",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "3.94 GiB",
+            "size_bytes": 4227530752,
+            "used": "136.12 MiB",
+            "used_bytes": 142733312
+        },
+        "/mqseries": {
+            "available": "4.70 GiB",
+            "available_bytes": 5047971840,
+            "capacity": "4.47%",
+            "device": "/dev/mapper/vg00-lvol11",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "_netdev",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "4.92 GiB",
+            "size_bytes": 5284429824,
+            "used": "225.50 MiB",
+            "used_bytes": 236457984
+        },
+        "/opt": {
+            "available": "2.38 GiB",
+            "available_bytes": 2557833216,
+            "capacity": "51.60%",
+            "device": "/dev/mapper/vg00-lvol04",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "4.92 GiB",
+            "size_bytes": 5284429824,
+            "used": "2.54 GiB",
+            "used_bytes": 2726596608
+        },
+        "/tftpboot": {
+            "available": "10.70 GiB",
+            "available_bytes": 11487023104,
+            "capacity": "9.43%",
+            "device": "/dev/mapper/vg00-lvol06",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "_netdev",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "11.81 GiB",
+            "size_bytes": 12682706944,
+            "used": "1.11 GiB",
+            "used_bytes": 1195683840
+        },
+        "/tlogarch": {
+            "available": "22.96 GiB",
+            "available_bytes": 24657821696,
+            "capacity": "6.68%",
+            "device": "/dev/mapper/vg00-lvol14",
+            "filesystem": "ext3",
+            "options": [
+                "rw"
+            ],
+            "size": "24.61 GiB",
+            "size_bytes": 26422341632,
+            "used": "1.64 GiB",
+            "used_bytes": 1764519936
+        },
+        "/tmp": {
+            "available": "4.60 GiB",
+            "available_bytes": 4943409152,
+            "capacity": "6.45%",
+            "device": "/dev/mapper/vg00-lvol05",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "4.92 GiB",
+            "size_bytes": 5284429824,
+            "used": "325.22 MiB",
+            "used_bytes": 341020672
+        },
+        "/u": {
+            "available": "11.05 GiB",
+            "available_bytes": 11862052864,
+            "capacity": "29.85%",
+            "device": "/dev/mapper/vg00-lvol07",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "_netdev",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "15.75 GiB",
+            "size_bytes": 16910295040,
+            "used": "4.70 GiB",
+            "used_bytes": 5048242176
+        },
+        "/usr": {
+            "available": "3.50 GiB",
+            "available_bytes": 3756265472,
+            "capacity": "28.92%",
+            "device": "/dev/mapper/vg00-lvol02",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "4.92 GiB",
+            "size_bytes": 5284429824,
+            "used": "1.42 GiB",
+            "used_bytes": 1528164352
+        },
+        "/usr/sys/inst.images": {
+            "available": "18.51 GiB",
+            "available_bytes": 19871739904,
+            "capacity": "5.99%",
+            "device": "/dev/mapper/vg00-lvol13",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "_netdev",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "19.69 GiB",
+            "size_bytes": 21137846272,
+            "used": "1.18 GiB",
+            "used_bytes": 1266106368
+        },
+        "/var": {
+            "available": "4.04 GiB",
+            "available_bytes": 4339040256,
+            "capacity": "17.89%",
+            "device": "/dev/mapper/vg00-lvol03",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "4.92 GiB",
+            "size_bytes": 5284429824,
+            "used": "901.59 MiB",
+            "used_bytes": 945389568
+        },
+        "/var/cache": {
+            "available": "4.56 GiB",
+            "available_bytes": 4901498880,
+            "capacity": "7.25%",
+            "device": "/dev/mapper/vg00-lvolche",
+            "filesystem": "ext3",
+            "options": [
+                "rw",
+                "acl",
+                "user_xattr"
+            ],
+            "size": "4.92 GiB",
+            "size_bytes": 5284429824,
+            "used": "365.19 MiB",
+            "used_bytes": 382930944
+        }
+    },
+    "facter_mysql_server_id": 5611184,
+    "facter_networking": {
+        "domain": "s01160.ca.wal-mart.com",
+        "fqdn": "isp.s01160.ca.wal-mart.com",
+        "hostname": "isp1160",
+        "interfaces": {
+            "eth0": {
+                "bindings": [
+                    {
+                        "address": "55.193.40.129",
+                        "netmask": "255.255.255.0",
+                        "network": "55.193.40.0"
+                    }
+                ],
+                "bindings6": [
+                    {
+                        "address": "fe80::250:56ff:fe35:9a10",
+                        "netmask": "ffff:ffff:ffff:ffff::",
+                        "network": "fe80::"
+                    }
+                ],
+                "ip": "55.193.40.129",
+                "ip6": "fe80::250:56ff:fe35:9a10",
+                "mac": "00:50:56:35:9a:10",
+                "mtu": 1500,
+                "netmask": "255.255.255.0",
+                "netmask6": "ffff:ffff:ffff:ffff::",
+                "network": "55.193.40.0",
+                "network6": "fe80::"
+            },
+            "eth1": {
+                "bindings": [
+                    {
+                        "address": "192.168.58.2",
+                        "netmask": "255.255.255.0",
+                        "network": "192.168.58.0"
+                    }
+                ],
+                "bindings6": [
+                    {
+                        "address": "fe80::250:56ff:fe0b:7a11",
+                        "netmask": "ffff:ffff:ffff:ffff::",
+                        "network": "fe80::"
+                    }
+                ],
+                "ip": "192.168.58.2",
+                "ip6": "fe80::250:56ff:fe0b:7a11",
+                "mac": "00:50:56:0b:7a:11",
+                "mtu": 1500,
+                "netmask": "255.255.255.0",
+                "netmask6": "ffff:ffff:ffff:ffff::",
+                "network": "192.168.58.0",
+                "network6": "fe80::"
+            },
+            "lo": {
+                "bindings": [
+                    {
+                        "address": "127.0.0.1",
+                        "netmask": "255.0.0.0",
+                        "network": "127.0.0.0"
+                    },
+                    {
+                        "address": "127.0.0.2",
+                        "netmask": "255.0.0.0",
+                        "network": "127.0.0.0"
+                    }
+                ],
+                "bindings6": [
+                    {
+                        "address": "::1",
+                        "netmask": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+                        "network": "::1"
+                    }
+                ],
+                "ip": "127.0.0.1",
+                "ip6": "::1",
+                "mtu": 16436,
+                "netmask": "255.0.0.0",
+                "netmask6": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+                "network": "127.0.0.0",
+                "network6": "::1"
+            }
+        },
+        "ip": "55.193.40.129",
+        "ip6": "fe80::250:56ff:fe35:9a10",
+        "mac": "00:50:56:35:9a:10",
+        "mtu": 1500,
+        "netmask": "255.255.255.0",
+        "netmask6": "ffff:ffff:ffff:ffff::",
+        "network": "55.193.40.0",
+        "network6": "fe80::",
+        "primary": "eth0"
+    },
+    "facter_nfs_mounts": {},
+    "facter_opc_client_bind": "55.193.40.129",
+    "facter_opc_ip_address": "55.193.40.129",
+    "facter_opc_nodename": "isp.s01160.ca.wal-mart.com",
+    "facter_opc_server_bind": "55.193.40.129",
+    "facter_opcagtversion": "12.01.020",
+    "facter_opccertissuer": "oser600492.wal-mart.com",
+    "facter_opccertserver": "isp.s01160.ca.wal-mart.com",
+    "facter_opchotfixed": false,
+    "facter_opcle_policies": true,
+    "facter_opcmona_policies": true,
+    "facter_opcmsgi_policies": true,
+    "facter_opcprimarymgr": "omima-sm2.wal-mart.com",
+    "facter_opcsecmgr": "omima-sm2.wal-mart.com",
+    "facter_opnet_capture_installed": true,
+    "facter_oracle_home": "",
+    "facter_oradb_inst_loc_data": "NotFound",
+    "facter_oradb_inst_products": "NotFound",
+    "facter_os": {
+        "architecture": "x86_64",
+        "family": "Suse",
+        "hardware": "x86_64",
+        "name": "SLES",
+        "release": {
+            "full": "11.3",
+            "major": "11",
+            "minor": "3"
+        },
+        "selinux": {
+            "enabled": false
+        }
+    },
+    "facter_package_provider": "zypper",
+    "facter_partitions": {
+        "/dev/mapper/vg00-lvol00": {
+            "filesystem": "ext3",
+            "mount": "/",
+            "size": "4.00 GiB",
+            "size_bytes": 4294967296,
+            "uuid": "f78ab430-8e4b-4f62-8b4e-dd8a8b638c29"
+        },
+        "/dev/mapper/vg00-lvol01": {
+            "filesystem": "swap",
+            "size": "4.00 GiB",
+            "size_bytes": 4294967296,
+            "uuid": "e1b78c93-f3fa-4559-b741-a09584cf4853"
+        },
+        "/dev/mapper/vg00-lvol02": {
+            "filesystem": "ext3",
+            "mount": "/usr",
+            "size": "5.00 GiB",
+            "size_bytes": 5368709120,
+            "uuid": "b6c1d76c-042b-422e-abf9-2bb13061e75c"
+        },
+        "/dev/mapper/vg00-lvol03": {
+            "filesystem": "ext3",
+            "mount": "/var",
+            "size": "5.00 GiB",
+            "size_bytes": 5368709120,
+            "uuid": "d7c42250-220e-4672-b394-90877b823c70"
+        },
+        "/dev/mapper/vg00-lvol04": {
+            "filesystem": "ext3",
+            "mount": "/opt",
+            "size": "5.00 GiB",
+            "size_bytes": 5368709120,
+            "uuid": "8599006f-f23c-4576-ae5e-160b5f9f0a73"
+        },
+        "/dev/mapper/vg00-lvol05": {
+            "filesystem": "ext3",
+            "mount": "/tmp",
+            "size": "5.00 GiB",
+            "size_bytes": 5368709120,
+            "uuid": "5222cce9-4390-4779-b141-51fb1b7abb85"
+        },
+        "/dev/mapper/vg00-lvol06": {
+            "filesystem": "ext3",
+            "mount": "/tftpboot",
+            "size": "12.00 GiB",
+            "size_bytes": 12884901888,
+            "uuid": "c1ba2088-171a-441d-b3cb-64762649eada"
+        },
+        "/dev/mapper/vg00-lvol07": {
+            "filesystem": "ext3",
+            "mount": "/u",
+            "size": "16.00 GiB",
+            "size_bytes": 17179869184,
+            "uuid": "4aa27094-532c-42fc-b304-ef869a43d8eb"
+        },
+        "/dev/mapper/vg00-lvol08": {
+            "filesystem": "ext3",
+            "mount": "/a1",
+            "size": "4.00 GiB",
+            "size_bytes": 4294967296,
+            "uuid": "46522f31-1778-455b-8ac4-446c55d5c841"
+        },
+        "/dev/mapper/vg00-lvol09": {
+            "filesystem": "ext3",
+            "mount": "/a2",
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648,
+            "uuid": "a83826b5-35e3-4a86-802b-b64117049f25"
+        },
+        "/dev/mapper/vg00-lvol10": {
+            "filesystem": "ext3",
+            "mount": "/informix",
+            "size": "6.00 GiB",
+            "size_bytes": 6442450944,
+            "uuid": "332c9799-e5da-47d5-9ff4-18e4ceb218f6"
+        },
+        "/dev/mapper/vg00-lvol11": {
+            "filesystem": "ext3",
+            "mount": "/mqseries",
+            "size": "5.00 GiB",
+            "size_bytes": 5368709120,
+            "uuid": "35a2b50a-7567-48f0-96dd-38287dc867a3"
+        },
+        "/dev/mapper/vg00-lvol12": {
+            "filesystem": "ext3",
+            "mount": "/informix_tmp",
+            "size": "4.00 GiB",
+            "size_bytes": 4294967296,
+            "uuid": "c6975185-29b1-4920-876d-32f6a6729cb3"
+        },
+        "/dev/mapper/vg00-lvol13": {
+            "filesystem": "ext3",
+            "mount": "/usr/sys/inst.images",
+            "size": "20.00 GiB",
+            "size_bytes": 21474836480,
+            "uuid": "cda8e795-96f6-4855-83ce-e61232164627"
+        },
+        "/dev/mapper/vg00-lvol14": {
+            "filesystem": "ext3",
+            "mount": "/tlogarch",
+            "size": "25.00 GiB",
+            "size_bytes": 26843545600,
+            "uuid": "48824833-656a-43d5-b7cd-8b458b297d36"
+        },
+        "/dev/mapper/vg00-lvolche": {
+            "filesystem": "ext3",
+            "mount": "/var/cache",
+            "size": "5.00 GiB",
+            "size_bytes": 5368709120,
+            "uuid": "f65797cb-1bdb-459e-a70c-cb436a37e764"
+        },
+        "/dev/mapper/vg00-raw01": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw02": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw03": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw04": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw05": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw06": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw07": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw08": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw09": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw10": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw11": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw12": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw13": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw14": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw15": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw16": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw17": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw18": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw19": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw20": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw21": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw22": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw23": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw24": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw25": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw26": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/mapper/vg00-raw27": {
+            "size": "2.00 GiB",
+            "size_bytes": 2147483648
+        },
+        "/dev/sda1": {
+            "filesystem": "ext2",
+            "mount": "/boot",
+            "size": "305.00 MiB",
+            "size_bytes": 319815680,
+            "uuid": "e7e777a7-a48a-4030-8fe5-b1ecbf40563f"
+        },
+        "/dev/sda2": {
+            "filesystem": "LVM2_member",
+            "size": "299.70 GiB",
+            "size_bytes": 321801682944,
+            "uuid": "19ekeQ-FjYQ-oika-eMck-LKeu-q2Zh-unFswE"
+        }
+    },
+    "facter_path": "/usr/bin:/bin:/usr/sbin:/sbin",
+    "facter_pe_concat_basedir": "/opt/puppetlabs/puppet/cache/pe_concat",
+    "facter_platform_symlink_writable": true,
+    "facter_platform_tag": "sles-11-x86_64",
+    "facter_postfix_installed": false,
+    "facter_preload_version": "1.5-1",
+    "facter_processors": {
+        "count": 2,
+        "isa": "x86_64",
+        "models": [
+            "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz",
+            "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz"
+        ],
+        "physicalcount": 2
+    },
+    "facter_puppet_agent_pid": 1038,
+    "facter_puppet_client_datadir": "/opt/puppetlabs/puppet/cache/client_data",
+    "facter_puppet_confdir": "/etc/puppetlabs/puppet",
+    "facter_puppet_config": "/etc/puppetlabs/puppet/puppet.conf",
+    "facter_puppet_environmentpath": "/etc/puppetlabs/code/environments",
+    "facter_puppet_files_dir_present": false,
+    "facter_puppet_inventory_metadata": {
+        "packages": {
+            "collection_enabled": false,
+            "last_collection_time": "0.0s"
+        }
+    },
+    "facter_puppet_manage_tsm": "enable",
+    "facter_puppet_master_server": "pe-puppetmaster.wal-mart.com",
+    "facter_puppet_server": "pe-puppetmaster.wal-mart.com",
+    "facter_puppet_ssldir": "/etc/puppetlabs/puppet/ssl",
+    "facter_puppet_sslpaths": {
+        "certdir": {
+            "path": "/etc/puppetlabs/puppet/ssl/certs",
+            "path_exists": true
+        },
+        "hostcrl": {
+            "path": "/etc/puppetlabs/puppet/ssl/crl.pem",
+            "path_exists": true
+        },
+        "privatedir": {
+            "path": "/etc/puppetlabs/puppet/ssl/private",
+            "path_exists": true
+        },
+        "privatekeydir": {
+            "path": "/etc/puppetlabs/puppet/ssl/private_keys",
+            "path_exists": true
+        },
+        "publickeydir": {
+            "path": "/etc/puppetlabs/puppet/ssl/public_keys",
+            "path_exists": true
+        },
+        "requestdir": {
+            "path": "/etc/puppetlabs/puppet/ssl/certificate_requests",
+            "path_exists": true
+        }
+    },
+    "facter_puppet_stringify_facts": false,
+    "facter_puppet_vardir": "/opt/puppetlabs/puppet/cache",
+    "facter_puppetversion": "4.10.4",
+    "facter_python2_version": "2.6.9",
+    "facter_python_sitelib": "/usr/lib64/python2.6/site-packages",
+    "facter_python_version": "2.6.9",
+    "facter_resolver_nameserver1": "55.193.40.129",
+    "facter_resolver_nameserver2": "55.193.40.132",
+    "facter_resolver_nameserver3": "161.173.7.20",
+    "facter_resolver_nameservers": "55.193.40.129,55.193.40.132,161.173.7.20",
+    "facter_resolver_options": "timeout:2 ndots:3",
+    "facter_resolver_search": "s01160.ca.wal-mart.com wal-mart.com",
+    "facter_rhn_satellite_registered": false,
+    "facter_rhn_satellite_server": "rhns01.wal-mart.com",
+    "facter_rhsmcertd_cron_schedule": "unscheduled",
+    "facter_rhsmcertd_heal_cron_schedule": "57 23 * * *",
+    "facter_rman_installed": true,
+    "facter_root_home": "/root",
+    "facter_root_rhosts_exists": true,
+    "facter_ruby": {
+        "platform": "x86_64-linux",
+        "sitedir": "/opt/puppetlabs/puppet/lib/ruby/site_ruby/2.1.0",
+        "version": "2.1.9"
+    },
+    "facter_sat6_registered": true,
+    "facter_sat6_server": "satellite-capsule.wal-mart.com",
+    "facter_scomserv_apply": "isp.11.CA",
+    "facter_sendmail_cf_installed": false,
+    "facter_sendmail_installed": true,
+    "facter_servercfg": "present",
+    "facter_servercfg_adsmbackups": "False",
+    "facter_servercfg_computegrid": "False",
+    "facter_servercfg_datagrid": "False",
+    "facter_servercfg_db2db": "False",
+    "facter_servercfg_dmz": "False",
+    "facter_servercfg_informixdb": "False",
+    "facter_servercfg_international": "False",
+    "facter_servercfg_oracledb": "False",
+    "facter_servercfg_pci_inscope": "False",
+    "facter_servercfg_sox_inscope": "False",
+    "facter_servercfg_support_team": "\"Walmart Server Teams\"",
+    "facter_service_provider": "redhat",
+    "facter_sitecfg": "absent",
+    "facter_smt_registered": false,
+    "facter_speed_eth0": "10000",
+    "facter_speed_eth1": "10000",
+    "facter_ssh": {
+        "dsa": {
+            "fingerprints": {
+                "sha1": "SSHFP 2 1 7bb71ac7017b192f02dd176db8a8a16c2e6f4e5f",
+                "sha256": "SSHFP 2 2 200ddcf8b398923ae7998b39a944acc761de705e9bc106800b0906b6eb4fb7a6"
+            },
+            "key": "AAAAB3NzaC1kc3MAAACBAK7LqEG/DElyJoj/7Muy/EfJ5X9tCM4XyeWyr2FXuxk5OkQ8wZn39vfbzooGC7tsSQJz5scFLd2BRkvgpoOzhjT/ohW8/EEyPm7FAO1+sESYor0vmVZD1ApN4yZYBMiq5hheQS+ckvCwgt0nMRN9r7kYpbEP7MPnwR8ffEK6jcg3AAAAFQDyCwf3dMf8lVLgjkevWIobwihOhwAAAIEAifdyl8Iq+U2aS33OV8BszMbL+6WJ8T3+PVzVmvfURJGoXLxk3gW8pFT7do5widlZQv+IMuuP5iJLQPmiJZ+hz9/dWOP4gGOgPyCWLtwjhcnRXDqHEC/v8gQPCwBmdoB/ZzdPAV6hdP3O1HrD6HeMALQjvEvZ7kGZ3qDKfH0ToicAAACBAJS2dklA0Clgs9VoeDAp9FqxikAq8UOBl3v2Kc+0+FiDYzJxLsvIQU+6j0cNf0jlrhqJK2qza3oy2oAfJkpDhUnjGNXVauIlIITKwlXedFQdUse+3ZWMpXeWMwW39Z0ZM7iWQiTGx/ISjqMgttnS8hw0DawnW36C+ZS6F9xcLpjJ"
+        },
+        "ecdsa": {
+            "fingerprints": {
+                "sha1": "SSHFP 3 1 58d62061266763525ab42ca0b848cedbb012d9c7",
+                "sha256": "SSHFP 3 2 cba7e6529ea54fad387db3b7e6a010c181bf0c8bee9567b1521c4af59d2605c5"
+            },
+            "key": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFxTHTy8o3Y/nO3KMCq7n4aMvz3NiBTJsL9il5S0SZQdMHSlNn8A06Z22MWbiauv+ujxL4309dnAdOPxTXaYzPw="
+        },
+        "rsa": {
+            "fingerprints": {
+                "sha1": "SSHFP 1 1 659e842bf2eab507363e855d20d3f74e941107cd",
+                "sha256": "SSHFP 1 2 c957f0d7e43982d9f726c066fc065fa0823571d98b667162c0dd1b28168a1f51"
+            },
+            "key": "AAAAB3NzaC1yc2EAAAABIwAAAIEAt+bSAN+mGDfQYfrToWIgkfVBL2XeboQ+gX0Y+cRri5ohw/CejOYayPuFRXVbJdCIq0/VcXRE+P5/B/oyeECCY+2h2Lp/fTA83N4PaOolBDIC4QyIxaRARa+z2v9bFcI+3ZEdSFTE07RodFmJq0d2y5AjERKpwZFDMCUd611QS5U="
+        }
+    },
+    "facter_ssh_server": "ssh-server-g3",
+    "facter_staging_http_get": "curl",
+    "facter_storecfg": "present",
+    "facter_storecfg_backup_solution": "ibm",
+    "facter_storecfg_backup_vlan": "150",
+    "facter_storecfg_bkup_octet": "2",
+    "facter_storecfg_border_store": "No",
+    "facter_storecfg_business_fmt_code": "RETL",
+    "facter_storecfg_business_type": "WMSC",
+    "facter_storecfg_capture": "No",
+    "facter_storecfg_capture_retain": "3",
+    "facter_storecfg_capture_size": "10000",
+    "facter_storecfg_certification": "no",
+    "facter_storecfg_comm_country": "CA",
+    "facter_storecfg_country": "CA",
+    "facter_storecfg_currency_code": "CAD",
+    "facter_storecfg_date_wait": "5",
+    "facter_storecfg_default": "1",
+    "facter_storecfg_en_device": "eth0",
+    "facter_storecfg_en_interface": "Yes",
+    "facter_storecfg_infmx_restore": "ontape_file",
+    "facter_storecfg_ip_network": "Yes",
+    "facter_storecfg_language": "104",
+    "facter_storecfg_last_octet": "129",
+    "facter_storecfg_list_tmps": "No",
+    "facter_storecfg_lnx_timezone": "America/Thunder_Bay",
+    "facter_storecfg_lpsched_flags": "-a",
+    "facter_storecfg_mask": "0",
+    "facter_storecfg_max_disk_usage": "97",
+    "facter_storecfg_mod_servers": "saps",
+    "facter_storecfg_node": "isp1160",
+    "facter_storecfg_parnt_company_code": "WMT",
+    "facter_storecfg_pfx": "isp",
+    "facter_storecfg_pos": "IBM",
+    "facter_storecfg_pos_tcp": "Yes",
+    "facter_storecfg_primary_language": "104",
+    "facter_storecfg_public_vlan": "20",
+    "facter_storecfg_purpose": "prod",
+    "facter_storecfg_scanning": "Yes",
+    "facter_storecfg_scanning_user": "SCAN",
+    "facter_storecfg_secondary_languages": "103",
+    "facter_storecfg_sign_says": "walmart",
+    "facter_storecfg_site": "1160",
+    "facter_storecfg_sna_def_ncp": "400070000058",
+    "facter_storecfg_sna_loc_net": "WALMART",
+    "facter_storecfg_sna_rmt_net": "WALMART",
+    "facter_storecfg_start_sna": "Yes",
+    "facter_storecfg_startpvs": "No",
+    "facter_storecfg_stg_octet": "14",
+    "facter_storecfg_storage_network": "192.168.58",
+    "facter_storecfg_storage_vendor": "none",
+    "facter_storecfg_sysname": "Wal-Mart In-Store Processor",
+    "facter_storecfg_telamon_bsc": "No",
+    "facter_storecfg_telxon": "750",
+    "facter_storecfg_terminal_server": "yes",
+    "facter_storecfg_thinclient": "Yes",
+    "facter_storecfg_timeclocks": "Yes",
+    "facter_storecfg_timezone": "EST5EDT",
+    "facter_storecfg_tlogloc": "nas",
+    "facter_storecfg_tr_interface": "No",
+    "facter_storecfg_wireless_loc": "jw1",
+    "facter_storecfg_wm_currency_mult": "1",
+    "facter_swapfree": "3.93 GiB",
+    "facter_swapfree_mb": 4023.484375,
+    "facter_swapsize": "4.00 GiB",
+    "facter_swapsize_mb": 4095.99609375,
+    "facter_sys_profile": "isp",
+    "facter_sys_type": "sles-11",
+    "facter_sysctl_active_kernel.msgmax": "65536",
+    "facter_sysctl_active_kernel.msgmnb": "4194304",
+    "facter_sysctl_active_kernel.msgmni": "4096",
+    "facter_sysctl_active_kernel.sem": "250 256000 32 1024",
+    "facter_sysctl_active_kernel.shmall": "1152921504606846720",
+    "facter_sysctl_active_kernel.shmmax": "18446744073709551615",
+    "facter_sysctl_active_kernel.shmmni": "4096",
+    "facter_sysctl_active_kernel.sysrq": "1",
+    "facter_sysctl_active_kernel.threads_max": "123742",
+    "facter_sysctl_active_vm.swappiness": "60",
+    "facter_sysctl_conf_kernel.unknown_nmi_panic": "0",
+    "facter_sysctl_conf_net.ipv4.conf.all.rp_filter": "1",
+    "facter_sysctl_conf_net.ipv4.icmp_echo_ignore_broadcasts": "1",
+    "facter_sysctl_conf_net.ipv4.ip_local_port_range": "32768 49151",
+    "facter_system_uptime": {
+        "days": 34,
+        "hours": 829,
+        "seconds": 2984761,
+        "uptime": "34 days"
+    },
+    "facter_systemd": false,
+    "facter_tc_server": "no tomcat",
+    "facter_tc_trust_stores": "no valid trust stores",
+    "facter_tectia_client_version": "6.4.14-26",
+    "facter_tectia_common_version": "6.4.14-26",
+    "facter_tectia_server_version": "6.4.14-26",
+    "facter_timezone": "CDT",
+    "facter_tmpdir": "",
+    "facter_tomcat_instances": "0",
+    "facter_topend_installed": true,
+    "facter_tsm_client_ver": "7.1.6-4",
+    "facter_virtual": "vmware",
+    "facter_vmware_disks": "sda",
+    "facter_wm_puppet_agent_cron_schedule": "42 1,3,5,7,9,11,13,15,17,19,21,23 * * *",
+    "facter_wmqmajclientversion": "7",
+    "facter_wmqmajversion": "7",
+    "facter_wmqversion": "7.0.1.1",
+    "facter_wmt_local_users": "root,bin,daemon,sys,lp,mail,games,at,wwwrun,ftp,tftp,progrm,topend,samsys,wmrx,sysadm,message,smartrx,pcmsys,imnadm,host,storesys,is,OPT,informix,wmdba,rxfill,hearing,ivrinst,ivr,ibm,rxdb,pcmsysmx,pcmsyscr,pcmsysgb,pcmsysin,pcmsysca,pcmsysbr,pcmsysar,pcmsyscn,pcmsysjp,strsysmx,strsyscr,strsysgb,strsysin,strsysca,strsysbr,strsysar,strsyscn,strsysjp,pcmsysgt,pcmsyshn,pcmsysni,pcmsyssv,pcmsyscl,strsysgt,strsyshn,strsysni,strsyssv,strsyscl,pdxset,remedy,neteng,invento,vcdb,grocery,mmed,iaadmin,dataadmn,sched,recap,ilgroup,budget,ipam,isdgta,dvrproc,posfuel1,dsign,thinftp,timeadj,saps220,isd,fssplan,pos,printeng,cscan,dm,flash,fsroot,gtn,internal,loss,odbc,oper,opticops,pest,poshot,ptcf,relo,return,rqachem,scanscan,smart,support,symbol,thin,tleptc,tscan,vision,upcpos,airbeam,telecom,rfinstal,p1csmsg,rollouts,relocmd,ejisd,epcsys,optical,netmgt,mqm,asset,express,rfeng,ptc,nobody,dvruser,chkctr,gftp,lasserrx,mapm,isdro,isdrx,cnrxftp,messagebus,ntp,haldaemon,sshd,nagios,printsup,ftpsecure,uuidd,polkituser,suse-ncc,tskmgt,wsadmin,clickpul,man,news,uucp,intrfce,scaleftp,ecommq,ecomintg,invpftp,wso2sys,metaget,cuemedm,tlemqusr,gsshr,ipamsup,gssfin,opc_op,splunk,monuser,itempos",
+    "facter_wmuname_fqdn": "isp.s01160.ca.wal-mart.com",
+    "facter_zypper_version": "1.6.333",
+    "module_setup": true
+}
