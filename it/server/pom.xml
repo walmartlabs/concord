@@ -300,6 +300,8 @@
                                             <DB_DRIVER>org.postgresql.Driver</DB_DRIVER>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
+                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
+                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
