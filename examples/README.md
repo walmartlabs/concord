@@ -53,3 +53,4 @@
 * [fork_join](fork_join) - starting multiple subprocesses and waiting for completion;
 * [logback_config](logback_config) - overriding logging configuration;
 * [process_from_a_process](process_from_a_process) - starting a new subprocess from a flow using a payload archive;
+* [process_from_a_process2](process_from_a_process2) - using output variables, starting a new subprocess from a project.

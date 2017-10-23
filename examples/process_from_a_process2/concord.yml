@@ -1,11 +1,22 @@
 flows:
   default:
-  # executes the provided payload archive as a child process
+  # starts a process and retrieves it's variable value
   - task: concord
     in:
       action: start
-      archive: example.zip
-      # wait for completion
+      archive: out.zip
+      sync: true
+      # list of output variables
+      outVars:
+      - result
+  - log: "${jobOut.result}"
+
+  # starts a process from an existing project (it must be created beforehand)
+  - task: concord
+    in:
+      action: start
+      project: test
+      repository: default
       sync: true
   - log: "Done! ${jobs[0]} is completed"
 
