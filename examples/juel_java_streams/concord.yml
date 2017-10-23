@@ -20,4 +20,4 @@ configuration:
     items2:
       - "a"
       - "b"
-      - "d"
+      - "c"
