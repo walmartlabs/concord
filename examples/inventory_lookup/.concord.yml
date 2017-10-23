@@ -1,0 +1,22 @@
+configuration:
+  dependencies:
+    - "file:///Users/brig/prj/wallmart/concord/plugins/tasks/ansible/target/ansible-tasks-0.44.1-SNAPSHOT.jar"
+    - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.33.1-SNAPSHOT"
+  arguments:
+    concord:
+      baseUrl: "http://localhost:8001"
+      apiKey: "auBy4eDWrKWsyhiDp3AQiw"
+
+flows:
+  default:
+  - task: ansible2
+    in:
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      playbook: playbook/hello.yml
+      extraVars:
+        greetings: "Hi there!"

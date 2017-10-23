@@ -29,6 +29,7 @@ public class RunPlaybookTask2 implements Task {
     private static final int SUCCESS_EXIT_CODE = 0;
     private static final String CALLBACK_DIR = "_callbacks";
     private static final String PYTHON_LIB_DIR = "_python_lib";
+    private static final String LOOKUP_DIR = "lookup";
 
     private final RpcConfiguration rpcCfg;
     private final SecretStore secretStore;
@@ -81,9 +82,13 @@ public class RunPlaybookTask2 implements Task {
         env.put("CONCORD_HOST", rpcCfg.getServerHost());
         env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
+        env.put("CONCORD_BASEURL", getConcordCfg(context, "baseUrl"));
+        env.put("CONCORD_APIKEY", getConcordCfg(context, "apiKey"));
+
         env = addExtraEnv(env, args);
 
         processCallback(workDir);
+        processLookup(workDir);
 
         PlaybookProcessBuilder b = pb.build(playbook, inventoryPath.toString())
                 .withAttachmentsDir(toString(attachmentsPath))
@@ -125,6 +130,12 @@ public class RunPlaybookTask2 implements Task {
         Path callbackDir = workDir.resolve(CALLBACK_DIR);
         Files.createDirectories(callbackDir);
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
+    }
+
+    private void processLookup(Path workDir) throws IOException {
+        Path callbackDir = workDir.resolve(LOOKUP_DIR);
+        Files.createDirectories(callbackDir);
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", callbackDir.resolve("concord_inventory.py"));
     }
 
     private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
@@ -290,6 +301,7 @@ public class RunPlaybookTask2 implements Task {
             baseDir = baseDir + "/";
         }
         m.put("callback_plugins", baseDir + CALLBACK_DIR);
+        m.put("lookup_plugins", baseDir + LOOKUP_DIR);
 
         return m;
     }
@@ -534,6 +546,7 @@ public class RunPlaybookTask2 implements Task {
         throw new IllegalArgumentException("'" + AnsibleConstants.VERBOSE_LEVEL_KEY + "' should be an integer: " + v);
     }
 
+    @SuppressWarnings("unchecked")
     private static Map<String, String> addExtraEnv(Map<String, String> env, Map<String, Object> m) {
         Map<String, String> extraEnv = (Map<String, String>) m.get(AnsibleConstants.EXTRA_ENV);
         if (extraEnv == null || extraEnv.isEmpty()) {
@@ -544,5 +557,15 @@ public class RunPlaybookTask2 implements Task {
         result.putAll(extraEnv);
 
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String getConcordCfg(Context ctx, String key) {
+        Map<String, String> cfg = (Map<String, String>) ctx.getVariable("concord");
+        if (cfg == null) {
+            throw new IllegalArgumentException("Concord cfg not found");
+        }
+
+        return cfg.get(key);
     }
 }

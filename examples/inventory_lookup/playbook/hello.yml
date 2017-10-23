@@ -1,0 +1,6 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "greetings {{ lookup('concord_inventory', 'myInventory2', 'lookupQuery result=0', {'qparam1':'qparam1-value'}) }}"
+      verbosity: 0
