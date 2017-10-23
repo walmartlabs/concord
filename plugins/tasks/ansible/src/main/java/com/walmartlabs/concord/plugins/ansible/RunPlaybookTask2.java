@@ -16,10 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Named("ansible2")
 public class RunPlaybookTask2 implements Task {
@@ -39,6 +36,9 @@ public class RunPlaybookTask2 implements Task {
 
     @InjectVariable(Constants.Context.TX_ID_KEY)
     String txId;
+
+    @Inject
+    ApiConfiguration apiCfg;
 
     @Inject
     public RunPlaybookTask2(RpcConfiguration rpcCfg, SecretStore secretStore) {
@@ -77,18 +77,15 @@ public class RunPlaybookTask2 implements Task {
             privateKeyPath = workDir.relativize(privateKeyPath);
         }
 
-        Map<String, String> env = new HashMap<>();
-        env.put("PYTHONPATH", PYTHON_LIB_DIR);
-        env.put("CONCORD_HOST", rpcCfg.getServerHost());
-        env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
-        env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
-        env.put("CONCORD_BASEURL", getConcordCfg(context, "baseUrl"));
-        env.put("CONCORD_APIKEY", getConcordCfg(context, "apiKey"));
-
-        env = addExtraEnv(env, args);
+        final Map<String, String> env = addExtraEnv(defaultEnv(), args);
 
         processCallback(workDir);
-        processLookup(workDir);
+
+        getConcordCfg(context, "apiKey")
+                .ifPresent(key -> {
+                    processLookup(workDir);
+                    env.put("CONCORD_APIKEY", key);
+                });
 
         PlaybookProcessBuilder b = pb.build(playbook, inventoryPath.toString())
                 .withAttachmentsDir(toString(attachmentsPath))
@@ -120,6 +117,16 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
+    private Map<String,String> defaultEnv() {
+        final Map<String, String> env = new HashMap<>();
+        env.put("PYTHONPATH", PYTHON_LIB_DIR);
+        env.put("CONCORD_HOST", rpcCfg.getServerHost());
+        env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
+        env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
+        env.put("CONCORD_BASEURL", apiCfg.getBaseUrl());
+        return env;
+    }
+
     private void processCallback(Path workDir) throws IOException {
         Path libDir = workDir.resolve(PYTHON_LIB_DIR);
         Files.createDirectories(libDir);
@@ -132,10 +139,14 @@ public class RunPlaybookTask2 implements Task {
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
     }
 
-    private void processLookup(Path workDir) throws IOException {
+    private void processLookup(Path workDir) {
         Path callbackDir = workDir.resolve(LOOKUP_DIR);
-        Files.createDirectories(callbackDir);
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", callbackDir.resolve("concord_inventory.py"));
+        try {
+            Files.createDirectories(callbackDir);
+            copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", callbackDir.resolve("concord_inventory.py"));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
@@ -560,12 +571,12 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private static String getConcordCfg(Context ctx, String key) {
+    private static Optional<String> getConcordCfg(Context ctx, String key) {
         Map<String, String> cfg = (Map<String, String>) ctx.getVariable("concord");
         if (cfg == null) {
-            throw new IllegalArgumentException("Concord cfg not found");
+            return Optional.empty();
         }
 
-        return cfg.get(key);
+        return Optional.ofNullable(cfg.get(key));
     }
 }
