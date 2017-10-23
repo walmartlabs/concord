@@ -1,0 +1,23 @@
+flows:
+  default:
+  # calculates the difference between items1 and items2
+  - script: groovy
+    body: |
+      execution.setVariable("delta",
+        items2.stream()
+              .filter { a -> !items1.contains(a) }
+              .collect())
+
+  - log: "We got ${delta}"
+
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"
+  arguments:
+    items1:
+      - "a"
+      - "b"
+    items2:
+      - "a"
+      - "b"
+      - "d"

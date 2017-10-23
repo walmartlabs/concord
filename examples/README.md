@@ -34,6 +34,7 @@
 * [forms_override](forms_override) - how to override default values in forms;
 * [groovy](groovy) - running a Groovy script from a flow;
 * [groovy_rest](groovy_rest) - calling a REST endpoint from a flow using Groovy;
+* [juel_java_steams](juel_java_steams) - using expressions, Groovy and Java Streams;
 * [oneops_scaling](oneops_scaling) - how to scaling up or down a platform in OneOps;
 * [profiles](profiles) - how to use profiles;
 * [python_script](python_script) - running a Python script from a flow;
