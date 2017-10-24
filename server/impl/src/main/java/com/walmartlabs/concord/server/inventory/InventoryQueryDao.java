@@ -1,34 +1,29 @@
 package com.walmartlabs.concord.server.inventory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.inventory.InventoryQueryEntry;
 import com.walmartlabs.concord.server.jooq.tables.InventoryQueries;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record4;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Inventories.INVENTORIES;
 import static com.walmartlabs.concord.server.jooq.tables.InventoryQueries.INVENTORY_QUERIES;
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.value;
 
 @Named
 public class InventoryQueryDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
-
     @Inject
-    public InventoryQueryDao(
-            @Named("inventory") Configuration cfg) {
+    public InventoryQueryDao(Configuration cfg) {
         super(cfg);
-        this.objectMapper = new ObjectMapper();
     }
 
     public UUID getId(UUID inventoryId, String queryName) {
@@ -76,22 +71,6 @@ public class InventoryQueryDao extends AbstractDao {
         tx(tx -> delete(tx, queryId));
     }
 
-    public List<Object> exec(UUID queryId, Map<String, Object> params) {
-        InventoryQueryEntry q = get(queryId);
-        if (q == null) {
-            return null;
-        }
-
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.resultQuery(q.getText(), val(serialize(params)))
-                    .fetch(this::toExecResult);
-        }
-    }
-
-    private Object toExecResult(Record record) {
-        return deserialize((String) record.getValue(0));
-    }
-
     private UUID insert(DSLContext tx, UUID inventoryId, String queryName, String text) {
         return tx.insertInto(INVENTORY_QUERIES)
                 .columns(INVENTORY_QUERIES.INVENTORY_ID, INVENTORY_QUERIES.QUERY_NAME, INVENTORY_QUERIES.QUERY_TEXT)
@@ -115,30 +94,5 @@ public class InventoryQueryDao extends AbstractDao {
         tx.deleteFrom(INVENTORY_QUERIES)
                 .where(INVENTORY_QUERIES.QUERY_ID.eq(queryId))
                 .execute();
-    }
-
-    private String serialize(Object m) {
-        if (m == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(m);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Object deserialize(String ab) {
-        if (ab == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(ab, Object.class);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
     }
 }
