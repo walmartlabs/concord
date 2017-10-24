@@ -1,11 +1,13 @@
 package com.walmartlabs.concord.server.security.secret;
 
 import com.google.common.base.Throwables;
-import com.walmartlabs.concord.common.secret.*;
+import com.walmartlabs.concord.common.secret.BinaryDataSecret;
+import com.walmartlabs.concord.common.secret.KeyPair;
+import com.walmartlabs.concord.common.secret.SecretStoreType;
+import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.security.ServerKeyManager;
 import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
 
 import javax.inject.Inject;
@@ -20,16 +22,13 @@ public class SecretManager {
 
     private final SecretDao secretDao;
     private final SecretStoreConfiguration secretCfg;
-    private final ServerKeyManager serverKeyManager;
 
     @Inject
     public SecretManager(SecretDao secretDao,
-                         SecretStoreConfiguration secretCfg,
-                         ServerKeyManager serverKeyManager) {
+                         SecretStoreConfiguration secretCfg) {
 
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
-        this.serverKeyManager = serverKeyManager;
     }
 
     public KeyPair createKeyPair(String name, UUID teamId, String password) {
@@ -169,7 +168,7 @@ public class SecretManager {
 
     private byte[] getPwd(String pwd) {
         if (pwd == null) {
-            return serverKeyManager.getKey();
+            return secretCfg.getServerPwd();
         }
         return pwd.getBytes(StandardCharsets.UTF_8);
     }

@@ -1,5 +1,16 @@
 # Change log
 
+### Added
+
+- ansible: Inventory lookup plugin.
+
+### Changed
+
+- concord-server: added environment variable to override the
+server's password.
+
+
+
 ## [0.45.0] - 2017-10-20
 
 ### Added
