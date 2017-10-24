@@ -1,0 +1,26 @@
+flows:
+  default:
+  # read and parse a YAML file
+  - script: groovy
+    body: |
+      import com.fasterxml.jackson.databind.ObjectMapper
+      import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+
+      def om = new ObjectMapper(new YAMLFactory())
+      def x = om.readValue(new File("test.yml"), Map.class)
+      execution.setVariable("yamlData", x)
+  - log: "We got: ${yamlData}"
+
+  - script: groovy
+    body: |
+      import com.fasterxml.jackson.databind.ObjectMapper
+      import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+
+      def om = new ObjectMapper()
+      def x = om.readValue(new File("test.json"), Map.class)
+      execution.setVariable("jsonData", x)
+  - log: "We got: ${jsonData}"
+
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"
