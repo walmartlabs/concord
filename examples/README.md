@@ -46,6 +46,8 @@
 * [dynamic_forms](dynamic_forms) - using forms with fields added/removed dynamically;
 * [dynamic_tasks](dynamic_tasks) - using custom tasks provided with the process;
 * [forms_wizard](forms_wizard) - multi-step forms;
+* [inventory](inventory) - using Concord Inventory to retrieve Ansible's inventory data;
+* [inventory_lookup](inventory_lookup) - using Concord Inventory lookup plugin for Ansible;
 * [secrets](secrets) - working with Concord's Secrets storage;
 
 ## Expert

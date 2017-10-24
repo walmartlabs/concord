@@ -3,9 +3,9 @@
 SERVER_ADDR="$1"
 
 rm -rf target && mkdir target
-cp -R playbook .concord.yml target/
+cp -R playbook concord.yml target/
 
-cd target && zip -r payload.zip ./* .concord.yml > /dev/null && cd ..
+cd target && zip -r payload.zip ./* > /dev/null && cd ..
 
 echo "Sending the payload..."
 read -p "Username: " CURL_USER

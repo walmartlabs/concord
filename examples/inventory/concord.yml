@@ -1,0 +1,29 @@
+configuration:
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.45.0"
+    # pre-release version
+    - "http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/repositories/devtools-snapshots/com/walmartlabs/concord/plugins/concord-tasks/0.34.1-SNAPSHOT/concord-tasks-0.34.1-20171024.152116-5.jar"
+  arguments:
+    myVars:
+      ansible_connection: "local"
+    concord:
+      apiKey: "iCKnYBTPCbaikaRV6GdJDw" # user "demo"
+
+flows:
+  default:
+  - task: ansible2
+    in:
+      # arguments: inventory name, ansible host group name, query name, query params, additional inventory variables
+      inventory: "${inventory.ansible('myInventory', 'myHostsGroup', 'endpointsByZypperVersion', {'facter_zypper_version': '1.6.333'}, myVars)}"
+      # will produce a JSON structure like this:
+      # {
+      #   "myHostsGroup": {
+      #     "hosts": ["55.193.40.129"],
+      #     "vars": {
+      #       "ansible_connection": "local"
+      #     }
+      #   }
+
+      playbook: playbook/hello.yml
+      extraVars:
+        greetings: "Hi there!"

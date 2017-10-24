@@ -1,0 +1,22 @@
+configuration:
+  dependencies:
+    # pre-release versions
+    - "http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/repositories/devtools-snapshots/com/walmartlabs/concord/plugins/basic/ansible-tasks/0.45.1-SNAPSHOT/ansible-tasks-0.45.1-20171024.153059-8.jar"
+    - "http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/repositories/devtools-snapshots/com/walmartlabs/concord/plugins/concord-tasks/0.34.1-SNAPSHOT/concord-tasks-0.34.1-20171024.152116-5.jar"
+  arguments:
+    concord:
+      apiKey: "iCKnYBTPCbaikaRV6GdJDw" # user "demo"
+
+flows:
+  default:
+  - task: ansible2
+    in:
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      playbook: playbook/hello.yml
+      extraVars:
+        greetings: "Hi there!"

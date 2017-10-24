@@ -8,9 +8,9 @@ QUERY_NAME="lookupQuery"
 SERVER_ADDR="$1"
 
 # create inventory
-echo -e "\ncreating inventory ..."
+echo -e "\nCreating an inventory ..."
 curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: application/json" -d "{\"name\": \"$INVENTORY_NAME\"}" "http://${SERVER_ADDR}/api/v1/inventory"
 
 # create query
-echo -e "\ncreating query ..."
-curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: text/plain" --data-binary @query.sql "http://localhost:8001/api/v1/inventory/$INVENTORY_NAME/query/${QUERY_NAME}"
+echo -e "\nCreating a query ..."
+curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: text/plain" --data-binary @query.sql "http://${SERVER_ADDR}/api/v1/inventory/$INVENTORY_NAME/query/${QUERY_NAME}"
