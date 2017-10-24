@@ -1,9 +1,10 @@
 package com.walmartlabs.concord.server.inventory;
 
 import com.walmartlabs.concord.server.api.OperationResult;
-import com.walmartlabs.concord.server.api.inventory.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.concord.server.api.inventory.CreateInventoryQueryResponse;
+import com.walmartlabs.concord.server.api.inventory.DeleteInventoryQueryResponse;
+import com.walmartlabs.concord.server.api.inventory.InventoryQueryEntry;
+import com.walmartlabs.concord.server.api.inventory.InventoryQueryResource;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -16,15 +17,15 @@ import java.util.UUID;
 @Named
 public class InventoryQueryResourceImpl implements InventoryQueryResource, Resource {
 
-    private static final Logger log = LoggerFactory.getLogger(InventoryQueryResourceImpl.class);
-
     private final InventoryDao inventoryDao;
     private final InventoryQueryDao inventoryQueryDao;
+    private final InventoryQueryExecDao inventoryQueryExecDao;
 
     @Inject
-    public InventoryQueryResourceImpl(InventoryDao inventoryDao, InventoryQueryDao inventoryQueryDao) {
+    public InventoryQueryResourceImpl(InventoryDao inventoryDao, InventoryQueryDao inventoryQueryDao, InventoryQueryExecDao inventoryQueryExecDao) {
         this.inventoryDao = inventoryDao;
         this.inventoryQueryDao = inventoryQueryDao;
+        this.inventoryQueryExecDao = inventoryQueryExecDao;
     }
 
     @Override
@@ -60,7 +61,7 @@ public class InventoryQueryResourceImpl implements InventoryQueryResource, Resou
     public List<Object> exec(String inventoryName, String queryName, Map<String, Object> params) {
         UUID inventoryId = assertInventory(inventoryName);
         UUID queryId = assertQuery(inventoryId, queryName);
-        return inventoryQueryDao.exec(queryId, params);
+        return inventoryQueryExecDao.exec(queryId, params);
     }
 
     private UUID assertInventory(String inventoryName) {
