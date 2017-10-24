@@ -94,7 +94,7 @@ public class ProjectDao extends AbstractDao {
                     REPOSITORIES.REPO_PATH,
                     SECRETS.SECRET_NAME)
                     .from(REPOSITORIES)
-                    .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.REPO_ID))
+                    .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID))
                     .where(REPOSITORIES.PROJECT_ID.eq(projectId))
                     .fetch();
 
