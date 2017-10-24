@@ -6,7 +6,6 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
@@ -201,11 +200,24 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return start(projectPipeline, payload, sync);
     }
 
+    private boolean isEmpty(InputStream in) {
+        try {
+            return in.available() <= 0;
+        } catch (IOException e) {
+            throw new WebApplicationException("Internal error", e);
+        }
+    }
+
     @Override
     @Validate
     @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, InputStream in, UUID parentInstanceId,
                                       boolean sync, String[] out) {
+
+        // allow empty POST requests
+        if (isEmpty(in)) {
+            return start(entryPoint, parentInstanceId, sync, out);
+        }
 
         assertInstanceId(parentInstanceId);
 

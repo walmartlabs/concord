@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.api.process;
 
-import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -127,7 +126,7 @@ public interface ProcessResource {
     @Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
-    StartProcessResponse start(@ApiParam @PathParam("entryPoint") @ConcordKey String entryPoint,
+    StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam InputStream in,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
