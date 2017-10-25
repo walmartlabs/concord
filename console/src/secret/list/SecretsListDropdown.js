@@ -14,7 +14,7 @@ class SecretsListDropdown extends Component {
     }
 
     render() {
-        const {data, isLoading, ...rest} = this.props;
+        const {data, isLoading, loadFn, ...rest} = this.props;
 
         let options = [];
         if (data) {
