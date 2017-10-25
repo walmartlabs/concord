@@ -3,6 +3,8 @@ package com.walmartlabs.concord.project.yaml;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.project.yaml.model.YamlFormDefinition;
 import com.walmartlabs.concord.project.yaml.model.YamlFormField;
+import io.takari.bpm.model.form.DefaultFormFields;
+import io.takari.bpm.model.form.DefaultFormFields.BooleanField;
 import io.takari.bpm.model.form.DefaultFormFields.DecimalField;
 import io.takari.bpm.model.form.DefaultFormFields.IntegerField;
 import io.takari.bpm.model.form.DefaultFormFields.StringField;
@@ -68,6 +70,9 @@ public final class YamlFormConverter {
             case DecimalField.TYPE: {
                 options.put(DecimalField.MIN, coerceToDouble(opts.remove("min")));
                 options.put(DecimalField.MAX, coerceToDouble(opts.remove("max")));
+                break;
+            }
+            case BooleanField.TYPE: {
                 break;
             }
             default:

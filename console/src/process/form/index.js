@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
 import {push as pushHistory} from "react-router-redux";
-import {Button, Dropdown, Form, Header, Input, Label, Loader} from "semantic-ui-react";
+import {Button, Checkbox, Dropdown, Form, Header, Input, Label, Loader} from "semantic-ui-react";
 import ErrorMessage from "../../shared/ErrorMessage";
 import * as actions from "./actions";
 import * as selectors from "./reducers";
@@ -63,7 +63,9 @@ class ProcessForm extends Component {
                 return this.renderStringField(f, value);
             case "int":
             case "decimal":
-                return this.renderIntField(f, value);
+                return this.renderNumberField(f, value);
+            case "boolean":
+                return this.renderBooleanField(f, value);
             default:
                 return <p key={f.name}>Unknown field type: {f.type}</p>
         }
@@ -87,25 +89,42 @@ class ProcessForm extends Component {
         </Form.Field>
     }
 
-    renderIntField({name, label, type}, value) {
+    renderNumberField({name, label, type}, value) {
         const {data: {errors}} = this.props;
         const error = errors ? errors[name] : undefined;
 
         return <Form.Field key={name} error={error && true}>
             <label>{label}</label>
 
-            { this.renderInput(name, type, value, "number") }
+            { this.renderInput(name, type, value, "number", {step: type === "decimal" ? "any" : "1"}) }
 
             { error && <Label basic color="red" pointing>{error}</Label> }
         </Form.Field>
     }
 
-    renderInput(name, type, value, inputType) {
+    renderBooleanField({name, label, type}, value) {
+        const {data: {errors}, submitting, completed} = this.props;
+        const error = errors ? errors[name] : undefined;
+
+        return <Form.Field key={name} error={error && true}>
+            <label>{label}</label>
+
+            <Checkbox name={name}
+                      disabled={submitting || completed}
+                      defaultChecked={value}
+                      onChange={this.handleCheckboxInput(name)}/>
+
+            {error && <Label basic color="red" pointing>{error}</Label>}
+        </Form.Field>
+    }
+
+    renderInput(name, type, value, inputType, opts) {
         const {submitting, completed} = this.props;
         return <Input name={name}
                       disabled={submitting || completed}
                       defaultValue={value}
                       type={inputType}
+                      {...opts}
                       onChange={this.handleInput(name, type)}/>;
     }
 
@@ -135,11 +154,23 @@ class ProcessForm extends Component {
         onReturnFn(instanceId);
     }
 
+    handleCheckboxInput(fieldName) {
+        return (ev, {checked}) => {
+            let o = {};
+            o[fieldName] = checked;
+            this.setState(o);
+        };
+    }
+
     handleInput(fieldName, type) {
         return ({target}) => {
             let v = target.value;
             if (type === "int") {
                 v = target.valueAsNumber;
+            } else if (type === "decimal") {
+                v = target.valueAsNumber;
+            } else if (type === "boolean") {
+                v = target.valueAsBoolean;
             }
 
             let o = {};

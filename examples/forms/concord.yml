@@ -2,9 +2,16 @@ flows:
   default:
   - form: myForm
   - log: "Hello, ${myForm.firstName} ${myForm.lastName}"
+  - log: "We got your password: ${myForm.password}"
+  - log: "We know that you are ${myForm.age} years old"
+  - log: "And your height is: ${myForm.money}"
+  - log: "'Remember me' checked: ${myForm.rememberMe}"
 
 forms:
   myForm:
   - firstName: { label: "First name", type: "string" }
   - lastName: { label: "Last name", type: "string" }
   - password:  { label: "Password", type: "string", inputType: 'password' }
+  - age: { label: "Age", type: "int?" }
+  - height: { label: "Height", type: "decimal?" }
+  - rememberMe: { label: "Remember me", type: "boolean", value: true }
