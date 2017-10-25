@@ -1,0 +1,9 @@
+flows:
+  default:
+  - script: ruby
+    body: |
+      puts "Hello!"
+
+configuration:
+  dependencies:
+  - "mvn://org.jruby:jruby:9.1.13.0"
