@@ -11,6 +11,9 @@ flows:
         country: Canada
 
   - log: "Hello, ${myForm.firstName} ${myForm.lastName}"
+  - if: ${myForm.tosAgree}
+    then:
+      - log: "${myForm.firstName} says: I have agreed to the Terms and Conditions"
 
 forms:
   myForm:
@@ -18,6 +21,7 @@ forms:
   - lastName: { label: "Last name", type: "string" }
   - age: { label: "Age", type: "int", min: 21, max: 999 }
   - color: { label: "Favorite color", type: "string", allow: ["red", "green", "blue"] }
+  - tosAgree: { label: "Terms and conditions read", type: "boolean" }
 
 configuration:
   arguments:

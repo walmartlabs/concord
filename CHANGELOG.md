@@ -2,6 +2,7 @@
 
 ### Added
 
+- concord-server, concord-console: support for boolean form fields;
 - ansible: Inventory lookup plugin.
 
 ### Changed

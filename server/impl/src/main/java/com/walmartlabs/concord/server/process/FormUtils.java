@@ -49,15 +49,12 @@ public final class FormUtils {
         FormDefinition fd = form.getFormDefinition();
 
         Map<String, Object> m2 = new HashMap<>();
-        for (Map.Entry<String, Object> e : m.entrySet()) {
-            String k = e.getKey();
+        for (FormField f : fd.getFields()) {
+            String k = f.getName();
 
-            FormField f = findField(fd, k);
-            if (f == null) {
-                continue;
-            }
+            Object v = m.get(k);
+            v = convert(locale, fd.getName(), f, null, v);
 
-            Object v = convert(locale, fd.getName(), f, null, e.getValue());
             boolean isOptional = f.getCardinality() == FormField.Cardinality.ONE_OR_NONE || f.getCardinality() == FormField.Cardinality.ANY;
             if (v == null && !isOptional) {
                 continue;
@@ -71,12 +68,19 @@ public final class FormUtils {
     private static Object convert(FormValidatorLocale locale, String formName, FormField f, Integer idx, Object v) throws ValidationException {
         if (v instanceof String) {
             String s = (String) v;
-            if (s.isEmpty()) {
-                return null;
-            }
 
             switch (f.getType()) {
+                case DefaultFormFields.StringField.TYPE: {
+                    if (s.isEmpty()) {
+                        return null;
+                    }
+                    break;
+                }
                 case DefaultFormFields.IntegerField.TYPE: {
+                    if (s.isEmpty()) {
+                        return null;
+                    }
+
                     try {
                         return Long.parseLong(s);
                     } catch (NumberFormatException e) {
@@ -84,11 +88,22 @@ public final class FormUtils {
                     }
                 }
                 case DefaultFormFields.DecimalField.TYPE: {
+                    if (s.isEmpty()) {
+                        return null;
+                    }
+
                     try {
                         return Double.parseDouble(s);
                     } catch (NumberFormatException e) {
                         throw new ValidationException(f, s, locale.expectedDecimal(formName, f, idx, s));
                     }
+                }
+                case DefaultFormFields.BooleanField.TYPE: {
+                    if (s.isEmpty()) {
+                        // default HTML checkbox will be submitted as an empty value if checked
+                        return true;
+                    }
+                    break;
                 }
             }
         } else if (v instanceof List) {
@@ -104,6 +119,10 @@ public final class FormUtils {
                 i++;
             }
             return ll;
+        } else if (v == null) {
+            if (f.getType().equals(DefaultFormFields.BooleanField.TYPE)) {
+                return false;
+            }
         }
 
         return v;

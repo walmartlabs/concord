@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,9 +60,13 @@ public class FormIT extends AbstractServerIT {
 
         formId = forms.get(0).getFormInstanceId();
 
-        data = Collections.singletonMap("lastName", lastName);
+        data = new HashMap<>();
+        data.put("lastName", lastName);
+        data.put("rememberMe", true);
+
         fsr = formResource.submit(spr.getInstanceId(), formId, data);
         assertTrue(fsr.isOk());
+        assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         psr = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, psr.getStatus());
@@ -72,6 +77,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*" + firstName + " " + lastName + ".*", ab);
         assertLog(".*100323.*", ab);
         assertLog(".*red.*", ab);
+        assertLog(".*AAA true.*", ab);
     }
 
     @Test(timeout = 30000)
