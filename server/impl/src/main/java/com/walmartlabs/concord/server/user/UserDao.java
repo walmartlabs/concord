@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.tables.Admins.ADMINS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PERMISSIONS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
@@ -75,14 +76,16 @@ public class UserDao extends AbstractDao {
                     .where(USER_PERMISSIONS.USER_ID.eq(id))
                     .fetchInto(String.class);
 
-            List<TeamEntry> teams = tx.select(TEAMS.TEAM_ID, TEAMS.TEAM_NAME, TEAMS.IS_ACTIVE)
+            List<TeamEntry> teams = tx.select(TEAMS.TEAM_ID, TEAMS.TEAM_NAME)
                     .from(USER_TEAMS)
                     .join(TEAMS).on(TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID))
                     .where(USER_TEAMS.USER_ID.eq(id).and(TEAMS.IS_ACTIVE.isTrue()))
-                    .fetch(e -> new TeamEntry(e.value1(), e.value2(), null, e.value3()));
+                    .fetch(e -> new TeamEntry(e.value1(), e.value2(), null, null, null));
+
+            boolean admin = tx.fetchExists(tx.selectFrom(ADMINS).where(ADMINS.USER_ID.eq(id)));
 
             return new UserEntry(r.get(USERS.USER_ID), r.get(USERS.USERNAME),
-                    new HashSet<>(perms), new HashSet<>(teams));
+                    new HashSet<>(perms), new HashSet<>(teams), admin);
         }
     }
 

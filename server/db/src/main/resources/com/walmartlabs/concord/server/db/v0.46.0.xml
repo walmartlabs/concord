@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="46000" author="ibodrov@gmail.com">
+        <addColumn tableName="TEAMS">
+            <column name="VISIBILITY" type="varchar(128)" defaultValue="PUBLIC">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="46010" author="ibodrov@gmail.com">
+        <dropPrimaryKey tableName="USER_TEAMS"/>
+
+        <addColumn tableName="USER_TEAMS">
+            <column name="TEAM_ROLE" type="varchar(128)" defaultValue="WRITER">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addPrimaryKey tableName="USER_TEAMS" columnNames="USER_ID, TEAM_ID, TEAM_ROLE"/>
+
+        <sql>
+            update USER_TEAMS set TEAM_ROLE = 'OWNER' where USER_ID = '230c5c9c-d9a7-11e6-bcfd-bb681c07b26c'
+        </sql>
+    </changeSet>
+
+    <changeSet id="46020" author="ibodrov@gmail.com">
+        <createTable tableName="ADMINS">
+            <column name="USER_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="ADMINS"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="FK_ADMINS_U_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"/>
+
+        <sql>
+            insert into ADMINS (USER_ID) values ('230c5c9c-d9a7-11e6-bcfd-bb681c07b26c')
+        </sql>
+    </changeSet>
+</databaseChangeLog>

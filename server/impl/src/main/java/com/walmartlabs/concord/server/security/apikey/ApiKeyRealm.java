@@ -39,7 +39,7 @@ public class ApiKeyRealm extends AuthorizingRealm {
         return userManager.get(t.getUserId())
                 .map(u -> {
                     // TODO roles?
-                    UserPrincipal p = new UserPrincipal("apikey", u.getId(), u.getName(), null);
+                    UserPrincipal p = new UserPrincipal("apikey", u.getId(), u.getName(), null, u.isAdmin());
                     return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
                 })
                 .orElse(null);

@@ -26,16 +26,20 @@ public class TeamEntry implements Serializable {
 
     private final Boolean enabled;
 
+    private final TeamVisibility visibility;
+
     @JsonCreator
     public TeamEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
                      @JsonProperty("description") String description,
-                     @JsonProperty("boolean") Boolean enabled) {
+                     @JsonProperty("boolean") Boolean enabled,
+                     @JsonProperty("visiblity") TeamVisibility visibility) {
 
         this.id = id;
         this.name = name;
         this.description = description;
         this.enabled = enabled;
+        this.visibility = visibility;
     }
 
     public UUID getId() {
@@ -54,6 +58,10 @@ public class TeamEntry implements Serializable {
         return enabled;
     }
 
+    public TeamVisibility getVisibility() {
+        return visibility;
+    }
+
     @Override
     public String toString() {
         return "TeamEntry{" +
@@ -61,6 +69,7 @@ public class TeamEntry implements Serializable {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", enabled=" + enabled +
+                ", visibility=" + visibility +
                 '}';
     }
 }

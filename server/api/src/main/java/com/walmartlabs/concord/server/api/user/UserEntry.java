@@ -17,17 +17,20 @@ public class UserEntry implements Serializable {
     private final String name;
     private final Set<String> permissions;
     private final Set<TeamEntry> teams;
+    private final boolean admin;
 
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
                      @JsonProperty("permissions") Set<String> permissions,
-                     @JsonProperty("teams") Set<TeamEntry> teams) {
+                     @JsonProperty("teams") Set<TeamEntry> teams,
+                     @JsonProperty("admin") boolean admin) {
 
         this.id = id;
         this.name = name;
         this.permissions = permissions;
         this.teams = teams;
+        this.admin = admin;
     }
 
     public UUID getId() {
@@ -46,6 +49,10 @@ public class UserEntry implements Serializable {
         return teams;
     }
 
+    public boolean isAdmin() {
+        return admin;
+    }
+
     @Override
     public String toString() {
         return "UserEntry{" +
@@ -53,6 +60,7 @@ public class UserEntry implements Serializable {
                 ", name='" + name + '\'' +
                 ", permissions=" + permissions +
                 ", teams=" + teams +
+                ", admin=" + admin +
                 '}';
     }
 }

@@ -8,10 +8,7 @@ import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRespons
 import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
 import com.walmartlabs.concord.server.api.security.ldap.LdapResource;
 import com.walmartlabs.concord.server.api.security.secret.*;
-import com.walmartlabs.concord.server.api.team.CreateTeamResponse;
-import com.walmartlabs.concord.server.api.team.TeamEntry;
-import com.walmartlabs.concord.server.api.team.TeamResource;
-import com.walmartlabs.concord.server.api.team.TeamUserEntry;
+import com.walmartlabs.concord.server.api.team.*;
 import com.walmartlabs.concord.server.api.user.*;
 import org.junit.Test;
 
@@ -31,7 +28,7 @@ public class CrudIT extends AbstractServerIT {
         TeamResource teamResource = proxy(TeamResource.class);
 
         String teamName = "team_" + System.currentTimeMillis();
-        CreateTeamResponse ctr = teamResource.createOrUpdate(new TeamEntry(null, teamName, null, null));
+        CreateTeamResponse ctr = teamResource.createOrUpdate(new TeamEntry(null, teamName, null, null, null));
         assertNotNull(ctr.getId());
 
         TeamEntry te = teamResource.get(teamName);
@@ -56,7 +53,9 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        teamResource.addUsers(teamName, Arrays.asList(userA, userB));
+        teamResource.addUsers(teamName, Arrays.asList(
+                new TeamUserEntry(userA, TeamRole.READER),
+                new TeamUserEntry(userB, TeamRole.READER)));
 
         List<TeamUserEntry> teamUserEntries = teamResource.listUsers(teamName);
         TeamUserEntry entryA = findTeamUser(teamUserEntries, userA);

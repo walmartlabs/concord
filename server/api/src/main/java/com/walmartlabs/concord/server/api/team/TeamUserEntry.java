@@ -13,12 +13,19 @@ public class TeamUserEntry implements Serializable {
 
     private final UUID id;
     private final String username;
+    private final TeamRole role;
+
+    public TeamUserEntry(String username, TeamRole role) {
+        this(null, username, role);
+    }
 
     @JsonCreator
     public TeamUserEntry(@JsonProperty("id") UUID id,
-                         @JsonProperty("username") String username) {
+                         @JsonProperty("username") String username,
+                         @JsonProperty("role") TeamRole role) {
         this.id = id;
         this.username = username;
+        this.role = role;
     }
 
     public UUID getId() {
@@ -29,11 +36,16 @@ public class TeamUserEntry implements Serializable {
         return username;
     }
 
+    public TeamRole getRole() {
+        return role;
+    }
+
     @Override
     public String toString() {
         return "TeamUserEntry{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
+                ", role=" + role +
                 '}';
     }
 }

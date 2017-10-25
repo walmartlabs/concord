@@ -16,21 +16,16 @@ public class CreateUserRequest implements Serializable {
 
     private final Set<String> permissions;
 
-    private final Set<String> teams;
-
-    public CreateUserRequest(String username,
-                             Set<String> permissions) {
-        this(username, permissions, null);
+    public CreateUserRequest(String username) {
+        this(username, null);
     }
 
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
-                             @JsonProperty("permissions") Set<String> permissions,
-                             @JsonProperty("teams") Set<String> teams) {
+                             @JsonProperty("permissions") Set<String> permissions) {
 
         this.username = username;
         this.permissions = permissions;
-        this.teams = teams;
     }
 
     public String getUsername() {
@@ -41,16 +36,11 @@ public class CreateUserRequest implements Serializable {
         return permissions;
     }
 
-    public Set<String> getTeams() {
-        return teams;
-    }
-
     @Override
     public String toString() {
         return "CreateUserRequest{" +
                 "username='" + username + '\'' +
                 ", permissions=" + permissions +
-                ", teams=" + teams +
                 '}';
     }
 }

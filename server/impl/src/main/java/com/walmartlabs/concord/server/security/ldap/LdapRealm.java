@@ -111,7 +111,7 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         UserEntry user = userManager.getOrCreate(username);
-        UserPrincipal p = new UserPrincipal(REALM_NAME, user.getId(), user.getName(), ldapInfo);
+        UserPrincipal p = new UserPrincipal(REALM_NAME, user.getId(), user.getName(), ldapInfo, user.isAdmin());
 
         return new SimpleAccount(Arrays.asList(p, t), t, getName());
     }

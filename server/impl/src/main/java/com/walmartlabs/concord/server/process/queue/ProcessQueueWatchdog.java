@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
@@ -169,7 +170,7 @@ public class ProcessQueueWatchdog {
 
             return tx.select(q.INSTANCE_ID, q.PROJECT_ID, q.INITIATOR)
                     .from(q)
-                    .where(q.PROCESS_KIND.in(toArray(HANDLED_PROCESS_KINDS))
+                    .where(q.PROCESS_KIND.in(Utils.toString(HANDLED_PROCESS_KINDS))
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
                             .and(q.CREATED_AT.greaterOrEqual(maxAge))
                             .and(existsMarker(q.INSTANCE_ID, entry.marker))
@@ -200,21 +201,13 @@ public class ProcessQueueWatchdog {
         private Condition noRunningHandlers(DSLContext tx, Field<UUID> parentInstanceId) {
             return notExists(tx.selectFrom(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
-                            .and(V_PROCESS_QUEUE.CURRENT_STATUS.in(toArray(ACTIVE_PROCESS_STATUSES)))
-                            .and(V_PROCESS_QUEUE.PROCESS_KIND.in(toArray(SPECIAL_HANDLERS)))));
+                            .and(V_PROCESS_QUEUE.CURRENT_STATUS.in(Utils.toString(ACTIVE_PROCESS_STATUSES)))
+                            .and(V_PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
         }
 
         private Condition existsMarker(Field<UUID> instanceId, String marker) {
             return exists(selectFrom(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
                     .and(PROCESS_STATE.ITEM_PATH.eq(marker))));
-        }
-
-        private static String[] toArray(Enum<?>... e) {
-            String[] as = new String[e.length];
-            for (int i = 0; i < e.length; i++) {
-                as[i] = e[i].toString();
-            }
-            return as;
         }
 
         private static ProcessEntry toEntry(Record3<UUID, UUID, String> r) {

@@ -53,6 +53,10 @@ public class ServerClient {
         return apiKey;
     }
 
+    public void resetApiKey() {
+        this.apiKey = DEFAULT_API_KEY;
+    }
+
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
     }

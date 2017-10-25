@@ -11,12 +11,14 @@ public class UserPrincipal implements Serializable {
     private final UUID id;
     private final String username;
     private final LdapInfo ldapInfo;
+    private final boolean admin;
 
-    public UserPrincipal(String realm, UUID id, String username, LdapInfo ldapInfo) {
+    public UserPrincipal(String realm, UUID id, String username, LdapInfo ldapInfo, boolean admin) {
         this.realm = realm;
         this.id = id;
         this.username = username;
         this.ldapInfo = ldapInfo;
+        this.admin = admin;
     }
 
     public String getRealm() {
@@ -33,5 +35,20 @@ public class UserPrincipal implements Serializable {
 
     public LdapInfo getLdapInfo() {
         return ldapInfo;
+    }
+
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    @Override
+    public String toString() {
+        return "UserPrincipal{" +
+                "realm='" + realm + '\'' +
+                ", id=" + id +
+                ", username='" + username + '\'' +
+                ", ldapInfo=" + ldapInfo +
+                ", admin=" + admin +
+                '}';
     }
 }

@@ -1,13 +1,15 @@
 package com.walmartlabs.concord.server.team;
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.api.team.TeamEntry;
+import com.walmartlabs.concord.server.api.team.TeamRole;
 import com.walmartlabs.concord.server.api.team.TeamUserEntry;
+import com.walmartlabs.concord.server.api.team.TeamVisibility;
+import com.walmartlabs.concord.server.jooq.tables.Teams;
 import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;
-import org.jooq.BatchBindStep;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Record2;
+import com.walmartlabs.concord.server.jooq.tables.records.UserTeamsRecord;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -19,6 +21,8 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.selectFrom;
 
 @Named
 public class TeamDao extends AbstractDao {
@@ -30,6 +34,11 @@ public class TeamDao extends AbstractDao {
         super(cfg);
     }
 
+    @Override
+    public void tx(Tx t) {
+        super.tx(t);
+    }
+
     public UUID getId(String name) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(TEAMS.TEAM_ID)
@@ -39,14 +48,14 @@ public class TeamDao extends AbstractDao {
         }
     }
 
-    public UUID insert(String name, String description, boolean isActive) {
-        return txResult(tx -> insert(tx, name, description, isActive));
+    public UUID insert(String name, String description, boolean isActive, TeamVisibility visibility) {
+        return txResult(tx -> insert(tx, name, description, isActive, visibility));
     }
 
-    public UUID insert(DSLContext tx, String name, String description, boolean isActive) {
+    public UUID insert(DSLContext tx, String name, String description, boolean isActive, TeamVisibility visibility) {
         return tx.insertInto(TEAMS)
-                .columns(TEAMS.TEAM_NAME, TEAMS.DESCRIPTION, TEAMS.IS_ACTIVE)
-                .values(name, description, isActive)
+                .columns(TEAMS.TEAM_NAME, TEAMS.DESCRIPTION, TEAMS.IS_ACTIVE, TEAMS.VISIBILITY)
+                .values(name, description, isActive, visibility.toString())
                 .returning(TEAMS.TEAM_ID)
                 .fetchOne()
                 .getTeamId();
@@ -88,15 +97,24 @@ public class TeamDao extends AbstractDao {
                 .fetchOne(TeamDao::toEntry);
     }
 
-    public List<TeamEntry> list() {
+    public List<TeamEntry> list(UUID currentUserId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx);
+            return list(tx, currentUserId);
         }
     }
 
-    public List<TeamEntry> list(DSLContext tx) {
-        return tx.selectFrom(TEAMS)
-                .orderBy(TEAMS.TEAM_NAME)
+    public List<TeamEntry> list(DSLContext tx, UUID currentUserId) {
+        Teams t = TEAMS.as("t");
+
+        Condition filterByTeamMember = exists(selectFrom(USER_TEAMS)
+                .where(USER_TEAMS.USER_ID.eq(currentUserId)
+                        .and(USER_TEAMS.TEAM_ID.eq(t.TEAM_ID))));
+
+        return tx.selectFrom(t)
+                .where(t.IS_ACTIVE.isTrue()
+                        .and(t.VISIBILITY.eq(TeamVisibility.PUBLIC.toString())
+                                .or(filterByTeamMember)))
+                .orderBy(t.TEAM_NAME)
                 .fetch(TeamDao::toEntry);
     }
 
@@ -107,33 +125,26 @@ public class TeamDao extends AbstractDao {
     }
 
     public List<TeamUserEntry> listUsers(DSLContext tx, UUID teamId) {
-        return tx.select(USERS.USER_ID, USERS.USERNAME)
+        return tx.select(USERS.USER_ID, USERS.USERNAME, USER_TEAMS.TEAM_ROLE)
                 .from(USER_TEAMS)
                 .innerJoin(USERS).on(USERS.USER_ID.eq(USER_TEAMS.USER_ID))
                 .where(USER_TEAMS.TEAM_ID.eq(teamId))
                 .orderBy(USERS.USERNAME)
-                .fetch((Record2<UUID, String> r) ->
-                        new TeamUserEntry(r.get(USERS.USER_ID), r.get(USERS.USERNAME)));
+                .fetch((Record3<UUID, String, String> r) ->
+                        new TeamUserEntry(r.get(USERS.USER_ID),
+                                r.get(USERS.USERNAME),
+                                TeamRole.valueOf(r.get(USER_TEAMS.TEAM_ROLE))));
     }
 
-    public void addUsers(UUID teamId, Collection<UUID> userIds) {
-        tx(tx -> addUsers(tx, teamId, userIds));
+    public void addUser(UUID teamId, UUID userId, TeamRole role) {
+        tx(tx -> addUsers(tx, teamId, userId, role));
     }
 
-    public void addUsers(DSLContext tx, UUID teamId, Collection<UUID> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            return;
-        }
-
-        BatchBindStep b = tx.batch(tx.insertInto(USER_TEAMS)
-                .columns(USER_TEAMS.USER_ID, USER_TEAMS.TEAM_ID)
-                .values((UUID) null, null));
-
-        for (UUID userId : userIds) {
-            b.bind(userId, teamId);
-        }
-
-        b.execute();
+    public void addUsers(DSLContext tx, UUID teamId, UUID userId, TeamRole role) {
+        tx.insertInto(USER_TEAMS)
+                .columns(USER_TEAMS.TEAM_ID, USER_TEAMS.USER_ID, USER_TEAMS.TEAM_ROLE)
+                .values(teamId, userId, role.toString())
+                .execute();
     }
 
     public void removeUsers(UUID teamId, Collection<UUID> userIds) {
@@ -151,7 +162,26 @@ public class TeamDao extends AbstractDao {
                 .execute();
     }
 
+    public boolean hasUser(UUID teamId, UUID userId, TeamRole... roles) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return hasUser(tx, teamId, userId, roles);
+        }
+    }
+
+    public boolean hasUser(DSLContext tx, UUID teamId, UUID userId, TeamRole... roles) {
+        SelectConditionStep<UserTeamsRecord> q = tx.selectFrom(USER_TEAMS)
+                .where(USER_TEAMS.TEAM_ID.eq(teamId)
+                        .and(USER_TEAMS.USER_ID.eq(userId)));
+
+        if (roles != null && roles.length != 0) {
+            q.and(USER_TEAMS.TEAM_ROLE.in(Utils.toString(roles)));
+        }
+
+        return tx.fetchExists(q);
+    }
+
     private static TeamEntry toEntry(TeamsRecord r) {
-        return new TeamEntry(r.getTeamId(), r.getTeamName(), r.getDescription(), r.getIsActive());
+        return new TeamEntry(r.getTeamId(), r.getTeamName(), r.getDescription(),
+                r.getIsActive(), TeamVisibility.valueOf(r.getVisibility()));
     }
 }

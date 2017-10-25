@@ -64,7 +64,7 @@ public interface TeamResource {
      * Adds a list of users to a team.
      *
      * @param teamName
-     * @param usernames
+     * @param users
      * @return
      */
     @PUT
@@ -73,7 +73,7 @@ public interface TeamResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     AddTeamUsersResponse addUsers(@ApiParam @PathParam("teamName") @ConcordKey String teamName,
-                                  @ApiParam Collection<String> usernames);
+                                  @ApiParam Collection<TeamUserEntry> users);
 
     /**
      * Removes a list of users from a team.

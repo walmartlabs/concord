@@ -68,12 +68,14 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
             return null;
         }
 
-        try {
-            if (ldapManager.getInfo(username) == null) {
-                throw new ValidationErrorsException("User not found: " + username);
+        if (!userManager.getId(username).isPresent()) {
+            try {
+                if (ldapManager.getInfo(username) == null) {
+                    throw new ValidationErrorsException("LDAP user not found: " + username);
+                }
+            } catch (NamingException e) {
+                throw new WebApplicationException(e);
             }
-        } catch (NamingException e) {
-            throw new WebApplicationException(e);
         }
 
         UserEntry entry = userManager.getOrCreate(username);

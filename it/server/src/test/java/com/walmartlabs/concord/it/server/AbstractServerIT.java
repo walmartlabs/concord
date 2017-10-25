@@ -51,6 +51,10 @@ public abstract class AbstractServerIT {
         return serverClient.getLog(logFileName);
     }
 
+    protected void resetApiKey() {
+        serverClient.resetApiKey();
+    }
+
     protected void setApiKey(String apiKey) {
         serverClient.setApiKey(apiKey);
     }

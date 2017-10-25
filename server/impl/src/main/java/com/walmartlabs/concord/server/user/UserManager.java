@@ -1,13 +1,14 @@
 package com.walmartlabs.concord.server.user;
 
-import com.walmartlabs.concord.server.api.team.TeamEntry;
+import com.walmartlabs.concord.server.api.team.TeamRole;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.team.TeamDao;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Named
 public class UserManager {
@@ -22,13 +23,13 @@ public class UserManager {
     }
 
     public UserEntry getOrCreate(String username) {
-        return getOrCreate(username, null, null);
+        return getOrCreate(username, null);
     }
 
-    public UserEntry getOrCreate(String username, Set<String> teamNames, Set<String> permissions) {
+    public UserEntry getOrCreate(String username, Set<String> permissions) {
         UUID id = userDao.getId(username);
         if (id == null) {
-            return create(username, teamNames, permissions);
+            return create(username, permissions);
         }
         return userDao.get(id);
     }
@@ -43,31 +44,8 @@ public class UserManager {
     }
 
     public UserEntry create(String username, Set<String> permissions) {
-        return create(username, null, permissions);
-    }
-
-    public UserEntry create(String username, Set<String> teamNames, Set<String> permissions) {
-        if (teamNames == null) {
-            TeamEntry team = teamDao.get(TeamDao.DEFAULT_TEAM_ID);
-            if (team == null) {
-                throw new ValidationErrorsException("Can't find the default team");
-            }
-
-            teamNames = Collections.singleton(team.getName());
-        }
-
         UUID id = userDao.insert(username, permissions);
-
-        Collection<UUID> uIds = Collections.singleton(id);
-        for (String tName : teamNames) {
-            UUID tId = teamDao.getId(tName);
-            if (tId == null) {
-                throw new ValidationErrorsException("Unknown team: " + tName);
-            }
-
-            teamDao.addUsers(tId, uIds);
-        }
-
+        teamDao.addUser(TeamDao.DEFAULT_TEAM_ID, id, TeamRole.WRITER);
         return userDao.get(id);
     }
 }
