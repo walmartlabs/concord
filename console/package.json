@@ -10,7 +10,7 @@
     "enzyme-to-json": "^3.0.1",
     "express": "4.16.2",
     "express-http-proxy": "1.0.7",
-    "flow-bin": "0.57.3",
+    "flow-bin": "0.56.0",
     "jest": "^21.1.0",
     "jest-cli": "^21.1.0",
     "jest-enzyme": "^4.0.0",
@@ -31,14 +31,14 @@
     "react": "15.6.2",
     "react-dom": "15.6.2",
     "react-redux": "5.0.6",
-    "redux-form": "7.1.2",
+    "redux-form": "7.1.1",
     "react-router": "3.0.5",
     "react-router-redux": "4.0.8",
     "redux": "3.7.2",
     "redux-logger": "3.0.6",
-    "redux-saga": "0.16.0",
+    "redux-saga": "0.15.6",
     "semantic-ui-css": "^2.2.12",
-    "semantic-ui-react": "0.75.1"
+    "semantic-ui-react": "0.74.2"
   },
   "scripts": {
     "start": "react-scripts start",
