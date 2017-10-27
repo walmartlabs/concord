@@ -2,6 +2,7 @@
 
 ### Added
 
+- ansible: support for saving and using Ansible's "limit" files;
 - concord-server, concord-console: support for boolean form fields;
 - ansible: Inventory lookup plugin.
 

@@ -1,0 +1,13 @@
+flows:
+  default:
+  - task: ansible2
+    in:
+      playbook: playbook/hello.yml
+      user: "aRandomUser"
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+      saveRetryFile: true
+      extraVars:
+        msg: "Hi there!"

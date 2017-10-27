@@ -92,7 +92,7 @@ public class RunPlaybookTask2 implements Task {
                 .withUser(trim(getString(args, AnsibleConstants.USER_KEY)))
                 .withTags(trim(getString(args, AnsibleConstants.TAGS_KEY)))
                 .withExtraVars(extraVars)
-                .withLimit(getLimit(args))
+                .withLimit(getRetryFile(args))
                 .withDebug(debug)
                 .withVerboseLevel(getVerboseLevel(args))
                 .withEnv(env);
@@ -107,15 +107,16 @@ public class RunPlaybookTask2 implements Task {
         int code = p.waitFor();
         log.debug("execution -> done, code {}", code);
 
-        updateAttachment(payloadPath, code);
+        updateAnsibleStats(workDir, code);
 
         if (code != SUCCESS_EXIT_CODE) {
+            saveRetryFile(args, workDir);
             log.warn("Playbook is finished with code {}", code);
             throw new IllegalStateException("Process finished with with exit code " + code);
         }
     }
 
-    private String getLimit(Map<String, Object> args) {
+    private String getRetryFile(Map<String, Object> args) {
         boolean retry = getBoolean(args, AnsibleConstants.RETRY_KEY, false);
         if (retry) {
             return getNameWithoutExtension(getString(args, AnsibleConstants.PLAYBOOK_KEY)) + ".retry";
@@ -201,6 +202,7 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.RETRY_KEY);
         addIfPresent(ctx, args, AnsibleConstants.LIMIT_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.SAVE_RETRY_FILE);
 
         String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
@@ -480,18 +482,19 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private static void updateAttachment(String payloadPath, int code) throws IOException {
-        Path p = Paths.get(payloadPath, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, AnsibleConstants.STATS_FILE_NAME);
+    private static void updateAnsibleStats(Path workDir, int code) throws IOException {
+        Path p = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME).resolve(AnsibleConstants.STATS_FILE_NAME);
+        if (!Files.exists(p)) {
+            return;
+        }
 
         ObjectMapper om = new ObjectMapper()
                 .enable(SerializationFeature.INDENT_OUTPUT);
 
         Map<String, Object> m = new HashMap<>();
-        if (Files.exists(p)) {
-            try (InputStream in = Files.newInputStream(p)) {
-                Map<String, Object> mm = om.readValue(in, Map.class);
-                m.putAll(mm);
-            }
+        try (InputStream in = Files.newInputStream(p)) {
+            Map<String, Object> mm = om.readValue(in, Map.class);
+            m.putAll(mm);
         }
 
         m.put(AnsibleConstants.EXIT_CODE_KEY, code);
@@ -499,6 +502,29 @@ public class RunPlaybookTask2 implements Task {
         try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             om.writeValue(out, m);
         }
+    }
+
+    private void saveRetryFile(Map<String, Object> args, Path workDir) throws IOException {
+        boolean saveRetryFiles = getBoolean(args, AnsibleConstants.SAVE_RETRY_FILE, false);
+        if (!saveRetryFiles) {
+            return;
+        }
+
+        String playbookName = getString(args, AnsibleConstants.PLAYBOOK_KEY);
+        String retryFile = getNameWithoutExtension(playbookName + ".retry");
+        if (retryFile == null) {
+            return;
+        }
+
+        Path src = workDir.resolve(retryFile);
+        if (!Files.exists(src)) {
+            log.warn("Retry file not found: {}", src);
+            return;
+        }
+
+        Path dst = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME).resolve(AnsibleConstants.LAST_RETRY_FILE);
+        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+        log.info("The retry file was saved as: {}", workDir.relativize(dst));
     }
 
     private static String trim(String s) {

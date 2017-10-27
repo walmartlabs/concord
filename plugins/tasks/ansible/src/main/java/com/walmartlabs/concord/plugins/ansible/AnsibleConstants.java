@@ -44,6 +44,10 @@ public final class AnsibleConstants {
 
     public static final String LIMIT_KEY = "limit";
 
+    public static final String SAVE_RETRY_FILE = "saveRetryFile";
+
+    public static final String LAST_RETRY_FILE = "ansible.retry";
+
     @Deprecated
     public static final String VAULT_PASSWORD_FILE_PATH = "_vaultPassword";
 

@@ -190,7 +190,7 @@
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-template</artifactId>
-                                    <version>0.39.0</version>
+                                    <version>0.45.0</version>
                                     <destFileName>ansible-template.jar</destFileName>
                                 </artifactItem>
 
