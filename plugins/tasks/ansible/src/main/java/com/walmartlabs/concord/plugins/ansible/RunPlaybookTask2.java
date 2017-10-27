@@ -92,7 +92,7 @@ public class RunPlaybookTask2 implements Task {
                 .withUser(trim(getString(args, AnsibleConstants.USER_KEY)))
                 .withTags(trim(getString(args, AnsibleConstants.TAGS_KEY)))
                 .withExtraVars(extraVars)
-                .withLimit(getRetryFile(args))
+                .withLimit(getLimit(args))
                 .withDebug(debug)
                 .withVerboseLevel(getVerboseLevel(args))
                 .withEnv(env);
@@ -116,10 +116,10 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    private String getRetryFile(Map<String, Object> args) {
+    private String getLimit(Map<String, Object> args) {
         boolean retry = getBoolean(args, AnsibleConstants.RETRY_KEY, false);
         if (retry) {
-            return getNameWithoutExtension(getString(args, AnsibleConstants.PLAYBOOK_KEY)) + ".retry";
+            return "@" + getNameWithoutExtension(getString(args, AnsibleConstants.PLAYBOOK_KEY)) + ".retry";
         }
 
         String limit = getString(args, AnsibleConstants.LIMIT_KEY);

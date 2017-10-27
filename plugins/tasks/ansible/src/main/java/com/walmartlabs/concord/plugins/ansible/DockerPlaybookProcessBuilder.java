@@ -167,7 +167,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
 
         if (limit != null) {
             result.add("--limit");
-            result.add("@" + limit);
+            result.add(limit);
         }
 
         if (verboseLevel > 0) {

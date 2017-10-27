@@ -170,7 +170,7 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
 
         if (limit != null) {
             l.add("--limit");
-            l.add("@" + limit);
+            l.add(limit);
         }
 
         if (verboseLevel > 0) {
