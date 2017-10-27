@@ -21,6 +21,8 @@ public interface PlaybookProcessBuilder {
 
     PlaybookProcessBuilder withEnv(Map<String, String> env);
 
+    PlaybookProcessBuilder withLimit(String limit);
+
     PlaybookProcessBuilder withDebug(boolean debug);
 
     PlaybookProcessBuilder withVerboseLevel(int level);

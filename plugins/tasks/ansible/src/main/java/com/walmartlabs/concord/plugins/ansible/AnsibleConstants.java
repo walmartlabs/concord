@@ -40,6 +40,10 @@ public final class AnsibleConstants {
 
     public static final String USER_KEY = "user";
 
+    public static final String RETRY_KEY = "retry";
+
+    public static final String LIMIT_KEY = "limit";
+
     @Deprecated
     public static final String VAULT_PASSWORD_FILE_PATH = "_vaultPassword";
 

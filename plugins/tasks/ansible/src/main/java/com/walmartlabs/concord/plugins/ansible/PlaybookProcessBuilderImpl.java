@@ -26,6 +26,7 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
     private String privateKey;
     private String vaultPasswordFile;
     private Map<String, String> extraEnv = Collections.emptyMap();
+    private String limit;
     private boolean debug;
     private int verboseLevel = 0;
 
@@ -96,6 +97,12 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
     }
 
     @Override
+    public PlaybookProcessBuilder withLimit(String limit) {
+        this.limit = limit;
+        return this;
+    }
+
+    @Override
     public Process build() throws IOException {
         File pwd = new File(workDir);
         if (!pwd.exists()) {
@@ -159,6 +166,11 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
         if (vaultPasswordFile != null) {
             l.add("--vault-password-file");
             l.add(vaultPasswordFile);
+        }
+
+        if (limit != null) {
+            l.add("--limit");
+            l.add("@" + limit);
         }
 
         if (verboseLevel > 0) {

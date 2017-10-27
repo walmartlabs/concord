@@ -11,10 +11,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
@@ -48,12 +45,12 @@ public class RunPlaybookTask2 implements Task {
 
     @SuppressWarnings("unchecked")
     private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilderFactory pb) throws Exception {
-        boolean debug = toBoolean(args.get(AnsibleConstants.DEBUG_KEY));
+        boolean debug = getBoolean(args, AnsibleConstants.DEBUG_KEY, false);
 
         Path workDir = Paths.get(payloadPath);
         Path tmpDir = Files.createTempDirectory(workDir, "ansible");
 
-        String playbook = (String) args.get(AnsibleConstants.PLAYBOOK_KEY);
+        String playbook = getString(args, AnsibleConstants.PLAYBOOK_KEY);
         if (playbook == null || playbook.trim().isEmpty()) {
             throw new IllegalArgumentException("Missing '" + AnsibleConstants.PLAYBOOK_KEY + "' parameter");
         }
@@ -92,9 +89,10 @@ public class RunPlaybookTask2 implements Task {
                 .withCfgFile(toString(cfgFile))
                 .withPrivateKey(toString(privateKeyPath))
                 .withVaultPasswordFile(toString(vaultPasswordPath))
-                .withUser(trim((String) args.get(AnsibleConstants.USER_KEY)))
-                .withTags(trim((String) args.get(AnsibleConstants.TAGS_KEY)))
+                .withUser(trim(getString(args, AnsibleConstants.USER_KEY)))
+                .withTags(trim(getString(args, AnsibleConstants.TAGS_KEY)))
                 .withExtraVars(extraVars)
+                .withLimit(getLimit(args))
                 .withDebug(debug)
                 .withVerboseLevel(getVerboseLevel(args))
                 .withEnv(env);
@@ -115,6 +113,20 @@ public class RunPlaybookTask2 implements Task {
             log.warn("Playbook is finished with code {}", code);
             throw new IllegalStateException("Process finished with with exit code " + code);
         }
+    }
+
+    private String getLimit(Map<String, Object> args) {
+        boolean retry = getBoolean(args, AnsibleConstants.RETRY_KEY, false);
+        if (retry) {
+            return getNameWithoutExtension(getString(args, AnsibleConstants.PLAYBOOK_KEY)) + ".retry";
+        }
+
+        String limit = getString(args, AnsibleConstants.LIMIT_KEY);
+        if (limit != null) {
+            return limit;
+        }
+
+        return null;
     }
 
     private Map<String,String> defaultEnv() {
@@ -151,7 +163,7 @@ public class RunPlaybookTask2 implements Task {
 
     private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
         try (InputStream is = RunPlaybookTask2.class.getResourceAsStream(resourceName)) {
-            Files.copy(is, dest);
+            Files.copy(is, dest, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -187,6 +199,8 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
         addIfPresent(ctx, args, AnsibleConstants.FORCE_PULL_KEY);
         addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.RETRY_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.LIMIT_KEY);
 
         String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
@@ -212,20 +226,6 @@ public class RunPlaybookTask2 implements Task {
         Object v = src.getVariable(k);
         if (v != null) {
             dst.put(k, v);
-        }
-    }
-
-    private static boolean toBoolean(Object v) {
-        if (v == null) {
-            return false;
-        }
-
-        if (v instanceof Boolean) {
-            return (Boolean) v;
-        } else if (v instanceof String) {
-            return Boolean.parseBoolean((String) v);
-        } else {
-            throw new IllegalArgumentException("Invalid boolean value: " + v);
         }
     }
 
@@ -578,5 +578,29 @@ public class RunPlaybookTask2 implements Task {
         }
 
         return Optional.ofNullable(cfg.get(key));
+    }
+
+    private static boolean getBoolean(Map<String, Object> args, String key, boolean defaultValue) {
+        Object v = args.get(key);
+        if (v == null) {
+            return defaultValue;
+        }
+
+        if (v instanceof Boolean) {
+            return (Boolean) v;
+        } else if (v instanceof String) {
+            return Boolean.parseBoolean((String) v);
+        } else {
+            throw new IllegalArgumentException("Invalid boolean value '" + v + "' for key '" + key + "'");
+        }
+    }
+
+    private static String getString(Map<String, Object> args, String key) {
+        return (String)args.get(key);
+    }
+
+    private static String getNameWithoutExtension(String fileName) {
+        int i = fileName.lastIndexOf('.');
+        return (i == -1) ? fileName : fileName.substring(0, i);
     }
 }

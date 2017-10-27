@@ -1,0 +1,29 @@
+configuration:
+  dependencies:
+  - "file:///Users/brig/prj/wallmart/concord/plugins/tasks/ansible/target/ansible-tasks-0.45.1-SNAPSHOT.jar"
+  arguments:
+    concord:
+      apiKey: "auBy4eDWrKWsyhiDp3AQiw"
+
+flows:
+  default:
+  - task: ansible2
+    in:
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.3"
+      extraVars:
+        greetings: "Hi there!"
+    error:
+    - task: ansible2
+      in:
+        playbook: playbook/hello.yml
+        inventory:
+          local:
+            hosts:
+              - "127.0.0.3"
+        extraVars:
+          greetings: "Hi there!"
+        retry: true

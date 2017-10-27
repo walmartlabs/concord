@@ -18,6 +18,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     private final String playbook;
     private final String inventory;
 
+    private String limit;
     private String cfgFile;
     private Map<String, String> extraVars = Collections.emptyMap();
     private String user;
@@ -103,6 +104,12 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     }
 
     @Override
+    public PlaybookProcessBuilder withLimit(String limit) {
+        this.limit = limit;
+        return this;
+    }
+
+    @Override
     public Process build() throws IOException {
         return new DockerProcessBuilder(imageName)
                 .addLabel(DockerProcessBuilder.CONCORD_TX_ID_LABEL, txId)
@@ -156,6 +163,11 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
         if (vaultPasswordFile != null) {
             result.add("--vault-password-file");
             result.add(vaultPasswordFile);
+        }
+
+        if (limit != null) {
+            result.add("--limit");
+            result.add("@" + limit);
         }
 
         if (verboseLevel > 0) {
