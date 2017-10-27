@@ -76,3 +76,24 @@ profiles:
       more:
         nested:
           stuff: false
+
+triggers:
+  # OneOps compute replacement event
+  - oneops:
+      org: "myOrg"
+      asm: "myAsm"
+      env: "myEnv"
+      platform: "myPlatform"
+      component: "compute"
+      type: "replace"
+      state: "complete"
+      entryPoint: doAfterReplacement
+      arguments:
+        message: "We got some ${event.payload}"
+  - github:
+      repository: myRepo
+      action: push
+      branch: "*"
+      entryPoint: doItAfterPush
+      arguments:
+        message: "${event.action} ${event.commitId} ${event.author}"

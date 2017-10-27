@@ -2,6 +2,7 @@ package com.walmartlabs.concord.project;
 
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.project.yaml.*;
 import com.walmartlabs.concord.project.yaml.model.*;
 import io.takari.bpm.model.ProcessDefinition;
@@ -14,9 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ProjectLoader {
 
@@ -173,6 +172,7 @@ public class ProjectLoader {
             }
 
             Map<String, Object> variables = new LinkedHashMap<>();
+            List<Trigger> triggers =  new ArrayList<>();
 
             if (projectDefinition != null) {
                 if (projectDefinition.getFlows() != null) {
@@ -190,9 +190,13 @@ public class ProjectLoader {
                 if (projectDefinition.getProfiles() != null) {
                     profiles.putAll(projectDefinition.getProfiles());
                 }
+
+                if (projectDefinition.getTriggers() != null) {
+                    triggers.addAll(projectDefinition.getTriggers());
+                }
             }
 
-            return new ProjectDefinition(flows, forms, variables, profiles);
+            return new ProjectDefinition(flows, forms, variables, profiles, triggers);
         }
     }
 }

@@ -58,6 +58,6 @@ public class SuspendTest {
     }
 
     private static ProjectDefinition project(ProcessDefinition pd) {
-        return new ProjectDefinition(Collections.singletonMap(pd.getId(), pd), null, null, null);
+        return new ProjectDefinition(Collections.singletonMap(pd.getId(), pd), null, null, null, null);
     }
 }

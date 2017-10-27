@@ -1,7 +1,9 @@
 package com.walmartlabs.concord.project.yaml;
 
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.project.yaml.model.YamlFormField;
 import com.walmartlabs.concord.project.yaml.model.YamlProfile;
 import com.walmartlabs.concord.project.yaml.model.YamlProject;
@@ -9,6 +11,7 @@ import com.walmartlabs.concord.project.yaml.model.YamlStep;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +23,29 @@ public final class YamlProjectConverter {
         Map<String, FormDefinition> forms = convertForms(project.getForms());
         Map<String, Object> cfg = project.getConfiguration();
         Map<String, Profile> profiles = convertProfiles(project.getProfiles());
-        return new ProjectDefinition(flows, forms, cfg, profiles);
+        return new ProjectDefinition(flows, forms, cfg, profiles, convertTriggers(project.getTriggers()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Trigger> convertTriggers(List<Map<String, Map<String, Object>>> triggers) {
+        if (triggers == null || triggers.isEmpty()) {
+            return null;
+        }
+
+        List<Trigger> result = new ArrayList<>();
+        for (Map<String, Map<String, Object>> t : triggers) {
+            if (t.isEmpty()) {
+                continue;
+            }
+
+            Map.Entry<String, Map<String, Object>> e = t.entrySet().iterator().next();
+            String name = e.getKey();
+            Map<String, Object> params = e.getValue();
+            String entryPoint = (String)params.remove(InternalConstants.Request.ENTRY_POINT_KEY);
+            Map<String, Object> arguments = (Map<String, Object>) params.remove(InternalConstants.Request.ARGUMENTS_KEY);
+            result.add(new Trigger(name, entryPoint, arguments, params));
+        }
+        return result;
     }
 
     public static Profile convert(YamlProfile profile) throws YamlConverterException {

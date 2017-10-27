@@ -7,7 +7,6 @@ import com.walmartlabs.concord.project.yaml.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Path;
 
 public class YamlParser {

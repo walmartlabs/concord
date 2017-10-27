@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.net.URI;
 import java.nio.file.Paths;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class ProjectLoaderTest {
@@ -32,5 +33,8 @@ public class ProjectLoaderTest {
         URI uri = ClassLoader.getSystemResource("complex").toURI();
         ProjectDefinition pd = loader.load(Paths.get(uri));
         assertNotNull(pd);
+
+        assertNotNull(pd.getTriggers());
+        assertEquals(2, pd.getTriggers().size());
     }
 }
