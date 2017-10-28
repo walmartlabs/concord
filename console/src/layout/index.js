@@ -9,6 +9,7 @@ import KillProcessPopup from "../process/KillProcessPopup";
 import DeleteSecretPopup from "../secret/list/DeleteSecretPopup";
 import RepositoryPopup from "../project/RepositoryPopup";
 import DeleteProjectPopup from "../project/DeleteProjectPopup";
+import StartProjectPopup from "../project/StartProjectPopup/StartProjectPopup";
 import "./styles.css";
 
 // register our modals
@@ -17,6 +18,7 @@ MODAL_TYPES[KillProcessPopup.MODAL_TYPE] = KillProcessPopup;
 MODAL_TYPES[DeleteSecretPopup.MODAL_TYPE] = DeleteSecretPopup;
 MODAL_TYPES[RepositoryPopup.MODAL_TYPE] = RepositoryPopup;
 MODAL_TYPES[DeleteProjectPopup.MODAL_TYPE] = DeleteProjectPopup;
+MODAL_TYPES[StartProjectPopup.MODAL_TYPE] = StartProjectPopup;
 
 const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, children, doLogout, router}) => {
     if (fullScreen) {

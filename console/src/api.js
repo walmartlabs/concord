@@ -10,6 +10,19 @@ export const queryParams = (params: { [id: mixed]: string }) => {
     return Object.keys(params).map(k => esc(k) + "=" + esc(params[k])).join("&");
 };
 
+export const processError = (resp: any) => {
+    const contentType = resp.headers.get("Content-Type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+        return resp.json().then(data => {
+            throw {...defaultError(resp), ...data};
+        });
+    }
+
+    return new Promise(() => {
+        throw defaultError(resp);
+    });
+};
+
 export const defaultError = (resp: any) => {
     return {
         status: resp.status,

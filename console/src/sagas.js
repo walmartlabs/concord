@@ -11,6 +11,7 @@ import {sagas as wizard} from "./process/wizard";
 import {sagas as portal} from "./process/portal";
 import {sagas as project} from "./project";
 import {sagas as projectList} from "./project/list";
+import {sagas as projectStart} from "./project/StartProjectPopup"
 import {sagas as repository} from "./project/repository";
 import {sagas as secret} from "./secret/list";
 import {sagas as secretNew} from "./secret/create"
@@ -28,6 +29,7 @@ export default function*(): Generator<*, *, *> {
         fork(portal),
         fork(project),
         fork(projectList),
+        fork(projectStart),
         fork(repository),
         fork(secret),
         fork(secretNew)

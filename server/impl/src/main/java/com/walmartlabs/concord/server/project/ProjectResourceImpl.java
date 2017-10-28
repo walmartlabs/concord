@@ -254,22 +254,22 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
-    public UpdateRepositoryResponse updateRepository(String projectName, String repositoryName, UpdateRepositoryRequest request) {
+    public UpdateRepositoryResponse updateRepository(String projectName, String repositoryName, UpdateRepositoryRequest req) {
         assertPermissions(projectName, Permissions.PROJECT_UPDATE_INSTANCE,
                 "The current user does not have permissions to update the specified project");
 
         UUID projectId = assertProject(projectName);
         UUID repoId = assertRepository(projectId, repositoryName);
-        UUID secretId = assertSecret(request.getSecret());
+        UUID secretId = assertSecret(req.getSecret());
 
         githubWebhookService.unregister(projectId, repoId);
 
         tx(tx -> repositoryDao.update(tx, repoId,
-                repositoryName, request.getUrl(),
-                request.getBranch(), request.getCommitId(),
-                request.getPath(), secretId));
+                repositoryName, req.getUrl(),
+                trim(req.getBranch()), trim(req.getCommitId()),
+                trim(req.getPath()), secretId));
 
-        githubWebhookService.register(projectId, repoId, request.getUrl());
+        githubWebhookService.register(projectId, repoId, req.getUrl());
 
         return new UpdateRepositoryResponse();
     }
@@ -464,13 +464,29 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             UUID secretId = assertSecret(req.getSecret());
 
             UUID id = repositoryDao.insert(tx, projectId, name, req.getUrl(),
-                    req.getBranch(), req.getCommitId(),
-                    req.getPath(), secretId);
+                    trim(req.getBranch()),
+                    trim(req.getCommitId()),
+                    trim(req.getPath()),
+                    secretId);
 
             ids.put(name, id);
         }
 
         return ids;
+    }
+
+    private String trim(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        s = s.trim();
+
+        if (s.isEmpty()) {
+            return null;
+        }
+
+        return s;
     }
 
     private void validateCfg(Map<String, Object> cfg) {

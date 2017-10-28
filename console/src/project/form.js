@@ -7,13 +7,14 @@ import {Field} from "../shared/forms";
 import {actions as modal} from "../shared/Modal";
 import * as RepositoryPopup from "./RepositoryPopup";
 import * as DeleteProjectPopup from "./DeleteProjectPopup";
+import * as StartProjectPopup from "./StartProjectPopup/StartProjectPopup";
 import * as api from "./api";
 import * as v from "../shared/validation";
 import {actions} from "./crud";
 
 const renderSourceText = (f, {commitId}) => commitId ? "Revision" : "Branch/tag";
 
-const renderRepositories = (newRepositoryPopupFn, editRepositoryPopupFn) => ({fields}) => {
+const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupFn, startProcess) => ({fields}) => {
     const newFn = (ev) => {
         ev.preventDefault();
         newRepositoryPopupFn();
@@ -36,6 +37,7 @@ const renderRepositories = (newRepositoryPopupFn, editRepositoryPopupFn) => ({fi
                     <Table.HeaderCell collapsing>Path</Table.HeaderCell>
                     <Table.HeaderCell collapsing>Secret</Table.HeaderCell>
                     <Table.HeaderCell collapsing/>
+                    <Table.HeaderCell collapsing/>
                 </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -49,6 +51,9 @@ const renderRepositories = (newRepositoryPopupFn, editRepositoryPopupFn) => ({fi
                         <Table.Cell>
                             <Button basic icon="delete" onClick={() => fields.remove(idx)}/>
                         </Table.Cell>
+                        <Table.Cell>
+                            <Button disabled={!pristine} basic icon="caret right" onClick={startProcess(fields.get(idx).name)}/>
+                        </Table.Cell>
                     </Table.Row>
                 ))}
             </Table.Body>
@@ -58,7 +63,7 @@ const renderRepositories = (newRepositoryPopupFn, editRepositoryPopupFn) => ({fi
 };
 
 let projectForm = (props) => {
-    const {handleSubmit, reset, createNew, newRepositoryPopupFn, editRepositoryPopupFn, deletePopupFn} = props;
+    const {handleSubmit, reset, createNew, newRepositoryPopupFn, editRepositoryPopupFn, deletePopupFn, startProcessFn} = props;
     const {originalName} = props;
     const {pristine, submitting, invalid} = props;
 
@@ -71,12 +76,17 @@ let projectForm = (props) => {
         deletePopupFn(originalName);
     };
 
+    const startProcess = (repositoryName) => (ev) => {
+        ev.preventDefault();
+        startProcessFn(originalName, repositoryName);
+    };
+
     return <Form onSubmit={handleSubmit} loading={submitting}>
         {createNew && <Field name="name" label="Name" required/> }
         <Field name="description" label="Description"/>
 
         <Divider horizontal>Repositories</Divider>
-        <FieldArray name="repositories" component={renderRepositories(newRepositoryPopupFn, editRepositoryPopupFn)}/>
+        <FieldArray name="repositories" component={renderRepositories(pristine, newRepositoryPopupFn, editRepositoryPopupFn, startProcess)}/>
 
         <Divider horizontal>Configuration</Divider>
         <Message size="tiny" info>Not supported yet. Please use the REST API to update the configuration
@@ -143,7 +153,12 @@ const mapDispatchToProps = (dispatch) => ({
         };
 
         dispatch(modal.open(DeleteProjectPopup.MODAL_TYPE, {onConfirmFn}));
+    },
+
+    startProcessFn: (projectName, repositoryName) => {
+        dispatch(modal.open(StartProjectPopup.MODAL_TYPE, {projectName, repositoryName}));
     }
 });
+
 
 export default connect(null, mapDispatchToProps)(projectForm);

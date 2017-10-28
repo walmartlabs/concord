@@ -12,6 +12,7 @@ import {reducers as wizard} from "../process/wizard";
 import {reducers as portal} from "../process/portal";
 import {reducers as project} from "../project";
 import {reducers as projectList} from "../project/list";
+import {reducers as projectStart} from "../project/StartProjectPopup";
 import {reducers as repository} from "../project/repository";
 import {reducers as secretList} from "../secret/list";
 import {reducers as secretForm} from "../secret/create";
@@ -29,6 +30,7 @@ export default {
     portal,
     project,
     projectList,
+    projectStart,
     repository,
     secretList,
     secretForm,
