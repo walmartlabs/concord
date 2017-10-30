@@ -1,0 +1,9 @@
+{{> header}}
+<div class="ui negative message">
+    <div class="header">Error</div>
+    <p>{{message}}</p>
+    {{#instanceId}}
+    <p><a href="/#/process/{{instanceId}}">Check the status</a></p>
+    {{/instanceId}}
+</div>
+{{> footer}}

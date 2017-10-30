@@ -6,14 +6,14 @@ import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import io.takari.bpm.api.ExecutionException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
@@ -23,25 +23,38 @@ import static javax.ws.rs.core.Response.Status;
 @Named
 public class ProcessPortalServiceImpl implements ProcessPortalService, Resource {
 
+    private static final Logger log = LoggerFactory.getLogger(ProcessPortalServiceImpl.class);
+
     private static final long STATUS_REFRESH_DELAY = 250;
 
     private final ProcessResource processResource;
     private final ConcordFormService formService;
     private final CustomFormService customFormService;
+    private final ResponseTemplates responseTemplates;
 
     @Inject
     public ProcessPortalServiceImpl(ProcessResource processResource, ConcordFormService formService, CustomFormService customFormService) {
         this.processResource = processResource;
         this.formService = formService;
         this.customFormService = customFormService;
+        this.responseTemplates = new ResponseTemplates();
     }
 
     @Override
     @Validate
     @RequiresAuthentication
     public Response startProcess(String entryPoint, String activeProfiles, UriInfo uriInfo) {
+        try {
+            return doStartProcess(entryPoint, activeProfiles, uriInfo);
+        } catch (Exception e) {
+            log.error("startProcess ['{}', '{}'] -> error", entryPoint, activeProfiles, e);
+            return processError(null, "Process error: " + e.getMessage());
+        }
+    }
+
+    private Response doStartProcess(String entryPoint, String activeProfiles, UriInfo uriInfo) {
         if (entryPoint == null || entryPoint.trim().isEmpty()) {
-            throw new WebApplicationException("Invalid entry point", Status.BAD_REQUEST);
+            return badRequest("Entry point is not specified");
         }
 
         Map<String, Object> req = new HashMap<>();
@@ -56,7 +69,12 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
             req.put(InternalConstants.Request.ARGUMENTS_KEY, args);
         }
 
-        StartProcessResponse resp = processResource.start(entryPoint, req, null, false, null);
+        StartProcessResponse resp;
+        try {
+            resp = processResource.start(entryPoint, req, null, false, null);
+        } catch (Exception e) {
+            return processError(null, e.getMessage());
+        }
 
         UUID instanceId = resp.getInstanceId();
         while (true) {
@@ -66,11 +84,9 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
             if (status == ProcessStatus.SUSPENDED) {
                 break;
             } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
-                throw new WebApplicationException("Process error", Status.INTERNAL_SERVER_ERROR);
+                return processError(instanceId, "Process failed");
             } else if (status == ProcessStatus.FINISHED) {
-                // TODO redirect to a success page?
-                return Response.ok(psr, MediaType.APPLICATION_JSON)
-                        .build();
+                return processFinished(instanceId);
             }
 
             try {
@@ -85,11 +101,11 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
         try {
             forms = formService.list(instanceId);
         } catch (ExecutionException e) {
-            throw new WebApplicationException("Process error", e);
+            return processError(instanceId, "Error while retrieving the list of process forms");
         }
 
         if (forms == null || forms.isEmpty()) {
-            throw new WebApplicationException("Invalid process state: no forms found", Status.INTERNAL_SERVER_ERROR);
+            return processError(instanceId, "Invalid process state: no forms found");
         }
 
         FormListEntry f = forms.get(0);
@@ -103,6 +119,29 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
         FormSessionResponse fsr = customFormService.startSession(instanceId, f.getFormInstanceId());
         return Response.status(Status.MOVED_PERMANENTLY)
                 .header(HttpHeaders.LOCATION, fsr.getUri())
+                .build();
+    }
+
+    private Response processFinished(UUID instanceId) {
+        return responseTemplates.processFinished(Response.ok(),
+                Collections.singletonMap("instanceId", instanceId))
+                .build();
+    }
+
+    private Response badRequest(String message) {
+        return responseTemplates.badRequest(Response.status(Status.BAD_REQUEST),
+                Collections.singletonMap("message", message))
+                .build();
+    }
+
+    private Response processError(UUID instanceId, String message) {
+        Map<String, Object> args = new HashMap<>();
+        if (instanceId != null) {
+            args.put("instanceId", instanceId);
+        }
+        args.put("message", message);
+
+        return responseTemplates.processError(Response.status(Status.INTERNAL_SERVER_ERROR), args)
                 .build();
     }
 }
