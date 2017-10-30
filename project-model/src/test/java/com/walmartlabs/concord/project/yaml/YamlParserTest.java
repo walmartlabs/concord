@@ -1420,6 +1420,24 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
+    @Test
+    public void test045() throws Exception {
+        deploy("045.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("err"));
+        verifyNoMoreInteractions(testBean);
+    }
+
     // FORMS (100 - 199)
 
     @Test

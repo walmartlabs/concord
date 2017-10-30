@@ -2,6 +2,7 @@
 
 ### Added
 
+- concord-project-model: alias `::` to `try:`;
 - concord-console: ability to start a new process from the project's
 form;
 - ansible: support for saving and using Ansible's "limit" files;

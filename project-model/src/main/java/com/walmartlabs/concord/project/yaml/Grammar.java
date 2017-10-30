@@ -226,7 +226,7 @@ public class Grammar {
 
     // group := FIELD_NAME ":" steps groupOptions
     private static final Parser<Atom, YamlStep> group = label("Group of steps",
-            satisfyField(":").bind(a -> steps.bind(items ->
+            choice(satisfyField(":"), satisfyField("try")).bind(a -> steps.bind(items ->
                     groupOptions.map(options -> new YamlGroup(a.location, items, options)))));
 
     // callFull := FIELD_NAME "call" VALUE_STRING callOptions

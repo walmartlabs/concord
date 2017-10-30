@@ -1,0 +1,8 @@
+main:
+  - try:
+    - myOtherFlow
+    error:
+      - ${testBean.toString("err")}
+
+myOtherFlow:
+  - return: someError
