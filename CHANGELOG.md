@@ -2,6 +2,7 @@
 
 ### Added
 
+- concord-server: show an error page when a "portal" process fails;
 - concord-project-model: alias `::` to `try:`;
 - concord-console: ability to start a new process from the project's
 form;
