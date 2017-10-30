@@ -15,7 +15,6 @@ public class RepositoryEntry implements Serializable {
 
     private final UUID id;
 
-    @NotNull
     @ConcordKey
     private final String name;
 

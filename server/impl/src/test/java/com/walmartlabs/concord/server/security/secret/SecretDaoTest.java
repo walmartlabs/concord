@@ -23,8 +23,8 @@ public class SecretDaoTest extends AbstractDaoTest {
     public void testOnCascade() {
         String projectName = "project#" + System.currentTimeMillis();
 
-        ProjectDao projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        UUID projectId = projectDao.insert(projectName, "test", null, null);
+        ProjectDao projectDao = new ProjectDao(getConfiguration());
+        UUID projectId = projectDao.insert(projectName, "test", null, null, null);
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));

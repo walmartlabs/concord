@@ -48,7 +48,7 @@ public class TemplateIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(InternalConstants.Request.TEMPLATE_KEY, templateAlias);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, cfg));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, cfg, null));
 
         // ---
 

@@ -8,7 +8,7 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
+import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import org.junit.After;
 import org.junit.Before;
@@ -92,10 +92,10 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, null, repoSecretName);
+        RepositoryEntry repo = new RepositoryEntry(null, repoName, repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
         Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg, null));
 
         // ---
 
@@ -138,11 +138,11 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        UpdateRepositoryRequest repo = new UpdateRepositoryRequest(repoUrl, "master", null, null, repoSecretName);
+        RepositoryEntry repo = new RepositoryEntry(null, repoName, repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg, null));
 
         // ---
 

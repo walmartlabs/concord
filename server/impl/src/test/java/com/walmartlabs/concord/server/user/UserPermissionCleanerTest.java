@@ -47,14 +47,13 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
     @Test
     public void testProjectRepositories() throws Exception {
         UserDao userDao = new UserDao(getConfiguration());
-        UserPermissionCleaner permissionCleaner = new UserPermissionCleaner(getConfiguration());
-        ProjectDao projectDao = new ProjectDao(getConfiguration(), permissionCleaner);
+        ProjectDao projectDao = new ProjectDao(getConfiguration());
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());
 
         // ---
 
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(projectName, "test", null, null);
+        UUID projectId = projectDao.insert(projectName, "test", null, null, null);
 
         // ---
 
@@ -68,7 +67,6 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         String username = "user#" + System.currentTimeMillis();
         Set<String> perms = new HashSet<>();
-        perms.add(String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName));
         perms.add(Permissions.APIKEY_DELETE_ANY);
         UUID userId = userDao.insert(username, perms);
 

@@ -2,20 +2,11 @@ package com.walmartlabs.concord.server.api.security;
 
 public final class Permissions {
 
-    public static final String TEAM_PREFIX = "team";
-    public static final String TEAM_MANAGE = TEAM_PREFIX + ":manage";
-
     public static final String APIKEY_PREFIX = "apikey";
     public static final String APIKEY_CREATE_NEW = APIKEY_PREFIX + ":create";
     public static final String APIKEY_DELETE_ANY = APIKEY_PREFIX + ":delete";
 
     public static final String PROCESS_START_PROJECT = "process:start:%s";
-
-    public static final String PROJECT_PREFIX = "project";
-    public static final String PROJECT_CREATE_NEW = PROJECT_PREFIX + ":create";
-    public static final String PROJECT_READ_INSTANCE = PROJECT_PREFIX + ":read:%s";
-    public static final String PROJECT_UPDATE_INSTANCE = PROJECT_PREFIX + ":update:%s";
-    public static final String PROJECT_DELETE_INSTANCE = PROJECT_PREFIX + ":delete:%s";
 
     public static final String TEMPLATE_PREFIX = "template";
     public static final String TEMPLATE_MANAGE = TEMPLATE_PREFIX + ":manage";

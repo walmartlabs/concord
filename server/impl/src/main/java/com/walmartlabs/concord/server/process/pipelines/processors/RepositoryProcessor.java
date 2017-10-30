@@ -95,7 +95,7 @@ public class RepositoryProcessor implements PayloadProcessor {
                 Path src;
                 if (githubConfiguration.getApiUrl() == null) {
                     // no github webhooks configured -> fetch repository
-                    log.warn("process ['{}'] -> no prefetched repository");
+                    log.warn("process ['{}'] -> no prefetched repository", instanceId);
                     src = fetchRepository(instanceId, projectId, repo);
                 } else {
                     src = getRepository(instanceId, projectId, repo);

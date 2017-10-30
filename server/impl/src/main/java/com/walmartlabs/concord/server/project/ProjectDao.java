@@ -5,11 +5,11 @@ import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
+import com.walmartlabs.concord.server.api.project.ProjectVisibility;
+import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
-import com.walmartlabs.concord.server.team.TeamDao;
-import com.walmartlabs.concord.server.user.UserPermissionCleaner;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -28,6 +28,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
+import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -35,13 +36,11 @@ public class ProjectDao extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectDao.class);
 
-    private final UserPermissionCleaner permissionCleaner;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public ProjectDao(Configuration cfg, UserPermissionCleaner permissionCleaner) {
+    public ProjectDao(Configuration cfg) {
         super(cfg);
-        this.permissionCleaner = permissionCleaner;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -63,30 +62,30 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    public ProjectEntry getByName(String name) {
+    public ProjectEntry get(UUID projectId) {
         Projects p = PROJECTS.as("p");
         Field<String> cfgField = p.PROJECT_CFG.cast(String.class);
         Field<String> teamNameField = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(p.TEAM_ID)).asField();
 
         try (DSLContext tx = DSL.using(cfg)) {
-            Record6<UUID, String, String, UUID, String, String> r = tx.select(
+            Record7<UUID, String, String, UUID, String, String, String> r = tx.select(
                     p.PROJECT_ID,
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
                     p.TEAM_ID,
                     teamNameField,
-                    cfgField)
+                    cfgField,
+                    p.VISIBILITY)
                     .from(p)
-                    .where(p.PROJECT_NAME.eq(name))
+                    .where(p.PROJECT_ID.eq(projectId))
                     .fetchOne();
 
             if (r == null) {
                 return null;
             }
 
-            UUID projectId = r.get(p.PROJECT_ID);
-
-            Result<Record6<String, String, String, String, String, String>> repos = tx.select(
+            Result<Record7<UUID, String, String, String, String, String, String>> repos = tx.select(
+                    REPOSITORIES.REPO_ID,
                     REPOSITORIES.REPO_NAME,
                     REPOSITORIES.REPO_URL,
                     REPOSITORIES.REPO_BRANCH,
@@ -98,10 +97,12 @@ public class ProjectDao extends AbstractDao {
                     .where(REPOSITORIES.PROJECT_ID.eq(projectId))
                     .fetch();
 
-            Map<String, UpdateRepositoryRequest> m = new HashMap<>();
-            for (Record6<String, String, String, String, String, String> repo : repos) {
+            Map<String, RepositoryEntry> m = new HashMap<>();
+            for (Record7<UUID, String, String, String, String, String, String> repo : repos) {
                 m.put(repo.get(REPOSITORIES.REPO_NAME),
-                        new UpdateRepositoryRequest(
+                        new RepositoryEntry(
+                                repo.get(REPOSITORIES.REPO_ID),
+                                repo.get(REPOSITORIES.REPO_NAME),
                                 repo.get(REPOSITORIES.REPO_URL),
                                 repo.get(REPOSITORIES.REPO_BRANCH),
                                 repo.get(REPOSITORIES.REPO_COMMIT_ID),
@@ -116,22 +117,27 @@ public class ProjectDao extends AbstractDao {
                     r.get(p.TEAM_ID),
                     r.get(teamNameField),
                     m,
-                    cfg);
+                    cfg,
+                    ProjectVisibility.valueOf(r.get(p.VISIBILITY)));
         }
     }
 
-    public UUID insert(String name, String description, UUID teamId, Map<String, Object> cfg) {
-        return txResult(tx -> insert(tx, name, description, teamId, cfg));
+    public UUID insert(String name, String description, UUID teamId, Map<String, Object> cfg, ProjectVisibility visibility) {
+        return txResult(tx -> insert(tx, name, description, teamId, cfg, visibility));
     }
 
-    public UUID insert(DSLContext tx, String name, String description, UUID teamId, Map<String, Object> cfg) {
+    public UUID insert(DSLContext tx, String name, String description, UUID teamId, Map<String, Object> cfg, ProjectVisibility visibility) {
         if (teamId == null) {
-            teamId = TeamDao.DEFAULT_TEAM_ID;
+            teamId = TeamManager.DEFAULT_TEAM_ID;
+        }
+
+        if (visibility == null) {
+            visibility = ProjectVisibility.PUBLIC;
         }
 
         return tx.insertInto(PROJECTS)
-                .columns(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, PROJECTS.TEAM_ID, PROJECTS.PROJECT_CFG)
-                .values(value(name), value(description), value(teamId), field("?::jsonb", serialize(cfg)))
+                .columns(PROJECTS.PROJECT_NAME, PROJECTS.DESCRIPTION, PROJECTS.TEAM_ID, PROJECTS.PROJECT_CFG, PROJECTS.VISIBILITY)
+                .values(value(name), value(description), value(teamId), field("?::jsonb", serialize(cfg)), value(visibility.toString()))
                 .returning(PROJECTS.PROJECT_ID)
                 .fetchOne()
                 .getProjectId();
@@ -178,8 +184,6 @@ public class ProjectDao extends AbstractDao {
     }
 
     public void delete(DSLContext tx, UUID projectId) {
-        permissionCleaner.onProjectRemoval(tx, getName(projectId));
-
         tx.deleteFrom(PROJECT_KV_STORE)
                 .where(PROJECT_KV_STORE.PROJECT_ID.eq(projectId))
                 .execute();
@@ -189,15 +193,38 @@ public class ProjectDao extends AbstractDao {
                 .execute();
     }
 
-    public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record5<UUID, String, String, UUID, String>> query = selectCreateProjectRequest(tx);
+    public List<ProjectEntry> list(UUID currentUserId, Field<?> sortField, boolean asc) {
+        Projects p = PROJECTS.as("p");
+        sortField = p.field(sortField);
 
-            if (sortField != null) {
-                query.orderBy(asc ? sortField.asc() : sortField.desc());
+        Field<String> teamNameField = select(TEAMS.TEAM_NAME)
+                .from(TEAMS)
+                .where(TEAMS.TEAM_ID.eq(p.TEAM_ID))
+                .asField();
+
+        Condition filterByTeamMember = exists(selectFrom(USER_TEAMS)
+                .where(USER_TEAMS.USER_ID.eq(currentUserId)
+                        .and(USER_TEAMS.TEAM_ID.eq(p.TEAM_ID))));
+
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectJoinStep<Record6<UUID, String, String, UUID, String, String>> q = tx.select(
+                    p.PROJECT_ID,
+                    p.PROJECT_NAME,
+                    p.DESCRIPTION,
+                    p.TEAM_ID,
+                    teamNameField,
+                    p.VISIBILITY)
+                    .from(p);
+
+            if (currentUserId != null) {
+                q.where(or(p.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString()), filterByTeamMember));
             }
 
-            return query.fetch(ProjectDao::toEntry);
+            if (sortField != null) {
+                q.orderBy(asc ? sortField.asc() : sortField.desc());
+            }
+
+            return q.fetch(ProjectDao::toEntry);
         }
     }
 
@@ -241,24 +268,14 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    private static ProjectEntry toEntry(Record5<UUID, String, String, UUID, String> r) {
+    private static ProjectEntry toEntry(Record6<UUID, String, String, UUID, String, String> r) {
         return new ProjectEntry(r.get(PROJECTS.PROJECT_ID),
                 r.get(PROJECTS.PROJECT_NAME),
                 r.get(PROJECTS.DESCRIPTION),
                 r.get(PROJECTS.TEAM_ID),
                 r.get(4, String.class),
                 null,
-                null);
-    }
-
-    private static SelectJoinStep<Record5<UUID, String, String, UUID, String>> selectCreateProjectRequest(DSLContext tx) {
-        Field<String> teamNameField = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(PROJECTS.TEAM_ID)).asField();
-        return tx.select(
-                PROJECTS.PROJECT_ID,
-                PROJECTS.PROJECT_NAME,
-                PROJECTS.DESCRIPTION,
-                PROJECTS.TEAM_ID,
-                teamNameField)
-                .from(PROJECTS);
+                null,
+                ProjectVisibility.valueOf(r.get(PROJECTS.VISIBILITY)));
     }
 }

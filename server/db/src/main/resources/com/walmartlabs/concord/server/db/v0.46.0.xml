@@ -39,10 +39,19 @@
                                  baseColumnNames="USER_ID"
                                  constraintName="FK_ADMINS_U_ID"
                                  referencedTableName="USERS"
-                                 referencedColumnNames="USER_ID"/>
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
 
         <sql>
             insert into ADMINS (USER_ID) values ('230c5c9c-d9a7-11e6-bcfd-bb681c07b26c')
         </sql>
+    </changeSet>
+
+    <changeSet id="46100" author="ibodrov@gmail.com">
+        <addColumn tableName="PROJECTS">
+            <column name="VISIBILITY" type="varchar(128)" defaultValue="PUBLIC">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
     </changeSet>
 </databaseChangeLog>

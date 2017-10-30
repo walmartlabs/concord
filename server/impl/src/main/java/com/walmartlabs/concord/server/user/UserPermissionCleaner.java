@@ -24,10 +24,6 @@ public class UserPermissionCleaner extends AbstractDao {
         remove(tx, Permissions.SECRET_PREFIX, name);
     }
 
-    public void onProjectRemoval(DSLContext tx, String name) {
-        remove(tx, Permissions.PROJECT_PREFIX, name);
-    }
-
     private void remove(DSLContext tx, String prefix, String name) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Invalid entity name: " + name);

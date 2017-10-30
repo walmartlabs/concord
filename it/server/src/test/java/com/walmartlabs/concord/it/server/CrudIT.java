@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.server.team.TeamDao.DEFAULT_TEAM_ID;
+import static com.walmartlabs.concord.server.team.TeamManager.DEFAULT_TEAM_ID;
 import static org.junit.Assert.*;
 
 public class CrudIT extends AbstractServerIT {
@@ -78,10 +78,10 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project_" + System.currentTimeMillis();
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, null));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
         assertTrue(cpr.isOk());
 
-        cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, null));
+        cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
         assertTrue(cpr.isOk());
 
         // ---
@@ -109,11 +109,12 @@ public class CrudIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new UpdateRepositoryRequest("n/a", branch, null, null, null)), null));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, repoName, "n/a", branch, null, null, null)), null, null));
 
         // ---
 
-        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName, new UpdateRepositoryRequest("something", branch, commitId, null, null));
+        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName,
+                new RepositoryEntry(null, repoName, "something", branch, commitId, null, null));
         assertTrue(urr.isOk());
 
         // ---
@@ -135,16 +136,18 @@ public class CrudIT extends AbstractServerIT {
         String projectName2 = "project2_" + System.currentTimeMillis();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName1, null, null, null, null, null));
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName2, null, null, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName1, null, null, null, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName2, null, null, null, null, null, null));
 
         // ---
 
         String repoName = "repo_" + System.currentTimeMillis();
-        CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1, new CreateRepositoryRequest(repoName, "n/a", null, null, null, null));
+        CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1,
+                new RepositoryEntry(null, repoName, "n/a", null, null, null, null));
         assertTrue(crr1.isOk());
 
-        CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2, new CreateRepositoryRequest(repoName, "n/a", null, null, null, null));
+        CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2,
+                new RepositoryEntry(null, repoName, "n/a", null, null, null, null));
         assertTrue(crr2.isOk());
     }
 
@@ -351,7 +354,7 @@ public class CrudIT extends AbstractServerIT {
     }
 
     private static RepositoryEntry findRepository(List<RepositoryEntry> l, String name) {
-        return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
+        return l.stream().filter(e -> name.equals(e.getName())).findAny().orElse(null);
     }
 
     private static SecretEntry findSecret(List<SecretEntry> l, String name) {

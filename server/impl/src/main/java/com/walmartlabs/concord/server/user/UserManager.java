@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.server.api.team.TeamRole;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.team.TeamDao;
+import com.walmartlabs.concord.server.team.TeamManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -45,7 +46,7 @@ public class UserManager {
 
     public UserEntry create(String username, Set<String> permissions) {
         UUID id = userDao.insert(username, permissions);
-        teamDao.addUser(TeamDao.DEFAULT_TEAM_ID, id, TeamRole.WRITER);
+        teamDao.addUser(TeamManager.DEFAULT_TEAM_ID, id, TeamRole.WRITER);
         return userDao.get(id);
     }
 }

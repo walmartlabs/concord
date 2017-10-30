@@ -48,7 +48,7 @@ public class SmtpIT extends AbstractServerIT {
         cfg.put(InternalConstants.Request.ARGUMENTS_KEY, args);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, cfg));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, cfg, null));
 
         // --
 

@@ -41,7 +41,7 @@ public interface ProjectResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     CreateRepositoryResponse createRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                              @ApiParam @Valid CreateRepositoryRequest request);
+                                              @ApiParam @Valid RepositoryEntry request);
 
     /**
      * Returns an existing project.
@@ -127,7 +127,7 @@ public interface ProjectResource {
     @Produces(MediaType.APPLICATION_JSON)
     UpdateRepositoryResponse updateRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                               @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName,
-                                              @ApiParam @Valid UpdateRepositoryRequest request);
+                                              @ApiParam @Valid RepositoryEntry request);
 
     /**
      * Returns a project configuration entry for the specified path.

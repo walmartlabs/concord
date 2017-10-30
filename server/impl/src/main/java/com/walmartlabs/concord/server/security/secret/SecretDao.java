@@ -4,7 +4,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
-import com.walmartlabs.concord.server.team.TeamDao;
+import com.walmartlabs.concord.server.team.TeamManager;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -53,7 +53,7 @@ public class SecretDao extends AbstractDao {
 
     public UUID insert(DSLContext tx, String name, SecretType type, UUID teamId, SecretStoreType storeType, byte[] data) {
         if (teamId == null) {
-            teamId = TeamDao.DEFAULT_TEAM_ID;
+            teamId = TeamManager.DEFAULT_TEAM_ID;
         }
 
         return tx.insertInto(SECRETS)

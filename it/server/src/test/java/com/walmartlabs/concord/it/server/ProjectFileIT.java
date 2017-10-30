@@ -9,7 +9,7 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.project.UpdateRepositoryRequest;
+import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
@@ -127,7 +127,7 @@ public class ProjectFileIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, null, secretName)), null));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, repoName, repoUrl, "master", null, null, secretName)), null, null));
 
         // ---
 
@@ -160,7 +160,7 @@ public class ProjectFileIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new UpdateRepositoryRequest(repoUrl, "master", null, null, secretName)), null));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, repoName, repoUrl, "master", null, null, secretName)), null, null));
 
         // ---
 

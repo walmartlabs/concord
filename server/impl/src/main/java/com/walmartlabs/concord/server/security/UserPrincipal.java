@@ -1,11 +1,18 @@
 package com.walmartlabs.concord.server.security;
 
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 
 import java.io.Serializable;
 import java.util.UUID;
 
 public class UserPrincipal implements Serializable {
+
+    public static UserPrincipal getCurrent() {
+        Subject subject = SecurityUtils.getSubject();
+        return (UserPrincipal) subject.getPrincipal();
+    }
 
     private final String realm;
     private final UUID id;

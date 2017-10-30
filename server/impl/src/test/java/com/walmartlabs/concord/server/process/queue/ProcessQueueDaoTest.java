@@ -5,7 +5,6 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -13,7 +12,6 @@ import org.junit.Test;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
 
 @Ignore("requires a local DB instance")
 public class ProcessQueueDaoTest extends AbstractDaoTest {
@@ -24,13 +22,13 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
     @Before
     public void setUp() throws Exception {
         queueDao = new ProcessQueueDao(getConfiguration());
-        projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
+        projectDao = new ProjectDao(getConfiguration());
     }
 
     @Test
     public void test() throws Exception {
         String projectName = "project_" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(projectName, null, null, null);
+        UUID projectId = projectDao.insert(projectName, null, null, null, null);
 
         UUID instanceA = UUID.randomUUID();
         queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, "testInitiator");

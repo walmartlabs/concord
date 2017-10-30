@@ -50,9 +50,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + System.currentTimeMillis();
         String userName = "myUser_" + System.currentTimeMillis();
-        Set<String> permissions = Sets.newHashSet(
-                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
-                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
         String repoName = "myRepo_" + System.currentTimeMillis();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
@@ -84,9 +82,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + System.currentTimeMillis();
         String userName = "myUser_" + System.currentTimeMillis();
-        Set<String> permissions = Sets.newHashSet(
-                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
-                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
         String repoName = "myRepo_" + System.currentTimeMillis();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName;
@@ -130,9 +126,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + System.currentTimeMillis();
         String userName = "myUser_" + System.currentTimeMillis();
-        Set<String> permissions = Sets.newHashSet(
-                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
-                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
         String repoName = "myRepo_" + System.currentTimeMillis();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
@@ -182,9 +176,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
         String projectName = "myProject_" + System.currentTimeMillis();
         String userName = "myUser_" + System.currentTimeMillis();
-        Set<String> permissions = Sets.newHashSet(
-                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
-                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
         String repoName = "myRepo_" + System.currentTimeMillis();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
@@ -215,9 +207,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + System.currentTimeMillis();
         String userName = "myUser_" + System.currentTimeMillis();
-        Set<String> permissions = Sets.newHashSet(
-                String.format(Permissions.PROJECT_UPDATE_INSTANCE, projectName),
-                String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
         String repoName = "myRepo_" + System.currentTimeMillis();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
@@ -263,7 +253,7 @@ public class ProjectIT extends AbstractServerIT {
                                   boolean sync) throws InterruptedException, IOException {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, null));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
         assertTrue(cpr.isOk());
 
         UserResource userResource = proxy(UserResource.class);
@@ -282,7 +272,8 @@ public class ProjectIT extends AbstractServerIT {
 
         setApiKey(apiKey);
 
-        CreateRepositoryResponse crr = projectResource.createRepository(projectName, new CreateRepositoryRequest(repoName, repoUrl, tag, commitId, null, null));
+        CreateRepositoryResponse crr = projectResource.createRepository(projectName,
+                new RepositoryEntry(null, repoName, repoUrl, tag, commitId, null, null));
         assertTrue(crr.isOk());
 
         // ---

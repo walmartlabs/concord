@@ -29,9 +29,15 @@ public class ProjectEntry implements Serializable {
     @ConcordKey
     private final String teamName;
 
-    private final Map<String, UpdateRepositoryRequest> repositories;
+    private final Map<String, RepositoryEntry> repositories;
 
     private final Map<String, Object> cfg;
+
+    private final ProjectVisibility visibility;
+
+    public ProjectEntry(String name) {
+        this(null, name, null, null, null, null, null, null);
+    }
 
     @JsonCreator
     public ProjectEntry(@JsonProperty("id") UUID id,
@@ -39,8 +45,9 @@ public class ProjectEntry implements Serializable {
                         @JsonProperty("description") String description,
                         @JsonProperty("teamId") UUID teamId,
                         @JsonProperty("teamName") String teamName,
-                        @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
-                        @JsonProperty("cfg") Map<String, Object> cfg) {
+                        @JsonProperty("repositories") Map<String, RepositoryEntry> repositories,
+                        @JsonProperty("cfg") Map<String, Object> cfg,
+                        @JsonProperty("visibility") ProjectVisibility visibility) {
 
         this.id = id;
         this.name = name;
@@ -49,6 +56,7 @@ public class ProjectEntry implements Serializable {
         this.teamName = teamName;
         this.repositories = repositories;
         this.cfg = cfg;
+        this.visibility = visibility;
     }
 
     public UUID getId() {
@@ -71,12 +79,16 @@ public class ProjectEntry implements Serializable {
         return teamName;
     }
 
-    public Map<String, UpdateRepositoryRequest> getRepositories() {
+    public Map<String, RepositoryEntry> getRepositories() {
         return repositories;
     }
 
     public Map<String, Object> getCfg() {
         return cfg;
+    }
+
+    public ProjectVisibility getVisibility() {
+        return visibility;
     }
 
     @Override
@@ -89,6 +101,7 @@ public class ProjectEntry implements Serializable {
                 ", teamName='" + teamName + '\'' +
                 ", repositories=" + repositories +
                 ", cfg=" + cfg +
+                ", visibility=" + visibility +
                 '}';
     }
 }

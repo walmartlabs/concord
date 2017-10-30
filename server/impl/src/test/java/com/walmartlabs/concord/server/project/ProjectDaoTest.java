@@ -3,7 +3,6 @@ package com.walmartlabs.concord.server.project;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
-import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,7 +14,6 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
 
 @Ignore("requires a local DB instance")
 public class ProjectDaoTest extends AbstractDaoTest {
@@ -26,14 +24,14 @@ public class ProjectDaoTest extends AbstractDaoTest {
     @Before
     public void setUp() throws Exception {
         repositoryDao = new RepositoryDao(getConfiguration());
-        projectDao = new ProjectDao(getConfiguration(), mock(UserPermissionCleaner.class));
+        projectDao = new ProjectDao(getConfiguration());
     }
 
     @Test
     public void testInsertDelete() throws Exception {
         Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(projectName, "test", null, cfg);
+        UUID projectId = projectDao.insert(projectName, "test", null, cfg, null);
 
         // ---
         Map<String, Object> actualCfg = projectDao.getConfiguration(projectId);
@@ -74,19 +72,19 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
     @Test
     public void testList() throws Exception {
-        assertEquals(0, projectDao.list(PROJECTS.PROJECT_NAME, true).size());
+        assertEquals(0, projectDao.list(null, PROJECTS.PROJECT_NAME, true).size());
 
         // ---
 
         String aName = "aProject#" + System.currentTimeMillis();
         String bName = "bProject#" + System.currentTimeMillis();
 
-        projectDao.insert(aName, "test", null, null);
-        projectDao.insert(bName, "test", null, null);
+        projectDao.insert(aName, "test", null, null, null);
+        projectDao.insert(bName, "test", null, null, null);
 
         // ---
 
-        List<ProjectEntry> l = projectDao.list(PROJECTS.PROJECT_NAME, false);
+        List<ProjectEntry> l = projectDao.list(null, PROJECTS.PROJECT_NAME, false);
         assertEquals(2, l.size());
 
         ProjectEntry a = l.get(1);

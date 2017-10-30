@@ -19,7 +19,7 @@ public class UpdateProjectRequest implements Serializable {
     @ConcordKey
     private final String teamName;
 
-    private final Map<String, UpdateRepositoryRequest> repositories;
+    private final Map<String, RepositoryEntry> repositories;
 
     private final Map<String, Object> cfg;
 
@@ -31,7 +31,7 @@ public class UpdateProjectRequest implements Serializable {
     public UpdateProjectRequest(@JsonProperty("description") String description,
                                 @JsonProperty("teamId") UUID teamId,
                                 @JsonProperty("teamName") String teamName,
-                                @JsonProperty("repositories") Map<String, UpdateRepositoryRequest> repositories,
+                                @JsonProperty("repositories") Map<String, RepositoryEntry> repositories,
                                 @JsonProperty("cfg") Map<String, Object> cfg) {
 
         this.description = description;
@@ -53,7 +53,7 @@ public class UpdateProjectRequest implements Serializable {
         return teamName;
     }
 
-    public Map<String, UpdateRepositoryRequest> getRepositories() {
+    public Map<String, RepositoryEntry> getRepositories() {
         return repositories;
     }
 

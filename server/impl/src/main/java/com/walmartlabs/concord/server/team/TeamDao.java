@@ -21,13 +21,10 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
-import static org.jooq.impl.DSL.exists;
-import static org.jooq.impl.DSL.selectFrom;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class TeamDao extends AbstractDao {
-
-    public static final UUID DEFAULT_TEAM_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Inject
     public TeamDao(Configuration cfg) {
@@ -106,14 +103,20 @@ public class TeamDao extends AbstractDao {
     public List<TeamEntry> list(DSLContext tx, UUID currentUserId) {
         Teams t = TEAMS.as("t");
 
+        if (currentUserId == null) {
+            return tx.selectFrom(t)
+                    .orderBy(t.TEAM_NAME)
+                    .fetch(TeamDao::toEntry);
+        }
+
+        Condition isPublic = t.VISIBILITY.eq(TeamVisibility.PUBLIC.toString());
+
         Condition filterByTeamMember = exists(selectFrom(USER_TEAMS)
                 .where(USER_TEAMS.USER_ID.eq(currentUserId)
                         .and(USER_TEAMS.TEAM_ID.eq(t.TEAM_ID))));
 
         return tx.selectFrom(t)
-                .where(t.IS_ACTIVE.isTrue()
-                        .and(t.VISIBILITY.eq(TeamVisibility.PUBLIC.toString())
-                                .or(filterByTeamMember)))
+                .where(t.IS_ACTIVE.isTrue().and(or(isPublic, filterByTeamMember)))
                 .orderBy(t.TEAM_NAME)
                 .fetch(TeamDao::toEntry);
     }
