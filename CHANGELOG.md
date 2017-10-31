@@ -27,6 +27,14 @@ variables;
 
 
 
+## [0.44.1] - 2017-10-30
+
+### Added
+
+- concord-console: "terminated ssl" option.
+
+
+
 ## [0.44.0] - 2017-10-12
 
 ### Added

@@ -9,6 +9,9 @@ NGINX_CONF_TEMPLATE="app.template"
 if [ "${SSL}" == "true" ]; then
     NGINX_CONF_TEMPLATE="app.ssl.template"
 fi
+if [ "${TERMINATED_SSL}" == "true" ]; then
+    NGINX_CONF_TEMPLATE="app.terminated_ssl.template"
+fi
 
 NGINX_CONF_DIR="/opt/concord/console/nginx/conf"
 
