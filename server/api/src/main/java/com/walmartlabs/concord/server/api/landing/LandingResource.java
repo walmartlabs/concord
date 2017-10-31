@@ -10,8 +10,8 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-@Api("Landing")
-@Path("/api/v1/landing")
+@Api("Landing page")
+@Path("/api/v1/landing_page")
 public interface LandingResource {
 
     /**
@@ -21,30 +21,30 @@ public interface LandingResource {
      * @return
      */
     @POST
-    @ApiOperation("Create or update landing")
+    @ApiOperation("Create or update a project's landing page registration")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     CreateLandingResponse createOrUpdate(@ApiParam @Valid LandingEntry entry);
 
     /**
-     * Delete project's landing page registration.
+     * Delete an existing project's landing page registration.
      *
      * @param id landing's id
      * @return
      */
     @DELETE
-    @ApiOperation("Delete landing")
+    @ApiOperation("Delete an existing project's landing page registration")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     DeleteLandingResponse delete(@ApiParam @PathParam("id") UUID id);
 
     /**
-     * Lists project's landing page registrations.
+     * Lists landing page registrations.
      *
      * @return
      */
     @GET
-    @ApiOperation("List landings")
+    @ApiOperation("List landing page registrations")
     @Produces(MediaType.APPLICATION_JSON)
     List<LandingEntry> list();
 }

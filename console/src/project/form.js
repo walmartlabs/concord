@@ -2,7 +2,7 @@ import React from "react";
 import {connect} from "react-redux";
 import {push as pushHistory} from "react-router-redux";
 import {arrayPush as formArrayPush, change as formChange, FieldArray, reduxForm} from "redux-form";
-import {Button, Divider, Form, Message, Table} from "semantic-ui-react";
+import {Button, Divider, Form, Message, Popup, Table} from "semantic-ui-react";
 import {Field} from "../shared/forms";
 import {actions as modal} from "../shared/Modal";
 import * as RepositoryPopup from "./RepositoryPopup";
@@ -52,7 +52,12 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
                             <Button basic icon="delete" onClick={() => fields.remove(idx)}/>
                         </Table.Cell>
                         <Table.Cell>
-                            <Button disabled={!pristine} basic icon="caret right" onClick={startProcess(fields.get(idx).name)}/>
+                            <Popup
+                                trigger={<Button disabled={!pristine} basic icon="caret right"
+                                                 onClick={startProcess(fields.get(idx).name)}/>}
+                                content="Start a new process"
+                                inverted
+                            />
                         </Table.Cell>
                     </Table.Row>
                 ))}

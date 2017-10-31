@@ -57,6 +57,9 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
                         <Menu.Item active={router.isActive("/project/_new")}>
                             <Link to="/project/_new">Create new</Link>
                         </Menu.Item>
+                        <Menu.Item active={router.isActive("/landing/list")}>
+                            <Link to="/landing/list">Browse flows</Link>
+                        </Menu.Item>
                     </Menu.Menu>
                 </Menu.Item>
                 <Menu.Item active={router.isActive("/secret")}>
@@ -67,14 +70,6 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
                         </Menu.Item>
                         <Menu.Item active={router.isActive("/secret/list")}>
                             <Link to="/secret/_new">Create New</Link>
-                        </Menu.Item>
-                    </Menu.Menu>
-                </Menu.Item>
-                <Menu.Item active={router.isActive("/landing")}>
-                    <Menu.Header><Icon name="cubes"/>Landings</Menu.Header>
-                    <Menu.Menu>
-                        <Menu.Item active={router.isActive("/landing/list")}>
-                            <Link to="/landing/list">List</Link>
                         </Menu.Item>
                     </Menu.Menu>
                 </Menu.Item>

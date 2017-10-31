@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
-import {Button, Header, Card, CardGroup, Image} from "semantic-ui-react";
+import {Button, Card, CardGroup, Header, Image} from "semantic-ui-react";
 import {Link} from "react-router";
 import * as StartProjectPopup from "../../project/StartProjectPopup/StartProjectPopup";
 import RefreshButton from "../../shared/RefreshButton";
@@ -23,41 +23,44 @@ class LandingPage extends Component {
         loadData();
     }
 
+    renderCard(item) {
+        const {startProcessPopupFn} = this.props;
+        return <Card key={item.id}>
+            <Card.Content>
+                {item.icon ? <Image floated='right' size='mini' src={`data:image/png;base64, ${item.icon}`}/> : ''}
+
+                <Card.Header>
+                    {item.name}
+                </Card.Header>
+                <Card.Meta>
+                    Project: <Link to={`/project/${item.projectName}`}>{item.projectName}</Link>
+                </Card.Meta>
+                <Card.Description>
+                    {item.description}
+                </Card.Description>
+            </Card.Content>
+            <Card.Content extra>
+                <div className='ui two buttons'>
+                    <Button basic color='green'
+                            onClick={() => startProcessPopupFn(item.projectName, item.repositoryName)}>Start
+                        process</Button>
+                </div>
+            </Card.Content>
+        </Card>
+    }
+
     render() {
-        const {loading, error, data, startProcessPopupFn} = this.props;
+        const {loading, error, data} = this.props;
 
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.load()}/>;
         }
 
         return <div>
-            <Header as="h3"><RefreshButton loading={loading} onClick={() => this.load()}/> Landing pages</Header>
+            <Header as="h3"><RefreshButton loading={loading} onClick={() => this.load()}/> Registered flows</Header>
 
-            <CardGroup>
-            {data.map(function (item) {
-                return <Card key={item.id}>
-                    <Card.Content>
-                        {item.icon ? <Image floated='right' size='mini' src={`data:image/png;base64, ${item.icon}`}/> : ''}
-
-                        <Card.Header>
-                            {item.name}
-                        </Card.Header>
-                        <Card.Meta>
-                            Project: <Link to={`/project/${item.projectName}`}>{item.projectName}</Link>
-                        </Card.Meta>
-                        <Card.Description>
-                            {item.description}
-                        </Card.Description>
-                    </Card.Content>
-                    <Card.Content extra>
-                        <div className='ui two buttons'>
-                            <Button basic color='green' onClick={() => startProcessPopupFn(item.projectName, item.repositoryName)}>Start process</Button>
-                        </div>
-                    </Card.Content>
-                </Card>
-                })
-            }
-            </CardGroup>
+            {!data || data.length <= 0 && <p>No registered flows found.</p>}
+            {data && data.length > 0 && <CardGroup>{data.map(item => this.renderCard(item))}</CardGroup>}
         </div>;
     }
 }

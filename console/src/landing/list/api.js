@@ -4,7 +4,7 @@ import * as common from "../../api";
 export const loadData = () => {
     console.debug("API: loadData -> starting...");
 
-    return fetch(`/api/v1/landing`, {credentials: "same-origin"})
+    return fetch(`/api/v1/landing_page`, {credentials: "same-origin"})
         .then(response => {
             if (!response.ok) {
                 throw common.defaultError(response);
