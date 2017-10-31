@@ -58,7 +58,7 @@ public class ProcessManager {
             status = ProcessStatus.SUSPENDED;
         }
 
-        queueDao.update(instanceId, agentId, status);
+        queueDao.updateAgentId(instanceId, agentId, status);
         logManager.info(instanceId, "Process status: {}", status);
 
         log.info("updateStatus [{}, '{}', {}] -> done", instanceId, agentId, status);

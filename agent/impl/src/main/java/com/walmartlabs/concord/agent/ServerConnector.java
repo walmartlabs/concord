@@ -17,6 +17,7 @@ public class ServerConnector {
     private final ExecutorService executor;
 
     private AgentApiClient client;
+    private Future<?> executionCleanup;
     private Future<?> commandHandler;
     private List<Future<?>> workers;
     private Future<?> dockerSweeper;
@@ -35,6 +36,9 @@ public class ServerConnector {
         log.info("start -> connecting to {}:{}", host, port);
 
         ExecutionManager executionManager = new ExecutionManager(client, cfg);
+
+        executionCleanup = executor.submit(new ExecutionStatusCleanup(executionManager));
+
         commandHandler = executor.submit(new CommandHandler(client, executionManager, executor));
 
         workers = new ArrayList<>();
@@ -69,6 +73,11 @@ public class ServerConnector {
         if (client != null) {
             client.stop();
             client = null;
+        }
+
+        if (executionCleanup != null) {
+            executionCleanup.cancel(true);
+            executionCleanup = null;
         }
     }
 }

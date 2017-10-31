@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-agent, concord-server: detect orphaned or stalled
+processes;
 - concord-server, concord-console: process landing pages;
 - concord-server: show an error page when a "portal" process fails;
 - concord-project-model: alias `::` to `try:`;

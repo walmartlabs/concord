@@ -28,6 +28,6 @@ public abstract class AbstractMainTest {
         Path idPath = tmpDir.resolve("_instanceId");
         Files.write(idPath, instanceId.getBytes());
 
-        return new Main(engineFactory);
+        return new Main(engineFactory, mock(ProcessHeartbeat.class));
     }
 }

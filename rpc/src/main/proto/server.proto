@@ -78,6 +78,16 @@ message TAttachments {
     bytes data = 2;
 }
 
+// PROCESS HEARTBEAT SERVICE
+
+message TProcessHeartbeatRequest {
+    string instanceId = 1;
+}
+
+service TProcessHeartbeatService {
+    rpc heartbeat(TProcessHeartbeatRequest) returns (google.protobuf.Empty);
+}
+
 // KEY-VALUE STORE SERVICE
 
 service TKvService {

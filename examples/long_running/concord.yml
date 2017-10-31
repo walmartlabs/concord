@@ -1,0 +1,3 @@
+flows:
+  default:
+  - ${sleep.ms(60000)}

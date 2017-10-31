@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.runner.engine;
 
-import com.walmartlabs.concord.rpc.*;
+import com.walmartlabs.concord.rpc.ProcessHeartbeatService;
+import com.walmartlabs.concord.rpc.RunnerApiClient;
 import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Inject;
@@ -36,5 +37,9 @@ public class RpcClientImpl implements RpcClient {
     @Override
     public SlackService getSlackService() {
         return client.getSlackService();
+    }
+
+    public ProcessHeartbeatService getHeartbeatService() {
+        return client.getHeartbeatService();
     }
 }

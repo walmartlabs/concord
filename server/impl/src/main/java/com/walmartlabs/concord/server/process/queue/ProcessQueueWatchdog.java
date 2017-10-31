@@ -8,6 +8,7 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.state.ProcessMetadataManager;
@@ -47,8 +48,11 @@ public class ProcessQueueWatchdog {
                     ProcessKind.CANCEL_HANDLER, 3)
     };
 
-    private static final long POLL_DELAY = 2000;
-    private static final long ERROR_DELAY = 10000;
+    private static final long HANDLERS_POLL_DELAY = 2000;
+    private static final long HANDLERS_ERROR_DELAY = 10000;
+
+    private static final long STALLED_POLL_DELAY = 10000;
+    private static final long STALLED_ERROR_DELAY = 10000;
 
     private static final ProcessKind[] HANDLED_PROCESS_KINDS = {
             ProcessKind.DEFAULT
@@ -67,41 +71,79 @@ public class ProcessQueueWatchdog {
             ProcessStatus.RESUMING
     };
 
+    private static final ProcessStatus[] POTENTIAL_STALLED_STATUSES = {
+            ProcessStatus.RUNNING,
+            ProcessStatus.STARTING
+    };
+
+    private final ProcessQueueDao queueDao;
+    private final LogManager logManager;
     private final WatchdogDao watchdogDao;
     private final PayloadManager payloadManager;
     private final Chain forkPipeline;
 
     @Inject
-    public ProcessQueueWatchdog(WatchdogDao watchdogDao, PayloadManager payloadManager, ForkPipeline forkPipeline) {
+    public ProcessQueueWatchdog(ProcessQueueDao queueDao, LogManager logManager,
+                                WatchdogDao watchdogDao, PayloadManager payloadManager,
+                                ForkPipeline forkPipeline) {
+
+        this.queueDao = queueDao;
+        this.logManager = logManager;
         this.watchdogDao = watchdogDao;
         this.payloadManager = payloadManager;
         this.forkPipeline = forkPipeline;
+
         init();
     }
 
     private void init() {
-        Thread t = new Thread(new Worker(), "process-queue-watchdog");
-        t.start();
+        new Thread(new Worker(HANDLERS_POLL_DELAY, HANDLERS_ERROR_DELAY, new ProcessHandlersWorker()),
+                "process-handlers-worker").start();
+
+        new Thread(new Worker(STALLED_POLL_DELAY, STALLED_ERROR_DELAY, new ProcessStalledWorker()),
+                "process-stalled-worker").start();
+
         log.info("init -> watchdog started");
     }
 
-    private final class Worker implements Runnable {
+    private static final class Worker implements Runnable {
+
+        private final long interval;
+        private final long errorInterval;
+        private final Runnable delegate;
+
+        private Worker(long interval, long errorInterval, Runnable delegate) {
+            this.interval = interval;
+            this.errorInterval = errorInterval;
+            this.delegate = delegate;
+        }
 
         @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    poll();
+                    delegate.run();
+                    sleep(interval);
                 } catch (Exception e) {
                     log.error("run -> error: {}", e.getMessage(), e);
-                    sleep(ERROR_DELAY);
+                    sleep(errorInterval);
                 }
-
-                sleep(POLL_DELAY);
             }
         }
 
-        private void poll() {
+        private void sleep(long ms) {
+            try {
+                Thread.sleep(ms);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private final class ProcessHandlersWorker implements Runnable {
+
+        @Override
+        public void run() {
             watchdogDao.transaction(tx -> {
                 Field<Timestamp> maxAge = currentTimestamp().minus(field("interval '7 days'"));
 
@@ -120,19 +162,27 @@ public class ProcessQueueWatchdog {
 
                         forkPipeline.process(payload);
 
-                        log.info("run -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
+                        log.info("processHandlers -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                                 childId, parent.instanceId, e.flow);
                     }
                 }
             });
         }
+    }
 
-        private void sleep(long ms) {
-            try {
-                Thread.sleep(ms);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+    private final class ProcessStalledWorker implements Runnable {
+        @Override
+        public void run() {
+            watchdogDao.transaction(tx -> {
+                Field<Timestamp> cutOff = currentTimestamp().minus(field("interval '1 minute'"));
+
+                List<UUID> ids = watchdogDao.pollStalled(tx, cutOff, 1);
+                for (UUID id : ids) {
+                    queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
+                    logManager.error(id, "Process stalled, no heartbeat for more than a minute");
+                    log.info("processStalled -> marked as failed: {}", id);
+                }
+            });
         }
     }
 
@@ -181,6 +231,20 @@ public class ProcessQueueWatchdog {
                     .forUpdate()
                     .skipLocked()
                     .fetch(WatchdogDao::toEntry);
+        }
+
+        public List<UUID> pollStalled(DSLContext tx, Field<Timestamp> cutOff, int maxEntries) {
+            VProcessQueue q = V_PROCESS_QUEUE.as("q");
+
+            return tx.select(q.INSTANCE_ID)
+                    .from(q)
+                    .where(q.CURRENT_STATUS.in(Utils.toString(POTENTIAL_STALLED_STATUSES))
+                            .and(q.LAST_UPDATED_AT.lessThan(cutOff)))
+                    .orderBy(q.CREATED_AT)
+                    .limit(maxEntries)
+                    .forUpdate()
+                    .skipLocked()
+                    .fetch(q.INSTANCE_ID);
         }
 
         private Field<Number> count(DSLContext tx, Field<UUID> parentInstanceId, ProcessKind kind) {

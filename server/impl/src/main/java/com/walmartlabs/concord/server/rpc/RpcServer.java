@@ -23,6 +23,7 @@ public class RpcServer implements Closeable {
     @Inject
     public RpcServer(CommandQueueImpl commandQueue,
                      JobQueueImpl jobQueue,
+                     ProcessHeartbeatServiceImpl heartbeatService,
                      KvServiceImpl kvService,
                      SecretStoreServiceImpl secretStoreService,
                      EventServiceImpl eventService,
@@ -35,6 +36,7 @@ public class RpcServer implements Closeable {
                 .forPort(port)
                 .addService(commandQueue)
                 .addService(jobQueue)
+                .addService(heartbeatService)
                 .addService(kvService)
                 .addService(secretStoreService)
                 .addService(eventService)

@@ -54,6 +54,7 @@ public class AgentCommand implements Serializable {
 
     public enum Status {
         CREATED,
-        SENT
+        SENT,
+        FAILED
     }
 }

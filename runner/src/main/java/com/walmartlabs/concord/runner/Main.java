@@ -40,11 +40,13 @@ public class Main {
     private static final String SUSPEND_MARKER = InternalConstants.Files.SUSPEND_MARKER_FILE_NAME;
 
     private final EngineFactory engineFactory;
+    private final ProcessHeartbeat heartbeat;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public Main(EngineFactory engineFactory) {
+    public Main(EngineFactory engineFactory, ProcessHeartbeat heartbeat) {
         this.engineFactory = engineFactory;
+        this.heartbeat = heartbeat;
     }
 
     public void run() throws Exception {
@@ -59,6 +61,8 @@ public class Main {
             Thread.sleep(100);
         }
         String instanceId = new String(Files.readAllBytes(idPath));
+
+        heartbeat.start(instanceId);
 
         String eventName = readResumeEvent(baseDir);
         if (eventName == null) {

@@ -60,19 +60,21 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute();
     }
 
-    public void update(UUID instanceId, String agentId, ProcessStatus status) {
-        tx(tx -> {
-            int i = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                    .set(PROCESS_QUEUE.LAST_AGENT_ID, agentId)
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .execute();
+    public void updateAgentId(UUID instanceId, String agentId, ProcessStatus status) {
+        tx(tx -> updateAgentId(tx, instanceId, agentId, status));
+    }
 
-            if (i != 1) {
-                throw new DataAccessException("Invalid number of rows updated: " + i);
-            }
-        });
+    public void updateAgentId(DSLContext tx, UUID instanceId, String agentId, ProcessStatus status) {
+        int i = tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
+                .set(PROCESS_QUEUE.LAST_AGENT_ID, agentId)
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                .execute();
+
+        if (i != 1) {
+            throw new DataAccessException("Invalid number of rows updated: " + i);
+        }
     }
 
     public void update(UUID instanceId, ProcessStatus status) {
@@ -116,6 +118,12 @@ public class ProcessQueueDao extends AbstractDao {
 
             return i == 1;
         });
+    }
+
+    public void touch(UUID instanceId) {
+        tx(tx -> tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
     }
 
     public ProcessEntry get(UUID instanceId) {
