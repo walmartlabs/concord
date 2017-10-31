@@ -1,5 +1,7 @@
 # Change log
 
+## [Unreleased]
+
 ### Added
 
 - concord-server: show an error page when a "portal" process fails;
@@ -16,6 +18,12 @@ form;
 entries returned by the API;
 - concord-server: added environment variable to override the
 server's password.
+
+## [0.45.1] - 2017-10-30
+
+### Added
+
+- concord-console: "terminated ssl" option.
 
 
 

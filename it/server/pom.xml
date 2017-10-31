@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>0.45.1-SNAPSHOT</version>
+        <version>0.45.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -190,7 +190,7 @@
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-template</artifactId>
-                                    <version>0.45.0</version>
+                                    <version>0.39.0</version>
                                     <destFileName>ansible-template.jar</destFileName>
                                 </artifactItem>
 
