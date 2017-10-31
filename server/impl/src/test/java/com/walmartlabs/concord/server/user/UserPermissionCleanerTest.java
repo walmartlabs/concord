@@ -16,7 +16,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @Ignore("requires a local DB instance")
 public class UserPermissionCleanerTest extends AbstractDaoTest {
@@ -67,7 +68,6 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         String username = "user#" + System.currentTimeMillis();
         Set<String> perms = new HashSet<>();
-        perms.add(Permissions.APIKEY_DELETE_ANY);
         UUID userId = userDao.insert(username, perms);
 
         // ---
@@ -78,7 +78,5 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
         UserEntry u = userDao.get(userId);
         assertNotNull(u);
-        assertEquals(1, u.getPermissions().size());
-        assertEquals(Permissions.APIKEY_DELETE_ANY, u.getPermissions().iterator().next());
     }
 }

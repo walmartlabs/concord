@@ -1,14 +1,14 @@
 package com.walmartlabs.concord.server.security.apikey;
 
-import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.security.apikey.DeleteApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -35,7 +35,6 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
 
     @Override
     @Validate
-    @RequiresPermissions(Permissions.APIKEY_CREATE_NEW)
     public CreateApiKeyResponse create(CreateApiKeyRequest request) {
         UUID userId = assertUserId(request.getUserId());
         if (userId == null) {
@@ -46,6 +45,8 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
             throw new ValidationErrorsException("User ID or name is required");
         }
 
+        assertOwner(userId);
+
         String key = apiKeyDao.newApiKey();
         UUID id = apiKeyDao.insert(userId, key);
         return new CreateApiKeyResponse(id, key);
@@ -53,11 +54,13 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
 
     @Override
     @Validate
-    @RequiresPermissions(Permissions.APIKEY_DELETE_ANY)
     public DeleteApiKeyResponse delete(UUID id) {
-        if (!apiKeyDao.existsById(id)) {
+        UUID userId = apiKeyDao.getUserId(id);
+        if (userId == null) {
             throw new ValidationErrorsException("API key not found: " + id);
         }
+
+        assertOwner(userId);
 
         apiKeyDao.delete(id);
         return new DeleteApiKeyResponse();
@@ -92,5 +95,17 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
         }
 
         return userId;
+    }
+
+    private void assertOwner(UUID userId) {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (p.isAdmin()) {
+            // admin users can manage other user's keys
+            return;
+        }
+
+        if (!userId.equals(p.getId())) {
+            throw new UnauthorizedException("Operation is not permitted");
+        }
     }
 }

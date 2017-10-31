@@ -51,6 +51,15 @@ public class ApiKeyDao extends AbstractDao {
                 .execute());
     }
 
+    public UUID getUserId(UUID id) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(API_KEYS.USER_ID)
+                    .from(API_KEYS)
+                    .where(API_KEYS.KEY_ID.eq(id))
+                    .fetchOne(API_KEYS.USER_ID);
+        }
+    }
+
     public UUID findUserId(String key) {
         try (DSLContext tx = DSL.using(cfg)) {
             UUID id = tx.select(API_KEYS.USER_ID)
@@ -63,15 +72,6 @@ public class ApiKeyDao extends AbstractDao {
             }
 
             return id;
-        }
-    }
-
-    public boolean existsById(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            int cnt = tx.fetchCount(tx.selectFrom(API_KEYS)
-                    .where(API_KEYS.KEY_ID.eq(id)));
-
-            return cnt > 0;
         }
     }
 
