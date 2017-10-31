@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: "download state" button to the process status
+page;  
 - concord-agent, concord-server: detect orphaned or stalled
 processes;
 - concord-server, concord-console: process landing pages;
