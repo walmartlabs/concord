@@ -1,7 +1,7 @@
 // @flow
 import {call, fork, put, takeLatest} from "redux-saga/effects";
 import * as api from "./api";
-import types, { retrievePublicKey, savePublicKey } from "./actions";
+import types from "./actions";
 
 function* fetchSecretList(action: any): Generator<*, *, *> {
     try {

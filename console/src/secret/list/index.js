@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
-import {Button, Header, Icon, Popup} from "semantic-ui-react";
+import {Button, Header, Popup} from "semantic-ui-react";
 import DataTable from "../../shared/DataTable";
 import RefreshButton from "../../shared/RefreshButton";
 import ErrorMessage from "../../shared/ErrorMessage";
@@ -20,10 +20,7 @@ const columns = [
 ];
 
 const nameKey = "name";
-const typeKey = "type"
 const actionsKey = "actions";
-
-
 
 const cellFn = (deletePopupFn, getPublicKey) => (row, key) => {
 
