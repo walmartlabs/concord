@@ -38,7 +38,7 @@ public class LandingDao extends AbstractDao {
             return tx
                     .select(lp.LANDING_PAGE_ID, projectNameField, repositoryNameField, lp.NAME, lp.DESCRIPTION, lp.ICON)
                     .from(lp)
-                    .where(LANDING_PAGE.LANDING_PAGE_ID.eq(id))
+                    .where(lp.LANDING_PAGE_ID.eq(id))
                     .fetchOne(LandingDao::toEntity);
         }
     }
