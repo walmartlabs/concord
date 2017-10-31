@@ -7,6 +7,7 @@ import {actions, selectors, SessionWidget} from "../session";
 import Modal from "../shared/Modal";
 import KillProcessPopup from "../process/KillProcessPopup";
 import DeleteSecretPopup from "../secret/list/DeleteSecretPopup";
+import ShowSecretPublicKey from "../secret/list/ShowSecretPublicKey";
 import RepositoryPopup from "../project/RepositoryPopup";
 import DeleteProjectPopup from "../project/DeleteProjectPopup";
 import StartProjectPopup from "../project/StartProjectPopup/StartProjectPopup";
@@ -19,6 +20,8 @@ MODAL_TYPES[DeleteSecretPopup.MODAL_TYPE] = DeleteSecretPopup;
 MODAL_TYPES[RepositoryPopup.MODAL_TYPE] = RepositoryPopup;
 MODAL_TYPES[DeleteProjectPopup.MODAL_TYPE] = DeleteProjectPopup;
 MODAL_TYPES[StartProjectPopup.MODAL_TYPE] = StartProjectPopup;
+MODAL_TYPES[ShowSecretPublicKey.MODAL_TYPE] = ShowSecretPublicKey;
+
 
 const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, children, doLogout, router}) => {
     if (fullScreen) {

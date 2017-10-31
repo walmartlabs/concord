@@ -35,3 +35,13 @@ export const deleteSecret = (name: ConcordKey) => {
             return true;
         });
 };
+
+export const getPublicKey = ( name: ConcordKey ) => {
+    return fetch(`/api/v1/secret/${name}/public`, {method: "GET", credentials: "same-origin" })
+        .then( response => {
+            if(!response.ok) {
+                throw new Error("ERROR: " + response.statusText + " (" + response.status + ")");
+            }
+            return response.json();
+        });
+}

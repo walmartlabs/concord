@@ -1,12 +1,13 @@
 import React, {Component} from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
-import {Button, Header} from "semantic-ui-react";
+import {Button, Header, Icon, Popup} from "semantic-ui-react";
 import DataTable from "../../shared/DataTable";
 import RefreshButton from "../../shared/RefreshButton";
 import ErrorMessage from "../../shared/ErrorMessage";
 import {actions as modal} from "../../shared/Modal";
 import DeleteSecretPopup from "./DeleteSecretPopup";
+import ShowSecretPublicKey from "./ShowSecretPublicKey";
 import * as actions from "./actions";
 import * as selectors from "./reducers";
 import reducers from "./reducers";
@@ -19,17 +20,39 @@ const columns = [
 ];
 
 const nameKey = "name";
+const typeKey = "type"
 const actionsKey = "actions";
 
-const cellFn = (deletePopupFn) => (row, key) => {
+
+
+const cellFn = (deletePopupFn, getPublicKey) => (row, key) => {
+
     if (key === nameKey) {
         return <span>{row[key]}</span>;
     }
 
+    console.log( row, key );
+
     // column with buttons (actions)
     if (key === actionsKey) {
         const name = row[nameKey];
-        return <Button icon="delete" color="red" onClick={() => deletePopupFn(name)}/>;
+        return (
+            <div style={{ textAlign: "right"}}>
+                { row.type === "KEY_PAIR" &&
+                    <Popup
+                        trigger={<Button color="blue" icon='key' onClick={() => getPublicKey(name)} />}
+                        content="Get Public Key"
+                        inverted
+                    />
+                }
+
+                    <Popup
+                        trigger={<Button icon="delete" color="red" onClick={() => deletePopupFn(name)} />}
+                        content="Delete"
+                        inverted
+                    />
+            </div>
+        );
     }
 
     return row[key];
@@ -47,7 +70,7 @@ class SecretTable extends Component {
     }
 
     render() {
-        const {error, loading, data, deletePopupFn} = this.props;
+        const {error, loading, data, deletePopupFn, getPublicKey} = this.props;
 
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.update()}/>;
@@ -55,7 +78,7 @@ class SecretTable extends Component {
 
         return <div>
             <Header as="h3"><RefreshButton loading={loading} onClick={() => this.update()}/>Secrets</Header>
-            <DataTable cols={columns} rows={data} cellFn={cellFn(deletePopupFn)}/>
+            <DataTable cols={columns} rows={data} cellFn={cellFn(deletePopupFn, getPublicKey)} />
         </div>;
     }
 }
@@ -75,9 +98,16 @@ const mapStateToProps = ({secretList}) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     fetchData: () => dispatch(actions.fetchSecretList()),
-    deletePopupFn: (name) => {
+    deletePopupFn: ( name ) => {
         const onSuccess = [actions.fetchSecretList()];
         dispatch(modal.open(DeleteSecretPopup.MODAL_TYPE, {name, onSuccess}));
+    },
+    getPublicKey: ( name ) => {
+        dispatch( modal.open(ShowSecretPublicKey.MODAL_TYPE, { name }) );
+        dispatch({
+            type: actions.types.USER_SECRET_PUBLICKEY_REQUEST,
+            name
+        });
     }
 });
 

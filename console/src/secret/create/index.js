@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import {connect} from "react-redux";
 import { CreateNewKeyPair, CreatePlainSecret, CreateUserCredentials, UploadExistingKeys } from "../components";
 import { actions, sagas, reducers } from "./create";
-import { Container, Segment, SegmentGroup, Message } from "semantic-ui-react";
+import { Segment, Message } from "semantic-ui-react";
 
 
 export class SecretCreate extends Component {
@@ -25,30 +25,30 @@ export class SecretCreate extends Component {
                 Submit_ExistingKeyPair,
         } = this.props;
 
-        return (
-            <Container > 
-                <SegmentGroup>
-                    <Segment loading={ isLoading }>
-                        <CreateNewKeyPair onSubmit={ Submit_NewKeyPair } />
-                        
-                        <CreatePlainSecret onSubmit={ Submit_PlainSecret } />
+        return (                
+            <Segment loading={ isLoading } basic>
 
-                        <CreateUserCredentials onSubmit={ Submit_UserCredentials } />
+                <Message success
+                    style={ { overflowWrap: "break-word" } }
+                    hidden={ !success }
+                    header={ message }
+                    content={ publicKey } 
+                />
 
-                        <UploadExistingKeys onSubmit={ Submit_ExistingKeyPair } />
+                <Message error
+                    hidden={ !error }
+                    header={ message } 
+                />
 
-                        <Message success
-                            style={ { overflowWrap: "break-word" } }
-                            hidden={ !success }
-                            header={ message }
-                            content={ publicKey } />
+                <CreateNewKeyPair onSubmit={ Submit_NewKeyPair } />
+                
+                <CreatePlainSecret onSubmit={ Submit_PlainSecret } />
 
-                        <Message error
-                            hidden={ !error }
-                            header={ message } />
-                    </Segment>
-                </SegmentGroup>
-            </Container> 
+                <CreateUserCredentials onSubmit={ Submit_UserCredentials } />
+
+                <UploadExistingKeys onSubmit={ Submit_ExistingKeyPair } />
+
+            </Segment>
         )
     }
 }

@@ -1,7 +1,7 @@
 // @flow
 import {call, fork, put, takeLatest} from "redux-saga/effects";
 import * as api from "./api";
-import types from "./actions";
+import types, { retrievePublicKey, savePublicKey } from "./actions";
 
 function* fetchSecretList(action: any): Generator<*, *, *> {
     try {
@@ -43,9 +43,28 @@ function* deleteSecret(action: any): Generator<*, *, *> {
     }
 }
 
+function* getPublicKey(action: any): Generator<*, *, *> {
+    try {
+        
+        const response = yield call ( api.getPublicKey, action.name );
+
+        yield put({ 
+            type: types.USER_SECRET_PUBLICKEY_SAVE,
+            publicKey: response.publicKey
+        });
+
+    } catch (e) {
+        yield put({
+            type: types.USER_SECRET_PUBLICKEY_RESPONSE,
+            error: `Error during retrieval: ${e.message}`
+        });
+    }
+}
+
 export default function*(): Generator<*, *, *> {
     yield [
         fork(takeLatest, types.USER_SECRET_LIST_REQUEST, fetchSecretList),
         fork(takeLatest, types.USER_SECRET_DELETE_REQUEST, deleteSecret),
+        fork(takeLatest, types.USER_SECRET_PUBLICKEY_REQUEST, getPublicKey)
     ];
 }
