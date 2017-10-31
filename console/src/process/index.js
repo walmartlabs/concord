@@ -60,6 +60,7 @@ class ProcessStatusPage extends Component {
         const showRefresh = constants.activeStatuses.includes(data.status);
         const enableLogButton = constants.hasLogStatuses.includes(data.status) && data.logFileName;
         const showKillButton = constants.canBeKilledStatuses.includes(data.status);
+        const showStateDownload = constants.hasProcessState.includes(data.status);
         const showForms = data.forms && data.forms.length > 0 && enableFormsStatuses.includes(data.status);
         const showWizard = showForms;
 
@@ -115,8 +116,14 @@ class ProcessStatusPage extends Component {
 
             <Button disabled={!enableLogButton} onClick={() => this.openLog()}>View Log</Button>
 
+            { showStateDownload && 
+                <a href={`/process/${instanceId}/state/snapshot`} download={`Concord_${data.status}_${instanceId}.zip`}>
+                    <Button icon="download" color="blue" content="State" />
+                </a>
+            }
+
             {showKillButton &&
-            <Button icon="delete" color="red" content="Kill" onClick={() => openKillPopup(instanceId)}/>}
+                <Button icon="delete" color="red" content="Kill" onClick={() => openKillPopup(instanceId)}/>}
 
             {showWizard && <Button onClick={() => this.openWizard()}>Wizard</Button>}
 

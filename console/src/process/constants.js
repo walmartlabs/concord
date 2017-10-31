@@ -14,6 +14,9 @@ export const canBeKilledStatuses = ["RUNNING", "SUSPENDED"];
 // statuses that can have a log file
 export const hasLogStatuses = ["STARTING", "RUNNING", "SUSPENDED", "RESUMING", "FINISHED", "FAILED", "CANCELLED"];
 
+// statuses that hava a process state
+export const hasProcessState = ["RUNNING", "SUSPENDED", "RESUMING", "FINISHED", "FAILED", "CANCELLED"];
+
 export const status = {
     preparingStatus: "PREPARING",
     enqueuedStatus: "ENQUEUED",
