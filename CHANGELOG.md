@@ -15,10 +15,13 @@ form;
 
 ### Changed
 
+- concord-server: user can now create API keys only for themselves;
 - concord-server: fix empty secret name in project repository
 entries returned by the API;
 - concord-server: added environment variable to override the
 server's password.
+
+
 
 ## [0.45.1] - 2017-10-30
 
