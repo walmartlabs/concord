@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
@@ -14,7 +13,6 @@ import javax.ws.rs.core.Response;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
 
@@ -62,13 +60,5 @@ public class PortalIT extends AbstractServerIT {
         ProcessPortalService portalService = proxy(ProcessPortalService.class);
         Response resp = portalService.startProcess(projectName + ":" + repoName + ":main", "test1,test2", null);
         assertEquals(200, resp.getStatus());
-
-        ProcessEntry pe = resp.readEntity(ProcessEntry.class);
-
-        // ---
-
-        byte[] ab = getLog(pe.getLogFileName());
-        assertLog(".*Hello, world.*", ab);
-        assertLog(".*x=123.*", ab);
     }
 }
