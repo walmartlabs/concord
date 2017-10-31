@@ -16,6 +16,7 @@ import ProcessForm from "./process/form";
 import ProcessWizard from "./process/wizard";
 import ProcessPortal from "./process/portal";
 import ProjectList from "./project/list";
+import LandingList from "./landing/list";
 import Project from "./project";
 import SecretList from "./secret/list";
 import SecretCreate from "./secret/create";
@@ -61,6 +62,12 @@ ReactDOM.render(
                     <IndexRedirect to="list"/>
                     <Route path="list" component={SecretList}/>
                     <Route path="_new" component={SecretCreate}/>
+                </Route>
+
+                <Route path="landing" onEnter={checkAuth}>
+                    <IndexRedirect to="list"/>
+                    <Route path="list" component={LandingList}/>
+                    <Route path=":landingName" component={Project}/>
                 </Route>
 
                 <Route path="system" onEnter={checkAuth}>

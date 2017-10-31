@@ -70,6 +70,14 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
                         </Menu.Item>
                     </Menu.Menu>
                 </Menu.Item>
+                <Menu.Item active={router.isActive("/landing")}>
+                    <Menu.Header><Icon name="cubes"/>Landings</Menu.Header>
+                    <Menu.Menu>
+                        <Menu.Item active={router.isActive("/landing/list")}>
+                            <Link to="/landing/list">List</Link>
+                        </Menu.Item>
+                    </Menu.Menu>
+                </Menu.Item>
                 <Menu.Item active={router.isActive("/system")}>
                     <Menu.Header><Icon name="lab"/>System</Menu.Header>
                     <Menu.Menu>

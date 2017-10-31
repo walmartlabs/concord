@@ -17,6 +17,7 @@ import {reducers as repository} from "../project/repository";
 import {reducers as secretList} from "../secret/list";
 import {reducers as secretForm} from "../secret/create";
 import {reducers as modal} from "../shared/Modal";
+import {reducers as landingList} from "../landing/list";
 
 export default {
     session,
@@ -34,6 +35,7 @@ export default {
     repository,
     secretList,
     secretForm,
+    landingList,
     modal,
     
     form: formReducer

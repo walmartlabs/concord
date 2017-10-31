@@ -15,6 +15,7 @@ import {sagas as projectStart} from "./project/StartProjectPopup"
 import {sagas as repository} from "./project/repository";
 import {sagas as secret} from "./secret/list";
 import {sagas as secretNew} from "./secret/create"
+import {sagas as landingList} from "./landing/list";
 
 export default function*(): Generator<*, *, *> {
     yield [
@@ -32,6 +33,7 @@ export default function*(): Generator<*, *, *> {
         fork(projectStart),
         fork(repository),
         fork(secret),
-        fork(secretNew)
+        fork(secretNew),
+        fork(landingList)
     ];
 }

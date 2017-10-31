@@ -47,11 +47,47 @@
         </sql>
     </changeSet>
 
+
     <changeSet id="46100" author="ibodrov@gmail.com">
         <addColumn tableName="PROJECTS">
             <column name="VISIBILITY" type="varchar(128)" defaultValue="PUBLIC">
                 <constraints nullable="false"/>
             </column>
         </addColumn>
+    </changeSet>
+
+    <changeSet id="46200" author="brig@gmail.com">
+        <createTable tableName="LANDING_PAGE">
+            <column name="LANDING_PAGE_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="REPO_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NAME" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION" type="varchar(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ICON" type="bytea">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="LANDING_PAGE"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_LANDING_PAGE_PROJECT_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"/>
+
+        <addForeignKeyConstraint baseTableName="LANDING_PAGE"
+                                 baseColumnNames="REPO_ID"
+                                 constraintName="FK_LANDING_PAGE_REPO_ID"
+                                 referencedTableName="REPOSITORIES"
+                                 referencedColumnNames="REPO_ID"/>
     </changeSet>
 </databaseChangeLog>
