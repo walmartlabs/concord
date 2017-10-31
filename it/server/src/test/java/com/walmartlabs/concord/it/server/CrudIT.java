@@ -1,7 +1,13 @@
 package com.walmartlabs.concord.it.server;
 
+import com.sun.org.apache.xml.internal.security.utils.Base64;
+import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.inventory.*;
+import com.walmartlabs.concord.server.api.landing.CreateLandingResponse;
+import com.walmartlabs.concord.server.api.landing.DeleteLandingResponse;
+import com.walmartlabs.concord.server.api.landing.LandingEntry;
+import com.walmartlabs.concord.server.api.landing.LandingResource;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
@@ -347,6 +353,44 @@ public class CrudIT extends AbstractServerIT {
         DeleteInventoryQueryResponse dqr = resource.delete(inventoryName, queryName);
         assertNotNull(dqr);
         assertTrue(dqr.isOk());
+    }
+
+    @Test
+    public void testLanding() throws Exception {
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        LandingResource resource = proxy(LandingResource.class);
+
+        String projectName = "project_" + System.currentTimeMillis();
+        String repositoryName = "repository_" + System.currentTimeMillis();
+        String name = "lp-name-1";
+        String description = "description";
+        String icon = Base64.encode("icon".getBytes());
+
+        projectResource.createOrUpdate(new ProjectEntry(projectName));
+        projectResource.createRepository(projectName, new RepositoryEntry(null, repositoryName, "http://localhost", null, null, null, null));
+
+        // --- create
+        LandingEntry entry = new LandingEntry(null, projectName, repositoryName, name, description, icon);
+        CreateLandingResponse result = resource.createOrUpdate(entry);
+        assertNotNull(result);
+        assertTrue(result.isOk());
+        assertNotNull(result.getId());
+        assertEquals(OperationResult.CREATED, result.getResult());
+
+        // --- update
+        result = resource.createOrUpdate(new LandingEntry(result.getId(), projectName, repositoryName, name, description, icon));
+        assertNotNull(result);
+        assertTrue(result.isOk());
+        assertNotNull(result.getId());
+        assertEquals(OperationResult.UPDATED, result.getResult());
+
+        // --- list
+        List<LandingEntry> listResult = resource.list();
+        assertNotNull(listResult);
+
+        // --- delete
+        DeleteLandingResponse deleteResult = resource.delete(result.getId());
+        assertNotNull(deleteResult);
     }
 
     private static ProjectEntry findProject(List<ProjectEntry> l, String name) {
