@@ -1,6 +1,14 @@
 # Change log
 
-## [Unreleased]
+## [0.44.1] - 2017-10-30
+
+### Added
+
+- concord-console: "terminated ssl" option.
+
+
+
+## [0.44.0] - 2017-10-20
 
 ### Added
 
@@ -24,14 +32,6 @@ variables;
 ### Changed
 
 - concord-dependency-manager: batch resolution of Maven dependencies.
-
-
-
-## [0.44.1] - 2017-10-30
-
-### Added
-
-- concord-console: "terminated ssl" option.
 
 
 
