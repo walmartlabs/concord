@@ -72,11 +72,9 @@ public class LandingDao extends AbstractDao {
     }
 
     public void delete(UUID id) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            tx.delete(LANDING_PAGE)
+        tx(tx -> tx.delete(LANDING_PAGE)
                 .where(LANDING_PAGE.LANDING_PAGE_ID.eq(id))
-                .execute();
-        }
+                .execute());
     }
 
     public List<LandingEntry> list(UUID currentUserId) {
