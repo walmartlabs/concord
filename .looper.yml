@@ -16,7 +16,7 @@ envs:
 
 tools:
   jdk: 8
-  maven: 3.3.9
+  maven: 3.5.0
   sonarscanner: 3.0.3.778
 
 docker:
@@ -46,8 +46,11 @@ flows:
     - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
 
   default:
-    - call: build_and_deploy
-    - call: runsonar
+    try:
+      - call: build_and_deploy
+      - call: runsonar
+    finally:
+      - hygieia.publishBuild()
 
   pr:
     - call: build
