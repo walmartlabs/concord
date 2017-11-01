@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.plugins.log;
 
 import com.walmartlabs.concord.sdk.Task;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
@@ -8,33 +9,35 @@ import javax.inject.Named;
 @Named("log")
 public class LoggingTask implements Task {
 
-    public static final String DEFAULT_LOGGER_NAME = "flow";
+    public static final Logger log = LoggerFactory.getLogger(LoggingTask.class);
 
     public void info(String s) {
-        LoggerFactory.getLogger(DEFAULT_LOGGER_NAME).info(s);
+        log.info(s);
     }
 
-    public void info(String log, String s) {
-        LoggerFactory.getLogger(log).info(s);
+    @Deprecated
+    public void info(String logName, String s) {
+        log.info("{} - {}", logName, s);
     }
 
     public void warn(String s) {
-        LoggerFactory.getLogger(DEFAULT_LOGGER_NAME).warn(s);
+        log.warn(s);
     }
 
-    public void warn(String log, String s) {
-        LoggerFactory.getLogger(log).warn(s);
+    @Deprecated
+    public void warn(String logName, String s) {
+        log.warn("{} - {}", logName, s);
     }
 
     public void error(String s) {
-        LoggerFactory.getLogger(DEFAULT_LOGGER_NAME).error(s);
+        log.error(s);
     }
 
-    public void error(String log, String s) {
-        LoggerFactory.getLogger(log).error(s);
+    public void error(String logName, String s) {
+        log.error("{} - {}", logName, s);
     }
 
     public void call(String s) {
-        LoggerFactory.getLogger(LoggingTask.class).info(s);
+        log.info(s);
     }
 }
