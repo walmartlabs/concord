@@ -117,7 +117,7 @@ class ProcessStatusPage extends Component {
             <Button disabled={!enableLogButton} onClick={() => this.openLog()}>View Log</Button>
 
             { showStateDownload && 
-                <a href={`/api/v1/process/${instanceId}/state/snapshot`} download={`Concord_${data.status}_${instanceId}.zip`}>
+                <a href={`/process/${instanceId}/state/snapshot`} download={`Concord_${data.status}_${instanceId}.zip`}>
                     <Button icon="download" color="blue" content="State" />
                 </a>
             }

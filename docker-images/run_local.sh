@@ -20,7 +20,7 @@ docker run -d \
 -e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
 -e 'DB_URL=jdbc:postgresql://localhost:5432/postgres' \
 --network=host \
-docker.prod.walmart.com/walmartlabs/concord-server
+walmartlabs/concord-server
 
 docker run -d \
 --privileged \
@@ -34,11 +34,11 @@ docker run -d \
 -v /tmp:/tmp \
 -e 'DOCKER_HOST=tcp://localhost:2375' \
 --network=host \
-docker.prod.walmart.com/walmartlabs/concord-agent
+walmartlabs/concord-agent
 
 docker run -d \
 --name console \
 -e 'SERVER_ADDR=localhost' \
 -e 'SERVER_PORT=8001' \
 --network=host \
-docker.prod.walmart.com/walmartlabs/concord-console
+walmartlabs/concord-console

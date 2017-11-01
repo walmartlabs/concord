@@ -11,6 +11,5 @@ ADD docker-images/console/target/dist/console.tar.gz /opt/concord/console/dist/
 COPY docker-images/console/src/main/docker/start.sh /opt/concord/console/
 COPY docker-images/console/src/main/docker/nginx /opt/concord/console/nginx
 
-ENTRYPOINT /opt/concord/console/start.sh
-
+CMD ["bash", "/opt/concord/console/start.sh"]
 

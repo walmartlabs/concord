@@ -7,6 +7,6 @@ EXPOSE 8101
 ADD docker-images/server/target/dist/server.tar.gz /opt/concord/server/
 COPY docker-images/server/src/main/docker/start.sh /opt/concord/server/
 
-ENTRYPOINT /opt/concord/server/start.sh
+CMD ["bash", "/opt/concord/server/start.sh"]
 
 

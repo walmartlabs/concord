@@ -6,7 +6,11 @@ COPY docker-images/base/src/main/docker/base.repo /etc/yum.repos.d/
 
 RUN yum-config-manager --disable base extras updates && \
     yum -y update && \
-    yum -y install java-1.8.0-openjdk-devel which libtool-ltdl strace && \
+    yum -y install java-1.8.0-openjdk-devel which libtool-ltdl strace python-pip && \
     yum clean all
+
+RUN pip install -i https://nexus.prod.walmart.com/nexus/content/repositories/pypi-proxy/simple dumb-init
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 ENV JAVA_HOME /usr/lib/jvm/java-1.8.0
