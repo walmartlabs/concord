@@ -37,7 +37,7 @@ public class SmtpTask implements Task {
             mailParams = (Map<String, Object>) ctx.getVariable("mail");
         }
 
-        call(smtpParams, mailParams);
+        call(ctx, smtpParams, mailParams);
     }
 
     public void call(@InjectVariable("context") Context ctx, Map<String, Object> smtpParams, Map<String, Object> mailParams) throws Exception {
