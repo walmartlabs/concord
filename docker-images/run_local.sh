@@ -16,6 +16,7 @@ hub.docker.prod.walmart.com/library/postgres:latest
 docker run -d \
 --name server \
 -v /tmp:/tmp \
+-v ${HOME}:${HOME}:ro \
 -v ${LDAP_PROPERTIES}:/opt/concord/conf/ldap.properties:ro \
 -e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
 -e 'DB_URL=jdbc:postgresql://localhost:5432/postgres' \
@@ -32,6 +33,7 @@ docker.prod.walmart.com/walmartlabs/concord-dind
 docker run -d \
 --name agent \
 -v /tmp:/tmp \
+-v ${HOME}:${HOME}:ro \
 -e 'DOCKER_HOST=tcp://localhost:2375' \
 --network=host \
 walmartlabs/concord-agent
