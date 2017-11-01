@@ -39,7 +39,7 @@ public class KvDao extends AbstractDao {
                 .execute());
     }
 
-    public synchronized void put(UUID projectId, String key, String value) {
+    public synchronized void putString(UUID projectId, String key, String value) {
         ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
         tx(tx -> {
             int rows = tx.insertInto(kv)
@@ -47,6 +47,22 @@ public class KvDao extends AbstractDao {
                     .values(projectId, key, value)
                     .onConflict(kv.PROJECT_ID, kv.VALUE_KEY)
                     .doUpdate().set(kv.VALUE_STRING, value)
+                    .execute();
+
+            if (rows != 1) {
+                throw new DataAccessException("Invalid number of rows: " + rows);
+            }
+        });
+    }
+
+    public synchronized void putLong(UUID projectId, String key, long value) {
+        ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
+        tx(tx -> {
+            int rows = tx.insertInto(kv)
+                    .columns(kv.PROJECT_ID, kv.VALUE_KEY, kv.VALUE_LONG)
+                    .values(projectId, key, value)
+                    .onConflict(kv.PROJECT_ID, kv.VALUE_KEY)
+                    .doUpdate().set(kv.VALUE_LONG, value)
                     .execute();
 
             if (rows != 1) {

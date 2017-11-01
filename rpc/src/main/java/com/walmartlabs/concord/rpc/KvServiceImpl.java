@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class KvServiceImpl implements KvService {
 
     private static final long UPDATE_TIMEOUT = 5000;
+    private static final long READ_TIMEOUT = 5000;
 
     private final ManagedChannel channel;
 
@@ -29,7 +30,7 @@ public class KvServiceImpl implements KvService {
     }
 
     @Override
-    public void put(String instanceId, String key, String value) throws ClientException {
+    public void putString(String instanceId, String key, String value) throws ClientException {
         if (value == null) {
             throw new IllegalArgumentException("KV store: null values are not allowed. Got: " + key + " = " + value);
         }
@@ -43,20 +44,20 @@ public class KvServiceImpl implements KvService {
                 .setValue(value)
                 .build();
 
-        blockingStub.put(req);
+        blockingStub.putString(req);
     }
 
     @Override
-    public String get(String instanceId, String key) throws ClientException {
+    public String getString(String instanceId, String key) throws ClientException {
         TKvServiceBlockingStub blockingStub = TKvServiceGrpc.newBlockingStub(channel)
-                .withDeadlineAfter(UPDATE_TIMEOUT, TimeUnit.MILLISECONDS);
+                .withDeadlineAfter(READ_TIMEOUT, TimeUnit.MILLISECONDS);
 
         TKvGetStringRequest req = TKvGetStringRequest.newBuilder()
                 .setInstanceId(instanceId)
                 .setKey(key)
                 .build();
 
-        TKvGetStringResponse resp = blockingStub.get(req);
+        TKvGetStringResponse resp = blockingStub.getString(req);
         String value = resp.getValue();
 
         if (value == null || value.isEmpty()) {
@@ -67,7 +68,7 @@ public class KvServiceImpl implements KvService {
     }
 
     @Override
-    public long inc(String instanceId, String key) throws ClientException {
+    public long incLong(String instanceId, String key) throws ClientException {
         TKvServiceBlockingStub blockingStub = TKvServiceGrpc.newBlockingStub(channel)
                 .withDeadlineAfter(UPDATE_TIMEOUT, TimeUnit.MILLISECONDS);
 
@@ -76,7 +77,44 @@ public class KvServiceImpl implements KvService {
                 .setKey(key)
                 .build();
 
-        TKvIncResponse resp = blockingStub.inc(req);
+        TKvIncResponse resp = blockingStub.incLong(req);
         return resp.getResult();
+    }
+
+    @Override
+    public void putLong(String instanceId, String key, Long value) throws ClientException {
+        if (value == null) {
+            throw new IllegalArgumentException("KV store: null values are not allowed. Got: " + key + " = " + value);
+        }
+
+        TKvServiceBlockingStub blockingStub = TKvServiceGrpc.newBlockingStub(channel)
+                .withDeadlineAfter(UPDATE_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        TKvPutLongRequest req = TKvPutLongRequest.newBuilder()
+                .setInstanceId(instanceId)
+                .setKey(key)
+                .setValue(value)
+                .build();
+
+        blockingStub.putLong(req);
+    }
+
+    @Override
+    public Long getLong(String instanceId, String key) throws ClientException {
+        TKvServiceBlockingStub blockingStub = TKvServiceGrpc.newBlockingStub(channel)
+                .withDeadlineAfter(READ_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        TKvGetLongRequest req = TKvGetLongRequest.newBuilder()
+                .setInstanceId(instanceId)
+                .setKey(key)
+                .build();
+
+        TKvGetLongResponse resp = blockingStub.getLong(req);
+        if (!resp.getHasValue()) {
+            return null;
+        }
+
+        long value = resp.getValue();
+        return value;
     }
 }

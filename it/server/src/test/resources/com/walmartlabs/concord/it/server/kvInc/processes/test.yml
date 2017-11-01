@@ -18,3 +18,12 @@ verify2:
   - if: ${kv.getString(testKey) == null}
     then:
       - log: "xyz"
+
+testLong:
+  - log: "x=${kv.incLong(testKey)}"
+  - log: "y=${kv.getLong(testKey)}"
+  - log: "a=${kv.inc(testKey)}"
+  - log: "b=${kv.getLong(testKey)}"
+  - ${kv.putLong(testKey, 234)}
+  - log: "c=${kv.getLong(testKey)}"
+  - log: "d=${kv.inc(testKey)}"

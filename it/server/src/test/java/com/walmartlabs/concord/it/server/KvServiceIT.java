@@ -43,6 +43,19 @@ public class KvServiceIT extends AbstractServerIT {
         assertLog(".*xyz.*", ab);
     }
 
+    @Test(timeout = 30000)
+    public void testKvLong() throws Exception {
+        String testKey = "key_" + System.currentTimeMillis();
+
+        byte[] ab = test("testLong", testKey);
+        assertLog(".*x=1.*", ab);
+        assertLog(".*y=1.*", ab);
+        assertLog(".*a=2.*", ab);
+        assertLog(".*b=2.*", ab);
+        assertLog(".*c=234.*", ab);
+        assertLog(".*d=235.*", ab);
+    }
+
     private byte[] test(String entryPoint, String testKey) throws Exception {
         Map<String, Object> args = ImmutableMap.of("testKey", testKey);
         byte[] payload = createPayload(entryPoint, args);

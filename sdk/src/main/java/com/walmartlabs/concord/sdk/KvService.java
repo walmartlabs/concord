@@ -8,9 +8,13 @@ public interface KvService {
 
     void remove(String instanceId, String key) throws ClientException;
 
-    void put(String instanceId, String key, String value) throws ClientException;
+    void putString(String instanceId, String key, String value) throws ClientException;
 
-    String get(String instanceId, String key) throws ClientException;
+    String getString(String instanceId, String key) throws ClientException;
 
-    long inc(String instanceId, String key) throws ClientException;
+    void putLong(String instanceId, String key, Long value) throws ClientException;
+
+    long incLong(String instanceId, String key) throws ClientException;
+
+    Long getLong(String instanceId, String key) throws ClientException;
 }

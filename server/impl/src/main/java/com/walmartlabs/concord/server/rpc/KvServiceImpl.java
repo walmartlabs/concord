@@ -49,7 +49,7 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
 
     @Override
     @WithTimer
-    public void put(TKvPutStringRequest request, StreamObserver<Empty> responseObserver) {
+    public void putString(TKvPutStringRequest request, StreamObserver<Empty> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
 
@@ -61,7 +61,7 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
         String key = request.getKey();
         String value = request.getValue();
 
-        kvDao.put(projectId.get(), key, value);
+        kvDao.putString(projectId.get(), key, value);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
@@ -69,14 +69,10 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
 
     @Override
     @WithTimer
-    public void get(TKvGetStringRequest request, StreamObserver<TKvGetStringResponse> responseObserver) {
+    public void getString(TKvGetStringRequest request, StreamObserver<TKvGetStringResponse> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
 
-        if (!projectId.isPresent()) {
-            responseObserver.onError(new IllegalArgumentException("Process instance not found: " + instanceId));
-            return;
-        }
 
         String key = request.getKey();
 
@@ -94,7 +90,7 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
 
     @Override
     @WithTimer
-    public void inc(TKvIncRequest request, StreamObserver<TKvIncResponse> responseObserver) {
+    public void incLong(TKvIncRequest request, StreamObserver<TKvIncResponse> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
 
@@ -110,6 +106,54 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
                 .setResult(i)
                 .build());
 
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    @WithTimer
+    public void getLong(TKvGetLongRequest request, StreamObserver<TKvGetLongResponse> responseObserver) {
+        String instanceId = request.getInstanceId();
+        Optional<UUID> projectId = assertProjectId(instanceId);
+
+        if (!projectId.isPresent()) {
+            responseObserver.onError(new IllegalArgumentException("Process instance not found: " + instanceId));
+            return;
+        }
+
+        String key = request.getKey();
+
+        Long value = kvDao.getLong(projectId.get(), key);
+        if (value == null) {
+            responseObserver.onNext(TKvGetLongResponse.newBuilder()
+                    .setHasValue(false)
+                    .build());
+        } else {
+            responseObserver.onNext(TKvGetLongResponse.newBuilder()
+                    .setValue(value)
+                    .setHasValue(true)
+                    .build());
+        }
+
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    @WithTimer
+    public void putLong(TKvPutLongRequest request, StreamObserver<Empty> responseObserver) {
+        String instanceId = request.getInstanceId();
+        Optional<UUID> projectId = assertProjectId(instanceId);
+
+        if (!projectId.isPresent()) {
+            responseObserver.onError(new IllegalArgumentException("Process instance not found: " + instanceId));
+            return;
+        }
+
+        String key = request.getKey();
+        long value = request.getValue();
+
+        kvDao.putLong(projectId.get(), key, value);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
 

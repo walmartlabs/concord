@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.plugins.kv;
 
-import com.walmartlabs.concord.sdk.KvService;
 import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.KvService;
 import com.walmartlabs.concord.sdk.RpcClient;
 import com.walmartlabs.concord.sdk.Task;
 
@@ -23,14 +23,26 @@ public class KvTask implements Task {
     }
 
     public void putString(@InjectVariable("txId") String instanceId, String key, String value) throws Exception {
-        kvService.put(instanceId, key, value);
+        kvService.putString(instanceId, key, value);
     }
 
     public String getString(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        return kvService.get(instanceId, key);
+        return kvService.getString(instanceId, key);
+    }
+
+    public void putLong(@InjectVariable("txId") String instanceId, String key, Long value) throws Exception {
+        kvService.putLong(instanceId, key, value);
     }
 
     public long inc(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        return kvService.inc(instanceId, key);
+        return incLong(instanceId, key);
+    }
+
+    public long incLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        return kvService.incLong(instanceId, key);
+    }
+
+    public Long getLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        return kvService.getLong(instanceId, key);
     }
 }
