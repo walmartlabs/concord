@@ -178,9 +178,12 @@ public class ProcessQueueWatchdog {
 
                 List<UUID> ids = watchdogDao.pollStalled(tx, cutOff, 1);
                 for (UUID id : ids) {
-                    queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
-                    logManager.error(id, "Process stalled, no heartbeat for more than a minute");
-                    log.info("processStalled -> marked as failed: {}", id);
+                    // temporarily disabled
+                    // queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
+                    // logManager.warn(id, "Process stalled, no heartbeat for more than a minute");
+                    // log.info("processStalled -> marked as failed: {}", id);
+
+                    log.warn("processStalled -> no heartbeat for more than a minute: {}", id);
                 }
             });
         }
