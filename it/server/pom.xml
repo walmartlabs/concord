@@ -190,7 +190,7 @@
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-template</artifactId>
-                                    <version>0.39.0</version>
+                                    <version>0.45.0</version>
                                     <destFileName>ansible-template.jar</destFileName>
                                 </artifactItem>
 
@@ -339,6 +339,9 @@
                                                 <volume>${settings.localRepository}:/root/.m2/repository</volume>
                                             </bind>
                                         </volumes>
+                                        <env>
+                                            <WORKERS_COUNT>3</WORKERS_COUNT>
+                                        </env>
                                     </run>
                                 </image>
                             </images>

@@ -1,32 +1,56 @@
 package com.walmartlabs.concord.agent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Field;
+
 public final class Utils {
+
+    private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
     public static boolean kill(Process proc) {
         if (!proc.isAlive()) {
             return false;
         }
 
+        String p = toString(proc);
+
+        log.info("kill ['{}'] -> attempting to stop...", p);
         proc.destroy();
 
         if (proc.isAlive()) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // ignore
-            }
+            sleep(1000);
         }
 
         while (proc.isAlive()) {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                // ignore
-            }
+            log.warn("kill ['{}'] -> waiting for the process to die...", p);
+            sleep(3000);
             proc.destroyForcibly();
         }
 
         return true;
+    }
+
+    private static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static String toString(Process proc) {
+        try {
+            Field f = proc.getClass().getDeclaredField("pid");
+            f.setAccessible(true);
+
+            return "pid=" + f.get(proc);
+        } catch (NoSuchFieldException e) {
+            return proc.toString();
+        } catch (IllegalAccessException e) {
+            return proc.toString();
+        }
     }
 
     private Utils() {

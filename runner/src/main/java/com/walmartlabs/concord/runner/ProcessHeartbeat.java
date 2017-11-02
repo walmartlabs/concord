@@ -30,6 +30,8 @@ public class ProcessHeartbeat {
         }
 
         worker = new Thread(() -> {
+            log.info("start ['{}'] -> running every {}ms", instanceId, HEARTBEAT_INTERVAL);
+
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     client.getHeartbeatService().ping(instanceId);
@@ -43,6 +45,8 @@ public class ProcessHeartbeat {
                     Thread.currentThread().interrupt();
                 }
             }
+
+            log.info("start ['{}'] -> stopped", instanceId);
         }, "process-heartbeat");
 
         worker.start();
