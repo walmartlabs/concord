@@ -47,7 +47,6 @@
         </sql>
     </changeSet>
 
-
     <changeSet id="46100" author="ibodrov@gmail.com">
         <addColumn tableName="PROJECTS">
             <column name="VISIBILITY" type="varchar(128)" defaultValue="PUBLIC">
@@ -90,4 +89,13 @@
                                  referencedTableName="REPOSITORIES"
                                  referencedColumnNames="REPO_ID"/>
     </changeSet>
+
+    <changeSet id="46300" author="ybrigo@gmail.com">
+        <addColumn tableName="REPOSITORIES">
+            <column name="PUSH_EVENT_DATE" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

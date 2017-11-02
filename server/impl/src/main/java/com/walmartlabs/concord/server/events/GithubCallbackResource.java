@@ -11,8 +11,7 @@ import java.util.UUID;
 public interface GithubCallbackResource {
 
     @POST
-    @Path("/push/{projectId}/{repoId}")
+    @Path("/push/{repoId}")
     @Consumes(MediaType.APPLICATION_JSON)
-    String push(@PathParam("projectId") UUID projectId,
-                @PathParam("repoId") UUID repoId);
+    String push(@PathParam("repoId") UUID repoId);
 }

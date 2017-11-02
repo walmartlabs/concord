@@ -19,15 +19,29 @@ public class RepositoryConfiguration implements Serializable {
 
     public static final String REPO_CACHE_DIR_KEY = "REPO_CACHE_DIR";
 
+    public static final String REPO_META_DIR_KEY = "REPO_META_DIR";
+
     private final Path repoCacheDir;
 
+    private final Path repoMetaDir;
+
     public RepositoryConfiguration() throws IOException {
-        String s = System.getenv(REPO_CACHE_DIR_KEY);
-        this.repoCacheDir = s != null ? Paths.get(s).toAbsolutePath() : Files.createTempDirectory("repos");
-        log.info("init -> repoCacheDir: {}", repoCacheDir);
+        this.repoCacheDir = getEnvOrTemp(REPO_CACHE_DIR_KEY, "repos");
+        this.repoMetaDir = getEnvOrTemp(REPO_META_DIR_KEY, "repos_meta");
+
+        log.info("init -> repoCacheDir: {}, repoMetaDir: {}", repoCacheDir, repoMetaDir);
     }
 
     public Path getRepoCacheDir() {
         return repoCacheDir;
+    }
+
+    public Path getRepoMetaDir() {
+        return repoMetaDir;
+    }
+
+    private static Path getEnvOrTemp(String key, String tempPrefix) throws IOException {
+        String s = System.getenv(REPO_CACHE_DIR_KEY);
+        return s != null ? Paths.get(s).toAbsolutePath() : Files.createTempDirectory(tempPrefix);
     }
 }

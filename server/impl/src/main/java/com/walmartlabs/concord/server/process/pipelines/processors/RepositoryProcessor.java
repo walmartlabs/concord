@@ -38,7 +38,6 @@ public class RepositoryProcessor implements PayloadProcessor {
      */
     public static final HeaderKey<RepositoryInfo> REPOSITORY_INFO_KEY = HeaderKey.register("_repositoryInfo", RepositoryInfo.class);
 
-    private final GithubConfiguration githubConfiguration;
     private final RepositoryDao repositoryDao;
     private final SecretManager secretManager;
     private final RepositoryManager repositoryManager;
@@ -48,14 +47,12 @@ public class RepositoryProcessor implements PayloadProcessor {
     public RepositoryProcessor(RepositoryDao repositoryDao,
                                SecretManager secretManager,
                                RepositoryManager repositoryManager,
-                               LogManager logManager,
-                               GithubConfiguration githubConfiguration) {
+                               LogManager logManager) {
 
         this.repositoryDao = repositoryDao;
         this.secretManager = secretManager;
         this.repositoryManager = repositoryManager;
         this.logManager = logManager;
-        this.githubConfiguration = githubConfiguration;
     }
 
     @Override
@@ -92,14 +89,7 @@ public class RepositoryProcessor implements PayloadProcessor {
     private void copyRepositoryData(UUID instanceId, UUID projectId, RepositoryEntry repo, Path dst) {
         repositoryManager.withLock(projectId, repo.getName(), () -> {
             try {
-                Path src;
-                if (githubConfiguration.getApiUrl() == null) {
-                    // no github webhooks configured -> fetch repository
-                    log.warn("process ['{}'] -> no prefetched repository", instanceId);
-                    src = fetchRepository(instanceId, projectId, repo);
-                } else {
-                    src = getRepository(instanceId, projectId, repo);
-                }
+                Path src = fetchRepository(instanceId, projectId, repo);
 
                 IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
                 log.info("process ['{}'] -> copy from {} to {}", instanceId, src, dst);
@@ -129,21 +119,6 @@ public class RepositoryProcessor implements PayloadProcessor {
         } else {
             result = repositoryManager.fetch(projectId, repo.getName(), repo.getUrl(), repo.getBranch(), repo.getPath(), secret);
         }
-        return result;
-    }
-
-    private Path getRepository(UUID instanceId, UUID projectId, RepositoryEntry repo) {
-        Path result;
-        if (repo.getCommitId() != null) {
-            result = repositoryManager.getRepoPath(projectId, repo.getName(), repo.getCommitId(), repo.getPath());
-        } else {
-            result = repositoryManager.getRepoPath(projectId, repo.getName(), repo.getBranch(), repo.getPath());
-        }
-
-        if (!Files.exists(result)) {
-            result = fetchRepository(instanceId, projectId, repo);
-        }
-
         return result;
     }
 
