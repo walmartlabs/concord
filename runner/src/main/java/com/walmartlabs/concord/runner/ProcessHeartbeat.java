@@ -14,7 +14,7 @@ public class ProcessHeartbeat {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessHeartbeat.class);
 
-    private static final long HEARTBEAT_INTERVAL = 5000;
+    private static final long HEARTBEAT_INTERVAL = 10000;
 
     private final RpcClientImpl client;
     private Thread worker;

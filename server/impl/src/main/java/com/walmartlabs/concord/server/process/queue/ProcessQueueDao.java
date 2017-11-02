@@ -120,10 +120,15 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public void touch(UUID instanceId) {
-        tx(tx -> tx.update(PROCESS_QUEUE)
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
-                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
+    public boolean touch(UUID instanceId) {
+        return txResult(tx -> {
+            int i = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .execute();
+
+            return i == 1;
+        });
     }
 
     public ProcessEntry get(UUID instanceId) {

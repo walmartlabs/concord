@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
@@ -78,17 +79,19 @@ public class ProcessQueueWatchdog {
 
     private final ProcessQueueDao queueDao;
     private final LogManager logManager;
+    private final AgentManager agentManager;
     private final WatchdogDao watchdogDao;
     private final PayloadManager payloadManager;
     private final Chain forkPipeline;
 
     @Inject
     public ProcessQueueWatchdog(ProcessQueueDao queueDao, LogManager logManager,
-                                WatchdogDao watchdogDao, PayloadManager payloadManager,
+                                AgentManager agentManager, WatchdogDao watchdogDao, PayloadManager payloadManager,
                                 ForkPipeline forkPipeline) {
 
         this.queueDao = queueDao;
         this.logManager = logManager;
+        this.agentManager = agentManager;
         this.watchdogDao = watchdogDao;
         this.payloadManager = payloadManager;
         this.forkPipeline = forkPipeline;
@@ -178,12 +181,11 @@ public class ProcessQueueWatchdog {
 
                 List<UUID> ids = watchdogDao.pollStalled(tx, cutOff, 1);
                 for (UUID id : ids) {
-                    // temporarily disabled
-                    // queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
-                    // logManager.warn(id, "Process stalled, no heartbeat for more than a minute");
-                    // log.info("processStalled -> marked as failed: {}", id);
+                    queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
+                    logManager.warn(id, "Process stalled, no heartbeat for more than a minute");
 
-                    log.warn("processStalled -> no heartbeat for more than a minute: {}", id);
+                    agentManager.killProcess(id);
+                    log.info("processStalled -> marked as failed: {}", id);
                 }
             });
         }

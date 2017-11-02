@@ -22,8 +22,13 @@ public class ProcessHeartbeatServiceImpl extends TProcessHeartbeatServiceGrpc.TP
 
     @Override
     public void heartbeat(TProcessHeartbeatRequest request, StreamObserver<Empty> responseObserver) {
-        UUID instanceId = UUID.fromString(request.getInstanceId());
-        queueDao.touch(instanceId);
+        String s = request.getInstanceId();
+        UUID instanceId = UUID.fromString(s);
+
+        if (!queueDao.touch(instanceId)) {
+            responseObserver.onError(new IllegalArgumentException("Process not found: " + s));
+            return;
+        }
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
