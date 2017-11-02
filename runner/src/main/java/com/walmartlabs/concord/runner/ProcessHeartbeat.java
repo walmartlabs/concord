@@ -26,7 +26,7 @@ public class ProcessHeartbeat {
 
     public synchronized void start(String instanceId) {
         if (worker != null) {
-            throw new IllegalArgumentException("Heartbear worker is already running");
+            throw new IllegalArgumentException("Heartbeat worker is already running");
         }
 
         worker = new Thread(() -> {
