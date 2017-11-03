@@ -183,8 +183,6 @@ public class ProcessQueueWatchdog {
                 for (UUID id : ids) {
                     queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
                     logManager.warn(id, "Process stalled, no heartbeat for more than a minute");
-
-                    agentManager.killProcess(id);
                     log.info("processStalled -> marked as failed: {}", id);
                 }
             });
@@ -216,7 +214,7 @@ public class ProcessQueueWatchdog {
             super(cfg);
         }
 
-        public void transaction(Tx t) {
+        private void transaction(Tx t) {
             tx(t);
         }
 

@@ -132,8 +132,12 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public ProcessEntry get(UUID instanceId) {
-        DSLContext tx = DSL.using(cfg);
+        try (DSLContext tx = DSL.using(cfg)) {
+            return get(tx, instanceId);
+        }
+    }
 
+    public ProcessEntry get(DSLContext tx, UUID instanceId) {
         VProcessQueueRecord r = tx.selectFrom(V_PROCESS_QUEUE)
                 .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .fetchOne();
