@@ -5,6 +5,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static org.jooq.impl.DSL.*;
 
@@ -54,6 +56,9 @@ public class ProcessQueueWatchdog {
     private static final long STALLED_POLL_DELAY = 10000;
     private static final long STALLED_ERROR_DELAY = 10000;
 
+    private static final long FAILED_TO_START_POLL_DELAY = 30000;
+    private static final long FAILED_TO_START_ERROR_DELAY = 30000;
+
     private static final ProcessKind[] HANDLED_PROCESS_KINDS = {
             ProcessKind.DEFAULT
     };
@@ -73,6 +78,11 @@ public class ProcessQueueWatchdog {
 
     private static final ProcessStatus[] POTENTIAL_STALLED_STATUSES = {
             ProcessStatus.RUNNING
+    };
+
+    private static final ProcessStatus[] FAILED_TO_START_STATUSES = {
+            ProcessStatus.STARTING,
+            ProcessStatus.RESUMING
     };
 
     private final ProcessQueueDao queueDao;
@@ -101,6 +111,9 @@ public class ProcessQueueWatchdog {
 
         new Thread(new Worker(STALLED_POLL_DELAY, STALLED_ERROR_DELAY, new ProcessStalledWorker()),
                 "process-stalled-worker").start();
+
+        new Thread(new Worker(FAILED_TO_START_POLL_DELAY, FAILED_TO_START_ERROR_DELAY, new ProcessStartFailuresWorker()),
+                "process-start-failures-worker").start();
 
         log.info("init -> watchdog started");
     }
@@ -175,11 +188,27 @@ public class ProcessQueueWatchdog {
             watchdogDao.transaction(tx -> {
                 Field<Timestamp> cutOff = currentTimestamp().minus(field("interval '1 minute'"));
 
-                List<UUID> ids = watchdogDao.pollStalled(tx, cutOff, 1);
+                List<UUID> ids = watchdogDao.pollOutdated(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
                 for (UUID id : ids) {
                     queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
                     logManager.warn(id, "Process stalled, no heartbeat for more than a minute");
                     log.info("processStalled -> marked as failed: {}", id);
+                }
+            });
+        }
+    }
+
+    private final class ProcessStartFailuresWorker implements Runnable {
+        @Override
+        public void run() {
+            watchdogDao.transaction(tx -> {
+                Field<Timestamp> cutOff = currentTimestamp().minus(field("interval '10 minute'"));
+
+                List<UUID> ids = watchdogDao.pollOutdated(tx, FAILED_TO_START_STATUSES, cutOff, 1);
+                for (UUID id : ids) {
+                    queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
+                    logManager.warn(id, "Process failed to start");
+                    log.info("processStartFaulures -> marked as failed: {}", id);
                 }
             });
         }
@@ -232,12 +261,11 @@ public class ProcessQueueWatchdog {
                     .fetch(WatchdogDao::toEntry);
         }
 
-        public List<UUID> pollStalled(DSLContext tx, Field<Timestamp> cutOff, int maxEntries) {
-            VProcessQueue q = V_PROCESS_QUEUE.as("q");
-
+        public List<UUID> pollOutdated(DSLContext tx, ProcessStatus[] statuses, Field<Timestamp> cutOff, int maxEntries) {
+            ProcessQueue q = PROCESS_QUEUE.as("q");
             return tx.select(q.INSTANCE_ID)
                     .from(q)
-                    .where(q.CURRENT_STATUS.in(Utils.toString(POTENTIAL_STALLED_STATUSES))
+                    .where(q.CURRENT_STATUS.in(Utils.toString(statuses))
                             .and(q.LAST_UPDATED_AT.lessThan(cutOff)))
                     .orderBy(q.CREATED_AT)
                     .limit(maxEntries)
