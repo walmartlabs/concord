@@ -71,7 +71,7 @@ public class RepositoryProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        logManager.info(instanceId, "Using the repository: {}", repo);
+        logManager.info(instanceId, "Copying the repository's data: {}", repo);
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
         copyRepositoryData(instanceId, projectId, repo, dst);

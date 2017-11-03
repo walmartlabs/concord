@@ -3,7 +3,6 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
@@ -73,25 +72,22 @@ public class ProcessQueueWatchdog {
     };
 
     private static final ProcessStatus[] POTENTIAL_STALLED_STATUSES = {
-            ProcessStatus.RUNNING,
-            ProcessStatus.STARTING
+            ProcessStatus.RUNNING
     };
 
     private final ProcessQueueDao queueDao;
     private final LogManager logManager;
-    private final AgentManager agentManager;
     private final WatchdogDao watchdogDao;
     private final PayloadManager payloadManager;
     private final Chain forkPipeline;
 
     @Inject
     public ProcessQueueWatchdog(ProcessQueueDao queueDao, LogManager logManager,
-                                AgentManager agentManager, WatchdogDao watchdogDao, PayloadManager payloadManager,
+                                WatchdogDao watchdogDao, PayloadManager payloadManager,
                                 ForkPipeline forkPipeline) {
 
         this.queueDao = queueDao;
         this.logManager = logManager;
-        this.agentManager = agentManager;
         this.watchdogDao = watchdogDao;
         this.payloadManager = payloadManager;
         this.forkPipeline = forkPipeline;
