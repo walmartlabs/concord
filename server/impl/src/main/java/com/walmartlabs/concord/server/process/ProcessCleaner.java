@@ -29,7 +29,7 @@ public class ProcessCleaner {
 
     private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toMillis(1);
     private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
-    private static final long AGE_CUTOFF = TimeUnit.DAYS.toMillis(7);
+    private static final long AGE_CUTOFF = TimeUnit.DAYS.toMillis(7); // TODO cfg
 
     private static final String[] REMOVE_STATUSES = {
             ProcessStatus.FINISHED.toString(),

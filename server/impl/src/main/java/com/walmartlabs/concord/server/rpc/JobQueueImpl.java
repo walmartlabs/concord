@@ -10,7 +10,6 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessManager.PayloadEntry;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
@@ -32,14 +31,12 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     private static final Logger log = LoggerFactory.getLogger(JobQueueImpl.class);
     private static final int PAYLOAD_CHUNK_SIZE = 512 * 1024; // 512kb
 
-    private final ProcessQueueDao queueDao;
     private final ProcessStateManager stateManager;
     private final LogManager logManager;
     private final ProcessManager processManager;
 
     @Inject
-    public JobQueueImpl(ProcessQueueDao queueDao, ProcessStateManager stateManager, LogManager logManager, ProcessManager processManager) {
-        this.queueDao = queueDao;
+    public JobQueueImpl(ProcessStateManager stateManager, LogManager logManager, ProcessManager processManager) {
         this.stateManager = stateManager;
         this.logManager = logManager;
         this.processManager = processManager;

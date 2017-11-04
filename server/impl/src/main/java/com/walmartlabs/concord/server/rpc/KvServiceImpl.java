@@ -73,6 +73,10 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
 
+        if (!projectId.isPresent()) {
+            responseObserver.onError(new IllegalArgumentException("Process instance not found: " + instanceId));
+            return;
+        }
 
         String key = request.getKey();
 

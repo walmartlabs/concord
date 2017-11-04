@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.project.yaml.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.io.Serializable;

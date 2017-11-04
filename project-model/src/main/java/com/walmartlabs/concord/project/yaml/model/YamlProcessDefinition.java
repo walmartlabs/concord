@@ -2,8 +2,6 @@ package com.walmartlabs.concord.project.yaml.model;
 
 import io.takari.parc.Seq;
 
-import java.io.Serializable;
-
 public class YamlProcessDefinition implements YamlDefinition {
 
     private final String name;

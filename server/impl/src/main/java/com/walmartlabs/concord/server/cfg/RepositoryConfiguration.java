@@ -18,11 +18,9 @@ public class RepositoryConfiguration implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(RepositoryConfiguration.class);
 
     public static final String REPO_CACHE_DIR_KEY = "REPO_CACHE_DIR";
-
     public static final String REPO_META_DIR_KEY = "REPO_META_DIR";
 
     private final Path repoCacheDir;
-
     private final Path repoMetaDir;
 
     public RepositoryConfiguration() throws IOException {

@@ -2,6 +2,7 @@ package com.walmartlabs.concord.runner;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
 import com.walmartlabs.concord.sdk.RpcClient;
@@ -24,8 +25,7 @@ public abstract class AbstractMainTest {
         IOUtils.copy(Paths.get(baseDir), tmpDir);
         System.setProperty("user.dir", tmpDir.toString());
 
-        // TODO constants
-        Path idPath = tmpDir.resolve("_instanceId");
+        Path idPath = tmpDir.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
         Files.write(idPath, instanceId.getBytes());
 
         return new Main(engineFactory, mock(ProcessHeartbeat.class));

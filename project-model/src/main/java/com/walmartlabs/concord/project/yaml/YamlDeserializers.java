@@ -69,7 +69,7 @@ public final class YamlDeserializers {
         }
 
         @Override
-        public YamlDefinitionFile deserialize(JsonParser json, DeserializationContext ctx) throws IOException, JsonProcessingException {
+        public YamlDefinitionFile deserialize(JsonParser json, DeserializationContext ctx) throws IOException {
             Seq<YamlDefinition> defs = parse(json, Grammar.getDefinitions());
 
             List<YamlDefinition> l = defs.toList();

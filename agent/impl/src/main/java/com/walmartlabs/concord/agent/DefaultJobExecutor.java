@@ -393,12 +393,7 @@ public class DefaultJobExecutor implements JobExecutor {
             return false;
         }
 
-        if (Files.exists(workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME))) {
-            // payload supplied its own JVM parameters
-            return false;
-        }
-
-        return true;
+        return !Files.exists(workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME));
     }
 
     private static void writeInstanceId(String instanceId, Path dst) throws IOException {

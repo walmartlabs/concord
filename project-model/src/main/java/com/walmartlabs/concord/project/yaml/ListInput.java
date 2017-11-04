@@ -30,7 +30,7 @@ public class ListInput<T> implements Input<T> {
 
     @Override
     public Input<T> rest() {
-        return new ListInput<T>(pos + 1, items);
+        return new ListInput<>(pos + 1, items);
     }
 
     @Override

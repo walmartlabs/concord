@@ -125,7 +125,7 @@ public class EngineFactory {
             this.project = project;
             this.activeProfiles = activeProfiles;
 
-            // TODO this should be replaces with a project attribute
+            // for backward compatibility
             String localPath = baseDir.toAbsolutePath().toString();
             this.attributes = Collections.singletonMap(InternalConstants.Context.LOCAL_PATH_ATTR, localPath);
         }
@@ -181,5 +181,4 @@ public class EngineFactory {
         }
     }
 
-    ;
 }

@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.mock;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.walmartlabs.concord.server.console.UserResponse;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -21,7 +22,7 @@ public class Main {
         UserResponse response = new UserResponse("ldap", "test", "Mock User", null);
 
         mock.stubFor(get(urlPathEqualTo("/api/service/console/whoami"))
-                .willReturn(aResponse()
+                .willReturn(ResponseDefinitionBuilder
                         .okForJson(response)
                         .withFixedDelay(1000)));
     }

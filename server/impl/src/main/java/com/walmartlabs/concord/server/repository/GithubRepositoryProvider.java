@@ -303,9 +303,6 @@ public class GithubRepositoryProvider implements RepositoryProvider {
             @Override
             protected JSch createDefaultJSch(FS fs) throws JSchException {
                 JSch d = super.createDefaultJSch(fs);
-                if (secret == null) {
-                    return d;
-                }
 
                 d.removeAllIdentity();
 

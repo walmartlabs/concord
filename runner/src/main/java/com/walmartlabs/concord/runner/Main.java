@@ -54,7 +54,6 @@ public class Main {
         Path baseDir = Paths.get(System.getProperty("user.dir"));
         log.info("run -> working directory: {}", baseDir.toAbsolutePath());
 
-        // TODO constants
         Path idPath = baseDir.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
         while (!Files.exists(idPath)) {
             // TODO replace with WatchService

@@ -2,7 +2,6 @@ package com.walmartlabs.concord.project.yaml.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.project.model.Trigger;
 
 import java.util.List;
 import java.util.Map;

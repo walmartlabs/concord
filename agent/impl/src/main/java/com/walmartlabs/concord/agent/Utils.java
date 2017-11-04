@@ -46,9 +46,7 @@ public final class Utils {
             f.setAccessible(true);
 
             return "pid=" + f.get(proc);
-        } catch (NoSuchFieldException e) {
-            return proc.toString();
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             return proc.toString();
         }
     }

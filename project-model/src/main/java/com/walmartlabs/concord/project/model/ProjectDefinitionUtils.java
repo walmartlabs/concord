@@ -17,7 +17,7 @@ public final class ProjectDefinitionUtils {
         Map<String, ProcessDefinition> flows = project.getFlows();
         Map<String, Profile> profiles = project.getProfiles();
 
-        Map<String, ProcessDefinition> view = overlay(flows, profiles, activeProfiles, p -> p.getFlows());
+        Map<String, ProcessDefinition> view = overlay(flows, profiles, activeProfiles, Profile::getFlows);
         return view.get(flowName);
     }
 
@@ -25,7 +25,7 @@ public final class ProjectDefinitionUtils {
         Map<String, FormDefinition> forms = project.getForms();
         Map<String, Profile> profiles = project.getProfiles();
 
-        Map<String, FormDefinition> view = overlay(forms, profiles, activeProfiles, p -> p.getForms());
+        Map<String, FormDefinition> view = overlay(forms, profiles, activeProfiles, Profile::getForms);
         return view.get(formName);
     }
 
@@ -33,8 +33,8 @@ public final class ProjectDefinitionUtils {
         Map<String, Object> variables = project.getConfiguration();
         Map<String, Profile> profiles = project.getProfiles();
 
-        Map<String, Object> view = overlay(variables, profiles, activeProfiles, p -> p.getConfiguration(),
-                (a, b) -> ConfigurationUtils.deepMerge(a, b));
+        Map<String, Object> view = overlay(variables, profiles, activeProfiles, Profile::getConfiguration,
+                ConfigurationUtils::deepMerge);
         return view;
     }
 

@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.plugins.slack;
 
-import com.walmartlabs.concord.sdk.SlackService;
 import com.walmartlabs.concord.sdk.*;
 import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;

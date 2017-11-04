@@ -95,7 +95,7 @@ public class FormResourceImpl implements FormResource, Resource {
 
         String pbk = form.getProcessBusinessKey();
         String fiid = form.getFormInstanceId().toString();
-        String name = fd.getName(); // TODO description?
+        String name = fd.getName();
         return new FormInstanceEntry(pbk, fiid, name, fields);
     }
 

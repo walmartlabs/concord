@@ -2,7 +2,6 @@ package com.walmartlabs.concord.server.security;
 
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.user.RoleDao;
-import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;

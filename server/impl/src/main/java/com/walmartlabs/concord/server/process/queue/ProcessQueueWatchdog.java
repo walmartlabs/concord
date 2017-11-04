@@ -5,6 +5,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
@@ -85,6 +86,7 @@ public class ProcessQueueWatchdog {
             ProcessStatus.RESUMING
     };
 
+    private final ProcessWatchdogConfiguration cfg;
     private final ProcessQueueDao queueDao;
     private final LogManager logManager;
     private final WatchdogDao watchdogDao;
@@ -92,9 +94,13 @@ public class ProcessQueueWatchdog {
     private final Chain forkPipeline;
 
     @Inject
-    public ProcessQueueWatchdog(ProcessQueueDao queueDao, LogManager logManager,
-                                WatchdogDao watchdogDao, PayloadManager payloadManager,
+    public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
+                                ProcessQueueDao queueDao,
+                                LogManager logManager,
+                                WatchdogDao watchdogDao,
+                                PayloadManager payloadManager,
                                 ForkPipeline forkPipeline) {
+        this.cfg = cfg;
 
         this.queueDao = queueDao;
         this.logManager = logManager;
@@ -152,12 +158,16 @@ public class ProcessQueueWatchdog {
         }
     }
 
+    private static Field<?> interval(String s) {
+        return field("interval '" + s + "'");
+    }
+
     private final class ProcessHandlersWorker implements Runnable {
 
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> maxAge = currentTimestamp().minus(field("interval '7 days'"));
+                Field<Timestamp> maxAge = currentTimestamp().minus(interval(cfg.getMaxFailureHandlingAge()));
 
                 for (PollEntry e : POLL_ENTRIES) {
                     List<ProcessEntry> parents = watchdogDao.poll(tx, e, maxAge, 1);
@@ -186,7 +196,7 @@ public class ProcessQueueWatchdog {
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> cutOff = currentTimestamp().minus(field("interval '1 minute'"));
+                Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStalledAge()));
 
                 List<UUID> ids = watchdogDao.pollOutdated(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
                 for (UUID id : ids) {
@@ -202,7 +212,7 @@ public class ProcessQueueWatchdog {
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> cutOff = currentTimestamp().minus(field("interval '10 minute'"));
+                Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStartFailureAge()));
 
                 List<UUID> ids = watchdogDao.pollOutdated(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (UUID id : ids) {

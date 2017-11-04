@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.server.api.OperationResult;
-import com.walmartlabs.concord.server.api.PerformedActionType;
 
 import java.io.Serializable;
 import java.util.UUID;

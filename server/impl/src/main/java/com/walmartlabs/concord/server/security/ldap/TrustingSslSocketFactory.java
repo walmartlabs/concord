@@ -10,7 +10,6 @@ import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -34,12 +33,12 @@ public class TrustingSslSocketFactory extends SocketFactory {
     }
 
     @Override
-    public Socket createSocket(String s, int i) throws IOException, UnknownHostException {
+    public Socket createSocket(String s, int i) throws IOException {
         return delegate.createSocket(s, i);
     }
 
     @Override
-    public Socket createSocket(String s, int i, InetAddress inetAddress, int i1) throws IOException, UnknownHostException {
+    public Socket createSocket(String s, int i, InetAddress inetAddress, int i1) throws IOException {
         return delegate.createSocket(s, i, inetAddress, i1);
     }
 
