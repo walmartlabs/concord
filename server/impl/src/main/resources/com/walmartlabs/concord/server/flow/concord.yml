@@ -4,6 +4,10 @@ flows:
     in:
       repository: ${event.repository}
       project: ${event.project}
+  - task: landingPageRefresh
+    in:
+      repository: ${event.repository}
+      project: ${event.project}
 
 configuration:
   arguments:

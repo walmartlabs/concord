@@ -1,55 +1,70 @@
 package com.walmartlabs.concord.server.landing;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.landing.DeleteLandingResponse;
 import com.walmartlabs.concord.server.api.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.landing.LandingResource;
+import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.ProjectManager;
-import com.walmartlabs.concord.server.project.RepositoryDao;
+import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import org.jooq.Configuration;
 import org.postgresql.util.Base64;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Named
-public class LandingResourceImpl implements LandingResource, Resource {
+public class LandingResourceImpl extends AbstractDao implements LandingResource, Resource {
 
+    public static final String LP_META_FILE_NAME = ".lp-meta.json";
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final LandingDao landingDao;
     private final ProjectDao projectDao;
-    private final RepositoryDao repositoryDao;
     private final ProjectManager projectManager;
+    private final RepositoryManager repositoryManager;
 
     @Inject
-    public LandingResourceImpl(LandingDao landingDao, ProjectDao projectDao, RepositoryDao repositoryDao,
-                               ProjectManager projectManager) {
+    public LandingResourceImpl(Configuration cfg,
+                               LandingDao landingDao, ProjectDao projectDao,
+                               ProjectManager projectManager, RepositoryManager repositoryManager) {
+        super(cfg);
+
         this.landingDao = landingDao;
         this.projectDao = projectDao;
-        this.repositoryDao = repositoryDao;
         this.projectManager = projectManager;
+        this.repositoryManager = repositoryManager;
     }
 
     @Override
     public CreateLandingResponse createOrUpdate(LandingEntry entry) {
-        UUID projectId = assertProject(entry.getProjectName());
-        UUID repositoryId = assertRepository(projectId, entry.getRepositoryName());
+        ProjectEntry project = assertProject(entry.getProjectName(), TeamRole.WRITER, true);
+        RepositoryEntry repository = assertRepository(project, entry.getRepositoryName());
         byte[] icon = null;
         if (entry.getIcon() != null) {
             icon = Base64.decode(entry.getIcon());
         }
 
         if (entry.getId() != null) {
-            landingDao.update(entry.getId(), projectId, repositoryId, entry.getName(), entry.getDescription(), icon);
+            landingDao.update(entry.getId(), project.getId(), repository.getId(), entry.getName(), entry.getDescription(), icon);
             return new CreateLandingResponse(OperationResult.UPDATED, entry.getId());
         } else {
-            UUID landingId = landingDao.insert(projectId, repositoryId, entry.getName(), entry.getDescription(), icon);
+            UUID landingId = landingDao.insert(project.getId(), repository.getId(), entry.getName(), entry.getDescription(), icon);
             return new CreateLandingResponse(OperationResult.CREATED, landingId);
         }
     }
@@ -61,7 +76,7 @@ public class LandingResourceImpl implements LandingResource, Resource {
             throw new ValidationErrorsException("A valid landing page id is required");
         }
 
-        assertProject(e.getProjectName());
+        assertProject(e.getProjectName(), TeamRole.WRITER, true);
 
         landingDao.delete(id);
         return new DeleteLandingResponse();
@@ -80,19 +95,38 @@ public class LandingResourceImpl implements LandingResource, Resource {
         return landingDao.list(userId);
     }
 
-    private UUID assertRepository(UUID projectId, String repositoryName) {
-        if (repositoryName == null) {
-            throw new ValidationErrorsException("A valid repository name is required");
-        }
+    @Override
+    public void refresh(String projectName, String repositoryName) {
+        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        RepositoryEntry r = assertRepository(p, repositoryName);
 
-        UUID id = repositoryDao.getId(projectId, repositoryName);
-        if (id == null) {
-            throw new ValidationErrorsException("Repository not found: " + repositoryName + " in project" + projectId);
-        }
-        return id;
+        Path lpMetaFile = repositoryManager.fetch(p.getId(), r).resolve(LP_META_FILE_NAME);
+
+        LandingEntry le = loadEntry(lpMetaFile);
+
+        tx(tx -> {
+            landingDao.delete(tx, p.getId(), r.getId());
+            if (le != null) {
+                byte[] icon = Base64.decode(le.getIcon());
+                landingDao.insert(tx, p.getId(), r.getId(), le.getName(), le.getDescription(), icon);
+            }
+        });
     }
 
-    private UUID assertProject(String projectName) {
+    private LandingEntry loadEntry(Path file) {
+        if (!Files.exists(file)) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(file.toFile(), LandingEntry.class);
+        } catch (IOException e) {
+            // ignore
+            return null;
+        }
+    }
+
+    private ProjectEntry assertProject(String projectName, TeamRole role, boolean membersOnly) {
         if (projectName == null) {
             throw new ValidationErrorsException("A valid project name is required");
         }
@@ -103,6 +137,24 @@ public class LandingResourceImpl implements LandingResource, Resource {
         }
 
 
-        return projectManager.assertProjectAccess(id, TeamRole.WRITER, true).getId();
+        return projectManager.assertProjectAccess(id, role, membersOnly);
+    }
+
+    private RepositoryEntry assertRepository(ProjectEntry p, String repositoryName) {
+        if (repositoryName == null) {
+            throw new ValidationErrorsException("Invalid repository name");
+        }
+
+        Map<String, RepositoryEntry> repos = p.getRepositories();
+        if (repos == null || repos.isEmpty()) {
+            throw new ValidationErrorsException("Repository not found: " + repositoryName);
+        }
+
+        RepositoryEntry r = repos.get(repositoryName);
+        if (r == null) {
+            throw new ValidationErrorsException("Repository not found: " + repositoryName);
+        }
+
+        return r;
     }
 }
