@@ -14,7 +14,7 @@ public class Configuration {
 
     public static final String SERVER_HOST_KEY = "SERVER_HOST";
     public static final String SERVER_RPC_PORT_KEY = "SERVER_RPC_PORT";
-    public static final String SERVER_API_PORT_KEY = "SERVER_RPC_PORT";
+    public static final String SERVER_API_PORT_KEY = "SERVER_API_PORT";
     public static final String LOG_DIR_KEY = "AGENT_LOG_DIR";
     public static final String PAYLOAD_DIR_KEY = "AGENT_PAYLOAD_DIR";
     public static final String JAVA_CMD_KEY = "AGENT_JAVA_CMD";
