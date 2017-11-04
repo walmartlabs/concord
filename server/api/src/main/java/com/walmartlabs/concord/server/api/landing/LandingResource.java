@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.api.landing;
 
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -47,4 +48,18 @@ public interface LandingResource {
     @ApiOperation("List landing page registrations")
     @Produces(MediaType.APPLICATION_JSON)
     List<LandingEntry> list();
+
+    /**
+     * Refresh process LP definitions for the specified project and repository.
+     *
+     * @param projectName
+     * @param repositoryName
+     * @return
+     */
+    @POST
+    @ApiOperation("Refresh landing page definitions")
+    @Path("/refresh/{projectName}/{repositoryName}")
+    void refresh(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                 @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
+
 }

@@ -47,7 +47,7 @@ public class LandingDao extends AbstractDao {
         return txResult(tx -> insert(tx, projectId, repositoryId, name, description, icon));
     }
 
-    private UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String name, String description, byte[] icon) {
+    public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String name, String description, byte[] icon) {
         return tx.insertInto(LANDING_PAGE)
                 .columns(LANDING_PAGE.PROJECT_ID, LANDING_PAGE.REPO_ID, LANDING_PAGE.NAME, LANDING_PAGE.DESCRIPTION, LANDING_PAGE.ICON)
                 .values(projectId, repositoryId, name, description, icon)
@@ -75,6 +75,13 @@ public class LandingDao extends AbstractDao {
         tx(tx -> tx.delete(LANDING_PAGE)
                 .where(LANDING_PAGE.LANDING_PAGE_ID.eq(id))
                 .execute());
+    }
+
+    public void delete(DSLContext tx, UUID projectId, UUID repositoryId) {
+        tx.delete(LANDING_PAGE)
+                .where(LANDING_PAGE.PROJECT_ID.eq(projectId)
+                        .and(LANDING_PAGE.REPO_ID.eq(repositoryId)))
+                .execute();
     }
 
     public List<LandingEntry> list(UUID currentUserId) {
