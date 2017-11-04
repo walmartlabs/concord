@@ -1,15 +1,9 @@
 package com.walmartlabs.concord.server.events;
 
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
-import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.PayloadParser;
-import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
-import com.walmartlabs.concord.server.process.pipelines.processors.Pipeline;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
@@ -19,15 +13,13 @@ import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.repository.CachedRepositoryManager.RepositoryCacheDao;
 import static com.walmartlabs.concord.server.repository.RepositoryManager.DEFAULT_BRANCH;
 
 @Named
-public class GithubCallbackResourceImpl implements GithubCallbackResource, Resource {
+public class GithubCallbackResourceImpl extends AbstractEventResource implements GithubCallbackResource, Resource {
 
     private static final Logger log = LoggerFactory.getLogger(GithubCallbackResourceImpl.class);
 
@@ -41,11 +33,8 @@ public class GithubCallbackResourceImpl implements GithubCallbackResource, Resou
     private static final String PUSHER_KEY = "author";
 
     private final ProjectDao projectDao;
-    private final TriggersDao triggersDao;
     private final RepositoryDao repositoryDao;
     private final RepositoryCacheDao repositoryCacheDao;
-    private final PayloadManager payloadManager;
-    private final Pipeline projectPipeline;
 
     @Inject
     public GithubCallbackResourceImpl(ProjectDao projectDao,
@@ -54,12 +43,11 @@ public class GithubCallbackResourceImpl implements GithubCallbackResource, Resou
                                       RepositoryCacheDao repositoryCacheDao,
                                       PayloadManager payloadManager,
                                       ProjectPipeline projectPipeline) {
+        super(EVENT_NAME, payloadManager, projectPipeline, triggersDao);
+
         this.projectDao = projectDao;
-        this.triggersDao = triggersDao;
         this.repositoryDao = repositoryDao;
         this.repositoryCacheDao = repositoryCacheDao;
-        this.payloadManager = payloadManager;
-        this.projectPipeline = projectPipeline;
     }
 
     @Override
@@ -88,18 +76,10 @@ public class GithubCallbackResourceImpl implements GithubCallbackResource, Resou
         Map<String, String> triggerConditions = buildConditions(repo, event);
         Map<String, Object> triggerEvent = buildTriggerEvent(event, repo, project, triggerConditions);
 
-        List<TriggerEntry> triggers = triggersDao.list(EVENT_NAME, triggerConditions);
-        for (TriggerEntry t : triggers) {
-            Map<String, Object> processArgs = new HashMap<>();
-            if (t.getArguments() != null) {
-                processArgs.putAll(t.getArguments());
-            }
-            processArgs.put("event", triggerEvent);
-            UUID instanceId = startProcess(t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), processArgs);
-            log.info("push ['{}', '{}'] -> process '{}'", projectId, repoId, instanceId);
-        }
+        String eventId = repoId.toString();
+        process(eventId, triggerConditions, triggerEvent);
 
-        log.info("push ['{}', '{}', '{}'] -> done", projectId, repoId, triggerEvent);
+        log.info("event ['{}', '{}', '{}'] -> done", eventId, triggerConditions, triggerEvent);
 
         return "ok";
     }
@@ -140,31 +120,4 @@ public class GithubCallbackResourceImpl implements GithubCallbackResource, Resou
         return (String)pusher.get("name");
     }
 
-    private UUID startProcess(String projectName, String repoName, String flowName, Map<String, Object> args) {
-        UUID instanceId = UUID.randomUUID();
-
-        PayloadParser.EntryPoint ep = new PayloadParser.EntryPoint(projectName, repoName, flowName);
-        Map<String, Object> request = new HashMap<>();
-        request.put(InternalConstants.Request.ARGUMENTS_KEY, args);
-
-        Payload payload;
-        try {
-
-            payload = payloadManager.createPayload(instanceId, null, null, ep, request, null);
-        } catch (Exception e) {
-            log.error("startProcess ['{}', '{}', '{}'] -> error creating a payload", projectName, repoName, flowName, e);
-            throw new WebApplicationException("Error creating a payload", e);
-        }
-
-        try {
-            projectPipeline.process(payload);
-        } catch (ProcessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("startProcess ['{}', '{}', '{}'] -> error starting the process ('{}')", projectName, repoName, flowName, instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-
-        return instanceId;
-    }
 }
