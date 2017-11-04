@@ -81,13 +81,15 @@
                                  baseColumnNames="PROJECT_ID"
                                  constraintName="FK_LANDING_PAGE_PROJECT_ID"
                                  referencedTableName="PROJECTS"
-                                 referencedColumnNames="PROJECT_ID"/>
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
 
         <addForeignKeyConstraint baseTableName="LANDING_PAGE"
                                  baseColumnNames="REPO_ID"
                                  constraintName="FK_LANDING_PAGE_REPO_ID"
                                  referencedTableName="REPOSITORIES"
-                                 referencedColumnNames="REPO_ID"/>
+                                 referencedColumnNames="REPO_ID"
+                                 onDelete="CASCADE"/>
     </changeSet>
 
     <changeSet id="46300" author="ybrigo@gmail.com">

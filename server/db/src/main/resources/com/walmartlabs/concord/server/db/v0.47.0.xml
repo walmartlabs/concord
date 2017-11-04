@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="47000" author="ybrigo@gmail.com">
+        <createTable tableName="TRIGGERS" >
+            <column name="TRIGGER_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="REPO_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EVENT_NAME" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENTRY_POINT" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ARGUMENTS" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CONDITIONS" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="TRIGGERS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_TRIGGERS_PROJECT_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="TRIGGERS"
+                                 baseColumnNames="REPO_ID"
+                                 constraintName="FK_TRIGGERS_REPO_ID"
+                                 referencedTableName="REPOSITORIES"
+                                 referencedColumnNames="REPO_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="47100" author="ybrigo@gmail.com">
+        <insert tableName="PROJECTS">
+            <column name="PROJECT_ID" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="TEAM_ID" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="PROJECT_NAME" value="system-flow"/>
+            <column name="VISIBILITY" value="PRIVATE"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="47200" author="ybrigo@gmail.com">
+        <insert tableName="REPOSITORIES">
+            <column name="REPO_ID" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="PROJECT_ID" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="REPO_NAME" value="concord-system"/>
+            <column name="REPO_URL" value="classpath://com/walmartlabs/concord/server/flow/concord.yml"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="47300" author="ybrigo@gmail.com">
+        <insert tableName="TRIGGERS">
+            <column name="PROJECT_ID" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="REPO_ID" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="EVENT_NAME" value="github"/>
+            <column name="ENTRY_POINT" value="doItAfterPush"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

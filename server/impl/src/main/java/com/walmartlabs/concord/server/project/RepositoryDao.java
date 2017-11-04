@@ -30,7 +30,7 @@ public class RepositoryDao extends AbstractDao {
                     .fetchOne(REPOSITORIES.REPO_ID);
         }
     }
-
+    
     public RepositoryEntry get(UUID projectId, UUID repoId) {
         try (DSLContext tx = DSL.using(cfg)) {
             return selectRepositoryEntry(tx)

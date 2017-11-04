@@ -24,4 +24,5 @@
     <include file="v0.44.0.xml" relativeToChangelogFile="true"/>
     <include file="v0.45.0.xml" relativeToChangelogFile="true"/>
     <include file="v0.46.0.xml" relativeToChangelogFile="true"/>
+    <include file="v0.47.0.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

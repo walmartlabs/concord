@@ -1,0 +1,20 @@
+flows:
+  doItAfterPush:
+  - task: triggersRefresh
+    in:
+      repository: ${event.repository}
+      project: ${event.project}
+
+configuration:
+  arguments:
+    name: "Concord"
+    concord:
+      apiKey: "auBy4eDWrKWsyhiDp3AQiw"
+  dependencies:
+  - "file:///Users/brig/prj/wallmart/concord-plugins/tasks/concord/target/concord-tasks-0.34.1-SNAPSHOT.jar"
+
+triggers:
+  - github:
+      repository: .*
+      branch: ".*"
+      entryPoint: doItAfterPush

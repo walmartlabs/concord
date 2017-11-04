@@ -63,7 +63,7 @@ public class GithubWebhookService {
             return;
         }
 
-        String webhookUrl = createWebHookUrl(repoId);
+        String webhookUrl = createWebHookUrl(projectId, repoId);
         String githubRepoName = GithubUtils.getRepositoryName(repoUrl);
 
         webhookManager.register(githubRepoName, webhookUrl);
@@ -91,7 +91,7 @@ public class GithubWebhookService {
             return;
         }
 
-        String webhookUrl = createWebHookUrl(repoId);
+        String webhookUrl = createWebHookUrl(projectId, repoId);
         String githubRepoName = GithubUtils.getRepositoryName(repoUrl);
 
         webhookManager.unregister(githubRepoName, webhookUrl);
@@ -104,8 +104,8 @@ public class GithubWebhookService {
         return repoUrl.contains(cfg.getGithubUrl());
     }
 
-    private String createWebHookUrl(UUID repoId) {
-        return cfg.getWebhookUrl() + "/" + repoId;
+    private String createWebHookUrl(UUID projectId, UUID repoId) {
+        return cfg.getWebhookUrl() + "/" + projectId + "/" + repoId;
     }
 
     private class HookRefresher implements Runnable {
