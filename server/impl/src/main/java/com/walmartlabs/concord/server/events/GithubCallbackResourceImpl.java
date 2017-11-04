@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.events;
 
-import com.walmartlabs.concord.server.project.CachedRepositoryManager;
+import com.walmartlabs.concord.server.repository.CachedRepositoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;

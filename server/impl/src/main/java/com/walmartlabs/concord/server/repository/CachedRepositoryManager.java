@@ -1,7 +1,7 @@
-package com.walmartlabs.concord.server.project;
+package com.walmartlabs.concord.server.repository;
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -12,11 +12,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
-import static com.walmartlabs.concord.server.project.RepositoryMetaManager.RepositoryMeta;
+import static com.walmartlabs.concord.server.repository.RepositoryMetaManager.RepositoryMeta;
 
 public class CachedRepositoryManager implements RepositoryManager {
 
@@ -37,7 +38,7 @@ public class CachedRepositoryManager implements RepositoryManager {
     }
 
     @Override
-    public void testConnection(String uri, String branch, String commitId, String path, Secret secret) {
+    public void testConnection(String uri, String branch, String commitId, String path, String secret) {
         delegate.testConnection(uri, branch, commitId, path, secret);
     }
 
@@ -47,34 +48,26 @@ public class CachedRepositoryManager implements RepositoryManager {
     }
 
     @Override
-    public Path fetchByCommit(UUID projectId, String repoName, String uri, String commitId, String path, Secret secret) {
-        return fetch(projectId, repoName, commitId, path, () -> delegate.fetchByCommit(projectId, repoName, uri, commitId, path, secret));
-    }
-
-    @Override
-    public Path fetch(UUID projectId, String repoName, String uri, String branchName, String path, Secret secret) {
-        return fetch(projectId, repoName, branchName, path, () -> delegate.fetch(projectId, repoName, uri, branchName, path, secret));
-    }
-
-    @Override
-    public Path getRepoPath(UUID projectId, String repoName, String branch, String path) {
-        return delegate.getRepoPath(projectId, repoName, branch, path);
-    }
-
-    private Path fetch(UUID projectId, String repoName, String branchOrCommit, String path, Callable<Path> f) {
+    public Path fetch(UUID projectId, RepositoryEntry repository) {
+        String repoName = repository.getName();
         return withLock(projectId, repoName, () -> {
             Date lastPushDate = repositoryDao.getLastPushDate(projectId, repoName);
-            RepositoryMeta rm = repositoryMetaManager.readMeta(projectId, repoName, branchOrCommit);
+            RepositoryMeta rm = repositoryMetaManager.readMeta(projectId, repository);
             if (needUpdate(rm, lastPushDate)) {
-                Path p = f.call();
-                repositoryMetaManager.writeMeta(projectId, repoName, branchOrCommit, new RepositoryMeta(lastPushDate));
+                Path result = delegate.fetch(projectId, repository);
+                repositoryMetaManager.writeMeta(projectId, repository, new RepositoryMeta(lastPushDate));
                 log.info("fetch ['{}', '{}'] -> updated", projectId, repoName);
-                return p;
+                return result;
             } else {
                 log.info("fetch ['{}', '{}'] -> from cache", projectId, repoName);
-                return delegate.getRepoPath(projectId, repoName, branchOrCommit, path);
+                return delegate.getRepoPath(projectId, repository);
             }
         });
+    }
+
+    @Override
+    public Path getRepoPath(UUID projectId, RepositoryEntry repository) {
+        return delegate.getRepoPath(projectId, repository);
     }
 
     private boolean needUpdate(RepositoryMeta rm, Date lastPushDate) {

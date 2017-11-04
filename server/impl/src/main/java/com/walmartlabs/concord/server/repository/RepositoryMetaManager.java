@@ -1,8 +1,10 @@
-package com.walmartlabs.concord.server.project;
+package com.walmartlabs.concord.server.repository;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
+import com.walmartlabs.concord.server.project.RepositoryException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -14,13 +16,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
-
-import static com.walmartlabs.concord.server.project.RepositoryManagerImpl.DEFAULT_BRANCH;
 
 @Named
 public class RepositoryMetaManager {
 
+    private static final String DEFAULT_BRANCH = "master";
     private static final String META_FILE = "meta.json";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -32,8 +34,8 @@ public class RepositoryMetaManager {
         this.cfg = cfg;
     }
 
-    public RepositoryMeta readMeta(UUID projectId, String repoName, String branch) throws IOException {
-        Path p = getMetaPath(projectId, repoName, branch);
+    public RepositoryMeta readMeta(UUID projectId, RepositoryEntry repository)  {
+        Path p = getMetaPath(projectId, repository);
 
         if (!Files.exists(p)) {
             return null;
@@ -42,11 +44,13 @@ public class RepositoryMetaManager {
         Path metaPath = p.resolve(META_FILE);
         try (InputStream in = Files.newInputStream(metaPath)) {
             return objectMapper.readValue(in, RepositoryMeta.class);
+        } catch (IOException e) {
+            throw new RepositoryException("read repository meta error", e);
         }
     }
 
-    public void writeMeta(UUID projectId, String repoName, String branch, RepositoryMeta meta) throws IOException {
-        Path p = getMetaPath(projectId, repoName, branch);
+    public void writeMeta(UUID projectId, RepositoryEntry repository, RepositoryMeta meta) {
+        Path p = getMetaPath(projectId, repository);
 
         if (!Files.exists(p)) {
             try {
@@ -59,17 +63,22 @@ public class RepositoryMetaManager {
         Path metaPath = p.resolve(META_FILE);
         try (OutputStream os = Files.newOutputStream(metaPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             objectMapper.writeValue(os, meta);
+        } catch (Exception e) {
+            throw new RepositoryException("write repository meta error", e);
         }
     }
 
-    private Path getMetaPath(UUID projectId, String repoName, String branch) {
-        if (branch == null) {
-            branch = DEFAULT_BRANCH;
+    private Path getMetaPath(UUID projectId, RepositoryEntry repository) {
+        String branch;
+        if (repository.getCommitId() != null) {
+            branch = repository.getCommitId();
+        } else {
+            branch = Optional.ofNullable(repository.getBranch()).orElse(DEFAULT_BRANCH);
         }
 
         return cfg.getRepoMetaDir()
                 .resolve(String.valueOf(projectId))
-                .resolve(repoName)
+                .resolve(repository.getName())
                 .resolve(branch);
     }
 

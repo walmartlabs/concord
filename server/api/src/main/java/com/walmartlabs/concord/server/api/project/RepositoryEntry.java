@@ -34,7 +34,12 @@ public class RepositoryEntry implements Serializable {
     @ConcordKey
     private final String secret;
 
+    public RepositoryEntry(String name, String url) {
+        this(null, name, url, null, null, null, null);
+    }
+
     @JsonCreator
+
     public RepositoryEntry(@JsonProperty("id") UUID id,
                            @JsonProperty("name") String name,
                            @JsonProperty("url") String url,

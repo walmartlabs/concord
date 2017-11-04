@@ -1,12 +1,10 @@
 package com.walmartlabs.concord.server.console;
 
-import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.project.RepositoryManager;
+import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
-import com.walmartlabs.concord.server.security.secret.SecretManager;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -27,18 +25,15 @@ public class ConsoleService implements Resource {
 
     private final ProjectDao projectDao;
     private final RepositoryManager repositoryManager;
-    private final SecretManager secretManager;
     private final UserManager userManager;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
                           RepositoryManager repositoryManager,
-                          SecretManager secretManager,
                           UserManager userManager) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
-        this.secretManager = secretManager;
         this.userManager = userManager;
     }
 
@@ -102,8 +97,7 @@ public class ConsoleService implements Resource {
     @RequiresAuthentication
     public boolean testRepository(RepositoryTestRequest req) {
         try {
-            Secret secret = secretManager.getSecret(req.getSecret(), null);
-            repositoryManager.testConnection(req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), secret);
+            repositoryManager.testConnection(req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecret());
             return true;
         } catch (Exception e) {
             String msg;
