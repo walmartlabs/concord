@@ -66,7 +66,7 @@ public class GithubCallbackResourceImpl extends AbstractEventResource implements
         ProjectEntry project = projectDao.get(projectId);
 
         String repoBranch = Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH);
-        if (!eventBranch.equals(repoBranch)) {
+        if (!repoBranch.equals(eventBranch)) {
             log.info("push ['{}', '{}', '{}'] -> ignore, expected branch '{}'", project, repoId, eventBranch, repoBranch);
             return "ok";
         }
@@ -98,6 +98,10 @@ public class GithubCallbackResourceImpl extends AbstractEventResource implements
 
     private static String getBranch(Map<String, Object> event) {
         String ref = (String) event.get("ref");
+        if (ref == null) {
+            return null;
+        }
+
         String[] refPath = ref.split("/");
         return refPath[refPath.length - 1];
     }
