@@ -6,6 +6,8 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.util.Map;
 
 @Api("Events")
@@ -21,5 +23,16 @@ public interface OneopsResource {
     @POST
     @Path("/oneops")
     @Consumes(MediaType.APPLICATION_JSON)
-    void event(Map<String, Object> event);
+    Response event(Map<String, Object> event);
+
+    /**
+     * Process OneOps event.
+     *
+     * @param in event's data
+     * @return
+     */
+    @POST
+    @Path("/oneops")
+    @Consumes(MediaType.WILDCARD)
+    Response event(InputStream in);
 }

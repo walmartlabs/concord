@@ -5,6 +5,7 @@ import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.PayloadParser;
+import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.Pipeline;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public abstract class AbstractEventResource {
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
-    protected void process(String eventId, Map<String, String> triggerConditions, Map<String, Object> triggerEvent) {
+    protected int process(String eventId, Map<String, String> triggerConditions, Map<String, Object> triggerEvent) {
         List<TriggerEntry> triggers = triggersDao.list(eventName, triggerConditions);
         for (TriggerEntry t : triggers) {
             Map<String, Object> processArgs = new HashMap<>();
@@ -46,6 +47,7 @@ public abstract class AbstractEventResource {
             UUID instanceId = startProcess(t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), processArgs);
             log.info("process ['{}'] -> instanceId '{}'", eventId, instanceId);
         }
+        return triggers.size();
     }
 
     private UUID startProcess(String projectName, String repoName, String flowName, Map<String, Object> args) {
@@ -58,16 +60,22 @@ public abstract class AbstractEventResource {
         Payload payload;
         try {
             payload = payloadManager.createPayload(instanceId, null, null, ep, request, null);
+        } catch (ProcessException e) {
+            log.error("startProcess ['{}', '{}', '{}'] -> error creating a payload", projectName, repoName, flowName, e);
+            throw e;
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}'] -> error creating a payload", projectName, repoName, flowName, e);
-            return null;
+            throw new ProcessException(instanceId, "Error while creating a payload: " + e.getMessage(), e);
         }
 
         try {
             projectPipeline.process(payload);
+        } catch (ProcessException e) {
+            log.error("startProcess ['{}', '{}', '{}'] -> error starting the process {}", projectName, repoName, flowName, instanceId, e);
+            throw e;
         } catch (Exception e) {
-            log.error("startProcess ['{}', '{}', '{}'] -> error starting the process ('{}')", projectName, repoName, flowName, instanceId, e);
-            return null;
+            log.error("startProcess ['{}', '{}', '{}'] -> error starting the process {}", projectName, repoName, flowName, instanceId, e);
+            throw new ProcessException(instanceId, "Error while starting a process: " + e.getMessage(), e);
         }
 
         return instanceId;

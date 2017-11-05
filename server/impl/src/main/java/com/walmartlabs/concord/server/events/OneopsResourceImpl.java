@@ -1,9 +1,9 @@
 package com.walmartlabs.concord.server.events;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.api.events.OneopsResource;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
-import com.walmartlabs.concord.server.process.pipelines.processors.Pipeline;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +11,11 @@ import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -34,26 +39,48 @@ public class OneopsResourceImpl extends AbstractEventResource implements OneopsR
     private static final String SUBJECT = "subject";
     private static final String DEPLOYMENT_STATE = "deploymentState";
 
+    private final ObjectMapper objectMapper;
+
     @Inject
     public OneopsResourceImpl(PayloadManager payloadManager,
                               ProjectPipeline projectPipeline,
                               TriggersDao triggersDao) {
+
         super(EVENT_NAME, payloadManager, projectPipeline, triggersDao);
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
-    public void event(Map<String, Object> event) {
+    public Response event(Map<String, Object> event) {
         if (event == null || event.isEmpty()) {
-            return;
+            return Response.status(Status.BAD_REQUEST).build();
         }
 
         Map<String, String> triggerConditions = buildConditions(event);
         Map<String, Object> triggerEvent = buildTriggerEvent(event, triggerConditions);
 
         String eventId = String.valueOf(event.get("cmsId"));
-        process(eventId, triggerConditions, triggerEvent);
+        int count = process(eventId, triggerConditions, triggerEvent);
 
-        log.info("event ['{}', '{}', '{}'] -> done", eventId, triggerConditions, triggerEvent);
+        if (log.isDebugEnabled()) {
+            log.debug("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
+        } else {
+            log.info("event ['{}'] -> done, {} processes started", eventId, count);
+        }
+
+        return Response.ok().build();
+    }
+
+    @Override
+    public Response event(InputStream in) {
+        Map<String, Object> m;
+        try {
+            m = objectMapper.readValue(in, Map.class);
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while reading JSON data: " + e.getMessage(), e);
+        }
+
+        return event(m);
     }
 
     private static Map<String, Object> buildTriggerEvent(Map<String, Object> event,
