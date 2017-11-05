@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.events;
 
+import com.walmartlabs.concord.server.api.events.GithubEventResource;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.PayloadManager;
@@ -19,9 +20,9 @@ import static com.walmartlabs.concord.server.repository.CachedRepositoryManager.
 import static com.walmartlabs.concord.server.repository.RepositoryManager.DEFAULT_BRANCH;
 
 @Named
-public class GithubCallbackResourceImpl extends AbstractEventResource implements GithubCallbackResource, Resource {
+public class GithubEventResourceImpl extends AbstractEventResource implements GithubEventResource, Resource {
 
-    private static final Logger log = LoggerFactory.getLogger(GithubCallbackResourceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(GithubEventResourceImpl.class);
 
     private static final String EVENT_NAME = "github";
 
@@ -37,12 +38,12 @@ public class GithubCallbackResourceImpl extends AbstractEventResource implements
     private final RepositoryCacheDao repositoryCacheDao;
 
     @Inject
-    public GithubCallbackResourceImpl(ProjectDao projectDao,
-                                      TriggersDao triggersDao,
-                                      RepositoryDao repositoryDao,
-                                      RepositoryCacheDao repositoryCacheDao,
-                                      PayloadManager payloadManager,
-                                      ProjectPipeline projectPipeline) {
+    public GithubEventResourceImpl(ProjectDao projectDao,
+                                   TriggersDao triggersDao,
+                                   RepositoryDao repositoryDao,
+                                   RepositoryCacheDao repositoryCacheDao,
+                                   PayloadManager payloadManager,
+                                   ProjectPipeline projectPipeline) {
         super(EVENT_NAME, payloadManager, projectPipeline, triggersDao);
 
         this.projectDao = projectDao;

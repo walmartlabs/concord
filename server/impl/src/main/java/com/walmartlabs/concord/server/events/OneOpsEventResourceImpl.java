@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.server.api.events.OneopsResource;
+import com.walmartlabs.concord.server.api.events.OneOpsEventResource;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 @Named
-public class OneopsResourceImpl extends AbstractEventResource implements OneopsResource, Resource {
+public class OneOpsEventResourceImpl extends AbstractEventResource implements OneOpsEventResource, Resource {
 
-    private static final Logger log = LoggerFactory.getLogger(OneopsResourceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(OneOpsEventResourceImpl.class);
 
     private static final String EVENT_NAME = "oneops";
 
@@ -42,9 +42,9 @@ public class OneopsResourceImpl extends AbstractEventResource implements OneopsR
     private final ObjectMapper objectMapper;
 
     @Inject
-    public OneopsResourceImpl(PayloadManager payloadManager,
-                              ProjectPipeline projectPipeline,
-                              TriggersDao triggersDao) {
+    public OneOpsEventResourceImpl(PayloadManager payloadManager,
+                                   ProjectPipeline projectPipeline,
+                                   TriggersDao triggersDao) {
 
         super(EVENT_NAME, payloadManager, projectPipeline, triggersDao);
         this.objectMapper = new ObjectMapper();

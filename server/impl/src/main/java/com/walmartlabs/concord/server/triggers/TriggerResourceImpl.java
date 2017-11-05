@@ -7,7 +7,6 @@ import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
 import com.walmartlabs.concord.server.api.trigger.TriggerResource;
-import com.walmartlabs.concord.server.events.GithubCallbackResourceImpl;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.ProjectManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;

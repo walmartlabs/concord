@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.events;
+package com.walmartlabs.concord.server.api.events;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Path("/events/github")
-public interface GithubCallbackResource {
+public interface GithubEventResource {
 
     @POST
     @Path("/push/{projectId}/{repoId}")

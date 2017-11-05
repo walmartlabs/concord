@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Api("Events")
 @Path("/api/v1/events")
-public interface OneopsResource {
+public interface OneOpsEventResource {
 
     /**
      * Process OneOps event.
