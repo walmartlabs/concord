@@ -6,7 +6,7 @@ import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.landing.DeleteLandingResponse;
 import com.walmartlabs.concord.server.api.landing.LandingEntry;
-import com.walmartlabs.concord.server.api.landing.LandingResource;
+import com.walmartlabs.concord.server.api.landing.LandingPageResource;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.UUID;
 
 @Named
-public class LandingResourceImpl extends AbstractDao implements LandingResource, Resource {
+public class LandingPageResourceImpl extends AbstractDao implements LandingPageResource, Resource {
 
-    public static final String LP_META_FILE_NAME = ".lp-meta.json";
+    private static final String LP_META_FILE_NAME = "landing.json";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final LandingDao landingDao;
@@ -40,9 +40,9 @@ public class LandingResourceImpl extends AbstractDao implements LandingResource,
     private final RepositoryManager repositoryManager;
 
     @Inject
-    public LandingResourceImpl(Configuration cfg,
-                               LandingDao landingDao, ProjectDao projectDao,
-                               ProjectManager projectManager, RepositoryManager repositoryManager) {
+    public LandingPageResourceImpl(Configuration cfg,
+                                   LandingDao landingDao, ProjectDao projectDao,
+                                   ProjectManager projectManager, RepositoryManager repositoryManager) {
         super(cfg);
 
         this.landingDao = landingDao;
@@ -100,14 +100,15 @@ public class LandingResourceImpl extends AbstractDao implements LandingResource,
         ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
-        Path lpMetaFile = repositoryManager.fetch(p.getId(), r).resolve(LP_META_FILE_NAME);
+        Path lpMetaFile = repositoryManager.fetch(p.getId(), r)
+                .resolve(LP_META_FILE_NAME);
 
         LandingEntry le = loadEntry(lpMetaFile);
 
         tx(tx -> {
             landingDao.delete(tx, p.getId(), r.getId());
             if (le != null) {
-                byte[] icon = Base64.decode(le.getIcon());
+                byte[] icon = le.getIcon() != null ? Base64.decode(le.getIcon()) : null;
                 landingDao.insert(tx, p.getId(), r.getId(), le.getName(), le.getDescription(), icon);
             }
         });

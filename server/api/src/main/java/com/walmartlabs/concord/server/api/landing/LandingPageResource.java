@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Api("Landing page")
 @Path("/api/v1/landing_page")
-public interface LandingResource {
+public interface LandingPageResource {
 
     /**
      * Create or update a project's landing page registration.
@@ -50,7 +50,7 @@ public interface LandingResource {
     List<LandingEntry> list();
 
     /**
-     * Refresh process LP definitions for the specified project and repository.
+     * Refresh landing page definitions for the specified project and repository.
      *
      * @param projectName
      * @param repositoryName

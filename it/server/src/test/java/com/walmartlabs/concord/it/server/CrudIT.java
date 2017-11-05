@@ -7,7 +7,7 @@ import com.walmartlabs.concord.server.api.inventory.*;
 import com.walmartlabs.concord.server.api.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.landing.DeleteLandingResponse;
 import com.walmartlabs.concord.server.api.landing.LandingEntry;
-import com.walmartlabs.concord.server.api.landing.LandingResource;
+import com.walmartlabs.concord.server.api.landing.LandingPageResource;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
@@ -358,7 +358,7 @@ public class CrudIT extends AbstractServerIT {
     @Test
     public void testLanding() throws Exception {
         ProjectResource projectResource = proxy(ProjectResource.class);
-        LandingResource resource = proxy(LandingResource.class);
+        LandingPageResource resource = proxy(LandingPageResource.class);
 
         String projectName = "project_" + System.currentTimeMillis();
         String repositoryName = "repository_" + System.currentTimeMillis();
