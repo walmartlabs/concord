@@ -7,10 +7,13 @@ import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
 import com.walmartlabs.concord.server.api.trigger.TriggerResource;
+import com.walmartlabs.concord.server.events.GithubCallbackResourceImpl;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.ProjectManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import org.jooq.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -24,6 +27,8 @@ import java.util.UUID;
 
 @Named
 public class TriggerResourceImpl extends AbstractDao implements TriggerResource, Resource {
+
+    private static final Logger log = LoggerFactory.getLogger(TriggerResourceImpl.class);
 
     private final ProjectLoader projectLoader = new ProjectLoader();
 
@@ -56,6 +61,7 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
         try {
             pd = projectLoader.load(repoPath);
         } catch (IOException e) {
+            log.error("refresh ['{}', '{}'] -> load project error", projectName, repoPath, e);
             throw new WebApplicationException("load project '" + projectName + "' error", e);
         }
 
