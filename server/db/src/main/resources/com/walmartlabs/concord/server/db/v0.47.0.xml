@@ -4,6 +4,10 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <property name="concordSystemTeamId" value="ad76f1e2-c33c-11e7-8064-f7371c66fa77"/>
+    <property name="concordTriggersProjectId" value="ad76f1e2-c33c-11e7-8064-f7371c66fa77"/>
+    <property name="concordTriggersRepoId" value="b31b0b06-c33c-11e7-b0e9-8702fc03629f"/>
+
     <changeSet id="47000" author="ybrigo@gmail.com">
         <createTable tableName="TRIGGERS" >
             <column name="TRIGGER_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
@@ -45,29 +49,32 @@
     </changeSet>
 
     <changeSet id="47100" author="ybrigo@gmail.com">
+        <insert tableName="TEAMS">
+            <column name="TEAM_ID">${concordSystemTeamId}</column>
+            <column name="TEAM_NAME">Concord</column>
+            <column name="DESCRIPTION">Concord System Team</column>
+            <column name="VISIBILITY">PRIVATE</column>
+        </insert>
+
         <insert tableName="PROJECTS">
-            <column name="PROJECT_ID" value="00000000-0000-0000-0000-000000000000"/>
-            <column name="TEAM_ID" value="00000000-0000-0000-0000-000000000000"/>
-            <column name="PROJECT_NAME" value="system-flow"/>
+            <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
+            <column name="TEAM_ID" value="${concordSystemTeamId}"/>
+            <column name="PROJECT_NAME" value="concordTriggers"/>
             <column name="VISIBILITY" value="PRIVATE"/>
         </insert>
-    </changeSet>
 
-    <changeSet id="47200" author="ybrigo@gmail.com">
         <insert tableName="REPOSITORIES">
-            <column name="REPO_ID" value="00000000-0000-0000-0000-000000000000"/>
-            <column name="PROJECT_ID" value="00000000-0000-0000-0000-000000000000"/>
-            <column name="REPO_NAME" value="concord-system"/>
-            <column name="REPO_URL" value="classpath://com/walmartlabs/concord/server/flow/concord.yml"/>
+            <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
+            <column name="REPO_ID" value="${concordTriggersRepoId}"/>
+            <column name="REPO_NAME" value="githubTriggers"/>
+            <column name="REPO_URL" value="classpath://com/walmartlabs/concord/server/triggers/github/concord.yml"/>
         </insert>
-    </changeSet>
 
-    <changeSet id="47300" author="ybrigo@gmail.com">
         <insert tableName="TRIGGERS">
-            <column name="PROJECT_ID" value="00000000-0000-0000-0000-000000000000"/>
-            <column name="REPO_ID" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
+            <column name="REPO_ID" value="${concordTriggersRepoId}"/>
             <column name="EVENT_NAME" value="github"/>
-            <column name="ENTRY_POINT" value="doItAfterPush"/>
+            <column name="ENTRY_POINT" value="onPush"/>
         </insert>
     </changeSet>
 </databaseChangeLog>

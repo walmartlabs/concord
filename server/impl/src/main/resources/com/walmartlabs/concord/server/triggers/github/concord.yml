@@ -1,5 +1,5 @@
 flows:
-  doItAfterPush:
+  onPush:
   - task: triggersRefresh
     in:
       repository: ${event.repository}
@@ -21,4 +21,4 @@ triggers:
   - github:
       repository: ".*"
       branch: ".*"
-      entryPoint: doItAfterPush
+      entryPoint: onPush
