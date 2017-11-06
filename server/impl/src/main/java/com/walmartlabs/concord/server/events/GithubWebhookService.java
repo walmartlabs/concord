@@ -26,7 +26,6 @@ public class GithubWebhookService {
 
     private static final Logger log = LoggerFactory.getLogger(GithubWebhookService.class);
 
-    private static final long REFRESH_INTERVAL = TimeUnit.MINUTES.toMillis(5);
     private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
 
     private final RepositoryDao repositoryDao;
@@ -124,7 +123,7 @@ public class GithubWebhookService {
                     repositories.forEach(r -> refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoUrl()));
                     log.info("run -> {} repositories processed", repositories.size());
 
-                    sleep(REFRESH_INTERVAL);
+                    sleep(cfg.getRefreshInterval());
                 } catch (Exception e) {
                     log.warn("run -> hook refresh error: {}. Will retry in {}ms...", e.getMessage(), RETRY_INTERVAL);
                     sleep(RETRY_INTERVAL);
