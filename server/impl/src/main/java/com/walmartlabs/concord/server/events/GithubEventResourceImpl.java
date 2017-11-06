@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.server.events;
 
-import com.walmartlabs.concord.server.api.events.GithubEventResource;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.PayloadManager;

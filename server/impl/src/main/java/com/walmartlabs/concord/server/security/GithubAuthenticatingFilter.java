@@ -121,7 +121,7 @@ public class GithubAuthenticatingFilter extends OncePerRequestFilter {
 
                 @Override
                 public void setReadListener(ReadListener listener) {
-                    //
+
                 }
             };
         }

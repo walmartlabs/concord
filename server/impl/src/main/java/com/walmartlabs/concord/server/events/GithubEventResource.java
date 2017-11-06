@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.api.events;
+package com.walmartlabs.concord.server.events;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;

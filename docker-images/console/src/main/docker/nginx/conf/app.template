@@ -5,7 +5,7 @@ server {
 
 	proxy_read_timeout      600;
 
-	location ~ ^/(api|logs|forms)/ {
+	location ~ ^/(api|logs|forms|events)/ {
         expires             off;
 	    proxy_pass          http://SERVER_ADDR:SERVER_PORT;
 	    proxy_redirect      off;
