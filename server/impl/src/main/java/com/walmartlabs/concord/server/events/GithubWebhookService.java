@@ -45,7 +45,7 @@ public class GithubWebhookService {
     }
 
     private void init(RefresherDao dao) {
-        if (this.cfg.getApiUrl() == null) {
+        if (this.cfg.getRefreshInterval() <= 0) {
             log.info("init -> webhook refresh disabled");
             return;
         }
