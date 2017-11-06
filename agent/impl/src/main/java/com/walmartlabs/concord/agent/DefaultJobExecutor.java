@@ -242,7 +242,7 @@ public class DefaultJobExecutor implements JobExecutor {
         l.add("-DagentId=" + cfg.getAgentId());
         l.add("-Drpc.server.host=" + cfg.getServerHost());
         l.add("-Drpc.server.port=" + cfg.getServerRpcPort());
-        l.add("-Dapi.baseUrl=http://" + cfg.getServerHost() + ":" + cfg.getServerApiPort());
+        l.add("-Dapi.baseUrl=" + cfg.getServerApiBaseUrl());
 
         // classpath
         Collection<String> dependencyFiles = dependencies.stream()
