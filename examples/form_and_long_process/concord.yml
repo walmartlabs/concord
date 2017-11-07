@@ -1,5 +1,5 @@
 flows:
-  main:
+  default:
 
   # "yield" makes the process to continue in background after this
   # form. It will stop a UI "spinner" in redirects a user back to the
@@ -18,5 +18,3 @@ forms:
   myForm:
   - name: { type: "string" }
 
-configuration:
-  entryPoint: main

@@ -1,3 +1,9 @@
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+  - "mvn://io.github.http-builder-ng:http-builder-ng-core:0.16.1"
+  - "mvn://xml-resolver:xml-resolver:1.2"
+
 flows:
   default:
   - script: groovy
@@ -16,9 +22,4 @@ flows:
 
   - log: "Server's version: ${serverVersion}"
 
-configuration:
-  dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"
-  - "mvn://io.github.http-builder-ng:http-builder-ng-core:0.16.1"
-  - "mvn://xml-resolver:xml-resolver:1.2"
 

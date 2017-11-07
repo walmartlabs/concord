@@ -1,3 +1,14 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.34.0"
+
+  arguments:
+    concord:
+      # default parameters, can be overridden with `in` parameters of
+      # the task
+      baseUrl: "http://localhost:8001"
+      apiKey: "auBy4eDWrKWsyhiDp3AQiw"
+
 flows:
   default:
   # "forks" the current process as multiple subprocesses
@@ -36,13 +47,3 @@ flows:
       sync: true
   - log: "Jobs are cancelled!"
 
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.32.0"
-
-  arguments:
-    concord:
-      # default parameters, can be overridden with `in` parameters of
-      # the task
-      baseUrl: "http://localhost:8001"
-      apiKey: "auBy4eDWrKWsyhiDp3AQiw"

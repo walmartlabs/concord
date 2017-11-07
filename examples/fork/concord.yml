@@ -1,3 +1,15 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.34.0"
+
+  arguments:
+    concord:
+      # default parameters, can be overridden with `in` parameters of
+      # the task
+      baseUrl: "http://server.dev.concord.devtools.prod.walmart.com:8001"
+      apiKey: "lzfJQL4u2gsH7toQveFYSQ"
+    myName: "Concord"
+
 flows:
   default:
   # "forks" the current process as a child process
@@ -25,15 +37,3 @@ flows:
   # simulate a long-running process, sleep for 10s
   - ${sleep.ms(10000)}
 
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.32.0"
-
-  arguments:
-    concord:
-      # default parameters, can be overridden with `in` parameters of
-      # the task
-      baseUrl: "http://server.dev.concord.devtools.prod.walmart.com:8001"
-      apiKey: "lzfJQL4u2gsH7toQveFYSQ"
-
-    myName: "Concord"

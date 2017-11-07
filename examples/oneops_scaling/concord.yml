@@ -1,3 +1,19 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.34.0"
+
+  arguments:
+    # form defaults
+    cfg:
+      baseUrl: "https://oneops.prod.walmart.com/"
+      org: "devtools"
+      asm: "concord-oo-example"
+      env: "test"
+      platform: "test"
+      minScale: 1
+      currScale: 1
+      maxScale: 2
+
 flows:
   default:
   # ask the user to fill in the parameters
@@ -26,18 +42,3 @@ forms:
   - currScale: { label: "Current scale", type: "int" }
   - maxScale: { label: "Maximum scale", type: "int" }
 
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.33.0"
-
-  arguments:
-    # form defaults
-    cfg:
-      baseUrl: "https://oneops.prod.walmart.com/"
-      org: "devtools"
-      asm: "concord-oo-example"
-      env: "test"
-      platform: "test"
-      minScale: 1
-      currScale: 1
-      maxScale: 2

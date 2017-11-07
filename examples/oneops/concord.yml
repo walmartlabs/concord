@@ -1,3 +1,17 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.34.0"
+  arguments:
+    # form defaults
+    cfg:
+      baseUrl: "https://oneops.prod.walmart.com/"
+      org: "devtools"
+      asm: "concord-example"
+      env: "test1"
+      platform: "myPlatform"
+      variableName: "myVar"
+      variableValue: "myVal"
+
 flows:
   default:
   # ask the user to fill in the parameters
@@ -23,16 +37,3 @@ forms:
   - variableName: { label: "Variable name", type: "string" }
   - variableValue: { label: "Variable value", type: "string" }
 
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.33.0"
-  arguments:
-    # form defaults
-    cfg:
-      baseUrl: "https://oneops.prod.walmart.com/"
-      org: "devtools"
-      asm: "concord-example"
-      env: "test1"
-      platform: "myPlatform"
-      variableName: "myVar"
-      variableValue: "myVal"

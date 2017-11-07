@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+
 flows:
   default:
     - script: groovy
@@ -7,6 +11,3 @@ flows:
         def logger = org.slf4j.LoggerFactory.getLogger("test")
         logger.debug("Hi there")
 
-configuration:
-  dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"

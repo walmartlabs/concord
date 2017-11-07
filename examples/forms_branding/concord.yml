@@ -1,3 +1,8 @@
+configuration:
+  arguments:
+    myForm:
+      lastName: Smith
+
 flows:
   default:
   - form: myForm
@@ -23,7 +28,3 @@ forms:
   - color: { label: "Favorite color", type: "string", allow: ["red", "green", "blue"] }
   - tosAgree: { label: "Terms and conditions read", type: "boolean" }
 
-configuration:
-  arguments:
-    myForm:
-      lastName: Smith

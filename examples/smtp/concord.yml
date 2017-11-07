@@ -1,3 +1,11 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:0.46.0"
+  arguments:
+    smtpServer:
+      host: "localhost"
+      port: 25
+
 flows:
   default:
   - task: smtp
@@ -10,11 +18,4 @@ flows:
         template: "mail.mustache"
   - log: mail sent to ${initiator.attributes.mail}
 
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:0.43.0"
-  arguments:
-    smtpServer:
-      host: "localhost"
-      port: 25
 

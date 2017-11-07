@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:teamrosters-task:0.34.0"
+
 flows:
   default:
   # getting all attributes
@@ -5,6 +9,3 @@ flows:
   # getting a specific attribute
   - log: "CCID: ${teamRosters.getUserDetails(initiator.username)['CCID']}"
 
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:teamrosters-task:0.32.0"

@@ -1,3 +1,7 @@
+configuration:
+  arguments:
+    name: "Concord"
+
 flows:
   default:
   # override "name" variable
@@ -16,6 +20,3 @@ flows:
   sayBye:
   - log: "Bye, ${name}"
 
-configuration:
-  arguments:
-    name: "Concord"

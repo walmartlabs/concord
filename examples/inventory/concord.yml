@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.45.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.46.0"
     # pre-release version
     - "http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/repositories/devtools-snapshots/com/walmartlabs/concord/plugins/concord-tasks/0.34.1-SNAPSHOT/concord-tasks-0.34.1-20171024.152116-5.jar"
   arguments:

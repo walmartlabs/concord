@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:boo-task:0.34.0"
+
 flows:
   default:
   - form: credentialsForm
@@ -20,6 +24,3 @@ forms:
   - asm: {type: "string", label: "OneOps Assembly", value: "concord-boo-example"}
   - env: {type: "string", label: "OneOps Environment", value: "test01"}
 
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:boo-task:0.31.0"

@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.46.0"
+
 flows:
   default:
   - task: ansible2
@@ -28,8 +32,4 @@ forms:
   # the secret's password
   - secretName: {type: "string", label: "Secret name"}
   - password: {type: "string", inputType: "password", label: "Password"}
-
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.43.0"
 

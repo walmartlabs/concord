@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+
 flows:
   default:
   - script: groovy
@@ -12,6 +16,3 @@ flows:
       // ...or used directly
       println x
 
-configuration:
-  dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"

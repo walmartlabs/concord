@@ -1,3 +1,7 @@
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+
 flows:
   default:
   # read and parse a YAML file
@@ -21,6 +25,3 @@ flows:
       execution.setVariable("jsonData", x)
   - log: "We got: ${jsonData}"
 
-configuration:
-  dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"

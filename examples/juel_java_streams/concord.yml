@@ -1,3 +1,15 @@
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+  arguments:
+    items1:
+      - "a"
+      - "b"
+    items2:
+      - "a"
+      - "b"
+      - "c"
+
 flows:
   default:
   # calculates the difference between items1 and items2
@@ -10,14 +22,3 @@ flows:
 
   - log: "We got ${delta}"
 
-configuration:
-  dependencies:
-  - "mvn://org.codehaus.groovy:groovy-all:2.4.11"
-  arguments:
-    items1:
-      - "a"
-      - "b"
-    items2:
-      - "a"
-      - "b"
-      - "c"

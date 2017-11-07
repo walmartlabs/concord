@@ -1,3 +1,9 @@
+configuration:
+## DEFAULT VARIABLES
+  arguments:
+    myForm:
+      myField: "AAA"
+
 flows:
   default:
   # call a form using the current (default) value of ${myForm}
@@ -17,8 +23,6 @@ flows:
         myField: "CCC"
   - log: "Value: ${myForm.myField}"
 
-
-
   myFlow:
   # call a form using the current value of ${myForm}
   - form: myForm
@@ -29,9 +33,3 @@ forms:
   myForm:
   - myField: { type: "string" }
 
-## DEFAULT VARIABLES
-
-configuration:
-  arguments:
-    myForm:
-      myField: "AAA"
