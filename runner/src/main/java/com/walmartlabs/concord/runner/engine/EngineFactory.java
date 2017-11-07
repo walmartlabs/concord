@@ -26,7 +26,6 @@ import io.takari.bpm.lock.NoopLockManager;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
-import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.JavaDelegateHandler;
 import io.takari.bpm.task.UserTaskHandler;
 
@@ -85,11 +84,6 @@ public class EngineFactory {
 
         UserTaskHandler uth = new FormTaskHandler(contextFactory, adapter.forms(), formService);
 
-        ResourceResolver resourceResolver = name -> {
-            Path p = baseDir.resolve(name);
-            return Files.newInputStream(p);
-        };
-
         Configuration cfg = new Configuration();
         cfg.setInterpolateInputVariables(true);
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
@@ -105,9 +99,9 @@ public class EngineFactory {
                 .withEventStorage(eventStorage)
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
-                .withResourceResolver(resourceResolver)
                 .withConfiguration(cfg)
                 .withListener(new ProcessOutVariablesListener(contextFactory, attachmentsDir))
+                .withResourceResolver(new ResourceResolverImpl(baseDir))
                 .build();
 
         result.addInterceptor(new ProcessElementInterceptor(rpcClient, adapter.processes()));

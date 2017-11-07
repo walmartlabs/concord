@@ -38,7 +38,8 @@
 * [oneops_scaling](oneops_scaling) - how to scaling up or down a platform in OneOps;
 * [profiles](profiles) - how to use profiles;
 * [python_script](python_script) - running a Python script from a flow;
-* [ruby](ruby) - running a Ruby snippet from a flow.
+* [ruby](ruby) - running a Ruby snippet from a flow;
+* [script_url](script_url) - running an external script file.
 
 
 ## Advanced

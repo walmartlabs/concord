@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- concord-runner: `script` task now supports URLs;
 - concord-server: initial support for process triggers.
 
 
