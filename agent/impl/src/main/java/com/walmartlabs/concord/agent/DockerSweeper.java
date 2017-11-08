@@ -19,13 +19,14 @@ public class DockerSweeper implements Runnable {
             "--filter", "label=" + DockerProcessBuilder.CONCORD_TX_ID_LABEL,
             "--format", "{{.Label \"" + DockerProcessBuilder.CONCORD_TX_ID_LABEL + "\"}} {{.ID}}"};
 
-    private static final long PERIOD_DELAY = TimeUnit.MINUTES.toMillis(15);
     private static final long RETRY_DELAY = TimeUnit.SECONDS.toMillis(30);
 
     private final ExecutionManager executionManager;
+    private final long period;
 
-    public DockerSweeper(ExecutionManager executionManager) {
+    public DockerSweeper(ExecutionManager executionManager, long period) {
         this.executionManager = executionManager;
+        this.period = period;
     }
 
     @Override
@@ -48,7 +49,7 @@ public class DockerSweeper implements Runnable {
                     killContainer(cId);
                 }
 
-                sleep(PERIOD_DELAY);
+                sleep(period);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {

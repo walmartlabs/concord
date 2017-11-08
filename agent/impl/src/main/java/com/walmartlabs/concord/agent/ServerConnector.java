@@ -48,7 +48,8 @@ public class ServerConnector {
         }
 
         if (cfg.isDockerSweeperEnabled()) {
-            dockerSweeper = executor.submit(new DockerSweeper(executionManager));
+            long t = cfg.getDockerSweeperPeriod();
+            dockerSweeper = executor.submit(new DockerSweeper(executionManager, t));
         }
     }
 
