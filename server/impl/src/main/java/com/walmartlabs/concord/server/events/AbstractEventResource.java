@@ -7,7 +7,10 @@ import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.PayloadParser;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.Pipeline;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +56,15 @@ public abstract class AbstractEventResource {
     private UUID startProcess(String projectName, String repoName, String flowName, Map<String, Object> args) {
         UUID instanceId = UUID.randomUUID();
 
+        String initiator = getInitiator();
+
         PayloadParser.EntryPoint ep = new PayloadParser.EntryPoint(projectName, repoName, flowName);
         Map<String, Object> request = new HashMap<>();
         request.put(InternalConstants.Request.ARGUMENTS_KEY, args);
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, null, null, ep, request, null);
+            payload = payloadManager.createPayload(instanceId, null, initiator, ep, request, null);
         } catch (ProcessException e) {
             log.error("startProcess ['{}', '{}', '{}'] -> error creating a payload", projectName, repoName, flowName, e);
             throw e;
@@ -81,4 +86,13 @@ public abstract class AbstractEventResource {
         return instanceId;
     }
 
+    private static String getInitiator() {
+        Subject subject = SecurityUtils.getSubject();
+        if (subject == null || !subject.isAuthenticated()) {
+            return null;
+        }
+
+        UserPrincipal p = (UserPrincipal) subject.getPrincipal();
+        return p != null ? p.getUsername() : null;
+    }
 }

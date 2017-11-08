@@ -42,7 +42,7 @@ public class ProcessSecurityContext {
     public <T> T runAsInitiator(UUID instanceId, Callable<T> c) throws Exception {
         Optional<PrincipalCollection> o = stateManager.get(instanceId, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize);
 
-        PrincipalCollection principals = o.orElseThrow(() -> new UnauthorizedException("Process principal not found"));
+        PrincipalCollection principals = o.orElseThrow(() -> new UnauthorizedException("Process' principal not found"));
 
         SecurityManager securityManager = injector.getInstance(SecurityManager.class);
         ThreadContext.bind(securityManager);
