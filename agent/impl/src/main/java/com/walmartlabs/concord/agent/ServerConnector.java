@@ -43,7 +43,7 @@ public class ServerConnector {
 
         workers = new ArrayList<>();
         for (int i = 0; i < workersCount; i++) {
-            Future<?> f = executor.submit(new Worker(client, executionManager));
+            Future<?> f = executor.submit(new Worker(client, executionManager, cfg.getLogMaxDelay()));
             workers.add(f);
         }
 

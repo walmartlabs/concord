@@ -23,10 +23,12 @@ public class Worker implements Runnable {
 
     private final AgentApiClient client;
     private final ExecutionManager executionManager;
+    private final long logSteamMaxDelay;
 
-    public Worker(AgentApiClient client, ExecutionManager executionManager) {
+    public Worker(AgentApiClient client, ExecutionManager executionManager, long logSteamMaxDelay) {
         this.client = client;
         this.executionManager = executionManager;
+        this.logSteamMaxDelay = logSteamMaxDelay;
     }
 
     @Override
@@ -137,7 +139,7 @@ public class Worker implements Runnable {
         }
     }
 
-    private static void streamLog(Path p, Supplier<Boolean> isRunning, Consumer<Chunk> sink) throws IOException {
+    private void streamLog(Path p, Supplier<Boolean> isRunning, Consumer<Chunk> sink) throws IOException {
         byte[] ab = new byte[8192];
 
         try (InputStream in = Files.newInputStream(p, StandardOpenOption.READ)) {
@@ -155,7 +157,7 @@ public class Worker implements Runnable {
 
                     // job is still running, wait for more data
                     try {
-                        Thread.sleep(250);
+                        Thread.sleep(logSteamMaxDelay);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         break;

@@ -16,6 +16,7 @@ public class Configuration {
     public static final String SERVER_RPC_PORT_KEY = "SERVER_RPC_PORT";
     public static final String SERVER_API_BASE_URL_KEY = "SERVER_API_BASE_URL";
     public static final String LOG_DIR_KEY = "AGENT_LOG_DIR";
+    public static final String LOG_MAX_DELAY_KEY = "LOG_MAX_DELAY";
     public static final String PAYLOAD_DIR_KEY = "AGENT_PAYLOAD_DIR";
     public static final String JAVA_CMD_KEY = "AGENT_JAVA_CMD";
     public static final String DEPENDENCY_CACHE_DIR_KEY = "DEPS_CACHE_DIR";
@@ -30,6 +31,7 @@ public class Configuration {
     private final int serverRpcPort;
     private final String serverApiBaseUrl;
     private final Path logDir;
+    private final long logMaxDelay;
     private final Path payloadDir;
     private final String agentJavaCmd;
     private final Path dependencyCacheDir;
@@ -48,6 +50,8 @@ public class Configuration {
             this.serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://" + serverHost + ":8001");
 
             this.logDir = getDir(LOG_DIR_KEY, "logDir");
+            this.logMaxDelay = Long.parseLong(getEnv(LOG_MAX_DELAY_KEY, "250")); // 250ms
+
             this.payloadDir = getDir(PAYLOAD_DIR_KEY, "payloadDir");
             this.agentJavaCmd = getEnv(JAVA_CMD_KEY, "java");
             this.dependencyCacheDir = getDir(DEPENDENCY_CACHE_DIR_KEY, "depsCacheDir");
@@ -90,6 +94,10 @@ public class Configuration {
 
     public Path getLogDir() {
         return logDir;
+    }
+
+    public long getLogMaxDelay() {
+        return logMaxDelay;
     }
 
     public Path getPayloadDir() {
