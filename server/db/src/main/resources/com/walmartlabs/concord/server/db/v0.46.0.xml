@@ -56,6 +56,7 @@
     </changeSet>
 
     <changeSet id="46200" author="brig@gmail.com">
+        <validCheckSum>7:4da9f8084cf605c5bb8dbf860e705266</validCheckSum>
         <createTable tableName="LANDING_PAGE">
             <column name="LANDING_PAGE_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
                 <constraints nullable="false"/>
