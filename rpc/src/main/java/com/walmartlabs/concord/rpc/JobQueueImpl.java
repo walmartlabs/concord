@@ -15,11 +15,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class JobQueueImpl implements JobQueue {
 
     private static final int RETRY_DELAY = 1000;
-    private static final int POLL_TIMEOUT = 5000;
+    private static final int POLL_TIMEOUT = 30000;
     private static final int UPDATE_TIMEOUT = 5000;
     private static final int STATE_UPLOAD_TIMEOUT = 30000;
 
@@ -79,6 +80,8 @@ public final class JobQueueImpl implements JobQueue {
         while (true) {
             SettableFuture<JobEntry> f = SettableFuture.create();
 
+            AtomicReference<String> instanceIdHolder = new AtomicReference<>();
+
             StreamObserver<TJobResponse> observer = new StreamObserver<TJobResponse>() {
 
                 private String instanceId;
@@ -93,6 +96,8 @@ public final class JobQueueImpl implements JobQueue {
                         }
 
                         instanceId = value.getInstanceId();
+                        instanceIdHolder.set(instanceId);
+
                         jobType = convert(value.getType());
                         byte[] ab = value.getChunk().toByteArray();
 
@@ -119,11 +124,13 @@ public final class JobQueueImpl implements JobQueue {
                 }
             };
 
+            String instanceId = instanceIdHolder.get();
+
             try {
                 stub.withDeadlineAfter(POLL_TIMEOUT, TimeUnit.MILLISECONDS)
                         .poll(req, observer);
             } catch (StatusRuntimeException e) {
-                throw new ClientException(e.getMessage(), e);
+                throw new ClientException(instanceId, e.getMessage(), e);
             }
 
             try {
@@ -140,7 +147,7 @@ public final class JobQueueImpl implements JobQueue {
                 if (cause == null) {
                     cause = e;
                 }
-                throw new ClientException(cause.getMessage(), cause);
+                throw new ClientException(instanceId, cause.getMessage(), cause);
             }
         }
     }

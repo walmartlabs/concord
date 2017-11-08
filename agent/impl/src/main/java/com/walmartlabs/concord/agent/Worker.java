@@ -40,7 +40,12 @@ public class Worker implements Runnable {
             try {
                 job = q.take();
             } catch (ClientException e) {
-                log.warn("run -> transport error: {}", e.getMessage());
+                String instanceId = e.getInstanceId();
+                if (instanceId != null) {
+                    log(instanceId, "Error while transferring the payload: " + e.getMessage());
+                }
+
+                log.error("run -> transport error: (instanceId={}), {}", instanceId, e.getMessage(), e);
                 sleep(ERROR_DELAY);
                 continue;
             }
@@ -53,6 +58,14 @@ public class Worker implements Runnable {
         }
     }
 
+    private void log(String instanceId, String s) {
+        try {
+            client.getJobQueue().appendLog(instanceId, s.getBytes());
+        } catch (ClientException e) {
+            log.warn("log ['{}'] -> unable to append a log entry ({}): {}", instanceId, e.getMessage(), s);
+        }
+    }
+
     private void execute(String instanceId, JobType type, Path payload) {
         log.info("execute ['{}', '{}', '{}'] -> starting", instanceId, type, payload);
 
@@ -61,7 +74,6 @@ public class Worker implements Runnable {
             i = executionManager.start(instanceId, type, "n/a", payload);
         } catch (ExecutionException e) {
             log.error("execute ['{}', '{}', '{}'] -> start error", instanceId, type, payload, e);
-            // TODO handle error
             return;
         }
 
@@ -71,7 +83,6 @@ public class Worker implements Runnable {
             q.update(instanceId, JobStatus.RUNNING);
         } catch (ClientException e) {
             log.error("execute ['{}', '{}', '{}'] -> status update error", instanceId, type, payload, e);
-            // TODO handle error
         }
 
         Consumer<Chunk> sink = chunk -> {
