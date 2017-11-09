@@ -6,11 +6,11 @@ import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.FormResource;
 import com.walmartlabs.concord.server.api.process.FormSubmitResponse;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
-import io.takari.bpm.form.FormSubmitResult;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
 import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.FormDefinition;
@@ -130,15 +130,10 @@ public class FormResourceImpl implements FormResource, Resource {
             return new FormSubmitResponse(processInstanceId, errors);
         }
 
-        FormSubmitResult result;
-        try {
-            result = formService.submit(processInstanceId, formInstanceId, data);
-        } catch (ExecutionException e) {
-            throw new WebApplicationException("Error submitting a form", e);
-        }
+        FormSubmitResult result = formService.submit(processInstanceId, formInstanceId, data);
 
         Map<String, String> errors = mergeErrors(result.getErrors());
-        return new FormSubmitResponse(UUID.fromString(result.getProcessBusinessKey()), errors);
+        return new FormSubmitResponse(result.getProcessInstanceId(), errors);
     }
 
     private static Map<String, String> mergeErrors(List<ValidationError> errors) {

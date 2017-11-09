@@ -7,8 +7,12 @@ import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.takari.bpm.api.ExecutionException;
-import io.takari.bpm.form.*;
+import io.takari.bpm.form.DefaultFormService;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
+import io.takari.bpm.form.DefaultFormValidator;
+import io.takari.bpm.form.Form;
+import io.takari.bpm.form.FormSubmitResult.ValidationError;
+import io.takari.bpm.form.FormValidator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -16,6 +20,7 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -42,6 +47,7 @@ public class ConcordFormService {
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.resumePipeline = resumePipeline;
+
         this.validator = new DefaultFormValidator();
     }
 
@@ -100,10 +106,10 @@ public class ConcordFormService {
         return o.orElse(null);
     }
 
-    public FormSubmitResult submit(UUID processInstanceId, String formInstanceId, Map<String, Object> data) throws ExecutionException {
+    public FormSubmitResult submit(UUID processInstanceId, String formInstanceId, Map<String, Object> data) {
         Form form = get(processInstanceId, formInstanceId);
         if (form == null) {
-            throw new ExecutionException("Form not found: " + formInstanceId);
+            throw new ProcessException(processInstanceId, "Form not found: " + formInstanceId);
         }
 
         ResumeHandler resumeHandler = (f, args) -> {
@@ -121,7 +127,40 @@ public class ConcordFormService {
         };
 
         Map<String, Object> merged = merge(form, data);
-        return DefaultFormService.submit(resumeHandler, validator, form, merged);
+        try {
+            return toResult(processInstanceId, form, DefaultFormService.submit(resumeHandler, validator, form, merged));
+        } catch (ExecutionException e) {
+            throw new ProcessException(processInstanceId, "Form submit error: " + e.getMessage(), e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public FormSubmitResult submitNext(UUID processInstanceId, Map<String, Object> data) {
+        List<FormListEntry> forms;
+        try {
+            forms = list(processInstanceId);
+        } catch (ExecutionException e) {
+            throw new ProcessException(processInstanceId, "Process execution error", e);
+        }
+
+        if (forms == null || forms.isEmpty()) {
+            throw new ProcessException(processInstanceId, "Invalid process state: no forms found");
+        }
+
+        FormSubmitResult lastResult = null;
+        for (FormListEntry f : forms) {
+            Map<String, Object> args = (Map<String, Object>) data.get(f.getName());
+
+            lastResult = submit(processInstanceId, f.getFormInstanceId(), args);
+            if (!lastResult.isValid()) {
+                return lastResult;
+            }
+        }
+        return lastResult;
+    }
+
+    private static FormSubmitResult toResult(UUID processInstanceId, Form f, io.takari.bpm.form.FormSubmitResult r) {
+        return new FormSubmitResult(processInstanceId, f.getFormDefinition().getName(), r.getErrors());
     }
 
     @SuppressWarnings("unchecked")
@@ -171,5 +210,34 @@ public class ConcordFormService {
         }
 
         return (Boolean) v;
+    }
+
+    public static final class FormSubmitResult implements Serializable {
+
+        private final UUID processInstanceId;
+        private final String formName;
+        private final List<ValidationError> errors;
+
+        public FormSubmitResult(UUID processInstanceId, String formName, List<ValidationError> errors) {
+            this.processInstanceId = processInstanceId;
+            this.formName = formName;
+            this.errors = errors;
+        }
+
+        public UUID getProcessInstanceId() {
+            return processInstanceId;
+        }
+
+        public String getFormName() {
+            return formName;
+        }
+
+        public List<ValidationError> getErrors() {
+            return errors;
+        }
+
+        public boolean isValid() {
+            return errors == null || errors.isEmpty();
+        }
     }
 }

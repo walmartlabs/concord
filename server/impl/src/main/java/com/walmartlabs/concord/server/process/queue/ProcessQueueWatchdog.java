@@ -10,9 +10,8 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
-import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.state.ProcessMetadataManager;
 import org.eclipse.sisu.EagerSingleton;
 import org.jooq.*;
@@ -91,7 +90,7 @@ public class ProcessQueueWatchdog {
     private final LogManager logManager;
     private final WatchdogDao watchdogDao;
     private final PayloadManager payloadManager;
-    private final Chain forkPipeline;
+    private final ProcessManager processManager;
 
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
@@ -99,14 +98,14 @@ public class ProcessQueueWatchdog {
                                 LogManager logManager,
                                 WatchdogDao watchdogDao,
                                 PayloadManager payloadManager,
-                                ForkPipeline forkPipeline) {
+                                ProcessManager processManager) {
         this.cfg = cfg;
 
         this.queueDao = queueDao;
         this.logManager = logManager;
         this.watchdogDao = watchdogDao;
         this.payloadManager = payloadManager;
-        this.forkPipeline = forkPipeline;
+        this.processManager = processManager;
 
         init();
     }
@@ -182,7 +181,7 @@ public class ProcessQueueWatchdog {
                         Payload payload = payloadManager.createFork(childId, parent.instanceId, e.handlerKind,
                                 parent.initiator, parent.projectId, req, null);
 
-                        forkPipeline.process(payload);
+                        processManager.startFork(payload, false);
 
                         log.info("processHandlers -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                                 childId, parent.instanceId, e.flow);
