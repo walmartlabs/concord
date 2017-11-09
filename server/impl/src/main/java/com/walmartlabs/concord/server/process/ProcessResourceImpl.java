@@ -1,27 +1,19 @@
 package com.walmartlabs.concord.server.process;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
+import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
-import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
-import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
-import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
-import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
-import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import io.takari.bpm.api.ExecutionException;
-import io.takari.bpm.form.FormSubmitResult;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -57,63 +49,27 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessResourceImpl.class);
 
+    private final ProcessManager processManager;
     private final ProjectDao projectDao;
     private final ProcessQueueDao queueDao;
     private final ProcessLogsDao logsDao;
-    private final Chain archivePipeline;
-    private final Chain projectPipeline;
-    private final Chain resumePipeline;
-    private final Chain forkPipeline;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
-    private final AgentManager agentManager;
-    private final ConcordFormService formService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public ProcessResourceImpl(ProjectDao projectDao,
+    public ProcessResourceImpl(ProcessManager processManager,
+                               ProjectDao projectDao,
                                ProcessQueueDao queueDao,
-                               ProcessLogsDao logsDao, ArchivePipeline archivePipeline,
-                               ProjectPipeline projectPipeline,
-                               ResumePipeline resumePipeline,
-                               ForkPipeline forkPipeline,
+                               ProcessLogsDao logsDao,
                                PayloadManager payloadManager,
-                               ProcessStateManager stateManager,
-                               AgentManager agentManager,
-                               ConcordFormService concordFormService) {
+                               ProcessStateManager stateManager) {
 
+        this.processManager = processManager;
         this.projectDao = projectDao;
         this.queueDao = queueDao;
         this.logsDao = logsDao;
-        this.archivePipeline = archivePipeline;
-        this.projectPipeline = projectPipeline;
-        this.resumePipeline = resumePipeline;
-        this.forkPipeline = forkPipeline;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
-        this.agentManager = agentManager;
-        this.formService = concordFormService;
-    }
-
-    private StartProcessResponse start(Chain pipeline, Payload payload, boolean sync) {
-        UUID instanceId = payload.getInstanceId();
-
-        try {
-            pipeline.process(payload);
-        } catch (ProcessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("start ['{}'] -> error starting the process", instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
-        }
-
-        Map<String, Object> out = null;
-        if (sync) {
-            Map<String, Object> args = readArgs(instanceId);
-            out = process(instanceId, args);
-        }
-
-        return new StartProcessResponse(instanceId, out);
     }
 
     @Override
@@ -133,7 +89,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return start(archivePipeline, payload, sync);
+        return toResponse(processManager.startArchive(payload, sync));
     }
 
     @Override
@@ -164,7 +120,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return start(projectPipeline, payload, sync);
+        return toResponse(processManager.startProject(payload, sync));
     }
 
     @Override
@@ -197,15 +153,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return start(projectPipeline, payload, sync);
-    }
-
-    private boolean isEmpty(InputStream in) {
-        try {
-            return in.available() <= 0;
-        } catch (IOException e) {
-            throw new WebApplicationException("Internal error", e);
-        }
+        return toResponse(processManager.startProject(payload, sync));
     }
 
     @Override
@@ -236,7 +184,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return start(archivePipeline, payload, sync);
+        return toResponse(processManager.startArchive(payload, sync));
     }
 
     @Override
@@ -251,7 +199,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        resumePipeline.process(payload);
+        processManager.resume(payload);
         return new ResumeProcessResponse();
     }
 
@@ -276,15 +224,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return start(forkPipeline, payload, sync);
-    }
-
-    private UUID assertProject(String projectName) {
-        UUID id = projectDao.getId(projectName);
-        if (id == null) {
-            throw new ValidationErrorsException("Unknown project name: " + projectName);
-        }
-        return id;
+        return toResponse(processManager.startFork(payload, sync));
     }
 
     @Override
@@ -323,33 +263,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Validate
     @RequiresAuthentication
     public void kill(UUID instanceId) {
-        ProcessEntry entry = queueDao.get(instanceId);
-        if (entry == null) {
-            throw new WebApplicationException("Process not found: " + instanceId, Status.NOT_FOUND);
-        }
-
-        ProcessStatus s = entry.getStatus();
-        if (s == ProcessStatus.CANCELLED || s == ProcessStatus.FINISHED) {
-            return;
-        }
-
-        if (cancel(instanceId, s, ProcessStatus.ENQUEUED, ProcessStatus.PREPARING, ProcessStatus.SUSPENDED)) {
-            return;
-        }
-
-        agentManager.killProcess(instanceId);
-    }
-
-    private boolean cancel(UUID instanceId, ProcessStatus current, ProcessStatus... expected) {
-        boolean found = false;
-        for (ProcessStatus s : expected) {
-            if (current == s) {
-                found = true;
-                break;
-            }
-        }
-
-        return found && queueDao.update(instanceId, current, ProcessStatus.CANCELLED);
+        processManager.kill(instanceId);
     }
 
     @Override
@@ -509,89 +423,13 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 .build();
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> readArgs(UUID instanceId) {
-        String resource = InternalConstants.Files.REQUEST_DATA_FILE_NAME;
-        Optional<Map<String, Object>> o = stateManager.get(instanceId, resource, in -> {
-            try {
-                ObjectMapper om = new ObjectMapper();
-
-                Map<String, Object> cfg = om.readValue(in, Map.class);
-                Map<String, Object> args = (Map<String, Object>) cfg.get(InternalConstants.Request.ARGUMENTS_KEY);
-
-                return Optional.ofNullable(args);
-            } catch (IOException e) {
-                throw new WebApplicationException("Error while reading request data", e);
-            }
-        });
-        return o.orElse(Collections.emptyMap());
+    private StartProcessResponse toResponse(ProcessResult r) {
+        return new StartProcessResponse(r.getInstanceId(), r.getOut());
     }
 
-    private Map<String, Object> process(UUID instanceId, Map<String, Object> params) {
-        while (true) {
-            ProcessEntry psr = get(instanceId);
-            ProcessStatus status = psr.getStatus();
-
-            if (status == ProcessStatus.SUSPENDED) {
-                wakeUpProcess(psr, params);
-            } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
-                throw new ProcessException(instanceId, "Process error", Status.INTERNAL_SERVER_ERROR);
-            } else if (status == ProcessStatus.FINISHED) {
-                return readOutValues(instanceId);
-            }
-
-            try {
-                Thread.sleep(1_000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    private Map<String, Object> readOutValues(UUID instanceId) {
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.OUT_VALUES_FILE_NAME);
-
-        Optional<Map<String, Object>> o = stateManager.get(instanceId, resource, in -> {
-            try {
-                return Optional.of(objectMapper.readValue(in, Map.class));
-            } catch (IOException e) {
-                throw new ProcessException(instanceId, "Error while reading OUT variables data", e);
-            }
-        });
-
-        return o.orElse(null);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void wakeUpProcess(ProcessEntry entry, Map<String, Object> data) {
-        UUID instanceId = entry.getInstanceId();
-
-        List<FormListEntry> forms;
-        try {
-            forms = formService.list(instanceId);
-        } catch (ExecutionException e) {
-            throw new ProcessException(instanceId, "Process execution error", e);
-        }
-
-        if (forms == null || forms.isEmpty()) {
-            throw new ProcessException(instanceId, "Invalid process state: no forms found");
-        }
-
-        for (FormListEntry f : forms) {
-            try {
-                Map<String, Object> args = (Map<String, Object>) data.get(f.getName());
-
-                FormSubmitResult submitResult = formService.submit(instanceId, f.getFormInstanceId(), args);
-                if (!submitResult.isValid()) {
-                    String error = "n/a";
-                    if (submitResult.getErrors() != null) {
-                        error = submitResult.getErrors().stream().map(e -> e.getFieldName() + ": " + e.getError()).collect(Collectors.joining(","));
-                    }
-                    throw new ProcessException(instanceId, "Form '" + f.getName() + "' submit error: " + error, Status.BAD_REQUEST);
-                }
-            } catch (ExecutionException e) {
-                throw new ProcessException(instanceId, "Form submit error: " + e.getMessage(), e);
-            }
+    private void assertProject(String projectName) {
+        if (projectDao.getId(projectName) == null) {
+            throw new ValidationErrorsException("Unknown project name: " + projectName);
         }
     }
 
@@ -622,5 +460,13 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UserPrincipal p = (UserPrincipal) subject.getPrincipal();
         return p.getUsername();
+    }
+
+    private static boolean isEmpty(InputStream in) {
+        try {
+            return in.available() <= 0;
+        } catch (IOException e) {
+            throw new WebApplicationException("Internal error", e);
+        }
     }
 }

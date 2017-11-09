@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.events;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.api.events.OneOpsEventResource;
 import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,10 +43,10 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
 
     @Inject
     public OneOpsEventResourceImpl(PayloadManager payloadManager,
-                                   ProjectPipeline projectPipeline,
+                                   ProcessManager processManager,
                                    TriggersDao triggersDao) {
 
-        super(EVENT_NAME, payloadManager, projectPipeline, triggersDao);
+        super(EVENT_NAME, payloadManager, processManager, triggersDao);
         this.objectMapper = new ObjectMapper();
     }
 

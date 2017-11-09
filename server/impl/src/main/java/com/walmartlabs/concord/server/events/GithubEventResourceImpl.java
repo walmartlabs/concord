@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.events;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
@@ -42,8 +42,9 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
                                    RepositoryDao repositoryDao,
                                    RepositoryCacheDao repositoryCacheDao,
                                    PayloadManager payloadManager,
-                                   ProjectPipeline projectPipeline) {
-        super(EVENT_NAME, payloadManager, projectPipeline, triggersDao);
+                                   ProcessManager processManager) {
+
+        super(EVENT_NAME, payloadManager, processManager, triggersDao);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;

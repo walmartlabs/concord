@@ -2,11 +2,7 @@ package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.PayloadParser;
-import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.pipelines.processors.Pipeline;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.apache.shiro.SecurityUtils;
@@ -25,16 +21,17 @@ public abstract class AbstractEventResource {
 
     private final String eventName;
     private final PayloadManager payloadManager;
-    private final Pipeline projectPipeline;
+    private final ProcessManager processManager;
     private final TriggersDao triggersDao;
 
     public AbstractEventResource(String eventName,
                                  PayloadManager payloadManager,
-                                 Pipeline projectPipeline,
+                                 ProcessManager processManager,
                                  TriggersDao triggersDao) {
+
         this.eventName = eventName;
         this.payloadManager = payloadManager;
-        this.projectPipeline = projectPipeline;
+        this.processManager = processManager;
         this.triggersDao = triggersDao;
         this.log = LoggerFactory.getLogger(this.getClass());
     }
@@ -73,16 +70,7 @@ public abstract class AbstractEventResource {
             throw new ProcessException(instanceId, "Error while creating a payload: " + e.getMessage(), e);
         }
 
-        try {
-            projectPipeline.process(payload);
-        } catch (ProcessException e) {
-            log.error("startProcess ['{}', '{}', '{}'] -> error starting the process {}", projectName, repoName, flowName, instanceId, e);
-            throw e;
-        } catch (Exception e) {
-            log.error("startProcess ['{}', '{}', '{}'] -> error starting the process {}", projectName, repoName, flowName, instanceId, e);
-            throw new ProcessException(instanceId, "Error while starting a process: " + e.getMessage(), e);
-        }
-
+        processManager.startProject(payload, false);
         return instanceId;
     }
 
