@@ -34,6 +34,7 @@ public class ProjectPipeline extends Pipeline {
                 TemplateFilesProcessor.class,
                 TemplateScriptProcessor.class,
                 RequestInfoProcessor.class,
+                ProjectInfoProcessor.class,
                 DependenciesProcessor.class,
                 UserInfoProcessor.class,
                 OutVariablesSettingProcessor.class,

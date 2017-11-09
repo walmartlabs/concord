@@ -28,6 +28,10 @@ public class TeamEntry implements Serializable {
 
     private final TeamVisibility visibility;
 
+    public TeamEntry(String name) {
+        this(null, name, null, null, null);
+    }
+
     @JsonCreator
     public TeamEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,

@@ -1,0 +1,5 @@
+flows:
+  default:
+  - log: "${projectInfo}"
+  - log: "Team ID: ${projectInfo.teamId}"
+  - log: "Project ID: ${projectInfo.projectId}"

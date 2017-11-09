@@ -93,7 +93,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         if (projectId != null) {
             projectManager.assertProjectAccess(projectId, TeamRole.WRITER, true);
             update(projectName, new UpdateProjectRequest(req));
-            return new CreateProjectResponse(PerformedActionType.UPDATED);
+            return new CreateProjectResponse(projectId, PerformedActionType.UPDATED);
         }
 
         if (teamId == null) {
@@ -133,7 +133,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             });
         }
 
-        return new CreateProjectResponse(PerformedActionType.CREATED);
+        return new CreateProjectResponse(r.projectId, PerformedActionType.CREATED);
     }
 
     @Override
