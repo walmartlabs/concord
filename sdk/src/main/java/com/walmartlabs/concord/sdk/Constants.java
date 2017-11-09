@@ -77,6 +77,11 @@ public class Constants {
         public static final String REQUEST_INFO_KEY = "requestInfo";
 
         /**
+         * Project's metadata
+         */
+        public static final String PROJECT_INFO_KEY = "projectInfo";
+
+        /**
          * Process tags.
          */
         public static final String TAGS_KEY = "tags";

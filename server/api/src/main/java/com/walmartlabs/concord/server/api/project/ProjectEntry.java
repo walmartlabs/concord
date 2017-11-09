@@ -43,6 +43,10 @@ public class ProjectEntry implements Serializable {
         this(null, name, null, null, null, repositories, null, null);
     }
 
+    public ProjectEntry(String teamName, String name) {
+        this(null, name, null, null, teamName, null, null, null);
+    }
+
     @JsonCreator
     public ProjectEntry(@JsonProperty("id") UUID id,
                         @JsonProperty("name") String name,

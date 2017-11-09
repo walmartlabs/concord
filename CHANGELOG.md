@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: new automatically-provided
+variable - `projectInfo`;
 - concord-runner: `script` task now supports URLs;
 - concord-server: initial support for process triggers.
 

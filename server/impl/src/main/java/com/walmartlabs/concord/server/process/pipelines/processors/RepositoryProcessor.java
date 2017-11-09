@@ -74,7 +74,8 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         String branch = Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH);
 
-        payload = payload.putHeader(REPOSITORY_INFO_KEY, new RepositoryInfo(repo.getName(), repo.getUrl(), branch, repo.getCommitId()));
+        RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), branch, repo.getCommitId());
+        payload = payload.putHeader(REPOSITORY_INFO_KEY, i);
 
         return chain.process(payload);
     }
@@ -97,16 +98,22 @@ public class RepositoryProcessor implements PayloadProcessor {
 
     public static final class RepositoryInfo implements Serializable {
 
+        private final UUID id;
         private final String name;
         private final String url;
         private final String branch;
         private final String commitId;
 
-        public RepositoryInfo(String name, String url, String branch, String commitId) {
+        public RepositoryInfo(UUID id, String name, String url, String branch, String commitId) {
+            this.id = id;
             this.name = name;
             this.url = url;
             this.branch = branch;
             this.commitId = commitId;
+        }
+
+        public UUID getId() {
+            return id;
         }
 
         public String getName() {
@@ -128,7 +135,8 @@ public class RepositoryProcessor implements PayloadProcessor {
         @Override
         public String toString() {
             return "RepositoryInfo{" +
-                    "name='" + name + '\'' +
+                    "id=" + id +
+                    ", name='" + name + '\'' +
                     ", url='" + url + '\'' +
                     ", branch='" + branch + '\'' +
                     ", commitId='" + commitId + '\'' +
