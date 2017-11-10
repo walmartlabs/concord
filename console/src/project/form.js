@@ -9,6 +9,7 @@ import * as RepositoryPopup from "./RepositoryPopup";
 import * as DeleteProjectPopup from "./DeleteProjectPopup";
 import * as StartProjectPopup from "./StartProjectPopup/StartProjectPopup";
 import * as api from "./api";
+import GitUrlParse from "git-url-parse";
 import * as v from "../shared/validation";
 import { actions } from "./crud";
 
@@ -32,7 +33,7 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell collapsing>Name</Table.HeaderCell>
-                        <Table.HeaderCell>URL</Table.HeaderCell>
+                        <Table.HeaderCell>Git URL</Table.HeaderCell>
                         <Table.HeaderCell collapsing>Source</Table.HeaderCell>
                         <Table.HeaderCell collapsing>Path</Table.HeaderCell>
                         <Table.HeaderCell collapsing>Secret</Table.HeaderCell>
@@ -44,7 +45,7 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
                     {fields.map((f, idx) => (
                         <Table.Row key={idx}>
                             <Table.Cell><a href="#edit" onClick={editFn(idx)}>{fields.get(idx).name}</a></Table.Cell>
-                            <Table.Cell>{fields.get(idx).url}</Table.Cell>
+                            <Table.Cell><a href={GitUrlParse(fields.get(idx).url).toString("https")}>{fields.get(idx).url}</a></Table.Cell>
                             <Table.Cell>{renderSourceText(f, fields.get(idx))}</Table.Cell>
                             <Table.Cell>{fields.get(idx).path}</Table.Cell>
                             <Table.Cell>{fields.get(idx).secret}</Table.Cell>
