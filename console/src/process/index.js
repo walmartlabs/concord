@@ -1,14 +1,14 @@
-import React, {Component} from "react";
+import React, { Component } from "react";
 import PropTypes from "prop-types";
-import {connect} from "react-redux";
-import {Link} from "react-router";
-import {Button, Divider, Header, Label, Loader, Table} from "semantic-ui-react";
-import {push as pushHistory} from "react-router-redux";
+import { connect } from "react-redux";
+import { Link } from "react-router";
+import { Button, Divider, Header, Label, Loader, Table } from "semantic-ui-react";
+import { push as pushHistory } from "react-router-redux";
 import moment from "moment";
 import ErrorMessage from "../shared/ErrorMessage";
 import RefreshButton from "../shared/RefreshButton";
 import KillProcessPopup from "./KillProcessPopup";
-import {actions as modal} from "../shared/Modal";
+import { actions as modal } from "../shared/Modal";
 import * as constants from "./constants";
 import * as actions from "./actions";
 import reducers, * as selectors from "./reducers";
@@ -25,36 +25,36 @@ class ProcessStatusPage extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        const {instanceId} = this.props;
+        const { instanceId } = this.props;
         if (prevProps.instanceId !== instanceId) {
             this.load();
         }
     }
 
     load() {
-        const {instanceId, loadData} = this.props;
+        const { instanceId, loadData } = this.props;
         loadData(instanceId);
     }
 
     openLog() {
-        const {instanceId, openLog} = this.props;
+        const { instanceId, openLog } = this.props;
         openLog(instanceId);
     }
 
     openWizard() {
-        const {instanceId, openWizard} = this.props;
+        const { instanceId, openWizard } = this.props;
         openWizard(instanceId);
     }
 
     render() {
-        const {instanceId, data, loading, error, openKillPopup} = this.props;
+        const { instanceId, data, loading, error, openKillPopup } = this.props;
 
         if (loading || !data) {
-            return <Loader active/>;
+            return <Loader active />;
         }
 
         if (error) {
-            return <ErrorMessage message={error} retryFn={() => this.load()}/>;
+            return <ErrorMessage message={error} retryFn={() => this.load()} />;
         }
 
         const showRefresh = constants.activeStatuses.includes(data.status);
@@ -67,7 +67,7 @@ class ProcessStatusPage extends Component {
         return <div>
             <Header as="h3">
                 Process {instanceId}
-                {showRefresh && <RefreshButton loading={loading} onClick={() => this.load()}/>}
+                {showRefresh && <RefreshButton loading={loading} onClick={() => this.load()} />}
             </Header>
 
             <Table definition collapsing>
@@ -85,14 +85,14 @@ class ProcessStatusPage extends Component {
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Project</Table.Cell>
-                        <Table.Cell>{data.projectName ? data.projectName : "-"}</Table.Cell>
+                        <Table.Cell>{data.projectName ? <Link to={`/project/${data.projectName}`}>{data.projectName}</Link> : "-"}</Table.Cell>
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Status</Table.Cell>
                         <Table.Cell>
                             <Label color={constants.statusColors[data.status]}
-                                   icon={constants.statusIcons[data.status]}
-                                   content={data.status}/>
+                                icon={constants.statusIcons[data.status]}
+                                content={data.status} />
                         </Table.Cell>
                     </Table.Row>
                     <Table.Row>
@@ -116,19 +116,19 @@ class ProcessStatusPage extends Component {
 
             <Button disabled={!enableLogButton} onClick={() => this.openLog()}>View Log</Button>
 
-            { showStateDownload && 
+            {showStateDownload &&
                 <a href={`/api/v1/process/${instanceId}/state/snapshot`} download={`Concord_${data.status}_${instanceId}.zip`}>
                     <Button icon="download" color="blue" content="State" />
                 </a>
             }
 
             {showKillButton &&
-                <Button icon="delete" color="red" content="Kill" onClick={() => openKillPopup(instanceId)}/>}
+                <Button icon="delete" color="red" content="Kill" onClick={() => openKillPopup(instanceId)} />}
 
             {showWizard && <Button onClick={() => this.openWizard()}>Wizard</Button>}
 
             {showForms && <div>
-                <Divider/>
+                <Divider />
 
                 <Header as="h4">Required actions</Header>
 
@@ -140,7 +140,7 @@ class ProcessStatusPage extends Component {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {data.forms.map(({formInstanceId, name}) => <Table.Row key={formInstanceId}>
+                        {data.forms.map(({ formInstanceId, name }) => <Table.Row key={formInstanceId}>
                             <Table.Cell>
                                 <Link to={`/process/${instanceId}/form/${formInstanceId}`}>{name}</Link>
                             </Table.Cell>
@@ -165,7 +165,7 @@ ProcessStatusPage.propTypes = {
     openWizard: PropTypes.func.isRequired
 };
 
-const mapStateToProps = ({process}, {params: {instanceId}}) => ({
+const mapStateToProps = ({ process }, { params: { instanceId } }) => ({
     instanceId,
     data: selectors.getData(process),
     loading: selectors.isLoading(process),
@@ -178,11 +178,11 @@ const mapDispatchToProps = (dispatch) => ({
     openKillPopup: (instanceId) => {
         // reload the data when a process is killed
         const onSuccess = [actions.load(instanceId)];
-        dispatch(modal.open(KillProcessPopup.MODAL_TYPE, {instanceId, onSuccess}))
+        dispatch(modal.open(KillProcessPopup.MODAL_TYPE, { instanceId, onSuccess }))
     },
     openWizard: (instanceId) => dispatch(pushHistory(`/process/${instanceId}/wizard`))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProcessStatusPage);
 
-export {actions, reducers, sagas};
+export { actions, reducers, sagas };

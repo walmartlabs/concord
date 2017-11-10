@@ -5,6 +5,7 @@ export const dateKeys = ["lastUpdatedAt", "createdAt"];
 
 export const idKey = "instanceId";
 export const statusKey = "status";
+export const projectName = "projectName";
 
 export const failedStatuses = ["FAILED"];
 
