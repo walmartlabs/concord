@@ -115,7 +115,7 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testArchiveOverride() throws Exception {
         String projectName = "project_" + System.currentTimeMillis();
         String repoName = "repo_" + System.currentTimeMillis();
@@ -148,7 +148,7 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*54321.*", ab);
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testArchiveOverrideSync() throws Exception {
         String projectName = "project_" + System.currentTimeMillis();
         String repoName = "repo_" + System.currentTimeMillis();

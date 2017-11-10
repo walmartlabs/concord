@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible: `ansible` alias for the `ansible2` task; 
 - concord-server: new automatically-provided
 variable - `projectInfo`;
 - concord-runner: `script` task now supports URLs;
