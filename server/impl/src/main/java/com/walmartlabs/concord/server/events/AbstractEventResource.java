@@ -14,30 +14,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public abstract class AbstractEventResource {
 
     private final Logger log;
 
-    private final String eventName;
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
     private final TriggersDao triggersDao;
 
-    public AbstractEventResource(String eventName,
-                                 PayloadManager payloadManager,
+    public AbstractEventResource(PayloadManager payloadManager,
                                  ProcessManager processManager,
                                  TriggersDao triggersDao) {
 
-        this.eventName = eventName;
         this.payloadManager = payloadManager;
         this.processManager = processManager;
         this.triggersDao = triggersDao;
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
-    protected int process(String eventId, Map<String, String> triggerConditions, Map<String, Object> triggerEvent) {
-        List<TriggerEntry> triggers = triggersDao.list(eventName, triggerConditions);
+    protected int process(String eventId, String eventName, Map<String, Object> triggerConditions, Map<String, Object> triggerEvent) {
+        List<TriggerEntry> triggers = triggersDao.list(eventName).stream()
+                .filter(t -> filter(t, triggerConditions))
+                .collect(Collectors.toList());
+
         for (TriggerEntry t : triggers) {
             Map<String, Object> processArgs = new HashMap<>();
             if (t.getArguments() != null) {
@@ -47,7 +48,12 @@ public abstract class AbstractEventResource {
             UUID instanceId = startProcess(t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), processArgs);
             log.info("process ['{}'] -> instanceId '{}'", eventId, instanceId);
         }
+
         return triggers.size();
+    }
+
+    private boolean filter(TriggerEntry t, Map<String, Object> triggerConditions) {
+        return EventMatcher.matches(triggerConditions, t.getConditions());
     }
 
     private UUID startProcess(String projectName, String repoName, String flowName, Map<String, Object> args) {

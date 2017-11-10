@@ -46,7 +46,7 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
                                    ProcessManager processManager,
                                    TriggersDao triggersDao) {
 
-        super(EVENT_NAME, payloadManager, processManager, triggersDao);
+        super(payloadManager, processManager, triggersDao);
         this.objectMapper = new ObjectMapper();
     }
 
@@ -56,11 +56,11 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        Map<String, String> triggerConditions = buildConditions(event);
+        Map<String, Object> triggerConditions = buildConditions(event);
         Map<String, Object> triggerEvent = buildTriggerEvent(event, triggerConditions);
 
         String eventId = String.valueOf(event.get("cmsId"));
-        int count = process(eventId, triggerConditions, triggerEvent);
+        int count = process(eventId, EVENT_NAME, triggerConditions, triggerEvent);
 
         if (log.isDebugEnabled()) {
             log.debug("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
@@ -84,21 +84,20 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
     }
 
     private static Map<String, Object> buildTriggerEvent(Map<String, Object> event,
-                                                         Map<String, String> conditions) {
+                                                         Map<String, Object> conditions) {
         Map<String, Object> result = new HashMap<>();
         result.putAll(conditions);
         result.put("payload", event);
         return result;
     }
 
-
     @SuppressWarnings("unchecked")
-    private static Map<String, String> buildConditions(Map<String, Object> event) {
+    private static Map<String, Object> buildConditions(Map<String, Object> event) {
         String[] nsPath = getNsPath(event);
         Map<String, Object> cis = getCis(event);
         Map<String, Object> payload = (Map<String, Object>) event.get("payload");
 
-        Map<String, String> result = new HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         result.put(STATE_KEY, get("ciState", cis));
         result.put(COMPONENT, get("ciClassName", cis));
         result.put(TYPE_KEY, get("type", event));
@@ -140,7 +139,7 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
         return Collections.emptyMap();
     }
 
-    private static void addKey(String key, String[] values, int valueIndex, Map<String, String> result) {
+    private static void addKey(String key, String[] values, int valueIndex, Map<String, Object> result) {
         if (values.length > valueIndex) {
             result.put(key, values[valueIndex]);
         }

@@ -44,7 +44,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
                                    PayloadManager payloadManager,
                                    ProcessManager processManager) {
 
-        super(EVENT_NAME, payloadManager, processManager, triggersDao);
+        super(payloadManager, processManager, triggersDao);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -74,11 +74,11 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
 
         repositoryCacheDao.updateLastPushDate(repoId, new Date());
 
-        Map<String, String> triggerConditions = buildConditions(repo, event);
+        Map<String, Object> triggerConditions = buildConditions(repo, event);
         Map<String, Object> triggerEvent = buildTriggerEvent(event, repo, project, triggerConditions);
 
         String eventId = repoId.toString();
-        process(eventId, triggerConditions, triggerEvent);
+        process(eventId, EVENT_NAME, triggerConditions, triggerEvent);
 
         log.info("event ['{}', '{}', '{}'] -> done", eventId, triggerConditions, triggerEvent);
 
@@ -88,7 +88,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
     private static Map<String, Object> buildTriggerEvent(Map<String, Object> event,
                                                          RepositoryEntry repo,
                                                          ProjectEntry project,
-                                                         Map<String, String> conditions) {
+                                                         Map<String, Object> conditions) {
         Map<String, Object> result = new HashMap<>();
         result.put(COMMIT_ID_KEY, event.get("after"));
         result.put(REPO_ID_KEY, repo.getId());
@@ -107,8 +107,8 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
         return refPath[refPath.length - 1];
     }
 
-    private static Map<String, String> buildConditions(RepositoryEntry repo, Map<String, Object> event) {
-        Map<String, String> result = new HashMap<>();
+    private static Map<String, Object> buildConditions(RepositoryEntry repo, Map<String, Object> event) {
+        Map<String, Object> result = new HashMap<>();
         result.put(REPO_NAME_KEY, repo.getName());
         result.put(REPO_BRANCH_KEY, Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH));
         result.put(PUSHER_KEY, getPusher(event));

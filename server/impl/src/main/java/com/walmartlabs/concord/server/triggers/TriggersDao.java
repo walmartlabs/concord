@@ -92,6 +92,12 @@ public class TriggersDao extends AbstractDao {
                 .execute();
     }
 
+    public List<TriggerEntry> list(String eventName) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return list(tx, eventName, null);
+        }
+    }
+
     public List<TriggerEntry> list(String eventName, Map<String, String> conditions) {
         try (DSLContext tx = DSL.using(cfg)) {
             return list(tx, eventName, conditions);
