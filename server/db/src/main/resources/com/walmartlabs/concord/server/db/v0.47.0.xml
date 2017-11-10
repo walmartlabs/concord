@@ -77,4 +77,15 @@
             <column name="ENTRY_POINT" value="onPush"/>
         </insert>
     </changeSet>
+
+    <changeSet id="47500" author="ibodrov@gmail.com">
+        <sql>
+            alter table PROCESS_QUEUE
+            drop constraint FK_PQ_RPJ_ID,
+            add constraint FK_PQ_PRJ_ID
+                foreign key (PROJECT_ID)
+                references PROJECTS(PROJECT_ID)
+                on delete set null
+        </sql>
+    </changeSet>
 </databaseChangeLog>
