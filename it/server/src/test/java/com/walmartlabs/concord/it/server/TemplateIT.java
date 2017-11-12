@@ -32,7 +32,7 @@ public class TemplateIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        String templateAlias = "template_" + System.currentTimeMillis();
+        String templateAlias = "template_" + randomString();
         Path templatePath = createTemplate();
 
         TemplateAliasResource templateAliasResource = proxy(TemplateAliasResource.class);
@@ -40,8 +40,8 @@ public class TemplateIT extends AbstractServerIT {
 
         // ---
 
-        String projectName = "project_" + System.currentTimeMillis();
-        String myName = "myName_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
+        String myName = "myName_" + randomString();
 
         // ---
 

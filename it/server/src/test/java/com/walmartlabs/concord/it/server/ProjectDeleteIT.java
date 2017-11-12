@@ -21,7 +21,7 @@ public class ProjectDeleteIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void test() throws Exception {
-        String projectName = "project_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));

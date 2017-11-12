@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.it.server;
 
+import com.googlecode.junittoolbox.ParallelRunner;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.PerformedActionType;
@@ -17,6 +18,7 @@ import com.walmartlabs.concord.server.api.security.secret.*;
 import com.walmartlabs.concord.server.api.team.*;
 import com.walmartlabs.concord.server.api.user.*;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import javax.ws.rs.BadRequestException;
 import java.util.Arrays;
@@ -27,13 +29,14 @@ import java.util.Map;
 import static com.walmartlabs.concord.server.team.TeamManager.DEFAULT_TEAM_ID;
 import static org.junit.Assert.*;
 
+@RunWith(ParallelRunner.class)
 public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testTeams() {
         TeamResource teamResource = proxy(TeamResource.class);
 
-        String teamName = "team_" + System.currentTimeMillis();
+        String teamName = "team_" + randomString();
         CreateTeamResponse ctr = teamResource.createOrUpdate(new TeamEntry(null, teamName, null, null, null));
         assertNotNull(ctr.getId());
 
@@ -50,11 +53,11 @@ public class CrudIT extends AbstractServerIT {
 
         UserResource userResource = proxy(UserResource.class);
 
-        String userA = "userA_" + System.currentTimeMillis();
+        String userA = "userA_" + randomString();
         CreateUserResponse curA = userResource.createOrUpdate(new CreateUserRequest(userA, null));
 
 
-        String userB = "userB_" + System.currentTimeMillis();
+        String userB = "userB_" + randomString();
         CreateUserResponse curB = userResource.createOrUpdate(new CreateUserRequest(userB, null));
 
         // ---
@@ -83,7 +86,7 @@ public class CrudIT extends AbstractServerIT {
     public void testProject() {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
-        String projectName = "project_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
         CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
         assertTrue(cpr.isOk());
 
@@ -108,10 +111,10 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testRepository() throws Exception {
-        String projectName = "project_" + System.currentTimeMillis();
-        String repoName = "repo_" + System.currentTimeMillis();
-        String branch = "branch_" + System.currentTimeMillis();
-        String commitId = "commitId_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+        String branch = "branch_" + randomString();
+        String commitId = "commitId_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
@@ -138,8 +141,8 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testNonUniqueRepositoryNames() throws Exception {
-        String projectName1 = "project1_" + System.currentTimeMillis();
-        String projectName2 = "project2_" + System.currentTimeMillis();
+        String projectName1 = "project1_" + randomString();
+        String projectName2 = "project2_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName1, null, null, null, null, null, null));
@@ -147,7 +150,7 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        String repoName = "repo_" + System.currentTimeMillis();
+        String repoName = "repo_" + randomString();
         CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1,
                 new RepositoryEntry(null, repoName, "n/a", null, null, null, null));
         assertTrue(crr1.isOk());
@@ -159,7 +162,7 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testSecretKeyPair() throws Exception {
-        String keyName = "key_" + System.currentTimeMillis();
+        String keyName = "key_" + randomString();
         SecretResource secretResource = proxy(SecretResource.class);
 
         // ---
@@ -195,7 +198,7 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testSecretUsernamePassword() throws Exception {
-        String keyName = "key_" + System.currentTimeMillis();
+        String keyName = "key_" + randomString();
         SecretResource secretResource = proxy(SecretResource.class);
 
         // ---
@@ -215,9 +218,9 @@ public class CrudIT extends AbstractServerIT {
 
     @Test
     public void testLdapMappings() throws Exception {
-        String roleA = "roleA_" + System.currentTimeMillis();
-        String roleB = "roleB_" + System.currentTimeMillis();
-        String ldapDn = "testDn_" + System.currentTimeMillis();
+        String roleA = "roleA_" + randomString();
+        String roleB = "roleB_" + randomString();
+        String ldapDn = "testDn_" + randomString();
 
         RoleResource roleResource = proxy(RoleResource.class);
         roleResource.createOrUpdate(new RoleEntry(roleA, "A", "1", "2"));
@@ -248,7 +251,7 @@ public class CrudIT extends AbstractServerIT {
     public void testInventory() throws Exception {
         InventoryResource inventoryResource = proxy(InventoryResource.class);
 
-        String inventoryName = "inventory_" + System.currentTimeMillis();
+        String inventoryName = "inventory_" + randomString();
         String teamName = "Default";
 
         // --- create
@@ -283,7 +286,7 @@ public class CrudIT extends AbstractServerIT {
     public void testInventoryData() throws Exception {
         InventoryDataResource resource = proxy(InventoryDataResource.class);
 
-        String inventoryName = "inventory_" + System.currentTimeMillis();
+        String inventoryName = "inventory_" + randomString();
         String itemPath = "/a";
         Map<String, Object> data = Collections.singletonMap("k", "v");
 
@@ -315,9 +318,9 @@ public class CrudIT extends AbstractServerIT {
     public void testInventoryQuery() throws Exception {
         InventoryQueryResource resource = proxy(InventoryQueryResource.class);
 
-        String inventoryName = "inventory_" + System.currentTimeMillis();
-        String queryName = "queryName_" + System.currentTimeMillis();
-        String text = "text_" + System.currentTimeMillis();;
+        String inventoryName = "inventory_" + randomString();
+        String queryName = "queryName_" + randomString();
+        String text = "text_" + randomString();;
 
         InventoryResource inventoryResource = proxy(InventoryResource.class);
         inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null,null));
@@ -360,8 +363,8 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
         LandingPageResource resource = proxy(LandingPageResource.class);
 
-        String projectName = "project_" + System.currentTimeMillis();
-        String repositoryName = "repository_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
+        String repositoryName = "repository_" + randomString();
         String name = "lp-name-1";
         String description = "description";
         String icon = Base64.encode("icon".getBytes());

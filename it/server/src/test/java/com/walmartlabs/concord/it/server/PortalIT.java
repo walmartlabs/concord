@@ -39,9 +39,9 @@ public class PortalIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        String projectName = "project@" + System.currentTimeMillis();
-        String repoSecretName = "repoSecret@" + System.currentTimeMillis();
-        String repoName = "repo@" + System.currentTimeMillis();
+        String projectName = "project@" + randomString();
+        String repoSecretName = "repoSecret@" + randomString();
+        String repoName = "repo@" + randomString();
         String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
 
         // ---

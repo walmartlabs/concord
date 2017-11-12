@@ -23,7 +23,7 @@ public class GroovyIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void test() throws Exception {
-        String username = "user_" + System.currentTimeMillis();
+        String username = "user_" + randomString();
 
         UserResource userResource = proxy(UserResource.class);
         CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, Collections.singleton("*")));

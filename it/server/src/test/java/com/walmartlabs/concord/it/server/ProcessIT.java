@@ -1,11 +1,13 @@
 package com.walmartlabs.concord.it.server;
 
+import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -16,6 +18,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.*;
 
+@RunWith(ParallelRunner.class)
 public class ProcessIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
@@ -178,8 +181,8 @@ public class ProcessIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testMultipart() throws Exception {
-        String zVal = "z" + System.currentTimeMillis();
-        String myFileVal = "myFile" + System.currentTimeMillis();
+        String zVal = "z" + randomString();
+        String myFileVal = "myFile" + randomString();
         byte[] payload = archive(ProcessIT.class.getResource("multipart").toURI());
 
 
@@ -335,7 +338,7 @@ public class ProcessIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testProjectId() throws Exception {
-        String projectName = "project_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));

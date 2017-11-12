@@ -21,8 +21,8 @@ public class ClasspathRepoIT extends AbstractServerIT {
     @Test(timeout = 30000)
     public void test() throws Exception {
         String url = "classpath://com/walmartlabs/concord/server/selfcheck/concord.yml";
-        String projectName = "project_" + System.currentTimeMillis();
-        String repoName = "repo_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(projectName,

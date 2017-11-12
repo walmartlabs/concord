@@ -25,7 +25,7 @@ public class KvServiceIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testKv() throws Exception {
-        String testKey = "key_" + System.currentTimeMillis();
+        String testKey = "key_" + randomString();
 
         byte[] ab = test("main", testKey);
         assertLog(".*x=[0-9]+.*", ab);
@@ -45,7 +45,7 @@ public class KvServiceIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testKvLong() throws Exception {
-        String testKey = "key_" + System.currentTimeMillis();
+        String testKey = "key_" + randomString();
 
         byte[] ab = test("testLong", testKey);
         assertLog(".*x=1.*", ab);

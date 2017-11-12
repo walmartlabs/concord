@@ -17,8 +17,8 @@ public class FormIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void test() throws Exception {
-        String firstName = "john_" + System.currentTimeMillis();
-        String lastName = "smith_" + System.currentTimeMillis();
+        String firstName = "john_" + randomString();
+        String lastName = "smith_" + randomString();
         byte[] payload = archive(FormIT.class.getResource("form").toURI());
 
         // ---

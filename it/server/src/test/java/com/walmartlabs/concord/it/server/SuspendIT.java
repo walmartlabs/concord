@@ -40,7 +40,7 @@ public class SuspendIT extends AbstractServerIT {
 
         // ---
 
-        String testValue = "test#" + System.currentTimeMillis();
+        String testValue = "test#" + randomString();
         Map<String, Object> args = Collections.singletonMap("testValue", testValue);
         Map<String, Object> req = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY, args);
 

@@ -121,6 +121,7 @@ public class Worker implements Runnable {
             // TODO retries?
             log.warn("handleSuccess ['{}'] -> error while updating status of a job: {}", instanceId, e.getMessage());
         }
+        log.info("handleSuccess ['{}'] -> done", instanceId);
     }
 
     private void handleError(String instanceId, Throwable error) {
@@ -140,6 +141,8 @@ public class Worker implements Runnable {
             // TODO retries?
             log.warn("handleError ['{}'] -> error while updating status of a job: {}", instanceId, e.getMessage());
         }
+
+        log.info("handleError ['{}'] -> done", instanceId);
     }
 
     private static void sleep(long millis) {

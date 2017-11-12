@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.it.server;
 
+import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.ProjectLoader;
@@ -13,6 +14,7 @@ import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -28,6 +30,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.*;
 
+@RunWith(ParallelRunner.class)
 public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
@@ -117,10 +120,10 @@ public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testArchiveOverride() throws Exception {
-        String projectName = "project_" + System.currentTimeMillis();
-        String repoName = "repo_" + System.currentTimeMillis();
-        String repoUrl = "git@test_" + System.currentTimeMillis();
-        String secretName = "secret_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+        String repoUrl = "git@test_" + randomString();
+        String secretName = "secret_" + randomString();
 
         SecretResource secretResource = proxy(SecretResource.class);
         secretResource.createKeyPair(secretName, null, null);
@@ -150,10 +153,10 @@ public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testArchiveOverrideSync() throws Exception {
-        String projectName = "project_" + System.currentTimeMillis();
-        String repoName = "repo_" + System.currentTimeMillis();
-        String repoUrl = "git@test_" + System.currentTimeMillis();
-        String secretName = "secret_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+        String repoUrl = "git@test_" + randomString();
+        String secretName = "secret_" + randomString();
 
         SecretResource secretResource = proxy(SecretResource.class);
         secretResource.createKeyPair(secretName, null, null);

@@ -27,7 +27,7 @@ public class TemplateMergeIT extends AbstractServerIT {
 
         // ---
 
-        String projectName = "project_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null,

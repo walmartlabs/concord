@@ -22,7 +22,7 @@ public class TeamRolesIT extends AbstractServerIT {
 
         TeamResource teamResource = proxy(TeamResource.class);
 
-        String teamName = "team_" + System.currentTimeMillis();
+        String teamName = "team_" + randomString();
         CreateTeamResponse ctr = teamResource.createOrUpdate(new TeamEntry(null, teamName, null, null, TeamVisibility.PRIVATE));
         assertNotNull(ctr.getId());
 
@@ -30,7 +30,7 @@ public class TeamRolesIT extends AbstractServerIT {
 
         UserResource userResource = proxy(UserResource.class);
 
-        String userAName = "userA_" + System.currentTimeMillis();
+        String userAName = "userA_" + randomString();
         userResource.createOrUpdate(new CreateUserRequest(userAName));
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);

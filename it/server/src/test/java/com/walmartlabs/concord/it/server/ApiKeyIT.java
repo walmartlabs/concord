@@ -16,8 +16,8 @@ public class ApiKeyIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testOwner() throws Exception {
-        String userAName = "userA_" + System.currentTimeMillis();
-        String userBName = "userB_" + System.currentTimeMillis();
+        String userAName = "userA_" + randomString();
+        String userBName = "userB_" + randomString();
 
         UserResource userResource = proxy(UserResource.class);
         userResource.createOrUpdate(new CreateUserRequest(userAName));

@@ -8,6 +8,8 @@ import org.junit.Before;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class AbstractServerIT {
 
@@ -61,5 +63,20 @@ public abstract class AbstractServerIT {
 
     protected void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException {
         serverClient.waitForLog(logFileName, pattern);
+    }
+
+    private static final char[] RANDOM_CHARS = "abcdef0123456789".toCharArray();
+
+    protected String randomString() {
+        StringBuilder b = new StringBuilder();
+        b.append(System.currentTimeMillis()).append("_");
+
+        Random rng = ThreadLocalRandom.current();
+        for (int i = 0; i < 6; i++) {
+            int n = rng.nextInt(RANDOM_CHARS.length);
+            b.append(RANDOM_CHARS[n]);
+        }
+
+        return b.toString();
     }
 }

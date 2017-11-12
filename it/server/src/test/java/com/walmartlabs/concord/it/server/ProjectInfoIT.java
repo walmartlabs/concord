@@ -22,8 +22,8 @@ public class ProjectInfoIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void test() throws Exception {
-        String teamName = "team_" + System.currentTimeMillis();
-        String projectName = "project_" + System.currentTimeMillis();
+        String teamName = "team_" + randomString();
+        String projectName = "project_" + randomString();
 
         TeamResource teamResource = proxy(TeamResource.class);
         CreateTeamResponse ctr = teamResource.createOrUpdate(new TeamEntry(teamName));

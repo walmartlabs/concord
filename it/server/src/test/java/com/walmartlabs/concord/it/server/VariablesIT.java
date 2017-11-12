@@ -23,7 +23,7 @@ public class VariablesIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void test() throws Exception {
-        String projectName = "project_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null,
@@ -52,8 +52,8 @@ public class VariablesIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testCrypto() throws Exception {
-        String projectName = "project_" + System.currentTimeMillis();
-        String secretValue = "secret_" + System.currentTimeMillis();
+        String projectName = "project_" + randomString();
+        String secretValue = "secret_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(projectName));

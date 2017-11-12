@@ -188,7 +188,9 @@ public class ServerClient {
     }
 
     public static void assertLog(String pattern, byte[] ab) throws IOException {
-        assertEquals(1, grep(pattern, ab).size());
+        String msg = "Expected: " + pattern + "\n"
+                + "Got: " + new String(ab);
+        assertEquals(msg, 1, grep(pattern, ab).size());
     }
 
     public static void assertLog(String pattern, int times, byte[] ab) throws IOException {

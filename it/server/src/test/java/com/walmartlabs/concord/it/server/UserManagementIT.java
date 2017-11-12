@@ -19,7 +19,7 @@ public class UserManagementIT extends AbstractServerIT {
     public void test() throws Exception {
         UserResource userResource = proxy(UserResource.class);
 
-        String username = "user_" + System.currentTimeMillis();
+        String username = "user_" + randomString();
         Set<String> permissions = Collections.singleton("user:delete");
 
         CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, permissions));

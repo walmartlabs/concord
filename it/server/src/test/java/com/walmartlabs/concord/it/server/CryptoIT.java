@@ -14,9 +14,9 @@ public class CryptoIT extends AbstractServerIT {
 
     @Test
     public void testPlain() throws Exception {
-        String secretName = "secret@" + System.currentTimeMillis();
-        String secretValue = "value@" + System.currentTimeMillis();
-        String storePassword = "store@" + System.currentTimeMillis();
+        String secretName = "secret@" + randomString();
+        String secretValue = "value@" + randomString();
+        String storePassword = "store@" + randomString();
 
         addPlainSecret(secretName, false, storePassword, secretValue.getBytes());
 
@@ -27,16 +27,16 @@ public class CryptoIT extends AbstractServerIT {
 
     @Test
     public void testUsernamePassword() throws Exception {
-        String secretName = "secret@" + System.currentTimeMillis();
-        String secretUsername = "username@" + System.currentTimeMillis();
-        String secretPassword = "username@" + System.currentTimeMillis();
-        String storePassword = "store@" + System.currentTimeMillis();
+        String secretName = "secret@" + randomString();
+        String secretUsername = "username@" + randomString();
+        String secretPassword = "password@" + randomString();
+        String storePassword = "store@" + randomString();
 
         addUsernamePassword(secretName, false, storePassword, secretUsername, secretPassword);
 
         // ---
 
-        test("cryptoPwd", secretName, storePassword, ".*value=.*" + secretUsername + ".*" + secretPassword + ".*");
+        test("cryptoPwd", secretName, storePassword, ".*" + secretUsername + " " + secretPassword + ".*");
     }
 
     private void test(String project, String secretName, String storePassword, String log) throws Exception {

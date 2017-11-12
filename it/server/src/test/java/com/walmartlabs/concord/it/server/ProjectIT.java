@@ -2,6 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
@@ -19,6 +20,7 @@ import com.walmartlabs.concord.server.api.user.UserResource;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(ParallelRunner.class)
 public class ProjectIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
@@ -48,13 +51,13 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        String projectName = "myProject_" + System.currentTimeMillis();
-        String userName = "myUser_" + System.currentTimeMillis();
+        String projectName = "myProject_" + randomString();
+        String userName = "myUser_" + randomString();
         Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
-        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
-        String greeting = "Hello, _" + System.currentTimeMillis();
+        String greeting = "Hello, _" + randomString();
         Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
@@ -80,10 +83,10 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        String projectName = "myProject_" + System.currentTimeMillis();
-        String userName = "myUser_" + System.currentTimeMillis();
+        String projectName = "myProject_" + randomString();
+        String userName = "myUser_" + randomString();
         Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
-        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName;
 
@@ -124,13 +127,13 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        String projectName = "myProject_" + System.currentTimeMillis();
-        String userName = "myUser_" + System.currentTimeMillis();
+        String projectName = "myProject_" + randomString();
+        String userName = "myUser_" + randomString();
         Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
-        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
-        String greeting = "Hello, _" + System.currentTimeMillis();
+        String greeting = "Hello, _" + randomString();
         Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
@@ -174,13 +177,13 @@ public class ProjectIT extends AbstractServerIT {
         System.out.println(">>>" + gitUrl);
 
         // ---
-        String projectName = "myProject_" + System.currentTimeMillis();
-        String userName = "myUser_" + System.currentTimeMillis();
+        String projectName = "myProject_" + randomString();
+        String userName = "myUser_" + randomString();
         Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
-        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
-        String greeting = "Hello, _" + System.currentTimeMillis();
+        String greeting = "Hello, _" + randomString();
         Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
@@ -205,13 +208,13 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        String projectName = "myProject_" + System.currentTimeMillis();
-        String userName = "myUser_" + System.currentTimeMillis();
+        String projectName = "myProject_" + randomString();
+        String userName = "myUser_" + randomString();
         Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
-        String repoName = "myRepo_" + System.currentTimeMillis();
+        String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
-        String greeting = "Hello, _" + System.currentTimeMillis();
+        String greeting = "Hello, _" + randomString();
         Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
                 ImmutableMap.of(
                         "myForm1", ImmutableMap.of(
