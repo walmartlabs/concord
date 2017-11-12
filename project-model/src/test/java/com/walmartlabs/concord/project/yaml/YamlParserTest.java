@@ -1181,7 +1181,7 @@ public class YamlParserTest {
 
         // ---
         ArgumentCaptor<Map<String, Object>> c = ArgumentCaptor.forClass(Map.class);
-        verify(task, times(1)).call(eq("test-image"), anyBoolean(), eq("test-cmd"), c.capture(), eq("/tmp"));
+        verify(task, times(1)).call(eq("test-image"), anyBoolean(), anyBoolean(), eq("test-cmd"), c.capture(), eq("/tmp"));
 
         Map<String, Object> m = c.getValue();
         assertNotNull(m);
@@ -1764,7 +1764,7 @@ public class YamlParserTest {
 
     private static class DockerTask implements Task {
 
-        public void call(String dockerImage, boolean forcePull, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
+        public void call(String dockerImage, boolean forcePull, boolean debug, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
         }
     }
 
