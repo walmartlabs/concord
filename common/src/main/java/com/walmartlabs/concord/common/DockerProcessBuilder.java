@@ -19,6 +19,7 @@ public class DockerProcessBuilder {
     private List<String> args = new ArrayList<>();
     private Map<String, String> env;
     private List<AbstractMap.SimpleEntry<String, String>> volumes = new ArrayList<>();
+    private String entryPoint;
     private boolean cleanup = true;
     private boolean debug = false;
     private boolean forcePull = true;
@@ -81,6 +82,10 @@ public class DockerProcessBuilder {
                 c.add(q(k + (v != null ? "=" + v : "")));
             }
         }
+        if (entryPoint != null) {
+            c.add("--entrypoint");
+            c.add(entryPoint);
+        }
         c.add(q(image));
         if (args != null) {
             args.forEach(a -> c.add(q(a)));
@@ -139,6 +144,11 @@ public class DockerProcessBuilder {
 
     public DockerProcessBuilder env(Map<String, String> env) {
         this.env = env;
+        return this;
+    }
+
+    public DockerProcessBuilder entryPoint(String entryPoint) {
+        this.entryPoint = entryPoint;
         return this;
     }
 

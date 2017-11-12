@@ -30,17 +30,20 @@ public class DockerTask implements Task {
     @InjectVariable(Constants.Context.TX_ID_KEY)
     String txId;
 
-    public void call(String dockerImage, boolean forcePull, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
+    public void call(String dockerImage, boolean forcePull, boolean debug, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
         try {
-            createRunScript(payloadPath, cmd);
+            Path workDir = Paths.get(payloadPath);
+            Path containerDir = Paths.get(VOLUME_CONTAINER_DEST);
+            Path entryPoint = containerDir.resolve(workDir.relativize(createRunScript(workDir, cmd)));
 
             Process p = new DockerProcessBuilder(dockerImage)
                     .addLabel(DockerProcessBuilder.CONCORD_TX_ID_LABEL, txId)
                     .cleanup(true)
                     .volume(payloadPath, VOLUME_CONTAINER_DEST)
-                    .arg("/workspace/.docker_cmd.sh")
                     .env(stringify(env))
+                    .entryPoint(entryPoint.toAbsolutePath().toString())
                     .forcePull(forcePull)
+                    .debug(debug)
                     .build();
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -66,8 +69,13 @@ public class DockerTask implements Task {
         }
     }
 
-    private static void createRunScript(String path, String cmd) throws IOException {
-        Path p = Paths.get(path, ".docker_cmd.sh");
+    private static Path createRunScript(Path workDir, String cmd) throws IOException {
+        Path tmpDir = workDir.resolve(".concord");
+        if (!Files.exists(tmpDir)) {
+            Files.createDirectories(tmpDir);
+        }
+
+        Path p = Files.createTempFile(tmpDir, "docker", ".sh");
 
         String script = "#!/bin/sh\n" +
                 "cd " + VOLUME_CONTAINER_DEST + "\n" +
@@ -75,6 +83,8 @@ public class DockerTask implements Task {
 
         Files.write(p, script.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         updateScriptPermissions(p);
+
+        return p;
     }
 
     private static void updateScriptPermissions(Path p) throws IOException {

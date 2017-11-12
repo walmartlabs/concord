@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-project-model: `debug` option for the `docker` step;
+- docker: the task now automatically overrides the container's
+`entrypoint`;
 - ansible: `ansible` alias for the `ansible2` task; 
 - concord-server: new automatically-provided
 variable - `projectInfo`;

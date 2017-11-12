@@ -273,6 +273,7 @@ public class Grammar {
                             new YamlDockerStep(a.location, (String) a.value,
                                     (String) options.get("cmd"),
                                     (boolean) options.getOrDefault("forcePull", true),
+                                    (boolean) options.getOrDefault("debug", false),
                                     (Map<String, Object>) options.get("env")))));
 
     // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | event | script | taskShort | vars END_OBJECT

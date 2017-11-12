@@ -9,14 +9,22 @@ public class YamlDockerStep extends YamlStep {
     private final String image;
     private final String cmd;
     private final boolean forcePull;
+    private final boolean debug;
     private final Map<String, Object> env;
 
-    public YamlDockerStep(JsonLocation location, String image, String cmd, boolean forcePull, Map<String, Object> env) {
+    public YamlDockerStep(JsonLocation location,
+                          String image,
+                          String cmd,
+                          boolean forcePull,
+                          boolean debug,
+                          Map<String, Object> env) {
+
         super(location);
 
         this.image = image;
         this.cmd = cmd;
         this.forcePull = forcePull;
+        this.debug = debug;
         this.env = env;
     }
 
@@ -30,6 +38,10 @@ public class YamlDockerStep extends YamlStep {
 
     public boolean isForcePull() {
         return forcePull;
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 
     public Map<String, Object> getEnv() {
