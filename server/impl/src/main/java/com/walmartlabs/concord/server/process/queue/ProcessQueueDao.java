@@ -170,12 +170,16 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public List<ProcessEntry> list() {
-        return list(null, null, DEFAULT_LIST_LIMIT);
+        return list(null, null, null, DEFAULT_LIST_LIMIT);
     }
 
-    public List<ProcessEntry> list(Timestamp beforeCreatedAt, Set<String> tags, int limit) {
+    public List<ProcessEntry> list(UUID projectId, Timestamp beforeCreatedAt, Set<String> tags, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectWhereStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE);
+
+            if (projectId != null) {
+                s.where(V_PROCESS_QUEUE.PROJECT_ID.eq(projectId));
+            }
 
             if (beforeCreatedAt != null) {
                 s.where(V_PROCESS_QUEUE.CREATED_AT.lessThan(beforeCreatedAt));

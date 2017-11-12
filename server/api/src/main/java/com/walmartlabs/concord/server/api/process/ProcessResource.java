@@ -237,7 +237,8 @@ public interface ProcessResource {
     @GET
     @ApiOperation("List processes")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProcessEntry> list(@ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+    List<ProcessEntry> list(@ApiParam @QueryParam("projectId") UUID projectId,
+                            @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                             @ApiParam @QueryParam("tags") Set<String> tags,
                             @ApiParam @QueryParam("limit") @DefaultValue("30") int limit);
 

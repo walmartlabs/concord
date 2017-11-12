@@ -332,8 +332,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @WithTimer
     @RequiresAuthentication
-    public List<ProcessEntry> list(IsoDateParam beforeCreatedAt, Set<String> tags, int limit) {
-        return queueDao.list(toTimestamp(beforeCreatedAt), tags, limit);
+    public List<ProcessEntry> list(UUID projectId, IsoDateParam beforeCreatedAt, Set<String> tags, int limit) {
+        return queueDao.list(projectId, toTimestamp(beforeCreatedAt), tags, limit);
     }
 
     @Override

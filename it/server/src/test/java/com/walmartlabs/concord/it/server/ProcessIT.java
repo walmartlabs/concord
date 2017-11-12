@@ -1,16 +1,16 @@
 package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.process.*;
+import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
+import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
@@ -323,13 +323,54 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        l = processResource.list(null, Collections.singleton("xyz"), 1);
+        l = processResource.list(null, null, Collections.singleton("xyz"), 1);
         assertTrue(l.isEmpty());
 
-        l = processResource.list(null, Collections.singleton("IT"), 1);
+        l = processResource.list(null, null, Collections.singleton("IT"), 1);
         assertEquals(1, l.size());
 
         e = l.get(0);
         assertEquals(childSpr.getInstanceId(), e.getInstanceId());
+    }
+
+    @Test(timeout = 30000)
+    public void testProjectId() throws Exception {
+        String projectName = "project_" + System.currentTimeMillis();
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
+
+        String entryPoint = projectName;
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse sprA = processResource.start(entryPoint, new ByteArrayInputStream(payload), null, false, null);
+        waitForCompletion(processResource, sprA.getInstanceId());
+
+        // ---
+
+        StartProcessResponse sprB = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        waitForCompletion(processResource, sprB.getInstanceId());
+
+        // ---
+
+        List<ProcessEntry> l = processResource.list(UUID.randomUUID(), null, null, 30);
+        assertTrue(l.isEmpty());
+
+        l = processResource.list(cpr.getId(), null, null, 30);
+        assertEquals(1, l.size());
+
+        l = processResource.list(null, null, null, 30);
+        ProcessEntry p = null;
+        for (ProcessEntry e : l) {
+            if (e.getInstanceId().equals(sprB.getInstanceId())) {
+                p = e;
+                break;
+            }
+        }
+        assertNotNull(p);
     }
 }
