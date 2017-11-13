@@ -11,6 +11,7 @@ import com.walmartlabs.concord.server.api.trigger.TriggerResource;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.ProjectManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,8 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
 
     @Override
     public List<TriggerEntry> list(String projectName, String repositoryName) {
-        ProjectEntry p = assertProject(projectName, TeamRole.READER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.READER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
         return triggersDao.list(p.getId(), r.getId());
@@ -62,7 +64,8 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
 
     @Override
     public Response refresh(String projectName, String repositoryName) {
-        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
         Path repoPath = repositoryManager.fetch(p.getId(), r);
@@ -86,12 +89,12 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
         return Response.ok().build();
     }
 
-    private ProjectEntry assertProject(String projectName, TeamRole requiredRole, boolean teamMembersOnly) {
+    private ProjectEntry assertProject(UUID teamId, String projectName, TeamRole requiredRole, boolean teamMembersOnly) {
         if (projectName == null) {
             throw new ValidationErrorsException("Invalid project name");
         }
 
-        UUID id = projectDao.getId(projectName);
+        UUID id = projectDao.getId(teamId, projectName);
         if (id == null) {
             throw new ValidationErrorsException("Project not found: " + projectName);
         }

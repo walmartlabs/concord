@@ -5,6 +5,7 @@ import com.walmartlabs.concord.server.api.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.project.ProjectVisibility;
 import com.walmartlabs.concord.server.jooq.tables.LandingPage;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
+import com.walmartlabs.concord.server.jooq.tables.Repositories;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.postgresql.util.Base64;
@@ -17,6 +18,7 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.tables.LandingPage.LANDING_PAGE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static org.jooq.impl.DSL.*;
 
@@ -30,14 +32,25 @@ public class LandingDao extends AbstractDao {
 
     public LandingEntry get(UUID id) {
         LandingPage lp = LANDING_PAGE.as("lp");
+        Projects p = PROJECTS.as("p");
+        Repositories r = REPOSITORIES.as("r");
 
-        Field<String> projectNameField = select(PROJECTS.PROJECT_NAME).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(lp.PROJECT_ID)).asField();
-        Field<String> repositoryNameField = select(REPOSITORIES.REPO_NAME).from(REPOSITORIES).where(REPOSITORIES.REPO_ID.eq(lp.REPO_ID)).asField();
+        Field<String> teamNameField = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(p.TEAM_ID)).asField();
 
         try (DSLContext tx = DSL.using(cfg)) {
             return tx
-                    .select(lp.LANDING_PAGE_ID, projectNameField, repositoryNameField, lp.NAME, lp.DESCRIPTION, lp.ICON)
+                    .select(lp.LANDING_PAGE_ID,
+                            p.TEAM_ID,
+                            teamNameField,
+                            lp.PROJECT_ID,
+                            p.PROJECT_NAME,
+                            r.REPO_NAME,
+                            lp.NAME,
+                            lp.DESCRIPTION,
+                            lp.ICON)
                     .from(lp)
+                    .innerJoin(p).on(p.PROJECT_ID.eq(lp.PROJECT_ID))
+                    .innerJoin(r).on(r.REPO_ID.eq(lp.REPO_ID))
                     .where(lp.LANDING_PAGE_ID.eq(id))
                     .fetchOne(LandingDao::toEntity);
         }
@@ -93,31 +106,43 @@ public class LandingDao extends AbstractDao {
     private List<LandingEntry> list(DSLContext tx, UUID currentUserId) {
         LandingPage lp = LANDING_PAGE.as("lp");
         Projects p = PROJECTS.as("p");
+        Repositories r = REPOSITORIES.as("r");
 
-        Field<String> repositoryNameField = select(REPOSITORIES.REPO_NAME).from(REPOSITORIES).where(REPOSITORIES.REPO_ID.eq(lp.REPO_ID)).asField();
+        Field<String> teamNameField = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(p.TEAM_ID)).asField();
 
         Condition filterByTeamMember = exists(selectFrom(USER_TEAMS)
                 .where(USER_TEAMS.USER_ID.eq(currentUserId)
                         .and(USER_TEAMS.TEAM_ID.eq(p.TEAM_ID))));
 
-        SelectJoinStep<Record6<UUID, String, String, String, String, byte[]>> q =
-                tx.select(lp.LANDING_PAGE_ID, p.PROJECT_NAME, repositoryNameField, lp.NAME, lp.DESCRIPTION, lp.ICON)
-                .from(lp)
-                .innerJoin(p).on(lp.PROJECT_ID.eq(p.PROJECT_ID));
+        SelectJoinStep<Record9<UUID, UUID, String, UUID, String, String, String, String, byte[]>> q =
+                tx.select(lp.LANDING_PAGE_ID,
+                        p.TEAM_ID,
+                        teamNameField,
+                        lp.PROJECT_ID,
+                        p.PROJECT_NAME,
+                        r.REPO_NAME,
+                        lp.NAME,
+                        lp.DESCRIPTION,
+                        lp.ICON)
+                        .from(lp)
+                        .innerJoin(p).on(p.PROJECT_ID.eq(lp.PROJECT_ID))
+                        .innerJoin(r).on(r.REPO_ID.eq(lp.REPO_ID));
 
         if (currentUserId != null) {
             q.where(or(p.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString()), filterByTeamMember));
         }
 
         return q.orderBy(lp.NAME)
-            .fetch(LandingDao::toEntity);
+                .fetch(LandingDao::toEntity);
     }
 
-    private static LandingEntry toEntity(Record6<UUID, String, String, String, String, byte[]> item) {
+    private static LandingEntry toEntity(Record9<UUID, UUID, String, UUID, String, String, String, String, byte[]> item) {
         String icon = null;
         if (item.value6() != null) {
-           icon = Base64.encodeBytes(item.value6());
+            icon = Base64.encodeBytes(item.value9());
         }
-        return new LandingEntry(item.value1(), item.value2(), item.value3(), item.value4(), item.value5(), icon);
+        return new LandingEntry(item.value1(), item.value2(), item.value3(),
+                item.value4(), item.value5(), item.value6(),
+                item.value7(), item.value8(), icon);
     }
 }

@@ -7,12 +7,12 @@ import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
+import com.walmartlabs.concord.server.api.team.TeamEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
-import com.walmartlabs.concord.server.team.TeamDao;
 import com.walmartlabs.concord.server.team.TeamManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -33,11 +33,11 @@ import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
+import static com.walmartlabs.concord.server.project.RepositoryUtils.assertRepository;
 
 @Named
 public class ProjectResourceImpl extends AbstractDao implements ProjectResource, Resource {
 
-    private final TeamDao teamDao;
     private final TeamManager teamManager;
     private final ProjectDao projectDao;
     private final ProjectManager projectManager;
@@ -53,7 +53,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Inject
     public ProjectResourceImpl(Configuration cfg,
-                               TeamDao teamDao,
                                TeamManager teamManager,
                                ProjectDao projectDao,
                                ProjectManager projectManager,
@@ -66,7 +65,6 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
         super(cfg);
 
-        this.teamDao = teamDao;
         this.teamManager = teamManager;
         this.projectDao = projectDao;
         this.projectManager = projectManager;
@@ -92,8 +90,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     public CreateProjectResponse createOrUpdate(ProjectEntry req) {
         String projectName = req.getName();
 
-        UUID teamId = assertOptionalTeam(req.getTeamId(), req.getTeamName());
-        UUID projectId = projectDao.getId(projectName);
+        TeamEntry t = teamManager.assertTeam(req.getTeamId(), req.getTeamName());
+        UUID projectId = projectDao.getId(t.getId(), projectName);
 
         if (projectId != null) {
             projectManager.assertProjectAccess(projectId, TeamRole.WRITER, true);
@@ -101,11 +99,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             return new CreateProjectResponse(projectId, PerformedActionType.UPDATED);
         }
 
-        if (teamId == null) {
-            teamId = TeamManager.DEFAULT_TEAM_ID;
-        }
-
-        teamManager.assertTeamAccess(teamId, TeamRole.WRITER, true);
+        teamManager.assertTeamAccess(t.getId(), TeamRole.WRITER, true);
 
         Map<String, Object> cfg = req.getCfg();
         validateCfg(cfg);
@@ -114,17 +108,16 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         if (repos != null) {
             for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
                 String secret = r.getValue().getSecret();
-                assertSecret(teamId, secret);
+                assertSecret(t.getId(), secret);
             }
         }
 
-        UUID tId = teamId;
         InsertResult r = txResult(tx -> {
-            UUID pId = projectDao.insert(tx, projectName, req.getDescription(), tId, cfg, req.getVisibility());
+            UUID pId = projectDao.insert(tx, t.getId(), projectName, req.getDescription(), cfg, req.getVisibility());
 
             Map<String, UUID> rIds = Collections.emptyMap();
             if (repos != null) {
-                rIds = insert(tx, tId, pId, repos);
+                rIds = insert(tx, t.getId(), pId, repos);
             }
 
             return new InsertResult(pId, rIds);
@@ -144,7 +137,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public CreateRepositoryResponse createRepository(String projectName, RepositoryEntry request) {
-        ProjectEntry project = assertProject(projectName, TeamRole.WRITER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry project = assertProject(teamId, projectName, TeamRole.WRITER, true);
 
         UUID secretId = assertSecret(project.getTeamId(), request.getSecret());
 
@@ -163,13 +157,15 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public ProjectEntry get(String projectName) {
-        return assertProject(projectName, TeamRole.READER, false);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        return assertProject(teamId, projectName, TeamRole.READER, false);
     }
 
     @Override
     @Validate
     public RepositoryEntry getRepository(String projectName, String repositoryName) {
-        ProjectEntry p = assertProject(projectName, TeamRole.READER, false);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.READER, false);
         return assertRepository(p, repositoryName);
     }
 
@@ -187,7 +183,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public List<RepositoryEntry> listRepositories(String projectName, String sortBy, boolean asc) {
-        ProjectEntry p = assertProject(projectName, TeamRole.READER, false);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.READER, false);
 
         Field<?> sortField = key2RepositoryField.get(sortBy);
         if (sortField == null) {
@@ -201,8 +198,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public UpdateProjectResponse update(String projectName, UpdateProjectRequest req) {
-        UUID teamId = assertOptionalTeam(req.getTeamId(), req.getTeamName());
-        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        TeamEntry t = teamManager.assertTeam(req.getTeamId(), req.getTeamName());
+        ProjectEntry p = assertProject(t.getId(), projectName, TeamRole.WRITER, true);
 
         Map<String, Object> cfg = req.getCfg();
         validateCfg(cfg);
@@ -211,24 +208,24 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         if (repos != null) {
             for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
                 String secret = r.getValue().getSecret();
-                assertSecret(teamId, secret);
+                assertSecret(t.getId(), secret);
             }
 
             githubWebhookService.unregister(p.getId());
         }
 
         Map<String, UUID> rIds = txResult(tx -> {
-            projectDao.update(tx, p.getId(), projectName, req.getDescription(), teamId, cfg);
+            projectDao.update(tx, t.getId(), p.getId(), projectName, req.getDescription(), cfg);
 
             Map<String, UUID> m = Collections.emptyMap();
             if (repos != null) {
                 repositoryDao.deleteAll(tx, p.getId());
-                m = insert(tx, teamId, p.getId(), repos);
+                m = insert(tx, t.getId(), p.getId(), repos);
             }
             return m;
         });
 
-        if(repos != null) {
+        if (repos != null) {
             repos.forEach((repoName, RepositoryEntry) ->
                     githubWebhookService.register(p.getId(), rIds.get(repoName), RepositoryEntry.getUrl()));
         }
@@ -239,7 +236,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public UpdateRepositoryResponse updateRepository(String projectName, String repositoryName, RepositoryEntry request) {
-        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
         UUID secretId = assertSecret(p.getTeamId(), request.getSecret());
 
@@ -262,7 +260,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Validate
     @SuppressWarnings("unchecked")
     public Object getConfiguration(String projectName, String path) {
-        ProjectEntry p = assertProject(projectName, TeamRole.READER, false);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.READER, false);
 
         String[] ps = cfgPath(path);
         Object v = projectDao.getConfigurationValue(p.getId(), ps);
@@ -277,7 +276,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public UpdateProjectConfigurationResponse updateConfiguration(String projectName, String path, Object data) {
-        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
 
         Map<String, Object> cfg = projectDao.getConfiguration(p.getId());
         if (cfg == null) {
@@ -309,7 +309,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     public DeleteProjectConfigurationResponse deleteConfiguration(String projectName, String path) {
-        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
 
         Map<String, Object> cfg = projectDao.getConfiguration(p.getId());
         if (cfg == null) {
@@ -333,7 +334,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public DeleteProjectResponse delete(String projectName) {
-        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
 
         githubWebhookService.unregister(p.getId());
 
@@ -344,7 +346,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public DeleteRepositoryResponse deleteRepository(String projectName, String repositoryName) {
-        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
         githubWebhookService.unregister(p.getId(), r.getId());
@@ -362,29 +365,13 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             throw new ValidationErrorsException("Value is required");
         }
 
-        assertProject(projectName, TeamRole.READER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        assertProject(teamId, projectName, TeamRole.READER, true);
 
         byte[] input = req.getValue().getBytes();
         byte[] result = secretManager.encryptData(projectName, input);
 
         return new EncryptValueResponse(result);
-    }
-
-    private UUID assertOptionalTeam(UUID teamId, String teamName) {
-        if (teamId != null) {
-            if (teamDao.get(teamId) == null) {
-                throw new ValidationErrorsException("Team not found: " + teamId);
-            }
-        }
-
-        if (teamId == null && teamName != null) {
-            teamId = teamDao.getId(teamName);
-            if (teamId == null) {
-                throw new ValidationErrorsException("Team not found: " + teamName);
-            }
-        }
-
-        return teamId;
     }
 
     private UUID assertSecret(UUID teamId, String name) {
@@ -405,35 +392,17 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         return id;
     }
 
-    private ProjectEntry assertProject(String projectName, TeamRole requiredRole, boolean teamMembersOnly) {
+    private ProjectEntry assertProject(UUID teamId, String projectName, TeamRole requiredRole, boolean teamMembersOnly) {
         if (projectName == null) {
             throw new ValidationErrorsException("Invalid project name");
         }
 
-        UUID id = projectDao.getId(projectName);
+        UUID id = projectDao.getId(teamId, projectName);
         if (id == null) {
             throw new ValidationErrorsException("Project not found: " + projectName);
         }
 
         return projectManager.assertProjectAccess(id, requiredRole, teamMembersOnly);
-    }
-
-    private RepositoryEntry assertRepository(ProjectEntry p, String repositoryName) {
-        if (repositoryName == null) {
-            throw new ValidationErrorsException("Invalid repository name");
-        }
-
-        Map<String, RepositoryEntry> repos = p.getRepositories();
-        if (repos == null || repos.isEmpty()) {
-            throw new ValidationErrorsException("Repository not found: " + repositoryName);
-        }
-
-        RepositoryEntry r = repos.get(repositoryName);
-        if (r == null) {
-            throw new ValidationErrorsException("Repository not found: " + repositoryName);
-        }
-
-        return r;
     }
 
     private Map<String, UUID> insert(DSLContext tx, UUID teamId, UUID projectId, Map<String, RepositoryEntry> repos) {

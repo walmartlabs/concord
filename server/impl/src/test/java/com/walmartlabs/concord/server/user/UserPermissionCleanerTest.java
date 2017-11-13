@@ -50,6 +50,8 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
     @Test
     public void testProjectRepositories() throws Exception {
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         UserDao userDao = new UserDao(getConfiguration());
         ProjectDao projectDao = new ProjectDao(getConfiguration());
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());
@@ -57,7 +59,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(projectName, "test", null, null, null);
+        UUID projectId = projectDao.insert(teamId, projectName, "test", null, null);
 
         // ---
 

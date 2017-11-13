@@ -291,7 +291,7 @@ public class CrudIT extends AbstractServerIT {
         Map<String, Object> data = Collections.singletonMap("k", "v");
 
         InventoryResource inventoryResource = proxy(InventoryResource.class);
-        inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null,null));
+        inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null, null));
 
         // --- create
 
@@ -320,10 +320,11 @@ public class CrudIT extends AbstractServerIT {
 
         String inventoryName = "inventory_" + randomString();
         String queryName = "queryName_" + randomString();
-        String text = "text_" + randomString();;
+        String text = "text_" + randomString();
+        ;
 
         InventoryResource inventoryResource = proxy(InventoryResource.class);
-        inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null,null));
+        inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null, null));
 
         // --- create
 
@@ -373,7 +374,7 @@ public class CrudIT extends AbstractServerIT {
         projectResource.createRepository(projectName, new RepositoryEntry(null, repositoryName, "http://localhost", null, null, null, null));
 
         // --- create
-        LandingEntry entry = new LandingEntry(null, projectName, repositoryName, name, description, icon);
+        LandingEntry entry = new LandingEntry(null, null, null, null, projectName, repositoryName, name, description, icon);
         CreateLandingResponse result = resource.createOrUpdate(entry);
         assertNotNull(result);
         assertTrue(result.isOk());
@@ -381,7 +382,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals(OperationResult.CREATED, result.getResult());
 
         // --- update
-        result = resource.createOrUpdate(new LandingEntry(result.getId(), projectName, repositoryName, name, description, icon));
+        result = resource.createOrUpdate(new LandingEntry(result.getId(), null, null, null, projectName, repositoryName, name, description, icon));
         assertNotNull(result);
         assertTrue(result.isOk());
         assertNotNull(result.getId());

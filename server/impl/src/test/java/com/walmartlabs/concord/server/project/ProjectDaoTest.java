@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.project;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,9 +30,11 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
     @Test
     public void testInsertDelete() throws Exception {
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(projectName, "test", null, cfg, null);
+        UUID projectId = projectDao.insert(teamId, projectName, "test", cfg, null);
 
         // ---
         Map<String, Object> actualCfg = projectDao.getConfiguration(projectId);
@@ -52,7 +55,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
         Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
-        tx(tx -> projectDao.update(tx, projectId, projectName, "new-description", null, newCfg2));
+        tx(tx -> projectDao.update(tx, teamId, projectId, projectName, "new-description", newCfg2));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg2, actualCfg);
@@ -66,12 +69,14 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
 
-        assertNull(projectDao.getId(projectName));
+        assertNull(projectDao.getId(teamId, projectName));
         assertNull(repositoryDao.getId(projectId, repoName));
     }
 
     @Test
     public void testList() throws Exception {
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         assertEquals(0, projectDao.list(null, PROJECTS.PROJECT_NAME, true).size());
 
         // ---
@@ -79,8 +84,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String aName = "aProject#" + System.currentTimeMillis();
         String bName = "bProject#" + System.currentTimeMillis();
 
-        projectDao.insert(aName, "test", null, null, null);
-        projectDao.insert(bName, "test", null, null, null);
+        projectDao.insert(teamId, aName, "test", null, null);
+        projectDao.insert(teamId, bName, "test", null, null);
 
         // ---
 

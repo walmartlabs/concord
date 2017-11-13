@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.events;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.process.*;
+import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.apache.shiro.SecurityUtils;
@@ -23,14 +24,16 @@ public abstract class AbstractEventResource {
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
     private final TriggersDao triggersDao;
+    private final ProjectDao projectDao;
 
     public AbstractEventResource(PayloadManager payloadManager,
                                  ProcessManager processManager,
-                                 TriggersDao triggersDao) {
+                                 TriggersDao triggersDao, ProjectDao projectDao) {
 
         this.payloadManager = payloadManager;
         this.processManager = processManager;
         this.triggersDao = triggersDao;
+        this.projectDao = projectDao;
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
@@ -45,7 +48,9 @@ public abstract class AbstractEventResource {
                 processArgs.putAll(t.getArguments());
             }
             processArgs.put("event", triggerEvent);
-            UUID instanceId = startProcess(t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), processArgs);
+
+            UUID teamId = projectDao.getTeamId(t.getProjectId());
+            UUID instanceId = startProcess(teamId, t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), processArgs);
             log.info("process ['{}'] -> instanceId '{}'", eventId, instanceId);
         }
 
@@ -56,12 +61,12 @@ public abstract class AbstractEventResource {
         return EventMatcher.matches(triggerConditions, t.getConditions());
     }
 
-    private UUID startProcess(String projectName, String repoName, String flowName, Map<String, Object> args) {
+    private UUID startProcess(UUID teamId, String projectName, String repoName, String flowName, Map<String, Object> args) {
         UUID instanceId = UUID.randomUUID();
 
         String initiator = getInitiator();
 
-        PayloadParser.EntryPoint ep = new PayloadParser.EntryPoint(projectName, repoName, flowName);
+        PayloadParser.EntryPoint ep = new PayloadParser.EntryPoint(teamId, projectName, repoName, flowName);
         Map<String, Object> request = new HashMap<>();
         request.put(InternalConstants.Request.ARGUMENTS_KEY, args);
 
