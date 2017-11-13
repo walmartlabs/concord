@@ -269,6 +269,7 @@ public class DefaultJobExecutor implements JobExecutor {
         return l.toArray(new String[l.size()]);
     }
 
+    @SuppressWarnings("unchecked")
     private Collection<URI> getDependencyUris(Path workDir) throws ExecutionException {
         Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {
@@ -373,6 +374,7 @@ public class DefaultJobExecutor implements JobExecutor {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private List<String> getAgentJvmParams(Path workDir) {
         Path p = workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME);
         if (!Files.exists(p)) {

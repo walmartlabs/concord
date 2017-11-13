@@ -38,6 +38,7 @@ public class LoadTasksTask implements Task {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void register(Class c) throws Exception {
         taskRegistry.register(c);
     }

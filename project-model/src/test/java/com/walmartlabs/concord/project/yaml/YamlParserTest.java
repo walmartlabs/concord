@@ -1160,6 +1160,7 @@ public class YamlParserTest {
         verify(testBean, times(1)).toString(eq("12341"));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void test033() throws Exception {
         String txId = UUID.randomUUID().toString();

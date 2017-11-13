@@ -77,6 +77,7 @@ public class ConcordTask extends AbstractConcordTask {
         return listSubprocesses(ctx, createJobCfg(ctx, m));
     }
 
+    @SuppressWarnings("unchecked")
     public List<String> listSubprocesses(@InjectVariable("context") Context ctx, Map<String, Object> cfg) throws Exception {
         String instanceId = get(cfg, INSTANCE_ID_KEY);
 
@@ -109,6 +110,7 @@ public class ConcordTask extends AbstractConcordTask {
         return waitForCompletion(ctx, defaults, ids, timeout);
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, Map<String, Object> cfg, List<String> ids, long timeout) throws Exception {
         String apiKey = get(cfg, SESSION_TOKEN_KEY);
 
@@ -193,6 +195,7 @@ public class ConcordTask extends AbstractConcordTask {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void fork(Context ctx) throws Exception {
         List<Map<String, Object>> jobs;
 
@@ -224,7 +227,7 @@ public class ConcordTask extends AbstractConcordTask {
 
             int n = getInstances(cfg);
             for (int i = 0; i < n; i++) {
-                String id = forkOne(ctx, cfg);
+                String id = forkOne(cfg);
                 ids.add(id);
             }
         }
@@ -232,7 +235,7 @@ public class ConcordTask extends AbstractConcordTask {
         return ids;
     }
 
-    private String forkOne(Context ctx, Map<String, Object> cfg) throws Exception {
+    private String forkOne(Map<String, Object> cfg) throws Exception {
         if (cfg.containsKey(ARCHIVE_KEY)) {
             log.warn("'" + ARCHIVE_KEY + "' parameter is not supported for fork action and will be ignored");
         }
@@ -342,6 +345,7 @@ public class ConcordTask extends AbstractConcordTask {
         return m;
     }
 
+    @SuppressWarnings("unchecked")
     private static Map<String, Object> createRequest(Map<String, Object> cfg) {
         Map<String, Object> req = new HashMap<>();
 
@@ -376,6 +380,7 @@ public class ConcordTask extends AbstractConcordTask {
         return req;
     }
 
+    @SuppressWarnings("unchecked")
     private static Set<String> getTags(Map<String, Object> cfg) {
         if (cfg == null) {
             return null;

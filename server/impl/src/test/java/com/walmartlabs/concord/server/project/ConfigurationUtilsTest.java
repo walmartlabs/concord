@@ -86,6 +86,7 @@ public class ConfigurationUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testToNested() throws Exception {
         String k = "a.b.c";
         Object v = 123;

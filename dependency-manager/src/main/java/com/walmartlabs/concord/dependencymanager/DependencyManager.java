@@ -295,6 +295,7 @@ public class DependencyManager {
         return m;
     }
 
+    @SuppressWarnings("unchecked")
     private static List<MavenRepository> readCfg() {
         String s = System.getenv(CFG_FILE_KEY);
         if (s == null || s.trim().isEmpty()) {

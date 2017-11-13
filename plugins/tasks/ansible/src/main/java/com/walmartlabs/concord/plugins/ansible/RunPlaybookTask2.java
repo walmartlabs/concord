@@ -331,6 +331,7 @@ public class RunPlaybookTask2 implements Task {
         return m;
     }
 
+    @SuppressWarnings("unchecked")
     private static Path getCfgFile(Map<String, Object> args, Path workDir, Path tmpDir, boolean debug) throws IOException {
         String s = (String) args.get(AnsibleConstants.CONFIG_FILE_KEY);
         if (s != null) {
@@ -406,6 +407,7 @@ public class RunPlaybookTask2 implements Task {
         return p;
     }
 
+    @SuppressWarnings("unchecked")
     private Path getPrivateKeyPath(Map<String, Object> args, Path workDir) throws Exception {
         Path p;
 

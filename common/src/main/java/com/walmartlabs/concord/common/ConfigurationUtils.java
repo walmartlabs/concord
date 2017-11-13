@@ -37,6 +37,7 @@ public final class ConfigurationUtils {
         return m.get(path[path.length - 1]);
     }
 
+    @SuppressWarnings("unchecked")
     public static void set(Map<String, Object> a, Object b, String... path) {
         Object holder = get(a, path.length - 1, path);
 
@@ -48,6 +49,7 @@ public final class ConfigurationUtils {
         m.put(path[path.length - 1], b);
     }
 
+    @SuppressWarnings("unchecked")
     public static void delete(Map<String, Object> a, String... path) {
         Object holder = get(a, path.length - 1, path);
 
