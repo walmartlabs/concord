@@ -4,7 +4,7 @@ main:
 
   - form: myForm2
   - ${log.info("test", myForm1.firstName.concat(' ').concat(myForm2.lastName))}
-  - ${log.info("test", myForm2.age + 10000)}
+  - ${log.info("test", myForm2.age + 100000)}
 
   - ${log.info("test", myForm1.x + 20000)}
 

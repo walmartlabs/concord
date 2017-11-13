@@ -98,10 +98,10 @@ public class ProcessIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
 
-        assertLog(".*100223.*", ab);
+        assertLog(".*110123.*", ab);
         assertLog(".*Boo Zoo.*", ab);
-        assertLog(".*122.*", ab);
-        assertLog(".*100323.*", ab);
+        assertLog(".*100022.*", ab);
+        assertLog(".*120123.*", ab);
         assertLog(".*red.*", ab);
 
         assertTrue(pir.getStatus() == ProcessStatus.FINISHED);

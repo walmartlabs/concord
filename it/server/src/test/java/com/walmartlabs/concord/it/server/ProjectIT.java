@@ -230,10 +230,10 @@ public class ProjectIT extends AbstractServerIT {
         ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, true);
 
         byte[] ab = getLog(psr.getLogFileName());
-        assertLog(".*100223.*", ab);
+        assertLog(".*110123.*", ab);
         assertLog(".*Boo Zoo.*", ab);
-        assertLog(".*1300.*", ab);
-        assertLog(".*100323.*", ab);
+        assertLog(".*101200.*", ab);
+        assertLog(".*120123.*", ab);
         assertLog(".*red.*", ab);
 
         assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
