@@ -256,11 +256,9 @@ public class PayloadManager {
                     .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(InternalConstants.Request.ENTRY_POINT_KEY, entryPoint));
         }
 
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
-
         UUID projectId = null;
         if (e.getProjectName() != null) {
-            projectId = projectDao.getId(teamId, e.getProjectName());
+            projectId = projectDao.getId(e.getTeamId(), e.getProjectName());
             if (projectId == null) {
                 throw new ProcessException(p.getInstanceId(), "Project not found: " + e.getProjectName());
             }
