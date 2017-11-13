@@ -43,7 +43,7 @@ public class TriggersDao extends AbstractDao {
                     .select(t.TRIGGER_ID,
                             t.PROJECT_ID, projectNameField,
                             t.REPO_ID, repositoryNameField,
-                            t.EVENT_NAME, t.ENTRY_POINT,
+                            t.EVENT_SOURCE, t.ENTRY_POINT,
                             t.ARGUMENTS.cast(String.class), t.CONDITIONS.cast(String.class))
                     .from(t)
                     .where(t.TRIGGER_ID.eq(id))
@@ -51,28 +51,28 @@ public class TriggersDao extends AbstractDao {
         }
     }
 
-    public UUID insert(UUID projectId, UUID repositoryId, String eventName, String entryPoint, Map<String, Object> args, Map<String, Object> conditions) {
-        return txResult(tx -> insert(tx, projectId, repositoryId, eventName, entryPoint, args, conditions));
+    public UUID insert(UUID projectId, UUID repositoryId, String eventSource, String entryPoint, Map<String, Object> args, Map<String, Object> conditions) {
+        return txResult(tx -> insert(tx, projectId, repositoryId, eventSource, entryPoint, args, conditions));
     }
 
-    public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String eventName, String entryPoint, Map<String, Object> args, Map<String, Object> conditions) {
+    public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String eventSource, String entryPoint, Map<String, Object> args, Map<String, Object> conditions) {
         return tx.insertInto(TRIGGERS)
-                .columns(TRIGGERS.PROJECT_ID, TRIGGERS.REPO_ID, TRIGGERS.EVENT_NAME, TRIGGERS.ENTRY_POINT, TRIGGERS.ARGUMENTS, TRIGGERS.CONDITIONS)
-                .values(projectId, repositoryId, eventName, entryPoint, field("?::jsonb", serialize(args)), field("?::jsonb", serialize(conditions)))
+                .columns(TRIGGERS.PROJECT_ID, TRIGGERS.REPO_ID, TRIGGERS.EVENT_SOURCE, TRIGGERS.ENTRY_POINT, TRIGGERS.ARGUMENTS, TRIGGERS.CONDITIONS)
+                .values(projectId, repositoryId, eventSource, entryPoint, field("?::jsonb", serialize(args)), field("?::jsonb", serialize(conditions)))
                 .returning(TRIGGERS.TRIGGER_ID)
                 .fetchOne()
                 .getTriggerId();
     }
 
-    public void update(UUID id, UUID projectId, UUID repositoryId, String eventName, String entryPoint, Map<String, Object> args, Map<String, Object> conditions) {
-        tx(tx -> update(tx, id, projectId, repositoryId, eventName, entryPoint, args, conditions));
+    public void update(UUID id, UUID projectId, UUID repositoryId, String eventSource, String entryPoint, Map<String, Object> args, Map<String, Object> conditions) {
+        tx(tx -> update(tx, id, projectId, repositoryId, eventSource, entryPoint, args, conditions));
     }
 
-    private void update(DSLContext tx, UUID id, UUID projectId, UUID repositoryId, String eventName, String entryPoint, Map<String, Object> args, Map<String, Object> conditions) {
+    private void update(DSLContext tx, UUID id, UUID projectId, UUID repositoryId, String eventSource, String entryPoint, Map<String, Object> args, Map<String, Object> conditions) {
         tx.update(TRIGGERS)
                 .set(TRIGGERS.PROJECT_ID, projectId)
                 .set(TRIGGERS.REPO_ID, repositoryId)
-                .set(TRIGGERS.EVENT_NAME, eventName)
+                .set(TRIGGERS.EVENT_SOURCE, eventSource)
                 .set(TRIGGERS.ENTRY_POINT, entryPoint)
                 .set(TRIGGERS.ARGUMENTS, field("?::jsonb", String.class, serialize(args)))
                 .set(TRIGGERS.CONDITIONS, field("?::jsonb", String.class, serialize(conditions)))
@@ -92,19 +92,19 @@ public class TriggersDao extends AbstractDao {
                 .execute();
     }
 
-    public List<TriggerEntry> list(String eventName) {
+    public List<TriggerEntry> list(String eventSource) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, eventName, null);
+            return list(tx, eventSource, null);
         }
     }
 
-    public List<TriggerEntry> list(String eventName, Map<String, String> conditions) {
+    public List<TriggerEntry> list(String eventSource, Map<String, String> conditions) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, eventName, conditions);
+            return list(tx, eventSource, conditions);
         }
     }
 
-    public List<TriggerEntry> list(DSLContext tx, String eventName, Map<String, String> conditions) {
+    public List<TriggerEntry> list(DSLContext tx, String eventSource, Map<String, String> conditions) {
         Triggers t = TRIGGERS.as("t");
 
         Field<String> repositoryNameField = select(REPOSITORIES.REPO_NAME).from(REPOSITORIES).where(REPOSITORIES.REPO_ID.eq(t.REPO_ID)).asField();
@@ -113,15 +113,15 @@ public class TriggersDao extends AbstractDao {
         return tx.select(t.TRIGGER_ID,
                          t.PROJECT_ID, projectNameField,
                          t.REPO_ID, repositoryNameField,
-                         t.EVENT_NAME, t.ENTRY_POINT,
+                         t.EVENT_SOURCE, t.ENTRY_POINT,
                          t.ARGUMENTS.cast(String.class), t.CONDITIONS.cast(String.class))
                 .from(t)
-                .where(buildConditionClause(t, eventName, conditions))
+                .where(buildConditionClause(t, eventSource, conditions))
                 .fetch(this::toEntity);
     }
 
-    private Condition buildConditionClause(Triggers t, String eventName, Map<String, String> conditions) {
-        Condition result = t.EVENT_NAME.eq(eventName);
+    private Condition buildConditionClause(Triggers t, String eventSource, Map<String, String> conditions) {
+        Condition result = t.EVENT_SOURCE.eq(eventSource);
         if (conditions == null) {
             return result;
         }

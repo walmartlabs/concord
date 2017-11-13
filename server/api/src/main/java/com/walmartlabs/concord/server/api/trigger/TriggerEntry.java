@@ -28,7 +28,7 @@ public class TriggerEntry implements Serializable {
 
     @NotNull
     @ConcordKey
-    private final String eventName;
+    private final String eventSource;
 
     @NotNull
     private final String entryPoint;
@@ -43,7 +43,7 @@ public class TriggerEntry implements Serializable {
                         @JsonProperty("projectName") String projectName,
                         @JsonProperty("repositoryId") UUID repositoryId,
                         @JsonProperty("repositoryName") String repositoryName,
-                        @JsonProperty("eventName") String eventName,
+                        @JsonProperty("eventSource") String eventSource,
                         @JsonProperty("entryPoint") String entryPoint,
                         @JsonProperty("arguments") Map<String, Object> arguments,
                         @JsonProperty("conditions") Map<String, Object> conditions) {
@@ -53,7 +53,7 @@ public class TriggerEntry implements Serializable {
         this.repositoryName = repositoryName;
         this.projectId = projectId;
         this.projectName = projectName;
-        this.eventName = eventName;
+        this.eventSource = eventSource;
         this.entryPoint = entryPoint;
         this.arguments = arguments;
         this.conditions = conditions;
@@ -79,8 +79,8 @@ public class TriggerEntry implements Serializable {
         return projectName;
     }
 
-    public String getEventName() {
-        return eventName;
+    public String getEventSource() {
+        return eventSource;
     }
 
     public String getEntryPoint() {
@@ -103,7 +103,7 @@ public class TriggerEntry implements Serializable {
                 ", repositoryName='" + repositoryName + '\'' +
                 ", projectId=" + projectId +
                 ", projectName='" + projectName + '\'' +
-                ", eventName='" + eventName + '\'' +
+                ", eventSource='" + eventSource + '\'' +
                 ", entryPoint='" + entryPoint + '\'' +
                 ", arguments=" + arguments +
                 ", conditions=" + conditions +

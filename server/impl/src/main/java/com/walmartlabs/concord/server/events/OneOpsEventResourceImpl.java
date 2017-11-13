@@ -26,7 +26,7 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
 
     private static final Logger log = LoggerFactory.getLogger(OneOpsEventResourceImpl.class);
 
-    private static final String EVENT_NAME = "oneops";
+    private static final String EVENT_SOURCE = "oneops";
 
     private static final String ORG_KEY = "org";
     private static final String ASM_KEY = "asm";
@@ -60,7 +60,7 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
         Map<String, Object> triggerEvent = buildTriggerEvent(event, triggerConditions);
 
         String eventId = String.valueOf(event.get("cmsId"));
-        int count = process(eventId, EVENT_NAME, triggerConditions, triggerEvent);
+        int count = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent);
 
         if (log.isDebugEnabled()) {
             log.debug("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);

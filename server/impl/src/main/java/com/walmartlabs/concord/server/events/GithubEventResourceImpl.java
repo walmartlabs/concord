@@ -23,7 +23,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
 
     private static final Logger log = LoggerFactory.getLogger(GithubEventResourceImpl.class);
 
-    private static final String EVENT_NAME = "github";
+    private static final String EVENT_SOURCE = "github";
 
     private static final String REPO_ID_KEY = "repositoryId";
     private static final String REPO_NAME_KEY = "repository";
@@ -78,7 +78,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
         Map<String, Object> triggerEvent = buildTriggerEvent(event, repo, project, triggerConditions);
 
         String eventId = repoId.toString();
-        int count = process(eventId, EVENT_NAME, triggerConditions, triggerEvent);
+        int count = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent);
 
         log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
 

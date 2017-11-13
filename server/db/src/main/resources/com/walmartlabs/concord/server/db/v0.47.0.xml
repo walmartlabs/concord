@@ -20,7 +20,7 @@
             <column name="REPO_ID" type="uuid">
                 <constraints nullable="false"/>
             </column>
-            <column name="EVENT_NAME" type="varchar(128)">
+            <column name="EVENT_SOURCE" type="varchar(128)">
                 <constraints nullable="false"/>
             </column>
             <column name="ENTRY_POINT" type="varchar(128)">
@@ -74,7 +74,7 @@
         <insert tableName="TRIGGERS">
             <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
             <column name="REPO_ID" value="${concordTriggersRepoId}"/>
-            <column name="EVENT_NAME" value="github"/>
+            <column name="EVENT_SOURCE" value="github"/>
             <column name="ENTRY_POINT" value="onPush"/>
         </insert>
     </changeSet>
