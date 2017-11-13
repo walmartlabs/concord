@@ -159,6 +159,15 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <filtering>false</filtering>
+                <directory>${project.basedir}/src/test/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>io.takari.maven.plugins</groupId>
@@ -188,6 +197,12 @@
                         </goals>
                         <configuration>
                             <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord</groupId>
+                                    <artifactId>concord-client</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
+
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-tasks</artifactId>

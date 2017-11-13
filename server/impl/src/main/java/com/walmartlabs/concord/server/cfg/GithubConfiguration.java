@@ -45,7 +45,7 @@ public class GithubConfiguration {
             this.githubUrl = props.getProperty("githubUrl");
             this.refreshInterval = getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
         } else {
-            this.secret = "";
+            this.secret = "123qwe";
             this.apiUrl = null;
             this.oauthAccessToken = null;
             this.webhookUrl = "";

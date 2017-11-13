@@ -1,7 +1,11 @@
 package com.walmartlabs.concord.server.security;
 
+import com.google.common.base.Throwables;
+import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
+import com.walmartlabs.concord.server.security.secret.SecretUtils;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
@@ -14,12 +18,14 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
+import java.security.GeneralSecurityException;
 import java.util.Base64;
 import java.util.UUID;
 
 public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private static final String AUTHORIZATION_HEADER = HttpHeaders.AUTHORIZATION;
+    private static final String SESSION_TOKEN_HEADER = "X-Concord-SessionToken";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
 
     /**
@@ -41,9 +47,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private final ApiKeyDao apiKeyDao;
 
+    private final SecretStoreConfiguration secretCfg;
+
     @Inject
-    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao) {
+    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao, SecretStoreConfiguration secretCfg) {
         this.apiKeyDao = apiKeyDao;
+        this.secretCfg = secretCfg;
     }
 
     @Override
@@ -61,11 +70,21 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
-        String h = getAuthzHeader(request);
-        if (h == null) {
-            return new UsernamePasswordToken();
+        HttpServletRequest req = WebUtils.toHttp(request);
+        String h = req.getHeader(AUTHORIZATION_HEADER);
+        if (h != null) {
+            return createFromAuthHeader(h, request);
         }
 
+        h = req.getHeader(SESSION_TOKEN_HEADER);
+        if (h != null) {
+            return createFromSessionHeader(h, request);
+        }
+
+        return new UsernamePasswordToken();
+    }
+
+    private AuthenticationToken createFromAuthHeader(String h, ServletRequest request) {
         if (h.startsWith(BASIC_AUTH_PREFIX)) {
             // create sessions if users are using username/password auth
             request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
@@ -80,6 +99,23 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             }
 
             return new ApiKey(userId, h);
+        }
+    }
+
+    private AuthenticationToken createFromSessionHeader(String h, ServletRequest request) {
+        request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+        return new SessionKey(decryptSessionKey(h));
+    }
+
+    private UUID decryptSessionKey(String h) {
+        byte[] salt = secretCfg.getSecretStoreSalt();
+        byte[] pwd = secretCfg.getServerPwd();
+
+        try {
+            byte[] ab = SecretUtils.decrypt(Base64.getDecoder().decode(h), pwd, salt);
+            return UUID.fromString(new String(ab));
+        } catch (GeneralSecurityException e) {
+            throw Throwables.propagate(e);
         }
     }
 
@@ -114,10 +150,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
                 }
             }
         }
-    }
-
-    private static String getAuthzHeader(ServletRequest request) {
-        return WebUtils.toHttp(request).getHeader(AUTHORIZATION_HEADER);
     }
 
     private static UsernamePasswordToken parseBasicAuth(String s) {

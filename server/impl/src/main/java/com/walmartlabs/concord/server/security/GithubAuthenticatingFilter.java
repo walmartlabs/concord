@@ -2,9 +2,12 @@ package com.walmartlabs.concord.server.security;
 
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
+import com.walmartlabs.concord.server.security.github.GithubKey;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.util.StringUtils;
-import org.apache.shiro.web.servlet.OncePerRequestFilter;
+import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +24,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class GithubAuthenticatingFilter extends OncePerRequestFilter {
+public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
     private static final Logger log = LoggerFactory.getLogger(GithubAuthenticatingFilter.class);
 
@@ -38,31 +41,31 @@ public class GithubAuthenticatingFilter extends OncePerRequestFilter {
     @Override
     public void doFilterInternal(ServletRequest request, ServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         HttpServletRequest req = WebUtils.toHttp(request);
-        HttpServletResponse resp = WebUtils.toHttp(response);
+        super.doFilterInternal(new CachingRequestWrapper(req), response, filterChain);
+    }
+
+    @Override
+    protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
+        CachingRequestWrapper req = (CachingRequestWrapper)request;
 
         String h = req.getHeader(SIGNATURE_HEADER);
         if (!StringUtils.hasText(h)) {
             log.warn("Authorization header is missing. URI: '{}'", req.getRequestURI());
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
+            return new UsernamePasswordToken();
         }
 
         String[] algDigest = h.split("=");
         if(algDigest.length != 2) {
             log.warn("Authorization header invalid format. URI: '{}'", req.getRequestURI());
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
+            return new UsernamePasswordToken();
         }
 
         if(!"sha1".equals(algDigest[0])) {
             log.warn("Authorization header invalid algorithm '{}'. URI: '{}'", algDigest[0], req.getRequestURI());
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
+            return new UsernamePasswordToken();
         }
 
-        CachingRequestWrapper requestWrapper = new CachingRequestWrapper(req);
-
-        final byte[] payload = requestWrapper.getContentAsByteArray();
+        final byte[] payload = req.getContentAsByteArray();
         SecretKeySpec signingKey = new SecretKeySpec(githubCfg.getSecret().getBytes(), HMAC_SHA1_ALGORITHM);
         try {
             Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
@@ -72,16 +75,26 @@ public class GithubAuthenticatingFilter extends OncePerRequestFilter {
 
             if(!algDigest[1].equals(digestHex)) {
                 log.error("Invalid auth digest. Expected: '{}', request: '{}'", digestHex, algDigest[1]);
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
+                return new UsernamePasswordToken();
             }
+
+            return new GithubKey(h);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             log.error("Internal error", e);
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            return;
+            throw e;
+        }
+    }
+
+    @Override
+    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+        boolean loggedId = executeLogin(request, response);
+
+        if (!loggedId) {
+            HttpServletResponse resp = WebUtils.toHttp(response);
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
 
-        filterChain.doFilter(requestWrapper, response);
+        return loggedId;
     }
 
     static class CachingRequestWrapper extends HttpServletRequestWrapper {

@@ -7,6 +7,7 @@
     <property name="concordSystemTeamId" value="ad76f1e2-c33c-11e7-8064-f7371c66fa77"/>
     <property name="concordTriggersProjectId" value="ad76f1e2-c33c-11e7-8064-f7371c66fa77"/>
     <property name="concordTriggersRepoId" value="b31b0b06-c33c-11e7-b0e9-8702fc03629f"/>
+    <property name="concordGithubUserId" value="acc17a02-b471-46af-9914-48cba3dd31ab"/>
 
     <changeSet id="47000" author="ybrigo@gmail.com">
         <createTable tableName="TRIGGERS" >
@@ -87,5 +88,17 @@
                 references PROJECTS(PROJECT_ID)
                 on delete set null
         </sql>
+    </changeSet>
+
+    <changeSet id="47600" author="ybrigo@gmail.com">
+        <insert tableName="USERS">
+            <column name="USER_ID" value="${concordGithubUserId}"/>
+            <column name="USERNAME" value="github"/>
+        </insert>
+        <insert tableName="USER_TEAMS">
+            <column name="USER_ID" value="${concordGithubUserId}"/>
+            <column name="TEAM_ID" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="TEAM_ROLE" value="WRITER"/>
+        </insert>
     </changeSet>
 </databaseChangeLog>

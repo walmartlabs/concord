@@ -61,6 +61,10 @@ public abstract class AbstractServerIT {
         serverClient.setApiKey(apiKey);
     }
 
+    protected void setGithubKey(String key) {
+        serverClient.setGithubKey(key);
+    }
+
     protected void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException {
         serverClient.waitForLog(logFileName, pattern);
     }

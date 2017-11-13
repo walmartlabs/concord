@@ -78,9 +78,9 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
         Map<String, Object> triggerEvent = buildTriggerEvent(event, repo, project, triggerConditions);
 
         String eventId = repoId.toString();
-        process(eventId, EVENT_NAME, triggerConditions, triggerEvent);
+        int count = process(eventId, EVENT_NAME, triggerConditions, triggerEvent);
 
-        log.info("event ['{}', '{}', '{}'] -> done", eventId, triggerConditions, triggerEvent);
+        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
 
         return "ok";
     }

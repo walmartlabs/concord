@@ -35,13 +35,15 @@ public class ServerClient {
 
     private String apiKey = DEFAULT_API_KEY;
 
+    private String githubKey;
+
     private final String baseUrl;
     private final Client client;
     private final WebTarget target;
 
     public ServerClient(String baseUrl) {
         this.baseUrl = baseUrl;
-        this.client = createClient(this::getApiKey);
+        this.client = createClient(this::getApiKey, this::getGithubKey);
         this.target = client.target(baseUrl);
     }
 
@@ -59,6 +61,14 @@ public class ServerClient {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public void setGithubKey(String githubKey) {
+        this.githubKey = githubKey;
+    }
+
+    public String getGithubKey() {
+        return githubKey;
     }
 
     public StartProcessResponse start(Map<String, Object> input, boolean sync) {
@@ -218,11 +228,18 @@ public class ServerClient {
         }
     }
 
-    private static Client createClient(Supplier<String> k) {
+    private static Client createClient(Supplier<String> auth, Supplier<String> github) {
         return ClientBuilder.newClient()
                 .register((ClientRequestFilter) requestContext -> {
                     MultivaluedMap<String, Object> headers = requestContext.getHeaders();
-                    headers.putSingle("Authorization", k.get());
+                    String v = auth.get();
+                    if (v != null) {
+                        headers.putSingle("Authorization", v);
+                    }
+                    v = github.get();
+                    if (v != null) {
+                        headers.putSingle("X-Hub-Signature", v);
+                    }
                 });
     }
 

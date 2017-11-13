@@ -82,6 +82,11 @@ public class Constants {
         public static final String PROJECT_INFO_KEY = "projectInfo";
 
         /**
+         * Process's metadata
+         */
+        public static final String PROCESS_INFO_KEY = "processInfo";
+
+        /**
          * Process tags.
          */
         public static final String TAGS_KEY = "tags";
