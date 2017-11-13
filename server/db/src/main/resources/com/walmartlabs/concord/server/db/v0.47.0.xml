@@ -49,6 +49,12 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <changeSet id="47010" author="ibodrov@gmail.com">
+        <createIndex tableName="TRIGGERS" indexName="IDX_TRIG_EV_SRC">
+            <column name="EVENT_SOURCE"/>
+        </createIndex>
+    </changeSet>
+
     <changeSet id="47100" author="ybrigo@gmail.com">
         <insert tableName="TEAMS">
             <column name="TEAM_ID">${concordSystemTeamId}</column>
