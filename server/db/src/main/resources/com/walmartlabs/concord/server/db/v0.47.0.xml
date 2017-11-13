@@ -7,6 +7,7 @@
     <property name="concordSystemTeamId" value="ad76f1e2-c33c-11e7-8064-f7371c66fa77"/>
     <property name="concordTriggersProjectId" value="ad76f1e2-c33c-11e7-8064-f7371c66fa77"/>
     <property name="concordTriggersRepoId" value="b31b0b06-c33c-11e7-b0e9-8702fc03629f"/>
+    <property name="concordRepositoryTriggersRepoId" value="fb795b1f-bece-4fce-90dc-4e5aca44eeb2"/>
     <property name="concordGithubUserId" value="acc17a02-b471-46af-9914-48cba3dd31ab"/>
 
     <changeSet id="47000" author="ybrigo@gmail.com">
@@ -112,6 +113,25 @@
             <column name="USER_ID" value="${concordGithubUserId}"/>
             <column name="TEAM_ID" value="00000000-0000-0000-0000-000000000000"/>
             <column name="TEAM_ROLE" value="WRITER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="47700" author="ybrigo@gmail.com">
+        <insert tableName="REPOSITORIES">
+            <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
+            <column name="REPO_ID" value="${concordRepositoryTriggersRepoId}"/>
+            <column name="REPO_NAME" value="repositoryTriggers"/>
+            <column name="REPO_URL" value="classpath://com/walmartlabs/concord/server/triggers/repo/concord.yml"/>
+        </insert>
+
+        <insert tableName="TRIGGERS">
+            <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
+            <column name="REPO_ID" value="${concordRepositoryTriggersRepoId}"/>
+            <column name="EVENT_SOURCE" value="concord"/>
+            <column name="ENTRY_POINT" value="repositoryChanged"/>
+            <column name="CONDITIONS">
+                {"event": "repository.*"}
+            </column>
         </insert>
     </changeSet>
 </databaseChangeLog>

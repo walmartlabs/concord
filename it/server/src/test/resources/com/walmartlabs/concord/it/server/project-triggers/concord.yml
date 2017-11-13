@@ -1,0 +1,13 @@
+flows:
+  onPush:
+  - log: "onPush!"
+
+triggers:
+  - github:
+      repository: "abc"
+      branch: "foo"
+      entryPoint: onPush
+  - github:
+      repository: "abc2"
+      branch: "foo2"
+      entryPoint: onPush

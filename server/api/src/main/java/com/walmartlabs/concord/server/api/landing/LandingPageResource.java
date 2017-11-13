@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiParam;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,7 +60,6 @@ public interface LandingPageResource {
     @POST
     @ApiOperation("Refresh landing page definitions")
     @Path("/refresh/{projectName}/{repositoryName}")
-    void refresh(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
+    Response refresh(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                  @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
-
 }

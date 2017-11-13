@@ -6,6 +6,7 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
+import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.api.trigger.TriggerResource;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.ProjectManager;
@@ -19,8 +20,10 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,7 +53,15 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
     }
 
     @Override
-    public void refresh(String projectName, String repositoryName) {
+    public List<TriggerEntry> list(String projectName, String repositoryName) {
+        ProjectEntry p = assertProject(projectName, TeamRole.READER, true);
+        RepositoryEntry r = assertRepository(p, repositoryName);
+
+        return triggersDao.list(p.getId(), r.getId());
+    }
+
+    @Override
+    public Response refresh(String projectName, String repositoryName) {
         ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
@@ -70,6 +81,9 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
                 triggersDao.insert(tx, p.getId(), r.getId(), t.getName(), t.getEntryPoint(), t.getArguments(), t.getParams());
             });
         });
+
+        log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectName, repositoryName, pd.getTriggers().size());
+        return Response.ok().build();
     }
 
     private ProjectEntry assertProject(String projectName, TeamRole requiredRole, boolean teamMembersOnly) {

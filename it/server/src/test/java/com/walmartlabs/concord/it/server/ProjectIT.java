@@ -14,6 +14,8 @@ import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
+import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
+import com.walmartlabs.concord.server.api.trigger.TriggerResource;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.CreateUserResponse;
 import com.walmartlabs.concord.server.api.user.UserResource;
@@ -25,13 +27,12 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(ParallelRunner.class)
@@ -239,22 +240,42 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
     }
 
-    protected ProcessEntry doTest(String projectName,
-                                  String userName, Set<String> permissions,
-                                  String repoName, String repoUrl,
-                                  String entryPoint, Map<String, Object> args,
-                                  boolean sync) throws InterruptedException, IOException {
-        return doTest(projectName, userName, permissions, repoName, repoUrl,
-                entryPoint, args, null, null, sync);
+    @Test(timeout = 30000)
+    public void testInitImport() throws Exception {
+        File tmpDir = Files.createTempDirectory("test").toFile();
+        File src = new File(ProjectIT.class.getResource("project-triggers").toURI());
+        IOUtils.copy(src.toPath(), tmpDir.toPath());
+
+        Git repo = Git.init().setDirectory(tmpDir).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.getAbsolutePath();
+
+        // ---
+
+        String projectName = "myProject_" + randomString();
+        String userName = "myUser_" + randomString();
+        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        String repoName = "myRepo_" + randomString();
+        String repoUrl = gitUrl;
+
+        createProjectAndRepo(projectName, userName, permissions, repoName, repoUrl, null, null);
+
+        TriggerResource triggerResource = proxy(TriggerResource.class);
+        List<TriggerEntry> triggers = triggerResource.list(projectName, repoName);
+        while (triggers.size() != 2) {
+            Thread.sleep(1_000);
+            triggers = triggerResource.list(projectName, repoName);
+        }
+        assertEquals(2, triggers.size());
     }
 
-    protected ProcessEntry doTest(String projectName,
-                                  String userName, Set<String> permissions,
-                                  String repoName, String repoUrl,
-                                  String entryPoint, Map<String, Object> args,
-                                  String commitId, String tag,
-                                  boolean sync) throws InterruptedException, IOException {
-
+    protected void createProjectAndRepo(String projectName,
+                                        String userName,
+                                        Set<String> permissions,
+                                        String repoName, String repoUrl,
+                                        String commitId, String tag) {
         ProjectResource projectResource = proxy(ProjectResource.class);
         CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
         assertTrue(cpr.isOk());
@@ -278,6 +299,27 @@ public class ProjectIT extends AbstractServerIT {
         CreateRepositoryResponse crr = projectResource.createRepository(projectName,
                 new RepositoryEntry(null, repoName, repoUrl, tag, commitId, null, null));
         assertTrue(crr.isOk());
+    }
+
+    protected ProcessEntry doTest(String projectName,
+                                  String userName, Set<String> permissions,
+                                  String repoName, String repoUrl,
+                                  String entryPoint, Map<String, Object> args,
+                                  boolean sync) throws InterruptedException, IOException {
+        return doTest(projectName, userName, permissions, repoName, repoUrl,
+                entryPoint, args, null, null, sync);
+    }
+
+    protected ProcessEntry doTest(String projectName,
+                                  String userName, Set<String> permissions,
+                                  String repoName, String repoUrl,
+                                  String entryPoint, Map<String, Object> args,
+                                  String commitId, String tag,
+                                  boolean sync) throws InterruptedException, IOException {
+
+        // ---
+
+        createProjectAndRepo(projectName, userName, permissions, repoName, repoUrl, commitId, tag);
 
         // ---
 

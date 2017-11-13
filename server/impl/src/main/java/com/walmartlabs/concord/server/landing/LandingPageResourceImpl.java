@@ -21,6 +21,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -96,7 +97,7 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
     }
 
     @Override
-    public void refresh(String projectName, String repositoryName) {
+    public Response refresh(String projectName, String repositoryName) {
         ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
@@ -112,6 +113,8 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
                 landingDao.insert(tx, p.getId(), r.getId(), le.getName(), le.getDescription(), icon);
             }
         });
+
+        return Response.ok().build();
     }
 
     private LandingEntry loadEntry(Path file) {

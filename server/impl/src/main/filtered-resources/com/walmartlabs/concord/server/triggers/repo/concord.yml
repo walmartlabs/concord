@@ -1,5 +1,5 @@
 flows:
-  onPush:
+  repositoryChanged:
   - log: "refreshing triggers"
   - task: triggersRefresh
     in:
@@ -12,10 +12,9 @@ flows:
       project: ${event.project}
 
 triggers:
-  - github:
-      repository: ".*"
-      branch: ".*"
-      entryPoint: onPush
+  - concord:
+      event: "repository.*"
+      entryPoint: "repositoryChanged"
 
 configuration:
   dependencies:

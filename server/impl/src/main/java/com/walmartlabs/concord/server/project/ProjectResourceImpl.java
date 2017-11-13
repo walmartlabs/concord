@@ -4,9 +4,11 @@ import com.google.common.base.Splitter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.PerformedActionType;
+import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.team.TeamRole;
+import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
@@ -44,6 +46,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     private final SecretDao secretDao;
     private final Set<ConfigurationValidator> cfgValidators;
     private final GithubWebhookService githubWebhookService;
+    private final EventResource eventResource;
 
     private final Map<String, Field<?>> key2ProjectField;
     private final Map<String, Field<?>> key2RepositoryField;
@@ -58,7 +61,8 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                                RepositoryDao repositoryDao,
                                SecretDao secretDao,
                                Set<ConfigurationValidator> cfgValidators,
-                               GithubWebhookService githubWebhookService) {
+                               GithubWebhookService githubWebhookService,
+                               EventResource eventResource) {
 
         super(cfg);
 
@@ -71,6 +75,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         this.secretDao = secretDao;
         this.cfgValidators = cfgValidators;
         this.githubWebhookService = githubWebhookService;
+        this.eventResource = eventResource;
 
         this.key2ProjectField = new HashMap<>();
         key2ProjectField.put("name", PROJECTS.PROJECT_NAME);
@@ -147,7 +152,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 request.getBranch(), request.getCommitId(),
                 request.getPath(), secretId));
 
+        // TODO: register from flow?
         githubWebhookService.register(project.getId(), repoId, request.getUrl());
+
+        eventResource.event(Events.CONCORD_EVENT, Events.Repository.createdEvent(projectName, request.getName()));
 
         return new CreateRepositoryResponse();
     }
@@ -242,7 +250,10 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
                 trim(request.getBranch()), trim(request.getCommitId()),
                 trim(request.getPath()), secretId));
 
+        // TODO: register from flow?
         githubWebhookService.register(p.getId(), r.getId(), request.getUrl());
+
+        eventResource.event(Events.CONCORD_EVENT, Events.Repository.updatedEvent(projectName, request.getName()));
 
         return new UpdateRepositoryResponse();
     }

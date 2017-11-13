@@ -92,6 +92,24 @@ public class TriggersDao extends AbstractDao {
                 .execute();
     }
 
+    public List<TriggerEntry> list(UUID projectId, UUID repositoryId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            Triggers t = TRIGGERS.as("t");
+
+            Field<String> repositoryNameField = select(REPOSITORIES.REPO_NAME).from(REPOSITORIES).where(REPOSITORIES.REPO_ID.eq(t.REPO_ID)).asField();
+            Field<String> projectNameField = select(PROJECTS.PROJECT_NAME).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(t.PROJECT_ID)).asField();
+
+            return tx.select(t.TRIGGER_ID,
+                    t.PROJECT_ID, projectNameField,
+                    t.REPO_ID, repositoryNameField,
+                    t.EVENT_SOURCE, t.ENTRY_POINT,
+                    t.ARGUMENTS.cast(String.class), t.CONDITIONS.cast(String.class))
+                    .from(t)
+                    .where(t.PROJECT_ID.eq(projectId).and(t.REPO_ID.eq(repositoryId)))
+                    .fetch(this::toEntity);
+        }
+    }
+
     public List<TriggerEntry> list(String eventSource) {
         try (DSLContext tx = DSL.using(cfg)) {
             return list(tx, eventSource, null);

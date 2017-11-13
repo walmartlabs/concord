@@ -34,23 +34,15 @@ public class EventResourceImpl extends AbstractEventResource implements EventRes
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
-        Map<String, Object> triggerEvent = buildTriggerEvent(event);
-
         String eventId = String.valueOf(Optional.ofNullable(event.get("id")).orElse(UUID.randomUUID()));
-        int count = process(eventId, eventName, event, triggerEvent);
+        int count = process(eventId, eventName, event, event);
 
         if (log.isDebugEnabled()) {
-            log.debug("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, triggerEvent, count);
+            log.debug("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, count);
         } else {
             log.info("event ['{}', '{}'] -> done, {} processes started", eventId, eventName, count);
         }
 
         return Response.ok().build();
-    }
-
-    private Map<String,Object> buildTriggerEvent(Map<String, Object> event) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("payload", event);
-        return result;
     }
 }
