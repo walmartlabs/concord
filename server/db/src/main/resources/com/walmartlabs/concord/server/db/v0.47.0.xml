@@ -11,7 +11,7 @@
     <property name="concordGithubUserId" value="acc17a02-b471-46af-9914-48cba3dd31ab"/>
 
     <changeSet id="47000" author="ybrigo@gmail.com">
-        <createTable tableName="TRIGGERS" >
+        <createTable tableName="TRIGGERS">
             <column name="TRIGGER_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -98,9 +98,9 @@
             alter table PROCESS_QUEUE
             drop constraint FK_PQ_RPJ_ID,
             add constraint FK_PQ_PRJ_ID
-                foreign key (PROJECT_ID)
-                references PROJECTS(PROJECT_ID)
-                on delete set null
+            foreign key (PROJECT_ID)
+            references PROJECTS(PROJECT_ID)
+            on delete set null
         </sql>
     </changeSet>
 
@@ -133,5 +133,10 @@
                 {"event": "repository.*"}
             </column>
         </insert>
+    </changeSet>
+
+    <changeSet id="47900" author="ibodrov@gmail.com">
+        <dropUniqueConstraint tableName="PROJECTS" constraintName="PROJECTS_PROJECT_NAME_KEY"/>
+        <addUniqueConstraint tableName="PROJECTS" columnNames="TEAM_ID, PROJECT_NAME"/>
     </changeSet>
 </databaseChangeLog>

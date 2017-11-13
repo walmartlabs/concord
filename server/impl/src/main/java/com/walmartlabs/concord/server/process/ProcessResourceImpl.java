@@ -14,6 +14,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -109,8 +110,10 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
-        assertProject(ep.getProjectName());
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
+        EntryPoint ep = PayloadParser.parseEntryPoint(teamId, entryPoint);
+        assertProject(teamId, ep.getProjectName());
 
         Payload payload;
         try {
@@ -140,9 +143,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
+        EntryPoint ep = PayloadParser.parseEntryPoint(teamId, entryPoint);
         if (ep != null) {
-            assertProject(ep.getProjectName());
+            assertProject(teamId, ep.getProjectName());
         }
 
         Payload payload;
@@ -171,9 +176,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(entryPoint);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
+        EntryPoint ep = PayloadParser.parseEntryPoint(teamId, entryPoint);
         if (ep != null) {
-            assertProject(ep.getProjectName());
+            assertProject(teamId, ep.getProjectName());
         }
 
         Payload payload;
@@ -427,8 +434,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return new StartProcessResponse(r.getInstanceId(), r.getOut());
     }
 
-    private void assertProject(String projectName) {
-        if (projectDao.getId(projectName) == null) {
+    private void assertProject(UUID teamId, String projectName) {
+        if (projectDao.getId(teamId, projectName) == null) {
             throw new ValidationErrorsException("Unknown project name: " + projectName);
         }
     }

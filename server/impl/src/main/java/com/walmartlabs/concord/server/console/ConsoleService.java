@@ -89,7 +89,8 @@ public class ConsoleService implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @RequiresAuthentication
     public boolean isProjectExists(@PathParam("projectName") String projectName) {
-        return projectDao.getId(projectName) != null;
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        return projectDao.getId(teamId, projectName) != null;
     }
 
     @POST

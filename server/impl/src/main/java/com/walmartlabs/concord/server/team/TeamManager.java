@@ -36,6 +36,30 @@ public class TeamManager {
         return teamDao.list(userId);
     }
 
+    public TeamEntry assertTeam(UUID teamId, String teamName) {
+        TeamEntry t = null;
+
+        if (teamId != null) {
+            t = teamDao.get(teamId);
+            if (t == null) {
+                throw new ValidationErrorsException("Team not found: " + teamId);
+            }
+        }
+
+        if (teamId == null && teamName != null) {
+            t = teamDao.getByName(teamName);
+            if (t == null) {
+                throw new ValidationErrorsException("Team not found: " + teamName);
+            }
+        }
+
+        if (t == null) {
+            t = teamDao.get(DEFAULT_TEAM_ID);
+        }
+
+        return t;
+    }
+
     public TeamEntry assertTeamAccess(UUID teamId, TeamRole requiredRole, boolean teamMembersOnly) {
         TeamEntry t = teamDao.get(teamId);
         if (t == null) {

@@ -6,12 +6,11 @@ import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.team.CreateTeamResponse;
-import com.walmartlabs.concord.server.api.team.TeamEntry;
-import com.walmartlabs.concord.server.api.team.TeamResource;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -22,14 +21,12 @@ public class ProjectInfoIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void test() throws Exception {
-        String teamName = "team_" + randomString();
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         String projectName = "project_" + randomString();
 
-        TeamResource teamResource = proxy(TeamResource.class);
-        CreateTeamResponse ctr = teamResource.createOrUpdate(new TeamEntry(teamName));
-
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(teamName, projectName));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(teamId, projectName));
 
         String entryPoint = projectName;
 
@@ -48,7 +45,7 @@ public class ProjectInfoIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Team ID:.*" + ctr.getId() + ".*", ab);
+        assertLog(".*Team ID:.*" + teamId + ".*", ab);
         assertLog(".*Project ID:.*" + cpr.getId() + ".*", ab);
     }
 }

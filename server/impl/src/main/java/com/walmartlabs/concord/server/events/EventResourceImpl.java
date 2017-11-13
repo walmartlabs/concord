@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.events;
 import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,6 @@ import org.sonatype.siesta.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,8 +24,10 @@ public class EventResourceImpl extends AbstractEventResource implements EventRes
     @Inject
     public EventResourceImpl(PayloadManager payloadManager,
                              ProcessManager processManager,
-                             TriggersDao triggersDao) {
-        super(payloadManager, processManager, triggersDao);
+                             TriggersDao triggersDao,
+                             ProjectDao projectDao) {
+
+        super(payloadManager, processManager, triggersDao, projectDao);
     }
 
     @Override

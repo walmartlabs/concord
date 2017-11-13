@@ -53,11 +53,12 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    public UUID getId(String projectName) {
+    public UUID getId(UUID teamId, String projectName) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROJECTS.PROJECT_ID)
                     .from(PROJECTS)
-                    .where(PROJECTS.PROJECT_NAME.eq(projectName))
+                    .where(PROJECTS.TEAM_ID.eq(teamId)
+                            .and(PROJECTS.PROJECT_NAME.eq(projectName)))
                     .fetchOne(PROJECTS.PROJECT_ID);
         }
     }
@@ -131,11 +132,11 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    public UUID insert(String name, String description, UUID teamId, Map<String, Object> cfg, ProjectVisibility visibility) {
-        return txResult(tx -> insert(tx, name, description, teamId, cfg, visibility));
+    public UUID insert(UUID teamId, String name, String description, Map<String, Object> cfg, ProjectVisibility visibility) {
+        return txResult(tx -> insert(tx, teamId, name, description, cfg, visibility));
     }
 
-    public UUID insert(DSLContext tx, String name, String description, UUID teamId, Map<String, Object> cfg, ProjectVisibility visibility) {
+    public UUID insert(DSLContext tx, UUID teamId, String name, String description, Map<String, Object> cfg, ProjectVisibility visibility) {
         if (teamId == null) {
             teamId = TeamManager.DEFAULT_TEAM_ID;
         }
@@ -152,7 +153,7 @@ public class ProjectDao extends AbstractDao {
                 .getProjectId();
     }
 
-    public void update(DSLContext tx, UUID id, String name, String description, UUID teamId, Map<String, Object> cfg) {
+    public void update(DSLContext tx, UUID id, UUID teamId, String name, String description, Map<String, Object> cfg) {
         UpdateSetFirstStep<ProjectsRecord> q = tx.update(PROJECTS);
 
         UpdateSetMoreStep<ProjectsRecord> u = null;

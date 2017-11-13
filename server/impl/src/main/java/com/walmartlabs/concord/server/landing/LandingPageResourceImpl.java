@@ -9,11 +9,13 @@ import com.walmartlabs.concord.server.api.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.landing.LandingPageResource;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.team.TeamEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.ProjectManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.jooq.Configuration;
 import org.postgresql.util.Base64;
 import org.sonatype.siesta.Resource;
@@ -26,8 +28,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+
+import static com.walmartlabs.concord.server.project.RepositoryUtils.assertRepository;
 
 @Named
 public class LandingPageResourceImpl extends AbstractDao implements LandingPageResource, Resource {
@@ -35,6 +38,7 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
     private static final String LP_META_FILE_NAME = "landing.json";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final TeamManager teamManager;
     private final LandingDao landingDao;
     private final ProjectDao projectDao;
     private final ProjectManager projectManager;
@@ -42,10 +46,11 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
 
     @Inject
     public LandingPageResourceImpl(Configuration cfg,
-                                   LandingDao landingDao, ProjectDao projectDao,
+                                   TeamManager teamManager, LandingDao landingDao, ProjectDao projectDao,
                                    ProjectManager projectManager, RepositoryManager repositoryManager) {
         super(cfg);
 
+        this.teamManager = teamManager;
         this.landingDao = landingDao;
         this.projectDao = projectDao;
         this.projectManager = projectManager;
@@ -54,8 +59,10 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
 
     @Override
     public CreateLandingResponse createOrUpdate(LandingEntry entry) {
-        ProjectEntry project = assertProject(entry.getProjectName(), TeamRole.WRITER, true);
+        TeamEntry team = teamManager.assertTeam(entry.getTeamId(), entry.getTeamName());
+        ProjectEntry project = assertProject(team.getId(), entry.getProjectName(), TeamRole.WRITER, true);
         RepositoryEntry repository = assertRepository(project, entry.getRepositoryName());
+
         byte[] icon = null;
         if (entry.getIcon() != null) {
             icon = Base64.decode(entry.getIcon());
@@ -77,7 +84,8 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
             throw new ValidationErrorsException("A valid landing page id is required");
         }
 
-        assertProject(e.getProjectName(), TeamRole.WRITER, true);
+        UUID teamId = projectDao.getTeamId(e.getProjectId());
+        assertProject(teamId, e.getProjectName(), TeamRole.WRITER, true);
 
         landingDao.delete(id);
         return new DeleteLandingResponse();
@@ -98,7 +106,8 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
 
     @Override
     public Response refresh(String projectName, String repositoryName) {
-        ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
         Path lpMetaFile = repositoryManager.fetch(p.getId(), r)
@@ -130,35 +139,17 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
         }
     }
 
-    private ProjectEntry assertProject(String projectName, TeamRole role, boolean membersOnly) {
+    private ProjectEntry assertProject(UUID teamId, String projectName, TeamRole role, boolean membersOnly) {
         if (projectName == null) {
             throw new ValidationErrorsException("A valid project name is required");
         }
 
-        UUID id = projectDao.getId(projectName);
+        UUID id = projectDao.getId(teamId, projectName);
         if (id == null) {
             throw new ValidationErrorsException("Project not found: " + projectName);
         }
 
 
         return projectManager.assertProjectAccess(id, role, membersOnly);
-    }
-
-    private RepositoryEntry assertRepository(ProjectEntry p, String repositoryName) {
-        if (repositoryName == null) {
-            throw new ValidationErrorsException("Invalid repository name");
-        }
-
-        Map<String, RepositoryEntry> repos = p.getRepositories();
-        if (repos == null || repos.isEmpty()) {
-            throw new ValidationErrorsException("Repository not found: " + repositoryName);
-        }
-
-        RepositoryEntry r = repos.get(repositoryName);
-        if (r == null) {
-            throw new ValidationErrorsException("Repository not found: " + repositoryName);
-        }
-
-        return r;
     }
 }

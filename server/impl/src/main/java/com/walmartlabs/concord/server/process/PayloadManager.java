@@ -6,6 +6,7 @@ import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
@@ -255,9 +256,11 @@ public class PayloadManager {
                     .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(InternalConstants.Request.ENTRY_POINT_KEY, entryPoint));
         }
 
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         UUID projectId = null;
         if (e.getProjectName() != null) {
-            projectId = projectDao.getId(e.getProjectName());
+            projectId = projectDao.getId(teamId, e.getProjectName());
             if (projectId == null) {
                 throw new ProcessException(p.getInstanceId(), "Project not found: " + e.getProjectName());
             }

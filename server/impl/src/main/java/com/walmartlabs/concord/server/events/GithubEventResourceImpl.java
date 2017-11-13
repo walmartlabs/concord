@@ -44,7 +44,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
                                    PayloadManager payloadManager,
                                    ProcessManager processManager) {
 
-        super(payloadManager, processManager, triggersDao);
+        super(payloadManager, processManager, triggersDao, projectDao);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -122,7 +122,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
             return null;
         }
 
-        return (String)pusher.get("name");
+        return (String) pusher.get("name");
     }
 
 }

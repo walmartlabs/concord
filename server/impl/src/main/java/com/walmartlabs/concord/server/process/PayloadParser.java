@@ -51,7 +51,7 @@ public final class PayloadParser {
                 .putAttachments(attachments);
     }
 
-    public static EntryPoint parseEntryPoint(String entryPoint) {
+    public static EntryPoint parseEntryPoint(UUID teamId, String entryPoint) {
         if (entryPoint == null) {
             return null;
         }
@@ -73,7 +73,7 @@ public final class PayloadParser {
             flow = as[2].trim();
         }
 
-        return new EntryPoint(projectName, repositoryName, flow);
+        return new EntryPoint(teamId, projectName, repositoryName, flow);
     }
 
     private PayloadParser() {
@@ -81,14 +81,20 @@ public final class PayloadParser {
 
     public static class EntryPoint implements Serializable {
 
+        private final UUID teamId;
         private final String projectName;
         private final String repositoryName;
         private final String flow;
 
-        public EntryPoint(String projectName, String repositoryName, String flow) {
+        public EntryPoint(UUID teamId, String projectName, String repositoryName, String flow) {
+            this.teamId = teamId;
             this.projectName = projectName;
             this.repositoryName = repositoryName;
             this.flow = flow;
+        }
+
+        public UUID getTeamId() {
+            return teamId;
         }
 
         public String getProjectName() {
