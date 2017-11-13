@@ -10,13 +10,14 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 
 public class ClasspathRepositoryProvider implements RepositoryProvider {
 
     public static final String URL_PREFIX = "classpath://";
 
     @Override
-    public void fetch(RepositoryEntry repository, Path dest) {
+    public void fetch(UUID teamId, RepositoryEntry repository, Path dest) {
         String repoUrl = repository.getUrl();
         URL resUrl = Resources.getResource(normalizeUrl(repoUrl));
 

@@ -38,8 +38,8 @@ public class CachedRepositoryManager implements RepositoryManager {
     }
 
     @Override
-    public void testConnection(String uri, String branch, String commitId, String path, String secret) {
-        delegate.testConnection(uri, branch, commitId, path, secret);
+    public void testConnection(UUID teamId, String uri, String branch, String commitId, String path, String secret) {
+        delegate.testConnection(teamId, uri, branch, commitId, path, secret);
     }
 
     @Override

@@ -1,16 +1,18 @@
 package com.walmartlabs.concord.server.ansible;
 
+import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
-import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
-import com.walmartlabs.concord.common.secret.KeyPair;
+import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +32,13 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
     private final LogManager logManager;
     private final SecretManager secretManager;
+    private final ProjectDao projectDao;
 
     @Inject
-    public PrivateKeyProcessor(LogManager logManager, SecretManager secretManager) {
+    public PrivateKeyProcessor(LogManager logManager, SecretManager secretManager, ProjectDao projectDao) {
         this.logManager = logManager;
         this.secretManager = secretManager;
+        this.projectDao = projectDao;
     }
 
     @Override
@@ -60,7 +64,8 @@ public class PrivateKeyProcessor implements PayloadProcessor {
             throw new ProcessException(instanceId, "No matching secrets found");
         }
 
-        KeyPair keyPair = secretManager.getKeyPair(secret, null);
+        UUID teamId = getTeamId(payload);
+        KeyPair keyPair = secretManager.getKeyPair(teamId, secret, null);
         if (keyPair == null) {
             logManager.error(instanceId, "Secret not found: " + secret);
             throw new ProcessException(instanceId, "Secret not found: " + secret);
@@ -87,6 +92,21 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
         log.info("process ['{}'] -> done", instanceId);
         return chain.process(payload);
+    }
+
+    private UUID getTeamId(Payload p) {
+        UUID projectId = p.getHeader(Payload.PROJECT_ID);
+
+        UUID teamId = null;
+        if (projectId != null) {
+            teamId = projectDao.getTeamId(projectId);
+        }
+
+        if (teamId == null) {
+            teamId = TeamManager.DEFAULT_TEAM_ID;
+        }
+
+        return teamId;
     }
 
     private static String findMatchingSecret(Payload payload, Collection<Map<String, Object>> items) {

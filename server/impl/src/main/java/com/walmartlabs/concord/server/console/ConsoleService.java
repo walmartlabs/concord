@@ -5,6 +5,7 @@ import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
+import com.walmartlabs.concord.server.team.TeamManager;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -18,6 +19,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.util.UUID;
 
 @Named
 @Path("/api/service/console")
@@ -96,8 +98,13 @@ public class ConsoleService implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @RequiresAuthentication
     public boolean testRepository(RepositoryTestRequest req) {
+        UUID teamId = req.getTeamId();
+        if (teamId == null) {
+            teamId = TeamManager.DEFAULT_TEAM_ID;
+        }
+
         try {
-            repositoryManager.testConnection(req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecret());
+            repositoryManager.testConnection(teamId, req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecret());
             return true;
         } catch (Exception e) {
             String msg;

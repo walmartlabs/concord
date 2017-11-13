@@ -9,6 +9,7 @@ import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
+import com.walmartlabs.concord.server.team.TeamManager;
 import io.grpc.stub.StreamObserver;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.slf4j.Logger;
@@ -56,9 +57,11 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
             return;
         }
 
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         try {
             securityContext.runAsInitiator(UUID.fromString(instanceId), () -> {
-                SecretDataEntry entry = secretManager.getRaw(secretName, secretPassword);
+                SecretDataEntry entry = secretManager.getRaw(teamId, secretName, secretPassword);
                 if (entry == null) {
                     responseObserver.onNext(TFetchSecretResponse.newBuilder()
                             .setStatus(TFetchSecretStatus.SECRET_NOT_FOUND)

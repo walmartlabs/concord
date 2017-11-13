@@ -10,7 +10,7 @@ public interface RepositoryManager {
 
     String DEFAULT_BRANCH = "master";
 
-    void testConnection(String uri, String branch, String commitId, String path, String secretName);
+    void testConnection(UUID teamId, String uri, String branch, String commitId, String path, String secretName);
 
     Path fetch(UUID projectId, RepositoryEntry repository);
 

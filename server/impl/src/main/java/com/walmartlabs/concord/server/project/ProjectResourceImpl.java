@@ -109,7 +109,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         if (repos != null) {
             for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
                 String secret = r.getValue().getSecret();
-                assertSecret(secret);
+                assertSecret(teamId, secret);
             }
         }
 
@@ -119,7 +119,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
             Map<String, UUID> rIds = Collections.emptyMap();
             if (repos != null) {
-                rIds = insert(tx, pId, repos);
+                rIds = insert(tx, tId, pId, repos);
             }
 
             return new InsertResult(pId, rIds);
@@ -139,16 +139,15 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     @Override
     @Validate
     public CreateRepositoryResponse createRepository(String projectName, RepositoryEntry request) {
-        assertProject(projectName, TeamRole.WRITER, true);
+        ProjectEntry project = assertProject(projectName, TeamRole.WRITER, true);
 
-        UUID secretId = assertSecret(request.getSecret());
-        UUID projectId = projectDao.getId(projectName);
+        UUID secretId = assertSecret(project.getTeamId(), request.getSecret());
 
-        UUID repoId = txResult(tx -> repositoryDao.insert(tx, projectId, request.getName(), request.getUrl(),
+        UUID repoId = txResult(tx -> repositoryDao.insert(tx, project.getId(), request.getName(), request.getUrl(),
                 request.getBranch(), request.getCommitId(),
                 request.getPath(), secretId));
 
-        githubWebhookService.register(projectId, repoId, request.getUrl());
+        githubWebhookService.register(project.getId(), repoId, request.getUrl());
 
         return new CreateRepositoryResponse();
     }
@@ -204,7 +203,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         if (repos != null) {
             for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
                 String secret = r.getValue().getSecret();
-                assertSecret(secret);
+                assertSecret(teamId, secret);
             }
 
             githubWebhookService.unregister(p.getId());
@@ -216,7 +215,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             Map<String, UUID> m = Collections.emptyMap();
             if (repos != null) {
                 repositoryDao.deleteAll(tx, p.getId());
-                m = insert(tx, p.getId(), repos);
+                m = insert(tx, teamId, p.getId(), repos);
             }
             return m;
         });
@@ -234,7 +233,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
     public UpdateRepositoryResponse updateRepository(String projectName, String repositoryName, RepositoryEntry request) {
         ProjectEntry p = assertProject(projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
-        UUID secretId = assertSecret(request.getSecret());
+        UUID secretId = assertSecret(p.getTeamId(), request.getSecret());
 
         githubWebhookService.unregister(p.getId(), r.getId());
 
@@ -377,12 +376,12 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         return teamId;
     }
 
-    private UUID assertSecret(String name) {
+    private UUID assertSecret(UUID teamId, String name) {
         if (name == null) {
             return null;
         }
 
-        UUID id = secretDao.getId(name);
+        UUID id = secretDao.getId(teamId, name);
         if (id == null) {
             throw new ValidationErrorsException("Secret not found: " + name);
         }
@@ -426,14 +425,14 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         return r;
     }
 
-    private Map<String, UUID> insert(DSLContext tx, UUID projectId, Map<String, RepositoryEntry> repos) {
+    private Map<String, UUID> insert(DSLContext tx, UUID teamId, UUID projectId, Map<String, RepositoryEntry> repos) {
         Map<String, UUID> ids = new HashMap<>();
 
         for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
             String name = r.getKey();
             RepositoryEntry req = r.getValue();
 
-            UUID secretId = assertSecret(req.getSecret());
+            UUID secretId = assertSecret(teamId, req.getSecret());
 
             UUID id = repositoryDao.insert(tx, projectId, name, req.getUrl(),
                     trim(req.getBranch()),

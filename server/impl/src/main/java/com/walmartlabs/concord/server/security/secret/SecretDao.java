@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.security.secret;
 
-import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.common.secret.SecretStoreType;
+import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.team.TeamManager;
@@ -29,11 +29,12 @@ public class SecretDao extends AbstractDao {
         this.permissionCleaner = permissionCleaner;
     }
 
-    public UUID getId(String name) {
+    public UUID getId(UUID teamId, String name) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(SECRETS.SECRET_ID)
                     .from(SECRETS)
-                    .where(SECRETS.SECRET_NAME.eq(name))
+                    .where(SECRETS.TEAM_ID.eq(teamId)
+                            .and(SECRETS.SECRET_NAME.eq(name)))
                     .fetchOne(SECRETS.SECRET_ID);
         }
     }
@@ -47,11 +48,11 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public UUID insert(String name, SecretType type, UUID teamId, SecretStoreType storeType, byte[] data) {
-        return txResult(tx -> insert(tx, name, type, teamId, storeType, data));
+    public UUID insert(UUID teamId, String name, SecretType type, SecretStoreType storeType, byte[] data) {
+        return txResult(tx -> insert(tx, teamId, name, type, storeType, data));
     }
 
-    public UUID insert(DSLContext tx, String name, SecretType type, UUID teamId, SecretStoreType storeType, byte[] data) {
+    public UUID insert(DSLContext tx, UUID teamId, String name, SecretType type, SecretStoreType storeType, byte[] data) {
         if (teamId == null) {
             teamId = TeamManager.DEFAULT_TEAM_ID;
         }
@@ -64,10 +65,11 @@ public class SecretDao extends AbstractDao {
                 .getSecretId();
     }
 
-    public SecretDataEntry getByName(String name) {
+    public SecretDataEntry getByName(UUID teamId, String name) {
         try (DSLContext tx = DSL.using(cfg)) {
             return selectSecretDataEntry(tx)
-                    .where(SECRETS.SECRET_NAME.eq(name))
+                    .where(SECRETS.TEAM_ID.eq(teamId)
+                            .and(SECRETS.SECRET_NAME.eq(name)))
                     .fetchOne(SecretDao::toDataEntry);
         }
     }

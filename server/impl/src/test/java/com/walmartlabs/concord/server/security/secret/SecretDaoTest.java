@@ -6,6 +6,7 @@ import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
+import com.walmartlabs.concord.server.team.TeamManager;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -21,6 +22,8 @@ public class SecretDaoTest extends AbstractDaoTest {
 
     @Test
     public void testOnCascade() {
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration());
@@ -28,7 +31,7 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        UUID secretId = secretDao.insert(secretName, SecretType.KEY_PAIR, null, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
+        UUID secretId = secretDao.insert(teamId, secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());

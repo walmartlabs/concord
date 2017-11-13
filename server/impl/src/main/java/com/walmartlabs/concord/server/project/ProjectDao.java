@@ -62,6 +62,15 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
+    public UUID getTeamId(UUID projectId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROJECTS.TEAM_ID)
+                    .from(PROJECTS)
+                    .where(PROJECTS.PROJECT_ID.eq(projectId))
+                    .fetchOne(PROJECTS.TEAM_ID);
+        }
+    }
+
     public ProjectEntry get(UUID projectId) {
         Projects p = PROJECTS.as("p");
         Field<String> cfgField = p.PROJECT_CFG.cast(String.class);

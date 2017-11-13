@@ -37,8 +37,8 @@ public class SecretManager {
         return k;
     }
 
-    public Secret getSecret(String name, String password) {
-        SecretDataEntry s = secretDao.getByName(name);
+    public Secret getSecret(UUID teamId, String name, String password) {
+        SecretDataEntry s = secretDao.getByName(teamId, name);
         if (s == null) {
             return null;
         }
@@ -52,8 +52,8 @@ public class SecretManager {
         return decrypt(s.getType(), s.getData(), pwd, salt);
     }
 
-    public SecretDataEntry getRaw(String name, String password) {
-        SecretDataEntry s = secretDao.getByName(name);
+    public SecretDataEntry getRaw(UUID teamId, String name, String password) {
+        SecretDataEntry s = secretDao.getByName(teamId, name);
         if (s == null) {
             return null;
         }
@@ -69,8 +69,8 @@ public class SecretManager {
         }
     }
 
-    public KeyPair getKeyPair(String name, String password) {
-        Secret s = getSecret(name, password);
+    public KeyPair getKeyPair(UUID teamId, String name, String password) {
+        Secret s = getSecret(teamId, name, password);
         if (s == null) {
             return null;
         }
@@ -111,7 +111,7 @@ public class SecretManager {
             throw Throwables.propagate(e);
         }
 
-        secretDao.insert(name, type, teamId, storeType, ab);
+        secretDao.insert(teamId, name, type, storeType, ab);
     }
 
     public byte[] encryptData(String projectName, byte[] data) {

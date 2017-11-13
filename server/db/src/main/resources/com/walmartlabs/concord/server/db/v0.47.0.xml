@@ -79,6 +79,13 @@
         </insert>
     </changeSet>
 
+    <changeSet id="47200" author="ibodrov@gmail.com">
+        <sql>
+            alter table SECRETS drop constraint SECRETS_SECRET_NAME_KEY
+        </sql>
+        <addUniqueConstraint tableName="SECRETS" columnNames="TEAM_ID, SECRET_NAME"/>
+    </changeSet>
+
     <changeSet id="47500" author="ibodrov@gmail.com">
         <sql>
             alter table PROCESS_QUEUE

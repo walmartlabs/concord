@@ -5,7 +5,9 @@ import com.google.common.util.concurrent.Striped;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
+import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryException;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,22 +31,28 @@ public class RepositoryManagerImpl implements RepositoryManager {
     private final RepositoryConfiguration cfg;
     private final RepositoryProvider githubRepositoryProvider;
     private final RepositoryProvider classpathRepositoryProvider;
+    private final ProjectDao projectDao;
 
     public RepositoryManagerImpl(RepositoryConfiguration cfg,
                                  GithubRepositoryProvider githubRepositoryProvider,
-                                 ClasspathRepositoryProvider classpathRepositoryProvider) {
+                                 ClasspathRepositoryProvider classpathRepositoryProvider,
+                                 ProjectDao projectDao) {
+
         this.cfg = cfg;
         this.githubRepositoryProvider = githubRepositoryProvider;
         this.classpathRepositoryProvider = classpathRepositoryProvider;
+        this.projectDao = projectDao;
     }
 
     @Override
-    public void testConnection(String uri, String branch, String commitId, String path, String secretName) {
+    public void testConnection(UUID teamId, String uri, String branch, String commitId, String path, String secretName) {
         Path tmpDir = null;
-
         try {
             tmpDir = Files.createTempDirectory("repository");
-            getProvider(uri).fetch(new RepositoryEntry(null, null, uri, branch, commitId, path, secretName), tmpDir);
+
+            RepositoryEntry repo = new RepositoryEntry(null, null, uri, branch, commitId, path, secretName);
+            getProvider(uri).fetch(teamId, repo, tmpDir);
+
             repoPath(tmpDir, path);
         } catch (IOException e) {
             log.error("testConnection ['{}', '{}', '{}', '{}', '{}'] -> error", uri, branch, commitId, path, secretName, e);
@@ -62,10 +70,13 @@ public class RepositoryManagerImpl implements RepositoryManager {
 
     @Override
     public Path fetch(UUID projectId, RepositoryEntry repository) {
+        UUID teamId = getTeamId(projectId);
+
         Path localPath = localPath(projectId, repository);
         RepositoryProvider provider = getProvider(repository.getUrl());
+
         return withLock(projectId, repository.getName(), () -> {
-            provider.fetch(repository, localPath);
+            provider.fetch(teamId, repository, localPath);
             return repoPath(localPath, repository.getPath());
         });
     }
@@ -87,6 +98,15 @@ public class RepositoryManagerImpl implements RepositoryManager {
     public Path getRepoPath(UUID projectId, RepositoryEntry repository) {
         Path localPath = localPath(projectId, repository);
         return repoPath(localPath, repository.getPath());
+    }
+
+    private UUID getTeamId(UUID projectId) {
+        UUID teamId = projectDao.getTeamId(projectId);
+        if (teamId == null) {
+            log.warn("getTeamId ['{}'] -> can't determine the project's team ID", projectId);
+            return TeamManager.DEFAULT_TEAM_ID;
+        }
+        return teamId;
     }
 
     private RepositoryProvider getProvider(String url) {

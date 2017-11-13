@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.ansible;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.project.ConfigurationValidator;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
@@ -12,6 +13,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collection;
 import java.util.Map;
+import java.util.UUID;
 
 @Named
 public class AnsibleConfigurationValidator implements ConfigurationValidator {
@@ -38,13 +40,15 @@ public class AnsibleConfigurationValidator implements ConfigurationValidator {
 
         Subject subject = SecurityUtils.getSubject();
 
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         for (Map<String, Object> pk : privateKeys) {
             String secret = (String) pk.get(AnsibleConfigurationConstants.SECRET_KEY);
             if (secret == null) {
                 continue;
             }
 
-            if (secretDao.getId(secret) == null) {
+            if (secretDao.getId(teamId, secret) == null) {
                 throw new ValidationErrorsException("Secret not found: " + secret);
             }
 

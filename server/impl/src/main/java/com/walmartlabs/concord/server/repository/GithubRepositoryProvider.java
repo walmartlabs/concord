@@ -40,10 +40,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 import static org.eclipse.jgit.transport.CredentialItem.Password;
 import static org.eclipse.jgit.transport.CredentialItem.Username;
@@ -63,8 +60,8 @@ public class GithubRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public void fetch(RepositoryEntry repository, Path dest) {
-        Secret secret = getSecret(repository.getSecret());
+    public void fetch(UUID teamId, RepositoryEntry repository, Path dest) {
+        Secret secret = getSecret(teamId, repository.getSecret());
 
         if (repository.getCommitId() != null) {
             fetchByCommit(repository.getUrl(), repository.getCommitId(), secret, dest);
@@ -121,10 +118,10 @@ public class GithubRepositoryProvider implements RepositoryProvider {
         }
     }
 
-    private Secret getSecret(String secretName) {
+    private Secret getSecret(UUID teamId, String secretName) {
         Secret secret = null;
         if (secretName != null) {
-            secret = secretManager.getSecret(secretName, null);
+            secret = secretManager.getSecret(teamId, secretName, null);
             if (secret == null) {
                 throw new RepositoryException("Secret not found: " + secretName);
             }

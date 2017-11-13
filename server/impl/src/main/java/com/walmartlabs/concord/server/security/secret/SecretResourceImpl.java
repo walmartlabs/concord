@@ -8,6 +8,7 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.*;
 import com.walmartlabs.concord.server.team.TeamDao;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -81,7 +82,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
         try {
             UUID teamId = assertOptionalTeam(input);
 
-            assertUnique(name);
+            assertUnique(teamId, name);
 
             String storePassword = getOrGenerateStorePassword(input, generatePassword);
 
@@ -108,7 +109,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
         try {
             UUID teamId = assertOptionalTeam(input);
 
-            assertUnique(name);
+            assertUnique(teamId, name);
 
             String storePassword = getOrGenerateStorePassword(input, generatePassword);
 
@@ -130,7 +131,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
         try {
             UUID teamId = assertOptionalTeam(input);
 
-            assertUnique(name);
+            assertUnique(teamId, name);
 
             String password = getOrGenerateStorePassword(input, generatePassword);
 
@@ -148,7 +149,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     public PublicKeyResponse createKeyPair(String name, UUID teamId, String teamName) {
         teamId = assertOptionalTeam(teamId, teamName);
 
-        assertUnique(name);
+        assertUnique(teamId, name);
 
         String password = null;
         KeyPair k = secretManager.createKeyPair(name, teamId, password);
@@ -162,7 +163,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     public UploadSecretResponse addUsernamePassword(String name, UUID teamId, String teamName, UsernamePasswordRequest request) {
         teamId = assertOptionalTeam(teamId, teamName);
 
-        assertUnique(name);
+        assertUnique(teamId, name);
 
         UsernamePassword k = new UsernamePassword(request.getUsername(), request.getPassword());
         String password = null;
@@ -176,8 +177,10 @@ public class SecretResourceImpl implements SecretResource, Resource {
         assertPermissions(secretName, Permissions.SECRET_READ_INSTANCE,
                 "The current user does not have permissions to access the specified secret");
 
-        assertSecret(secretName);
-        KeyPair k = secretManager.getKeyPair(secretName, null);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
+        assertSecret(teamId, secretName);
+        KeyPair k = secretManager.getKeyPair(teamId, secretName, null);
         return toPublicKey(secretName, k.getPublicKey(), null);
     }
 
@@ -196,20 +199,21 @@ public class SecretResourceImpl implements SecretResource, Resource {
         assertPermissions(name, Permissions.SECRET_DELETE_INSTANCE,
                 "The current user does not have permissions to delete the specified secret");
 
-        UUID secretId = assertSecret(name);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        UUID secretId = assertSecret(teamId, name);
 
         secretDao.delete(secretId);
         return new DeleteSecretResponse();
     }
 
-    private void assertUnique(String name) {
-        if (secretDao.getId(name) != null) {
+    private void assertUnique(UUID teamId, String name) {
+        if (secretDao.getId(teamId, name) != null) {
             throw new ValidationErrorsException("Secret already exists: " + name);
         }
     }
 
-    private UUID assertSecret(String name) {
-        UUID id = secretDao.getId(name);
+    private UUID assertSecret(UUID teamId, String name) {
+        UUID id = secretDao.getId(teamId, name);
         if (id == null) {
             throw new ValidationErrorsException("Secret not found: " + name);
         }
@@ -240,6 +244,10 @@ public class SecretResourceImpl implements SecretResource, Resource {
                     throw new ValidationErrorsException("Team not found: " + s);
                 }
             }
+        }
+
+        if (teamId == null) {
+            teamId = TeamManager.DEFAULT_TEAM_ID;
         }
 
         return teamId;

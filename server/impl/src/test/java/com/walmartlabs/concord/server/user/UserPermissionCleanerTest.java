@@ -8,6 +8,7 @@ import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.RepositoryDao;
 import com.walmartlabs.concord.server.security.secret.SecretDao;
+import com.walmartlabs.concord.server.team.TeamManager;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -24,6 +25,8 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
     @Test
     public void testSecrets() throws Exception {
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+
         UserDao userDao = new UserDao(getConfiguration());
         UserPermissionCleaner permissionCleaner = new UserPermissionCleaner(getConfiguration());
         SecretDao secretDao = new SecretDao(getConfiguration(), permissionCleaner);
@@ -31,7 +34,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         String secretName = "secret#" + System.currentTimeMillis();
-        UUID secretId = secretDao.insert(secretName, SecretType.KEY_PAIR, null, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
+        UUID secretId = secretDao.insert(teamId, secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
 
         String username = "user#" + System.currentTimeMillis();
         Set<String> permissions = Collections.singleton(String.format(Permissions.SECRET_READ_INSTANCE, secretName));
