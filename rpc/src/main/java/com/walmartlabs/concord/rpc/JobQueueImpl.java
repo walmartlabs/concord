@@ -32,17 +32,6 @@ public final class JobQueueImpl implements JobQueue {
         this.channel = channel;
     }
 
-    private static Path store(byte[] ab) throws ClientException {
-        try {
-            // TODO cfg
-            Path tmp = Files.createTempFile("payload", ".zip");
-            Files.write(tmp, ab);
-            return tmp;
-        } catch (IOException e) {
-            throw new ClientException(e.getMessage(), e);
-        }
-    }
-
     private static JobType convert(TJobType t) {
         switch (t) {
             case RUNNER:

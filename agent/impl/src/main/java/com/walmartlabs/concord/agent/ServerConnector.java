@@ -5,26 +5,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
 
 public class ServerConnector {
 
     private static final Logger log = LoggerFactory.getLogger(ServerConnector.class);
 
-    private final ExecutorService executor;
-
     private AgentApiClient client;
-    private Future<?> executionCleanup;
-    private Future<?> commandHandler;
-    private List<Future<?>> workers;
-    private Future<?> dockerSweeper;
-
-    public ServerConnector(ExecutorService executor) {
-        this.executor = executor;
-    }
+    private Thread[] workers;
+    private Thread executionCleanup;
+    private Thread commandHandler;
+    private Thread dockerSweeper;
 
     public void start(Configuration cfg) throws IOException {
         String agentId = cfg.getAgentId();
@@ -37,36 +28,47 @@ public class ServerConnector {
 
         ExecutionManager executionManager = new ExecutionManager(client, cfg);
 
-        executionCleanup = executor.submit(new ExecutionStatusCleanup(executionManager));
+        executionCleanup = new Thread(new ExecutionStatusCleanup(executionManager),
+                "execution-status-cleanup");
+        executionCleanup.start();
 
-        commandHandler = executor.submit(new CommandHandler(client, executionManager, executor));
+        commandHandler = new Thread(new CommandHandler(client, executionManager, Executors.newCachedThreadPool()),
+                "command-handler");
+        commandHandler.start();
 
-        workers = new ArrayList<>();
+        workers = new Thread[workersCount];
         for (int i = 0; i < workersCount; i++) {
-            Future<?> f = executor.submit(new Worker(client, executionManager, cfg.getLogMaxDelay()));
-            workers.add(f);
+            Worker w = new Worker(client, executionManager, cfg.getLogMaxDelay());
+            Thread t = new Thread(w, "worker-" + i);
+            workers[i] = t;
+        }
+
+        for (Thread w : workers) {
+            w.start();
         }
 
         if (cfg.isDockerSweeperEnabled()) {
             long t = cfg.getDockerSweeperPeriod();
-            dockerSweeper = executor.submit(new DockerSweeper(executionManager, t));
+            dockerSweeper = new Thread(new DockerSweeper(executionManager, t),
+                    "docker-sweeper");
+            dockerSweeper.start();
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
         if (dockerSweeper != null) {
-            dockerSweeper.cancel(true);
+            dockerSweeper.interrupt();
             dockerSweeper = null;
         }
 
         if (commandHandler != null) {
-            commandHandler.cancel(true);
+            commandHandler.interrupt();
             commandHandler = null;
         }
 
         if (workers != null) {
-            for (Future<?> f : workers) {
-                f.cancel(true);
+            for (Thread w : workers) {
+                w.interrupt();
             }
             workers = null;
         }
@@ -77,7 +79,7 @@ public class ServerConnector {
         }
 
         if (executionCleanup != null) {
-            executionCleanup.cancel(true);
+            executionCleanup.interrupt();
             executionCleanup = null;
         }
     }

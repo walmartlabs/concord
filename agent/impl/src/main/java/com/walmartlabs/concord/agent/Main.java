@@ -1,12 +1,10 @@
 package com.walmartlabs.concord.agent;
 
-import java.util.concurrent.Executors;
-
 public class Main {
 
     public void start() throws Exception {
         Configuration cfg = new Configuration();
-        ServerConnector c = new ServerConnector(Executors.newCachedThreadPool());
+        ServerConnector c = new ServerConnector();
         c.start(cfg);
 
         Thread.currentThread().join();

@@ -78,11 +78,15 @@ public class Worker implements Runnable {
         }
 
         JobQueue q = client.getJobQueue();
+        Supplier<Boolean> isRunning = () -> executionManager.getStatus(instanceId) == JobStatus.RUNNING;
 
-        try {
-            q.update(instanceId, JobStatus.RUNNING);
-        } catch (ClientException e) {
-            log.error("execute ['{}', '{}', '{}'] -> status update error", instanceId, type, payload, e);
+        // check the status to avoid races
+        if (isRunning.get()) {
+            try {
+                q.update(instanceId, JobStatus.RUNNING);
+            } catch (ClientException e) {
+                log.error("execute ['{}', '{}', '{}'] -> status update error", instanceId, type, payload, e);
+            }
         }
 
         Consumer<Chunk> sink = chunk -> {
@@ -97,7 +101,6 @@ public class Worker implements Runnable {
         };
 
         CompletableFuture<?> f = i.future();
-        Supplier<Boolean> isRunning = () -> executionManager.getStatus(instanceId) == JobStatus.RUNNING;
 
         try {
             streamLog(i.logFile(), isRunning, sink);
