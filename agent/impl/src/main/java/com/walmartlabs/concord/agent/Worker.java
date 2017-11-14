@@ -114,6 +114,8 @@ public class Worker implements Runnable {
         } catch (CancellationException | CompletionException e) {
             handleError(instanceId, e);
         }
+
+        log.info("execute ['{}', '{}', '{}'] -> done", instanceId, type, payload);
     }
 
     private void handleSuccess(String instanceId) {

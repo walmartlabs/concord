@@ -13,9 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -146,23 +144,9 @@ public class ExecutionManager {
     }
 
     public void cleanup() {
-        Collection<String> done = new HashSet<>();
-
         synchronized (mutex) {
-            statuses.asMap().forEach((instanceId, status) -> {
-                if (status != JobStatus.RUNNING) {
-                    done.add(instanceId);
-                }
-            });
-
-            if (done.isEmpty()) {
-                log.info("cleanup -> nothing to do");
-                return;
-            }
-
-            statuses.invalidateAll(done);
-            instances.invalidateAll(done);
-            log.info("cleanup -> removed {} entries", done.size());
+            statuses.cleanUp();
+            instances.cleanUp();
         }
     }
 

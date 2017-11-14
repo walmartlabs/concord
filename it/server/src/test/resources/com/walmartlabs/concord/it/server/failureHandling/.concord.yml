@@ -3,7 +3,7 @@ flows:
   - ${misc.throwBpmnError("boom!")}
 
   onFailure:
-  - log: "abc"
+  - log: "hello!"
 
 variables:
   entryPoint: main

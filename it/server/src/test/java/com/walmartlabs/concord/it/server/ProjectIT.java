@@ -21,6 +21,7 @@ import com.walmartlabs.concord.server.api.user.CreateUserResponse;
 import com.walmartlabs.concord.server.api.user.UserResource;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -32,7 +33,6 @@ import java.util.*;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(ParallelRunner.class)
@@ -240,6 +240,7 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
     }
 
+    @Ignore
     @Test(timeout = 30000)
     public void testInitImport() throws Exception {
         File tmpDir = Files.createTempDirectory("test").toFile();

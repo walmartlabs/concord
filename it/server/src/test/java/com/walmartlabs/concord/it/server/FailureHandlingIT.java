@@ -35,7 +35,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         // check the logs for the successful message
 
         ab = getLog(child.getLogFileName());
-        assertLog(".*abc.*", ab);
+        assertLog(".*hello!.*", ab);
     }
 
     @Test(timeout = 30000)

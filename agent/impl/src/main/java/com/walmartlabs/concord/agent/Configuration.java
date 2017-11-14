@@ -65,7 +65,7 @@ public class Configuration {
 
             this.runnerPath = Paths.get(s);
 
-            this.workersCount = Integer.parseInt(getEnv(WORKERS_COUNT_KEY, "2"));
+            this.workersCount = Integer.parseInt(getEnv(WORKERS_COUNT_KEY, "3"));
 
             this.maxPreforkAge = Long.parseLong(getEnv(MAX_PREFORK_AGE_KEY, "30000"));
 
