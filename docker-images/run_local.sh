@@ -24,13 +24,6 @@ docker run -d \
 walmartlabs/concord-server
 
 docker run -d \
---privileged \
---name dind \
--v /tmp:/tmp \
---network=host \
-docker.prod.walmart.com/walmartlabs/concord-dind
-
-docker run -d \
 --name agent \
 -v /tmp:/tmp \
 -v ${HOME}:${HOME}:ro \
