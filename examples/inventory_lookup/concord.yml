@@ -9,7 +9,7 @@ configuration:
 
 flows:
   default:
-  - task: ansible2
+  - task: ansible
     in:
       inventory:
         local:

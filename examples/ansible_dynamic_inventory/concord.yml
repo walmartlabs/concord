@@ -12,4 +12,4 @@ configuration:
 
 flows:
   default:
-    - ${ansible2.run(ansibleParams, __attr_localPath)}
+    - ${ansible.run(ansibleParams, __attr_localPath)}

@@ -1,6 +1,6 @@
 flows:
   main:
-  - task: ansible2
+  - task: ansible
     in:
       playbook: playbook/hello.yml
       inventory:
