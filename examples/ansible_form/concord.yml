@@ -1,5 +1,5 @@
 configuration:
-  # to use `ansible2` task
+  # to use `ansible` task
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.46.0"
 
@@ -14,7 +14,7 @@ flows:
   - form: myForm
 
   # call the playbook
-  - task: ansible2
+  - task: ansible
     in:
       playbook: playbook/hello.yml
       inventory:

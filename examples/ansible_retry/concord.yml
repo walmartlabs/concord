@@ -5,7 +5,7 @@ configuration:
 
 flows:
   default:
-  - task: ansible2
+  - task: ansible
     in:
       playbook: playbook/hello.yml
       inventory:
@@ -15,7 +15,7 @@ flows:
       extraVars:
         greetings: "Hi there!"
     error:
-    - task: ansible2
+    - task: ansible
       in:
         playbook: playbook/hello.yml
         inventory:
