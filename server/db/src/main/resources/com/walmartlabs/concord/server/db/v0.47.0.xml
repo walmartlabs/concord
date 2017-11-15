@@ -74,15 +74,25 @@
         <insert tableName="REPOSITORIES">
             <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
             <column name="REPO_ID" value="${concordTriggersRepoId}"/>
-            <column name="REPO_NAME" value="githubTriggers"/>
-            <column name="REPO_URL" value="classpath://com/walmartlabs/concord/server/triggers/github/concord.yml"/>
+            <column name="REPO_NAME" value="triggers"/>
+            <column name="REPO_URL" value="classpath://com/walmartlabs/concord/server/triggers/concord.yml"/>
         </insert>
 
         <insert tableName="TRIGGERS">
             <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
             <column name="REPO_ID" value="${concordTriggersRepoId}"/>
             <column name="EVENT_SOURCE" value="github"/>
-            <column name="ENTRY_POINT" value="onPush"/>
+            <column name="ENTRY_POINT" value="onChange"/>
+        </insert>
+
+        <insert tableName="TRIGGERS">
+            <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
+            <column name="REPO_ID" value="${concordTriggersRepoId}"/>
+            <column name="EVENT_SOURCE" value="concord"/>
+            <column name="ENTRY_POINT" value="onChange"/>
+            <column name="CONDITIONS">
+                {"event": "repository.*"}
+            </column>
         </insert>
     </changeSet>
 
@@ -113,25 +123,6 @@
             <column name="USER_ID" value="${concordGithubUserId}"/>
             <column name="TEAM_ID" value="00000000-0000-0000-0000-000000000000"/>
             <column name="TEAM_ROLE" value="WRITER"/>
-        </insert>
-    </changeSet>
-
-    <changeSet id="47700" author="ybrigo@gmail.com">
-        <insert tableName="REPOSITORIES">
-            <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
-            <column name="REPO_ID" value="${concordRepositoryTriggersRepoId}"/>
-            <column name="REPO_NAME" value="repositoryTriggers"/>
-            <column name="REPO_URL" value="classpath://com/walmartlabs/concord/server/triggers/repo/concord.yml"/>
-        </insert>
-
-        <insert tableName="TRIGGERS">
-            <column name="PROJECT_ID" value="${concordTriggersProjectId}"/>
-            <column name="REPO_ID" value="${concordRepositoryTriggersRepoId}"/>
-            <column name="EVENT_SOURCE" value="concord"/>
-            <column name="ENTRY_POINT" value="repositoryChanged"/>
-            <column name="CONDITIONS">
-                {"event": "repository.*"}
-            </column>
         </insert>
     </changeSet>
 
