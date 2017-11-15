@@ -21,7 +21,6 @@ import com.walmartlabs.concord.server.api.user.CreateUserResponse;
 import com.walmartlabs.concord.server.api.user.UserResource;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -32,7 +31,6 @@ import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(ParallelRunner.class)
@@ -240,7 +238,6 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
     }
 
-    @Ignore
     @Test(timeout = 30000)
     public void testInitImport() throws Exception {
         File tmpDir = Files.createTempDirectory("test").toFile();
@@ -264,12 +261,34 @@ public class ProjectIT extends AbstractServerIT {
         createProjectAndRepo(projectName, userName, permissions, repoName, repoUrl, null, null);
 
         TriggerResource triggerResource = proxy(TriggerResource.class);
-        List<TriggerEntry> triggers = triggerResource.list(projectName, repoName);
-        while (triggers.size() != 2) {
+        while (true) {
+            List<TriggerEntry> triggers = triggerResource.list(projectName, repoName);
+            if (hasCondition("github", "repository", "abc", triggers) &&
+                    hasCondition("github", "repository", "abc2", triggers) &&
+                    hasCondition("oneops", "org", "myOrg", triggers)) {
+                break;
+            }
+
             Thread.sleep(1_000);
-            triggers = triggerResource.list(projectName, repoName);
         }
-        assertEquals(2, triggers.size());
+    }
+
+    private static boolean hasCondition(String src, String k, Object v, Collection<TriggerEntry> entries) {
+        for (TriggerEntry e : entries) {
+            Map<String, Object> c = e.getConditions();
+            if (c == null || c.isEmpty()) {
+                continue;
+            }
+
+            if (!src.equals(e.getEventSource())) {
+                continue;
+            }
+
+            if (v.equals(c.get(k))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected void createProjectAndRepo(String projectName,

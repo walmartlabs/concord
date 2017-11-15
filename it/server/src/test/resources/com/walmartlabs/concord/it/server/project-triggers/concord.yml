@@ -11,3 +11,6 @@ triggers:
       repository: "abc2"
       branch: "foo2"
       entryPoint: onPush
+  - oneops:
+      org: "myOrg"
+      entryPoint: onPush
