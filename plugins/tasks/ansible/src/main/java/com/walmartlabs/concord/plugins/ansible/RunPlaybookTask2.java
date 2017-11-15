@@ -191,7 +191,7 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.EXTRA_VARS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.INVENTORY_KEY);
         addIfPresent(ctx, args, AnsibleConstants.INVENTORY_FILE_NAME);
-        addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME);
+        addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
         addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);

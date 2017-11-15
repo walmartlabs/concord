@@ -2,14 +2,11 @@ configuration:
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.46.0"
 
-  arguments:
-    ansibleParams:
+flows:
+  default:
+  - task: ansible
+    in:
       playbook: playbook/hello.yml
       dynamicInventoryFile: inventory.sh
       extraVars:
         greetings: "Hi there!"
-
-
-flows:
-  default:
-    - ${ansible.run(ansibleParams, __attr_localPath)}

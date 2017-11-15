@@ -3,17 +3,15 @@ configuration:
   dependencies:
   - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.46.0"
 
-  arguments:
-    ansibleParams:
+flows:
+  default:
+  - task: ansible
+    in:
       playbook: playbook/hello.yml
       inventory:
         local:
           hosts:
-            - "127.0.0.1"
+          - "127.0.0.1"
           vars:
             ansible_connection: "local"
       vaultPassword: myVaultPassword
-
-flows:
-  default:
-    - ${ansible.run("docker.prod.walmart.com/walmartlabs/concord-ansible", ansibleParams, __attr_localPath)}
