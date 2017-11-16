@@ -17,8 +17,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.client.Keys.BASEURL_KEY;
-import static com.walmartlabs.concord.client.Keys.SESSION_TOKEN_KEY;
+import static com.walmartlabs.concord.client.Keys.*;
 
 @Named("concord")
 public class ConcordTask extends AbstractConcordTask {
@@ -27,7 +26,6 @@ public class ConcordTask extends AbstractConcordTask {
 
     private static long DEFAULT_KILL_TIMEOUT = 10000;
 
-    private static final String ACTION_KEY = "action";
     private static final String ARCHIVE_KEY = "archive";
     private static final String PROJECT_KEY = "project";
     private static final String REPOSITORY_KEY = "repository";
@@ -82,7 +80,7 @@ public class ConcordTask extends AbstractConcordTask {
         String instanceId = get(cfg, INSTANCE_ID_KEY);
 
         String target = get(cfg, BASEURL_KEY) + "/api/v1/process/" + instanceId + "/subprocess";
-        String apiKey = get(cfg, SESSION_TOKEN_KEY);
+        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
         Set<String> tags = getTags(cfg);
         if (tags != null) {
@@ -97,7 +95,7 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         URL url = new URL(target);
-        List<Map<String, Object>> l = Http.getJson(url, apiKey, List.class);
+        List<Map<String, Object>> l = Http.getJson(url, sessionToken, List.class);
 
         return l.stream().map(e -> (String) e.get("instanceId")).collect(Collectors.toList());
     }
@@ -112,7 +110,7 @@ public class ConcordTask extends AbstractConcordTask {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, Map<String, Object> cfg, List<String> ids, long timeout) throws Exception {
-        String apiKey = get(cfg, SESSION_TOKEN_KEY);
+        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
         Map<String, Object> result = new HashMap<>();
 
@@ -121,7 +119,7 @@ public class ConcordTask extends AbstractConcordTask {
             try {
                 String target = get(cfg, BASEURL_KEY) + "/api/v1/process/" + id + "/waitForCompletion";
                 URL url = new URL(target + "?timeout=" + timeout);
-                Map<String, Object> m = Http.getJson(url, apiKey, Map.class);
+                Map<String, Object> m = Http.getJson(url, sessionToken, Map.class);
                 String status = (String) m.get("status");
                 log.info("Process {} is {}", id, status);
 
@@ -165,7 +163,7 @@ public class ConcordTask extends AbstractConcordTask {
             }
         }
 
-        String apiKey = get(cfg, SESSION_TOKEN_KEY);
+        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
         URL url = new URL(target + "?parentId=" + instanceId + "&sync=" + sync);
         HttpURLConnection conn = null;
@@ -179,7 +177,7 @@ public class ConcordTask extends AbstractConcordTask {
             ObjectMapper om = new ObjectMapper();
             input.put("request", om.writeValueAsBytes(req));
 
-            conn = Http.postMultipart(url, apiKey, input);
+            conn = Http.postMultipart(url, sessionToken, input);
 
             Map<String, Object> result = Http.readMap(conn);
             String childId = (String) result.get("instanceId");
@@ -242,7 +240,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         String instanceId = get(cfg, INSTANCE_ID_KEY);
         String target = get(cfg, BASEURL_KEY) + "/api/v1/process/" + instanceId + "/fork";
-        String apiKey = get(cfg, SESSION_TOKEN_KEY);
+        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
         boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
 
         Map<String, Object> req = createRequest(cfg);
@@ -251,7 +249,7 @@ public class ConcordTask extends AbstractConcordTask {
         URL url = new URL(target + "?sync=" + sync);
         HttpURLConnection conn = null;
         try {
-            conn = Http.postJson(url, apiKey, req);
+            conn = Http.postJson(url, sessionToken, req);
 
             Map<String, Object> result = Http.readMap(conn);
 
@@ -308,13 +306,13 @@ public class ConcordTask extends AbstractConcordTask {
 
     private void killOne(Context ctx, Map<String, Object> cfg, String instanceId) throws Exception {
         String target = get(cfg, BASEURL_KEY) + "/api/v1/process/" + instanceId;
-        String apiKey = get(cfg, SESSION_TOKEN_KEY);
+        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
         URL url = new URL(target);
         HttpURLConnection conn = null;
         try {
             log.info("Sending kill command for {}...", instanceId);
-            conn = Http.delete(url, apiKey);
+            conn = Http.delete(url, sessionToken);
 
             int response = conn.getResponseCode();
             if (response == 404) {
@@ -422,8 +420,8 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private static int getInstances(Map<String, Object> cfg) {
-        int i = 1;
-
+        int i;
+        
         Object v = cfg.getOrDefault(INSTANCES_KEY, 1);
         if (v instanceof Integer) {
             i = (Integer) v;

@@ -55,10 +55,10 @@ public class InventoryTask extends AbstractConcordTask {
     private <T> T execQuery(Context ctx, String inventoryName, String queryName, Map<String, Object> params, Class<T> clazz) throws Exception {
         Map<String, Object> cfg = createTaskCfg(ctx);
         String target = String.format("%s/api/v1/inventory/%s/query/%s/exec", get(cfg, Keys.BASEURL_KEY), inventoryName, queryName);
-        String apiKey = get(cfg, SESSION_TOKEN_KEY);
+        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
         URL url = new URL(target);
-        HttpURLConnection conn = Http.postJson(url, apiKey, params);
+        HttpURLConnection conn = Http.postJson(url, sessionToken, params);
 
         return Http.read(conn, clazz);
     }

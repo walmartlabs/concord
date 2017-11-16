@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-client: the `project` task - provides a method to create
+new projects using flows;
 - concord-server: methods to refresh triggers and LPs for all
 projects.
 

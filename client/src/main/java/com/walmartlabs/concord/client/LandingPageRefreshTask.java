@@ -24,9 +24,9 @@ public class LandingPageRefreshTask extends AbstractConcordTask implements Task 
         String repositoryName = get(cfg, REPOSITORY_KEY);
 
         String target = get(cfg, BASEURL_KEY) + "/api/v1/landing_page/refresh/" + projectName + "/" + repositoryName;
-        String apiKey = get(cfg, SESSION_TOKEN_KEY);
+        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
         URL url = new URL(target);
-        Http.postJson(url, apiKey, Collections.emptyMap());
+        Http.postJson(url, sessionToken, Collections.emptyMap());
     }
 }

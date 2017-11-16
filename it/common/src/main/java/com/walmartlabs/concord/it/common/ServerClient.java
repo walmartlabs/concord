@@ -1,6 +1,5 @@
 package com.walmartlabs.concord.it.common;
 
-import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
@@ -18,6 +17,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -116,15 +116,26 @@ public class ServerClient {
     }
 
     public UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("secret", secret);
+        if (storePassword != null) {
+            m.put("storePassword", storePassword);
+        }
+
         return request(SecretResource.class.getAnnotation(Path.class).value() + "/plain?name=" + name + "&generatePassword=" + generatePassword,
-                ImmutableMap.of("secret", secret, "storePassword", storePassword),
-                UploadSecretResponse.class);
+                m, UploadSecretResponse.class);
     }
 
     public UploadSecretResponse addUsernamePassword(String name, boolean generatePassword, String storePassword, String username, String password) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("username", username);
+        m.put("password", password);
+        if (storePassword != null) {
+            m.put("storePassword", storePassword);
+        }
+
         return request(SecretResource.class.getAnnotation(Path.class).value() + "/password?name=" + name + "&generatePassword=" + generatePassword,
-                ImmutableMap.of("username", username, "password", password, "storePassword", storePassword),
-                UploadSecretResponse.class);
+                m, UploadSecretResponse.class);
     }
 
     public byte[] getLog(String logFileName) {
