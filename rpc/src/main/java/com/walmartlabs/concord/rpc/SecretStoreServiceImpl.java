@@ -1,16 +1,17 @@
 package com.walmartlabs.concord.rpc;
 
 import com.google.protobuf.ByteString;
-import com.walmartlabs.concord.rpc.TSecretStoreServiceGrpc.TSecretStoreServiceBlockingStub;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
-import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.rpc.TSecretStoreServiceGrpc.TSecretStoreServiceBlockingStub;
 import com.walmartlabs.concord.sdk.ClientException;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.sdk.SecretStoreService;
 import io.grpc.ManagedChannel;
 
 import javax.xml.bind.DatatypeConverter;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class SecretStoreServiceImpl implements SecretStoreService {

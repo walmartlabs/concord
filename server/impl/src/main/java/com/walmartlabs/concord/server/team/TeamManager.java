@@ -60,11 +60,16 @@ public class TeamManager {
         return t;
     }
 
+    public TeamEntry assertTeamAccess(String teamName, TeamRole requiredRole, boolean teamMembersOnly) {
+        return assertTeamAccess(null, teamName, requiredRole, teamMembersOnly);
+    }
+
     public TeamEntry assertTeamAccess(UUID teamId, TeamRole requiredRole, boolean teamMembersOnly) {
-        TeamEntry t = teamDao.get(teamId);
-        if (t == null) {
-            throw new ValidationErrorsException("Team not found: " + t);
-        }
+        return assertTeamAccess(teamId, null, requiredRole, teamMembersOnly);
+    }
+
+    private TeamEntry assertTeamAccess(UUID teamId, String teamName, TeamRole requiredRole, boolean teamMembersOnly) {
+        TeamEntry t = assertTeam(teamId, teamName);
 
         UserPrincipal p = UserPrincipal.getCurrent();
         boolean admin = p.isAdmin();

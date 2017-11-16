@@ -9,7 +9,6 @@ import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.secret.*;
 import com.walmartlabs.concord.server.team.TeamDao;
 import com.walmartlabs.concord.server.team.TeamManager;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -36,9 +35,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 @Named
 public class SecretResourceImpl implements SecretResource, Resource {
 
-    private static final int SECRET_PASSWORD_LENGTH = 12;
-    private static final String SECRET_PASSWORD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~`!@#$%^&*()-_=+[{]}|,<.>/?\\";
-
     private final SecretDao secretDao;
     private final SecretManager secretManager;
     private final TeamDao teamDao;
@@ -56,10 +52,6 @@ public class SecretResourceImpl implements SecretResource, Resource {
         key2Field.put("type", SECRETS.SECRET_TYPE);
     }
 
-    private String generatePassword() {
-        return RandomStringUtils.random(SECRET_PASSWORD_LENGTH, SECRET_PASSWORD_CHARS);
-    }
-
     private String getOrGenerateStorePassword(MultipartInput input, boolean generatePassword) {
         String password;
         try {
@@ -69,7 +61,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
         }
 
         if (password == null && generatePassword) {
-            return generatePassword();
+            return secretManager.generatePassword();
         }
 
         return password;

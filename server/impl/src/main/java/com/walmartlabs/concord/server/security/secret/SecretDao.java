@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.team.TeamManager;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -48,6 +49,18 @@ public class SecretDao extends AbstractDao {
         }
     }
 
+    public UUID insertOrUpdate(UUID teamId, String name, SecretType type, SecretStoreType storeType, byte[] data) {
+        return txResult(tx -> {
+            UUID id = getId(teamId, name);
+            if (id == null) {
+                id = insert(tx, teamId, name, type, storeType, data);
+            } else {
+                update(tx, id, teamId, name, type, storeType, data);
+            }
+            return id;
+        });
+    }
+
     public UUID insert(UUID teamId, String name, SecretType type, SecretStoreType storeType, byte[] data) {
         return txResult(tx -> insert(tx, teamId, name, type, storeType, data));
     }
@@ -63,6 +76,21 @@ public class SecretDao extends AbstractDao {
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
                 .getSecretId();
+    }
+
+    public void update(DSLContext tx, UUID id, UUID teamId, String name, SecretType type, SecretStoreType storeType, byte[] data) {
+        int i = tx.update(SECRETS)
+                .set(SECRETS.TEAM_ID, teamId)
+                .set(SECRETS.SECRET_NAME, name)
+                .set(SECRETS.SECRET_TYPE, type.toString())
+                .set(SECRETS.SECRET_STORE_TYPE, storeType.toString())
+                .set(SECRETS.SECRET_DATA, data)
+                .where(SECRETS.SECRET_ID.eq(id))
+                .execute();
+
+        if (i != 1) {
+            throw new DataAccessException("Invalid number of rows updated: " + i);
+        }
     }
 
     public SecretDataEntry getByName(UUID teamId, String name) {

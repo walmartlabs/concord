@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.security.secret;
 
 import com.google.common.base.Throwables;
+import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.SecretStoreType;
@@ -9,9 +10,12 @@ import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.UUID;
@@ -19,6 +23,9 @@ import java.util.function.Function;
 
 @Named
 public class SecretManager {
+
+    private static final int SECRET_PASSWORD_LENGTH = 12;
+    private static final String SECRET_PASSWORD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~`!@#$%^&*()-_=+[{]}|,<.>/?\\";
 
     private final SecretDao secretDao;
     private final SecretStoreConfiguration secretCfg;
@@ -29,6 +36,38 @@ public class SecretManager {
 
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
+    }
+
+    public KeyPairEntry createKeyPair(UUID teamId, String name, String storePassword) throws IOException {
+        KeyPair k = KeyPairUtils.create();
+        UUID id = store(name, teamId, k, storePassword);
+        return new KeyPairEntry(id, k.getPublicKey());
+    }
+
+    public KeyPairEntry createKeyPair(UUID teamId, String name, String storePassword, InputStream publicKey, InputStream privateKey) throws IOException {
+        KeyPair k = KeyPairUtils.create(publicKey, privateKey);
+        UUID id = store(name, teamId, k, storePassword);
+        return new KeyPairEntry(id, k.getPublicKey());
+    }
+
+    public UsernamePasswordEntry createUsernamePassword(UUID teamId, String name, String storePassword, String username, char[] password) {
+        UsernamePassword p = new UsernamePassword(username, password);
+        UUID id = store(name, teamId, p, storePassword);
+        return new UsernamePasswordEntry(id);
+    }
+
+    public BinaryDataEntry createBinaryData(UUID teamId, String name, String storePassword, InputStream data) throws IOException {
+        BinaryDataSecret d = new BinaryDataSecret(ByteStreams.toByteArray(data));
+        UUID id = store(name, teamId, d, storePassword);
+        return new BinaryDataEntry(id);
+    }
+
+    public boolean exists(UUID teamId, String name) {
+        return secretDao.getByName(teamId, name) != null;
+    }
+
+    public String generatePassword() {
+        return RandomStringUtils.random(SECRET_PASSWORD_LENGTH, SECRET_PASSWORD_CHARS);
     }
 
     public KeyPair createKeyPair(String name, UUID teamId, String password) {
@@ -82,7 +121,7 @@ public class SecretManager {
         return (KeyPair) s;
     }
 
-    public void store(String name, UUID teamId, Secret s, String password) {
+    public UUID store(String name, UUID teamId, Secret s, String password) {
         byte[] data;
 
         SecretType type;
@@ -111,7 +150,7 @@ public class SecretManager {
             throw Throwables.propagate(e);
         }
 
-        secretDao.insert(teamId, name, type, storeType, ab);
+        return secretDao.insert(teamId, name, type, storeType, ab);
     }
 
     public byte[] encryptData(String projectName, byte[] data) {
@@ -178,5 +217,50 @@ public class SecretManager {
             return SecretStoreType.SERVER_KEY;
         }
         return SecretStoreType.PASSWORD;
+    }
+
+    public static class KeyPairEntry {
+
+        private final UUID id;
+        private final byte[] data;
+
+        public KeyPairEntry(UUID id, byte[] data) {
+            this.id = id;
+            this.data = data;
+        }
+
+        public UUID getId() {
+            return id;
+        }
+
+        public byte[] getData() {
+            return data;
+        }
+    }
+
+    public static class UsernamePasswordEntry {
+
+        private final UUID id;
+
+        public UsernamePasswordEntry(UUID id) {
+            this.id = id;
+        }
+
+        public UUID getId() {
+            return id;
+        }
+    }
+
+    public static class BinaryDataEntry {
+
+        private final UUID id;
+
+        public BinaryDataEntry(UUID id) {
+            this.id = id;
+        }
+
+        public UUID getId() {
+            return id;
+        }
     }
 }
