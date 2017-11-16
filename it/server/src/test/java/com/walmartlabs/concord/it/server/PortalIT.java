@@ -51,7 +51,7 @@ public class PortalIT extends AbstractServerIT {
 
         // ---
 
-        RepositoryEntry repo = new RepositoryEntry(null, repoName, repoUrl, "master", null, null, repoSecretName);
+        RepositoryEntry repo = new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), null, null));
 

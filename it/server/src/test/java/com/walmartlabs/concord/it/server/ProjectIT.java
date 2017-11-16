@@ -317,7 +317,7 @@ public class ProjectIT extends AbstractServerIT {
         setApiKey(apiKey);
 
         CreateRepositoryResponse crr = projectResource.createRepository(projectName,
-                new RepositoryEntry(null, repoName, repoUrl, tag, commitId, null, null));
+                new RepositoryEntry(null, null, repoName, repoUrl, tag, commitId, null, null));
         assertTrue(crr.isOk());
     }
 

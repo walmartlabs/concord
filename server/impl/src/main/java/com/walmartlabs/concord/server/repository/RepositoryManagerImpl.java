@@ -50,7 +50,7 @@ public class RepositoryManagerImpl implements RepositoryManager {
         try {
             tmpDir = Files.createTempDirectory("repository");
 
-            RepositoryEntry repo = new RepositoryEntry(null, null, uri, branch, commitId, path, secretName);
+            RepositoryEntry repo = new RepositoryEntry(null, null, null, uri, branch, commitId, path, secretName);
             getProvider(uri).fetch(teamId, repo, tmpDir);
 
             repoPath(tmpDir, path);

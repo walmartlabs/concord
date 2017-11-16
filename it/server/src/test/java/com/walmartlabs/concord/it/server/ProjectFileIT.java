@@ -130,7 +130,7 @@ public class ProjectFileIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, repoName, repoUrl, "master", null, null, secretName)), null, null));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, secretName)), null, null));
 
         // ---
 
@@ -163,7 +163,7 @@ public class ProjectFileIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, repoName, repoUrl, "master", null, null, secretName)), null, null));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, secretName)), null, null));
 
         // ---
 
