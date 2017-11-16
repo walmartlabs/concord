@@ -1,11 +1,12 @@
 flows:
   onChange:
-  - log: "refreshing triggers"
+  - log: "Refreshing triggers..."
   - task: triggersRefresh
     in:
       repository: ${event.repository}
       project: ${event.project}
-  - log: "refreshing LP"
+
+  - log: "Refreshing LPs..."
   - task: landingPageRefresh
     in:
       repository: ${event.repository}
@@ -17,10 +18,4 @@ triggers:
       entryPoint: "onChange"
 
   - github:
-      repository: ".*"
-      branch: ".*"
       entryPoint: "onChange"
-
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord:concord-client:${project.version}"

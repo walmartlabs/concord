@@ -13,7 +13,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 @Named
@@ -36,7 +35,11 @@ public class EventResourceImpl extends AbstractEventResource implements EventRes
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
-        String eventId = String.valueOf(Optional.ofNullable(event.get("id")).orElse(UUID.randomUUID()));
+        String eventId = (String) event.get("id");
+        if (eventId == null) {
+            eventId = UUID.randomUUID().toString();
+        }
+
         int count = process(eventId, eventName, event, event);
 
         if (log.isDebugEnabled()) {

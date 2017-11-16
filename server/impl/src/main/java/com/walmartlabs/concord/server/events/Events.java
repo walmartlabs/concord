@@ -9,16 +9,16 @@ public class Events {
 
     public static class Repository {
 
-        public static final String CREATED_EVENT = "repositoryCreated";
+        public static final String REPOSITORY_CREATED_EVENT = "repositoryCreated";
 
-        public static final String UPDATED_EVENT = "repositoryUpdated";
+        public static final String REPOSITORY_UPDATED_EVENT = "repositoryUpdated";
 
-        public static Map<String, Object> createdEvent(String project, String repository) {
-            return event(CREATED_EVENT, project, repository);
+        public static Map<String, Object> repositoryCreated(String project, String repository) {
+            return event(REPOSITORY_CREATED_EVENT, project, repository);
         }
 
-        public static Map<String, Object> updatedEvent(String project, String repository) {
-            return event(UPDATED_EVENT, project, repository);
+        public static Map<String, Object> repositoryUpdated(String project, String repository) {
+            return event(REPOSITORY_UPDATED_EVENT, project, repository);
         }
 
         private static Map<String, Object> event(String eventType, String project, String repository) {

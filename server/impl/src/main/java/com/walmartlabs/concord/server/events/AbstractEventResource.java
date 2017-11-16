@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.events;
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.project.ProjectDao;
@@ -37,28 +37,28 @@ public abstract class AbstractEventResource {
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
-    protected int process(String eventId, String eventName, Map<String, Object> triggerConditions, Map<String, Object> triggerEvent) {
+    protected int process(String eventId, String eventName, Map<String, Object> conditions, Map<String, Object> event) {
         List<TriggerEntry> triggers = triggersDao.list(eventName).stream()
-                .filter(t -> filter(t, triggerConditions))
+                .filter(t -> filter(conditions, t))
                 .collect(Collectors.toList());
 
         for (TriggerEntry t : triggers) {
-            Map<String, Object> processArgs = new HashMap<>();
+            Map<String, Object> args = new HashMap<>();
             if (t.getArguments() != null) {
-                processArgs.putAll(t.getArguments());
+                args.putAll(t.getArguments());
             }
-            processArgs.put("event", triggerEvent);
+            args.put("event", event);
 
             UUID teamId = projectDao.getTeamId(t.getProjectId());
-            UUID instanceId = startProcess(teamId, t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), processArgs);
-            log.info("process ['{}'] -> instanceId '{}'", eventId, instanceId);
+            UUID instanceId = startProcess(teamId, t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), args);
+            log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, instanceId, t);
         }
 
         return triggers.size();
     }
 
-    private boolean filter(TriggerEntry t, Map<String, Object> triggerConditions) {
-        return EventMatcher.matches(triggerConditions, t.getConditions());
+    private boolean filter(Map<String, Object> conditions, TriggerEntry t) {
+        return EventMatcher.matches(conditions, t.getConditions());
     }
 
     private UUID startProcess(UUID teamId, String projectName, String repoName, String flowName, Map<String, Object> args) {
@@ -68,7 +68,7 @@ public abstract class AbstractEventResource {
 
         PayloadParser.EntryPoint ep = new PayloadParser.EntryPoint(teamId, projectName, repoName, flowName);
         Map<String, Object> request = new HashMap<>();
-        request.put(InternalConstants.Request.ARGUMENTS_KEY, args);
+        request.put(Constants.Request.ARGUMENTS_KEY, args);
 
         Payload payload;
         try {

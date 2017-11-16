@@ -149,7 +149,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         // TODO: register using the triggered flow?
         githubWebhookService.register(project.getId(), repoId, request.getUrl());
 
-        eventResource.event(Events.CONCORD_EVENT, Events.Repository.createdEvent(projectName, request.getName()));
+        eventResource.event(Events.CONCORD_EVENT, Events.Repository.repositoryCreated(projectName, request.getName()));
 
         return new CreateRepositoryResponse();
     }
@@ -251,7 +251,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         // TODO: register using the triggered flow?
         githubWebhookService.register(p.getId(), r.getId(), request.getUrl());
 
-        eventResource.event(Events.CONCORD_EVENT, Events.Repository.updatedEvent(projectName, request.getName()));
+        eventResource.event(Events.CONCORD_EVENT, Events.Repository.repositoryUpdated(projectName, request.getName()));
 
         return new UpdateRepositoryResponse();
     }
