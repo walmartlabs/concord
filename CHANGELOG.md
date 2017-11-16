@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: methods to refresh triggers and LPs for all
+projects.
+
+
+
 ## [0.47.0] - 2017-11-15
 
 ### Added

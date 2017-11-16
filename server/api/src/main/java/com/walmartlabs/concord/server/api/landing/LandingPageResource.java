@@ -51,6 +51,16 @@ public interface LandingPageResource {
     List<LandingEntry> list();
 
     /**
+     * Refresh all landing page definitions for all projects.
+     *
+     * @return
+     */
+    @POST
+    @ApiOperation("Refresh all landing page definitions for all projects")
+    @Path("/refresh")
+    Response refreshAll();
+
+    /**
      * Refresh landing page definitions for the specified project and repository.
      *
      * @param projectName
@@ -58,7 +68,7 @@ public interface LandingPageResource {
      * @return
      */
     @POST
-    @ApiOperation("Refresh landing page definitions")
+    @ApiOperation("Refresh landing page definitions for the specified project and repository")
     @Path("/refresh/{projectName}/{repositoryName}")
     Response refresh(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                  @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);

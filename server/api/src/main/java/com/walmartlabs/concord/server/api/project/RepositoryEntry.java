@@ -15,6 +15,8 @@ public class RepositoryEntry implements Serializable {
 
     private final UUID id;
 
+    private final UUID projectId;
+
     @ConcordKey
     private final String name;
 
@@ -35,12 +37,13 @@ public class RepositoryEntry implements Serializable {
     private final String secret;
 
     public RepositoryEntry(String name, String url) {
-        this(null, name, url, null, null, null, null);
+        this(null, null, name, url, null, null, null, null);
     }
 
     @JsonCreator
 
     public RepositoryEntry(@JsonProperty("id") UUID id,
+                           @JsonProperty("projectId") UUID projectId,
                            @JsonProperty("name") String name,
                            @JsonProperty("url") String url,
                            @JsonProperty("branch") String branch,
@@ -49,6 +52,7 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("secret") String secret) {
 
         this.id = id;
+        this.projectId = projectId;
         this.name = name;
         this.url = url;
         this.branch = branch;
@@ -59,6 +63,10 @@ public class RepositoryEntry implements Serializable {
 
     public UUID getId() {
         return id;
+    }
+
+    public UUID getProjectId() {
+        return projectId;
     }
 
     public String getName() {
@@ -89,6 +97,7 @@ public class RepositoryEntry implements Serializable {
     public String toString() {
         return "RepositoryEntry{" +
                 "id=" + id +
+                ", projectId=" + projectId +
                 ", name='" + name + '\'' +
                 ", url='" + url + '\'' +
                 ", branch='" + branch + '\'' +

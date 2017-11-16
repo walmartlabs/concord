@@ -94,8 +94,9 @@ public class ProjectDao extends AbstractDao {
                 return null;
             }
 
-            Result<Record7<UUID, String, String, String, String, String, String>> repos = tx.select(
+            Result<Record8<UUID, UUID, String, String, String, String, String, String>> repos = tx.select(
                     REPOSITORIES.REPO_ID,
+                    REPOSITORIES.PROJECT_ID,
                     REPOSITORIES.REPO_NAME,
                     REPOSITORIES.REPO_URL,
                     REPOSITORIES.REPO_BRANCH,
@@ -108,10 +109,11 @@ public class ProjectDao extends AbstractDao {
                     .fetch();
 
             Map<String, RepositoryEntry> m = new HashMap<>();
-            for (Record7<UUID, String, String, String, String, String, String> repo : repos) {
+            for (Record8<UUID, UUID, String, String, String, String, String, String> repo : repos) {
                 m.put(repo.get(REPOSITORIES.REPO_NAME),
                         new RepositoryEntry(
                                 repo.get(REPOSITORIES.REPO_ID),
+                                repo.get(REPOSITORIES.PROJECT_ID),
                                 repo.get(REPOSITORIES.REPO_NAME),
                                 repo.get(REPOSITORIES.REPO_URL),
                                 repo.get(REPOSITORIES.REPO_BRANCH),

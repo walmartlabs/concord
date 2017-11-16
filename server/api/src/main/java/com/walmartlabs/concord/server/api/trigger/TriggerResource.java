@@ -29,6 +29,16 @@ public interface TriggerResource {
                             @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
 
     /**
+     * Refresh process trigger definitions for all projects.
+     *
+     * @return
+     */
+    @POST
+    @ApiOperation("Refresh trigger definitions for all projects")
+    @Path("/refresh")
+    Response refreshAll();
+
+    /**
      * Refresh process trigger definitions for the specified project and repository.
      *
      * @param projectName
@@ -36,7 +46,7 @@ public interface TriggerResource {
      * @return
      */
     @POST
-    @ApiOperation("Refresh trigger definitions")
+    @ApiOperation("Refresh trigger definitions for the specified project and repository")
     @Path("/refresh/{projectName}/{repositoryName}")
     Response refresh(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                      @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);

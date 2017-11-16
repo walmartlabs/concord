@@ -79,13 +79,20 @@ public class RepositoryDao extends AbstractDao {
                 .execute();
     }
 
+    public List<RepositoryEntry> list() {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return selectRepositoryEntry(tx)
+                    .fetch(RepositoryDao::toEntry);
+        }
+    }
+
     public List<RepositoryEntry> list(UUID projectId) {
         return list(projectId, null, false);
     }
 
     public List<RepositoryEntry> list(UUID projectId, Field<?> sortField, boolean asc) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record7<UUID, String, String, String, String, String, String>> query = selectRepositoryEntry(tx)
+            SelectConditionStep<Record8<UUID, UUID, String, String, String, String, String, String>> query = selectRepositoryEntry(tx)
                     .where(REPOSITORIES.PROJECT_ID.eq(projectId));
 
             if (sortField != null) {
@@ -96,8 +103,9 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    private static SelectJoinStep<Record7<UUID, String, String, String, String, String, String>> selectRepositoryEntry(DSLContext tx) {
+    private static SelectJoinStep<Record8<UUID, UUID, String, String, String, String, String, String>> selectRepositoryEntry(DSLContext tx) {
         return tx.select(REPOSITORIES.REPO_ID,
+                REPOSITORIES.PROJECT_ID,
                 REPOSITORIES.REPO_NAME,
                 REPOSITORIES.REPO_URL,
                 REPOSITORIES.REPO_BRANCH,
@@ -108,8 +116,9 @@ public class RepositoryDao extends AbstractDao {
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
     }
 
-    private static RepositoryEntry toEntry(Record7<UUID, String, String, String, String, String, String> r) {
+    private static RepositoryEntry toEntry(Record8<UUID, UUID, String, String, String, String, String, String> r) {
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
+                r.get(REPOSITORIES.PROJECT_ID),
                 r.get(REPOSITORIES.REPO_NAME),
                 r.get(REPOSITORIES.REPO_URL),
                 r.get(REPOSITORIES.REPO_BRANCH),

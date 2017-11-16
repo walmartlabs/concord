@@ -10,8 +10,11 @@ import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.api.trigger.TriggerResource;
 import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.project.ProjectManager;
+import com.walmartlabs.concord.server.project.RepositoryDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.team.TeamManager;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +28,9 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+
+import static com.walmartlabs.concord.server.project.RepositoryUtils.assertRepository;
 
 @Named
 public class TriggerResourceImpl extends AbstractDao implements TriggerResource, Resource {
@@ -34,20 +38,23 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
     private static final Logger log = LoggerFactory.getLogger(TriggerResourceImpl.class);
 
     private final ProjectLoader projectLoader = new ProjectLoader();
-
     private final ProjectDao projectDao;
+    private final RepositoryDao repositoryDao;
     private final TriggersDao triggersDao;
-
     private final RepositoryManager repositoryManager;
     private final ProjectManager projectManager;
 
     @Inject
-    public TriggerResourceImpl(ProjectDao projectDao, TriggersDao triggersDao,
+    public TriggerResourceImpl(ProjectDao projectDao,
+                               RepositoryDao repositoryDao,
+                               TriggersDao triggersDao,
                                RepositoryManager repositoryManager,
                                ProjectManager projectManager,
                                Configuration cfg) {
+
         super(cfg);
         this.projectDao = projectDao;
+        this.repositoryDao = repositoryDao;
         this.triggersDao = triggersDao;
         this.repositoryManager = repositoryManager;
         this.projectManager = projectManager;
@@ -63,30 +70,48 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
     }
 
     @Override
+    public Response refreshAll() {
+        assertAdmin();
+        repositoryDao.list().parallelStream().forEach(r -> {
+            try {
+                refresh(r);
+            } catch (Exception e) {
+                log.warn("refreshAll -> {} refresh failed: {}", r.getId(), e.getMessage());
+            }
+        });
+        return Response.ok().build();
+    }
+
+    @Override
     public Response refresh(String projectName, String repositoryName) {
         UUID teamId = TeamManager.DEFAULT_TEAM_ID;
         ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
-        Path repoPath = repositoryManager.fetch(p.getId(), r);
+        refresh(r);
+
+        return Response.ok().build();
+    }
+
+    private void refresh(RepositoryEntry r) {
+        Path repoPath = repositoryManager.fetch(r.getProjectId(), r);
 
         ProjectDefinition pd;
         try {
             pd = projectLoader.load(repoPath);
         } catch (IOException e) {
-            log.error("refresh ['{}', '{}'] -> load project error", projectName, repoPath, e);
-            throw new WebApplicationException("load project '" + projectName + "' error", e);
+            log.error("refresh ['{}'] -> load project error", r.getId(), e);
+            throw new WebApplicationException("Refresh failed", e);
         }
 
         tx(tx -> {
-            triggersDao.delete(tx, p.getId(), r.getId());
-            pd.getTriggers().forEach(t -> {
-                triggersDao.insert(tx, p.getId(), r.getId(), t.getName(), t.getEntryPoint(), t.getArguments(), t.getParams());
-            });
+            triggersDao.delete(tx, r.getProjectId(), r.getId());
+            pd.getTriggers().forEach(t -> triggersDao.insert(tx,
+                    r.getProjectId(), r.getId(), t.getName(),
+                    t.getEntryPoint(), t.getArguments(), t.getParams()));
         });
 
-        log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectName, repositoryName, pd.getTriggers().size());
-        return Response.ok().build();
+        log.info("refresh ['{}'] -> done, triggers count: {}", r.getId(), pd.getTriggers().size());
     }
 
     private ProjectEntry assertProject(UUID teamId, String projectName, TeamRole requiredRole, boolean teamMembersOnly) {
@@ -102,22 +127,10 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
         return projectManager.assertProjectAccess(id, requiredRole, teamMembersOnly);
     }
 
-    private RepositoryEntry assertRepository(ProjectEntry p, String repositoryName) {
-        if (repositoryName == null) {
-            throw new ValidationErrorsException("Invalid repository name");
+    private static void assertAdmin() {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (!p.isAdmin()) {
+            throw new UnauthorizedException("Not authorized");
         }
-
-        Map<String, RepositoryEntry> repos = p.getRepositories();
-        if (repos == null || repos.isEmpty()) {
-            throw new ValidationErrorsException("Repository not found: " + repositoryName);
-        }
-
-        RepositoryEntry r = repos.get(repositoryName);
-        if (r == null) {
-            throw new ValidationErrorsException("Repository not found: " + repositoryName);
-        }
-
-        return r;
     }
-
 }

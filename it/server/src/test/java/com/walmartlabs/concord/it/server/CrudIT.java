@@ -118,12 +118,12 @@ public class CrudIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, repoName, "n/a", branch, null, null, null)), null, null));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", branch, null, null, null)), null, null));
 
         // ---
 
         UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName,
-                new RepositoryEntry(null, repoName, "something", branch, commitId, null, null));
+                new RepositoryEntry(null, null, repoName, "something", branch, commitId, null, null));
         assertTrue(urr.isOk());
 
         // ---
@@ -152,11 +152,11 @@ public class CrudIT extends AbstractServerIT {
 
         String repoName = "repo_" + randomString();
         CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1,
-                new RepositoryEntry(null, repoName, "n/a", null, null, null, null));
+                new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null));
         assertTrue(crr1.isOk());
 
         CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2,
-                new RepositoryEntry(null, repoName, "n/a", null, null, null, null));
+                new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null));
         assertTrue(crr2.isOk());
     }
 
@@ -371,7 +371,7 @@ public class CrudIT extends AbstractServerIT {
         String icon = Base64.encode("icon".getBytes());
 
         projectResource.createOrUpdate(new ProjectEntry(projectName));
-        projectResource.createRepository(projectName, new RepositoryEntry(null, repositoryName, "http://localhost", null, null, null, null));
+        projectResource.createRepository(projectName, new RepositoryEntry(null, null, repositoryName, "http://localhost", null, null, null, null));
 
         // --- create
         LandingEntry entry = new LandingEntry(null, null, null, null, projectName, repositoryName, name, description, icon);
