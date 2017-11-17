@@ -53,14 +53,9 @@ public class FailureHandlingIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testCancel() throws Exception {
-        ProcessResource processResource = proxy(ProcessResource.class);
-
-        // prepare the payload
-
         byte[] payload = archive(ProcessIT.class.getResource("cancelHandling").toURI());
 
-        // start the process and wait for it to fail
-
+        ProcessResource processResource = proxy(ProcessResource.class);
         StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
         waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.RUNNING);
 
@@ -77,5 +72,28 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         byte[] ab = getLog(child.getLogFileName());
         assertLog(".*abc.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testCancelSuspended() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("cancelSuspendHandling").toURI());
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+
+        // cancel the running process
+
+        processResource.kill(spr.getInstanceId());
+        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.CANCELLED);
+
+        // find the child processes
+
+        ProcessEntry child = waitForChild(processResource, spr.getInstanceId(), ProcessKind.CANCEL_HANDLER, ProcessStatus.FINISHED);
+
+        // check the logs for the successful message
+
+        byte[] ab = getLog(child.getLogFileName());
+        assertLog(".*!cancelled by a user!.*", ab);
     }
 }

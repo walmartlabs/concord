@@ -1,0 +1,10 @@
+flows:
+  default:
+  - form: myForm
+
+  onCancel:
+  - log: "!cancelled by a user!"
+
+forms:
+  myForm:
+  - firstName: { type: "string" }
