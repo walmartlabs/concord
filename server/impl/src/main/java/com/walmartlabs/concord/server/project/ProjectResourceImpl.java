@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.project;
 import com.google.common.base.Splitter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.PerformedActionType;
+import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.api.security.Permissions;
@@ -96,7 +96,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
         if (projectId != null) {
             projectManager.assertProjectAccess(projectId, TeamRole.WRITER, true);
             update(projectName, new UpdateProjectRequest(req));
-            return new CreateProjectResponse(projectId, PerformedActionType.UPDATED);
+            return new CreateProjectResponse(projectId, OperationResult.UPDATED);
         }
 
         teamManager.assertTeamAccess(t.getId(), TeamRole.WRITER, true);
@@ -131,7 +131,7 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
             });
         }
 
-        return new CreateProjectResponse(r.projectId, PerformedActionType.CREATED);
+        return new CreateProjectResponse(r.projectId, OperationResult.CREATED);
     }
 
     @Override

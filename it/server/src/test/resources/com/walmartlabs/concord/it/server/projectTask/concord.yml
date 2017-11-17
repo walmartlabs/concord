@@ -1,0 +1,11 @@
+flows:
+  default:
+  - task: project
+    in:
+      action: create
+      name: ${projectName}
+      repositories:
+      - name: ${repoName}
+        url: ${repoUrl}
+        secret: ${repoSecret}
+  - log: "Done!"
