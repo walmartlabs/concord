@@ -7,6 +7,7 @@ import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
@@ -18,8 +19,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
+
+import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 
 @Named
 public class SecretManager {
@@ -38,32 +42,51 @@ public class SecretManager {
         this.secretCfg = secretCfg;
     }
 
-    public KeyPairEntry createKeyPair(UUID teamId, String name, String storePassword) throws IOException {
+    public DecryptedKeyPair createKeyPair(UUID teamId, String name, String storePassword) throws IOException {
         KeyPair k = KeyPairUtils.create();
         UUID id = store(name, teamId, k, storePassword);
-        return new KeyPairEntry(id, k.getPublicKey());
+        return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
-    public KeyPairEntry createKeyPair(UUID teamId, String name, String storePassword, InputStream publicKey, InputStream privateKey) throws IOException {
+    public DecryptedKeyPair createKeyPair(UUID teamId, String name, String storePassword, InputStream publicKey, InputStream privateKey) throws IOException {
         KeyPair k = KeyPairUtils.create(publicKey, privateKey);
         UUID id = store(name, teamId, k, storePassword);
-        return new KeyPairEntry(id, k.getPublicKey());
+        return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
-    public UsernamePasswordEntry createUsernamePassword(UUID teamId, String name, String storePassword, String username, char[] password) {
+    public DecryptedUsernamePassword createUsernamePassword(UUID teamId, String name, String storePassword, String username, char[] password) {
         UsernamePassword p = new UsernamePassword(username, password);
         UUID id = store(name, teamId, p, storePassword);
-        return new UsernamePasswordEntry(id);
+        return new DecryptedUsernamePassword(id);
     }
 
-    public BinaryDataEntry createBinaryData(UUID teamId, String name, String storePassword, InputStream data) throws IOException {
+    public DecryptedBinaryData createBinaryData(UUID teamId, String name, String storePassword, InputStream data) throws IOException {
         BinaryDataSecret d = new BinaryDataSecret(ByteStreams.toByteArray(data));
         UUID id = store(name, teamId, d, storePassword);
-        return new BinaryDataEntry(id);
+        return new DecryptedBinaryData(id);
+    }
+
+    public DecryptedKeyPair getKeyPair(UUID teamId, String name) {
+        DecryptedSecret e = getSecret(teamId, name, null);
+        if (e == null) {
+            return null;
+        }
+
+        Secret s = e.getSecret();
+        if (!(s instanceof KeyPair)) {
+            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected a key pair, got: " + e.getClass());
+        }
+
+        KeyPair k = (KeyPair) s;
+        return new DecryptedKeyPair(e.getId(), k.getPublicKey());
     }
 
     public boolean exists(UUID teamId, String name) {
         return secretDao.getByName(teamId, name) != null;
+    }
+
+    public List<SecretEntry> list(UUID teamId) {
+        return secretDao.list(teamId, SECRETS.SECRET_NAME, true);
     }
 
     public String generatePassword() {
@@ -76,19 +99,20 @@ public class SecretManager {
         return k;
     }
 
-    public Secret getSecret(UUID teamId, String name, String password) {
-        SecretDataEntry s = secretDao.getByName(teamId, name);
-        if (s == null) {
+    public DecryptedSecret getSecret(UUID teamId, String name, String password) {
+        SecretDataEntry e = secretDao.getByName(teamId, name);
+        if (e == null) {
             return null;
         }
 
         SecretStoreType providedStoreType = getStoreType(password);
-        assertStoreType(name, providedStoreType, s.getStoreType());
+        assertStoreType(name, providedStoreType, e.getStoreType());
 
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
-        return decrypt(s.getType(), s.getData(), pwd, salt);
+        Secret s = decrypt(e.getType(), e.getData(), pwd, salt);
+        return new DecryptedSecret(e.getId(), s);
     }
 
     public SecretDataEntry getRaw(UUID teamId, String name, String password) {
@@ -109,13 +133,14 @@ public class SecretManager {
     }
 
     public KeyPair getKeyPair(UUID teamId, String name, String password) {
-        Secret s = getSecret(teamId, name, password);
-        if (s == null) {
+        DecryptedSecret e = getSecret(teamId, name, password);
+        if (e == null) {
             return null;
         }
 
+        Secret s = e.getSecret();
         if (!(s instanceof KeyPair)) {
-            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected a key pair, got: " + s.getClass());
+            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected a key pair, got: " + e.getClass());
         }
 
         return (KeyPair) s;
@@ -219,12 +244,31 @@ public class SecretManager {
         return SecretStoreType.PASSWORD;
     }
 
-    public static class KeyPairEntry {
+    public static class DecryptedSecret {
+
+        private final UUID id;
+        private final Secret secret;
+
+        public DecryptedSecret(UUID id, Secret secret) {
+            this.id = id;
+            this.secret = secret;
+        }
+
+        public UUID getId() {
+            return id;
+        }
+
+        public Secret getSecret() {
+            return secret;
+        }
+    }
+
+    public static class DecryptedKeyPair {
 
         private final UUID id;
         private final byte[] data;
 
-        public KeyPairEntry(UUID id, byte[] data) {
+        public DecryptedKeyPair(UUID id, byte[] data) {
             this.id = id;
             this.data = data;
         }
@@ -238,11 +282,11 @@ public class SecretManager {
         }
     }
 
-    public static class UsernamePasswordEntry {
+    public static class DecryptedUsernamePassword {
 
         private final UUID id;
 
-        public UsernamePasswordEntry(UUID id) {
+        public DecryptedUsernamePassword(UUID id) {
             this.id = id;
         }
 
@@ -251,11 +295,11 @@ public class SecretManager {
         }
     }
 
-    public static class BinaryDataEntry {
+    public static class DecryptedBinaryData {
 
         private final UUID id;
 
-        public BinaryDataEntry(UUID id) {
+        public DecryptedBinaryData(UUID id) {
             this.id = id;
         }
 

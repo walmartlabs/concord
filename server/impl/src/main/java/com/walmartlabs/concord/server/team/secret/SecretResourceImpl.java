@@ -1,7 +1,9 @@
 package com.walmartlabs.concord.server.team.secret;
 
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.OperationResult;
+import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.api.team.TeamEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
@@ -9,9 +11,9 @@ import com.walmartlabs.concord.server.api.team.secret.PublicKeyResponse;
 import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
 import com.walmartlabs.concord.server.api.team.secret.SecretResource;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
-import com.walmartlabs.concord.server.security.secret.SecretManager.BinaryDataEntry;
-import com.walmartlabs.concord.server.security.secret.SecretManager.KeyPairEntry;
-import com.walmartlabs.concord.server.security.secret.SecretManager.UsernamePasswordEntry;
+import com.walmartlabs.concord.server.security.secret.SecretManager.DecryptedBinaryData;
+import com.walmartlabs.concord.server.security.secret.SecretManager.DecryptedKeyPair;
+import com.walmartlabs.concord.server.security.secret.SecretManager.DecryptedUsernamePassword;
 import com.walmartlabs.concord.server.team.TeamManager;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -23,6 +25,7 @@ import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.UUID;
 
 @Named
@@ -39,7 +42,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
     @Override
     public SecretOperationResponse create(String teamName, MultipartInput input) {
-        UUID teamId = assertTeam(teamName);
+        UUID teamId = assertTeam(teamName, TeamRole.WRITER);
 
         try {
             SecretType type = assertType(input);
@@ -68,8 +71,21 @@ public class SecretResourceImpl implements SecretResource, Resource {
         }
     }
 
+    @Override
+    public PublicKeyResponse getPublicKey(String teamName, String secretName) {
+        UUID teamId = assertTeam(teamName, TeamRole.READER);
+        DecryptedKeyPair k = secretManager.getKeyPair(teamId, secretName);
+        return new PublicKeyResponse(k.getId(), null, new String(k.getData()));
+    }
+
+    @Override
+    public List<SecretEntry> list(String teamName) {
+        UUID teamId = assertTeam(teamName, TeamRole.READER);
+        return secretManager.list(teamId);
+    }
+
     private PublicKeyResponse createKeyPair(UUID teamId, String name, String storePassword, MultipartInput input) throws IOException {
-        KeyPairEntry e;
+        DecryptedKeyPair e;
 
         InputStream publicKey = getStream(input, "public");
         if (publicKey != null) {
@@ -86,18 +102,18 @@ public class SecretResourceImpl implements SecretResource, Resource {
         String username = assertString(input, "username");
         String password = assertString(input, "password");
 
-        UsernamePasswordEntry e = secretManager.createUsernamePassword(teamId, name, storePassword, username, password.toCharArray());
+        DecryptedUsernamePassword e = secretManager.createUsernamePassword(teamId, name, storePassword, username, password.toCharArray());
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED);
     }
 
     private SecretOperationResponse createData(UUID teamId, String name, String storePassword, MultipartInput input) throws IOException {
         InputStream data = assertStream(input, "data");
-        BinaryDataEntry e = secretManager.createBinaryData(teamId, name, storePassword, data);
+        DecryptedBinaryData e = secretManager.createBinaryData(teamId, name, storePassword, data);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED);
     }
 
-    private UUID assertTeam(String teamName) {
-        TeamEntry t = teamManager.assertTeamAccess(teamName, TeamRole.WRITER, true);
+    private UUID assertTeam(String teamName, TeamRole requiredRole) {
+        TeamEntry t = teamManager.assertTeamAccess(teamName, requiredRole, true);
         return t.getId();
     }
 
@@ -127,6 +143,11 @@ public class SecretResourceImpl implements SecretResource, Resource {
         if (s == null || s.trim().isEmpty()) {
             throw new ValidationErrorsException("'name' is required");
         }
+
+        if (!s.matches(ConcordKey.PATTERN)) {
+            throw new ValidationErrorsException("Invalid secret name: " + s);
+        }
+
         return s;
     }
 

@@ -11,6 +11,7 @@ import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
 import com.walmartlabs.concord.server.project.RepositoryException;
 import com.walmartlabs.concord.server.security.secret.SecretManager;
+import com.walmartlabs.concord.server.security.secret.SecretManager.DecryptedSecret;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.SubmoduleInitCommand;
@@ -119,14 +120,16 @@ public class GithubRepositoryProvider implements RepositoryProvider {
     }
 
     private Secret getSecret(UUID teamId, String secretName) {
-        Secret secret = null;
-        if (secretName != null) {
-            secret = secretManager.getSecret(teamId, secretName, null);
-            if (secret == null) {
-                throw new RepositoryException("Secret not found: " + secretName);
-            }
+        if (secretName == null) {
+            return null;
         }
-        return secret;
+
+        DecryptedSecret s = secretManager.getSecret(teamId, secretName, null);
+        if (s == null) {
+            throw new RepositoryException("Secret not found: " + secretName);
+        }
+
+        return s.getSecret();
     }
 
     private static Git openRepo(Path path) {

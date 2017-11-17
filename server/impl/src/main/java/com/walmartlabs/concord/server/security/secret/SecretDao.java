@@ -102,7 +102,7 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public List<SecretEntry> list(Field<?> sortField, boolean asc) {
+    public List<SecretEntry> list(UUID teamId, Field<?> sortField, boolean asc) {
         Field<String> teamName = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(SECRETS.TEAM_ID)).asField();
 
         try (DSLContext tx = DSL.using(cfg)) {
@@ -114,6 +114,10 @@ public class SecretDao extends AbstractDao {
                             SECRETS.SECRET_TYPE,
                             SECRETS.SECRET_STORE_TYPE)
                     .from(SECRETS);
+
+            if (teamId != null) {
+                query.where(SECRETS.TEAM_ID.eq(teamId));
+            }
 
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());

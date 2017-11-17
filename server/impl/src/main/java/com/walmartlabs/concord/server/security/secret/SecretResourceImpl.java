@@ -182,7 +182,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
         if (sortField == null) {
             throw new ValidationErrorsException("Unknown sort field: " + sortBy);
         }
-        return secretDao.list(sortField, asc);
+        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        return secretDao.list(teamId, sortField, asc);
     }
 
     @Override
