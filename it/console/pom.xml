@@ -14,7 +14,7 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <selenium.version>3.5.3</selenium.version>
+        <selenium.version>3.7.1</selenium.version>
         <webdriver.version>0.9.7376</webdriver.version>
         <webdriver.type>local</webdriver.type>
     </properties>
@@ -228,7 +228,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>docker.prod.walmart.com/selenium/standalone-chrome-3.4:wm-01</name>
+                                    <name>selenium/standalone-chrome:3.7.1</name>
                                     <alias>selenium-chrome</alias>
                                     <run>
                                         <network>

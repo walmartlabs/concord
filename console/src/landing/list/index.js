@@ -59,7 +59,7 @@ class LandingPage extends Component {
         return <div>
             <Header as="h3"><RefreshButton loading={loading} onClick={() => this.load()}/> Registered flows</Header>
 
-            {!data || data.length <= 0 && <p>No registered flows found.</p>}
+            {(!data || data.length <= 0) && <p>No registered flows found.</p>}
             {data && data.length > 0 && <CardGroup>{data.map(item => this.renderCard(item))}</CardGroup>}
         </div>;
     }

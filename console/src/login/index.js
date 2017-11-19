@@ -6,7 +6,7 @@ import {Field} from "../shared/forms";
 import * as actions from "./actions";
 import reducers, * as selectors from "./reducers";
 import sagas from "./sagas";
-import './styles.css';
+import "./styles.css";
 
 const isThere = (x) => x !== undefined && x !== null;
 
@@ -17,7 +17,7 @@ let loginForm = (props) => {
             <Card centered>
                 <CardContent>
                     <div className="crop">
-                        <Image src='/strati-logo.png' size='medium'/>
+                        <Image id="strati-logo" src="/strati-logo.png" size="medium"/>
                     </div>
                     <Dimmer active={loading} inverted>
                         <Loader/>

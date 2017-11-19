@@ -8,11 +8,13 @@ import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.logging.Logs;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -100,6 +102,13 @@ public abstract class AbstractIT {
 
     protected void assertNoErrors() {
         Logs logs = getDriver().manage().logs();
-        assertTrue(logs.get(LogType.BROWSER).filter(Level.SEVERE).isEmpty());
+        List<LogEntry> errors = logs.get(LogType.BROWSER).filter(Level.SEVERE);
+        if (!errors.isEmpty()) {
+            for (LogEntry e : errors) {
+                System.err.print(">>> ");
+                System.err.println(e.getMessage());
+            }
+            fail("Found some errors in the log");
+        }
     }
 }

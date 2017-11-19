@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { push as pushHistory } from "react-router-redux";
 import { arrayPush as formArrayPush, change as formChange, FieldArray, reduxForm } from "redux-form";
-import { Button, Divider, Form, Message, Popup, Table, Icon } from "semantic-ui-react";
+import { Button, Divider, Form, Message, Popup, Table } from "semantic-ui-react";
 import { Field } from "../shared/forms";
 import { actions as modal } from "../shared/Modal";
 import * as RepositoryPopup from "./RepositoryPopup";

@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.console;
 
 public final class ITConstants {
 
-    public static final int LOCAL_CONSOLE_PORT = 8080;
+    public static final int LOCAL_CONSOLE_PORT = 3000;
     public static final int REMOTE_CONSOLE_PORT = 8080;
 
     public static final int SERVER_PORT;
