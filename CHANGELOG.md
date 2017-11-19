@@ -9,6 +9,11 @@ new projects using flows;
 - concord-server: methods to refresh triggers and LPs for all
 projects.
 
+### Changed
+
+- concord-console: rename "Kill" button on the process page to
+"Cancel".
+
 
 
 ## [0.47.0] - 2017-11-15

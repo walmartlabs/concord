@@ -11,9 +11,9 @@ const killProcessPopup = ({open, instanceId, onSuccess, onCloseFn, onConfirmFn, 
     const inFlight = inFlightFn(instanceId);
 
     return <Modal open={open} dimmer="inverted">
-        <Modal.Header>Kill the selected process?</Modal.Header>
+        <Modal.Header>Cancel the selected process?</Modal.Header>
         <Modal.Content>
-            Are you sure you want to kill the selected process?
+            Are you sure you want to cancel the selected process?
         </Modal.Content>
         <Modal.Actions>
             <Button color="green" disabled={inFlight} onClick={onCloseFn}>No</Button>

@@ -123,7 +123,7 @@ class ProcessStatusPage extends Component {
             }
 
             {showKillButton &&
-                <Button icon="delete" color="red" content="Kill" onClick={() => openKillPopup(instanceId)} />}
+                <Button icon="delete" color="red" content="Cancel" onClick={() => openKillPopup(instanceId)} />}
 
             {showWizard && <Button onClick={() => this.openWizard()}>Wizard</Button>}
 

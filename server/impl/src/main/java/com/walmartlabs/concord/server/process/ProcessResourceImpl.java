@@ -269,8 +269,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @RequiresAuthentication
-    public void kill(UUID instanceId) {
+    public void cancel(UUID instanceId) {
         processManager.kill(instanceId);
+    }
+
+    @Override
+    @Validate
+    @RequiresAuthentication
+    public void kill(UUID instanceId) {
+        cancel(instanceId);
     }
 
     @Override
