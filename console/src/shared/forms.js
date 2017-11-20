@@ -1,6 +1,6 @@
 import React from "react";
 import {Field as RFField} from "redux-form";
-import {Form, Input, Label, Dropdown as SUDropdown} from "semantic-ui-react";
+import {Dropdown as SUDropdown, Form, Input, Label} from "semantic-ui-react";
 
 const CInput = ({input, meta: {error, touched, asyncValidating}, label, required, ...custom}) => {
     const invalid = error && touched;
@@ -14,10 +14,7 @@ const CInput = ({input, meta: {error, touched, asyncValidating}, label, required
     </Form.Field>;
 };
 
-export const Field = (props) => <RFField component={CInput} {...props}/>;
-
-const CDropdown = ({widget, input, meta: {error, touched}, label, required, ...custom}) => {
-    const Widget = widget ? widget : SUDropdown;
+const SUComponent = ({widget: Widget, input, meta: {error, touched}, label, required, ...custom}) => {
     const invalid = error && touched;
 
     return <Form.Field error={invalid} required={required}>
@@ -30,4 +27,12 @@ const CDropdown = ({widget, input, meta: {error, touched}, label, required, ...c
     </Form.Field>;
 };
 
+const CDropdown = props => {
+    return <SUComponent widget={SUDropdown} {...props}/>
+};
+
+export const Field = (props) => <RFField component={CInput} {...props}/>;
+
 export const Dropdown = (props) => <RFField component={CDropdown} {...props}/>;
+
+export const FileInput = (props) => <RFField component={CInput} {...props} type="file"/>;
