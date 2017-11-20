@@ -18,6 +18,7 @@ import {reducers as secretList} from "../secret/list";
 import {reducers as secretForm} from "../secret/create";
 import {reducers as modal} from "../shared/Modal";
 import {reducers as landingList} from "../landing/list";
+import {reducers as teamSecretForm} from "../team/secret/create/effects";
 
 export default {
     session,
@@ -37,6 +38,7 @@ export default {
     secretForm,
     landingList,
     modal,
+    teamSecretForm,
     
     form: formReducer
 };

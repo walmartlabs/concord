@@ -65,7 +65,7 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
                         <Menu.Item active={router.isActive("/secret/list")}>
                             <Link to="/secret/list">List</Link>
                         </Menu.Item>
-                        <Menu.Item active={router.isActive("/secret/list")}>
+                        <Menu.Item active={router.isActive("/secret/_new")}>
                             <Link to="/secret/_new">Create New</Link>
                         </Menu.Item>
                     </Menu.Menu>

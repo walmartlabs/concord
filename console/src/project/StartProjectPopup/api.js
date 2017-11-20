@@ -16,7 +16,7 @@ export const startProject = (projectName: ConcordKey, repositoryName: ConcordKey
     return fetch(`api/v1/process/${projectName}:${repositoryName}`, opts)
         .then(response => {
             if (!response.ok) {
-                return common.processError(response);
+                return common.parseError(response);
             }
 
             return response.json();

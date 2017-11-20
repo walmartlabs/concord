@@ -19,7 +19,7 @@ import ProjectList from "./project/list";
 import LandingList from "./landing/list";
 import Project from "./project";
 import SecretList from "./secret/list";
-import SecretCreate from "./secret/create";
+import CreateSecretPage from "./team/secret/create";
 import {actions as session} from "./session";
 import "./index.css";
 
@@ -61,7 +61,7 @@ ReactDOM.render(
                 <Route path="secret" onEnter={checkAuth}>
                     <IndexRedirect to="list"/>
                     <Route path="list" component={SecretList}/>
-                    <Route path="_new" component={SecretCreate}/>
+                    <Route path="_new" component={CreateSecretPage}/>
                 </Route>
 
                 <Route path="landing" onEnter={checkAuth}>

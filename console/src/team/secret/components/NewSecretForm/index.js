@@ -1,17 +1,11 @@
 import React from "react";
 import {connect} from "react-redux";
 import {formValueSelector, reduxForm} from "redux-form";
-import {Dropdown as SUIDropdown, Form, Segment} from "semantic-ui-react";
+import {Dropdown as SUIDropdown, Form} from "semantic-ui-react";
 
-import {Checkbox, Dropdown, Field, FileInput} from "../../../../shared/forms";
+import {secretTypes} from "../../create/constants";
+import {Dropdown, Field, FileInput} from "../../../../shared/forms";
 import * as v from "../../../../shared/validation";
-
-const secretTypes = {
-    newKeyPair: "NEW_KEY_PAIR",
-    existingKeyPair: "EXISTING_KEY_PAIR",
-    usernamePassword: "USERNAME_PASSWORD",
-    singleValue: "DATA"
-};
 
 const SecretTypeDropdown = props => {
     const types = [
@@ -26,8 +20,8 @@ const SecretTypeDropdown = props => {
                         {...props}/>;
 };
 
-const renderField = (typeValue) => {
-    switch (typeValue) {
+const renderField = (secretTypeValue) => {
+    switch (secretTypeValue) {
         case secretTypes.newKeyPair: {
             return;
         }
@@ -46,56 +40,77 @@ const renderField = (typeValue) => {
         case secretTypes.singleValue: {
             return <Field name="data" label="Value" required/>
         }
+        default: {
+            return `Unsupported secret type: ${secretTypeValue}`;
+        }
     }
 };
 
-let NewSecretForm = ({handleSubmit, pristine, invalid, submitting, typeValue}) =>
-
-    <Form onSubmit={handleSubmit} loading={submitting}>
+let NewSecretForm = ({handleSubmit, pristine, invalid, loading, submitting, secretTypeValue}) =>
+    <Form onSubmit={handleSubmit} loading={loading || submitting}>
         <Field name="name" label="Name" required/>
-        <Dropdown name="type" label="Type" widget={SecretTypeDropdown} required/>
+        <Dropdown name="secretType" label="Type" widget={SecretTypeDropdown} required/>
 
-        {renderField(typeValue)}
+        {renderField(secretTypeValue)}
 
         <Field name="storePassword" label="Store password"/>
 
         <Form.Button primary type="submit" disabled={pristine || submitting || invalid}>Submit</Form.Button>
     </Form>;
 
-const validate = ({name, type, publicFile, privateFile, username, password, data}) => {
+const validate = ({name, secretType, publicFile, privateFile, username, password, data}) => {
     const errors = {};
 
     errors.name = v.secret.name(name);
 
-    switch (type) {
+    switch (secretType) {
+        case secretTypes.newKeyPair: {
+            break;
+        }
         case secretTypes.existingKeyPair: {
             errors.publicFile = v.secret.publicFile(publicFile);
             errors.privateFile = v.secret.privateFile(privateFile);
+            break;
         }
         case secretTypes.usernamePassword: {
             errors.username = v.secret.username(username);
             errors.password = v.secret.password(password);
+            break;
         }
         case secretTypes.singleValue: {
             errors.data = v.secret.data(data);
+            break;
+        }
+        default: {
+            errors.type = `Unsupported secret type: ${secretType}`;
+            break;
         }
     }
 
     return errors;
 };
 
+const asyncValidate = ({name}, dispatch, {nameCheckFn}) => {
+    if (!nameCheckFn) {
+        return Promise.resolve(true);
+    }
+
+    return nameCheckFn(name);
+};
+
 NewSecretForm = reduxForm({
-    form: "NewSecretForm",
-    initialValues: {type: secretTypes.newKeyPair},
+    form: "newSecretForm",
+    initialValues: {secretType: secretTypes.newKeyPair},
     validate,
+    asyncValidate,
     enableReinitialize: true,
     keepDirtyOnReinitialize: true
 })(NewSecretForm);
 
-const selector = formValueSelector("NewSecretForm");
+const selector = formValueSelector("newSecretForm");
 
 const mapStateToProps = (state) => ({
-    typeValue: selector(state, "type")
+    secretTypeValue: selector(state, "secretType")
 });
 
 export default connect(mapStateToProps)(NewSecretForm);

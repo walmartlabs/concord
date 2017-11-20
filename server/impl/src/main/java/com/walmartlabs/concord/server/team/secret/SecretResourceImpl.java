@@ -101,17 +101,21 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     private PublicKeyResponse createKeyPair(UUID teamId, String name, String storePassword, MultipartInput input) throws IOException {
-        DecryptedKeyPair e;
+        DecryptedKeyPair k;
 
         InputStream publicKey = getStream(input, "public");
         if (publicKey != null) {
             InputStream privateKey = assertStream(input, "private");
-            e = secretManager.createKeyPair(teamId, name, storePassword, publicKey, privateKey);
+            try {
+                k = secretManager.createKeyPair(teamId, name, storePassword, publicKey, privateKey);
+            } catch (IllegalArgumentException e) {
+                throw new ValidationErrorsException(e.getMessage());
+            }
         } else {
-            e = secretManager.createKeyPair(teamId, name, storePassword);
+            k = secretManager.createKeyPair(teamId, name, storePassword);
         }
 
-        return new PublicKeyResponse(e.getId(), OperationResult.CREATED, new String(e.getData()));
+        return new PublicKeyResponse(k.getId(), OperationResult.CREATED, new String(k.getData()));
     }
 
     private SecretOperationResponse createUsernamePassword(UUID teamId, String name, String storePassword, MultipartInput input) throws IOException {

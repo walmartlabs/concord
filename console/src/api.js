@@ -17,17 +17,45 @@ const errorWithDetails = (resp: any, data: any) => {
     };
 };
 
-export const processError = (resp: any) => {
+export const parseError = (resp: any) => {
     const contentType = resp.headers.get("Content-Type");
-    if (contentType && contentType.indexOf("application/json") !== -1) {
-        return resp.json().then(data => {
+    if (isSiestaError(contentType)) {
+        return resp.json().then(json => {
+            const data = json.length > 0 ? json[0] : {};
             throw errorWithDetails(resp, data);
+        });
+    } else if (isJson(contentType)) {
+        return resp.json().then(json => {
+            throw errorWithDetails(resp, json);
         });
     }
 
     return new Promise(() => {
         throw defaultError(resp);
     });
+};
+
+const isJson = (h: ?string): boolean => {
+    if (!h) {
+        return false;
+    }
+
+    if (h.indexOf("application/json") !== -1) {
+        return true;
+    }
+    return false;
+};
+
+const isSiestaError = (h: ?string): boolean => {
+    if (!h) {
+        return false;
+    }
+
+    if (h.indexOf("application/vnd.siesta-validation-errors-v1+json") !== -1) {
+        return true;
+    }
+
+    return false;
 };
 
 export const defaultError = (resp: any) => {
