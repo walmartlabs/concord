@@ -15,6 +15,7 @@ import java.util.UUID;
 
 @Api("Secrets")
 @Path("/api/v1/secret")
+@Deprecated
 public interface SecretResource {
 
     @POST

@@ -74,7 +74,7 @@ public class TeamManager {
         UserPrincipal p = UserPrincipal.getCurrent();
         boolean admin = p.isAdmin();
         if (!admin && (teamMembersOnly || t.getVisibility() != TeamVisibility.PUBLIC)) {
-            if (!teamDao.hasUser(teamId, p.getId(), TeamRole.atLeast(requiredRole))) {
+            if (!teamDao.hasUser(t.getId(), p.getId(), TeamRole.atLeast(requiredRole))) {
                 throw new UnauthorizedException("The current user does not have access to the specified team (id=" + teamId + "). " +
                         "Required role: " + requiredRole);
             }

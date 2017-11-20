@@ -3,6 +3,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.it.common.ServerClient;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
+import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
 import org.junit.After;
 import org.junit.Before;
 
@@ -35,6 +36,10 @@ public abstract class AbstractServerIT {
 
     protected StartProcessResponse start(String entryPoint, Map<String, Object> input) {
         return serverClient.start(entryPoint, input, false);
+    }
+
+    protected SecretOperationResponse postSecret(String teamName, Map<String, Object> input) {
+        return serverClient.postSecret(teamName, input);
     }
 
     protected UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {

@@ -81,12 +81,20 @@ public class SecretManager {
         return new DecryptedKeyPair(e.getId(), k.getPublicKey());
     }
 
+    public UUID getId(UUID teamId, String name) {
+        return secretDao.getId(teamId, name);
+    }
+
     public boolean exists(UUID teamId, String name) {
         return secretDao.getByName(teamId, name) != null;
     }
 
     public List<SecretEntry> list(UUID teamId) {
         return secretDao.list(teamId, SECRETS.SECRET_NAME, true);
+    }
+
+    public void delete(UUID secretId) {
+        secretDao.delete(secretId);
     }
 
     public String generatePassword() {

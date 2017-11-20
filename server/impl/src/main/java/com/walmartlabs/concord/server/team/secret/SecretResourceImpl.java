@@ -7,6 +7,7 @@ import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.security.secret.SecretType;
 import com.walmartlabs.concord.server.api.team.TeamEntry;
 import com.walmartlabs.concord.server.api.team.TeamRole;
+import com.walmartlabs.concord.server.api.team.secret.DeleteSecretResponse;
 import com.walmartlabs.concord.server.api.team.secret.PublicKeyResponse;
 import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
 import com.walmartlabs.concord.server.api.team.secret.SecretResource;
@@ -23,6 +24,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -82,6 +84,20 @@ public class SecretResourceImpl implements SecretResource, Resource {
     public List<SecretEntry> list(String teamName) {
         UUID teamId = assertTeam(teamName, TeamRole.READER);
         return secretManager.list(teamId);
+    }
+
+    @Override
+    public DeleteSecretResponse delete(String teamName, String secretName) {
+        UUID teamId = assertTeam(teamName, TeamRole.WRITER);
+
+        UUID secretId = secretManager.getId(teamId, secretName);
+        if (secretId == null) {
+            throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
+        }
+
+        secretManager.delete(secretId);
+
+        return new DeleteSecretResponse();
     }
 
     private PublicKeyResponse createKeyPair(UUID teamId, String name, String storePassword, MultipartInput input) throws IOException {

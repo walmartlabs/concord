@@ -3,6 +3,7 @@ package com.walmartlabs.concord.it.common;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
+import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
@@ -115,6 +116,12 @@ public class ServerClient {
         return e;
     }
 
+    public SecretOperationResponse postSecret(String teamName, Map<String, Object> input) {
+        return request(com.walmartlabs.concord.server.api.team.secret.SecretResource.class.getAnnotation(Path.class).value() + "/" + teamName + "/secret",
+                input, SecretOperationResponse.class);
+    }
+
+    @Deprecated
     public UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {
         Map<String, Object> m = new HashMap<>();
         m.put("secret", secret);
@@ -126,6 +133,7 @@ public class ServerClient {
                 m, UploadSecretResponse.class);
     }
 
+    @Deprecated
     public UploadSecretResponse addUsernamePassword(String name, boolean generatePassword, String storePassword, String username, String password) {
         Map<String, Object> m = new HashMap<>();
         m.put("username", username);

@@ -12,6 +12,10 @@ public class CreateApiKeyRequest implements Serializable {
 
     private final String username;
 
+    public CreateApiKeyRequest(String username) {
+        this(null, username);
+    }
+
     @JsonCreator
     public CreateApiKeyRequest(@JsonProperty("userId") UUID userId,
                                @JsonProperty("username") String username) {

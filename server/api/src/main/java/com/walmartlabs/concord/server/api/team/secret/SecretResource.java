@@ -20,19 +20,26 @@ public interface SecretResource {
     @Path("/{teamName}/secret")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    SecretOperationResponse create(@ApiParam @ConcordKey String teamName,
+    SecretOperationResponse create(@ApiParam @PathParam("teamName") @ConcordKey String teamName,
                                    @ApiParam MultipartInput input);
 
     @GET
     @ApiOperation("Retrieves the public key of a key pair")
     @Path("/{teamName}/secret/{secretName}/public")
     @Produces(MediaType.APPLICATION_JSON)
-    PublicKeyResponse getPublicKey(@ApiParam @ConcordKey String teamName,
-                                   @ApiParam @ConcordKey String secretName);
+    PublicKeyResponse getPublicKey(@ApiParam @PathParam("teamName") @ConcordKey String teamName,
+                                   @ApiParam @PathParam("secretName") @ConcordKey String secretName);
 
     @GET
     @ApiOperation("List secrets")
     @Path("/{teamName}/secret")
     @Produces(MediaType.APPLICATION_JSON)
-    List<SecretEntry> list(@ApiParam @ConcordKey String teamName);
+    List<SecretEntry> list(@ApiParam @PathParam("teamName") @ConcordKey String teamName);
+
+    @DELETE
+    @ApiOperation("Delete an existing secret")
+    @Path("/{teamName}/secret/{secretName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    DeleteSecretResponse delete(@ApiParam @PathParam("teamName") @ConcordKey String teamName,
+                                @ApiParam @PathParam("secretName") @ConcordKey String secretName);
 }
