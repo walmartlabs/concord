@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.ansible;
 
 import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.project.ConfigurationValidator;
-import com.walmartlabs.concord.server.security.secret.SecretDao;
+import com.walmartlabs.concord.server.team.secret.SecretDao;
 import com.walmartlabs.concord.server.team.TeamManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;

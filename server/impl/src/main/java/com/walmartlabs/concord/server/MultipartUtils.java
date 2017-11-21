@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server;
 
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
@@ -31,6 +32,16 @@ public final class MultipartUtils {
         }
 
         return null;
+    }
+
+    public static boolean contains(MultipartInput input, String key) {
+        for (InputPart p : input.getParts()) {
+            String name = MultipartUtils.extractName(p);
+            if (key.equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private MultipartUtils() {

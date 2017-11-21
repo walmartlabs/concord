@@ -4,3 +4,6 @@
   - debug:
       msg: "{{ greetings }}"
       verbosity: 0
+  - debug:
+      msg: "yay!"
+      verbosity: 0

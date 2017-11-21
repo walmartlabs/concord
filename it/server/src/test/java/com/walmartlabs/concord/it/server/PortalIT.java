@@ -3,7 +3,6 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.security.secret.SecretResource;
 import com.walmartlabs.concord.server.console.ProcessPortalService;
 import org.junit.After;
 import org.junit.Before;
@@ -39,6 +38,10 @@ public class PortalIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
+        String teamName = "Default";
+
+        // ---
+
         String projectName = "project@" + randomString();
         String repoSecretName = "repoSecret@" + randomString();
         String repoName = "repo@" + randomString();
@@ -46,8 +49,7 @@ public class PortalIT extends AbstractServerIT {
 
         // ---
 
-        SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(repoSecretName, null, null);
+        generateKeyPair(teamName, repoSecretName, false, null);
 
         // ---
 

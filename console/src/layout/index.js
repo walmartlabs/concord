@@ -6,8 +6,8 @@ import {Grid, Header, Icon, Menu} from "semantic-ui-react";
 import {actions, selectors, SessionWidget} from "../session";
 import Modal from "../shared/Modal";
 import KillProcessPopup from "../process/KillProcessPopup";
-import DeleteSecretPopup from "../secret/list/DeleteSecretPopup";
-import ShowSecretPublicKey from "../secret/list/ShowSecretPublicKey";
+import DeleteSecretPopup from "../team/secret/list/DeleteSecretPopup";
+import ShowSecretPublicKey from "../team/secret/list/ShowSecretPublicKey";
 import RepositoryPopup from "../project/RepositoryPopup";
 import DeleteProjectPopup from "../project/DeleteProjectPopup";
 import StartProjectPopup from "../project/StartProjectPopup/StartProjectPopup";
@@ -65,7 +65,7 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
                         <Menu.Item active={router.isActive("/secret/list")}>
                             <Link to="/secret/list">List</Link>
                         </Menu.Item>
-                        <Menu.Item active={router.isActive("/secret/list")}>
+                        <Menu.Item active={router.isActive("/secret/_new")}>
                             <Link to="/secret/_new">Create New</Link>
                         </Menu.Item>
                     </Menu.Menu>

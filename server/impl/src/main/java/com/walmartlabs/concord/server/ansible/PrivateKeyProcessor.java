@@ -11,7 +11,7 @@ import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProces
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
 import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.security.secret.SecretManager;
+import com.walmartlabs.concord.server.team.secret.SecretManager;
 import com.walmartlabs.concord.server.team.TeamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.it.common.ServerClient;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
+import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
 import org.junit.After;
 import org.junit.Before;
 
@@ -37,12 +37,20 @@ public abstract class AbstractServerIT {
         return serverClient.start(entryPoint, input, false);
     }
 
-    protected UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {
-        return serverClient.addPlainSecret(name, generatePassword, storePassword, secret);
+    protected SecretOperationResponse postSecret(String teamName, Map<String, Object> input) {
+        return serverClient.postSecret(teamName, input);
     }
 
-    protected UploadSecretResponse addUsernamePassword(String name, boolean generatePassword, String storePassword, String username, String password) {
-        return serverClient.addUsernamePassword(name, generatePassword, storePassword, username, password);
+    protected SecretOperationResponse addPlainSecret(String teamName, String name, boolean generatePassword, String storePassword, byte[] secret) {
+        return serverClient.addPlainSecret(teamName, name, generatePassword, storePassword, secret);
+    }
+
+    protected SecretOperationResponse addUsernamePassword(String teamName, String name, boolean generatePassword, String storePassword, String username, String password) {
+        return serverClient.addUsernamePassword(teamName, name, generatePassword, storePassword, username, password);
+    }
+
+    protected SecretOperationResponse generateKeyPair(String teamName, String name, boolean generatePassword, String storePassword) {
+        return serverClient.generateKeyPair(teamName, name, generatePassword, storePassword);
     }
 
     protected <T> T proxy(Class<T> klass) {

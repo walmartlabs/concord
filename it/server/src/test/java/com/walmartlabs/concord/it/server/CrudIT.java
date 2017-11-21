@@ -10,21 +10,24 @@ import com.walmartlabs.concord.server.api.landing.DeleteLandingResponse;
 import com.walmartlabs.concord.server.api.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.landing.LandingPageResource;
 import com.walmartlabs.concord.server.api.project.*;
+import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
+import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
+import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
 import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
 import com.walmartlabs.concord.server.api.security.ldap.LdapResource;
-import com.walmartlabs.concord.server.api.security.secret.*;
+import com.walmartlabs.concord.server.api.team.secret.SecretEntry;
+import com.walmartlabs.concord.server.api.team.secret.SecretType;
 import com.walmartlabs.concord.server.api.team.*;
+import com.walmartlabs.concord.server.api.team.secret.PublicKeyResponse;
+import com.walmartlabs.concord.server.api.team.secret.SecretResource;
 import com.walmartlabs.concord.server.api.user.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.ws.rs.BadRequestException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import javax.ws.rs.ForbiddenException;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.team.TeamManager.DEFAULT_TEAM_ID;
 import static org.junit.Assert.*;
@@ -80,6 +83,113 @@ public class CrudIT extends AbstractServerIT {
         teamUserEntries = teamResource.listUsers(teamName);
         entryA = findTeamUser(teamUserEntries, userA);
         assertNull(entryA);
+    }
+
+    @Test
+    public void testTeamSecrets() throws Exception {
+        TeamResource teamResource = proxy(TeamResource.class);
+
+        String teamAName = "teamA_" + System.currentTimeMillis();
+        teamResource.createOrUpdate(new TeamEntry(teamAName));
+
+        String teamBName = "teamB_" + System.currentTimeMillis();
+        teamResource.createOrUpdate(new TeamEntry(teamBName));
+
+        // ---
+
+        UserResource userResource = proxy(UserResource.class);
+        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
+
+        String userAName = "userA_" + System.currentTimeMillis();
+        userResource.createOrUpdate(new CreateUserRequest(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+
+        String userBName = "userB_" + System.currentTimeMillis();
+        userResource.createOrUpdate(new CreateUserRequest(userBName));
+        CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
+
+        // ---
+
+        teamResource.addUsers(teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.WRITER)));
+        teamResource.addUsers(teamAName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.READER)));
+
+        teamResource.addUsers(teamBName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.WRITER)));
+
+        // ---
+
+        SecretResource secretResource = proxy(SecretResource.class);
+
+        // create a new key pair as the User A
+
+        setApiKey(apiKeyA.getKey());
+
+        String secretAName = "secretA_" + System.currentTimeMillis();
+
+        Map<String, Object> m = new HashMap<>();
+        m.put("type", SecretType.KEY_PAIR.toString());
+        m.put("name", secretAName);
+
+        postSecret(teamAName, m);
+        PublicKeyResponse pkrA = secretResource.getPublicKey(teamAName, secretAName);
+        assertNotNull(pkrA.getPublicKey());
+
+        // check if the key pair is readable by the User B
+
+        setApiKey(apiKeyB.getKey());
+
+        pkrA = secretResource.getPublicKey(teamAName, secretAName);
+        assertNotNull(pkrA.getPublicKey());
+
+        // try deleting the secret as the User B
+
+        setApiKey(apiKeyB.getKey());
+
+        try {
+            secretResource.delete(teamAName, secretAName);
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // create another secret (a username/password combo) as the User B
+
+        setApiKey(apiKeyB.getKey());
+
+        String secretBName = "secretB_" + System.currentTimeMillis();
+
+        m = new HashMap<>();
+        m.put("type", SecretType.USERNAME_PASSWORD.toString());
+        m.put("name", secretBName);
+        m.put("username", "username_" + System.currentTimeMillis());
+        m.put("password", "password_" + System.currentTimeMillis());
+
+        postSecret(teamBName, m);
+
+        // the User A should not be able to see the second secret
+
+        setApiKey(apiKeyA.getKey());
+
+        try {
+            secretResource.list(teamBName);
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // the Admin should be able to see the second secret
+
+        resetApiKey();
+
+        List<SecretEntry> l = secretResource.list(teamBName);
+        assertEquals(1, l.size());
+        assertEquals(secretBName, l.get(0).getName());
+
+        // the User B should be able to delete the second secret
+
+        setApiKey(apiKeyB.getKey());
+
+        secretResource.delete(teamBName, secretBName);
+
+        l = secretResource.list(teamBName);
+        assertTrue(l.isEmpty());
     }
 
     @Test
@@ -158,62 +268,6 @@ public class CrudIT extends AbstractServerIT {
         CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2,
                 new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null));
         assertTrue(crr2.isOk());
-    }
-
-    @Test
-    public void testSecretKeyPair() throws Exception {
-        String keyName = "key_" + randomString();
-        SecretResource secretResource = proxy(SecretResource.class);
-
-        // ---
-
-        PublicKeyResponse pkr = secretResource.createKeyPair(keyName, null, null);
-        assertTrue(pkr.isOk());
-        assertNotNull(pkr.getPublicKey());
-
-        // ---
-
-        PublicKeyResponse pkr2 = secretResource.getPublicKey(keyName);
-        assertEquals(pkr.getPublicKey(), pkr2.getPublicKey());
-
-        // ---
-
-        List<SecretEntry> l = secretResource.list(null, true);
-        SecretEntry s = findSecret(l, keyName);
-        assertNotNull(s);
-        assertEquals(keyName, s.getName());
-
-        // ---
-
-        secretResource.delete(keyName);
-
-        // ---
-
-        try {
-            secretResource.getPublicKey(keyName);
-            fail("should fail");
-        } catch (BadRequestException e) {
-        }
-    }
-
-    @Test
-    public void testSecretUsernamePassword() throws Exception {
-        String keyName = "key_" + randomString();
-        SecretResource secretResource = proxy(SecretResource.class);
-
-        // ---
-
-        UploadSecretResponse usr = secretResource.addUsernamePassword(keyName, null, null,
-                new UsernamePasswordRequest("something", new char[]{'a', 'b', 'c'}));
-        assertTrue(usr.isOk());
-
-        // ---
-
-        List<SecretEntry> l = secretResource.list(null, true);
-        SecretEntry s = findSecret(l, keyName);
-        assertNotNull(s);
-        assertEquals(SecretType.USERNAME_PASSWORD, s.getType());
-        assertEquals(keyName, s.getName());
     }
 
     @Test

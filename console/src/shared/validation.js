@@ -33,6 +33,12 @@ const repositoryUrlValidator = (v: ?string) => {
     }
 };
 
+const requiredValidator = (v: ?any) => {
+    if (!v) {
+        return requiredError();
+    }
+};
+
 export const project = {
     name: concordKeyValidator,
     description: (v: ?string) => {
@@ -56,4 +62,14 @@ export const repository = {
         }
     },
     secret: concordKeyValidator
+};
+
+export const secret = {
+    name: concordKeyValidator,
+    publicFile: requiredValidator,
+    privateFile: requiredValidator,
+    username: requiredValidator,
+    password: requiredValidator,
+    data: requiredValidator,
+    storePassword: requiredValidator
 };

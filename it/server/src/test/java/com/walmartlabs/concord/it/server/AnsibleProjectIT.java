@@ -9,7 +9,8 @@ import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.security.secret.SecretResource;
+import com.walmartlabs.concord.server.api.team.TeamEntry;
+import com.walmartlabs.concord.server.api.team.TeamResource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,6 +73,10 @@ public class AnsibleProjectIT extends AbstractServerIT {
     @Test
     @SuppressWarnings("unchecked")
     public void testFailure() throws Exception {
+        String teamName = "Default";
+
+        // ---
+
         Map<String, Object> input = new HashMap<>();
         input.put("request", resource("ansibleproject/requestFailure.json"));
 
@@ -87,8 +92,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(repoSecretName, null, null);
+        generateKeyPair(teamName, repoSecretName, false, null);
 
         // ---
 
@@ -123,6 +127,10 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     @SuppressWarnings("unchecked")
     public void test(Map<String, Object> input) throws Exception {
+        String teamName = "Default";
+
+        // ---
+
         String templatePath = "file://" + ITConstants.DEPENDENCIES_DIR + "/ansible-template.jar";
 
         String projectName = "project@" + randomString();
@@ -133,8 +141,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(repoSecretName, null, null);
+        generateKeyPair(teamName, repoSecretName, false, null);
 
         // ---
 

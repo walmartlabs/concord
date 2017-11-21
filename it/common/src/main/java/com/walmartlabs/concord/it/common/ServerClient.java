@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.it.common;
 
 import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.security.secret.SecretResource;
-import com.walmartlabs.concord.server.api.security.secret.UploadSecretResponse;
+import com.walmartlabs.concord.server.api.team.secret.SecretType;
+import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
@@ -90,6 +90,8 @@ public class ServerClient {
                 mdo.addFormData(k, v, MediaType.TEXT_PLAIN_TYPE);
             } else if (v instanceof Map) {
                 mdo.addFormData(k, v, MediaType.APPLICATION_JSON_TYPE);
+            } else if (v instanceof Boolean) {
+                mdo.addFormData(k, v.toString(), MediaType.TEXT_PLAIN_TYPE);
             } else {
                 throw new IllegalArgumentException("Unknown input type: " + v);
             }
@@ -115,27 +117,48 @@ public class ServerClient {
         return e;
     }
 
-    public UploadSecretResponse addPlainSecret(String name, boolean generatePassword, String storePassword, byte[] secret) {
+    public SecretOperationResponse postSecret(String teamName, Map<String, Object> input) {
+        return request(com.walmartlabs.concord.server.api.team.secret.SecretResource.class.getAnnotation(Path.class).value() + "/" + teamName + "/secret",
+                input, SecretOperationResponse.class);
+    }
+
+    public SecretOperationResponse generateKeyPair(String teamName, String name, boolean generatePassword, String storePassword) {
         Map<String, Object> m = new HashMap<>();
-        m.put("secret", secret);
+        m.put("name", name);
+        m.put("generatePassword", generatePassword);
+        m.put("type", SecretType.KEY_PAIR.toString());
         if (storePassword != null) {
             m.put("storePassword", storePassword);
         }
 
-        return request(SecretResource.class.getAnnotation(Path.class).value() + "/plain?name=" + name + "&generatePassword=" + generatePassword,
-                m, UploadSecretResponse.class);
+        return postSecret(teamName, m);
     }
 
-    public UploadSecretResponse addUsernamePassword(String name, boolean generatePassword, String storePassword, String username, String password) {
+    public SecretOperationResponse addPlainSecret(String teamName, String name, boolean generatePassword, String storePassword, byte[] secret) {
         Map<String, Object> m = new HashMap<>();
+        m.put("name", name);
+        m.put("type", SecretType.DATA.toString());
+        m.put("generatePassword", generatePassword);
+        m.put("data", secret);
+        if (storePassword != null) {
+            m.put("storePassword", storePassword);
+        }
+
+        return postSecret(teamName, m);
+    }
+
+    public SecretOperationResponse addUsernamePassword(String teamName, String name, boolean generatePassword, String storePassword, String username, String password) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("name", name);
+        m.put("type", SecretType.USERNAME_PASSWORD.toString());
+        m.put("generatePassword", generatePassword);
         m.put("username", username);
         m.put("password", password);
         if (storePassword != null) {
             m.put("storePassword", storePassword);
         }
 
-        return request(SecretResource.class.getAnnotation(Path.class).value() + "/password?name=" + name + "&generatePassword=" + generatePassword,
-                m, UploadSecretResponse.class);
+        return postSecret(teamName, m);
     }
 
     public byte[] getLog(String logFileName) {

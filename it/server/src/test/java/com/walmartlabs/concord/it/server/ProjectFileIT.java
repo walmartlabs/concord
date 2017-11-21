@@ -11,7 +11,8 @@ import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.security.secret.SecretResource;
+import com.walmartlabs.concord.server.api.team.TeamEntry;
+import com.walmartlabs.concord.server.api.team.TeamResource;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -120,13 +121,16 @@ public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testArchiveOverride() throws Exception {
+        String teamName = "Default";
+
+        // ---
+
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
         String repoUrl = "git@test_" + randomString();
         String secretName = "secret_" + randomString();
 
-        SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(secretName, null, null);
+        generateKeyPair(teamName, secretName, false, null);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
@@ -153,13 +157,16 @@ public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testArchiveOverrideSync() throws Exception {
+        String teamName = "Default";
+
+        // ---
+
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
         String repoUrl = "git@test_" + randomString();
         String secretName = "secret_" + randomString();
 
-        SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.createKeyPair(secretName, null, null);
+        generateKeyPair(teamName, secretName, false, null);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,

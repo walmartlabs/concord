@@ -168,9 +168,10 @@ enum TSecretType {
 }
 
 message TFetchSecretResponse {
-    TFetchSecretStatus status = 1;
-    TSecretType type = 2;
-    bytes data = 3;
+    string id = 1;
+    TFetchSecretStatus status = 2;
+    TSecretType type = 3;
+    bytes data = 4;
 }
 
 enum TFetchSecretStatus {
