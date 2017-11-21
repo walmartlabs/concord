@@ -1,16 +1,18 @@
 import React from "react";
 import {connect} from "react-redux";
 import {Button, Modal} from "semantic-ui-react";
-import ErrorMessage from "../../shared/ErrorMessage";
-import {actions as modal} from "../../shared/Modal";
+
+import ErrorMessage from "../../../shared/ErrorMessage";
+import {actions as modal} from "../../../shared/Modal";
+
 import * as actions from "./actions";
 import * as selectors from "./reducers";
 
 export const MODAL_TYPE = "DELETE_SECRET_POPUP";
 
-const deleteSecretPopup = ({open, name, error, onSuccess, onCloseFn, onConfirmFn, inFlightFn}) => {
+const deleteSecretPopup = ({open, teamName, name, error, onSuccess, onCloseFn, onConfirmFn, inFlightFn}) => {
     const inFlight = inFlightFn(name);
-    const onYesClick = () => onConfirmFn(name, onSuccess);
+    const onYesClick = () => onConfirmFn(teamName, name, onSuccess);
 
     return <Modal open={open} dimmer="inverted">
         <Modal.Header>Delete the selected secret?</Modal.Header>
@@ -27,14 +29,14 @@ const deleteSecretPopup = ({open, name, error, onSuccess, onCloseFn, onConfirmFn
 
 deleteSecretPopup.MODAL_TYPE = MODAL_TYPE;
 
-const mapStateToProps = ({secretList}) => ({
+const mapStateToProps = ({session, secretList}) => ({
     error: selectors.getDeleteError(secretList),
     inFlightFn: (name) => selectors.isInFlight(secretList, name)
 });
 
 const mapDispatchToProps = (dispatch) => ({
     onCloseFn: () => dispatch(modal.close()),
-    onConfirmFn: (name, onSuccess) => {
+    onConfirmFn: (teamName, name, onSuccess) => {
         if (!onSuccess) {
             onSuccess = [];
         }
@@ -42,7 +44,7 @@ const mapDispatchToProps = (dispatch) => ({
         // first, we need to close the dialog
         onSuccess.unshift(modal.close());
 
-        dispatch(actions.deleteSecret(name, onSuccess))
+        dispatch(actions.deleteSecret(teamName, name, onSuccess))
     }
 });
 

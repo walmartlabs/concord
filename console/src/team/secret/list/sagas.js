@@ -5,7 +5,7 @@ import types from "./actions";
 
 function* fetchSecretList(action: any): Generator<*, *, *> {
     try {
-        const response = yield call(api.fetchSecretList);
+        const response = yield call(api.fetchSecretList, action.teamName);
         yield put({
             type: types.USER_SECRET_LIST_RESPONSE,
             response
@@ -21,7 +21,7 @@ function* fetchSecretList(action: any): Generator<*, *, *> {
 
 function* deleteSecret(action: any): Generator<*, *, *> {
     try {
-        yield call(api.deleteSecret, action.name);
+        yield call(api.deleteSecret, action.teamName, action.name);
         yield put({
             type: types.USER_SECRET_DELETE_RESPONSE,
             name: action.name
@@ -45,14 +45,12 @@ function* deleteSecret(action: any): Generator<*, *, *> {
 
 function* getPublicKey(action: any): Generator<*, *, *> {
     try {
-        
-        const response = yield call ( api.getPublicKey, action.name );
+        const response = yield call(api.getPublicKey, action.teamName, action.name);
 
-        yield put({ 
-            type: types.USER_SECRET_PUBLICKEY_SAVE,
+        yield put({
+            type: types.USER_SECRET_PUBLICKEY_RESPONSE,
             publicKey: response.publicKey
         });
-
     } catch (e) {
         yield put({
             type: types.USER_SECRET_PUBLICKEY_RESPONSE,
@@ -61,7 +59,7 @@ function* getPublicKey(action: any): Generator<*, *, *> {
     }
 }
 
-export default function*(): Generator<*, *, *> {
+export default function* (): Generator<*, *, *> {
     yield [
         fork(takeLatest, types.USER_SECRET_LIST_REQUEST, fetchSecretList),
         fork(takeLatest, types.USER_SECRET_DELETE_REQUEST, deleteSecret),

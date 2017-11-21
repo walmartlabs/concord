@@ -17,7 +17,7 @@ const errorWithDetails = (resp: any, data: any) => {
     };
 };
 
-export const parseError = (resp: any) => {
+export const parseError = (resp: any): any => {
     const contentType = resp.headers.get("Content-Type");
     if (isSiestaError(contentType)) {
         return resp.json().then(json => {

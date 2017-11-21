@@ -2,12 +2,15 @@ import React, {Component} from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
 import {Button, Header, Popup} from "semantic-ui-react";
-import DataTable from "../../shared/DataTable";
-import RefreshButton from "../../shared/RefreshButton";
-import ErrorMessage from "../../shared/ErrorMessage";
-import {actions as modal} from "../../shared/Modal";
+
+import DataTable from "../../../shared/DataTable";
+import RefreshButton from "../../../shared/RefreshButton";
+import ErrorMessage from "../../../shared/ErrorMessage";
+import {actions as modal} from "../../../shared/Modal";
 import DeleteSecretPopup from "./DeleteSecretPopup";
 import ShowSecretPublicKey from "./ShowSecretPublicKey";
+import {getCurrentTeamName} from "../../../session/reducers";
+
 import * as actions from "./actions";
 import * as selectors from "./reducers";
 import reducers from "./reducers";
@@ -28,26 +31,26 @@ const cellFn = (deletePopupFn, getPublicKey) => (row, key) => {
         return <span>{row[key]}</span>;
     }
 
-    console.log( row, key );
+    console.log(row, key);
 
     // column with buttons (actions)
     if (key === actionsKey) {
         const name = row[nameKey];
         return (
-            <div style={{ textAlign: "right"}}>
-                { row.type === "KEY_PAIR" &&
-                    <Popup
-                        trigger={<Button color="blue" icon='key' onClick={() => getPublicKey(name)} />}
-                        content="Get Public Key"
-                        inverted
-                    />
+            <div style={{textAlign: "right"}}>
+                {row.type === "KEY_PAIR" &&
+                <Popup
+                    trigger={<Button color="blue" icon='key' onClick={() => getPublicKey(name)}/>}
+                    content="Get Public Key"
+                    inverted
+                />
                 }
 
-                    <Popup
-                        trigger={<Button icon="delete" color="red" onClick={() => deletePopupFn(name)} />}
-                        content="Delete"
-                        inverted
-                    />
+                <Popup
+                    trigger={<Button icon="delete" color="red" onClick={() => deletePopupFn(name)}/>}
+                    content="Delete"
+                    inverted
+                />
             </div>
         );
     }
@@ -62,8 +65,8 @@ class SecretTable extends Component {
     }
 
     update() {
-        const {fetchData} = this.props;
-        fetchData();
+        const {fetchData, teamName} = this.props;
+        fetchData(teamName);
     }
 
     render() {
@@ -75,7 +78,7 @@ class SecretTable extends Component {
 
         return <div>
             <Header as="h3"><RefreshButton loading={loading} onClick={() => this.update()}/>Secrets</Header>
-            <DataTable cols={columns} rows={data} cellFn={cellFn(deletePopupFn, getPublicKey)} />
+            <DataTable cols={columns} rows={data} cellFn={cellFn(deletePopupFn, getPublicKey)}/>
         </div>;
     }
 }
@@ -87,20 +90,23 @@ SecretTable.propTypes = {
     deletePopupFn: PropTypes.func,
 };
 
-const mapStateToProps = ({secretList}) => ({
+const mapStateToProps = ({session, secretList}) => ({
+    teamName: getCurrentTeamName(session),
     error: selectors.getError(secretList),
     loading: selectors.getIsLoading(secretList),
     data: selectors.getRows(secretList)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    fetchData: () => dispatch(actions.fetchSecretList()),
-    deletePopupFn: ( name ) => {
+    fetchData: (teamName) => dispatch(actions.fetchSecretList(teamName)),
+
+    deletePopupFn: (teamName, name) => {
         const onSuccess = [actions.fetchSecretList()];
-        dispatch(modal.open(DeleteSecretPopup.MODAL_TYPE, {name, onSuccess}));
+        dispatch(modal.open(DeleteSecretPopup.MODAL_TYPE, {teamName, name, onSuccess}));
     },
-    getPublicKey: ( name ) => {
-        dispatch( modal.open(ShowSecretPublicKey.MODAL_TYPE, { name }) );
+
+    getPublicKey: (teamName, name) => {
+        dispatch(modal.open(ShowSecretPublicKey.MODAL_TYPE, {teamName, name}));
         dispatch({
             type: actions.types.USER_SECRET_PUBLICKEY_REQUEST,
             name

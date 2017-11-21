@@ -1,6 +1,9 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {Dropdown} from "semantic-ui-react";
+
+import {getCurrentTeamName} from "../../../session/reducers";
+
 import * as selectors from "./reducers";
 import * as actions from "./actions";
 
@@ -9,12 +12,12 @@ const LOCKED_SECRET_TYPE = "PASSWORD";
 class SecretsListDropdown extends Component {
 
     componentDidMount() {
-        const {loadFn} = this.props;
-        loadFn();
+        const {loadFn, teamName} = this.props;
+        loadFn(teamName);
     }
 
     render() {
-        const {data, isLoading, loadFn, ...rest} = this.props;
+        const {data, isLoading, loadFn, teamName, ...rest} = this.props;
 
         let options = [];
         if (data) {
@@ -28,13 +31,14 @@ class SecretsListDropdown extends Component {
     }
 }
 
-const mapStateToProps = ({secretList}) => ({
+const mapStateToProps = ({session, secretList}) => ({
+    teamName: getCurrentTeamName(session),
     data: selectors.getRows(secretList),
     isLoading: selectors.getIsLoading(secretList)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    loadFn: () => dispatch(actions.fetchSecretList())
+    loadFn: (teamName) => dispatch(actions.fetchSecretList(teamName))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(SecretsListDropdown);

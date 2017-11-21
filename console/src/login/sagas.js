@@ -44,6 +44,7 @@ function* doRefresh(action: any): Generator<*, *, *> {
     try {
         const response = yield call(api.login);
         yield put(session.setCurrent(response));
+
     } catch (e) {
         yield put(pushHistory("/login"));
     }

@@ -1,9 +1,10 @@
 // @flow
 
+import type {ConcordKey} from "../../../types";
 import * as common from "../../../api";
 import {secretTypes, storePwdTypes} from "./constants";
 
-export const exists = (teamName: string, secretName: string): any => {
+export const exists = (teamName: ConcordKey, secretName: ConcordKey): any => {
     return fetch(`/api/service/console/team/${teamName}/secret/${secretName}/exists`, {credentials: "same-origin"})
         .then(response => {
             if (!response.ok) {

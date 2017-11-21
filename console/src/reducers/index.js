@@ -14,11 +14,10 @@ import {reducers as project} from "../project";
 import {reducers as projectList} from "../project/list";
 import {reducers as projectStart} from "../project/StartProjectPopup";
 import {reducers as repository} from "../project/repository";
-import {reducers as secretList} from "../secret/list";
-import {reducers as secretForm} from "../secret/create";
 import {reducers as modal} from "../shared/Modal";
 import {reducers as landingList} from "../landing/list";
-import {reducers as teamSecretForm} from "../team/secret/create/effects";
+import {reducers as secretList} from "../team/secret/list";
+import {reducers as secretForm} from "../team/secret/create/effects";
 
 export default {
     session,
@@ -34,11 +33,10 @@ export default {
     projectList,
     projectStart,
     repository,
-    secretList,
-    secretForm,
     landingList,
     modal,
-    teamSecretForm,
+    secretList,
+    secretForm,
     
     form: formReducer
 };

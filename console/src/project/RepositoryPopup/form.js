@@ -4,7 +4,7 @@ import {connect} from "react-redux";
 import {formValueSelector, getFormValues, reduxForm, submit as submitForm} from "redux-form";
 import {Button, Form, Modal, Popup, Message, Icon} from "semantic-ui-react";
 import {Dropdown, Field} from "../../shared/forms";
-import SecretListDropdown from "../../secret/list/SecretsListDropdown";
+import SecretListDropdown from "../../team/secret/list/SecretsListDropdown";
 import * as v from "../../shared/validation";
 import * as c from "./constants";
 import {actions as repoActions, selectors as repoSelectors} from "../repository";

@@ -66,11 +66,11 @@ class CreateSecretPage extends Component {
     }
 }
 
-const mapStateToProps = ({session, teamSecretForm}) => ({
+const mapStateToProps = ({session, secretForm}) => ({
     teamName: getCurrentTeamName(session),
-    response: selectors.response(teamSecretForm),
-    error: selectors.error(teamSecretForm),
-    loading: selectors.loading(teamSecretForm)
+    response: selectors.response(secretForm),
+    error: selectors.error(secretForm),
+    loading: selectors.loading(secretForm)
 });
 
 const mapDispatchToProps = (dispatch) => ({
