@@ -77,7 +77,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     public PublicKeyResponse getPublicKey(String teamName, String secretName) {
         UUID teamId = assertTeam(teamName, TeamRole.READER);
         DecryptedKeyPair k = secretManager.getKeyPair(teamId, secretName);
-        return new PublicKeyResponse(k.getId(), null, new String(k.getData()));
+        return new PublicKeyResponse(k.getId(), null, new String(k.getData()), null);
     }
 
     @Override
@@ -115,7 +115,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
             k = secretManager.createKeyPair(teamId, name, storePassword);
         }
 
-        return new PublicKeyResponse(k.getId(), OperationResult.CREATED, new String(k.getData()));
+        return new PublicKeyResponse(k.getId(), OperationResult.CREATED, storePassword, new String(k.getData()));
     }
 
     private SecretOperationResponse createUsernamePassword(UUID teamId, String name, String storePassword, MultipartInput input) throws IOException {
@@ -123,13 +123,13 @@ public class SecretResourceImpl implements SecretResource, Resource {
         String password = assertString(input, "password");
 
         DecryptedUsernamePassword e = secretManager.createUsernamePassword(teamId, name, storePassword, username, password.toCharArray());
-        return new SecretOperationResponse(e.getId(), OperationResult.CREATED);
+        return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
     private SecretOperationResponse createData(UUID teamId, String name, String storePassword, MultipartInput input) throws IOException {
         InputStream data = assertStream(input, "data");
         DecryptedBinaryData e = secretManager.createBinaryData(teamId, name, storePassword, data);
-        return new SecretOperationResponse(e.getId(), OperationResult.CREATED);
+        return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
     private UUID assertTeam(String teamName, TeamRole requiredRole) {

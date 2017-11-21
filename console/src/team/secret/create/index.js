@@ -1,6 +1,7 @@
-import React from "react";
+import React, {Component} from "react";
 import {connect} from "react-redux";
-import {Header, Message} from "semantic-ui-react";
+import {Button, Header, Message, TextArea} from "semantic-ui-react";
+import {CopyToClipboard} from "react-copy-to-clipboard";
 
 import ErrorMessage from "../../../shared/ErrorMessage";
 import {NewSecretForm} from "../components";
@@ -8,30 +9,61 @@ import * as api from "./api";
 import {actions, reducers, sagas, selectors} from "./effects";
 import {getCurrentTeamName} from "../../../session/reducers";
 
-const renderResponse = ({ok, id, publicKey}) =>
-    <Message success style={{overflowWrap: "break-word", fontFamily: "monospace"}}
-             header={"Secret created"}
-             content={publicKey ? `Public key: ${publicKey}` : "Secret was successfully created."}/>;
+import "./styles.css";
 
-const CreateSecretPage = ({submitFn, teamName, response, error, ...rest}) => {
-    const nameCheckFn = (secretName) => {
-        return api.exists(teamName, secretName).then(exists => {
-            if (exists) {
-                throw {name: "Already exists"};
-            }
-        });
-    };
+class CreateSecretPage extends Component {
+    componentDidMount() {
+        this.props.resetFn();
+    }
 
-    return <div>
-        <Header as="h3">New secret</Header>
+    copyToClipboard(value) {
+        document.getElementsByTagName("body");
+    }
 
-        {error && <ErrorMessage message={error}/>}
-        {response && response.ok && renderResponse(response)}
+    renderResponse({password, publicKey}) {
+        return <Message success>
+            <Message.Header>Secret created</Message.Header>
 
-        <NewSecretForm onSubmit={(req) => submitFn(teamName, req)}
-                       nameCheckFn={nameCheckFn}
-                       {...rest}/>
-    </div>;
+            {publicKey && <div>
+                <b>Public key: </b>
+                <CopyToClipboard text={publicKey}>
+                    <Button icon="copy" size="mini" basic/>
+                </CopyToClipboard>
+                <TextArea id="publicKeyValue" className="secretData">{publicKey}</TextArea>
+            </div>}
+
+            {password && <div>
+                <b>Export password: </b>
+                <CopyToClipboard text={password}>
+                    <Button icon="copy" size="mini" basic/>
+                </CopyToClipboard>
+                <TextArea id="passwordValue" className="secretData">{password}</TextArea>
+            </div>}
+        </Message>;
+    }
+
+    render() {
+        const {submitFn, teamName, response, error, ...rest} = this.props;
+
+        const nameCheckFn = (secretName) => {
+            return api.exists(teamName, secretName).then(exists => {
+                if (exists) {
+                    throw {name: "Already exists"};
+                }
+            });
+        };
+
+        return <div>
+            <Header as="h3">New secret</Header>
+
+            {error && <ErrorMessage message={error}/>}
+            {response && response.ok && this.renderResponse(response)}
+
+            <NewSecretForm onSubmit={(req) => submitFn(teamName, req)}
+                           nameCheckFn={nameCheckFn}
+                           {...rest}/>
+        </div>;
+    }
 }
 
 const mapStateToProps = ({session, teamSecretForm}) => ({
@@ -42,6 +74,7 @@ const mapStateToProps = ({session, teamSecretForm}) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
+    resetFn: () => dispatch(actions.reset()),
     submitFn: (teamName, req) => dispatch(actions.createNewSecret(teamName, req))
 });
 

@@ -16,9 +16,10 @@ public class PublicKeyResponse extends SecretOperationResponse {
     @JsonCreator
     public PublicKeyResponse(@JsonProperty("id") UUID id,
                              @JsonProperty("result") OperationResult result,
+                             @JsonProperty("password") String password,
                              @JsonProperty("publicKey") String publicKey) {
 
-        super(id, result);
+        super(id, result, password);
         this.publicKey = publicKey;
     }
 

@@ -70,5 +70,6 @@ export const secret = {
     privateFile: requiredValidator,
     username: requiredValidator,
     password: requiredValidator,
-    data: requiredValidator
+    data: requiredValidator,
+    storePassword: requiredValidator
 };

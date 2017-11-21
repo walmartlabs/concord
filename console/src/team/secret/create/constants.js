@@ -6,3 +6,9 @@ export const secretTypes = {
     usernamePassword: "USERNAME_PASSWORD",
     singleValue: "DATA"
 };
+
+export const storePwdTypes = {
+    doNotUse: "DO_NOT_USE_STORE_PWD",
+    specify: "SPECIFY_STORE_PWD",
+    generate: "GENERATE_STORE_PWD"
+};

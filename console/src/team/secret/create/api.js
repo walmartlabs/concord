@@ -1,7 +1,7 @@
 // @flow
 
 import * as common from "../../../api";
-import {secretTypes} from "./constants";
+import {secretTypes, storePwdTypes} from "./constants";
 
 export const exists = (teamName: string, secretName: string): any => {
     return fetch(`/api/service/console/team/${teamName}/secret/${secretName}/exists`, {credentials: "same-origin"})
@@ -14,7 +14,7 @@ export const exists = (teamName: string, secretName: string): any => {
         });
 };
 
-export const create = ({teamName, name, secretType, storePassword, ...rest}: any): any => {
+export const create = ({teamName, name, secretType, storePwdType, storePassword, ...rest}: any): any => {
     const data = new FormData();
 
     data.append("name", name);
@@ -30,8 +30,8 @@ export const create = ({teamName, name, secretType, storePassword, ...rest}: any
             }
 
             data.append("type", "KEY_PAIR");
-            data.append("public", rest.publicFile);
-            data.append("private", rest.privateFile);
+            data.append("public", rest.publicFile[0]);
+            data.append("private", rest.privateFile[0]);
             break;
         }
         case secretTypes.usernamePassword: {
@@ -58,8 +58,25 @@ export const create = ({teamName, name, secretType, storePassword, ...rest}: any
         }
     }
 
-    if (storePassword) {
-        data.append("storePassword", storePassword);
+    switch (storePwdType) {
+        case storePwdTypes.doNotUse: {
+            break;
+        }
+        case storePwdTypes.specify: {
+            if (!storePassword) {
+                return Promise.reject(new Error("Missing the store password value"));
+            }
+
+            data.append("storePassword", storePassword);
+            break;
+        }
+        case storePwdTypes.generate: {
+            data.append("generatePassword", "true");
+            break;
+        }
+        default: {
+            return Promise.reject(`Unsupported store password type: ${storePwdType}`);
+        }
     }
 
     let opts = {

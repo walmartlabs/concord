@@ -17,12 +17,15 @@ public class SecretOperationResponse implements Serializable {
     private final boolean ok = true;
     private final UUID id;
     private final OperationResult result;
+    private final String password;
 
     @JsonCreator
     public SecretOperationResponse(@JsonProperty("id") UUID id,
-                                   @JsonProperty("result") OperationResult result) {
+                                   @JsonProperty("result") OperationResult result,
+                                   @JsonProperty("password") String password) {
         this.id = id;
         this.result = result;
+        this.password = password;
     }
 
     public boolean isOk() {
@@ -35,6 +38,10 @@ public class SecretOperationResponse implements Serializable {
 
     public OperationResult getResult() {
         return result;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     @Override

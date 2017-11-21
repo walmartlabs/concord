@@ -9,7 +9,8 @@ const NAMESPACE = "team/secret";
 
 const actionTypes = {
     CREATE_REQUEST: `${NAMESPACE}/create/request`,
-    CREATE_RESPONSE: `${NAMESPACE}/create/response`
+    CREATE_RESPONSE: `${NAMESPACE}/create/response`,
+    CREATE_RESET: `${NAMESPACE}/create/reset`
 };
 
 // Actions
@@ -19,6 +20,10 @@ export const actions = {
         type: actionTypes.CREATE_REQUEST,
         teamName,
         ...req
+    }),
+
+    reset: () => ({
+        type: actionTypes.CREATE_RESET
     })
 };
 
@@ -26,7 +31,8 @@ export const actions = {
 
 const response = (state = null, {type, ...rest}) => {
     switch (type) {
-        case actionTypes.CREATE_REQUEST: {
+        case actionTypes.CREATE_REQUEST:
+        case actionTypes.CREATE_RESET: {
             return null;
         }
         case actionTypes.CREATE_RESPONSE: {
@@ -43,7 +49,8 @@ const loading = (state = false, {type}) => {
         case actionTypes.CREATE_REQUEST: {
             return true;
         }
-        case actionTypes.CREATE_RESPONSE: {
+        case actionTypes.CREATE_RESPONSE:
+        case actionTypes.CREATE_RESET: {
             return false;
         }
         default: {
@@ -59,6 +66,9 @@ const error = (state = null, {type, error, message}) => {
                 return null;
             }
             return message;
+        }
+        case actionTypes.CREATE_RESET: {
+            return null;
         }
         default: {
             return state;
@@ -78,7 +88,7 @@ export const selectors = {
 
 // Sagas
 
-function* createNewSecret(action: any): Generator<*, *, *> {
+function* onCreate(action: any): Generator<*, *, *> {
     try {
         const resp = yield call(api.create, action);
         if (resp.error) {
@@ -104,8 +114,13 @@ function* createNewSecret(action: any): Generator<*, *, *> {
     }
 }
 
+function* onReset(action: any): Generator<*, *, *> {
+    yield put(resetForm("newSecretForm"));
+}
+
 export function* sagas(): Generator<*, *, *> {
     yield [
-        fork(takeLatest, actionTypes.CREATE_REQUEST, createNewSecret)
+        fork(takeLatest, actionTypes.CREATE_REQUEST, onCreate),
+        fork(takeLatest, actionTypes.CREATE_RESET, onReset)
     ];
 };
