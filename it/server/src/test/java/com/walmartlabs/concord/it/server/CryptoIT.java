@@ -14,11 +14,15 @@ public class CryptoIT extends AbstractServerIT {
 
     @Test
     public void testPlain() throws Exception {
+        String teamName = "Default";
+
+        // ---
+
         String secretName = "secret@" + randomString();
         String secretValue = "value@" + randomString();
         String storePassword = "store@" + randomString();
 
-        addPlainSecret(secretName, false, storePassword, secretValue.getBytes());
+        addPlainSecret(teamName, secretName, false, storePassword, secretValue.getBytes());
 
         // ---
 
@@ -27,12 +31,16 @@ public class CryptoIT extends AbstractServerIT {
 
     @Test
     public void testUsernamePassword() throws Exception {
+        String teamName = "Default";
+
+        // ---
+
         String secretName = "secret@" + randomString();
         String secretUsername = "username@" + randomString();
         String secretPassword = "password@" + randomString();
         String storePassword = "store@" + randomString();
 
-        addUsernamePassword(secretName, false, storePassword, secretUsername, secretPassword);
+        addUsernamePassword(teamName, secretName, false, storePassword, secretUsername, secretPassword);
 
         // ---
 
