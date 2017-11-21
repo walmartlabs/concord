@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.server.api.project;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.security.secret.SecretResource;
+import com.walmartlabs.concord.server.api.team.secret.SecretResource;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -197,7 +197,7 @@ public interface ProjectResource {
     /**
      * Encrypts a string with the project's key.
      *
-     * @deprecated use {@link SecretResource#addPlainSecret(String, boolean, MultipartInput)}
+     * @deprecated use {@link SecretResource#create(String, MultipartInput)}
      */
     @POST
     @ApiOperation("Encrypts a string with the project's key")
