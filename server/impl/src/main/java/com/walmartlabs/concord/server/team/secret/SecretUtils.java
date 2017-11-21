@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.security.secret;
+package com.walmartlabs.concord.server.team.secret;
 
 import com.walmartlabs.concord.sdk.Secret;
 
@@ -17,14 +17,6 @@ public final class SecretUtils {
             return deserializer.apply(ab);
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error decrypting a key pair", e);
-        }
-    }
-
-    public static <T extends Secret> byte[] encrypt(Function<T, byte[]> serializer, T k, byte[] password, byte[] hash) throws SecurityException {
-        try {
-            return encrypt(serializer.apply(k), password, hash);
-        } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error encrypting a key pair", e);
         }
     }
 

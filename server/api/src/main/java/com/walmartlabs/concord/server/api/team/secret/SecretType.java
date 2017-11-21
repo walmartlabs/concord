@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.api.security.secret;
+package com.walmartlabs.concord.server.api.team.secret;
 
 public enum SecretType {
 

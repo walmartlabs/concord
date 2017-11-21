@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.security.secret;
+package com.walmartlabs.concord.server.team.secret;
 
 import com.google.common.io.ByteStreams;
 import com.jcraft.jsch.JSch;

@@ -1,9 +1,9 @@
-package com.walmartlabs.concord.server.security.secret;
+package com.walmartlabs.concord.server.team.secret;
 
 import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
-import com.walmartlabs.concord.server.api.security.secret.SecretType;
+import com.walmartlabs.concord.server.api.team.secret.SecretEntry;
+import com.walmartlabs.concord.server.api.team.secret.SecretType;
 import com.walmartlabs.concord.server.team.TeamManager;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
@@ -47,18 +47,6 @@ public class SecretDao extends AbstractDao {
                     .where(SECRETS.SECRET_ID.eq(id))
                     .fetchOne(SECRETS.SECRET_NAME);
         }
-    }
-
-    public UUID insertOrUpdate(UUID teamId, String name, SecretType type, SecretStoreType storeType, byte[] data) {
-        return txResult(tx -> {
-            UUID id = getId(teamId, name);
-            if (id == null) {
-                id = insert(tx, teamId, name, type, storeType, data);
-            } else {
-                update(tx, id, teamId, name, type, storeType, data);
-            }
-            return id;
-        });
     }
 
     public UUID insert(UUID teamId, String name, SecretType type, SecretStoreType storeType, byte[] data) {

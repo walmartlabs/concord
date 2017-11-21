@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.server.api.team.secret;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

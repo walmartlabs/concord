@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.security.secret;
+package com.walmartlabs.concord.server.team.secret;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
@@ -7,10 +7,10 @@ import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
-import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
-import com.walmartlabs.concord.server.api.security.secret.SecretType;
+import com.walmartlabs.concord.server.api.team.secret.SecretEntry;
+import com.walmartlabs.concord.server.api.team.secret.SecretType;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.security.secret.SecretDao.SecretDataEntry;
+import com.walmartlabs.concord.server.team.secret.SecretDao.SecretDataEntry;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.inject.Inject;
@@ -101,12 +101,6 @@ public class SecretManager {
 
     public String generatePassword() {
         return RandomStringUtils.random(SECRET_PASSWORD_LENGTH, SECRET_PASSWORD_CHARS);
-    }
-
-    public KeyPair createKeyPair(String name, UUID teamId, String password) {
-        KeyPair k = KeyPairUtils.create();
-        store(name, teamId, k, password);
-        return k;
     }
 
     public DecryptedSecret getSecret(UUID teamId, String name, String password) {

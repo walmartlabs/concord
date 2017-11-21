@@ -7,7 +7,7 @@ import com.walmartlabs.concord.server.project.ProjectDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
-import com.walmartlabs.concord.server.security.secret.SecretManager;
+import com.walmartlabs.concord.server.team.secret.SecretManager;
 import com.walmartlabs.concord.server.team.TeamManager;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;

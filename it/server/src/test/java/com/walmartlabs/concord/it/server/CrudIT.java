@@ -17,8 +17,8 @@ import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
 import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
 import com.walmartlabs.concord.server.api.security.ldap.LdapResource;
-import com.walmartlabs.concord.server.api.security.secret.SecretEntry;
-import com.walmartlabs.concord.server.api.security.secret.SecretType;
+import com.walmartlabs.concord.server.api.team.secret.SecretEntry;
+import com.walmartlabs.concord.server.api.team.secret.SecretType;
 import com.walmartlabs.concord.server.api.team.*;
 import com.walmartlabs.concord.server.api.team.secret.PublicKeyResponse;
 import com.walmartlabs.concord.server.api.team.secret.SecretResource;

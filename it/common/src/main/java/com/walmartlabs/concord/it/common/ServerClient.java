@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.it.common;
 
 import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.security.secret.SecretType;
+import com.walmartlabs.concord.server.api.team.secret.SecretType;
 import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
