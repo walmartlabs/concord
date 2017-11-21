@@ -5,13 +5,12 @@ import {Button, Modal} from "semantic-ui-react";
 import ErrorMessage from "../../../shared/ErrorMessage";
 import {actions as modal} from "../../../shared/Modal";
 
-import * as actions from "./actions";
-import * as selectors from "./reducers";
+import {actions, selectors} from "./effects";
 
 export const MODAL_TYPE = "DELETE_SECRET_POPUP";
 
 const deleteSecretPopup = ({open, teamName, name, error, onSuccess, onCloseFn, onConfirmFn, inFlightFn}) => {
-    const inFlight = inFlightFn(name);
+    const inFlight = inFlightFn(teamName, name);
     const onYesClick = () => onConfirmFn(teamName, name, onSuccess);
 
     return <Modal open={open} dimmer="inverted">
@@ -31,7 +30,7 @@ deleteSecretPopup.MODAL_TYPE = MODAL_TYPE;
 
 const mapStateToProps = ({session, secretList}) => ({
     error: selectors.getDeleteError(secretList),
-    inFlightFn: (name) => selectors.isInFlight(secretList, name)
+    inFlightFn: (teamName, name) => selectors.isInFlight(secretList, teamName, name)
 });
 
 const mapDispatchToProps = (dispatch) => ({

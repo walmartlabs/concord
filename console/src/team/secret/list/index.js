@@ -11,10 +11,7 @@ import DeleteSecretPopup from "./DeleteSecretPopup";
 import ShowSecretPublicKey from "./ShowSecretPublicKey";
 import {getCurrentTeamName} from "../../../session/reducers";
 
-import * as actions from "./actions";
-import * as selectors from "./reducers";
-import reducers from "./reducers";
-import sagas from "./sagas";
+import {actionTypes, actions, selectors, reducers, sagas} from "./effects";
 
 const columns = [
     {key: "name", label: "Name", collapsing: true},
@@ -25,7 +22,7 @@ const columns = [
 const nameKey = "name";
 const actionsKey = "actions";
 
-const cellFn = (deletePopupFn, getPublicKey) => (row, key) => {
+const cellFn = (teamName, deletePopupFn, getPublicKey) => (row, key) => {
 
     if (key === nameKey) {
         return <span>{row[key]}</span>;
@@ -40,14 +37,14 @@ const cellFn = (deletePopupFn, getPublicKey) => (row, key) => {
             <div style={{textAlign: "right"}}>
                 {row.type === "KEY_PAIR" &&
                 <Popup
-                    trigger={<Button color="blue" icon='key' onClick={() => getPublicKey(name)}/>}
+                    trigger={<Button color="blue" icon='key' onClick={() => getPublicKey(teamName, name)}/>}
                     content="Get Public Key"
                     inverted
                 />
                 }
 
                 <Popup
-                    trigger={<Button icon="delete" color="red" onClick={() => deletePopupFn(name)}/>}
+                    trigger={<Button icon="delete" color="red" onClick={() => deletePopupFn(teamName, name)}/>}
                     content="Delete"
                     inverted
                 />
@@ -70,7 +67,7 @@ class SecretTable extends Component {
     }
 
     render() {
-        const {error, loading, data, deletePopupFn, getPublicKey} = this.props;
+        const {error, loading, data, teamName, deletePopupFn, getPublicKey} = this.props;
 
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.update()}/>;
@@ -78,7 +75,7 @@ class SecretTable extends Component {
 
         return <div>
             <Header as="h3"><RefreshButton loading={loading} onClick={() => this.update()}/>Secrets</Header>
-            <DataTable cols={columns} rows={data} cellFn={cellFn(deletePopupFn, getPublicKey)}/>
+            <DataTable cols={columns} rows={data} cellFn={cellFn(teamName, deletePopupFn, getPublicKey)}/>
         </div>;
     }
 }
@@ -101,14 +98,15 @@ const mapDispatchToProps = (dispatch) => ({
     fetchData: (teamName) => dispatch(actions.fetchSecretList(teamName)),
 
     deletePopupFn: (teamName, name) => {
-        const onSuccess = [actions.fetchSecretList()];
+        const onSuccess = [actions.fetchSecretList(teamName)];
         dispatch(modal.open(DeleteSecretPopup.MODAL_TYPE, {teamName, name, onSuccess}));
     },
 
     getPublicKey: (teamName, name) => {
         dispatch(modal.open(ShowSecretPublicKey.MODAL_TYPE, {teamName, name}));
         dispatch({
-            type: actions.types.USER_SECRET_PUBLICKEY_REQUEST,
+            type: actionTypes.USER_SECRET_PUBLICKEY_REQUEST,
+            teamName,
             name
         });
     }

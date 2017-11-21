@@ -77,7 +77,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     public PublicKeyResponse getPublicKey(String teamName, String secretName) {
         UUID teamId = assertTeam(teamName, TeamRole.READER);
         DecryptedKeyPair k = secretManager.getKeyPair(teamId, secretName);
-        return new PublicKeyResponse(k.getId(), null, new String(k.getData()), null);
+        return new PublicKeyResponse(k.getId(), null, null, new String(k.getData()));
     }
 
     @Override

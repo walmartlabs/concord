@@ -4,8 +4,7 @@ import {Dropdown} from "semantic-ui-react";
 
 import {getCurrentTeamName} from "../../../session/reducers";
 
-import * as selectors from "./reducers";
-import * as actions from "./actions";
+import {actions, selectors} from "./effects";
 
 const LOCKED_SECRET_TYPE = "PASSWORD";
 

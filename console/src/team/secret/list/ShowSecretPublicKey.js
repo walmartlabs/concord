@@ -5,7 +5,7 @@ import {CopyToClipboard} from "react-copy-to-clipboard";
 
 import ErrorMessage from "../../../shared/ErrorMessage";
 import {actions as modal} from "../../../shared/Modal";
-import * as selectors from "./reducers";
+import {selectors} from "./effects";
 
 import "./styles.css";
 
