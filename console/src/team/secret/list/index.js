@@ -16,6 +16,7 @@ import {actionTypes, actions, selectors, reducers, sagas} from "./effects";
 const columns = [
     {key: "name", label: "Name", collapsing: true},
     {key: "type", label: "Type"},
+    {key: "storeType", label: "Store type"},
     {key: "actions", label: "Actions", collapsing: true}
 ];
 
@@ -35,7 +36,7 @@ const cellFn = (teamName, deletePopupFn, getPublicKey) => (row, key) => {
         const name = row[nameKey];
         return (
             <div style={{textAlign: "right"}}>
-                {row.type === "KEY_PAIR" &&
+                {row.type === "KEY_PAIR" && row.storeType == "SERVER_KEY" &&
                 <Popup
                     trigger={<Button color="blue" icon='key' onClick={() => getPublicKey(teamName, name)}/>}
                     content="Get Public Key"
