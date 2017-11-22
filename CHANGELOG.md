@@ -12,6 +12,7 @@ projects.
 
 ### Changed
 
+- concord-console: reworked the form for creating secrets;
 - concord-console: rename "Kill" button on the process page to
 "Cancel".
 
