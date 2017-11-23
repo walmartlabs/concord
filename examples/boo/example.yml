@@ -1,6 +1,6 @@
 ---
 boo:
-  oneops_host: '{{host}}'
+  oneops_host: '{{oneopsApiHost}}'
   organization: '{{org}}'
   api_key: '{{apiKey}}'
   email: '{{email}}'
@@ -28,7 +28,7 @@ environment:
   autorepair: false
   autoreplace: false
   clouds:
-    prod-cdc6:
+    dev-cdc1:
       priority: '1'
       dpmt_order: '1'
       pct_scale: '100'
