@@ -71,7 +71,7 @@ const renderStorePwdField = (storePwdTypeValue) => {
             return `Unsupported store password type: ${storePwdTypeValue}`;
         }
     }
-}
+};
 
 let NewSecretForm = ({handleSubmit, pristine, invalid, loading, submitting, secretTypeValue, storePwdTypeValue}) =>
     <Form onSubmit={handleSubmit} loading={loading || submitting}>
