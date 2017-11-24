@@ -48,6 +48,9 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*x=123.*", ab);
         assertLog(".*y=abc.*", ab);
         assertLog(".*z=false.*", ab);
+        assertLog(".*nested.p=false.*", ab);
+        assertLog(".*nested.q=abc.*", ab);
+        assertLog(".*var1=var1-value.*", ab);
     }
 
     @Test(timeout = 30000)

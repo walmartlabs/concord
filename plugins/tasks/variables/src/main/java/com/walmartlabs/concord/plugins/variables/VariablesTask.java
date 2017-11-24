@@ -1,14 +1,19 @@
 package com.walmartlabs.concord.plugins.variables;
 
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.Task;
 
+import javax.el.*;
 import javax.inject.Named;
+import java.beans.FeatureDescriptor;
 import java.util.*;
 
 @Named("vars")
 public class VariablesTask implements Task {
+
+    private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
 
     public Object get(Context ctx, String key, Object defaultValue) {
         Object v = ctx.getVariable(key);
@@ -23,8 +28,14 @@ public class VariablesTask implements Task {
         ctx.setVariable(targetKey, v);
     }
 
-    public void set(Context ctx, Map<String, Object> vars) {
-        vars.forEach(ctx::setVariable);
+    public void set(@InjectVariable("context") Context ctx1, Context ctx, Map<String, Object> vars) {
+        vars.forEach((k, v) -> {
+            if (isNestedVariable(k)) {
+                evalNestedVariable(ctx, k, v);
+            } else {
+                ctx.setVariable(k, v);
+            }
+        });
     }
 
     public Object eval(@InjectVariable("context") Context ctx, Object v) {
@@ -44,5 +55,74 @@ public class VariablesTask implements Task {
         l.addAll(a);
         l.addAll(b);
         return l;
+    }
+
+    private boolean isNestedVariable(String str) {
+        return str.contains(".");
+    }
+
+    private void evalNestedVariable(Context ctx, String expr, Object value) {
+        try {
+            ELResolver r = new VariablesResolver(ctx);
+
+            StandardELContext sc = new StandardELContext(expressionFactory);
+            sc.putContext(ExpressionFactory.class, expressionFactory);
+            sc.addELResolver(r);
+
+            VariableMapper vm = sc.getVariableMapper();
+            vm.setVariable(InternalConstants.Context.CONTEXT_KEY, expressionFactory.createValueExpression(ctx, Context.class));
+
+            ValueExpression x = expressionFactory.createValueExpression(sc, "${" + expr + "}", Object.class);
+            x.setValue(sc, value);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    private static class VariablesResolver extends ELResolver {
+
+        private final Context ctx;
+
+        public VariablesResolver(Context executionContext) {
+            this.ctx = executionContext;
+        }
+
+        @Override
+        public Class<?> getCommonPropertyType(ELContext context, Object base) {
+            return Object.class;
+        }
+
+        @Override
+        public Iterator<FeatureDescriptor> getFeatureDescriptors(ELContext context, Object base) {
+            return null;
+        }
+
+        @Override
+        public Class<?> getType(ELContext context, Object base, Object property) {
+            return Object.class;
+        }
+
+        @Override
+        public Object getValue(ELContext context, Object base, Object property) {
+            if (base == null && property instanceof String) {
+                String k = (String) property;
+                Object v = ctx.getVariable(k);
+                if (v != null) {
+                    context.setPropertyResolved(true);
+                    return v;
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        public boolean isReadOnly(ELContext context, Object base, Object property) {
+            return true;
+        }
+
+        @Override
+        public void setValue(ELContext context, Object base, Object property, Object value) {
+        }
     }
 }

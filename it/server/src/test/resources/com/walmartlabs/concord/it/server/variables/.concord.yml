@@ -1,12 +1,20 @@
 flows:
   main:
+  - set:
+      nested.p: false
+      nested.q: "abc"
+      var1: "var1-value"
   - log: "x=${nested.x}"
   - log: "y=${nested.y}"
   - log: "z=${nested.z}"
+  - log: "nested.p=${nested.p}"
+  - log: "nested.q=${nested.q}"
+  - log: "var1=${var1}"
   - log: "Hello, ${name}"
 
 variables:
   arguments:
     nested:
       z: false
+      p: true
     name: "stranger"
