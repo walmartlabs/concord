@@ -3,6 +3,7 @@ import {connect} from "react-redux";
 import PropTypes from "prop-types";
 import {Link} from "react-router";
 import {Grid, Header, Icon, Menu, Segment, Loader} from "semantic-ui-react";
+
 import {actions, selectors, SessionWidget} from "../session";
 import Modal from "../shared/Modal";
 import KillProcessPopup from "../process/KillProcessPopup";
@@ -11,6 +12,8 @@ import ShowSecretPublicKey from "../team/secret/list/ShowSecretPublicKey";
 import RepositoryPopup from "../project/RepositoryPopup";
 import DeleteProjectPopup from "../project/DeleteProjectPopup";
 import StartProjectPopup from "../project/StartProjectPopup/StartProjectPopup";
+import TeamSwitchDropdown from "../team/components/TeamSwitchDropdown";
+
 import "./styles.css";
 
 // register our modals
@@ -45,7 +48,10 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
                 <Menu.Item>
                     <Header id="logo" as="h2" inverted>{title}</Header>
                 </Menu.Item>
+
                 <SessionWidget displayName={displayName} teamName={teamName} onLogout={doLogout}/>
+                <TeamSwitchDropdown/>
+
                 <Menu.Item active={router.isActive("/process")}>
                     <Menu.Header><Icon name="tasks"/>Processes</Menu.Header>
                     <Menu.Menu>

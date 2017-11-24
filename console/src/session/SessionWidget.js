@@ -12,12 +12,10 @@ const sessionWidget = ({displayName, teamName, onLogout}) => {
     // it should be possible to return array of elements instead of wrapping in a div
     return <div>
         <Dropdown item text={displayName}>
-        <Dropdown.Menu>
-            <Dropdown.Item icon="log out" onClick={logOut} content="Log out"/>
-        </Dropdown.Menu>
+            <Dropdown.Menu>
+                <Dropdown.Item icon="log out" onClick={logOut} content="Log out"/>
+            </Dropdown.Menu>
         </Dropdown>
-
-        <Dropdown item text={`Team: ${teamName}`} disabled></Dropdown>
     </div>;
 };
 

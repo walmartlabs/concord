@@ -50,3 +50,5 @@ export const getCurrentTeamName = (state: any) => {
     const t = state.currentTeam;
     return t ? t.name : undefined;
 };
+
+export const getAvailableTeams = (state: any) => state.teams;
