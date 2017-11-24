@@ -25,16 +25,17 @@ public class ProjectManager {
         this.teamManager = teamManager;
     }
 
-    public List<ProjectEntry> list(Field<?> sortField, boolean asc) {
-        UserPrincipal p = UserPrincipal.getCurrent();
+    public List<ProjectEntry> list(UUID teamId, Field<?> sortField, boolean asc) {
+        teamManager.assertTeamAccess(teamId, TeamRole.READER, false);
 
+        UserPrincipal p = UserPrincipal.getCurrent();
         UUID userId = p.getId();
         if (p.isAdmin()) {
             // admins can see any project, so we shouldn't filter projects by user
             userId = null;
         }
 
-        return projectDao.list(userId, sortField, asc);
+        return projectDao.list(teamId, userId, sortField, asc);
     }
 
     public ProjectEntry assertProjectAccess(UUID projectId, TeamRole requiredRole, boolean teamMembersOnly) {

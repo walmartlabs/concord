@@ -1,11 +1,14 @@
 // @flow
+import type {ConcordId} from "../types";
+
 const NAMESPACE = "session";
 
 const types = {
     SET_CURRENT_SESSION: `${NAMESPACE}/setCurrent`,
     UPDATE_SESSION: `${NAMESPACE}/update`,
     CHECK_AUTH: `${NAMESPACE}/checkAuth`,
-    LOGOUT: `${NAMESPACE}/logout`
+    LOGOUT: `${NAMESPACE}/logout`,
+    CHANGE_TEAM: `${NAMESPACE}/changeTeam`
 };
 
 export default types;
@@ -27,4 +30,9 @@ export const checkAuth = (destination: any) => ({
 
 export const logOut = () => ({
     type: types.LOGOUT
+});
+
+export const changeTeam = (teamId: ConcordId) => ({
+    type: types.CHANGE_TEAM,
+    teamId
 });

@@ -3,6 +3,7 @@ import {connect} from "react-redux";
 import PropTypes from "prop-types";
 import {Link} from "react-router";
 import {Grid, Header, Icon, Menu, Segment, Loader} from "semantic-ui-react";
+
 import {actions, selectors, SessionWidget} from "../session";
 import Modal from "../shared/Modal";
 import KillProcessPopup from "../process/KillProcessPopup";
@@ -11,6 +12,8 @@ import ShowSecretPublicKey from "../team/secret/list/ShowSecretPublicKey";
 import RepositoryPopup from "../project/RepositoryPopup";
 import DeleteProjectPopup from "../project/DeleteProjectPopup";
 import StartProjectPopup from "../project/StartProjectPopup/StartProjectPopup";
+import TeamSwitchDropdown from "../team/components/TeamSwitchDropdown";
+
 import "./styles.css";
 
 // register our modals
@@ -22,8 +25,7 @@ MODAL_TYPES[DeleteProjectPopup.MODAL_TYPE] = DeleteProjectPopup;
 MODAL_TYPES[StartProjectPopup.MODAL_TYPE] = StartProjectPopup;
 MODAL_TYPES[ShowSecretPublicKey.MODAL_TYPE] = ShowSecretPublicKey;
 
-
-const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, children, doLogout, router}) => {
+const layout = ({fullScreen, user: {displayName, team, loggedIn}, title, children, doLogout, router}) => {
     if (fullScreen) {
         return <Grid className="maxHeight tight">
             <Grid.Column id="mainContent" width={16} className="mainContent">
@@ -33,7 +35,8 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
         </Grid>;
     }
 
-    if (!loggedIn || !teamName) {
+    if (!loggedIn || !team) {
+        console.debug("layout -> not logged in or no team");
         return <Segment className="maxHeight">
             <Loader/>
         </Segment>;
@@ -45,7 +48,10 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
                 <Menu.Item>
                     <Header id="logo" as="h2" inverted>{title}</Header>
                 </Menu.Item>
-                <SessionWidget displayName={displayName} teamName={teamName} onLogout={doLogout}/>
+
+                <SessionWidget displayName={displayName} teamName={team.name} onLogout={doLogout}/>
+                <TeamSwitchDropdown/>
+
                 <Menu.Item active={router.isActive("/process")}>
                     <Menu.Header><Icon name="tasks"/>Processes</Menu.Header>
                     <Menu.Menu>
@@ -103,12 +109,12 @@ layout.defaultProps = {
     title: "Concord"
 };
 
-const mapStateToProps = (state, {location: {query}}) => ({
+const mapStateToProps = ({session}, {location: {query}}) => ({
     fullScreen: query.fullScreen === "true",
     user: {
-        displayName: selectors.getDisplayName(state.session),
-        loggedIn: selectors.isLoggedIn(state.session),
-        teamName: selectors.getCurrentTeamName(state.session)
+        displayName: selectors.getDisplayName(session),
+        loggedIn: selectors.isLoggedIn(session),
+        team: selectors.getCurrentTeam(session)
     }
 });
 

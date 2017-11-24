@@ -1,10 +1,12 @@
 // @flow
+import type {ConcordId} from "../../types";
 import * as common from "../../api";
 
-export const listProjects = (sortBy: string = "name", sortDir: string = common.sort.ASC) => {
-    console.debug("API: listProjects ['%s', '%s'] -> starting...", sortBy, sortDir);
+export const listProjects = (teamId: ConcordId, sortBy: string = "name", sortDir: string = common.sort.ASC): Promise<any> => {
+    console.debug("API: listProjects ['%s', '%s', '%s'] -> starting...", teamId, sortBy, sortDir);
 
     const query = common.queryParams({
+        teamId,
         sortBy,
         asc: String(common.sort.ASC === sortDir)
     });

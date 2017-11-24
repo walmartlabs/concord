@@ -6,6 +6,7 @@ import ErrorMessage from "../shared/ErrorMessage";
 import ProjectForm from "./form";
 import {actions, reducers, sagas, selectors} from "./crud";
 import * as repoConstants from "./RepositoryPopup/constants";
+import {getCurrentTeam} from "../session/reducers";
 
 /**
  * Converts the server's representation of a project object into the form's format.
@@ -61,8 +62,10 @@ class ProjectPage extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        const {projectName} = prevProps;
-        if (!projectName || projectName !== this.props.projectName) {
+        const {projectName: prevProjectName} = prevProps;
+        const {projectName: currentProjectName} = this.props;
+
+        if (!prevProjectName || prevProjectName !== currentProjectName) {
             this.load();
         }
     }
@@ -79,7 +82,8 @@ class ProjectPage extends Component {
     }
 
     handleSave(data) {
-        const {saveData} = this.props;
+        const {saveData, team} = this.props;
+        data.teamId = team.id;
         saveData(data);
     }
 
@@ -103,7 +107,8 @@ class ProjectPage extends Component {
     }
 }
 
-const mapStateToProps = ({project}, {params: {projectName}}) => ({
+const mapStateToProps = ({project, session}, {params: {projectName}}) => ({
+    team: getCurrentTeam(session),
     projectName: projectName,
     createNew: projectName === "_new",
     data: selectors.getData(project),

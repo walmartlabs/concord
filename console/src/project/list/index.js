@@ -8,6 +8,7 @@ import ErrorMessage from "../../shared/ErrorMessage";
 import DataTable from "../../shared/DataTable";
 import * as api from "./api";
 import DataItem from "../../shared/DataItem";
+import {getCurrentTeam} from "../../session/reducers";
 
 const {actions, reducers, selectors, sagas} = DataItem("project/list", [], api.listProjects);
 
@@ -33,13 +34,21 @@ class ProjectListPage extends Component {
         this.load();
     }
 
+    componentDidUpdate(prevProps) {
+        const {team: currentTeam} = this.props;
+        const {team: prevTeam} = prevProps;
+        if (currentTeam !== prevTeam) {
+            this.load();
+        }
+    }
+
     load() {
-        const {loadData} = this.props;
-        loadData();
+        const {loadData, team} = this.props;
+        loadData(team.id);
     }
 
     render() {
-        const {loading, error, data} = this.props;
+        const {loading, error, data, team} = this.props;
 
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.load()}/>;
@@ -58,14 +67,15 @@ ProjectListPage.propTypes = {
     data: PropTypes.array
 };
 
-const mapStateToProps = ({projectList}) => ({
+const mapStateToProps = ({projectList, session}) => ({
+    team: getCurrentTeam(session),
     loading: selectors.isLoading(projectList),
     error: selectors.getError(projectList),
     data: selectors.getData(projectList)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    loadData: () => dispatch(actions.loadData())
+    loadData: (teamId) => dispatch(actions.loadData([teamId]))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProjectListPage);

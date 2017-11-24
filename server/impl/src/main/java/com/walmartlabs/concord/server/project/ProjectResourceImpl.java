@@ -171,13 +171,13 @@ public class ProjectResourceImpl extends AbstractDao implements ProjectResource,
 
     @Override
     @Validate
-    public List<ProjectEntry> list(String sortBy, boolean asc) {
+    public List<ProjectEntry> list(UUID teamId, String sortBy, boolean asc) {
         Field<?> sortField = key2ProjectField.get(sortBy);
         if (sortField == null) {
             throw new ValidationErrorsException("Unknown sort field: " + sortBy);
         }
 
-        return projectManager.list(sortField, asc);
+        return projectManager.list(teamId, sortField, asc);
     }
 
     @Override

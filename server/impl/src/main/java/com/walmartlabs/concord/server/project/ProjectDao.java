@@ -205,7 +205,9 @@ public class ProjectDao extends AbstractDao {
                 .execute();
     }
 
-    public List<ProjectEntry> list(UUID currentUserId, Field<?> sortField, boolean asc) {
+    public List<ProjectEntry> list(UUID teamId, UUID currentUserId, Field<?> sortField, boolean asc) {
+        // TODO simplify
+
         Projects p = PROJECTS.as("p");
         sortField = p.field(sortField);
 
@@ -230,6 +232,10 @@ public class ProjectDao extends AbstractDao {
 
             if (currentUserId != null) {
                 q.where(or(p.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString()), filterByTeamMember));
+            }
+
+            if (teamId != null) {
+                q.where(p.TEAM_ID.eq(teamId));
             }
 
             if (sortField != null) {

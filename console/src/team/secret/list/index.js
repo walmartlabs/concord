@@ -9,7 +9,7 @@ import ErrorMessage from "../../../shared/ErrorMessage";
 import {actions as modal} from "../../../shared/Modal";
 import DeleteSecretPopup from "./DeleteSecretPopup";
 import ShowSecretPublicKey from "./ShowSecretPublicKey";
-import {getCurrentTeamName} from "../../../session/reducers";
+import {getCurrentTeam} from "../../../session/reducers";
 
 import {actionTypes, actions, selectors, reducers, sagas} from "./effects";
 
@@ -62,13 +62,21 @@ class SecretTable extends Component {
         this.update();
     }
 
+    componentDidUpdate(prevProps) {
+        const {team: currentTeam} = this.props;
+        const {team: prevTeam} = prevProps;
+        if (currentTeam !== prevTeam) {
+            this.update();
+        }
+    }
+
     update() {
-        const {fetchData, teamName} = this.props;
-        fetchData(teamName);
+        const {fetchData, team} = this.props;
+        fetchData(team.name);
     }
 
     render() {
-        const {error, loading, data, teamName, deletePopupFn, getPublicKey} = this.props;
+        const {error, loading, data, team, deletePopupFn, getPublicKey} = this.props;
 
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.update()}/>;
@@ -76,7 +84,7 @@ class SecretTable extends Component {
 
         return <div>
             <Header as="h3"><RefreshButton loading={loading} onClick={() => this.update()}/>Secrets</Header>
-            <DataTable cols={columns} rows={data} cellFn={cellFn(teamName, deletePopupFn, getPublicKey)}/>
+            <DataTable cols={columns} rows={data} cellFn={cellFn(team.name, deletePopupFn, getPublicKey)}/>
         </div>;
     }
 }
@@ -89,7 +97,7 @@ SecretTable.propTypes = {
 };
 
 const mapStateToProps = ({session, secretList}) => ({
-    teamName: getCurrentTeamName(session),
+    team: getCurrentTeam(session),
     error: selectors.getError(secretList),
     loading: selectors.getIsLoading(secretList),
     data: selectors.getRows(secretList)
