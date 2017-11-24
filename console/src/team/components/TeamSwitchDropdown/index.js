@@ -1,7 +1,7 @@
 import React from "react";
 import {connect} from "react-redux";
 import {Dropdown} from "semantic-ui-react"
-import {selectors} from "../../../session";
+import {selectors, actions} from "../../../session";
 
 const byName = ({name: a}, {name: b}) => {
     if (a < b) {
@@ -14,24 +14,22 @@ const byName = ({name: a}, {name: b}) => {
 
 const teamsToOptions = (teams) =>
     teams.slice().sort(byName)
-        .map(t => ({text: t.name, value: t.name}));
+        .map(t => ({text: t.name, value: t.id}));
 
-const TeamSwitchDropdown = ({currentTeamName, teams, onChangeFn}) =>
+const TeamSwitchDropdown = ({currentTeam, teams, onChangeFn}) =>
     <Dropdown item
-              text={`Team: ${currentTeamName}`}
-              value={currentTeamName}
+              text={`Team: ${currentTeam.name}`}
+              value={currentTeam.id}
               options={teamsToOptions(teams)}
               onChange={(ev, v) => onChangeFn(v.value)}/>;
 
 const mapStateToProps = ({session}) => ({
-    currentTeamName: selectors.getCurrentTeamName(session),
+    currentTeam: selectors.getCurrentTeam(session),
     teams: selectors.getAvailableTeams(session)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    onChangeFn: (teamName) => {
-        console.log("!!!!", teamName);
-    }
+    onChangeFn: (teamId) => dispatch(actions.changeTeam(teamId))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(TeamSwitchDropdown);

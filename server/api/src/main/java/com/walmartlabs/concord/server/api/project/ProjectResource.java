@@ -11,6 +11,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.UUID;
 
 @Api("Project")
 @Path("/api/v1/project")
@@ -79,7 +80,8 @@ public interface ProjectResource {
     @GET
     @ApiOperation("List projects")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProjectEntry> list(@ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy,
+    List<ProjectEntry> list(@ApiParam @QueryParam("teamId") UUID teamId,
+                            @ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy,
                             @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc);
 
     /**

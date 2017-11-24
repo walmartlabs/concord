@@ -25,8 +25,7 @@ MODAL_TYPES[DeleteProjectPopup.MODAL_TYPE] = DeleteProjectPopup;
 MODAL_TYPES[StartProjectPopup.MODAL_TYPE] = StartProjectPopup;
 MODAL_TYPES[ShowSecretPublicKey.MODAL_TYPE] = ShowSecretPublicKey;
 
-
-const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, children, doLogout, router}) => {
+const layout = ({fullScreen, user: {displayName, team, loggedIn}, title, children, doLogout, router}) => {
     if (fullScreen) {
         return <Grid className="maxHeight tight">
             <Grid.Column id="mainContent" width={16} className="mainContent">
@@ -36,7 +35,8 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
         </Grid>;
     }
 
-    if (!loggedIn || !teamName) {
+    if (!loggedIn || !team) {
+        console.debug("layout -> not logged in or no team");
         return <Segment className="maxHeight">
             <Loader/>
         </Segment>;
@@ -49,7 +49,7 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
                     <Header id="logo" as="h2" inverted>{title}</Header>
                 </Menu.Item>
 
-                <SessionWidget displayName={displayName} teamName={teamName} onLogout={doLogout}/>
+                <SessionWidget displayName={displayName} teamName={team.name} onLogout={doLogout}/>
                 <TeamSwitchDropdown/>
 
                 <Menu.Item active={router.isActive("/process")}>
@@ -109,12 +109,12 @@ layout.defaultProps = {
     title: "Concord"
 };
 
-const mapStateToProps = (state, {location: {query}}) => ({
+const mapStateToProps = ({session}, {location: {query}}) => ({
     fullScreen: query.fullScreen === "true",
     user: {
-        displayName: selectors.getDisplayName(state.session),
-        loggedIn: selectors.isLoggedIn(state.session),
-        teamName: selectors.getCurrentTeamName(state.session)
+        displayName: selectors.getDisplayName(session),
+        loggedIn: selectors.isLoggedIn(session),
+        team: selectors.getCurrentTeam(session)
     }
 });
 

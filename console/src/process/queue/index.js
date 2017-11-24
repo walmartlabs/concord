@@ -1,14 +1,14 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import PropTypes from "prop-types";
-import { connect } from "react-redux";
-import { Link } from "react-router";
+import {connect} from "react-redux";
+import {Link} from "react-router";
 import moment from "moment";
-import { Button, Header, Icon } from "semantic-ui-react";
+import {Button, Header, Icon} from "semantic-ui-react";
 import KillProcessPopup from "../KillProcessPopup";
 import RefreshButton from "../../shared/RefreshButton";
 import ErrorMessage from "../../shared/ErrorMessage";
 import DataTable from "../../shared/DataTable";
-import { actions as modal } from "../../shared/Modal";
+import {actions as modal} from "../../shared/Modal";
 import DataItem from "../../shared/DataItem";
 import * as api from "./api";
 import * as constants from "../constants";
@@ -91,7 +91,7 @@ class QueuePage extends Component {
         }
 
         return <div>
-            <Header as="h3"><RefreshButton loading={loading} onClick={() => this.load()} /> Queue</Header>
+            <Header as="h3"><RefreshButton loading={loading} onClick={() => this.load()}/> Queue (all teams)</Header>
             <DataTable cols={columns} rows={data} cellFn={cellFn(killPopupFn)} />
         </div>;
     }

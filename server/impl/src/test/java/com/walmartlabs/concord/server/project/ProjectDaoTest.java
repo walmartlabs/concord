@@ -77,7 +77,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
     public void testList() throws Exception {
         UUID teamId = TeamManager.DEFAULT_TEAM_ID;
 
-        assertEquals(0, projectDao.list(null, PROJECTS.PROJECT_NAME, true).size());
+        assertEquals(0, projectDao.list(null, null, PROJECTS.PROJECT_NAME, true).size());
 
         // ---
 
@@ -89,7 +89,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
 
-        List<ProjectEntry> l = projectDao.list(null, PROJECTS.PROJECT_NAME, false);
+        List<ProjectEntry> l = projectDao.list(null, null, PROJECTS.PROJECT_NAME, false);
         assertEquals(2, l.size());
 
         ProjectEntry a = l.get(1);

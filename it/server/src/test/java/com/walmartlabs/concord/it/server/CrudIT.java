@@ -211,7 +211,7 @@ public class CrudIT extends AbstractServerIT {
         UpdateProjectResponse upr = projectResource.update(projectName, new UpdateProjectRequest(null, null, null, null, Collections.emptyMap()));
         assertTrue(upr.isOk());
 
-        List<ProjectEntry> l = projectResource.list(null, false);
+        List<ProjectEntry> l = projectResource.list(null, null, false);
         ProjectEntry e2 = findProject(l, projectName);
         assertNotNull(e2);
 

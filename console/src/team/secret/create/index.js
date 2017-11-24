@@ -7,7 +7,7 @@ import ErrorMessage from "../../../shared/ErrorMessage";
 import {NewSecretForm} from "../components";
 import * as api from "./api";
 import {actions, reducers, sagas, selectors} from "./effects";
-import {getCurrentTeamName} from "../../../session/reducers";
+import {getCurrentTeam} from "../../../session/reducers";
 
 import "./styles.css";
 
@@ -39,10 +39,10 @@ class CreateSecretPage extends Component {
     }
 
     render() {
-        const {submitFn, teamName, response, error, ...rest} = this.props;
+        const {submitFn, team, response, error, ...rest} = this.props;
 
         const nameCheckFn = (secretName) => {
-            return api.exists(teamName, secretName).then(exists => {
+            return api.exists(team.name, secretName).then(exists => {
                 if (exists) {
                     const err = {name: "Already exists"};
                     throw err;
@@ -56,7 +56,7 @@ class CreateSecretPage extends Component {
             {error && <ErrorMessage message={error}/>}
             {response && response.ok && CreateSecretPage.renderResponse(response)}
 
-            <NewSecretForm onSubmit={(req) => submitFn(teamName, req)}
+            <NewSecretForm onSubmit={(req) => submitFn(team.name, req)}
                            nameCheckFn={nameCheckFn}
                            {...rest}/>
         </div>;
@@ -64,7 +64,7 @@ class CreateSecretPage extends Component {
 }
 
 const mapStateToProps = ({session, secretForm}) => ({
-    teamName: getCurrentTeamName(session),
+    team: getCurrentTeam(session),
     response: selectors.response(secretForm),
     error: selectors.error(secretForm),
     loading: selectors.loading(secretForm)

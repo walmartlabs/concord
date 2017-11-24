@@ -2,7 +2,7 @@
 import type {ConcordKey} from "../types";
 import * as common from "../api";
 
-export const fetchProject = (name: ConcordKey) => {
+export const fetchProject = (name: ConcordKey): Promise<any> => {
     console.debug("API: fetchProject ['%s'] -> starting...", name);
     return fetch(`/api/v1/project/${name}`, {credentials: "same-origin"})
         .then(response => {
@@ -18,7 +18,7 @@ export const fetchProject = (name: ConcordKey) => {
         });
 };
 
-export const updateProject = (data: any) => {
+export const updateProject = (data: any): Promise<any> => {
     console.debug("API: updateProject ['%o'] -> starting...", data);
 
     const opts = {
@@ -44,7 +44,7 @@ export const updateProject = (data: any) => {
         });
 };
 
-export const isProjectExists = (name: string) => {
+export const isProjectExists = (name: string): Promise<any> => {
     console.debug("API: checkName ['%s'] -> starting...", name);
     return fetch(`/api/service/console/project/${name}/exists`, {credentials: "same-origin"})
         .then(response => {
@@ -60,7 +60,7 @@ export const isProjectExists = (name: string) => {
         });
 };
 
-export const deleteProject = (name: ConcordKey) => {
+export const deleteProject = (name: ConcordKey): Promise<any> => {
     console.debug("API: deleteProject ['%s'] -> starting...", name);
 
     const opts = {

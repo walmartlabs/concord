@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import {Dropdown} from "semantic-ui-react";
 
-import {getCurrentTeamName} from "../../../session/reducers";
+import {getCurrentTeam} from "../../../session/reducers";
 
 import {actions, selectors} from "./effects";
 
@@ -11,12 +11,12 @@ const LOCKED_SECRET_TYPE = "PASSWORD";
 class SecretsListDropdown extends Component {
 
     componentDidMount() {
-        const {loadFn, teamName} = this.props;
-        loadFn(teamName);
+        const {loadFn, team} = this.props;
+        loadFn(team.name);
     }
 
     render() {
-        const {data, isLoading, loadFn, teamName, ...rest} = this.props;
+        const {data, isLoading, loadFn, team, ...rest} = this.props;
 
         let options = [];
         if (data) {
@@ -31,7 +31,7 @@ class SecretsListDropdown extends Component {
 }
 
 const mapStateToProps = ({session, secretList}) => ({
-    teamName: getCurrentTeamName(session),
+    team: getCurrentTeam(session),
     data: selectors.getRows(secretList),
     isLoading: selectors.getIsLoading(secretList)
 });
