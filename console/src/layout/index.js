@@ -2,7 +2,7 @@ import React from "react";
 import {connect} from "react-redux";
 import PropTypes from "prop-types";
 import {Link} from "react-router";
-import {Grid, Header, Icon, Menu} from "semantic-ui-react";
+import {Grid, Header, Icon, Menu, Segment, Loader} from "semantic-ui-react";
 import {actions, selectors, SessionWidget} from "../session";
 import Modal from "../shared/Modal";
 import KillProcessPopup from "../process/KillProcessPopup";
@@ -33,13 +33,19 @@ const layout = ({fullScreen, user: {displayName, teamName, loggedIn}, title, chi
         </Grid>;
     }
 
+    if (!loggedIn || !teamName) {
+        return <Segment className="maxHeight">
+            <Loader/>
+        </Segment>;
+    }
+
     return <Grid className="maxHeight tight">
         <Grid.Column width={2} className="maxHeight tight">
             <Menu size="large" vertical inverted fluid className="mainMenu maxHeight">
                 <Menu.Item>
                     <Header id="logo" as="h2" inverted>{title}</Header>
                 </Menu.Item>
-                {loggedIn && <SessionWidget displayName={displayName} teamName={teamName} onLogout={doLogout}/>}
+                <SessionWidget displayName={displayName} teamName={teamName} onLogout={doLogout}/>
                 <Menu.Item active={router.isActive("/process")}>
                     <Menu.Header><Icon name="tasks"/>Processes</Menu.Header>
                     <Menu.Menu>
