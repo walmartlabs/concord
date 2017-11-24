@@ -1,5 +1,5 @@
 // @flow
-import {fork, call, put, takeLatest, select} from "redux-saga/effects";
+import {fork, call, put, takeLatest, select, all} from "redux-saga/effects";
 import {push as pushHistory} from "react-router-redux";
 import types from "./actions";
 import {actions as session} from "../session";
@@ -51,8 +51,8 @@ function* doRefresh(action: any): Generator<*, *, *> {
 }
 
 export default function*(): Generator<*, *, *> {
-    yield [
+    yield all([
         fork(takeLatest, types.LOGIN_REQUEST, doLogin),
         fork(takeLatest, types.LOGIN_REFRESH, doRefresh)
-    ];
+    ]);
 }

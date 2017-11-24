@@ -36,7 +36,7 @@ const cellFn = (teamName, deletePopupFn, getPublicKey) => (row, key) => {
         const name = row[nameKey];
         return (
             <div style={{textAlign: "right"}}>
-                {row.type === "KEY_PAIR" && row.storeType == "SERVER_KEY" &&
+                {row.type === "KEY_PAIR" && row.storeType === "SERVER_KEY" &&
                 <Popup
                     trigger={<Button color="blue" icon='key' onClick={() => getPublicKey(teamName, name)}/>}
                     content="Get Public Key"

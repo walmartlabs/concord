@@ -1,5 +1,5 @@
 // @flow
-import {fork} from "redux-saga/effects";
+import {fork, all} from "redux-saga/effects";
 import {sagas as session} from "./session";
 import {sagas as about} from "./system/about";
 import {sagas as loginForm} from "./login";
@@ -18,7 +18,7 @@ import {sagas as secretNew} from "./team/secret/create";
 import {sagas as landingList} from "./landing/list";
 
 export default function*(): Generator<*, *, *> {
-    yield [
+    yield all([
         fork(session),
         fork(about),
         fork(loginForm),
@@ -35,5 +35,5 @@ export default function*(): Generator<*, *, *> {
         fork(secret),
         fork(secretNew),
         fork(landingList)
-    ];
+    ]);
 }

@@ -16,11 +16,7 @@ class CreateSecretPage extends Component {
         this.props.resetFn();
     }
 
-    copyToClipboard(value) {
-        document.getElementsByTagName("body");
-    }
-
-    renderResponse({password, publicKey}) {
+    static renderResponse({password, publicKey}) {
         return <Message success>
             <Message.Header>Secret created</Message.Header>
 
@@ -48,7 +44,8 @@ class CreateSecretPage extends Component {
         const nameCheckFn = (secretName) => {
             return api.exists(teamName, secretName).then(exists => {
                 if (exists) {
-                    throw {name: "Already exists"};
+                    const err = {name: "Already exists"};
+                    throw err;
                 }
             });
         };
@@ -57,7 +54,7 @@ class CreateSecretPage extends Component {
             <Header as="h3">New secret</Header>
 
             {error && <ErrorMessage message={error}/>}
-            {response && response.ok && this.renderResponse(response)}
+            {response && response.ok && CreateSecretPage.renderResponse(response)}
 
             <NewSecretForm onSubmit={(req) => submitFn(teamName, req)}
                            nameCheckFn={nameCheckFn}

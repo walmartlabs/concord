@@ -1,6 +1,6 @@
 // @flow
 import {combineReducers} from "redux";
-import {call, fork, put, takeLatest} from "redux-saga/effects";
+import {call, fork, put, takeLatest, all} from "redux-saga/effects";
 import {reset as resetForm} from "redux-form";
 
 import * as api from "./api";
@@ -119,8 +119,8 @@ function* onReset(action: any): Generator<*, *, *> {
 }
 
 export function* sagas(): Generator<*, *, *> {
-    yield [
+    yield all([
         fork(takeLatest, actionTypes.CREATE_REQUEST, onCreate),
         fork(takeLatest, actionTypes.CREATE_RESET, onReset)
-    ];
-};
+    ]);
+}

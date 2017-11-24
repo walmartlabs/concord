@@ -1,6 +1,6 @@
 // @flow
 import {delay} from "redux-saga"
-import {call, fork, put, takeLatest} from "redux-saga/effects";
+import {call, fork, put, takeLatest, all} from "redux-saga/effects";
 import {push as pushHistory} from "react-router-redux";
 import types from "./actions";
 import * as api from "./api";
@@ -65,8 +65,8 @@ function* submitForm(action: any): Generator<*, *, *> {
 }
 
 export default function*(): Generator<*, *, *> {
-    yield [
+    yield all([
         fork(takeLatest, types.PROCESS_FORM_REQUEST, loadForm),
         fork(takeLatest, types.PROCESS_FORM_SUBMIT_REQUEST, submitForm)
-    ];
+    ]);
 }

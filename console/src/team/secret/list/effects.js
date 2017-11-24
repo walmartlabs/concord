@@ -1,6 +1,6 @@
 // @flow
 import {combineReducers} from "redux";
-import {call, fork, put, takeLatest} from "redux-saga/effects";
+import {call, fork, put, takeLatest, all} from "redux-saga/effects";
 
 import type {ConcordKey} from "../../../types";
 import * as common from "../../../reducers/common";
@@ -191,9 +191,9 @@ function* getPublicKey(action: any): Generator<*, *, *> {
 }
 
 export const sagas = function* (): Generator<*, *, *> {
-    yield [
+    yield all([
         fork(takeLatest, actionTypes.USER_SECRET_LIST_REQUEST, fetchSecretList),
         fork(takeLatest, actionTypes.USER_SECRET_DELETE_REQUEST, deleteSecret),
         fork(takeLatest, actionTypes.USER_SECRET_PUBLICKEY_REQUEST, getPublicKey)
-    ];
+    ]);
 };

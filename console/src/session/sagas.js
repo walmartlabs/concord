@@ -1,5 +1,5 @@
 // @flow
-import {call, fork, put, select, takeEvery} from "redux-saga/effects";
+import {call, fork, put, select, takeEvery, all} from "redux-saga/effects";
 import {replace as replaceHistory} from "react-router-redux";
 import Cookies from "js-cookie";
 import types from "./actions";
@@ -45,8 +45,8 @@ function* doLogout(): Generator<*, *, *> {
 }
 
 export default function*(): Generator<*, *, *> {
-    yield [
+    yield all([
         fork(takeEvery, types.CHECK_AUTH, checkAuth),
         fork(takeEvery, types.LOGOUT, doLogout)
-    ];
+    ]);
 }

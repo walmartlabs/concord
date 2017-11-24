@@ -1,5 +1,5 @@
 // @flow
-import {call, put, fork, takeLatest} from "redux-saga/effects";
+import {call, put, fork, takeLatest, all} from "redux-saga/effects";
 import * as process from "../api";
 import * as log from "./api";
 import types from "./actions";
@@ -26,7 +26,7 @@ function* loadData(action: any): Generator<*, *, *> {
 }
 
 export default function* (): Generator<*, *, *> {
-    yield [
+    yield all([
         fork(takeLatest, types.PROCESS_LOG_REQUEST, loadData)
-    ];
+    ]);
 }

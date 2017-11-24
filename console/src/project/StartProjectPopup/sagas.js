@@ -1,5 +1,5 @@
 // @flow
-import {call, fork, put, takeLatest} from "redux-saga/effects";
+import {call, fork, put, takeLatest, all} from "redux-saga/effects";
 import * as api from "./api";
 import types from "./actions";
 
@@ -30,7 +30,7 @@ function* startProject(action: any): Generator<*, *, *> {
 }
 
 export default function*(): Generator<*, *, *> {
-    yield [
+    yield all([
         fork(takeLatest, types.PROJECT_START_REQUEST, startProject)
-    ];
+    ]);
 }

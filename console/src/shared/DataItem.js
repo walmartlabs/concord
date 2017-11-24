@@ -1,6 +1,6 @@
 // @flow
 import {combineReducers} from "redux";
-import {call, fork, put, takeLatest} from "redux-saga/effects";
+import {call, fork, put, takeLatest, all} from "redux-saga/effects";
 
 const NAMESPACE = "shared/data_item";
 
@@ -190,11 +190,11 @@ export default (key: string, initial: any, loadFn: Function, saveFn: Function, d
     }
 
     function* sagas(): Generator<*, *, *> {
-        yield [
+        yield all([
             fork(takeLatest, types.DATA_ITEM_REQUEST, loadData),
             fork(takeLatest, types.DATA_ITEM_SAVE_REQUEST, saveData),
             fork(takeLatest, types.DATA_ITEM_DELETE_REQUEST, deleteData),
-        ];
+        ]);
     }
 
     return {types, actions, reducers, selectors, sagas}
