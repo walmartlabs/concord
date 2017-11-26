@@ -13,7 +13,7 @@
     <fileSets>
         <fileSet>
             <directory>${basedir}/build</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>.</outputDirectory>
             <includes>
                 <include>**/*</include>
             </includes>
