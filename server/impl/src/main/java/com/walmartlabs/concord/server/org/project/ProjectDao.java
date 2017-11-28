@@ -232,9 +232,9 @@ public class ProjectDao extends AbstractDao {
         Projects p = PROJECTS.as("p");
         sortField = p.field(sortField);
 
-        Field<String> teamNameField = select(TEAMS.TEAM_NAME)
-                .from(TEAMS)
-                .where(TEAMS.ORG_ID.eq(p.ORG_ID))
+        Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
+                .from(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID))
                 .asField();
 
         Field<String> ownerUsernameField = select(USERS.USERNAME)
@@ -256,7 +256,7 @@ public class ProjectDao extends AbstractDao {
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
                     p.ORG_ID,
-                    teamNameField,
+                    orgNameField,
                     p.VISIBILITY,
                     p.OWNER_ID,
                     ownerUsernameField)
