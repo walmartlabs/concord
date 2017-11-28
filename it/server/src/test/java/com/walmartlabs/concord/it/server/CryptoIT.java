@@ -14,7 +14,7 @@ public class CryptoIT extends AbstractServerIT {
 
     @Test
     public void testPlain() throws Exception {
-        String teamName = "Default";
+        String orgName = "Default";
 
         // ---
 
@@ -22,7 +22,7 @@ public class CryptoIT extends AbstractServerIT {
         String secretValue = "value@" + randomString();
         String storePassword = "store@" + randomString();
 
-        addPlainSecret(teamName, secretName, false, storePassword, secretValue.getBytes());
+        addPlainSecret(orgName, secretName, false, storePassword, secretValue.getBytes());
 
         // ---
 
@@ -31,7 +31,7 @@ public class CryptoIT extends AbstractServerIT {
 
     @Test
     public void testUsernamePassword() throws Exception {
-        String teamName = "Default";
+        String orgName = "Default";
 
         // ---
 
@@ -40,7 +40,7 @@ public class CryptoIT extends AbstractServerIT {
         String secretPassword = "password@" + randomString();
         String storePassword = "store@" + randomString();
 
-        addUsernamePassword(teamName, secretName, false, storePassword, secretUsername, secretPassword);
+        addUsernamePassword(orgName, secretName, false, storePassword, secretUsername, secretPassword);
 
         // ---
 

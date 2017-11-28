@@ -158,11 +158,11 @@ public class ProjectManager {
         }
 
         for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
-            String secret = r.getValue().getSecret();
-            if (secret == null) {
+            String secretName = r.getValue().getSecret();
+            if (secretName == null) {
                 continue;
             }
-            secretManager.assertAccess(orgId, secret, ResourceAccessLevel.READER, false);
+            secretManager.assertAccess(orgId, null, secretName, ResourceAccessLevel.READER, false);
         }
     }
 
@@ -179,7 +179,7 @@ public class ProjectManager {
 
             UUID secretId = null;
             if (req.getSecret() != null) {
-                SecretEntry e = secretManager.assertAccess(orgId, req.getSecret(), ResourceAccessLevel.READER, false);
+                SecretEntry e = secretManager.assertAccess(orgId, null, req.getSecret(), ResourceAccessLevel.READER, false);
                 secretId = e.getId();
             }
 

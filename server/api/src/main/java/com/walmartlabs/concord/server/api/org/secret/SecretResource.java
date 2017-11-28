@@ -1,11 +1,14 @@
 package com.walmartlabs.concord.server.api.org.secret;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -41,4 +44,13 @@ public interface SecretResource {
     @Produces(MediaType.APPLICATION_JSON)
     DeleteSecretResponse delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                 @ApiParam @PathParam("secretName") @ConcordKey String secretName);
+
+    @POST
+    @ApiOperation("Updates the access level for the specified secret and team")
+    @Path("/{orgName}/secret/{secretName}/access")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    GenericOperationResultResponse updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                     @ApiParam @PathParam("secretName") @ConcordKey String secretName,
+                                                     @ApiParam @Valid ResourceAccessEntry entry);
 }

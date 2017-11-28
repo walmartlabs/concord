@@ -4,6 +4,8 @@ import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -11,8 +13,6 @@ import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.secret.SecretManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,16 +97,16 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     private UUID getOrgId(Payload p) {
         UUID projectId = p.getHeader(Payload.PROJECT_ID);
 
-        UUID teamId = null;
+        UUID orgId = null;
         if (projectId != null) {
-            teamId = projectDao.getOrgId(projectId);
+            orgId = projectDao.getOrgId(projectId);
         }
 
-        if (teamId == null) {
-            teamId = OrganizationManager.DEFAULT_ORG_ID;
+        if (orgId == null) {
+            orgId = OrganizationManager.DEFAULT_ORG_ID;
         }
 
-        return teamId;
+        return orgId;
     }
 
     private static String findMatchingSecret(Payload payload, Collection<Map<String, Object>> items) {

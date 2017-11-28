@@ -23,19 +23,19 @@ public class TeamManager {
         this.teamDao = teamDao;
     }
 
-    public TeamEntry assertExisting(UUID orgId, UUID id, String name) {
-        if (id != null) {
-            TeamEntry e = teamDao.get(id);
+    public TeamEntry assertExisting(UUID orgId, UUID teamId, String teamName) {
+        if (teamId != null) {
+            TeamEntry e = teamDao.get(teamId);
             if (e == null) {
-                throw new ValidationErrorsException("Team not found: " + id);
+                throw new ValidationErrorsException("Team not found: " + teamId);
             }
             return e;
         }
 
-        if (name != null) {
-            TeamEntry e = teamDao.getByName(orgId, name);
+        if (teamName != null) {
+            TeamEntry e = teamDao.getByName(orgId, teamName);
             if (e == null) {
-                throw new ValidationErrorsException("Team not found: " + name);
+                throw new ValidationErrorsException("Team not found: " + teamName);
             }
             return e;
         }
@@ -43,12 +43,12 @@ public class TeamManager {
         throw new ValidationErrorsException("Team ID or name is required");
     }
 
-    public TeamEntry assertAccess(UUID orgId, String name, TeamRole requiredRole, boolean teamMembersOnly) {
-        return assertAccess(orgId, null, name, requiredRole, teamMembersOnly);
+    public TeamEntry assertAccess(UUID orgId, String teamName, TeamRole requiredRole, boolean teamMembersOnly) {
+        return assertAccess(orgId, null, teamName, requiredRole, teamMembersOnly);
     }
 
-    public TeamEntry assertAccess(UUID orgId, UUID id, String name, TeamRole requiredRole, boolean teamMembersOnly) {
-        TeamEntry e = assertExisting(orgId, id, name);
+    public TeamEntry assertAccess(UUID orgId, UUID teamId, String teamName, TeamRole requiredRole, boolean teamMembersOnly) {
+        TeamEntry e = assertExisting(orgId, teamId, teamName);
 
         UserPrincipal p = UserPrincipal.getCurrent();
         if (p.isAdmin()) {

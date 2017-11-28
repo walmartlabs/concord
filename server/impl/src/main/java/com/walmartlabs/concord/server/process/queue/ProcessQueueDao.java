@@ -17,9 +17,9 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.VProcessQueue.V_PROCESS_QUEUE;
-import static org.jooq.impl.DSL.currentTimestamp;
-import static org.jooq.impl.DSL.value;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class ProcessQueueDao extends AbstractDao {
@@ -147,6 +147,20 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         return toEntry(r);
+    }
+
+    public UUID getOrgId(UUID instanceId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            Field<UUID> orgId = select(PROJECTS.ORG_ID)
+                    .from(PROJECTS)
+                    .where(PROJECTS.PROJECT_ID.eq(PROCESS_QUEUE.PROJECT_ID))
+                    .asField();
+
+            return tx.select(orgId)
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .fetchOne(orgId);
+        }
     }
 
     public ProcessEntry poll() {

@@ -9,6 +9,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import io.grpc.stub.StreamObserver;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -30,20 +31,23 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
     private final SecretManager secretManager;
     private final ProcessQueueDao queueDao;
     private final ProcessSecurityContext securityContext;
+    private final LogManager logManager;
 
     @Inject
     public SecretStoreServiceImpl(SecretManager secretManager,
                                   ProcessQueueDao queueDao,
-                                  ProcessSecurityContext securityContext) {
+                                  ProcessSecurityContext securityContext,
+                                  LogManager logManager) {
 
         this.secretManager = secretManager;
         this.queueDao = queueDao;
         this.securityContext = securityContext;
+        this.logManager = logManager;
     }
 
     @Override
     public void fetch(TFetchSecretRequest request, StreamObserver<TFetchSecretResponse> responseObserver) {
-        String instanceId = request.getInstanceId();
+        String sId = request.getInstanceId();
 
         String secretName = request.getSecretName();
         if (secretName == null) {
@@ -57,11 +61,11 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
             return;
         }
 
-        // TODO teams
-        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
+        UUID instanceId = UUID.fromString(sId);
+        UUID orgId = getOrgId(instanceId, secretName);
 
         try {
-            securityContext.runAsInitiator(UUID.fromString(instanceId), () -> {
+            securityContext.runAsInitiator(instanceId, () -> {
                 SecretDataEntry entry = secretManager.getRaw(orgId, secretName, secretPassword);
                 if (entry == null) {
                     responseObserver.onNext(TFetchSecretResponse.newBuilder()
@@ -115,6 +119,16 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
                 .setData(ByteString.copyFrom(result))
                 .build());
         responseObserver.onCompleted();
+    }
+
+    private UUID getOrgId(UUID instanceId, String secretName) {
+        UUID id = queueDao.getOrgId(instanceId);
+        if (id == null) {
+            logManager.warn(instanceId, "Using a secret from the default organization: {}. " +
+                    "Consider moving those secrets into your organization.", secretName);
+            return OrganizationManager.DEFAULT_ORG_ID;
+        }
+        return id;
     }
 
     private Optional<String> getProjectName(String instanceId) {

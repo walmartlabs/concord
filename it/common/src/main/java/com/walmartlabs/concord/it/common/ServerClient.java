@@ -1,11 +1,12 @@
 package com.walmartlabs.concord.it.common;
 
-import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.org.secret.SecretOperationResponse;
+import com.walmartlabs.concord.server.api.org.secret.SecretType;
+import com.walmartlabs.concord.server.api.process.*;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
@@ -109,6 +110,10 @@ public class ServerClient {
         Response resp = target.request().post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
         if (resp.getStatus() != Status.OK.getStatusCode()) {
             resp.close();
+            if (resp.getStatus() == 403) {
+                throw new ForbiddenException();
+            }
+
             throw new WebApplicationException(resp);
         }
 

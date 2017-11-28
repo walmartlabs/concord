@@ -13,6 +13,7 @@ import com.walmartlabs.concord.server.api.org.secret.SecretOwner;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.org.secret.SecretVisibility;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -25,11 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
-
-import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 
 @Named
 public class SecretManager {
@@ -39,19 +37,36 @@ public class SecretManager {
 
     private final SecretDao secretDao;
     private final SecretStoreConfiguration secretCfg;
+    private final OrganizationManager orgManager;
 
     @Inject
     public SecretManager(SecretDao secretDao,
-                         SecretStoreConfiguration secretCfg) {
+                         SecretStoreConfiguration secretCfg, OrganizationManager orgManager) {
 
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
+        this.orgManager = orgManager;
     }
 
-    public SecretEntry assertAccess(UUID orgId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
-        SecretEntry e = secretDao.getByName(orgId, secretName);
+    public SecretEntry assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
+        SecretEntry e = null;
+
+        if (secretId != null) {
+            e = secretDao.get(secretId);
+            if (e == null) {
+                throw new ValidationErrorsException("Secret not found: " + secretId);
+            }
+        }
+
+        if (e == null && secretName != null) {
+            e = secretDao.getByName(orgId, secretName);
+            if (e == null) {
+                throw new ValidationErrorsException("Secret not found: " + secretName);
+            }
+        }
+
         if (e == null) {
-            throw new ValidationErrorsException("Secret not found: " + secretName);
+            throw new ValidationErrorsException("Secret ID or name is required");
         }
 
         UserPrincipal p = UserPrincipal.getCurrent();
@@ -79,6 +94,8 @@ public class SecretManager {
     public DecryptedKeyPair createKeyPair(UUID orgId, String name, String storePassword,
                                           SecretVisibility visibility) throws IOException {
 
+        orgManager.assertAccess(orgId, true);
+
         KeyPair k = KeyPairUtils.create();
         UUID id = store(name, orgId, k, storePassword, visibility);
         return new DecryptedKeyPair(id, k.getPublicKey());
@@ -86,6 +103,8 @@ public class SecretManager {
 
     public DecryptedKeyPair createKeyPair(UUID orgId, String name, String storePassword,
                                           InputStream publicKey, InputStream privateKey, SecretVisibility visibility) throws IOException {
+
+        orgManager.assertAccess(orgId, true);
 
         KeyPair k = KeyPairUtils.create(publicKey, privateKey);
         validate(k);
@@ -97,6 +116,8 @@ public class SecretManager {
     public DecryptedUsernamePassword createUsernamePassword(UUID orgId, String name, String storePassword,
                                                             String username, char[] password, SecretVisibility visibility) {
 
+        orgManager.assertAccess(orgId, true);
+
         UsernamePassword p = new UsernamePassword(username, password);
         UUID id = store(name, orgId, p, storePassword, visibility);
         return new DecryptedUsernamePassword(id);
@@ -104,6 +125,8 @@ public class SecretManager {
 
     public DecryptedBinaryData createBinaryData(UUID orgId, String name, String storePassword,
                                                 InputStream data, SecretVisibility visibility) throws IOException {
+
+        orgManager.assertAccess(orgId, true);
 
         BinaryDataSecret d = new BinaryDataSecret(ByteStreams.toByteArray(data));
         UUID id = store(name, orgId, d, storePassword, visibility);
@@ -125,20 +148,9 @@ public class SecretManager {
         return new DecryptedKeyPair(e.getId(), k.getPublicKey());
     }
 
-    public UUID getId(UUID orgId, String name) {
-        return secretDao.getId(orgId, name);
-    }
-
-    public boolean exists(UUID orgId, String name) {
-        return secretDao.getByName(orgId, name) != null;
-    }
-
-    public List<SecretEntry> list(UUID orgId) {
-        return secretDao.list(orgId, SECRETS.SECRET_NAME, true);
-    }
-
-    public void delete(UUID secretId) {
-        secretDao.delete(secretId);
+    public void delete(UUID orgId, String secretName) {
+        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
+        secretDao.delete(e.getId());
     }
 
     public String generatePassword() {
@@ -146,6 +158,8 @@ public class SecretManager {
     }
 
     public DecryptedSecret getSecret(UUID orgId, String name, String password) {
+        assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
+
         SecretDataEntry e = secretDao.getByName(orgId, name);
         if (e == null) {
             return null;
@@ -162,6 +176,8 @@ public class SecretManager {
     }
 
     public SecretDataEntry getRaw(UUID orgId, String name, String password) {
+        assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
+
         SecretDataEntry s = secretDao.getByName(orgId, name);
         if (s == null) {
             return null;
@@ -192,7 +208,12 @@ public class SecretManager {
         return (KeyPair) s;
     }
 
-    public UUID store(String name, UUID orgId, Secret s, String password, SecretVisibility visibility) {
+    public void updateAccessLevel(UUID secretId, UUID teamId, ResourceAccessLevel level) {
+        assertAccess(null, secretId, null, ResourceAccessLevel.OWNER, true);
+        secretDao.upsertAccessLevel(secretId, teamId, level);
+    }
+
+    private UUID store(String name, UUID orgId, Secret s, String password, SecretVisibility visibility) {
         byte[] data;
 
         SecretType type;

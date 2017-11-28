@@ -1,14 +1,10 @@
 package com.walmartlabs.concord.it.server;
 
 import com.googlecode.junittoolbox.ParallelRunner;
-import com.walmartlabs.concord.server.api.org.CreateOrganizationResponse;
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.OrganizationResource;
-import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.project.ProjectAccessEntry;
+import com.walmartlabs.concord.server.api.org.*;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
 import com.walmartlabs.concord.server.api.org.project.ProjectResource;
+import com.walmartlabs.concord.server.api.org.secret.SecretResource;
 import com.walmartlabs.concord.server.api.org.team.*;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
@@ -203,7 +199,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
 
         setApiKey(apiKeyA.getKey());
-        orgProjectResource.updateAccessLevel(orgName, projectName, new ProjectAccessEntry(ctr.getId(), ResourceAccessLevel.WRITER));
+        orgProjectResource.updateAccessLevel(orgName, projectName, new ResourceAccessEntry(ctr.getId(), ResourceAccessLevel.WRITER));
 
         // ---
 
@@ -226,5 +222,76 @@ public class TeamRbacIT extends AbstractServerIT {
         setApiKey(apiKeyB.getKey());
         projectResource.createOrUpdate(orgName, new ProjectEntry(null, projectName, "another description",
                 null, null, null, null, null, null));
+    }
+
+    @Test(timeout = 30000)
+    public void testOrgPublicSecrets() {
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+
+        String orgAName = "orgA_" + randomString();
+        organizationResource.createOrUpdate(new OrganizationEntry(orgAName));
+
+        // ---
+
+        TeamResource teamResource = proxy(TeamResource.class);
+
+        String teamAName = "teamA_" + randomString();
+        teamResource.createOrUpdate(orgAName, new TeamEntry(teamAName));
+
+        // ---
+
+        UserResource userResource = proxy(UserResource.class);
+        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
+
+        String userAName = "userA_" + randomString();
+        userResource.createOrUpdate(new CreateUserRequest(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+
+        String userBName = "userB_" + randomString();
+        userResource.createOrUpdate(new CreateUserRequest(userBName));
+        CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
+
+        // ---
+
+        setApiKey(apiKeyA.getKey());
+
+        String secretAName = "secretA_" + randomString();
+        try {
+            generateKeyPair(orgAName, secretAName, false, null);
+            fail("should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        resetApiKey();
+        teamResource.addUsers(orgAName, teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+
+        // ---
+
+        setApiKey(apiKeyA.getKey());
+        generateKeyPair(orgAName, secretAName, false, null);
+
+        // ---
+
+        SecretResource secretResource = proxy(SecretResource.class);
+
+        setApiKey(apiKeyB.getKey());
+        secretResource.getPublicKey(orgAName, secretAName);
+
+        // ---
+
+        setApiKey(apiKeyB.getKey());
+
+        try {
+            secretResource.delete(orgAName, secretAName);
+            fail("should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        setApiKey(apiKeyA.getKey());
+        secretResource.delete(orgAName, secretAName);
     }
 }
