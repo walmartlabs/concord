@@ -8,7 +8,6 @@ import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretOwner;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.org.secret.SecretVisibility;
-import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
@@ -57,6 +56,15 @@ public class SecretDao extends AbstractDao {
         }
     }
 
+    public UUID getOrgId(UUID id) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(SECRETS.ORG_ID)
+                    .from(SECRETS)
+                    .where(SECRETS.SECRET_ID.eq(id))
+                    .fetchOne(SECRETS.ORG_ID);
+        }
+    }
+
     public UUID insert(UUID orgId, String name, UUID ownerId, SecretType type,
                        SecretStoreType storeType, SecretVisibility visibility, byte[] data) {
 
@@ -65,10 +73,6 @@ public class SecretDao extends AbstractDao {
 
     public UUID insert(DSLContext tx, UUID orgId, String name, UUID ownerId, SecretType type,
                        SecretStoreType storeType, SecretVisibility visibility, byte[] data) {
-
-        if (orgId == null) {
-            orgId = OrganizationManager.DEFAULT_ORG_ID;
-        }
 
         return tx.insertInto(SECRETS)
                 .columns(SECRETS.SECRET_NAME,
@@ -96,6 +100,14 @@ public class SecretDao extends AbstractDao {
 
         if (i != 1) {
             throw new DataAccessException("Invalid number of rows updated: " + i);
+        }
+    }
+
+    public SecretDataEntry get(UUID id) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return selectSecretDataEntry(tx)
+                    .where(SECRETS.SECRET_ID.eq(id))
+                    .fetchOne(SecretDao::toDataEntry);
         }
     }
 

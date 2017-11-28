@@ -59,19 +59,19 @@ public class OrganizationManager {
         orgDao.update(orgId, entry.getName());
     }
 
-    public OrganizationEntry assertExisting(UUID id, String name) {
-        if (id != null) {
-            OrganizationEntry e = orgDao.get(id);
+    public OrganizationEntry assertExisting(UUID orgId, String orgName) {
+        if (orgId != null) {
+            OrganizationEntry e = orgDao.get(orgId);
             if (e == null) {
-                throw new ValidationErrorsException("Organization not found: " + id);
+                throw new ValidationErrorsException("Organization not found: " + orgId);
             }
             return e;
         }
 
-        if (name != null) {
-            OrganizationEntry e = orgDao.getByName(name);
+        if (orgName != null) {
+            OrganizationEntry e = orgDao.getByName(orgName);
             if (e == null) {
-                throw new ValidationErrorsException("Organization not found: " + name);
+                throw new ValidationErrorsException("Organization not found: " + orgName);
             }
             return e;
         }
@@ -79,16 +79,16 @@ public class OrganizationManager {
         throw new ValidationErrorsException("Organization ID or name is required");
     }
 
-    public OrganizationEntry assertAccess(UUID id, boolean orgMembersOnly) {
-        return assertAccess(id, null, orgMembersOnly);
+    public OrganizationEntry assertAccess(UUID orgId, boolean orgMembersOnly) {
+        return assertAccess(orgId, null, orgMembersOnly);
     }
 
-    public OrganizationEntry assertAccess(String name, boolean orgMembersOnly) {
-        return assertAccess(null, name, orgMembersOnly);
+    public OrganizationEntry assertAccess(String orgName, boolean orgMembersOnly) {
+        return assertAccess(null, orgName, orgMembersOnly);
     }
 
-    public OrganizationEntry assertAccess(UUID id, String name, boolean orgMembersOnly) {
-        OrganizationEntry e = assertExisting(id, name);
+    public OrganizationEntry assertAccess(UUID orgId, String name, boolean orgMembersOnly) {
+        OrganizationEntry e = assertExisting(orgId, name);
 
         UserPrincipal p = UserPrincipal.getCurrent();
         if (p.isAdmin()) {

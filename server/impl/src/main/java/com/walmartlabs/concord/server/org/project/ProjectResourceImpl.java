@@ -5,15 +5,16 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.project.ProjectAccessEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectResource;
 import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
+import com.walmartlabs.concord.server.api.org.project.ProjectResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
@@ -46,6 +47,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     }
 
     @Override
+    @Validate
     public ProjectOperationResponse createOrUpdate(String orgName, ProjectEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -64,6 +66,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     }
 
     @Override
+    @Validate
     public ProjectEntry get(String orgName, String projectName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -76,12 +79,14 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     }
 
     @Override
+    @Validate
     public List<ProjectEntry> list(String orgName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return projectManager.list(org.getId());
     }
 
     @Override
+    @Validate
     public Object getConfiguration(String orgName, String projectName, String path) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -104,6 +109,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     }
 
     @Override
+    @Validate
     public GenericOperationResultResponse updateConfiguration(String orgName, String projectName, String path, Object data) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -136,11 +142,13 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     }
 
     @Override
+    @Validate
     public GenericOperationResultResponse updateConfiguration(String orgName, String projectName, Object data) {
         return updateConfiguration(projectName, "/", data);
     }
 
     @Override
+    @Validate
     public GenericOperationResultResponse deleteConfiguration(String orgName, String projectName, String path) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -170,6 +178,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     }
 
     @Override
+    @Validate
     public GenericOperationResultResponse delete(String orgName, String projectName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -183,7 +192,8 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     }
 
     @Override
-    public GenericOperationResultResponse updateAccessLevel(String orgName, String projectName, ProjectAccessEntry entry) {
+    @Validate
+    public GenericOperationResultResponse updateAccessLevel(String orgName, String projectName, ResourceAccessEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
@@ -196,6 +206,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     }
 
     @Override
+    @Validate
     public EncryptValueResponse encrypt(String orgName, String projectName, String value) {
         if (value == null) {
             throw new ValidationErrorsException("Value is required");

@@ -2,8 +2,10 @@ package com.walmartlabs.concord.server.org.secret;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.MultipartUtils;
+import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.api.org.secret.*;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryData;
@@ -12,6 +14,7 @@ import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedUsername
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
@@ -23,21 +26,26 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
+
 @Named
 public class SecretResourceImpl implements SecretResource, Resource {
 
     private final OrganizationManager orgManager;
     private final SecretManager secretManager;
+    private final SecretDao secretDao;
 
     @Inject
-    public SecretResourceImpl(OrganizationManager orgManager, SecretManager secretManager) {
+    public SecretResourceImpl(OrganizationManager orgManager, SecretManager secretManager, SecretDao secretDao) {
         this.orgManager = orgManager;
         this.secretManager = secretManager;
+        this.secretDao = secretDao;
     }
 
     @Override
+    @Validate
     public SecretOperationResponse create(String orgName, MultipartInput input) {
-        OrganizationEntry org = assertOrganization(orgName);
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         try {
             SecretType type = assertType(input);
@@ -68,30 +76,40 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     @Override
+    @Validate
     public PublicKeyResponse getPublicKey(String orgName, String secretName) {
-        OrganizationEntry org = assertOrganization(orgName);
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
         DecryptedKeyPair k = secretManager.getKeyPair(org.getId(), secretName);
         return new PublicKeyResponse(k.getId(), null, null, new String(k.getData()));
     }
 
     @Override
+    @Validate
     public List<SecretEntry> list(String orgName) {
-        OrganizationEntry org = assertOrganization(orgName);
-        return secretManager.list(org.getId());
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        return secretDao.list(org.getId(), SECRETS.SECRET_NAME, true);
     }
 
     @Override
+    @Validate
     public DeleteSecretResponse delete(String orgName, String secretName) {
-        OrganizationEntry org = assertOrganization(orgName);
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        secretManager.delete(org.getId(), secretName);
+        return new DeleteSecretResponse();
+    }
 
-        UUID secretId = secretManager.getId(org.getId(), secretName);
+    @Override
+    @Validate
+    public GenericOperationResultResponse updateAccessLevel(String orgName, String secretName, ResourceAccessEntry entry) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+
+        UUID secretId = secretDao.getId(org.getId(), secretName);
         if (secretId == null) {
             throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
         }
 
-        secretManager.delete(secretId);
-
-        return new DeleteSecretResponse();
+        secretManager.updateAccessLevel(secretId, entry.getTeamId(), entry.getLevel());
+        return new GenericOperationResultResponse(OperationResult.UPDATED);
     }
 
     private PublicKeyResponse createKeyPair(UUID orgId, String name, String storePassword, SecretVisibility visibility, MultipartInput input) throws IOException {
@@ -130,13 +148,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
-    private OrganizationEntry assertOrganization(String orgName) {
-        // TODO teams
-        return orgManager.assertAccess(orgName, true);
-    }
-
     private void assertUnique(UUID orgId, String name) {
-        if (secretManager.exists(orgId, name)) {
+        if (secretDao.getId(orgId, name) != null) {
             throw new ValidationErrorsException("Secret already exists: " + name);
         }
     }

@@ -102,11 +102,12 @@ public class RepositoryManagerImpl implements RepositoryManager {
 
     private UUID getOrgId(UUID projectId) {
         UUID orgId = projectDao.getOrgId(projectId);
+
         if (orgId == null) {
             log.warn("getOrgId ['{}'] -> can't determine the project's organization ID", projectId);
-            // TODO teams
             return OrganizationManager.DEFAULT_ORG_ID;
         }
+
         return orgId;
     }
 

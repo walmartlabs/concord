@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.api.org.project;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -85,11 +86,8 @@ public interface ProjectResource {
     @Produces(MediaType.APPLICATION_JSON)
     GenericOperationResultResponse updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                                      @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                     @ApiParam @Valid ProjectAccessEntry entry);
+                                                     @ApiParam @Valid ResourceAccessEntry entry);
 
-    /**
-     * Encrypts a string with the project's key.
-     */
     @POST
     @ApiOperation("Encrypts a string with the project's key")
     @Path("/{orgName}/project/{projectName}/encrypt")

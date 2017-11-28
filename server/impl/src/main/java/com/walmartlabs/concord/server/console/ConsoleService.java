@@ -4,8 +4,9 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.secret.SecretDao;
+import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
@@ -33,6 +34,7 @@ public class ConsoleService implements Resource {
     private final RepositoryManager repositoryManager;
     private final UserManager userManager;
     private final SecretManager secretManager;
+    private final SecretDao secretDao;
     private final OrganizationManager orgManager;
 
     @Inject
@@ -40,12 +42,13 @@ public class ConsoleService implements Resource {
                           RepositoryManager repositoryManager,
                           UserManager userManager,
                           SecretManager secretManager,
-                          OrganizationManager orgManager) {
+                          SecretDao secretDao, OrganizationManager orgManager) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
         this.userManager = userManager;
         this.secretManager = secretManager;
+        this.secretDao = secretDao;
         this.orgManager = orgManager;
     }
 
@@ -113,7 +116,7 @@ public class ConsoleService implements Resource {
                                   @PathParam("secretName") String secretName) {
         try {
             OrganizationEntry org = orgManager.assertAccess(orgName, true);
-            return secretManager.exists(org.getId(), secretName);
+            return secretDao.getId(org.getId(), secretName) != null;
         } catch (UnauthorizedException e) {
             return false;
         }
