@@ -24,9 +24,10 @@ let repositoryForm = (props) => {
     const {testResult, testError, testLoading, onTestRepoFn, formValues, org} = props;
     const testDisabled = submitting || invalid;
     const testIcon = testError ? "warning sign" : (testResult ? "check" : undefined);
+
     const testFn = (ev) => {
         ev.preventDefault();
-        onTestRepoFn(org.id, formValues);
+        onTestRepoFn(Object.assign({}, formValues, {orgId: org.id}));
     };
 
     const {handleSubmit, onSaveFn, onCloseFn} = props;
