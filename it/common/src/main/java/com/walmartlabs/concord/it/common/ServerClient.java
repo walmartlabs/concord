@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.it.common;
 
 import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.team.secret.SecretType;
-import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
+import com.walmartlabs.concord.server.api.org.secret.SecretType;
+import com.walmartlabs.concord.server.api.org.secret.SecretOperationResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
@@ -117,12 +117,12 @@ public class ServerClient {
         return e;
     }
 
-    public SecretOperationResponse postSecret(String teamName, Map<String, Object> input) {
-        return request(com.walmartlabs.concord.server.api.team.secret.SecretResource.class.getAnnotation(Path.class).value() + "/" + teamName + "/secret",
+    public SecretOperationResponse postSecret(String orgName, Map<String, Object> input) {
+        return request(com.walmartlabs.concord.server.api.org.secret.SecretResource.class.getAnnotation(Path.class).value() + "/" + orgName + "/secret",
                 input, SecretOperationResponse.class);
     }
 
-    public SecretOperationResponse generateKeyPair(String teamName, String name, boolean generatePassword, String storePassword) {
+    public SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("generatePassword", generatePassword);
@@ -131,7 +131,7 @@ public class ServerClient {
             m.put("storePassword", storePassword);
         }
 
-        return postSecret(teamName, m);
+        return postSecret(orgName, m);
     }
 
     public SecretOperationResponse addPlainSecret(String teamName, String name, boolean generatePassword, String storePassword, byte[] secret) {

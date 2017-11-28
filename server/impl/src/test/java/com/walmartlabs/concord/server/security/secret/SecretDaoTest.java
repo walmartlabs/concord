@@ -2,12 +2,12 @@ package com.walmartlabs.concord.server.security.secret;
 
 import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.server.AbstractDaoTest;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.team.secret.SecretType;
-import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.project.RepositoryDao;
-import com.walmartlabs.concord.server.team.TeamManager;
-import com.walmartlabs.concord.server.team.secret.SecretDao;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.secret.SecretType;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -23,16 +23,16 @@ public class SecretDaoTest extends AbstractDaoTest {
 
     @Test
     public void testOnCascade() {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration());
-        UUID projectId = projectDao.insert(teamId, projectName, "test", null, null);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null);
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));
-        UUID secretId = secretDao.insert(teamId, secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
+        UUID secretId = secretDao.insert(orgId, secretName, null, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, null, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());

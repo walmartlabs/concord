@@ -34,7 +34,7 @@ public class CreateProjectResponse implements Serializable {
 
     @Override
     public String toString() {
-        return "CreateProjectResponse{" +
+        return "ProjectOperationResponse{" +
                 "ok=" + ok +
                 ", id=" + id +
                 ", result=" + result +

@@ -8,10 +8,10 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.project.RepositoryException;
-import com.walmartlabs.concord.server.team.secret.SecretManager;
-import com.walmartlabs.concord.server.team.secret.SecretManager.DecryptedSecret;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryException;
+import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedSecret;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.SubmoduleInitCommand;
@@ -61,8 +61,8 @@ public class GithubRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public void fetch(UUID teamId, RepositoryEntry repository, Path dest) {
-        Secret secret = getSecret(teamId, repository.getSecret());
+    public void fetch(UUID orgId, RepositoryEntry repository, Path dest) {
+        Secret secret = getSecret(orgId, repository.getSecret());
 
         if (repository.getCommitId() != null) {
             fetchByCommit(repository.getUrl(), repository.getCommitId(), secret, dest);
@@ -119,12 +119,12 @@ public class GithubRepositoryProvider implements RepositoryProvider {
         }
     }
 
-    private Secret getSecret(UUID teamId, String secretName) {
+    private Secret getSecret(UUID orgId, String secretName) {
         if (secretName == null) {
             return null;
         }
 
-        DecryptedSecret s = secretManager.getSecret(teamId, secretName, null);
+        DecryptedSecret s = secretManager.getSecret(orgId, secretName, null);
         if (s == null) {
             throw new RepositoryException("Secret not found: " + secretName);
         }

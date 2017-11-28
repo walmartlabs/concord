@@ -4,7 +4,7 @@ import com.google.common.base.Throwables;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.team.secret.SecretUtils;
+import com.walmartlabs.concord.server.org.secret.SecretUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;

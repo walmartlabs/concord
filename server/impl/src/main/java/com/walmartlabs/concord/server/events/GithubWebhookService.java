@@ -1,9 +1,9 @@
 package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
-import com.walmartlabs.concord.server.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import org.eclipse.sisu.EagerSingleton;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;

@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import {Dropdown} from "semantic-ui-react";
 
-const sessionWidget = ({displayName, teamName, onLogout}) => {
+const sessionWidget = ({displayName, orgName, onLogout}) => {
     const logOut = (ev) => {
         ev.preventDefault();
         onLogout();
@@ -21,7 +21,7 @@ const sessionWidget = ({displayName, teamName, onLogout}) => {
 
 sessionWidget.propTypes = {
     displayName: PropTypes.string.isRequired,
-    teamName: PropTypes.string.isRequired,
+    orgName: PropTypes.string.isRequired,
     onLogout: PropTypes.func.isRequired
 };
 

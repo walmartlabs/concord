@@ -6,14 +6,14 @@ import types from "./actions";
 export default (state: any = {}, {type, ...rest}: any) => {
     switch (type) {
         case types.SET_CURRENT_SESSION: {
-            return chooseDefaultTeam({...rest});
+            return chooseDefaultOrg({...rest});
         }
         case types.UPDATE_SESSION: {
-            return chooseDefaultTeam(Object.assign({}, state, ...rest));
+            return chooseDefaultOrg(Object.assign({}, state, ...rest));
         }
-        case types.CHANGE_TEAM: {
-            const t = getTeam(state, rest.teamId);
-            return Object.assign({}, state, {currentTeam: t});
+        case types.CHANGE_ORG: {
+            const t = getOrg(state, rest.orgId);
+            return Object.assign({}, state, {currentOrg: t});
         }
         default: {
             return state;
@@ -21,35 +21,35 @@ export default (state: any = {}, {type, ...rest}: any) => {
     }
 };
 
-const chooseDefaultTeam = (state: any) => {
-    const {teams} = state;
+const chooseDefaultOrg = (state: any) => {
+    const {orgs} = state;
 
-    if (!teams || teams.length === 0) {
+    if (!orgs || orgs.length === 0) {
         throw new Error("The current user is not in any team");
     }
 
-    let t = teams[0];
-    return Object.assign({}, state, {currentTeam: t});
+    let o = orgs[0];
+    return Object.assign({}, state, {currentOrg: o});
 };
 
-const getTeam = (state: any, teamId: ConcordId) => {
-    const {teams} = state;
-    const found = teams.filter(t => t.id === teamId);
+const getOrg = (state: any, orgId: ConcordId) => {
+    const {orgs} = state;
+    const found = orgs.filter(t => t.id === orgId);
     if (!found || found.length <= 0) {
-        throw new Error(`Team not found: ${teamId}`);
+        throw new Error(`Organization not found: ${orgId}`);
     }
     return found[0];
 };
 
 export const isLoggedIn = (state: any) => {
-    const t = state.username;
-    return t !== undefined && t !== null;
+    const u = state.username;
+    return u !== undefined && u !== null;
 };
 
 export const getDisplayName = (state: any) => state.displayName;
 
 export const getDestination = (state: any) => state.destination;
 
-export const getCurrentTeam = (state: any) => state.currentTeam;
+export const getCurrentOrg = (state: any) => state.currentOrg;
 
-export const getAvailableTeams = (state: any) => state.teams;
+export const getAvailableOrgs = (state: any) => state.orgs;

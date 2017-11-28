@@ -5,7 +5,8 @@ import com.walmartlabs.concord.server.api.inventory.CreateInventoryResponse;
 import com.walmartlabs.concord.server.api.inventory.DeleteInventoryResponse;
 import com.walmartlabs.concord.server.api.inventory.InventoryEntry;
 import com.walmartlabs.concord.server.api.inventory.InventoryResource;
-import com.walmartlabs.concord.server.team.TeamDao;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -17,12 +18,12 @@ import java.util.UUID;
 public class InventoryResourceImpl implements InventoryResource, Resource {
 
     private final InventoryDao inventoryDao;
-    private final TeamDao teamDao;
+    private final OrganizationManager orgManager;
 
     @Inject
-    public InventoryResourceImpl(InventoryDao inventoryDao, TeamDao teamDao) {
+    public InventoryResourceImpl(InventoryDao inventoryDao, OrganizationManager orgManager) {
         this.inventoryDao = inventoryDao;
-        this.teamDao = teamDao;
+        this.orgManager = orgManager;
     }
 
     @Override
@@ -38,14 +39,14 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
            parentId = assertInventory(entry.getParent().getName());
         }
 
-        UUID teamId = assertOptionalTeam(entry.getTeamId(), entry.getTeamName());
+        OrganizationEntry org = assertOrganization(entry.getOrgId(), entry.getOrgName());
         UUID inventoryId = inventoryDao.getId(entry.getName());
 
         if (inventoryId != null) {
-            inventoryDao.update(inventoryId, entry.getName(), teamId, parentId);
+            inventoryDao.update(inventoryId, entry.getName(), org.getId(), parentId);
             return new CreateInventoryResponse(OperationResult.UPDATED, inventoryId);
         } else {
-            inventoryId = inventoryDao.insert(entry.getName(), teamId, parentId);
+            inventoryId = inventoryDao.insert(entry.getName(), org.getId(), parentId);
             return new CreateInventoryResponse(OperationResult.CREATED, inventoryId);
         }
     }
@@ -69,20 +70,12 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
         return id;
     }
 
-    private UUID assertOptionalTeam(UUID teamId, String teamName) {
-        if (teamId != null) {
-            if (teamDao.get(teamId) == null) {
-                throw new ValidationErrorsException("Team not found: " + teamId);
-            }
+    private OrganizationEntry assertOrganization(UUID orgId, String orgName) {
+        if (orgId == null && orgName == null) {
+            // TODO teams
+            orgId = OrganizationManager.DEFAULT_ORG_ID;
         }
 
-        if (teamId == null && teamName != null) {
-            teamId = teamDao.getId(teamName);
-            if (teamId == null) {
-                throw new ValidationErrorsException("Team not found: " + teamName);
-            }
-        }
-
-        return teamId;
+        return orgManager.assertAccess(orgId, orgName, true);
     }
 }

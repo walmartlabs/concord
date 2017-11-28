@@ -7,16 +7,15 @@ import com.walmartlabs.concord.server.api.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.landing.DeleteLandingResponse;
 import com.walmartlabs.concord.server.api.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.landing.LandingPageResource;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.team.TeamEntry;
-import com.walmartlabs.concord.server.api.team.TeamRole;
-import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.project.ProjectManager;
-import com.walmartlabs.concord.server.project.RepositoryDao;
+import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectManager;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.team.TeamManager;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.Configuration;
 import org.postgresql.util.Base64;
@@ -34,7 +33,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.project.RepositoryUtils.assertRepository;
+import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
 
 @Named
 public class LandingPageResourceImpl extends AbstractDao implements LandingPageResource, Resource {
@@ -44,36 +43,38 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
     private static final String LP_META_FILE_NAME = "landing.json";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final TeamManager teamManager;
     private final LandingDao landingDao;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final ProjectManager projectManager;
     private final RepositoryManager repositoryManager;
+    private final OrganizationManager orgManager;
 
     @Inject
     public LandingPageResourceImpl(Configuration cfg,
-                                   TeamManager teamManager,
                                    LandingDao landingDao,
                                    ProjectDao projectDao,
                                    RepositoryDao repositoryDao,
                                    ProjectManager projectManager,
-                                   RepositoryManager repositoryManager) {
+                                   RepositoryManager repositoryManager,
+                                   OrganizationManager orgManager) {
 
         super(cfg);
 
-        this.teamManager = teamManager;
         this.landingDao = landingDao;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.projectManager = projectManager;
         this.repositoryManager = repositoryManager;
+        this.orgManager = orgManager;
     }
 
     @Override
     public CreateLandingResponse createOrUpdate(LandingEntry entry) {
-        TeamEntry team = teamManager.assertTeam(entry.getTeamId(), entry.getTeamName());
-        ProjectEntry project = assertProject(team.getId(), entry.getProjectName(), TeamRole.WRITER, true);
+        // TODO teams
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
+
+        ProjectEntry project = assertProject(orgId, entry.getProjectName(), ResourceAccessLevel.WRITER, true);
         RepositoryEntry repository = assertRepository(project, entry.getRepositoryName());
 
         byte[] icon = null;
@@ -97,8 +98,8 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
             throw new ValidationErrorsException("A valid landing page id is required");
         }
 
-        UUID teamId = projectDao.getTeamId(e.getProjectId());
-        assertProject(teamId, e.getProjectName(), TeamRole.WRITER, true);
+        UUID orgId = projectDao.getOrgId(e.getProjectId());
+        assertProject(orgId, e.getProjectName(), ResourceAccessLevel.WRITER, true);
 
         landingDao.delete(id);
         return new DeleteLandingResponse();
@@ -132,8 +133,10 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
 
     @Override
     public Response refresh(String projectName, String repositoryName) {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
-        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
+        // TODO teams
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
+
+        ProjectEntry p = assertProject(orgId, projectName, ResourceAccessLevel.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
         refresh(r);
@@ -171,18 +174,17 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
         log.info("refresh ['{}'] -> done", r.getId());
     }
 
-    private ProjectEntry assertProject(UUID teamId, String projectName, TeamRole role, boolean membersOnly) {
+    private ProjectEntry assertProject(UUID orgId, String projectName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {
         if (projectName == null) {
             throw new ValidationErrorsException("A valid project name is required");
         }
 
-        UUID id = projectDao.getId(teamId, projectName);
+        UUID id = projectDao.getId(orgId, projectName);
         if (id == null) {
             throw new ValidationErrorsException("Project not found: " + projectName);
         }
 
-
-        return projectManager.assertProjectAccess(id, role, membersOnly);
+        return projectManager.assertProjectAccess(id, accessLevel, orgMembersOnly);
     }
 
     private static void assertAdmin() {

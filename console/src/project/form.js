@@ -12,6 +12,7 @@ import * as api from "./api";
 import GitUrlParse from "git-url-parse";
 import * as v from "../shared/validation";
 import { actions } from "./crud";
+import {getCurrentOrg} from "../session/reducers";
 
 const renderSourceText = (f, { commitId }) => commitId ? "Revision" : "Branch/tag";
 
@@ -123,12 +124,12 @@ const validate = ({ name, description }) => {
     return errors;
 };
 
-const asyncValidate = ({ name }, dispatch, { originalName }) => {
+const asyncValidate = ({ name }, dispatch, { originalName, org }) => {
     if (name === originalName) {
         return Promise.resolve(true);
     }
 
-    return api.isProjectExists(name).then(exists => {
+    return api.isProjectExists(org.name, name).then(exists => {
         if (exists) {
             throw Object({ name: v.projectAlreadyExistsError(name) });
         }
@@ -142,6 +143,10 @@ projectForm = reduxForm({
     enableReinitialize: true,
     keepDirtyOnReinitialize: true
 })(projectForm);
+
+const mapStateToProps = ({session}) => ({
+    org: getCurrentOrg(session)
+});
 
 const mapDispatchToProps = (dispatch) => ({
     newRepositoryPopupFn: () => {
@@ -177,4 +182,4 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 
-export default connect(null, mapDispatchToProps)(projectForm);
+export default connect(mapStateToProps, mapDispatchToProps)(projectForm);

@@ -2,9 +2,9 @@
 import type {ConcordKey} from "../types";
 import * as common from "../api";
 
-export const fetchProject = (name: ConcordKey): Promise<any> => {
-    console.debug("API: fetchProject ['%s'] -> starting...", name);
-    return fetch(`/api/v1/project/${name}`, {credentials: "same-origin"})
+export const fetchProject = (orgName: ConcordKey, name: ConcordKey): Promise<any> => {
+    console.debug("API: fetchProject ['%s', '%s'] -> starting...", orgName, name);
+    return fetch(`/api/v1/org/${orgName}/project/${name}`, {credentials: "same-origin"})
         .then(response => {
             if (!response.ok) {
                 throw new common.defaultError(response);
@@ -13,7 +13,7 @@ export const fetchProject = (name: ConcordKey): Promise<any> => {
             return response.json();
         })
         .then(json => {
-            console.debug("API: fetchProject ['%s'] -> done: %o", name, json);
+            console.debug("API: fetchProject ['%s', '%s'] -> done: %o", orgName, name, json);
             return json;
         });
 };
@@ -21,16 +21,18 @@ export const fetchProject = (name: ConcordKey): Promise<any> => {
 export const updateProject = (data: any): Promise<any> => {
     console.debug("API: updateProject ['%o'] -> starting...", data);
 
+    const {orgName, ...rest} = data;
+
     const opts = {
         method: "POST",
         credentials: "same-origin",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(rest)
     };
 
-    return fetch("/api/v1/project", opts)
+    return fetch(`/api/v1/org/${orgName}/project`, opts)
         .then(response => {
             if (!response.ok) {
                 throw new common.defaultError(response);
@@ -44,9 +46,9 @@ export const updateProject = (data: any): Promise<any> => {
         });
 };
 
-export const isProjectExists = (name: string): Promise<any> => {
-    console.debug("API: checkName ['%s'] -> starting...", name);
-    return fetch(`/api/service/console/project/${name}/exists`, {credentials: "same-origin"})
+export const isProjectExists = (orgName: ConcordKey, name: string): Promise<any> => {
+    console.debug("API: isProjectExists ['%s', '%s'] -> starting...", orgName, name);
+    return fetch(`/api/service/console/org/${orgName}/project/${name}/exists`, {credentials: "same-origin"})
         .then(response => {
             if (!response.ok) {
                 throw new common.defaultError(response);
@@ -55,20 +57,20 @@ export const isProjectExists = (name: string): Promise<any> => {
             return response.json();
         })
         .then(json => {
-            console.debug("API: checkName ['%s'] -> done: %o", name, json);
+            console.debug("API: isProjectExists ['%s', '%s'] -> done: %o", orgName, name, json);
             return json;
         });
 };
 
-export const deleteProject = (name: ConcordKey): Promise<any> => {
-    console.debug("API: deleteProject ['%s'] -> starting...", name);
+export const deleteProject = (orgName: ConcordKey, name: ConcordKey): Promise<any> => {
+    console.debug("API: deleteProject ['%s', '%s'] -> starting...", orgName, name);
 
     const opts = {
         method: "DELETE",
         credentials: "same-origin"
     };
 
-    return fetch(`/api/v1/project/${name}`, opts)
+    return fetch(`/api/v1/org/${orgName}/project/${name}`, opts)
         .then(response => {
             if (!response.ok) {
                 throw new common.defaultError(response);
@@ -77,7 +79,7 @@ export const deleteProject = (name: ConcordKey): Promise<any> => {
             return response.json();
         })
         .then(json => {
-            console.debug("API: deleteProject ['%s'] -> done: %o", name, json);
+            console.debug("API: deleteProject ['%s', '%s'] -> done: %o", orgName, name, json);
             return json;
         });
 };

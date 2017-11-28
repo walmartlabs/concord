@@ -3,13 +3,13 @@ package com.walmartlabs.concord.server.rpc;
 import com.google.protobuf.ByteString;
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.sdk.SecretStoreService;
+import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.team.secret.SecretType;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
+import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.team.secret.SecretDao.SecretDataEntry;
-import com.walmartlabs.concord.server.team.secret.SecretManager;
-import com.walmartlabs.concord.server.team.TeamManager;
 import io.grpc.stub.StreamObserver;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.slf4j.Logger;
@@ -57,11 +57,12 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
             return;
         }
 
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        // TODO teams
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         try {
             securityContext.runAsInitiator(UUID.fromString(instanceId), () -> {
-                SecretDataEntry entry = secretManager.getRaw(teamId, secretName, secretPassword);
+                SecretDataEntry entry = secretManager.getRaw(orgId, secretName, secretPassword);
                 if (entry == null) {
                     responseObserver.onNext(TFetchSecretResponse.newBuilder()
                             .setStatus(TFetchSecretStatus.SECRET_NOT_FOUND)

@@ -1,11 +1,11 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
-import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -56,8 +56,8 @@ public class ProjectInfoProcessor implements PayloadProcessor {
         }
 
         Map<String, Object> m = new HashMap<>();
-        m.put("teamId", e.getTeamId());
-        m.put("teamName", e.getTeamName());
+        m.put("orgId", e.getOrgId());
+        m.put("orgName", e.getOrgName());
         m.put("projectId", projectId);
         m.put("projectName", e.getName());
 

@@ -7,12 +7,12 @@ import {Grid, Header, Icon, Menu, Segment, Loader} from "semantic-ui-react";
 import {actions, selectors, SessionWidget} from "../session";
 import Modal from "../shared/Modal";
 import KillProcessPopup from "../process/KillProcessPopup";
-import DeleteSecretPopup from "../team/secret/list/DeleteSecretPopup";
-import ShowSecretPublicKey from "../team/secret/list/ShowSecretPublicKey";
+import DeleteSecretPopup from "../org/secret/list/DeleteSecretPopup";
+import ShowSecretPublicKey from "../org/secret/list/ShowSecretPublicKey";
 import RepositoryPopup from "../project/RepositoryPopup";
 import DeleteProjectPopup from "../project/DeleteProjectPopup";
 import StartProjectPopup from "../project/StartProjectPopup/StartProjectPopup";
-import TeamSwitchDropdown from "../team/components/TeamSwitchDropdown";
+import OrgSwitchDropdown from "../org/components/OrgSwitchDropdown";
 
 import "./styles.css";
 
@@ -25,7 +25,7 @@ MODAL_TYPES[DeleteProjectPopup.MODAL_TYPE] = DeleteProjectPopup;
 MODAL_TYPES[StartProjectPopup.MODAL_TYPE] = StartProjectPopup;
 MODAL_TYPES[ShowSecretPublicKey.MODAL_TYPE] = ShowSecretPublicKey;
 
-const layout = ({fullScreen, user: {displayName, team, loggedIn}, title, children, doLogout, router}) => {
+const layout = ({fullScreen, user: {displayName, org, loggedIn}, title, children, doLogout, router}) => {
     if (fullScreen) {
         return <Grid className="maxHeight tight">
             <Grid.Column id="mainContent" width={16} className="mainContent">
@@ -35,8 +35,8 @@ const layout = ({fullScreen, user: {displayName, team, loggedIn}, title, childre
         </Grid>;
     }
 
-    if (!loggedIn || !team) {
-        console.debug("layout -> not logged in or no team");
+    if (!loggedIn || !org) {
+        console.debug("layout -> not logged in or no org");
         return <Segment className="maxHeight">
             <Loader/>
         </Segment>;
@@ -49,8 +49,8 @@ const layout = ({fullScreen, user: {displayName, team, loggedIn}, title, childre
                     <Header id="logo" as="h2" inverted>{title}</Header>
                 </Menu.Item>
 
-                <SessionWidget displayName={displayName} teamName={team.name} onLogout={doLogout}/>
-                <TeamSwitchDropdown/>
+                <SessionWidget displayName={displayName} orgName={org.name} onLogout={doLogout}/>
+                <OrgSwitchDropdown/>
 
                 <Menu.Item active={router.isActive("/process")}>
                     <Menu.Header><Icon name="tasks"/>Processes</Menu.Header>
@@ -114,7 +114,7 @@ const mapStateToProps = ({session}, {location: {query}}) => ({
     user: {
         displayName: selectors.getDisplayName(session),
         loggedIn: selectors.isLoggedIn(session),
-        team: selectors.getCurrentTeam(session)
+        org: selectors.getCurrentOrg(session)
     }
 });
 

@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="concordDefaultOrgId" value="0fac1b18-d179-11e7-b3e7-d7df4543ed4f"/>
+    <property name="concordSystemOrgId" value="94a35e54-d204-11e7-9a97-c32b8f0c3380"/>
+
+    <changeSet id="48000" author="ibodrov@gmail.com">
+        <createTable tableName="ORGANIZATIONS">
+            <column name="ORG_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ORG_NAME" type="varchar(128)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="VISIBILITY" type="varchar(128)" defaultValue="PUBLIC">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <insert tableName="ORGANIZATIONS">
+            <column name="ORG_ID">${concordDefaultOrgId}</column>
+            <column name="ORG_NAME">Default</column>
+        </insert>
+
+        <insert tableName="ORGANIZATIONS">
+            <column name="ORG_ID">${concordSystemOrgId}</column>
+            <column name="ORG_NAME">ConcordSystem</column>
+        </insert>
+    </changeSet>
+
+    <changeSet id="48010" author="ibodrov@gmail.com">
+        <addColumn tableName="TEAMS">
+            <column name="ORG_ID" type="uuid" defaultValue="'${concordDefaultOrgId}'">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="48020" author="ibodrov@gmail.com">
+        <dropColumn tableName="PROJECTS" columnName="TEAM_ID"/>
+
+        <addColumn tableName="PROJECTS">
+            <column name="ORG_ID" type="uuid" defaultValue="'${concordDefaultOrgId}'">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="PROJECTS"
+                                 baseColumnNames="ORG_ID"
+                                 constraintName="FK_PRJ_ORG_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"/>
+    </changeSet>
+
+    <changeSet id="48030" author="ibodrov@gmail.com">
+        <dropColumn tableName="SECRETS" columnName="TEAM_ID"/>
+
+        <addColumn tableName="SECRETS">
+            <column name="ORG_ID" type="uuid" defaultValue="'${concordDefaultOrgId}'">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="SECRETS"
+                                 baseColumnNames="ORG_ID"
+                                 constraintName="FK_SECRET_ORG_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"/>
+    </changeSet>
+
+    <changeSet id="48040" author="ibodrov@gmail.com">
+        <dropColumn tableName="INVENTORIES" columnName="TEAM_ID"/>
+
+        <addColumn tableName="INVENTORIES">
+            <column name="ORG_ID" type="uuid" defaultValue="'${concordDefaultOrgId}'">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="INVENTORIES"
+                                 baseColumnNames="ORG_ID"
+                                 constraintName="FK_INV_ORG_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"/>
+    </changeSet>
+
+    <changeSet id="48050" author="ibodrov@gmail.com">
+        <dropColumn tableName="TEAMS" columnName="VISIBILITY"/>
+    </changeSet>
+
+    <changeSet id="48060" author="ibodrov@gmail.com">
+        <dropUniqueConstraint tableName="TEAMS" constraintName="TEAMS_TEAM_NAME_KEY"/>
+        <addUniqueConstraint tableName="TEAMS" columnNames="ORG_ID, TEAM_NAME"/>
+    </changeSet>
+
+    <changeSet id="48070" author="ibodrov@gmail.com">
+        <dropColumn tableName="TEAMS" columnName="IS_ACTIVE"/>
+    </changeSet>
+
+    <changeSet id="48090" author="ibodrov@gmail.com">
+        <createTable tableName="PROJECT_TEAM_ACCESS">
+            <column name="PROJECT_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TEAM_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ACCESS_LEVEL" type="varchar(128)" defaultValue="READER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="PROJECT_TEAM_ACCESS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_PRJ_T_A_PRJ"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="PROJECT_TEAM_ACCESS"
+                                 baseColumnNames="TEAM_ID"
+                                 constraintName="FK_PRJ_T_A_T"
+                                 referencedTableName="TEAMS"
+                                 referencedColumnNames="TEAM_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="48100" author="ibodrov@gmail.com">
+        <addColumn tableName="PROJECTS">
+            <column name="OWNER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="PROJECTS"
+                                 baseColumnNames="OWNER_ID"
+                                 constraintName="FK_PRJ_OWN_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="SET NULL"/>
+
+        <addUniqueConstraint tableName="PROJECTS"
+                             columnNames="ORG_ID, PROJECT_NAME"/>
+    </changeSet>
+
+    <changeSet id="48110" author="ibodrov@gmail.com">
+        <sql>
+            update PROJECTS
+            set ORG_ID = '${concordSystemOrgId}'
+            where PROJECT_ID = '${concordTriggersProjectId}'
+        </sql>
+    </changeSet>
+
+    <changeSet id="48120" author="ibodrov@gmail.com">
+        <sql>
+            update TEAMS
+            set TEAM_NAME = 'default'
+            where TEAM_ID = '00000000-0000-0000-0000-000000000000'
+        </sql>
+
+        <sql>
+            update TEAMS
+            set TEAM_NAME = 'default',
+            ORG_ID = '${concordSystemOrgId}'
+            where TEAM_ID = '${concordSystemTeamId}'
+        </sql>
+    </changeSet>
+
+    <changeSet id="48130" author="ibodrov@gmail.com">
+        <addColumn tableName="SECRETS">
+            <column name="OWNER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="SECRETS"
+                                 baseColumnNames="OWNER_ID"
+                                 constraintName="FK_SCRT_OWN_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="48140" author="ibodrov@gmail.com">
+        <createTable tableName="SECRET_TEAM_ACCESS">
+            <column name="SECRET_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TEAM_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ACCESS_LEVEL" type="varchar(128)" defaultValue="READER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="SECRET_TEAM_ACCESS"
+                                 baseColumnNames="SECRET_ID"
+                                 constraintName="FK_SCRT_T_A_SCRT"
+                                 referencedTableName="SECRETS"
+                                 referencedColumnNames="SECRET_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="SECRET_TEAM_ACCESS"
+                                 baseColumnNames="TEAM_ID"
+                                 constraintName="FK_SCRT_T_A_T"
+                                 referencedTableName="TEAMS"
+                                 referencedColumnNames="TEAM_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="48150" author="ibodrov@gmail.com">
+        <addColumn tableName="SECRETS">
+            <column name="VISIBILITY" type="varchar(128)" defaultValue="PUBLIC">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

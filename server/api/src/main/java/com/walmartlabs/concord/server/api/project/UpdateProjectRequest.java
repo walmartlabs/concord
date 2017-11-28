@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -14,29 +16,29 @@ public class UpdateProjectRequest implements Serializable {
 
     private final String description;
 
-    private final UUID teamId;
+    private final UUID orgId;
 
     @ConcordKey
-    private final String teamName;
+    private final String orgName;
 
     private final Map<String, RepositoryEntry> repositories;
 
     private final Map<String, Object> cfg;
 
     public UpdateProjectRequest(ProjectEntry e) {
-        this(e.getDescription(), e.getTeamId(), e.getTeamName(), e.getRepositories(), e.getCfg());
+        this(e.getDescription(), e.getOrgId(), e.getOrgName(), e.getRepositories(), e.getCfg());
     }
 
     @JsonCreator
     public UpdateProjectRequest(@JsonProperty("description") String description,
-                                @JsonProperty("teamId") UUID teamId,
-                                @JsonProperty("teamName") String teamName,
+                                @JsonProperty("orgId") UUID orgId,
+                                @JsonProperty("orgName") String orgName,
                                 @JsonProperty("repositories") Map<String, RepositoryEntry> repositories,
                                 @JsonProperty("cfg") Map<String, Object> cfg) {
 
         this.description = description;
-        this.teamId = teamId;
-        this.teamName = teamName;
+        this.orgId = orgId;
+        this.orgName = orgName;
         this.repositories = repositories;
         this.cfg = cfg;
     }
@@ -45,12 +47,12 @@ public class UpdateProjectRequest implements Serializable {
         return description;
     }
 
-    public UUID getTeamId() {
-        return teamId;
+    public UUID getOrgId() {
+        return orgId;
     }
 
-    public String getTeamName() {
-        return teamName;
+    public String getOrgName() {
+        return orgName;
     }
 
     public Map<String, RepositoryEntry> getRepositories() {
@@ -65,8 +67,8 @@ public class UpdateProjectRequest implements Serializable {
     public String toString() {
         return "UpdateProjectRequest{" +
                 "description='" + description + '\'' +
-                ", teamId=" + teamId +
-                ", teamName='" + teamName + '\'' +
+                ", orgId=" + orgId +
+                ", orgName='" + orgName + '\'' +
                 ", repositories=" + repositories +
                 ", cfg=" + cfg +
                 '}';

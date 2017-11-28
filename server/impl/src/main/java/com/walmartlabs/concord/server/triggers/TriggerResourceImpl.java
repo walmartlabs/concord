@@ -3,17 +3,17 @@ package com.walmartlabs.concord.server.triggers;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.team.TeamRole;
+import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.api.trigger.TriggerResource;
-import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.project.ProjectManager;
-import com.walmartlabs.concord.server.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectManager;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.team.TeamManager;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.project.RepositoryUtils.assertRepository;
+import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
 
 @Named
 public class TriggerResourceImpl extends AbstractDao implements TriggerResource, Resource {
@@ -62,8 +62,10 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
 
     @Override
     public List<TriggerEntry> list(String projectName, String repositoryName) {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
-        ProjectEntry p = assertProject(teamId, projectName, TeamRole.READER, true);
+        // TODO teams
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
+
+        ProjectEntry p = assertProject(orgId, projectName, ResourceAccessLevel.READER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
         return triggersDao.list(p.getId(), r.getId());
@@ -84,8 +86,10 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
 
     @Override
     public Response refresh(String projectName, String repositoryName) {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
-        ProjectEntry p = assertProject(teamId, projectName, TeamRole.WRITER, true);
+        // TODO teams
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
+
+        ProjectEntry p = assertProject(orgId, projectName, ResourceAccessLevel.WRITER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
         refresh(r);
@@ -114,17 +118,17 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
         log.info("refresh ['{}'] -> done, triggers count: {}", r.getId(), pd.getTriggers().size());
     }
 
-    private ProjectEntry assertProject(UUID teamId, String projectName, TeamRole requiredRole, boolean teamMembersOnly) {
+    private ProjectEntry assertProject(UUID orgId, String projectName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {
         if (projectName == null) {
             throw new ValidationErrorsException("Invalid project name");
         }
 
-        UUID id = projectDao.getId(teamId, projectName);
+        UUID id = projectDao.getId(orgId, projectName);
         if (id == null) {
             throw new ValidationErrorsException("Project not found: " + projectName);
         }
 
-        return projectManager.assertProjectAccess(id, requiredRole, teamMembersOnly);
+        return projectManager.assertProjectAccess(id, accessLevel, orgMembersOnly);
     }
 
     private static void assertAdmin() {

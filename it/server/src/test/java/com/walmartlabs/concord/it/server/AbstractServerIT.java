@@ -2,7 +2,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.it.common.ServerClient;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.team.secret.SecretOperationResponse;
+import com.walmartlabs.concord.server.api.org.secret.SecretOperationResponse;
 import org.junit.After;
 import org.junit.Before;
 
@@ -37,20 +37,20 @@ public abstract class AbstractServerIT {
         return serverClient.start(entryPoint, input, false);
     }
 
-    protected SecretOperationResponse postSecret(String teamName, Map<String, Object> input) {
-        return serverClient.postSecret(teamName, input);
+    protected SecretOperationResponse postSecret(String orgName, Map<String, Object> input) {
+        return serverClient.postSecret(orgName, input);
     }
 
-    protected SecretOperationResponse addPlainSecret(String teamName, String name, boolean generatePassword, String storePassword, byte[] secret) {
-        return serverClient.addPlainSecret(teamName, name, generatePassword, storePassword, secret);
+    protected SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) {
+        return serverClient.addPlainSecret(orgName, name, generatePassword, storePassword, secret);
     }
 
-    protected SecretOperationResponse addUsernamePassword(String teamName, String name, boolean generatePassword, String storePassword, String username, String password) {
-        return serverClient.addUsernamePassword(teamName, name, generatePassword, storePassword, username, password);
+    protected SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) {
+        return serverClient.addUsernamePassword(orgName, name, generatePassword, storePassword, username, password);
     }
 
-    protected SecretOperationResponse generateKeyPair(String teamName, String name, boolean generatePassword, String storePassword) {
-        return serverClient.generateKeyPair(teamName, name, generatePassword, storePassword);
+    protected SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) {
+        return serverClient.generateKeyPair(orgName, name, generatePassword, storePassword);
     }
 
     protected <T> T proxy(Class<T> klass) {

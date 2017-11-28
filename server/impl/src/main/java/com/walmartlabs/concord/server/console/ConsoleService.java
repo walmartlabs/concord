@@ -1,14 +1,14 @@
 package com.walmartlabs.concord.server.console;
 
-import com.walmartlabs.concord.server.api.team.TeamEntry;
-import com.walmartlabs.concord.server.api.team.TeamRole;
+import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
-import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
-import com.walmartlabs.concord.server.team.secret.SecretManager;
-import com.walmartlabs.concord.server.team.TeamManager;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -32,21 +32,21 @@ public class ConsoleService implements Resource {
     private final ProjectDao projectDao;
     private final RepositoryManager repositoryManager;
     private final UserManager userManager;
-    private final TeamManager teamManager;
     private final SecretManager secretManager;
+    private final OrganizationManager orgManager;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
                           RepositoryManager repositoryManager,
                           UserManager userManager,
-                          TeamManager teamManager,
-                          SecretManager secretManager) {
+                          SecretManager secretManager,
+                          OrganizationManager orgManager) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
         this.userManager = userManager;
-        this.teamManager = teamManager;
         this.secretManager = secretManager;
+        this.orgManager = orgManager;
     }
 
     @GET
@@ -80,7 +80,7 @@ public class ConsoleService implements Resource {
         UserEntry user = userManager.get(p.getId())
                 .orElseThrow(() -> new WebApplicationException("Unknown user: " + p.getId()));
 
-        return new UserResponse(p.getRealm(), user.getName(), displayName, user.getTeams());
+        return new UserResponse(p.getRealm(), user.getName(), displayName, user.getOrgs());
     }
 
     @POST
@@ -95,23 +95,25 @@ public class ConsoleService implements Resource {
     }
 
     @GET
-    @Path("/project/{projectName}/exists")
+    @Path("/org/{orgName}/project/{projectName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
     @RequiresAuthentication
-    public boolean isProjectExists(@PathParam("projectName") String projectName) {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
-        return projectDao.getId(teamId, projectName) != null;
+    public boolean isProjectExists(@PathParam("orgName") @ConcordKey String orgName,
+                                   @PathParam("projectName") String projectName) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        return projectDao.getId(org.getId(), projectName) != null;
     }
 
     @GET
-    @Path("/team/{teamName}/secret/{secretName}/exists")
+    @Path("/org/{orgName}/secret/{secretName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
     @RequiresAuthentication
-    public boolean isSecretExists(@PathParam("teamName") String teamName,
+    public boolean isSecretExists(@PathParam("orgName") String orgName,
                                   @PathParam("secretName") String secretName) {
         try {
-            TeamEntry t = teamManager.assertTeamAccess(teamName, TeamRole.READER, true);
-            return secretManager.exists(t.getId(), secretName);
+            OrganizationEntry org = orgManager.assertAccess(orgName, true);
+            return secretManager.exists(org.getId(), secretName);
         } catch (UnauthorizedException e) {
             return false;
         }
@@ -123,13 +125,10 @@ public class ConsoleService implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @RequiresAuthentication
     public boolean testRepository(RepositoryTestRequest req) {
-        UUID teamId = req.getTeamId();
-        if (teamId == null) {
-            teamId = TeamManager.DEFAULT_TEAM_ID;
-        }
+        UUID orgId = req.getOrgId();
 
         try {
-            repositoryManager.testConnection(teamId, req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecret());
+            repositoryManager.testConnection(orgId, req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecret());
             return true;
         } catch (Exception e) {
             String msg;

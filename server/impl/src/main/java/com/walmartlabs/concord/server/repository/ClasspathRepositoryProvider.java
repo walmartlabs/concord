@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.server.repository;
 
 import com.google.common.io.Resources;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.project.RepositoryException;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -17,7 +17,7 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     public static final String URL_PREFIX = "classpath://";
 
     @Override
-    public void fetch(UUID teamId, RepositoryEntry repository, Path dest) {
+    public void fetch(UUID orgId, RepositoryEntry repository, Path dest) {
         String repoUrl = repository.getUrl();
         URL resUrl = Resources.getResource(normalizeUrl(repoUrl));
 

@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.events;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.process.*;
-import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.apache.shiro.SecurityUtils;
@@ -49,7 +49,7 @@ public abstract class AbstractEventResource {
             }
             args.put("event", event);
 
-            UUID teamId = projectDao.getTeamId(t.getProjectId());
+            UUID teamId = projectDao.getOrgId(t.getProjectId());
             UUID instanceId = startProcess(teamId, t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), args);
             log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, instanceId, t);
         }
@@ -61,12 +61,12 @@ public abstract class AbstractEventResource {
         return EventMatcher.matches(conditions, t.getConditions());
     }
 
-    private UUID startProcess(UUID teamId, String projectName, String repoName, String flowName, Map<String, Object> args) {
+    private UUID startProcess(UUID orgId, String projectName, String repoName, String flowName, Map<String, Object> args) {
         UUID instanceId = UUID.randomUUID();
 
         String initiator = getInitiator();
 
-        PayloadParser.EntryPoint ep = new PayloadParser.EntryPoint(teamId, projectName, repoName, flowName);
+        PayloadParser.EntryPoint ep = new PayloadParser.EntryPoint(orgId, projectName, repoName, flowName);
         Map<String, Object> request = new HashMap<>();
         request.put(Constants.Request.ARGUMENTS_KEY, args);
 

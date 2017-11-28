@@ -9,190 +9,34 @@ import com.walmartlabs.concord.server.api.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.landing.DeleteLandingResponse;
 import com.walmartlabs.concord.server.api.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.landing.LandingPageResource;
-import com.walmartlabs.concord.server.api.project.*;
-import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.team.TeamEntry;
+import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
+import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
+import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
+import com.walmartlabs.concord.server.api.project.DeleteProjectResponse;
+import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
 import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
 import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
 import com.walmartlabs.concord.server.api.security.ldap.LdapResource;
-import com.walmartlabs.concord.server.api.team.secret.SecretEntry;
-import com.walmartlabs.concord.server.api.team.secret.SecretType;
-import com.walmartlabs.concord.server.api.team.*;
-import com.walmartlabs.concord.server.api.team.secret.PublicKeyResponse;
-import com.walmartlabs.concord.server.api.team.secret.SecretResource;
-import com.walmartlabs.concord.server.api.user.*;
+import com.walmartlabs.concord.server.api.user.RoleEntry;
+import com.walmartlabs.concord.server.api.user.RoleResource;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.ws.rs.ForbiddenException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import static com.walmartlabs.concord.server.team.TeamManager.DEFAULT_TEAM_ID;
 import static org.junit.Assert.*;
 
 @RunWith(ParallelRunner.class)
 public class CrudIT extends AbstractServerIT {
 
-    @Test
-    public void testTeams() {
-        TeamResource teamResource = proxy(TeamResource.class);
-
-        String teamName = "team_" + randomString();
-        CreateTeamResponse ctr = teamResource.createOrUpdate(new TeamEntry(null, teamName, null, null, null));
-        assertNotNull(ctr.getId());
-
-        TeamEntry te = teamResource.get(teamName);
-        assertNotNull(te);
-        assertEquals(ctr.getId(), te.getId());
-
-        List<TeamEntry> list = teamResource.list();
-        te = findTeam(list, teamName);
-        assertNotNull(te);
-        assertEquals(ctr.getId(), te.getId());
-
-        // ---
-
-        UserResource userResource = proxy(UserResource.class);
-
-        String userA = "userA_" + randomString();
-        CreateUserResponse curA = userResource.createOrUpdate(new CreateUserRequest(userA, null));
-
-
-        String userB = "userB_" + randomString();
-        CreateUserResponse curB = userResource.createOrUpdate(new CreateUserRequest(userB, null));
-
-        // ---
-
-        teamResource.addUsers(teamName, Arrays.asList(
-                new TeamUserEntry(userA, TeamRole.READER),
-                new TeamUserEntry(userB, TeamRole.READER)));
-
-        List<TeamUserEntry> teamUserEntries = teamResource.listUsers(teamName);
-        TeamUserEntry entryA = findTeamUser(teamUserEntries, userA);
-        assertEquals(curA.getId(), entryA.getId());
-
-        TeamUserEntry entryB = findTeamUser(teamUserEntries, userB);
-        assertEquals(curB.getId(), entryB.getId());
-
-        // ---
-
-        teamResource.removeUsers(teamName, Arrays.asList(userA));
-
-        teamUserEntries = teamResource.listUsers(teamName);
-        entryA = findTeamUser(teamUserEntries, userA);
-        assertNull(entryA);
-    }
-
-    @Test
-    public void testTeamSecrets() throws Exception {
-        TeamResource teamResource = proxy(TeamResource.class);
-
-        String teamAName = "teamA_" + System.currentTimeMillis();
-        teamResource.createOrUpdate(new TeamEntry(teamAName));
-
-        String teamBName = "teamB_" + System.currentTimeMillis();
-        teamResource.createOrUpdate(new TeamEntry(teamBName));
-
-        // ---
-
-        UserResource userResource = proxy(UserResource.class);
-        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-
-        String userAName = "userA_" + System.currentTimeMillis();
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
-
-        String userBName = "userB_" + System.currentTimeMillis();
-        userResource.createOrUpdate(new CreateUserRequest(userBName));
-        CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
-
-        // ---
-
-        teamResource.addUsers(teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.WRITER)));
-        teamResource.addUsers(teamAName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.READER)));
-
-        teamResource.addUsers(teamBName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.WRITER)));
-
-        // ---
-
-        SecretResource secretResource = proxy(SecretResource.class);
-
-        // create a new key pair as the User A
-
-        setApiKey(apiKeyA.getKey());
-
-        String secretAName = "secretA_" + System.currentTimeMillis();
-
-        Map<String, Object> m = new HashMap<>();
-        m.put("type", SecretType.KEY_PAIR.toString());
-        m.put("name", secretAName);
-
-        postSecret(teamAName, m);
-        PublicKeyResponse pkrA = secretResource.getPublicKey(teamAName, secretAName);
-        assertNotNull(pkrA.getPublicKey());
-
-        // check if the key pair is readable by the User B
-
-        setApiKey(apiKeyB.getKey());
-
-        pkrA = secretResource.getPublicKey(teamAName, secretAName);
-        assertNotNull(pkrA.getPublicKey());
-
-        // try deleting the secret as the User B
-
-        setApiKey(apiKeyB.getKey());
-
-        try {
-            secretResource.delete(teamAName, secretAName);
-            fail("Should fail");
-        } catch (ForbiddenException e) {
-        }
-
-        // create another secret (a username/password combo) as the User B
-
-        setApiKey(apiKeyB.getKey());
-
-        String secretBName = "secretB_" + System.currentTimeMillis();
-
-        m = new HashMap<>();
-        m.put("type", SecretType.USERNAME_PASSWORD.toString());
-        m.put("name", secretBName);
-        m.put("username", "username_" + System.currentTimeMillis());
-        m.put("password", "password_" + System.currentTimeMillis());
-
-        postSecret(teamBName, m);
-
-        // the User A should not be able to see the second secret
-
-        setApiKey(apiKeyA.getKey());
-
-        try {
-            secretResource.list(teamBName);
-            fail("Should fail");
-        } catch (ForbiddenException e) {
-        }
-
-        // the Admin should be able to see the second secret
-
-        resetApiKey();
-
-        List<SecretEntry> l = secretResource.list(teamBName);
-        assertEquals(1, l.size());
-        assertEquals(secretBName, l.get(0).getName());
-
-        // the User B should be able to delete the second secret
-
-        setApiKey(apiKeyB.getKey());
-
-        secretResource.delete(teamBName, secretBName);
-
-        l = secretResource.list(teamBName);
-        assertTrue(l.isEmpty());
-    }
-
-    @Test
+    @Test(timeout = 30000)
     public void testProject() {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
@@ -208,8 +52,8 @@ public class CrudIT extends AbstractServerIT {
         ProjectEntry e1 = projectResource.get(projectName);
         assertNotNull(e1);
 
-        UpdateProjectResponse upr = projectResource.update(projectName, new UpdateProjectRequest(null, null, null, null, Collections.emptyMap()));
-        assertTrue(upr.isOk());
+        CreateProjectResponse cpr2 = projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.emptyMap()));
+        assertTrue(cpr2.isOk());
 
         List<ProjectEntry> l = projectResource.list(null, null, false);
         ProjectEntry e2 = findProject(l, projectName);
@@ -219,58 +63,22 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(dpr.isOk());
     }
 
-    @Test
-    public void testRepository() throws Exception {
-        String projectName = "project_" + randomString();
-        String repoName = "repo_" + randomString();
-        String branch = "branch_" + randomString();
-        String commitId = "commitId_" + randomString();
-
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", branch, null, null, null)), null, null));
-
-        // ---
-
-        UpdateRepositoryResponse urr = projectResource.updateRepository(projectName, repoName,
-                new RepositoryEntry(null, null, repoName, "something", branch, commitId, null, null));
-        assertTrue(urr.isOk());
-
-        // ---
-
-        List<RepositoryEntry> l = projectResource.listRepositories(projectName, null, true);
-        RepositoryEntry e = findRepository(l, repoName);
-        assertNotNull(e);
-        assertEquals("something", e.getUrl());
-        assertEquals(branch, e.getBranch());
-        assertEquals(commitId, e.getCommitId());
-
-        DeleteRepositoryResponse drr = projectResource.deleteRepository(projectName, repoName);
-        assertTrue(drr.isOk());
-    }
-
-    @Test
+    @Test(timeout = 30000)
     public void testNonUniqueRepositoryNames() throws Exception {
         String projectName1 = "project1_" + randomString();
         String projectName2 = "project2_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName1, null, null, null, null, null, null));
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName2, null, null, null, null, null, null));
-
-        // ---
-
         String repoName = "repo_" + randomString();
-        CreateRepositoryResponse crr1 = projectResource.createRepository(projectName1,
-                new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null));
-        assertTrue(crr1.isOk());
 
-        CreateRepositoryResponse crr2 = projectResource.createRepository(projectName2,
-                new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null));
-        assertTrue(crr2.isOk());
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(new ProjectEntry(projectName1,
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null))));
+
+        projectResource.createOrUpdate(new ProjectEntry(projectName2,
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null))));
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testLdapMappings() throws Exception {
         String roleA = "roleA_" + randomString();
         String roleB = "roleB_" + randomString();
@@ -301,22 +109,22 @@ public class CrudIT extends AbstractServerIT {
         ldapResource.deleteMapping(clmr.getId());
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testInventory() throws Exception {
         InventoryResource inventoryResource = proxy(InventoryResource.class);
 
         String inventoryName = "inventory_" + randomString();
-        String teamName = "Default";
+        String orgName = "Default";
 
         // --- create
 
-        CreateInventoryResponse cir = inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, teamName, null));
+        CreateInventoryResponse cir = inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, orgName, null));
         assertTrue(cir.isOk());
         assertNotNull(cir.getId());
 
         // --- update
 
-        CreateInventoryResponse uir = inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, DEFAULT_TEAM_ID, null, null));
+        CreateInventoryResponse uir = inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, OrganizationManager.DEFAULT_ORG_ID, null, null));
         assertTrue(uir.isOk());
         assertNotNull(uir.getId());
 
@@ -327,7 +135,7 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(i1.getId());
         assertEquals(uir.getId(), i1.getId());
         assertEquals(inventoryName, i1.getName());
-        assertEquals(teamName, i1.getTeamName());
+        assertEquals(orgName, i1.getOrgName());
         assertNull(i1.getParent());
 
         // --- delete
@@ -336,7 +144,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(dpr.isOk());
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testInventoryData() throws Exception {
         InventoryDataResource resource = proxy(InventoryDataResource.class);
 
@@ -368,7 +176,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(didr.isOk());
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testInventoryQuery() throws Exception {
         InventoryQueryResource resource = proxy(InventoryQueryResource.class);
 
@@ -413,7 +221,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(dqr.isOk());
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testLanding() throws Exception {
         ProjectResource projectResource = proxy(ProjectResource.class);
         LandingPageResource resource = proxy(LandingPageResource.class);
@@ -424,8 +232,9 @@ public class CrudIT extends AbstractServerIT {
         String description = "description";
         String icon = Base64.encode("icon".getBytes());
 
-        projectResource.createOrUpdate(new ProjectEntry(projectName));
-        projectResource.createRepository(projectName, new RepositoryEntry(null, null, repositoryName, "http://localhost", null, null, null, null));
+        projectResource.createOrUpdate(new ProjectEntry(projectName,
+                Collections.singletonMap(repositoryName,
+                        new RepositoryEntry(null, null, repositoryName, "http://localhost", null, null, null, null))));
 
         // --- create
         LandingEntry entry = new LandingEntry(null, null, null, null, projectName, repositoryName, name, description, icon);

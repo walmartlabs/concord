@@ -3,12 +3,12 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.common.secret.SecretStoreType;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.security.Permissions;
-import com.walmartlabs.concord.server.api.team.secret.SecretType;
+import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.user.UserEntry;
-import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.project.RepositoryDao;
-import com.walmartlabs.concord.server.team.secret.SecretDao;
-import com.walmartlabs.concord.server.team.TeamManager;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.secret.SecretDao;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
     @Test
     public void testSecrets() throws Exception {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         UserDao userDao = new UserDao(getConfiguration());
         UserPermissionCleaner permissionCleaner = new UserPermissionCleaner(getConfiguration());
@@ -34,7 +34,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         String secretName = "secret#" + System.currentTimeMillis();
-        UUID secretId = secretDao.insert(teamId, secretName, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, new byte[]{0, 1, 2});
+        UUID secretId = secretDao.insert(orgId, secretName, null, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, null, new byte[]{0, 1, 2});
 
         String username = "user#" + System.currentTimeMillis();
         Set<String> permissions = Collections.singleton(String.format(Permissions.SECRET_READ_INSTANCE, secretName));
@@ -50,7 +50,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
 
     @Test
     public void testProjectRepositories() throws Exception {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         UserDao userDao = new UserDao(getConfiguration());
         ProjectDao projectDao = new ProjectDao(getConfiguration());
@@ -59,7 +59,7 @@ public class UserPermissionCleanerTest extends AbstractDaoTest {
         // ---
 
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(teamId, projectName, "test", null, null);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null);
 
         // ---
 

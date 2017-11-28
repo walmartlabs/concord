@@ -6,7 +6,7 @@ import ErrorMessage from "../shared/ErrorMessage";
 import ProjectForm from "./form";
 import {actions, reducers, sagas, selectors} from "./crud";
 import * as repoConstants from "./RepositoryPopup/constants";
-import {getCurrentTeam} from "../session/reducers";
+import {getCurrentOrg} from "../session/reducers";
 
 /**
  * Converts the server's representation of a project object into the form's format.
@@ -77,14 +77,13 @@ class ProjectPage extends Component {
             return;
         }
 
-        const {loadData, projectName} = this.props;
-        loadData(projectName);
+        const {loadData, projectName, org} = this.props;
+        loadData(org.name, projectName);
     }
 
     handleSave(data) {
-        const {saveData, team} = this.props;
-        data.teamId = team.id;
-        saveData(data);
+        const {saveData, org} = this.props;
+        saveData(org.name, data);
     }
 
     render() {
@@ -108,7 +107,7 @@ class ProjectPage extends Component {
 }
 
 const mapStateToProps = ({project, session}, {params: {projectName}}) => ({
-    team: getCurrentTeam(session),
+    org: getCurrentOrg(session),
     projectName: projectName,
     createNew: projectName === "_new",
     data: selectors.getData(project),
@@ -121,11 +120,11 @@ const mapDispatchToProps = (dispatch) => ({
         dispatch(actions.resetData());
     },
 
-    loadData: (projectName) => dispatch(actions.loadData([projectName])),
+    loadData: (orgName, projectName) => dispatch(actions.loadData([orgName, projectName])),
 
-    saveData: (data) => {
+    saveData: (orgName, data) => {
         const o = formToRaw(data);
-
+        o.orgName = orgName;
         dispatch(actions.saveData(o, [
             pushHistory("/project/list")
         ]))

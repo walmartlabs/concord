@@ -4,8 +4,8 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.team.TeamManager;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -28,10 +28,10 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     @Test
     public void test() throws Exception {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         String projectName = "project_" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(teamId, projectName, null, null, null);
+        UUID projectId = projectDao.insert(orgId, projectName, null, null, null, null);
 
         UUID instanceA = UUID.randomUUID();
         queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, "testInitiator");

@@ -16,8 +16,8 @@ import {reducers as projectStart} from "../project/StartProjectPopup";
 import {reducers as repository} from "../project/repository";
 import {reducers as modal} from "../shared/Modal";
 import {reducers as landingList} from "../landing/list";
-import {reducers as secretList} from "../team/secret/list";
-import {reducers as secretForm} from "../team/secret/create/effects";
+import {reducers as secretList} from "../org/secret/list";
+import {reducers as secretForm} from "../org/secret/create/effects";
 
 export default {
     session,

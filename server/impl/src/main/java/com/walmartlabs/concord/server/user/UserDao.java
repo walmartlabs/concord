@@ -1,12 +1,9 @@
 package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.team.TeamEntry;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
-import org.jooq.BatchBindStep;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Record2;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -17,10 +14,13 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Admins.ADMINS;
+import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PERMISSIONS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.selectFrom;
 
 @Named
 public class UserDao extends AbstractDao {
@@ -76,16 +76,21 @@ public class UserDao extends AbstractDao {
                     .where(USER_PERMISSIONS.USER_ID.eq(id))
                     .fetchInto(String.class);
 
-            List<TeamEntry> teams = tx.select(TEAMS.TEAM_ID, TEAMS.TEAM_NAME)
-                    .from(USER_TEAMS)
-                    .join(TEAMS).on(TEAMS.TEAM_ID.eq(USER_TEAMS.TEAM_ID))
-                    .where(USER_TEAMS.USER_ID.eq(id).and(TEAMS.IS_ACTIVE.isTrue()))
-                    .fetch(e -> new TeamEntry(e.value1(), e.value2(), null, null, null));
+            Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
+                    .from(ORGANIZATIONS)
+                    .where(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID)).asField();
+
+            SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID).from(USER_TEAMS)
+                    .where(USER_TEAMS.USER_ID.eq(id));
+
+            List<OrganizationEntry> orgs = tx.select(TEAMS.ORG_ID, orgNameField).from(TEAMS)
+                    .where(TEAMS.TEAM_ID.in(teamIds))
+                    .fetch(e -> new OrganizationEntry(e.value1(), e.value2()));
 
             boolean admin = tx.fetchExists(tx.selectFrom(ADMINS).where(ADMINS.USER_ID.eq(id)));
 
             return new UserEntry(r.get(USERS.USER_ID), r.get(USERS.USERNAME),
-                    new HashSet<>(perms), new HashSet<>(teams), admin);
+                    new HashSet<>(perms), new HashSet<>(orgs), admin);
         }
     }
 
@@ -113,6 +118,18 @@ public class UserDao extends AbstractDao {
                     .where(USERS.USER_ID.eq(id)));
 
             return cnt > 0;
+        }
+    }
+
+    public boolean isInOrganization(UUID userId, UUID orgId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
+                    .from(TEAMS)
+                    .where(TEAMS.ORG_ID.eq(orgId));
+
+            return tx.fetchExists(selectFrom(USER_TEAMS)
+                    .where(USER_TEAMS.USER_ID.eq(userId)
+                            .and(USER_TEAMS.TEAM_ID.in(teamIds))));
         }
     }
 

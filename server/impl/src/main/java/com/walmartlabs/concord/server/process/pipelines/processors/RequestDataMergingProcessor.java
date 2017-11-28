@@ -10,7 +10,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;

@@ -5,7 +5,7 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Test;
 
@@ -32,7 +32,7 @@ public class TemplateMergeIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null,
                 Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, template.toUri().toString()),
-                null));
+                null, null));
 
         // ---
 

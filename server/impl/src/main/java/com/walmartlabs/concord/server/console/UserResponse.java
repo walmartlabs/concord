@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.server.api.team.TeamEntry;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.team.TeamEntry;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
 @JsonInclude(Include.NON_EMPTY)
 public class UserResponse implements Serializable {
@@ -15,18 +17,18 @@ public class UserResponse implements Serializable {
     private final String realm;
     private final String username;
     private final String displayName;
-    private final Set<TeamEntry> teams;
+    private final Set<OrganizationEntry> orgs;
 
     @JsonCreator
     public UserResponse(@JsonProperty("realm") String realm,
                         @JsonProperty("username") String username,
                         @JsonProperty("displayName") String displayName,
-                        @JsonProperty("teams") Set<TeamEntry> teams) {
+                        @JsonProperty("orgs") Set<OrganizationEntry> orgs) {
 
         this.realm = realm;
         this.username = username;
         this.displayName = displayName;
-        this.teams = teams;
+        this.orgs = orgs;
     }
 
     public String getRealm() {
@@ -41,8 +43,8 @@ public class UserResponse implements Serializable {
         return displayName;
     }
 
-    public Set<TeamEntry> getTeams() {
-        return teams;
+    public Set<OrganizationEntry> getOrgs() {
+        return orgs;
     }
 
     @Override
@@ -51,7 +53,7 @@ public class UserResponse implements Serializable {
                 "realm='" + realm + '\'' +
                 ", username='" + username + '\'' +
                 ", displayName='" + displayName + '\'' +
-                ", teams=" + teams +
+                ", orgs=" + orgs +
                 '}';
     }
 }

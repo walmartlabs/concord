@@ -16,10 +16,10 @@ public class LandingEntry implements Serializable {
 
     private final UUID id;
 
-    private final UUID teamId;
+    private final UUID orgId;
 
     @ConcordKey
-    private final String teamName;
+    private final String orgName;
 
     private final UUID projectId;
 
@@ -42,8 +42,8 @@ public class LandingEntry implements Serializable {
 
     @JsonCreator
     public LandingEntry(@JsonProperty("id") UUID id,
-                        @JsonProperty("teamId") UUID teamId,
-                        @JsonProperty("teamName") String teamName,
+                        @JsonProperty("orgId") UUID orgId,
+                        @JsonProperty("orgName") String orgName,
                         @JsonProperty("projectId") UUID projectId,
                         @JsonProperty("projectName") String projectName,
                         @JsonProperty("repositoryName") String repositoryName,
@@ -52,8 +52,8 @@ public class LandingEntry implements Serializable {
                         @JsonProperty("icon") String icon) {
 
         this.id = id;
-        this.teamId = teamId;
-        this.teamName = teamName;
+        this.orgId = orgId;
+        this.orgName = orgName;
         this.projectId = projectId;
         this.projectName = projectName;
         this.repositoryName = repositoryName;
@@ -66,12 +66,12 @@ public class LandingEntry implements Serializable {
         return id;
     }
 
-    public UUID getTeamId() {
-        return teamId;
+    public UUID getOrgId() {
+        return orgId;
     }
 
-    public String getTeamName() {
-        return teamName;
+    public String getOrgName() {
+        return orgName;
     }
 
     public UUID getProjectId() {
@@ -102,8 +102,8 @@ public class LandingEntry implements Serializable {
     public String toString() {
         return "LandingEntry{" +
                 "id=" + id +
-                ", teamId=" + teamId +
-                ", teamName='" + teamName + '\'' +
+                ", orgId=" + orgId +
+                ", orgName='" + orgName + '\'' +
                 ", projectName='" + projectName + '\'' +
                 ", repositoryName='" + repositoryName + '\'' +
                 ", name='" + name + '\'' +

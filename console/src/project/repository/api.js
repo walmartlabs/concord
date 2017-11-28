@@ -1,6 +1,6 @@
 // @flow
 
-export const testRepository = (data: any) => {
+export const testRepository = (data: any): Promise<any> => {
     console.debug("API: testRepository ['%o'] -> starting...", data);
 
     const opts = {

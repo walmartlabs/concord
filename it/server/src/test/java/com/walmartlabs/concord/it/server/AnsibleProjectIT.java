@@ -6,11 +6,9 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.team.TeamEntry;
-import com.walmartlabs.concord.server.api.team.TeamResource;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,7 +97,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         RepositoryEntry repo = new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
         Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg, null, null));
 
         // ---
 
@@ -149,7 +147,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg, null));
+        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg, null, null));
 
         // ---
 

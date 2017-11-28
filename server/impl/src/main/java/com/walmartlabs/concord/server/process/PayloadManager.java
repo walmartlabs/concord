@@ -4,9 +4,8 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.project.ProjectDao;
-import com.walmartlabs.concord.server.project.RepositoryDao;
-import com.walmartlabs.concord.server.team.TeamManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
@@ -228,6 +227,7 @@ public class PayloadManager {
         return p.putHeader(Payload.OUT_EXPRESSIONS, s);
     }
 
+    @SuppressWarnings("unchecked")
     private Payload addEntryPoint(Payload p, EntryPoint e) {
         if (e == null) {
             return p;

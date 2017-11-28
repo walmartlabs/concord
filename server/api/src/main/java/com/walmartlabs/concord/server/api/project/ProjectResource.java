@@ -1,7 +1,10 @@
 package com.walmartlabs.concord.server.api.project;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.team.secret.SecretResource;
+import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.secret.SecretResource;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -15,6 +18,7 @@ import java.util.UUID;
 
 @Api("Project")
 @Path("/api/v1/project")
+@Deprecated
 public interface ProjectResource {
 
     /**
@@ -80,7 +84,7 @@ public interface ProjectResource {
     @GET
     @ApiOperation("List projects")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProjectEntry> list(@ApiParam @QueryParam("teamId") UUID teamId,
+    List<ProjectEntry> list(@ApiParam @QueryParam("orgId") UUID orgId,
                             @ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy,
                             @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc);
 
@@ -99,21 +103,6 @@ public interface ProjectResource {
     List<RepositoryEntry> listRepositories(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                            @ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy,
                                            @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc);
-
-    /**
-     * Updates an existing project.
-     *
-     * @param projectName
-     * @param request
-     * @return
-     */
-    @PUT
-    @ApiOperation("Update an existing project")
-    @Path("/{projectName}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    UpdateProjectResponse update(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                 @ApiParam @Valid UpdateProjectRequest request);
 
     /**
      * Updates an existing repository.

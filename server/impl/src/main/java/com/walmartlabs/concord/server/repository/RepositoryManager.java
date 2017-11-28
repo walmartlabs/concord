@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.repository;
 
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 
 import java.nio.file.Path;
 import java.util.UUID;
@@ -10,7 +10,7 @@ public interface RepositoryManager {
 
     String DEFAULT_BRANCH = "master";
 
-    void testConnection(UUID teamId, String uri, String branch, String commitId, String path, String secretName);
+    void testConnection(UUID orgId, String uri, String branch, String commitId, String path, String secretName);
 
     Path fetch(UUID projectId, RepositoryEntry repository);
 

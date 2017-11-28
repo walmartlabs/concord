@@ -8,7 +8,7 @@ const types = {
     UPDATE_SESSION: `${NAMESPACE}/update`,
     CHECK_AUTH: `${NAMESPACE}/checkAuth`,
     LOGOUT: `${NAMESPACE}/logout`,
-    CHANGE_TEAM: `${NAMESPACE}/changeTeam`
+    CHANGE_ORG: `${NAMESPACE}/changeOrg`
 };
 
 export default types;
@@ -32,7 +32,7 @@ export const logOut = () => ({
     type: types.LOGOUT
 });
 
-export const changeTeam = (teamId: ConcordId) => ({
-    type: types.CHANGE_TEAM,
-    teamId
+export const changeOrg = (orgId: ConcordId) => ({
+    type: types.CHANGE_ORG,
+    orgId
 });

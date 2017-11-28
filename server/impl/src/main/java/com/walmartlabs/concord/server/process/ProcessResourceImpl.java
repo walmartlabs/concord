@@ -5,6 +5,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
@@ -12,9 +13,8 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.team.TeamManager;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -110,10 +110,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        // TODO teams
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(teamId, entryPoint);
-        assertProject(teamId, ep.getProjectName());
+        EntryPoint ep = PayloadParser.parseEntryPoint(orgId, entryPoint);
+        assertProject(orgId, ep.getProjectName());
 
         Payload payload;
         try {
@@ -143,11 +144,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        // TODO teams
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(teamId, entryPoint);
+        EntryPoint ep = PayloadParser.parseEntryPoint(orgId, entryPoint);
         if (ep != null) {
-            assertProject(teamId, ep.getProjectName());
+            assertProject(orgId, ep.getProjectName());
         }
 
         Payload payload;
@@ -176,11 +178,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        // TODO teams
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(teamId, entryPoint);
+        EntryPoint ep = PayloadParser.parseEntryPoint(orgId, entryPoint);
         if (ep != null) {
-            assertProject(teamId, ep.getProjectName());
+            assertProject(orgId, ep.getProjectName());
         }
 
         Payload payload;

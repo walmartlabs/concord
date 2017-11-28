@@ -5,8 +5,8 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.EncryptValueRequest;
-import com.walmartlabs.concord.server.api.project.EncryptValueResponse;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Test;
 
@@ -32,7 +32,7 @@ public class VariablesIT extends AbstractServerIT {
                                 ImmutableMap.of(
                                         "y", "cba",
                                         "z", true))),
-                null));
+                null, null));
 
         // ---
 

@@ -5,6 +5,8 @@ import com.google.common.collect.Sets;
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
@@ -296,9 +298,6 @@ public class ProjectIT extends AbstractServerIT {
                                         Set<String> permissions,
                                         String repoName, String repoUrl,
                                         String commitId, String tag) {
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
-        assertTrue(cpr.isOk());
 
         UserResource userResource = proxy(UserResource.class);
         CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(userName, permissions));
@@ -316,9 +315,11 @@ public class ProjectIT extends AbstractServerIT {
 
         setApiKey(apiKey);
 
-        CreateRepositoryResponse crr = projectResource.createRepository(projectName,
-                new RepositoryEntry(null, null, repoName, repoUrl, tag, commitId, null, null));
-        assertTrue(crr.isOk());
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName,
+                Collections.singletonMap(repoName,
+                        new RepositoryEntry(null, null, repoName, repoUrl, tag, commitId, null, null))));
+        assertTrue(cpr.isOk());
     }
 
     protected ProcessEntry doTest(String projectName,

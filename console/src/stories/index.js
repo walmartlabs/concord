@@ -10,7 +10,7 @@ import "semantic-ui-css/semantic.min.css";
 // Mock Provider
 import Provider from "./Provider";
 // Concord Components
-import {NewSecretForm} from "../team/secret/components"
+import {NewSecretForm} from "../org/secret/components"
 
 storiesOf("Welcome", module).add("to Storybook", () => <Welcome showApp={linkTo("Button")}/>);
 

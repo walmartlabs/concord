@@ -3,7 +3,7 @@ package com.walmartlabs.concord.it.server;
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Ignore;
 import org.junit.Test;

@@ -4,9 +4,9 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.team.TeamManager;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -21,12 +21,12 @@ public class ProjectInfoIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void test() throws Exception {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         String projectName = "project_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(teamId, projectName));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(orgId, projectName));
 
         String entryPoint = projectName;
 
@@ -45,7 +45,7 @@ public class ProjectInfoIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Team ID:.*" + teamId + ".*", ab);
+        assertLog(".*Org ID:.*" + orgId + ".*", ab);
         assertLog(".*Project ID:.*" + cpr.getId() + ".*", ab);
     }
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -13,21 +14,25 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class RepositoryTestRequest implements Serializable {
 
-    private final UUID teamId;
+    @NotNull
+    private final UUID orgId;
+
+    @NotNull
     private final String url;
+
     private final String branch;
     private final String commitId;
     private final String path;
     private final String secret;
 
     @JsonCreator
-    public RepositoryTestRequest(@JsonProperty("teamId") UUID teamId,
+    public RepositoryTestRequest(@JsonProperty("orgId") UUID orgId,
                                  @JsonProperty("url") String url,
                                  @JsonProperty("branch") String branch,
                                  @JsonProperty("commitId") String commitId,
                                  @JsonProperty("path") String path,
                                  @JsonProperty("secret") String secret) {
-        this.teamId = teamId;
+        this.orgId = orgId;
         this.url = url;
         this.branch = branch;
         this.commitId = commitId;
@@ -35,8 +40,8 @@ public class RepositoryTestRequest implements Serializable {
         this.secret = secret;
     }
 
-    public UUID getTeamId() {
-        return teamId;
+    public UUID getOrgId() {
+        return orgId;
     }
 
     public String getUrl() {

@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.it.server;
 
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.console.ProcessPortalService;
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +55,7 @@ public class PortalIT extends AbstractServerIT {
 
         RepositoryEntry repo = new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, repoSecretName);
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), null, null));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, singletonMap(repoName, repo)));
 
         // ---
 

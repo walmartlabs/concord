@@ -19,24 +19,24 @@ public class InventoryEntry implements Serializable {
     @ConcordKey
     private final String name;
 
-    private final UUID teamId;
+    private final UUID orgId;
 
     @ConcordKey
-    private final String teamName;
+    private final String orgName;
 
     private final InventoryEntry parent;
 
     @JsonCreator
     public InventoryEntry(@JsonProperty("id") UUID id,
                           @JsonProperty("name") String name,
-                          @JsonProperty("teamId") UUID teamId,
-                          @JsonProperty("teamName") String teamName,
+                          @JsonProperty("orgId") UUID orgId,
+                          @JsonProperty("orgName") String orgName,
                           @JsonProperty("parent") InventoryEntry parent) {
 
         this.id = id;
         this.name = name;
-        this.teamId = teamId;
-        this.teamName = teamName;
+        this.orgId = orgId;
+        this.orgName = orgName;
         this.parent = parent;
     }
 
@@ -44,12 +44,12 @@ public class InventoryEntry implements Serializable {
         return name;
     }
 
-    public UUID getTeamId() {
-        return teamId;
+    public UUID getOrgId() {
+        return orgId;
     }
 
-    public String getTeamName() {
-        return teamName;
+    public String getOrgName() {
+        return orgName;
     }
 
     public UUID getId() {
@@ -65,8 +65,8 @@ public class InventoryEntry implements Serializable {
         return "InventoryEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", teamId=" + teamId +
-                ", teamName='" + teamName + '\'' +
+                ", orgId=" + orgId +
+                ", orgName='" + orgName + '\'' +
                 ", parent=" + parent +
                 '}';
     }

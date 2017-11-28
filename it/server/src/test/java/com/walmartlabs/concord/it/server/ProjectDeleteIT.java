@@ -6,11 +6,12 @@ import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
 import com.walmartlabs.concord.server.api.project.DeleteProjectResponse;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Test;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import java.io.ByteArrayInputStream;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -48,7 +49,7 @@ public class ProjectDeleteIT extends AbstractServerIT {
         try {
             projectResource.get(projectName);
             fail("Should fail");
-        } catch (BadRequestException e) {
+        } catch (NotFoundException | BadRequestException e) {
         }
 
         // ---

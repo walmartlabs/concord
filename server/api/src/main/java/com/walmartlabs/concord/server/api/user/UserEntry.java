@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.server.api.team.TeamEntry;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -16,20 +16,20 @@ public class UserEntry implements Serializable {
     private final UUID id;
     private final String name;
     private final Set<String> permissions;
-    private final Set<TeamEntry> teams;
+    private final Set<OrganizationEntry> orgs;
     private final boolean admin;
 
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
                      @JsonProperty("permissions") Set<String> permissions,
-                     @JsonProperty("teams") Set<TeamEntry> teams,
+                     @JsonProperty("orgs") Set<OrganizationEntry> orgs,
                      @JsonProperty("admin") boolean admin) {
 
         this.id = id;
         this.name = name;
         this.permissions = permissions;
-        this.teams = teams;
+        this.orgs = orgs;
         this.admin = admin;
     }
 
@@ -45,8 +45,8 @@ public class UserEntry implements Serializable {
         return permissions;
     }
 
-    public Set<TeamEntry> getTeams() {
-        return teams;
+    public Set<OrganizationEntry> getOrgs() {
+        return orgs;
     }
 
     public boolean isAdmin() {
@@ -59,7 +59,7 @@ public class UserEntry implements Serializable {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", permissions=" + permissions +
-                ", teams=" + teams +
+                ", orgs=" + orgs +
                 ", admin=" + admin +
                 '}';
     }

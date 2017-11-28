@@ -1,7 +1,7 @@
 // @flow
 import * as common from "../api";
 
-export const logout = () => {
+export const logout = (): Promise<any> => {
     console.debug("API: logout -> starting...",);
 
     return fetch("/api/service/console/logout", {method: "POST", credentials: "same-origin"})

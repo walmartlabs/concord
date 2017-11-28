@@ -8,11 +8,9 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.team.TeamEntry;
-import com.walmartlabs.concord.server.api.team.TeamResource;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -133,8 +131,7 @@ public class ProjectFileIT extends AbstractServerIT {
         generateKeyPair(teamName, secretName, false, null);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, secretName)), null, null));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, secretName))));
 
         // ---
 
@@ -169,8 +166,7 @@ public class ProjectFileIT extends AbstractServerIT {
         generateKeyPair(teamName, secretName, false, null);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, secretName)), null, null));
+        projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, secretName))));
 
         // ---
 

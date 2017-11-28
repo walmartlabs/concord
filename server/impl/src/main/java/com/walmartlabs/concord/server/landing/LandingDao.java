@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.landing;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.landing.LandingEntry;
-import com.walmartlabs.concord.server.api.project.ProjectVisibility;
+import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.jooq.tables.LandingPage;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Repositories;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.LandingPage.LANDING_PAGE;
+import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
@@ -35,13 +36,13 @@ public class LandingDao extends AbstractDao {
         Projects p = PROJECTS.as("p");
         Repositories r = REPOSITORIES.as("r");
 
-        Field<String> teamNameField = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(p.TEAM_ID)).asField();
+        Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME).from(ORGANIZATIONS).where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID)).asField();
 
         try (DSLContext tx = DSL.using(cfg)) {
             return tx
                     .select(lp.LANDING_PAGE_ID,
-                            p.TEAM_ID,
-                            teamNameField,
+                            p.ORG_ID,
+                            orgNameField,
                             lp.PROJECT_ID,
                             p.PROJECT_NAME,
                             r.REPO_NAME,
@@ -108,16 +109,18 @@ public class LandingDao extends AbstractDao {
         Projects p = PROJECTS.as("p");
         Repositories r = REPOSITORIES.as("r");
 
-        Field<String> teamNameField = select(TEAMS.TEAM_NAME).from(TEAMS).where(TEAMS.TEAM_ID.eq(p.TEAM_ID)).asField();
+        Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME).from(ORGANIZATIONS).where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID)).asField();
+
+        SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID).from(TEAMS).where(TEAMS.ORG_ID.eq(p.ORG_ID));
 
         Condition filterByTeamMember = exists(selectFrom(USER_TEAMS)
                 .where(USER_TEAMS.USER_ID.eq(currentUserId)
-                        .and(USER_TEAMS.TEAM_ID.eq(p.TEAM_ID))));
+                        .and(USER_TEAMS.TEAM_ID.in(teamIds))));
 
         SelectJoinStep<Record9<UUID, UUID, String, UUID, String, String, String, String, byte[]>> q =
                 tx.select(lp.LANDING_PAGE_ID,
-                        p.TEAM_ID,
-                        teamNameField,
+                        p.ORG_ID,
+                        orgNameField,
                         lp.PROJECT_ID,
                         p.PROJECT_NAME,
                         r.REPO_NAME,

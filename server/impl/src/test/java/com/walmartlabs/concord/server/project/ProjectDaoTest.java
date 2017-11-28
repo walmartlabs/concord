@@ -2,8 +2,10 @@ package com.walmartlabs.concord.server.project;
 
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.AbstractDaoTest;
-import com.walmartlabs.concord.server.api.project.ProjectEntry;
-import com.walmartlabs.concord.server.team.TeamManager;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,11 +32,11 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
     @Test
     public void testInsertDelete() throws Exception {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(teamId, projectName, "test", cfg, null);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, cfg, null);
 
         // ---
         Map<String, Object> actualCfg = projectDao.getConfiguration(projectId);
@@ -48,14 +50,14 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
         Map<String, Object> newCfg1 = ImmutableMap.of("a1", "a1-v");
-        tx(tx -> projectDao.update(tx, projectId, newCfg1));
+        tx(tx -> projectDao.updateCfg(tx, projectId, newCfg1));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg1, actualCfg);
 
         // ---
         Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
-        tx(tx -> projectDao.update(tx, teamId, projectId, projectName, "new-description", newCfg2));
+        tx(tx -> projectDao.update(tx, orgId, projectId, projectName, "new-description", newCfg2));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg2, actualCfg);
@@ -69,13 +71,13 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
 
-        assertNull(projectDao.getId(teamId, projectName));
+        assertNull(projectDao.getId(orgId, projectName));
         assertNull(repositoryDao.getId(projectId, repoName));
     }
 
     @Test
     public void testList() throws Exception {
-        UUID teamId = TeamManager.DEFAULT_TEAM_ID;
+        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         assertEquals(0, projectDao.list(null, null, PROJECTS.PROJECT_NAME, true).size());
 
@@ -84,8 +86,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String aName = "aProject#" + System.currentTimeMillis();
         String bName = "bProject#" + System.currentTimeMillis();
 
-        projectDao.insert(teamId, aName, "test", null, null);
-        projectDao.insert(teamId, bName, "test", null, null);
+        projectDao.insert(orgId, aName, "test", null, null, null);
+        projectDao.insert(orgId, bName, "test", null, null, null);
 
         // ---
 

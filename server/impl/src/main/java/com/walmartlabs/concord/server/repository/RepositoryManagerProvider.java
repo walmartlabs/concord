@@ -2,7 +2,7 @@ package com.walmartlabs.concord.server.repository;
 
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
-import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;

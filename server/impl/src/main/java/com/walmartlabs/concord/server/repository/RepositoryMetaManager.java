@@ -2,9 +2,9 @@ package com.walmartlabs.concord.server.repository;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.server.api.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
-import com.walmartlabs.concord.server.project.RepositoryException;
+import com.walmartlabs.concord.server.org.project.RepositoryException;
 
 import javax.inject.Inject;
 import javax.inject.Named;

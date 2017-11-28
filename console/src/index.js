@@ -18,8 +18,8 @@ import ProcessPortal from "./process/portal";
 import ProjectList from "./project/list";
 import LandingList from "./landing/list";
 import Project from "./project";
-import SecretList from "./team/secret/list";
-import CreateSecretPage from "./team/secret/create";
+import SecretList from "./org/secret/list";
+import CreateSecretPage from "./org/secret/create";
 import {actions as session} from "./session";
 import "./index.css";
 

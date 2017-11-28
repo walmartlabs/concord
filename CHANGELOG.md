@@ -4,7 +4,10 @@
 
 ### Added
 
-- concord-server: new endpoint for managing team secrets;
+- concord-server, concord-console: initial support for Organizations;
+- concord-server: public and private projects and secrets;
+- concord-server: project and secret now has owners;
+- concord-server: new endpoint for managing secrets;
 - concord-client: the `project` task - provides a method to create
 new projects using flows;
 - concord-server: methods to refresh triggers and LPs for all

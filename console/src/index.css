@@ -1,9 +1,19 @@
-html, body {
-    height: 100%;
+html {
+    height: 100% !important;
+    min-height: 100% !important;
+}
+
+body {
+    min-height: 100% !important;
+}
+
+#root {
+    height: 100% !important;
+    min-height: 100% !important;
 }
 
 .maxHeight {
-    height: 100% !important;
+    min-height: 100% !important;
 }
 
 .tight {

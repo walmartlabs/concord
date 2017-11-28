@@ -4,10 +4,11 @@ import {connect} from "react-redux";
 import {formValueSelector, getFormValues, reduxForm, submit as submitForm} from "redux-form";
 import {Button, Form, Modal, Popup, Message, Icon} from "semantic-ui-react";
 import {Dropdown, Field} from "../../shared/forms";
-import SecretListDropdown from "../../team/secret/list/SecretsListDropdown";
+import SecretListDropdown from "../../org/secret/list/SecretsListDropdown";
 import * as v from "../../shared/validation";
 import * as c from "./constants";
 import {actions as repoActions, selectors as repoSelectors} from "../repository";
+import {getCurrentOrg} from "../../session/reducers";
 
 const SOURCE_TYPE_LABELS = {
     [c.BRANCH_SOURCE_TYPE]: "Branch/tag",
@@ -20,12 +21,12 @@ let repositoryForm = (props) => {
     const {pristine, submitting, invalid} = props;
     const saveDisabled = pristine || submitting || invalid;
 
-    const {testResult, testError, testLoading, onTestRepoFn, formValues} = props;
+    const {testResult, testError, testLoading, onTestRepoFn, formValues, org} = props;
     const testDisabled = submitting || invalid;
     const testIcon = testError ? "warning sign" : (testResult ? "check" : undefined);
     const testFn = (ev) => {
         ev.preventDefault();
-        onTestRepoFn(formValues);
+        onTestRepoFn(org.id, formValues);
     };
 
     const {handleSubmit, onSaveFn, onCloseFn} = props;
@@ -113,6 +114,7 @@ repositoryForm = reduxForm({
 const selector = formValueSelector("repository");
 
 const mapStateToProps = (state) => ({
+    org: getCurrentOrg(state.session),
     sourceTypeValue: selector(state, "sourceType"),
     formValues: getFormValues("repository")(state),
     testResult: repoSelectors.getTestResult(state.repository),

@@ -3,7 +3,7 @@ package com.walmartlabs.concord.server.events;
 import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

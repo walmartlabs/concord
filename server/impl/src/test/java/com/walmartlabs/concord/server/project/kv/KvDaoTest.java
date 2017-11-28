@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.project.kv;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.org.project.KvDao;
 import org.junit.Ignore;
 import org.junit.Test;
 
