@@ -246,7 +246,7 @@ public class ProjectDao extends AbstractDao {
                 .from(TEAMS)
                 .where(TEAMS.ORG_ID.eq(orgId));
 
-        Condition filterByTeamMember = exists(selectFrom(USER_TEAMS)
+        Condition filterByTeamMember = exists(selectOne().from(USER_TEAMS)
                 .where(USER_TEAMS.USER_ID.eq(currentUserId)
                         .and(USER_TEAMS.TEAM_ID.in(teamIds))));
 

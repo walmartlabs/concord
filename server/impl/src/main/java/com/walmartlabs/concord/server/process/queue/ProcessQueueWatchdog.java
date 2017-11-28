@@ -261,9 +261,9 @@ public class ProcessQueueWatchdog {
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
                             .and(q.CREATED_AT.greaterOrEqual(maxAge))
                             .and(existsMarker(q.INSTANCE_ID, entry.marker))
-                            .and(notExistsSuccess(tx, q.INSTANCE_ID, entry.handlerKind))
+                            .and(notExistsSuccess(q.INSTANCE_ID, entry.handlerKind))
                             .and(count(tx, q.INSTANCE_ID, entry.handlerKind).lessThan(entry.maxTries))
-                            .and(noRunningHandlers(tx, q.INSTANCE_ID)))
+                            .and(noRunningHandlers(q.INSTANCE_ID)))
                     .limit(maxEntries)
                     .forUpdate()
                     .skipLocked()
@@ -291,22 +291,22 @@ public class ProcessQueueWatchdog {
                     .asField();
         }
 
-        private Condition notExistsSuccess(DSLContext tx, Field<UUID> parentInstanceId, ProcessKind kind) {
-            return notExists(tx.selectFrom(V_PROCESS_QUEUE)
+        private Condition notExistsSuccess(Field<UUID> parentInstanceId, ProcessKind kind) {
+            return notExists(selectOne().from(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
                             .and(V_PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString()))
                             .and(V_PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.FINISHED.toString()))));
         }
 
-        private Condition noRunningHandlers(DSLContext tx, Field<UUID> parentInstanceId) {
-            return notExists(tx.selectFrom(V_PROCESS_QUEUE)
+        private Condition noRunningHandlers(Field<UUID> parentInstanceId) {
+            return notExists(selectOne().from(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
                             .and(V_PROCESS_QUEUE.CURRENT_STATUS.in(Utils.toString(ACTIVE_PROCESS_STATUSES)))
                             .and(V_PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
         }
 
         private Condition existsMarker(Field<UUID> instanceId, String marker) {
-            return exists(selectFrom(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
+            return exists(selectOne().from(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
                     .and(PROCESS_STATE.ITEM_PATH.eq(marker))));
         }
 

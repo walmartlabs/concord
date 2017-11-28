@@ -113,7 +113,7 @@ public class LandingDao extends AbstractDao {
 
         SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID).from(TEAMS).where(TEAMS.ORG_ID.eq(p.ORG_ID));
 
-        Condition filterByTeamMember = exists(selectFrom(USER_TEAMS)
+        Condition filterByTeamMember = exists(selectOne().from(USER_TEAMS)
                 .where(USER_TEAMS.USER_ID.eq(currentUserId)
                         .and(USER_TEAMS.TEAM_ID.in(teamIds))));
 
