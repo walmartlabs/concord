@@ -69,7 +69,7 @@ public class SecretManager {
         if (orgMembersOnly || e.getVisibility() != SecretVisibility.PUBLIC) {
             if (!secretDao.hasAccessLevel(e.getId(), p.getId(), ResourceAccessLevel.atLeast(level))) {
                 throw new UnauthorizedException("The current user doesn't have " +
-                        "the necessary access level (" + level + ") to the project: " + e.getName());
+                        "the necessary access level (" + level + ") to the secret: " + e.getName());
             }
         }
 

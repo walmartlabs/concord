@@ -65,7 +65,7 @@ public class ProjectManager {
             UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), ownerId, entry.getCfg(), entry.getVisibility());
 
             if (repos != null) {
-                Map<String, UUID> ids = insertRepos(tx, orgId, pId, entry.getName(), repos);
+                Map<String, UUID> ids = insertRepos(tx, orgId, pId, entry.getName(), repos, true);
 
                 repos.forEach((repoName, repo) -> {
                     githubWebhookService.register(pId, ids.get(repoName), repo.getUrl());
@@ -90,7 +90,7 @@ public class ProjectManager {
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);
-                Map<String, UUID> ids = insertRepos(tx, orgId, projectId, entry.getName(), repos);
+                Map<String, UUID> ids = insertRepos(tx, orgId, projectId, entry.getName(), repos, true);
                 repos.forEach((repoName, RepositoryEntry) ->
                         githubWebhookService.register(projectId, ids.get(repoName), RepositoryEntry.getUrl()));
             }
@@ -162,11 +162,15 @@ public class ProjectManager {
             if (secret == null) {
                 continue;
             }
-            secretManager.assertAccess(orgId, secret, ResourceAccessLevel.READER, true);
+            secretManager.assertAccess(orgId, secret, ResourceAccessLevel.READER, false);
         }
     }
 
-    private Map<String, UUID> insertRepos(DSLContext tx, UUID orgId, UUID projectId, String projectName, Map<String, RepositoryEntry> repos) {
+    private Map<String, UUID> insertRepos(DSLContext tx, UUID orgId,
+                                          UUID projectId, String projectName,
+                                          Map<String, RepositoryEntry> repos,
+                                          boolean update) {
+
         Map<String, UUID> ids = new HashMap<>();
 
         for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
@@ -175,7 +179,7 @@ public class ProjectManager {
 
             UUID secretId = null;
             if (req.getSecret() != null) {
-                SecretEntry e = secretManager.assertAccess(orgId, req.getSecret(), ResourceAccessLevel.READER, true);
+                SecretEntry e = secretManager.assertAccess(orgId, req.getSecret(), ResourceAccessLevel.READER, false);
                 secretId = e.getId();
             }
 
@@ -185,7 +189,8 @@ public class ProjectManager {
                     trim(req.getPath()),
                     secretId);
 
-            eventResource.event(Events.CONCORD_EVENT, Events.Repository.repositoryCreated(projectName, req.getName()));
+            eventResource.event(Events.CONCORD_EVENT, update ? Events.Repository.repositoryUpdated(projectName, req.getName()) :
+                    Events.Repository.repositoryCreated(projectName, req.getName()));
 
             ids.put(name, id);
         }

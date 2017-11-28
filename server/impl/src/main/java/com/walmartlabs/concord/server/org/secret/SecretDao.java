@@ -221,7 +221,7 @@ public class SecretDao extends AbstractDao {
                 SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
                 SecretStoreType.valueOf(r.get(SECRETS.SECRET_STORE_TYPE)),
                 SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
-                toOwner(r.get(SECRETS.OWNER_ID), r.value9()),
+                toOwner(r.get(SECRETS.OWNER_ID), r.value6()),
                 r.get(SECRETS.SECRET_DATA));
     }
 
