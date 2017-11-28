@@ -33,7 +33,6 @@ public class UserManagementIT extends AbstractServerIT {
 
         // ---
 
-        setApiKey(cakr.getKey());
         userResource.delete(cur.getId());
     }
 }

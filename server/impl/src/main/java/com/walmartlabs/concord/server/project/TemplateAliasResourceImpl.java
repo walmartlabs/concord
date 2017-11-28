@@ -4,10 +4,8 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.project.TemplateAliasEntry;
 import com.walmartlabs.concord.server.api.project.TemplateAliasResource;
 import com.walmartlabs.concord.server.api.project.TemplateAliasResponse;
-import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.jooq.Configuration;
 import org.sonatype.siesta.Resource;
 
@@ -27,7 +25,6 @@ public class TemplateAliasResourceImpl extends AbstractDao implements TemplateAl
     }
 
     @Override
-    @RequiresPermissions(Permissions.TEMPLATE_MANAGE)
     public TemplateAliasResponse createOrUpdate(TemplateAliasEntry request) {
         assertAdmin();
 
@@ -40,13 +37,11 @@ public class TemplateAliasResourceImpl extends AbstractDao implements TemplateAl
     }
 
     @Override
-    @RequiresPermissions(Permissions.TEMPLATE_MANAGE)
     public List<TemplateAliasEntry> list() {
         return aliasDao.list();
     }
 
     @Override
-    @RequiresPermissions(Permissions.TEMPLATE_MANAGE)
     public TemplateAliasResponse delete(String alias) {
         assertAdmin();
         aliasDao.delete(alias);
@@ -56,7 +51,7 @@ public class TemplateAliasResourceImpl extends AbstractDao implements TemplateAl
     private static void assertAdmin() {
         UserPrincipal p = UserPrincipal.getCurrent();
         if (!p.isAdmin()) {
-            throw new UnauthorizedException("Not authorized");
+            throw new UnauthorizedException("Only admins can do that");
         }
     }
 }

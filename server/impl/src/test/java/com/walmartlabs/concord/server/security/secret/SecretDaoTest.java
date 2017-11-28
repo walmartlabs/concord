@@ -8,7 +8,6 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
-import com.walmartlabs.concord.server.user.UserPermissionCleaner;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -16,7 +15,6 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
 
 @Ignore("requires a local DB instance")
 public class SecretDaoTest extends AbstractDaoTest {
@@ -31,7 +29,7 @@ public class SecretDaoTest extends AbstractDaoTest {
         UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null);
 
         String secretName = "secret#" + System.currentTimeMillis();
-        SecretDao secretDao = new SecretDao(getConfiguration(), mock(UserPermissionCleaner.class));
+        SecretDao secretDao = new SecretDao(getConfiguration());
         UUID secretId = secretDao.insert(orgId, secretName, null, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, null, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();

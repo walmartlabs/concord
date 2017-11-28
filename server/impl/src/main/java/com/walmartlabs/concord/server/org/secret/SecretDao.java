@@ -8,7 +8,7 @@ import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretOwner;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.org.secret.SecretVisibility;
-import com.walmartlabs.concord.server.user.UserPermissionCleaner;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -29,12 +29,9 @@ import static org.jooq.impl.DSL.selectFrom;
 @Named
 public class SecretDao extends AbstractDao {
 
-    private final UserPermissionCleaner permissionCleaner;
-
     @Inject
-    public SecretDao(Configuration cfg, UserPermissionCleaner permissionCleaner) {
+    public SecretDao(Configuration cfg) {
         super(cfg);
-        this.permissionCleaner = permissionCleaner;
     }
 
     public UUID getId(UUID orgId, String name) {
@@ -163,12 +160,9 @@ public class SecretDao extends AbstractDao {
     }
 
     public void delete(UUID id) {
-        tx(tx -> {
-            permissionCleaner.onSecretRemoval(tx, getName(id));
-            tx.deleteFrom(SECRETS)
-                    .where(SECRETS.SECRET_ID.eq(id))
-                    .execute();
-        });
+        tx(tx -> tx.deleteFrom(SECRETS)
+                .where(SECRETS.SECRET_ID.eq(id))
+                .execute());
     }
 
     public boolean hasAccessLevel(UUID secretId, UUID userId, ResourceAccessLevel... levels) {

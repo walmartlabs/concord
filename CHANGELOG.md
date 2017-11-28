@@ -15,6 +15,8 @@ projects.
 
 ### Changed
 
+- concord-server: user permissions are effectively replaced with the
+Team RBAC feature;
 - concord-console: reworked the form for creating secrets;
 - concord-console: rename "Kill" button on the process page to
 "Cancel".

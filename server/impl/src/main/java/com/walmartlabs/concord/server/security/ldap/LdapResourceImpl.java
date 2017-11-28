@@ -1,13 +1,10 @@
 package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.server.api.PerformedActionType;
-import com.walmartlabs.concord.server.api.security.Permissions;
 import com.walmartlabs.concord.server.api.security.ldap.*;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.RoleDao;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.apache.shiro.subject.Subject;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -17,6 +14,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.naming.NamingException;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
 @Named
@@ -37,20 +35,16 @@ public class LdapResourceImpl implements LdapResource, Resource {
     @Override
     @Validate
     public CreateLdapMappingResponse createOrUpdate(CreateLdapMappingRequest request) {
+        assertAdmin();
+
         String ldapDn = request.getLdapDn();
         validateRoles(request.getRoles());
 
         UUID id = ldapDao.getId(ldapDn);
         if (id != null) {
-            assertPermissions(Permissions.LDAP_MAPPING_UPDATE_ANY,
-                    "The current user does not have permissions to update the specified LDAP group mapping");
-
             ldapDao.update(id, ldapDn, request.getRoles());
             return new CreateLdapMappingResponse(id, PerformedActionType.UPDATED);
         } else {
-            assertPermissions(Permissions.LDAP_MAPPING_CREATE_NEW,
-                    "The current user does not have permissions to create a new LDAP group mapping");
-
             id = UUID.randomUUID();
             ldapDao.insert(id, ldapDn, request.getRoles());
             return new CreateLdapMappingResponse(id, PerformedActionType.CREATED);
@@ -64,8 +58,9 @@ public class LdapResourceImpl implements LdapResource, Resource {
 
     @Override
     @Validate
-    @RequiresPermissions(Permissions.LDAP_MAPPING_DELETE_ANY)
     public DeleteLdapMappingResponse deleteMapping(UUID id) {
+        assertAdmin();
+
         if (!ldapDao.exists(id)) {
             throw new ValidationErrorsException("LDAP group mapping not found: " + id);
         }
@@ -76,8 +71,9 @@ public class LdapResourceImpl implements LdapResource, Resource {
 
     @Override
     @Validate
-    @RequiresPermissions(Permissions.LDAP_QUERY)
     public List<String> getLdapGroups(String username) {
+        assertAdmin();
+
         try {
             LdapInfo i = ldapManager.getInfo(username);
 
@@ -101,10 +97,10 @@ public class LdapResourceImpl implements LdapResource, Resource {
         }
     }
 
-    private static void assertPermissions(String permission, String message) {
-        Subject subject = SecurityUtils.getSubject();
-        if (!subject.isPermitted(permission)) {
-            throw new UnauthorizedException(message);
+    private static void assertAdmin() {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (!p.isAdmin()) {
+            throw new UnauthorizedException("Only admins can do that");
         }
     }
 }

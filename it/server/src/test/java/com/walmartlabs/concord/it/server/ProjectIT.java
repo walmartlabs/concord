@@ -1,7 +1,6 @@
 package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
@@ -11,8 +10,8 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.*;
-import com.walmartlabs.concord.server.api.security.Permissions;
+import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
+import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
@@ -54,7 +53,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + randomString();
         String userName = "myUser_" + randomString();
-        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
@@ -86,7 +85,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + randomString();
         String userName = "myUser_" + randomString();
-        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName;
@@ -130,7 +129,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + randomString();
         String userName = "myUser_" + randomString();
-        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
@@ -180,7 +179,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
         String projectName = "myProject_" + randomString();
         String userName = "myUser_" + randomString();
-        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
@@ -211,7 +210,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + randomString();
         String userName = "myUser_" + randomString();
-        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
         String entryPoint = projectName + ":" + repoName + ":main";
@@ -256,7 +255,7 @@ public class ProjectIT extends AbstractServerIT {
 
         String projectName = "myProject_" + randomString();
         String userName = "myUser_" + randomString();
-        Set<String> permissions = Sets.newHashSet(String.format(Permissions.PROCESS_START_PROJECT, projectName));
+        Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
 
