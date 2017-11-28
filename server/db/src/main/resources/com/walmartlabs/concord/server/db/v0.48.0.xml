@@ -219,4 +219,12 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="48160" author="ibodrov@gmail.com">
+        <addColumn tableName="PROJECTS">
+            <column name="ACCEPTS_RAW_PAYLOAD" type="bool" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -31,7 +31,7 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
         String projectName = "project_" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(orgId, projectName, null, null, null, null);
+        UUID projectId = projectDao.insert(orgId, projectName, null, null, null, null, true);
 
         UUID instanceA = UUID.randomUUID();
         queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, "testInitiator");

@@ -1,17 +1,17 @@
 import React from "react";
-import { connect } from "react-redux";
-import { push as pushHistory } from "react-router-redux";
-import { arrayPush as formArrayPush, change as formChange, FieldArray, reduxForm } from "redux-form";
-import { Button, Divider, Form, Message, Popup, Table } from "semantic-ui-react";
-import { Field } from "../shared/forms";
-import { actions as modal } from "../shared/Modal";
+import {connect} from "react-redux";
+import {push as pushHistory} from "react-router-redux";
+import {arrayPush as formArrayPush, change as formChange, FieldArray, reduxForm} from "redux-form";
+import {Button, Divider, Form, Message, Popup, Table} from "semantic-ui-react";
+import {Checkbox, Field} from "../shared/forms";
+import {actions as modal} from "../shared/Modal";
 import * as RepositoryPopup from "./RepositoryPopup";
 import * as DeleteProjectPopup from "./DeleteProjectPopup";
 import * as StartProjectPopup from "./StartProjectPopup/StartProjectPopup";
 import * as api from "./api";
 import GitUrlParse from "git-url-parse";
 import * as v from "../shared/validation";
-import { actions } from "./crud";
+import {actions} from "./crud";
 import {getCurrentOrg} from "../session/reducers";
 
 const renderSourceText = (f, { commitId }) => commitId ? "Revision" : "Branch/tag";
@@ -101,6 +101,11 @@ let projectForm = (props) => {
     return <Form onSubmit={handleSubmit} loading={submitting}>
         {createNew && <Field name="name" label="Name" required />}
         <Field name="description" label="Description" />
+
+        <Popup trigger={<Checkbox name="acceptsRawPayload" label="Accept payload archives"/>}
+               content={"Allows users to start new processes using payload archives. " +
+               "When disabled, only the configured repositories can be used to start a new process."}
+               inverted/>
 
         <Divider horizontal>Repositories</Divider>
         <FieldArray name="repositories" component={renderRepositories(pristine, newRepositoryPopupFn, editRepositoryPopupFn, startProcess)} />

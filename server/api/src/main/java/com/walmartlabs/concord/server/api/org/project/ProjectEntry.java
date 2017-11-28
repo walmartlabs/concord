@@ -37,16 +37,18 @@ public class ProjectEntry implements Serializable {
 
     private final ProjectOwner owner;
 
+    private final Boolean acceptsRawPayload;
+
     public ProjectEntry(String name) {
-        this(null, name, null, null, null, null, null, null, null);
+        this(null, name, null, null, null, null, null, null, null, true);
     }
 
     public ProjectEntry(String name, Map<String, RepositoryEntry> repositories) {
-        this(null, name, null, null, null, repositories, null, null, null);
+        this(null, name, null, null, null, repositories, null, null, null, true);
     }
 
     public ProjectEntry(UUID orgId, String name) {
-        this(null, name, null, orgId, null, null, null, null, null);
+        this(null, name, null, orgId, null, null, null, null, null, true);
     }
 
     @JsonCreator
@@ -58,7 +60,8 @@ public class ProjectEntry implements Serializable {
                         @JsonProperty("repositories") Map<String, RepositoryEntry> repositories,
                         @JsonProperty("cfg") Map<String, Object> cfg,
                         @JsonProperty("visibility") ProjectVisibility visibility,
-                        @JsonProperty("owner") ProjectOwner owner) {
+                        @JsonProperty("owner") ProjectOwner owner,
+                        @JsonProperty("acceptsRawPayload") Boolean acceptsRawPayload) {
 
         this.id = id;
         this.name = name;
@@ -69,6 +72,7 @@ public class ProjectEntry implements Serializable {
         this.cfg = cfg;
         this.visibility = visibility;
         this.owner = owner;
+        this.acceptsRawPayload = acceptsRawPayload;
     }
 
     public UUID getId() {
@@ -107,6 +111,10 @@ public class ProjectEntry implements Serializable {
         return owner;
     }
 
+    public Boolean getAcceptsRawPayload() {
+        return acceptsRawPayload;
+    }
+
     @Override
     public String toString() {
         return "ProjectEntry{" +
@@ -119,6 +127,7 @@ public class ProjectEntry implements Serializable {
                 ", cfg=" + cfg +
                 ", visibility=" + visibility +
                 ", owner=" + owner +
+                ", acceptsRawPayload=" + acceptsRawPayload +
                 '}';
     }
 }

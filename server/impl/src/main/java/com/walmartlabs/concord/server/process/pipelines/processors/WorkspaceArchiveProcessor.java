@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
@@ -22,10 +23,12 @@ import java.util.UUID;
 public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
     private final LogManager logManager;
+    private final PayloadManager payloadManager;
 
     @Inject
-    public WorkspaceArchiveProcessor(LogManager logManager) {
+    public WorkspaceArchiveProcessor(LogManager logManager, PayloadManager payloadManager) {
         this.logManager = logManager;
+        this.payloadManager = payloadManager;
     }
 
     @Override
@@ -37,6 +40,8 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
         if (archive == null) {
             return chain.process(payload);
         }
+
+        payloadManager.assertAcceptsRawPayload(payload);
 
         if (!Files.exists(archive)) {
             logManager.error(instanceId, "No input archive found: " + archive);

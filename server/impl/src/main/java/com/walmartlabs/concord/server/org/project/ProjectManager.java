@@ -62,7 +62,9 @@ public class ProjectManager {
         UUID ownerId = p.getId();
 
         return projectDao.txResult(tx -> {
-            UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), ownerId, entry.getCfg(), entry.getVisibility());
+            boolean acceptsRawPayload = entry.getAcceptsRawPayload() != null ? entry.getAcceptsRawPayload() : true;
+            UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), ownerId, entry.getCfg(),
+                    entry.getVisibility(), acceptsRawPayload);
 
             if (repos != null) {
                 Map<String, UUID> ids = insertRepos(tx, orgId, pId, entry.getName(), repos, true);

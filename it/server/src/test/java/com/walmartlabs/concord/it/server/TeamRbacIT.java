@@ -182,7 +182,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         try {
             projectResource.createOrUpdate(orgName, new ProjectEntry(null, projectName, "new description",
-                    null, null, null, null, null, null));
+                    null, null, null, null, null, null, true));
             fail("should fail");
         } catch (ForbiddenException e) {
         }
@@ -191,7 +191,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(apiKeyA.getKey());
         projectResource.createOrUpdate(orgName, new ProjectEntry(null, projectName, "new description",
-                null, null, null, null, null, null));
+                null, null, null, null, null, null, true));
 
         // ---
 
@@ -207,7 +207,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         try {
             projectResource.createOrUpdate(orgName, new ProjectEntry(null, projectName, "another description",
-                    null, null, null, null, null, null));
+                    null, null, null, null, null, null, true));
             fail("should fail");
         } catch (ForbiddenException e) {
         }
@@ -221,7 +221,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(apiKeyB.getKey());
         projectResource.createOrUpdate(orgName, new ProjectEntry(null, projectName, "another description",
-                null, null, null, null, null, null));
+                null, null, null, null, null, null, true));
     }
 
     @Test(timeout = 30000)

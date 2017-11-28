@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: an option to disallow raw payload
+archives for projects;
 - concord-server, concord-console: initial support for Organizations;
 - concord-server: public and private projects and secrets;
 - concord-server: project and secret now has owners;

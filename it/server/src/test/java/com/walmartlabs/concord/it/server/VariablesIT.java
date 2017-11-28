@@ -32,7 +32,7 @@ public class VariablesIT extends AbstractServerIT {
                                 ImmutableMap.of(
                                         "y", "cba",
                                         "z", true))),
-                null, null));
+                null, null, true));
 
         // ---
 

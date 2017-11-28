@@ -10,6 +10,8 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -197,6 +199,23 @@ public class PayloadManager {
         p = addOut(p, out);
 
         return p;
+    }
+
+    public void assertAcceptsRawPayload(Payload payload) {
+        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
+        if (projectId == null) {
+            return;
+        }
+
+        Optional<Boolean> o = projectDao.isAcceptsRawPayload(projectId);
+        if (!o.isPresent()) {
+            throw new ProcessException(payload.getInstanceId(), "Project not found: " + projectId);
+        }
+
+        if (!o.get()) {
+            throw new ProcessException(payload.getInstanceId(), "The project is not accepting raw payloads: " + projectId,
+                    Status.BAD_REQUEST);
+        }
     }
 
     private Path createPayloadDir() throws IOException {

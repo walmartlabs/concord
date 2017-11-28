@@ -22,6 +22,7 @@ public class ArchivePipeline extends Pipeline {
     public ArchivePipeline(Injector injector) {
         super(injector,
                 InitialQueueEntryProcessor.class,
+                RawPayloadCheckProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 ProjectDefinitionProcessor.class,
                 InventoryProcessor.class,
