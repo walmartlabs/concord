@@ -27,6 +27,7 @@ public class ArchivePipeline extends Pipeline {
                 ProjectDefinitionProcessor.class,
                 InventoryProcessor.class,
                 AttachmentStoringProcessor.class,
+                DefaultVariablesProcessor.class,
                 RequestDataMergingProcessor.class,
                 TagsExtractingProcessor.class,
                 PrivateKeyProcessor.class,

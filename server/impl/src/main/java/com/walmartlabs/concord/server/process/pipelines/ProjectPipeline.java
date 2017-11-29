@@ -28,6 +28,7 @@ public class ProjectPipeline extends Pipeline {
                 ProjectDefinitionProcessor.class,
                 InventoryProcessor.class,
                 AttachmentStoringProcessor.class,
+                DefaultVariablesProcessor.class,
                 RequestDataMergingProcessor.class,
                 TagsExtractingProcessor.class,
                 PrivateKeyProcessor.class,
