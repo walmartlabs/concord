@@ -189,6 +189,7 @@ message TDecryptRequest {
 enum TDecryptStatus {
     KEY_FOUND = 0;
     KEY_NOT_FOUND = 1;
+    INVALID_DATA = 2;
 }
 
 message TDecryptResponse {

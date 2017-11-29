@@ -76,7 +76,7 @@ public class SecretStoreServiceImpl implements SecretStoreService {
                 .build());
 
         if (resp.getStatus() != TDecryptStatus.KEY_FOUND) {
-            throw new ClientException("Error while trying to decrypt a value: " + TDecryptStatus.KEY_NOT_FOUND);
+            throw new ClientException("Error while trying to decrypt a value: " + resp.getStatus());
         }
 
         byte[] result = resp.getData().toByteArray();

@@ -16,6 +16,7 @@ import org.apache.shiro.authz.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.IllegalBlockSizeException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -112,13 +113,32 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
         }
 
         byte[] data = request.getData().toByteArray();
-        byte[] result = secretManager.decryptData(projectName.get(), data);
+
+        byte[] result;
+        try {
+            result = secretManager.decryptData(projectName.get(), data);
+        } catch (Exception e) {
+            handleError(e, responseObserver);
+            return;
+        }
 
         responseObserver.onNext(TDecryptResponse.newBuilder()
                 .setStatus(TDecryptStatus.KEY_FOUND)
                 .setData(ByteString.copyFrom(result))
                 .build());
         responseObserver.onCompleted();
+    }
+
+    private void handleError(Exception e, StreamObserver<TDecryptResponse> responseObserver) {
+        Throwable cause = e.getCause();
+        if (cause instanceof IllegalBlockSizeException) {
+            responseObserver.onNext(TDecryptResponse.newBuilder()
+                    .setStatus(TDecryptStatus.INVALID_DATA)
+                    .build());
+            responseObserver.onCompleted();
+        } else {
+            responseObserver.onError(e);
+        }
     }
 
     private UUID getOrgId(UUID instanceId, String secretName) {
