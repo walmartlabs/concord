@@ -70,6 +70,11 @@ public class CachedRepositoryManager implements RepositoryManager {
         return delegate.getRepoPath(projectId, repository);
     }
 
+    @Override
+    public RepositoryInfo getInfo(RepositoryEntry repository, Path path) {
+        return delegate.getInfo(repository, path);
+    }
+
     private boolean needUpdate(RepositoryMeta rm, Date lastPushDate) {
         return rm == null || rm.getPushDate().before(lastPushDate);
     }

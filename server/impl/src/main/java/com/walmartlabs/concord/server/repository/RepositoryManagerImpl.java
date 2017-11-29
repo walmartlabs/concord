@@ -100,6 +100,12 @@ public class RepositoryManagerImpl implements RepositoryManager {
         return repoPath(localPath, repository.getPath());
     }
 
+    @Override
+    public RepositoryInfo getInfo(RepositoryEntry repository, Path path) {
+        RepositoryProvider provider = getProvider(repository.getUrl());
+        return withLock(repository.getProjectId(), repository.getName(), () -> provider.getInfo(path));
+    }
+
     private UUID getOrgId(UUID projectId) {
         UUID orgId = projectDao.getOrgId(projectId);
 

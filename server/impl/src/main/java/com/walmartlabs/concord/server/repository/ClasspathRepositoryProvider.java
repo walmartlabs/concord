@@ -37,6 +37,11 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
         }
     }
 
+    @Override
+    public RepositoryManager.RepositoryInfo getInfo(Path path) {
+        return null;
+    }
+
     private static String normalizeUrl(String url) {
         return url.substring(URL_PREFIX.length());
     }

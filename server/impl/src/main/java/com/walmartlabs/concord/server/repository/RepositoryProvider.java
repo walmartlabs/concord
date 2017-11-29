@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface RepositoryProvider {
 
     void fetch(UUID orgId, RepositoryEntry repository, Path dest);
+
+    RepositoryManager.RepositoryInfo getInfo(Path path);
 }

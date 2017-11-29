@@ -19,6 +19,7 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidConfigurationException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
@@ -41,6 +42,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static org.eclipse.jgit.transport.CredentialItem.Password;
@@ -97,6 +99,32 @@ public class GithubRepositoryProvider implements RepositoryProvider {
 
         try (Git ignored = cloneRepo(uri, dest, branch, transportCallback)) {
             log.info("fetch ['{}', '{}'] -> initial clone completed", uri, branch);
+        }
+    }
+
+    @Override
+    public RepositoryManager.RepositoryInfo getInfo(Path path)  {
+        try (Git repo = openRepo(path)) {
+            if (repo == null) {
+                return null;
+            }
+
+            Iterator<RevCommit> result = null;
+            try {
+                result = repo.log().setMaxCount(1).call().iterator();
+            } catch (NoHeadException e) {
+                return null;
+            } catch (GitAPIException e) {
+                log.error("getInfo ['{}'] -> error", path, e);
+                throw new RepositoryException("Error while getting a repository info", e);
+            }
+
+            if(result.hasNext()) {
+                RevCommit r = result.next();
+                return new RepositoryManager.RepositoryInfo(r.getId().getName(), r.getFullMessage(), r.getAuthorIdent().getName());
+            }
+
+            return null;
         }
     }
 

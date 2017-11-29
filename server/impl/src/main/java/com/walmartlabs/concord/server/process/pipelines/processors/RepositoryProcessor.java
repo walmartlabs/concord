@@ -71,10 +71,16 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
         copyRepositoryData(instanceId, projectId, repo, dst);
+        RepositoryManager.RepositoryInfo r = repositoryManager.getInfo(repo, dst);
 
         String branch = Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH);
 
-        RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), branch, repo.getCommitId());
+        CommitInfo ci = null;
+        if (r != null) {
+            ci = new CommitInfo(r.getCommitId(), r.getAuthor(), r.getMessage());
+        }
+
+        RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), branch, repo.getCommitId(), ci);
         payload = payload.putHeader(REPOSITORY_INFO_KEY, i);
 
         return chain.process(payload);
@@ -103,13 +109,16 @@ public class RepositoryProcessor implements PayloadProcessor {
         private final String url;
         private final String branch;
         private final String commitId;
+        private final CommitInfo commitInfo;
 
-        public RepositoryInfo(UUID id, String name, String url, String branch, String commitId) {
+        public RepositoryInfo(UUID id, String name, String url, String branch, String commitId,
+                              CommitInfo commitInfo) {
             this.id = id;
             this.name = name;
             this.url = url;
             this.branch = branch;
             this.commitId = commitId;
+            this.commitInfo = commitInfo;
         }
 
         public UUID getId() {
@@ -132,6 +141,10 @@ public class RepositoryProcessor implements PayloadProcessor {
             return commitId;
         }
 
+        public CommitInfo getCommitInfo() {
+            return commitInfo;
+        }
+
         @Override
         public String toString() {
             return "RepositoryInfo{" +
@@ -140,6 +153,40 @@ public class RepositoryProcessor implements PayloadProcessor {
                     ", url='" + url + '\'' +
                     ", branch='" + branch + '\'' +
                     ", commitId='" + commitId + '\'' +
+                    ", commitInfo=" + commitInfo +
+                    '}';
+        }
+    }
+
+    public static final class CommitInfo implements Serializable {
+        private final String id;
+        private final String author;
+        private final String message;
+
+        public CommitInfo(String id, String author, String message) {
+            this.id = id;
+            this.author = author;
+            this.message = message;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getAuthor() {
+            return author;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        @Override
+        public String toString() {
+            return "CommitInfo{" +
+                    "id='" + id + '\'' +
+                    ", author='" + author + '\'' +
+                    ", message='" + message + '\'' +
                     '}';
         }
     }
