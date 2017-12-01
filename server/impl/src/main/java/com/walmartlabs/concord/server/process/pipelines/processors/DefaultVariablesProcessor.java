@@ -27,6 +27,8 @@ public class DefaultVariablesProcessor implements PayloadProcessor {
             req = new HashMap<>();
         }
 
+        req = new HashMap<>(req);
+
         Map<String, Object> args = (Map<String, Object>) req.get(Constants.Request.ARGUMENTS_KEY);
         if (args == null) {
             args = new HashMap<>();
