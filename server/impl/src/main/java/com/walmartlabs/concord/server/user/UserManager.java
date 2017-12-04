@@ -25,13 +25,13 @@ public class UserManager {
     }
 
     public UserEntry getOrCreate(String username) {
-        return getOrCreate(username, null);
+        return getOrCreate(username, null, false);
     }
 
-    public UserEntry getOrCreate(String username, Set<String> permissions) {
+    public UserEntry getOrCreate(String username, Set<String> permissions, boolean admin) {
         UUID id = userDao.getId(username);
         if (id == null) {
-            return create(username, permissions);
+            return create(username, permissions, admin);
         }
         return userDao.get(id);
     }
@@ -45,8 +45,8 @@ public class UserManager {
         return Optional.ofNullable(id);
     }
 
-    public UserEntry create(String username, Set<String> permissions) {
-        UUID id = userDao.insert(username, permissions);
+    public UserEntry create(String username, Set<String> permissions, boolean admin) {
+        UUID id = userDao.insert(username, permissions, admin);
 
         // TODO teams
         UUID teamId = TeamManager.DEFAULT_TEAM_ID;

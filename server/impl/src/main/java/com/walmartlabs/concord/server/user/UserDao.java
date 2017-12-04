@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.tables.Admins.ADMINS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PERMISSIONS;
@@ -30,14 +29,14 @@ public class UserDao extends AbstractDao {
         super(cfg);
     }
 
-    public UUID insert(String username, Set<String> permissions) {
-        return txResult(tx -> insert(tx, username, permissions));
+    public UUID insert(String username, Set<String> permissions, boolean admin) {
+        return txResult(tx -> insert(tx, username, permissions, admin));
     }
 
-    public UUID insert(DSLContext tx, String username, Set<String> permissions) {
+    public UUID insert(DSLContext tx, String username, Set<String> permissions, boolean admin) {
         UUID id = tx.insertInto(USERS)
-                .columns(USERS.USERNAME)
-                .values(username)
+                .columns(USERS.USERNAME, USERS.IS_ADMIN)
+                .values(username, admin)
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
 
@@ -52,8 +51,15 @@ public class UserDao extends AbstractDao {
                 .execute());
     }
 
-    public void update(UUID id, Set<String> permissions) {
+    public void update(UUID id, Set<String> permissions, Boolean admin) {
         tx(tx -> {
+            if (admin != null) {
+                tx.update(USERS)
+                        .set(USERS.IS_ADMIN, admin)
+                        .where(USERS.USER_ID.eq(id))
+                        .execute();
+            }
+
             deletePermissions(tx, id);
             insertPermissions(tx, id, permissions);
         });
@@ -61,7 +67,7 @@ public class UserDao extends AbstractDao {
 
     public UserEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record2<UUID, String> r = tx.select(USERS.USER_ID, USERS.USERNAME)
+            Record3<UUID, String, Boolean> r = tx.select(USERS.USER_ID, USERS.USERNAME, USERS.IS_ADMIN)
                     .from(USERS)
                     .where(USERS.USER_ID.eq(id))
                     .fetchOne();
@@ -87,10 +93,11 @@ public class UserDao extends AbstractDao {
                     .where(TEAMS.TEAM_ID.in(teamIds))
                     .fetch(e -> new OrganizationEntry(e.value1(), e.value2()));
 
-            boolean admin = tx.fetchExists(tx.selectFrom(ADMINS).where(ADMINS.USER_ID.eq(id)));
-
-            return new UserEntry(r.get(USERS.USER_ID), r.get(USERS.USERNAME),
-                    new HashSet<>(perms), new HashSet<>(orgs), admin);
+            return new UserEntry(r.get(USERS.USER_ID),
+                    r.get(USERS.USERNAME),
+                    new HashSet<>(perms),
+                    new HashSet<>(orgs),
+                    r.get(USERS.IS_ADMIN));
         }
     }
 

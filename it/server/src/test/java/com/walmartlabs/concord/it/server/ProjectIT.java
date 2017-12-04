@@ -299,7 +299,7 @@ public class ProjectIT extends AbstractServerIT {
                                         String commitId, String tag) {
 
         UserResource userResource = proxy(UserResource.class);
-        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(userName, permissions));
+        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(userName, permissions, false));
         assertTrue(cur.isOk());
 
         UUID userId = cur.getId();

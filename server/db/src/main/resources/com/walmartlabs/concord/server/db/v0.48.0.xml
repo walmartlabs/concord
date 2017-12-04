@@ -227,4 +227,21 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="48200" author="ibodrov@gmail.com">
+        <addColumn tableName="USERS">
+            <column name="IS_ADMIN" type="bool" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <sql>
+            update USERS
+            set IS_ADMIN = true
+            where exists
+                (select USER_ID from ADMINS where ADMINS.USER_ID = USERS.USER_ID)
+        </sql>
+
+        <dropTable tableName="ADMINS"/>
+    </changeSet>
 </databaseChangeLog>

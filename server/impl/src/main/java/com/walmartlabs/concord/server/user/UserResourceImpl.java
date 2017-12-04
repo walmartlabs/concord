@@ -35,10 +35,11 @@ public class UserResourceImpl implements UserResource, Resource {
 
         UUID id = userDao.getId(username);
         if (id == null) {
-            UserEntry e = userManager.create(username, request.getPermissions());
+            boolean admin = request.getAdmin() != null ? request.getAdmin() : false;
+            UserEntry e = userManager.create(username, request.getPermissions(), admin);
             return new CreateUserResponse(e.getId(), PerformedActionType.CREATED);
         } else {
-            userDao.update(id, request.getPermissions());
+            userDao.update(id, request.getPermissions(), request.getAdmin());
             return new CreateUserResponse(id, PerformedActionType.UPDATED);
         }
     }

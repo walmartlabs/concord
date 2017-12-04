@@ -16,16 +16,20 @@ public class CreateUserRequest implements Serializable {
 
     private final Set<String> permissions;
 
+    private final Boolean admin;
+
     public CreateUserRequest(String username) {
-        this(username, null);
+        this(username, null, false);
     }
 
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
-                             @JsonProperty("permissions") Set<String> permissions) {
+                             @JsonProperty("permissions") Set<String> permissions,
+                             @JsonProperty("admin") Boolean admin) {
 
         this.username = username;
         this.permissions = permissions;
+        this.admin = admin;
     }
 
     public String getUsername() {
@@ -36,11 +40,16 @@ public class CreateUserRequest implements Serializable {
         return permissions;
     }
 
+    public Boolean getAdmin() {
+        return admin;
+    }
+
     @Override
     public String toString() {
         return "CreateUserRequest{" +
                 "username='" + username + '\'' +
                 ", permissions=" + permissions +
+                ", admin=" + admin +
                 '}';
     }
 }
