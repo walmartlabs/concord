@@ -146,7 +146,7 @@ public class ProjectManager {
 
         if (orgMembersOnly || e.getVisibility() != ProjectVisibility.PUBLIC) {
             if (!projectDao.hasAccessLevel(projectId, p.getId(), ResourceAccessLevel.atLeast(level))) {
-                throw new UnauthorizedException("The current user doesn't have " +
+                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
                         "the necessary access level (" + level + ") to the project: " + e.getName());
             }
         }

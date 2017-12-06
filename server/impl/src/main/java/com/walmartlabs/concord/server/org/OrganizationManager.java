@@ -98,7 +98,7 @@ public class OrganizationManager {
 
         if (orgMembersOnly) {
             if (!userManager.isInOrganization(e.getId())) {
-                throw new UnauthorizedException("The current user doesn't belong to the specified organization: " + e.getName());
+                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't belong to the specified organization: " + e.getName());
             }
         }
 

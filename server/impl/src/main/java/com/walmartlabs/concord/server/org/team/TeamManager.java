@@ -57,7 +57,7 @@ public class TeamManager {
 
         if (requiredRole != null && teamMembersOnly) {
             if (!teamDao.hasUser(e.getId(), p.getId(), TeamRole.atLeast(requiredRole))) {
-                throw new UnauthorizedException("The current user doesn't belong to the team: " + e.getName());
+                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't belong to the team: " + e.getName());
             }
         }
 
