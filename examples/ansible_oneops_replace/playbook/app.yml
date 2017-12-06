@@ -1,5 +1,5 @@
 ---
-- hosts: local
+- hosts: app
   tasks:
   - debug:
       msg: "{{ greetings }}"

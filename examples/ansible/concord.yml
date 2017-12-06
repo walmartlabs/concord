@@ -7,17 +7,11 @@ flows:
   - task: ansible
     in:
       playbook: playbook/hello.yml
-      verbose: 3
-      user: "ibodrov"
-      config:
-        ssh_connection:
-          pipelining: false
-      privateKey:
-        secretName: "ibTestSecret"
-        password: "q1"
       inventory:
         local:
           hosts:
-            - "10.227.235.190"
+            - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
       extraVars:
         greetings: "Hi there!"

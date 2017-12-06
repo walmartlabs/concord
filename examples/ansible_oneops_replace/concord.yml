@@ -1,0 +1,63 @@
+flows:
+  default:
+  # do the initial deployment
+  - call: deploy
+    in:
+      # grab all IPs of computes
+      hosts: ${oneops.getIPs(cfg, cfg.platform, 'compute')}
+      message: "Initial deployment"
+
+  onReplace:
+  # a VM was replaced, do the partial deployment
+  - call: deploy
+    in:
+      # use the IPs provided by OneOps
+      hosts: ${event.ips}
+      message: "Deployment on VM replacement"
+
+  deploy:
+  # common deployment flow
+  - task: ansible
+    in:
+      playbook: playbook/app.yml
+
+      # remote user's name
+      user: "app"
+
+      # remote server's key
+      privateKey:
+        secretName: ${cfg.secretName}
+        password: ${cfg.secretPwd}
+
+      # IPs of all our servers
+      inventory:
+        app:
+          hosts: ${hosts}
+
+      extraVars:
+        greetings: ${message}
+
+triggers:
+  - oneops:
+      asm: "concord-trigger-example"
+      env: "qa01"
+      deploymentState: "complete"
+      entryPoint: onReplace
+
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.47.0"
+  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.33.0"
+
+  arguments:
+    cfg:
+      baseUrl: "https://oneops.prod.walmart.com/"
+
+      # replace with the actual values
+      org: "devtools"
+      asm: "concord-trigger-example"
+      env: "qa01"
+      platform: "app"
+      apiToken: "${crypto.decryptString('encryptedOneOpsApiToken')}"
+      secretName: "concordTriggerExampleKey"
+      secretPwd: "${crypto.decryptString('encryptedSecretPassword')}"
