@@ -76,7 +76,18 @@ public class RepositoryManagerImpl implements RepositoryManager {
         RepositoryProvider provider = getProvider(repository.getUrl());
 
         return withLock(projectId, repository.getName(), () -> {
-            provider.fetch(orgId, repository, localPath);
+            try {
+                provider.fetch(orgId, repository, localPath);
+            } catch (RepositoryException e) {
+                try {
+                    IOUtils.deleteRecursively(localPath);
+                } catch (IOException ee) {
+                    log.warn("fetch ['{}', '{}'] -> cleanup error: {}", projectId, repository, ee.getMessage());
+                }
+                
+                // retry
+                provider.fetch(orgId, repository, localPath);
+            }
             return repoPath(localPath, repository.getPath());
         });
     }

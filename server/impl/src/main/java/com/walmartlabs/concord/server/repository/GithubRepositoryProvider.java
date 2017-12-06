@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static org.eclipse.jgit.transport.CredentialItem.Password;
@@ -206,11 +205,6 @@ public class GithubRepositoryProvider implements RepositoryProvider {
 
             return repo;
         } catch (ConfigInvalidException | IOException | GitAPIException e) {
-            try {
-                IOUtils.deleteRecursively(path);
-            } catch (IOException ee) {
-                log.warn("cloneRepo ['{}', '{}'] -> cleanup error: {}", uri, branch, ee.getMessage());
-            }
             throw new RepositoryException("Error while cloning a repository", e);
         }
     }
