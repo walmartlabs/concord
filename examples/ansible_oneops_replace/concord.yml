@@ -29,7 +29,6 @@ flows:
         secretName: ${cfg.secretName}
         password: ${cfg.secretPwd}
 
-      # IPs of all our servers
       inventory:
         app:
           hosts: ${hosts}
