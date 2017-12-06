@@ -2,9 +2,9 @@ package com.walmartlabs.concord.server.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.api.events.OneOpsEventResource;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +17,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Named
 public class OneOpsEventResourceImpl extends AbstractEventResource implements OneOpsEventResource, Resource {
@@ -39,6 +36,7 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
     private static final String SOURCE = "source";
     private static final String SUBJECT = "subject";
     private static final String DEPLOYMENT_STATE = "deploymentState";
+    private static final String IP_ADDRESSES = "ips";
 
     private final ObjectMapper objectMapper;
 
@@ -96,6 +94,7 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
     @SuppressWarnings("unchecked")
     private static Map<String, Object> buildConditions(Map<String, Object> event) {
         String[] nsPath = getNsPath(event);
+
         Map<String, Object> cis = getCis(event);
         Map<String, Object> payload = (Map<String, Object>) event.get("payload");
 
@@ -106,10 +105,14 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
         result.put(SOURCE, get("source", event));
         result.put(SUBJECT, get("subject", event));
         result.put(DEPLOYMENT_STATE, get("deploymentState", payload));
+
+        result.put(IP_ADDRESSES, getIPs(event));
+
         addKey(ORG_KEY, nsPath, 0, result);
         addKey(ASM_KEY, nsPath, 1, result);
         addKey(ENV_KEY, nsPath, 2, result);
         addKey(PLATFORM_KEY, nsPath, 3, result);
+
         return result;
     }
 
@@ -130,15 +133,49 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getCis(Map<String, Object> event) {
+        List<Map<String, Object>> cisItems = getCisItems(event);
+        if (cisItems == null || cisItems.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return cisItems.get(0);
+    }
+
+    private static List<Map<String, Object>> getCisItems(Map<String, Object> event) {
         Object cisElement = event.get("cis");
-        if (cisElement != null && cisElement instanceof List) {
-            List<Map<String, Object>> cisItems = (List<Map<String, Object>>) cisElement;
-            if (!cisItems.isEmpty()) {
-                return cisItems.get(0);
-            }
+        if (cisElement == null) {
+            return Collections.emptyList();
         }
 
-        return Collections.emptyMap();
+        if (cisElement instanceof List) {
+            List<Map<String, Object>> cisItems = (List<Map<String, Object>>) cisElement;
+            return cisItems;
+        }
+
+        return Collections.emptyList();
+    }
+
+    private static Set<String> getIPs(Map<String, Object> event) {
+        List<Map<String, Object>> cisItems = getCisItems(event);
+        if (cisItems == null || cisItems.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<String> result = new HashSet<>();
+        for (Map<String, Object> i : cisItems) {
+            Object attrs = i.get("ciAttributes");
+            if (attrs == null) {
+                continue;
+            }
+
+            Map<String, Object> m = (Map<String, Object>) attrs;
+            Object v = m.get("public_ip");
+            if (v == null) {
+                continue;
+            }
+
+            result.add(v.toString());
+        }
+        return result;
     }
 
     private static void addKey(String key, String[] values, int valueIndex, Map<String, Object> result) {
