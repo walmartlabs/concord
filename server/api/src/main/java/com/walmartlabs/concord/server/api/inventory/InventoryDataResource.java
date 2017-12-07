@@ -3,11 +3,12 @@ package com.walmartlabs.concord.server.api.inventory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-@Api("Inventory")
+@Api(value = "Inventory", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/inventory")
 public interface InventoryDataResource {
 

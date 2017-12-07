@@ -6,6 +6,7 @@ import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.validation.Valid;
@@ -13,7 +14,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api("Secrets")
+@Api(value = "Secrets", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public interface SecretResource {
 

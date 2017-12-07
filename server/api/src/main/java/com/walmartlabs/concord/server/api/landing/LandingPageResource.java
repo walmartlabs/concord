@@ -4,6 +4,7 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -12,7 +13,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
-@Api("Landing page")
+@Api(value = "Landing page", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/landing_page")
 public interface LandingPageResource {
 

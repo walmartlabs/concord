@@ -4,13 +4,14 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api("TemplateAlias")
+@Api(value = "TemplateAlias", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/template/alias")
 public interface TemplateAliasResource {
 
