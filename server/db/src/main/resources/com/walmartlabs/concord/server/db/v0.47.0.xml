@@ -69,7 +69,6 @@
             <column name="TEAM_ID" value="${concordSystemTeamId}"/>
             <column name="PROJECT_NAME" value="concordTriggers"/>
             <column name="VISIBILITY" value="PRIVATE"/>
-            <column name="VISIBILITY" value="PRIVATE"/>
         </insert>
 
         <insert tableName="REPOSITORIES">
