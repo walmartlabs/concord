@@ -16,6 +16,7 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -38,14 +39,18 @@ public class SecretManager {
     private final SecretDao secretDao;
     private final SecretStoreConfiguration secretCfg;
     private final OrganizationManager orgManager;
+    private final UserDao userDao;
 
     @Inject
     public SecretManager(SecretDao secretDao,
-                         SecretStoreConfiguration secretCfg, OrganizationManager orgManager) {
+                         SecretStoreConfiguration secretCfg,
+                         OrganizationManager orgManager,
+                         UserDao userDao) {
 
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
         this.orgManager = orgManager;
+        this.userDao = userDao;
     }
 
     public SecretEntry assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
@@ -81,7 +86,15 @@ public class SecretManager {
             return e;
         }
 
+        if (orgMembersOnly && e.getVisibility() == SecretVisibility.PUBLIC
+                && userDao.isInOrganization(p.getId(), e.getOrgId())) {
+            // organization members can access any public project in the same organization
+            return e;
+        }
+
         if (orgMembersOnly || e.getVisibility() != SecretVisibility.PUBLIC) {
+            // we need to check the resource's access level if the access is limited to
+            // the organization's members or the secret is not public
             if (!secretDao.hasAccessLevel(e.getId(), p.getId(), ResourceAccessLevel.atLeast(level))) {
                 throw new UnauthorizedException("The current user doesn't have " +
                         "the necessary access level (" + level + ") to the secret: " + e.getName());

@@ -12,6 +12,7 @@ import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -34,13 +35,16 @@ public class ProjectManager {
     private final SecretManager secretManager;
     private final GithubWebhookService githubWebhookService;
     private final EventResource eventResource;
+    private final UserDao userDao;
 
     @Inject
     public ProjectManager(ProjectDao projectDao,
                           RepositoryDao repositoryDao,
                           OrganizationManager orgManager,
                           SecretManager secretManager,
-                          GithubWebhookService githubWebhookService, EventResource eventResource) {
+                          GithubWebhookService githubWebhookService,
+                          EventResource eventResource,
+                          UserDao userDao) {
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -48,6 +52,7 @@ public class ProjectManager {
         this.secretManager = secretManager;
         this.githubWebhookService = githubWebhookService;
         this.eventResource = eventResource;
+        this.userDao = userDao;
     }
 
     public ProjectEntry get(UUID projectId) {
@@ -144,7 +149,15 @@ public class ProjectManager {
             return e;
         }
 
+        if (orgMembersOnly && e.getVisibility() == ProjectVisibility.PUBLIC
+                && userDao.isInOrganization(p.getId(), e.getOrgId())) {
+            // organization members can access any public project in the same organization
+            return e;
+        }
+
         if (orgMembersOnly || e.getVisibility() != ProjectVisibility.PUBLIC) {
+            // we need to check the resource's access level if the access is limited to
+            // the organization's members or the project is not public
             if (!projectDao.hasAccessLevel(projectId, p.getId(), ResourceAccessLevel.atLeast(level))) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
                         "the necessary access level (" + level + ") to the project: " + e.getName());
