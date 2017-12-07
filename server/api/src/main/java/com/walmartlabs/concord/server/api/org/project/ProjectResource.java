@@ -6,13 +6,14 @@ import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api("Projects")
+@Api(value = "Projects", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public interface ProjectResource {
 

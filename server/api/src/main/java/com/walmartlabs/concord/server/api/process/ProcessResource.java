@@ -4,6 +4,7 @@ import com.walmartlabs.concord.server.api.IsoDateParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.validation.constraints.NotNull;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@Api("Process")
+@Api(value = "Process", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
 public interface ProcessResource {
 

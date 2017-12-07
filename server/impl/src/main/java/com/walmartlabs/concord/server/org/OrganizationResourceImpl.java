@@ -4,8 +4,6 @@ import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.CreateOrganizationResponse;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.OrganizationResource;
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.apache.shiro.authz.AuthorizationException;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;

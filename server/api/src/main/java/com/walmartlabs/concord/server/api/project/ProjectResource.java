@@ -8,6 +8,7 @@ import com.walmartlabs.concord.server.api.org.secret.SecretResource;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.validation.Valid;
@@ -16,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-@Api("Project")
+@Api(value = "Project", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/project")
 @Deprecated
 public interface ProjectResource {

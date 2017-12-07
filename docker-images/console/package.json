@@ -1,0 +1,8 @@
+{
+  "name": "concord-swagger",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "swagger-ui-dist": "^3.6.0"
+  }
+}

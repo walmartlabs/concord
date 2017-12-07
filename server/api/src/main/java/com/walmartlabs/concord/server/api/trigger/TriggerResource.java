@@ -4,13 +4,14 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Api("Triggers")
+@Api(value = "Triggers", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/triggers")
 public interface TriggerResource {
 
