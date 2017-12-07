@@ -89,7 +89,7 @@ public class InventoryDao extends AbstractDao {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Can't find inventory in results"));
 
-        return new InventoryEntry(inventoryId, i.getName(), i.getorgId(), i.getTeamName(),
+        return new InventoryEntry(inventoryId, i.getName(), i.getOrgId(), i.getOrgName(),
                 buildParent(i.getParentId(), items));
     }
 
@@ -104,7 +104,7 @@ public class InventoryDao extends AbstractDao {
                 .orElseThrow(() -> new IllegalStateException("Can't find parent inventory in results"));
 
         return new InventoryEntry(entity.getId(), entity.getName(),
-                entity.getorgId(), entity.getTeamName(),
+                entity.getOrgId(), entity.getOrgName(),
                 buildParent(entity.getParentId(), items));
     }
 
@@ -148,15 +148,15 @@ public class InventoryDao extends AbstractDao {
 
         private final UUID orgId;
 
-        private final String teamName;
+        private final String orgName;
 
         private final UUID parentId;
 
-        public InventoryEntity(UUID id, String name, UUID orgId, String teamName, UUID parentId) {
+        public InventoryEntity(UUID id, String name, UUID orgId, String orgName, UUID parentId) {
             this.id = id;
             this.name = name;
             this.orgId = orgId;
-            this.teamName = teamName;
+            this.orgName = orgName;
             this.parentId = parentId;
         }
 
@@ -168,12 +168,12 @@ public class InventoryDao extends AbstractDao {
             return name;
         }
 
-        public UUID getorgId() {
+        public UUID getOrgId() {
             return orgId;
         }
 
-        public String getTeamName() {
-            return teamName;
+        public String getOrgName() {
+            return orgName;
         }
 
         public UUID getParentId() {

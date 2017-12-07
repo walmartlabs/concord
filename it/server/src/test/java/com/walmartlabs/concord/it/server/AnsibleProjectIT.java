@@ -71,7 +71,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
     @Test
     @SuppressWarnings("unchecked")
     public void testFailure() throws Exception {
-        String teamName = "Default";
+        String orgName = "Default";
 
         // ---
 
@@ -90,7 +90,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        generateKeyPair(teamName, repoSecretName, false, null);
+        generateKeyPair(orgName, repoSecretName, false, null);
 
         // ---
 
@@ -125,7 +125,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
     @SuppressWarnings("unchecked")
     public void test(Map<String, Object> input) throws Exception {
-        String teamName = "Default";
+        String orgName = "Default";
 
         // ---
 
@@ -139,7 +139,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        generateKeyPair(teamName, repoSecretName, false, null);
+        generateKeyPair(orgName, repoSecretName, false, null);
 
         // ---
 

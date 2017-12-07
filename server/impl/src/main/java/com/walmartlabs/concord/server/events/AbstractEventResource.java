@@ -52,8 +52,8 @@ public abstract class AbstractEventResource {
             }
             args.put("event", event);
 
-            UUID teamId = projectDao.getOrgId(t.getProjectId());
-            UUID instanceId = startProcess(teamId, t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), args);
+            UUID orgId = projectDao.getOrgId(t.getProjectId());
+            UUID instanceId = startProcess(orgId, t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), args);
             log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, instanceId, t);
         }
 

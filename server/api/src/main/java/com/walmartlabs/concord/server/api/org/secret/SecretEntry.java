@@ -20,10 +20,10 @@ public class SecretEntry implements Serializable {
     @ConcordKey
     private final String name;
 
-    private final UUID teamId;
+    private final UUID orgId;
 
     @ConcordKey
-    private final String teamName;
+    private final String orgName;
 
     @NotNull
     private final SecretType type;
@@ -37,8 +37,8 @@ public class SecretEntry implements Serializable {
     @JsonCreator
     public SecretEntry(@JsonProperty("id") UUID id,
                        @JsonProperty("name") String name,
-                       @JsonProperty("teamId") UUID teamId,
-                       @JsonProperty("teamName") String teamName,
+                       @JsonProperty("orgId") UUID orgId,
+                       @JsonProperty("orgName") String orgName,
                        @JsonProperty("type") SecretType type,
                        @JsonProperty("storeType") SecretStoreType storeType,
                        @JsonProperty("visibility") SecretVisibility visibility,
@@ -46,8 +46,8 @@ public class SecretEntry implements Serializable {
 
         this.id = id;
         this.name = name;
-        this.teamId = teamId;
-        this.teamName = teamName;
+        this.orgId = orgId;
+        this.orgName = orgName;
         this.type = type;
         this.storeType = storeType;
         this.visibility = visibility;
@@ -62,12 +62,12 @@ public class SecretEntry implements Serializable {
         return name;
     }
 
-    public UUID getTeamId() {
-        return teamId;
+    public UUID getOrgId() {
+        return orgId;
     }
 
-    public String getTeamName() {
-        return teamName;
+    public String getOrgName() {
+        return orgName;
     }
 
     public SecretType getType() {
@@ -91,8 +91,8 @@ public class SecretEntry implements Serializable {
         return "SecretEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", teamId=" + teamId +
-                ", teamName='" + teamName + '\'' +
+                ", orgId=" + orgId +
+                ", orgName='" + orgName + '\'' +
                 ", type=" + type +
                 ", storeType=" + storeType +
                 ", visibility=" + visibility +

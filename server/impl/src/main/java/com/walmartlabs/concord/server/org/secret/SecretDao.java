@@ -8,7 +8,6 @@ import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretOwner;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.org.secret.SecretVisibility;
-import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -243,13 +242,13 @@ public class SecretDao extends AbstractDao {
         private final byte[] data;
 
         public SecretDataEntry(SecretDataEntry s, byte[] data) {
-            this(s.getId(), s.getName(), s.getTeamId(), s.getTeamName(), s.getType(), s.getStoreType(),
+            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getType(), s.getStoreType(),
                     s.getVisibility(), s.getOwner(), data);
         }
 
-        public SecretDataEntry(UUID id, String name, UUID orgId, String teamName, SecretType type,
+        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName , SecretType type,
                                SecretStoreType storeType, SecretVisibility visibility, SecretOwner owner, byte[] data) {
-            super(id, name, orgId, teamName, type, storeType, visibility, owner);
+            super(id, name, orgId, orgName, type, storeType, visibility, owner);
             this.data = data;
         }
 

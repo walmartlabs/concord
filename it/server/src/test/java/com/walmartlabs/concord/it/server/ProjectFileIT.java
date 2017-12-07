@@ -119,7 +119,7 @@ public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testArchiveOverride() throws Exception {
-        String teamName = "Default";
+        String orgName = "Default";
 
         // ---
 
@@ -128,7 +128,7 @@ public class ProjectFileIT extends AbstractServerIT {
         String repoUrl = "git@test_" + randomString();
         String secretName = "secret_" + randomString();
 
-        generateKeyPair(teamName, secretName, false, null);
+        generateKeyPair(orgName, secretName, false, null);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, secretName))));
@@ -154,7 +154,7 @@ public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testArchiveOverrideSync() throws Exception {
-        String teamName = "Default";
+        String orgName = "Default";
 
         // ---
 
@@ -163,7 +163,7 @@ public class ProjectFileIT extends AbstractServerIT {
         String repoUrl = "git@test_" + randomString();
         String secretName = "secret_" + randomString();
 
-        generateKeyPair(teamName, secretName, false, null);
+        generateKeyPair(orgName, secretName, false, null);
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, secretName))));

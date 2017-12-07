@@ -11,8 +11,8 @@ import "./styles.css";
 
 export const MODAL_TYPE = "SHOW_SECRET_PUBLIC_KEY_POPUP";
 
-const showSecretPublicKey = ({open, teamName, name, error, publicKey, onCloseFn, inFlightFn}) => {
-    const inFlight = inFlightFn(teamName, name);
+const showSecretPublicKey = ({open, orgName, name, error, publicKey, onCloseFn, inFlightFn}) => {
+    const inFlight = inFlightFn(orgName, name);
 
     return <Modal open={open} dimmer="inverted">
         <Modal.Header>{name}</Modal.Header>
@@ -35,7 +35,7 @@ const showSecretPublicKey = ({open, teamName, name, error, publicKey, onCloseFn,
 showSecretPublicKey.MODAL_TYPE = MODAL_TYPE;
 
 const mapStateToProps = ({secretList}) => ({
-    inFlightFn: (teamName, name) => selectors.isInFlight(secretList, teamName, name),
+    inFlightFn: (orgName, name) => selectors.isInFlight(secretList, orgName, name),
     error: selectors.getPublicKeyError(secretList),
     publicKey: selectors.getPublicKey(secretList)
 });

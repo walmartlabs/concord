@@ -139,7 +139,7 @@ public class ServerClient {
         return postSecret(orgName, m);
     }
 
-    public SecretOperationResponse addPlainSecret(String teamName, String name, boolean generatePassword, String storePassword, byte[] secret) {
+    public SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("type", SecretType.DATA.toString());
@@ -149,10 +149,10 @@ public class ServerClient {
             m.put("storePassword", storePassword);
         }
 
-        return postSecret(teamName, m);
+        return postSecret(orgName, m);
     }
 
-    public SecretOperationResponse addUsernamePassword(String teamName, String name, boolean generatePassword, String storePassword, String username, String password) {
+    public SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("type", SecretType.USERNAME_PASSWORD.toString());
@@ -163,7 +163,7 @@ public class ServerClient {
             m.put("storePassword", storePassword);
         }
 
-        return postSecret(teamName, m);
+        return postSecret(orgName, m);
     }
 
     public byte[] getLog(String logFileName) {

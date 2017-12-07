@@ -9,9 +9,9 @@ import {actions, selectors} from "./effects";
 
 export const MODAL_TYPE = "DELETE_SECRET_POPUP";
 
-const deleteSecretPopup = ({open, teamName, name, error, onSuccess, onCloseFn, onConfirmFn, inFlightFn}) => {
-    const inFlight = inFlightFn(teamName, name);
-    const onYesClick = () => onConfirmFn(teamName, name, onSuccess);
+const deleteSecretPopup = ({open, orgName, name, error, onSuccess, onCloseFn, onConfirmFn, inFlightFn}) => {
+    const inFlight = inFlightFn(orgName, name);
+    const onYesClick = () => onConfirmFn(orgName, name, onSuccess);
 
     return <Modal open={open} dimmer="inverted">
         <Modal.Header>Delete the selected secret?</Modal.Header>
@@ -30,12 +30,12 @@ deleteSecretPopup.MODAL_TYPE = MODAL_TYPE;
 
 const mapStateToProps = ({session, secretList}) => ({
     error: selectors.getDeleteError(secretList),
-    inFlightFn: (teamName, name) => selectors.isInFlight(secretList, teamName, name)
+    inFlightFn: (orgName, name) => selectors.isInFlight(secretList, orgName, name)
 });
 
 const mapDispatchToProps = (dispatch) => ({
     onCloseFn: () => dispatch(modal.close()),
-    onConfirmFn: (teamName, name, onSuccess) => {
+    onConfirmFn: (orgName, name, onSuccess) => {
         if (!onSuccess) {
             onSuccess = [];
         }
@@ -43,7 +43,7 @@ const mapDispatchToProps = (dispatch) => ({
         // first, we need to close the dialog
         onSuccess.unshift(modal.close());
 
-        dispatch(actions.deleteSecret(teamName, name, onSuccess))
+        dispatch(actions.deleteSecret(orgName, name, onSuccess))
     }
 });
 

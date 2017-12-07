@@ -17,7 +17,7 @@ public class ProjectTaskIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void testCreate() throws Exception {
-        String teamName = "Default";
+        String orgName = "Default";
 
         // ---
 
@@ -25,7 +25,7 @@ public class ProjectTaskIT extends AbstractServerIT {
         String repoName = "repo_" + System.currentTimeMillis();
         String repoUrl = "git://127.0.0.1/test.git";
         String repoSecret = "secret_" + System.currentTimeMillis();
-        addUsernamePassword(teamName, repoSecret, false, null, "user_" + System.currentTimeMillis(), "pwd_" + System.currentTimeMillis());
+        addUsernamePassword(orgName, repoSecret, false, null, "user_" + System.currentTimeMillis(), "pwd_" + System.currentTimeMillis());
 
         // ---
 

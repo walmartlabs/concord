@@ -38,7 +38,7 @@ public class PortalIT extends AbstractServerIT {
 
     @Test
     public void test() throws Exception {
-        String teamName = "Default";
+        String orgName = "Default";
 
         // ---
 
@@ -49,7 +49,7 @@ public class PortalIT extends AbstractServerIT {
 
         // ---
 
-        generateKeyPair(teamName, repoSecretName, false, null);
+        generateKeyPair(orgName, repoSecretName, false, null);
 
         // ---
 
