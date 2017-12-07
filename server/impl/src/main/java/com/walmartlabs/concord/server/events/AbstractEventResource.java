@@ -2,8 +2,11 @@ package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
-import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.PayloadManager;
+import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.triggers.TriggersDao;
 import org.apache.shiro.SecurityUtils;
@@ -66,7 +69,7 @@ public abstract class AbstractEventResource {
 
         String initiator = getInitiator();
 
-        PayloadParser.EntryPoint ep = new PayloadParser.EntryPoint(orgId, projectName, repoName, flowName);
+        PayloadManager.EntryPoint ep = payloadManager.createEntryPoint(instanceId, orgId, projectName, repoName, flowName);
         Map<String, Object> request = new HashMap<>();
         request.put(Constants.Request.ARGUMENTS_KEY, args);
 
@@ -81,7 +84,7 @@ public abstract class AbstractEventResource {
             throw new ProcessException(instanceId, "Error while creating a payload: " + e.getMessage(), e);
         }
 
-        processManager.startProject(payload, false);
+        processManager.start(payload, false);
         return instanceId;
     }
 

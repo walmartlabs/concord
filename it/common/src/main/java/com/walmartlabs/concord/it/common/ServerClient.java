@@ -271,6 +271,9 @@ public class ServerClient {
         return ClientBuilder.newClient()
                 .register((ClientRequestFilter) requestContext -> {
                     MultivaluedMap<String, Object> headers = requestContext.getHeaders();
+
+                    headers.putSingle("X-Concord-Trace-Enabled", "true");
+
                     String v = auth.get();
                     if (v != null) {
                         headers.putSingle("Authorization", v);

@@ -10,6 +10,7 @@ import java.util.*;
 
 public class Payload {
 
+    public static final HeaderKey<UUID> ORGANIZATION_ID = HeaderKey.register("_orgId", UUID.class);
     public static final HeaderKey<UUID> PROJECT_ID = HeaderKey.register("_projectId", UUID.class);
     public static final HeaderKey<UUID> REPOSITORY_ID = HeaderKey.register("_repoId", UUID.class);
     public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
@@ -145,9 +146,10 @@ public class Payload {
     @Override
     public String toString() {
         return "Payload{" +
-                "instanceId='" + instanceId + '\'' +
-                ", headers=" + headers.size() +
-                ", attachments=" + attachments.size() +
+                "instanceId=" + instanceId +
+                ", parentInstanceId=" + parentInstanceId +
+                ", headers=" + headers +
+                ", attachments=" + attachments +
                 '}';
     }
 }

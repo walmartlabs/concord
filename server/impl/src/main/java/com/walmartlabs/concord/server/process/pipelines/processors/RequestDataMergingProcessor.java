@@ -6,11 +6,11 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -62,9 +62,6 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
         // create the resulting configuration
         Map<String, Object> m = ConfigurationUtils.deepMerge(projectCfg, profileCfg, workspaceCfg, attachedCfg, req);
-
-        // check if we need to set an entry point
-        m = assertEntryPoint(payload.getInstanceId(), m);
 
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
 
@@ -132,16 +129,5 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
             }
         }
         return DEFAULT_PROFILES;
-    }
-
-    private Map<String, Object> assertEntryPoint(UUID instanceId, Map<String, Object> m) {
-        String s = (String) m.get(InternalConstants.Request.ENTRY_POINT_KEY);
-        if (s != null) {
-            return m;
-        }
-
-        logManager.info(instanceId, "Using the default entry point");
-        m.put(InternalConstants.Request.ENTRY_POINT_KEY, InternalConstants.Request.DEFAULT_ENTRY_POINT_NAME);
-        return m;
     }
 }

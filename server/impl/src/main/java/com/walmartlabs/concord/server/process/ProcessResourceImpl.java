@@ -6,14 +6,14 @@ import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
@@ -90,7 +90,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.startArchive(payload, sync));
+        return toResponse(processManager.start(payload, sync));
     }
 
     @Override
@@ -113,8 +113,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         // TODO teams
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(orgId, entryPoint);
-        assertProject(orgId, ep.getProjectName());
+        EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
 
         Payload payload;
         try {
@@ -124,7 +123,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.startProject(payload, sync));
+        return toResponse(processManager.start(payload, sync));
     }
 
     @Override
@@ -147,10 +146,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         // TODO teams
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(orgId, entryPoint);
-        if (ep != null) {
-            assertProject(orgId, ep.getProjectName());
-        }
+        EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
 
         Payload payload;
         try {
@@ -160,7 +156,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.startProject(payload, sync));
+        return toResponse(processManager.start(payload, sync));
     }
 
     @Override
@@ -181,10 +177,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         // TODO teams
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
-        EntryPoint ep = PayloadParser.parseEntryPoint(orgId, entryPoint);
-        if (ep != null) {
-            assertProject(orgId, ep.getProjectName());
-        }
+        EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
 
         Payload payload;
         try {
@@ -194,7 +187,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.startArchive(payload, sync));
+        return toResponse(processManager.start(payload, sync));
     }
 
     @Override
@@ -442,12 +435,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     private StartProcessResponse toResponse(ProcessResult r) {
         return new StartProcessResponse(r.getInstanceId(), r.getOut());
-    }
-
-    private void assertProject(UUID teamId, String projectName) {
-        if (projectDao.getId(teamId, projectName) == null) {
-            throw new ValidationErrorsException("Unknown project name: " + projectName);
-        }
     }
 
     private void assertInstanceId(UUID id) {

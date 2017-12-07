@@ -1,30 +1,29 @@
 package com.walmartlabs.concord.server.process;
 
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
-import com.walmartlabs.concord.server.process.PayloadParser.EntryPoint;
-import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
 @Named
 public class PayloadManager {
-
-    private static final String WORKSPACE_DIR_NAME = "workspace";
-    private static final String INPUT_ARCHIVE_NAME = "_input.zip";
 
     private final ProcessStateManager stateManager;
     private final ProjectDao projectDao;
@@ -53,17 +52,12 @@ public class PayloadManager {
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
                                  EntryPoint entryPoint, MultipartInput input, String[] out) throws IOException {
 
-        Path baseDir = createPayloadDir();
-        Path workspaceDir = ensureWorkspace(baseDir);
-
-        Payload p = PayloadParser.parse(instanceId, parentInstanceId, baseDir, input)
-                .putHeader(Payload.BASE_DIR, baseDir)
-                .putHeader(Payload.WORKSPACE_DIR, workspaceDir);
-
-        p = addInitiator(p, initiator);
-        p = addOut(p, out);
-
-        return addEntryPoint(p, entryPoint);
+        return new PayloadBuilder(instanceId, parentInstanceId)
+                .with(input)
+                .apply(p(entryPoint))
+                .initiator(initiator)
+                .outExpressions(out)
+                .build();
     }
 
     /**
@@ -78,18 +72,12 @@ public class PayloadManager {
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
                                  EntryPoint entryPoint, Map<String, Object> request, String[] out) throws IOException {
 
-        Path baseDir = createPayloadDir();
-        Path workspaceDir = ensureWorkspace(baseDir);
-
-        Payload p = new Payload(instanceId, parentInstanceId)
-                .putHeader(Payload.BASE_DIR, baseDir)
-                .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
-                .putHeader(Payload.REQUEST_DATA_MAP, request);
-
-        p = addInitiator(p, initiator);
-        p = addOut(p, out);
-
-        return addEntryPoint(p, entryPoint);
+        return new PayloadBuilder(instanceId, parentInstanceId)
+                .initiator(initiator)
+                .apply(p(entryPoint))
+                .configuration(request)
+                .outExpressions(out)
+                .build();
     }
 
     /**
@@ -104,22 +92,12 @@ public class PayloadManager {
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
                                  EntryPoint entryPoint, InputStream in, String[] out) throws IOException {
 
-        Path baseDir = createPayloadDir();
-        Path workspaceDir = ensureWorkspace(baseDir);
-
-        Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
-        Files.copy(in, archive);
-
-        Payload p = new Payload(instanceId, parentInstanceId);
-
-        p = addInitiator(p, initiator);
-        p = addOut(p, out);
-
-        p = p.putHeader(Payload.BASE_DIR, baseDir)
-                .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
-                .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
-
-        return addEntryPoint(p, entryPoint);
+        return new PayloadBuilder(instanceId, parentInstanceId)
+                .initiator(initiator)
+                .apply(p(entryPoint))
+                .workspace(in)
+                .outExpressions(out)
+                .build();
     }
 
     /**
@@ -134,20 +112,11 @@ public class PayloadManager {
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
                                  InputStream in, String[] out) throws IOException {
 
-        Path baseDir = createPayloadDir();
-        Path workspaceDir = ensureWorkspace(baseDir);
-
-        Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
-        Files.copy(in, archive);
-
-        Payload p = new Payload(instanceId, parentInstanceId);
-
-        p = addInitiator(p, initiator);
-        p = addOut(p, out);
-
-        return p.putHeader(Payload.BASE_DIR, baseDir)
-                .putHeader(Payload.WORKSPACE_DIR, workspaceDir)
-                .putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
+        return new PayloadBuilder(instanceId, parentInstanceId)
+                .initiator(initiator)
+                .workspace(in)
+                .outExpressions(out)
+                .build();
     }
 
     /**
@@ -165,10 +134,11 @@ public class PayloadManager {
             throw new ProcessException(instanceId, "Can't resume '" + instanceId + "', state snapshot not found");
         }
 
-        return new Payload(instanceId)
-                .putHeader(Payload.WORKSPACE_DIR, tmpDir)
-                .putHeader(Payload.REQUEST_DATA_MAP, req)
-                .putHeader(Payload.RESUME_EVENT_NAME, eventName);
+        return new PayloadBuilder(instanceId)
+                .workspace(tmpDir)
+                .configuration(req)
+                .resumeEventName(eventName)
+                .build();
     }
 
     /**
@@ -184,21 +154,18 @@ public class PayloadManager {
                               String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
 
         Path tmpDir = Files.createTempDirectory("payload");
-
         if (!stateManager.export(parentInstanceId, copyTo(tmpDir))) {
             throw new ProcessException(instanceId, "Can't fork '" + instanceId + "', parent state snapshot not found");
         }
 
-        Payload p = new Payload(instanceId, parentInstanceId)
-                .putHeader(Payload.PROCESS_KIND, kind)
-                .putHeader(Payload.WORKSPACE_DIR, tmpDir)
-                .putHeader(Payload.PROJECT_ID, projectId)
-                .putHeader(Payload.REQUEST_DATA_MAP, req);
-
-        p = addInitiator(p, initiator);
-        p = addOut(p, out);
-
-        return p;
+        return new PayloadBuilder(instanceId, parentInstanceId)
+                .kind(kind)
+                .initiator(initiator)
+                .project(projectId)
+                .configuration(req)
+                .outExpressions(out)
+                .workspace(tmpDir)
+                .build();
     }
 
     public void assertAcceptsRawPayload(Payload payload) {
@@ -218,80 +185,76 @@ public class PayloadManager {
         }
     }
 
-    private Path createPayloadDir() throws IOException {
-        return Files.createTempDirectory("payload");
-    }
-
-    private Path ensureWorkspace(Path baseDir) throws IOException {
-        Path p = baseDir.resolve(WORKSPACE_DIR_NAME);
-        if (!Files.exists(p)) {
-            Files.createDirectories(p);
-        }
-        return p;
-    }
-
-    private static Payload addInitiator(Payload p, String initiator) {
-        if (initiator == null) {
-            return p;
-        }
-        return p.putHeader(Payload.INITIATOR, initiator);
-    }
-
-    private static Payload addOut(Payload p, String[] out) {
-        if (out == null || out.length == 0) {
-            return p;
+    private static Function<PayloadBuilder, PayloadBuilder> p(EntryPoint p) {
+        if (p == null) {
+            return Function.identity();
         }
 
-        Set<String> s = new HashSet<>(Arrays.asList(out));
-        return p.putHeader(Payload.OUT_EXPRESSIONS, s);
+        return (b) -> b.organization(p.orgId)
+                .project(p.projectId)
+                .repository(p.repoId)
+                .entryPoint(p.flow);
     }
 
-    @SuppressWarnings("unchecked")
-    private Payload addEntryPoint(Payload p, EntryPoint e) {
-        if (e == null) {
-            return p;
-        }
-
-        // entry point specified in the request has the priority
-        String entryPoint = e.getFlow();
-
-        // if it wasn't specified in the request, we should check for
-        // the existing entry point value
+    public EntryPoint parseEntryPoint(UUID instanceId, UUID orgId, String entryPoint) {
         if (entryPoint == null) {
-            entryPoint = p.getHeader(Payload.ENTRY_POINT);
+            return null;
         }
 
-        // we can also receive the entry point name in the request's
-        // JSON data
-        if (entryPoint == null) {
-            Map<String, Object> req = p.getHeader(Payload.REQUEST_DATA_MAP);
-            if (req != null) {
-                entryPoint = (String) req.get(InternalConstants.Request.ENTRY_POINT_KEY);
-            }
+        String[] as = entryPoint.split(":");
+        if (as.length < 1 || as.length > 3) {
+            throw new ValidationErrorsException("Invalid entry point format: " + entryPoint);
         }
 
-        if (entryPoint != null) {
-            p = p.putHeader(Payload.ENTRY_POINT, entryPoint)
-                    .mergeValues(Payload.REQUEST_DATA_MAP, Collections.singletonMap(InternalConstants.Request.ENTRY_POINT_KEY, entryPoint));
+        String projectName = as[0].trim();
+        UUID projectId = projectDao.getId(orgId, projectName);
+        if (projectId == null) {
+            throw new ProcessException(instanceId, "Project not found: " + projectName);
         }
 
-        UUID projectId = null;
-        if (e.getProjectName() != null) {
-            projectId = projectDao.getId(e.getTeamId(), e.getProjectName());
-            if (projectId == null) {
-                throw new ProcessException(p.getInstanceId(), "Project not found: " + e.getProjectName());
-            }
+        String repoName = null;
+        if (as.length > 1) {
+            repoName = as[1].trim();
+
+        }
+
+        String flow = null;
+        if (as.length > 2) {
+            flow = as[2].trim();
+        }
+
+        return createEntryPoint(instanceId, orgId, projectName, repoName, flow);
+    }
+
+    public EntryPoint createEntryPoint(UUID instanceId, UUID orgId, String projectName, String repoName, String flow) {
+        UUID projectId = projectDao.getId(orgId, projectName);
+        if (projectId == null) {
+            throw new ProcessException(instanceId, "Project not found: " + projectName);
         }
 
         UUID repoId = null;
-        if (projectId != null && e.getRepositoryName() != null) {
-            repoId = repositoryDao.getId(projectId, e.getRepositoryName());
+        if (repoName != null) {
+            repoId = repositoryDao.getId(projectId, repoName);
             if (repoId == null) {
-                throw new ProcessException(p.getInstanceId(), "Repository not found: " + e.getRepositoryName());
+                throw new ProcessException(instanceId, "Repository not found: " + repoName);
             }
         }
 
-        return p.putHeader(Payload.PROJECT_ID, projectId)
-                .putHeader(Payload.REPOSITORY_ID, repoId);
+        return new PayloadManager.EntryPoint(orgId, projectId, repoId, flow);
+    }
+
+    public static class EntryPoint implements Serializable {
+
+        private final UUID orgId;
+        private final UUID projectId;
+        private final UUID repoId;
+        private final String flow;
+
+        public EntryPoint(UUID orgId, UUID projectId, UUID repoId, String flow) {
+            this.orgId = orgId;
+            this.projectId = projectId;
+            this.repoId = repoId;
+            this.flow = flow;
+        }
     }
 }

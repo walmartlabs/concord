@@ -7,9 +7,8 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.process.pipelines.ArchivePipeline;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
-import com.walmartlabs.concord.server.process.pipelines.ProjectPipeline;
+import com.walmartlabs.concord.server.process.pipelines.ProcessPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -46,8 +45,7 @@ public class ProcessManager {
     private final LogManager logManager;
     private final ConcordFormService formService;
 
-    private final Chain archivePipeline;
-    private final Chain projectPipeline;
+    private final Chain processPipeline;
     private final Chain resumePipeline;
     private final Chain forkPipeline;
 
@@ -59,8 +57,7 @@ public class ProcessManager {
                           AgentManager agentManager,
                           LogManager logManager,
                           ConcordFormService formService,
-                          ArchivePipeline archivePipeline,
-                          ProjectPipeline projectPipeline,
+                          ProcessPipeline processPipeline,
                           ResumePipeline resumePipeline,
                           ForkPipeline forkPipeline) {
 
@@ -70,8 +67,7 @@ public class ProcessManager {
         this.logManager = logManager;
         this.formService = formService;
 
-        this.archivePipeline = archivePipeline;
-        this.projectPipeline = projectPipeline;
+        this.processPipeline = processPipeline;
         this.resumePipeline = resumePipeline;
         this.forkPipeline = forkPipeline;
 
@@ -95,12 +91,8 @@ public class ProcessManager {
         return new PayloadEntry(p, tmp);
     }
 
-    public ProcessResult startArchive(Payload payload, boolean sync) {
-        return start(archivePipeline, payload, sync);
-    }
-
-    public ProcessResult startProject(Payload payload, boolean sync) {
-        return start(projectPipeline, payload, sync);
+    public ProcessResult start(Payload payload, boolean sync) {
+        return start(processPipeline, payload, sync);
     }
 
     public ProcessResult startFork(Payload payload, boolean sync) {

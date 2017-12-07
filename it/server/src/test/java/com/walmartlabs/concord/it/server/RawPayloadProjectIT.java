@@ -30,7 +30,6 @@ public class RawPayloadProjectIT extends AbstractServerIT {
             processResource.start(projectName, new ByteArrayInputStream(payload), null, false, null);
             fail("should fail");
         } catch (BadRequestException e) {
-            e.printStackTrace();
         }
     }
 }

@@ -9,32 +9,35 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 /**
- * Processing self-contained archives.
+ * Processing project requests.
  * <p>
- * Runs a process using an archive provided by a user.
+ * Runs a process by pulling a project's repository and applying
+ * overrides from a request JSON.
  */
 @Named
-public class ArchivePipeline extends Pipeline {
+public class ProcessPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
 
     @Inject
-    public ArchivePipeline(Injector injector) {
+    public ProcessPipeline(Injector injector) {
         super(injector,
                 InitialQueueEntryProcessor.class,
-                RawPayloadCheckProcessor.class,
                 WorkspaceArchiveProcessor.class,
+                RepositoryProcessor.class,
                 ProjectDefinitionProcessor.class,
                 InventoryProcessor.class,
                 AttachmentStoringProcessor.class,
                 DefaultVariablesProcessor.class,
                 RequestDataMergingProcessor.class,
+                EntryPointProcessor.class,
                 TagsExtractingProcessor.class,
                 PrivateKeyProcessor.class,
                 TemplateFilesProcessor.class,
                 TemplateScriptProcessor.class,
                 RequestInfoProcessor.class,
                 ProjectInfoProcessor.class,
+                ProcessInfoProcessor.class,
                 DependenciesProcessor.class,
                 UserInfoProcessor.class,
                 OutVariablesSettingProcessor.class,
