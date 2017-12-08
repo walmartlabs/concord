@@ -7,7 +7,7 @@ EXPOSE 8080
 
 RUN yum -y install nginx && yum clean all
 
-ADD docker-images/swagger/node_modules/swagger-ui-dist /opt/concord/console/dist/swag
+ADD docker-images/console/node_modules/swagger-ui-dist /opt/concord/console/dist/swag
 ADD docker-images/console/target/dist/console.tar.gz /opt/concord/console/dist/
 
 COPY docker-images/console/src/main/docker/start.sh /opt/concord/console/
