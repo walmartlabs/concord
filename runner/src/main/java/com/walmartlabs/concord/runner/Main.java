@@ -25,6 +25,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -240,7 +243,15 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         try {
-            Injector injector = createInjector();
+            List<URL> deps = Collections.emptyList();
+            if (args.length > 0) {
+                deps = parseDeps(args[0]);
+            }
+
+            URLClassLoader depsClassLoader = new URLClassLoader(deps.toArray(new URL[deps.size()]), Main.class.getClassLoader());
+            Thread.currentThread().setContextClassLoader(depsClassLoader);
+
+            Injector injector = createInjector(depsClassLoader);
             Main main = injector.getInstance(Main.class);
             main.run();
 
@@ -270,9 +281,23 @@ public class Main {
         return e;
     }
 
-    private static Injector createInjector() {
+    private static List<URL> parseDeps(String plainDeps) {
+        List<URL> result = new ArrayList<>();
+        for(String d : plainDeps.split(":")) {
+            try {
+                result.add(new URL("file://" + d));
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return result;
+    }
+
+    private static Injector createInjector(ClassLoader depsClassLoader) {
         ClassLoader cl = Main.class.getClassLoader();
-        Module m = new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.CACHE));
+        Module m = new WireModule(
+                new SpaceModule(new URLClassSpace(cl), BeanScanning.CACHE),
+                new SpaceModule(new URLClassSpace(depsClassLoader), BeanScanning.CACHE));
 
         // TODO: find a way to inject task classes directly
         Module tasks = new AbstractModule() {

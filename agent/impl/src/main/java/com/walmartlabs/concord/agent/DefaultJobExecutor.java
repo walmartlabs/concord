@@ -245,15 +245,7 @@ public class DefaultJobExecutor implements JobExecutor {
         l.add("-Dapi.baseUrl=" + cfg.getServerApiBaseUrl());
 
         // classpath
-        Collection<String> dependencyFiles = dependencies.stream()
-                .map(p -> p.toAbsolutePath().toString())
-                .sorted()
-                .collect(Collectors.toSet());
-
         l.add("-cp");
-
-        // dependencies are stored in a '../lib/' directory relative to the working directory (payload)
-        String deps = String.join(":", dependencyFiles);
 
         // payload's own libraries are stored in `./lib/` directory in the working directory
         String libs = InternalConstants.Files.LIBRARIES_DIR_NAME + "/*";
@@ -261,10 +253,17 @@ public class DefaultJobExecutor implements JobExecutor {
         // the runner's runtime is stored somewhere in the agent's libraries
         String runner = cfg.getRunnerPath().toAbsolutePath().toString();
 
-        l.add(joinClassPath(deps, libs, runner));
+        l.add(joinClassPath(libs, runner));
 
         // main class
         l.add("com.walmartlabs.concord.runner.Main");
+
+        Collection<String> dependencyFiles = dependencies.stream()
+                .map(p -> p.toAbsolutePath().toString())
+                .sorted()
+                .collect(Collectors.toSet());
+        String deps = String.join(":", dependencyFiles);
+        l.add(joinClassPath(deps));
 
         return l.toArray(new String[l.size()]);
     }
