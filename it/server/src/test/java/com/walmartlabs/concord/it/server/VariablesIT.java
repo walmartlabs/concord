@@ -1,12 +1,12 @@
 package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.ImmutableMap;
+import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.project.EncryptValueRequest;
-import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.junit.Test;
 
@@ -95,5 +95,34 @@ public class VariablesIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*test.duration=60.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testArrayInterpolation() throws Exception {
+        String varA = "varA_" + System.currentTimeMillis();
+        String varB = "varB_" + System.currentTimeMillis();
+
+        byte[] payload = archive(VariablesIT.class.getResource("arrayInterpolation").toURI(),
+                ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("varA", varA);
+        args.put("varB", varB);
+
+        Map<String, Object> req = new HashMap<>();
+        req.put("arguments", args);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("request", req);
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*" + varA + ".*" + varB + ".*", ab);
     }
 }

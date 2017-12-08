@@ -35,4 +35,8 @@ public class ExampleTask implements Task {
         log.info("Hello, {}. (from injected var)", context.getVariable("myName"));
         ctx.setVariable("exampleOutput", "Hello!");
     }
+
+    public void call(String a, String b) {
+        log.info("We got {} and {}", a, b);
+    }
 }
