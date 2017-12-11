@@ -17,4 +17,4 @@ flows:
             ansible_connection: "local"
       extraVars:
         greetings: "Hi there!"
-      limit: @playbook/hello.limit
+      limit: "@playbook/hello.limit"

@@ -4,12 +4,12 @@
 
 1. Create an inventory:
 ```
-./create_inventory.sh server.dev.concord.devtools.prod.walmart.com:8001
+./create_inventory.sh localhost:8001
 ```
 
 2. Start the process:
 ```
-./run.sh server.dev.concord.devtools.prod.walmart.com:8001
+./run.sh localhost:8001
 ```
 
 3. Check the logs in the Console

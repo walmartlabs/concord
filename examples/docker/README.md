@@ -27,5 +27,5 @@ cd target && zip -r payload.zip ./*
 3. Send the payload to the server:
 
 ```
-curl -v -H "Content-Type: application/octet-stream" --data-binary @payload.zip http://localhost:8001/api/v1/process
+curl -v -u username -F archive=@payload.zip http://localhost:8001/api/v1/process
 ```
