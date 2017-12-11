@@ -2,18 +2,18 @@ package com.walmartlabs.concord.it.server;
 
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
+import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.PerformedActionType;
-import com.walmartlabs.concord.server.api.inventory.*;
-import com.walmartlabs.concord.server.api.landing.CreateLandingResponse;
-import com.walmartlabs.concord.server.api.landing.DeleteLandingResponse;
-import com.walmartlabs.concord.server.api.landing.LandingEntry;
-import com.walmartlabs.concord.server.api.landing.LandingPageResource;
+import com.walmartlabs.concord.server.api.org.inventory.*;
+import com.walmartlabs.concord.server.api.org.landing.CreateLandingResponse;
+import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
+import com.walmartlabs.concord.server.api.org.landing.LandingPageResource;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.org.team.TeamEntry;
 import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
 import com.walmartlabs.concord.server.api.project.DeleteProjectResponse;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
@@ -113,24 +113,24 @@ public class CrudIT extends AbstractServerIT {
     public void testInventory() throws Exception {
         InventoryResource inventoryResource = proxy(InventoryResource.class);
 
+        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
         String inventoryName = "inventory_" + randomString();
-        String orgName = "Default";
 
         // --- create
 
-        CreateInventoryResponse cir = inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, orgName, null));
+        CreateInventoryResponse cir = inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
         assertTrue(cir.isOk());
         assertNotNull(cir.getId());
 
         // --- update
 
-        CreateInventoryResponse uir = inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, OrganizationManager.DEFAULT_ORG_ID, null, null));
+        CreateInventoryResponse uir = inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
         assertTrue(uir.isOk());
         assertNotNull(uir.getId());
 
         // --- get
 
-        InventoryEntry i1 = inventoryResource.get(inventoryName);
+        InventoryEntry i1 = inventoryResource.get(orgName, inventoryName);
         assertNotNull(i1);
         assertNotNull(i1.getId());
         assertEquals(uir.getId(), i1.getId());
@@ -140,38 +140,39 @@ public class CrudIT extends AbstractServerIT {
 
         // --- delete
 
-        DeleteInventoryResponse dpr = inventoryResource.delete(inventoryName);
-        assertTrue(dpr.isOk());
+        GenericOperationResultResponse dpr = inventoryResource.delete(orgName, inventoryName);
+        assertTrue(dpr.getResult() == OperationResult.DELETED);
     }
 
     @Test(timeout = 30000)
     public void testInventoryData() throws Exception {
         InventoryDataResource resource = proxy(InventoryDataResource.class);
 
+        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
         String inventoryName = "inventory_" + randomString();
         String itemPath = "/a";
         Map<String, Object> data = Collections.singletonMap("k", "v");
 
         InventoryResource inventoryResource = proxy(InventoryResource.class);
-        inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null, null));
+        inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
 
         // --- create
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> result = (Map<String, Object>) resource.data(inventoryName, itemPath, data);
+        Map<String, Object> result = (Map<String, Object>) resource.data(orgName, inventoryName, itemPath, data);
         assertNotNull(result);
         assertEquals(Collections.singletonMap("a", data), result);
 
         // --- get
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> result2 = (Map<String, Object>) resource.get(inventoryName, itemPath);
+        Map<String, Object> result2 = (Map<String, Object>) resource.get(orgName, inventoryName, itemPath);
         assertNotNull(result2);
         assertEquals(Collections.singletonMap("a", data), result);
 
         // --- delete
 
-        DeleteInventoryDataResponse didr = resource.delete(inventoryName, itemPath);
+        DeleteInventoryDataResponse didr = resource.delete(orgName, inventoryName, itemPath);
         assertNotNull(didr);
         assertTrue(didr.isOk());
     }
@@ -180,28 +181,29 @@ public class CrudIT extends AbstractServerIT {
     public void testInventoryQuery() throws Exception {
         InventoryQueryResource resource = proxy(InventoryQueryResource.class);
 
+        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
         String inventoryName = "inventory_" + randomString();
         String queryName = "queryName_" + randomString();
         String text = "text_" + randomString();
         ;
 
         InventoryResource inventoryResource = proxy(InventoryResource.class);
-        inventoryResource.createOrUpdate(new InventoryEntry(null, inventoryName, null, null, null));
+        inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
 
         // --- create
 
-        CreateInventoryQueryResponse cqr = resource.createOrUpdate(inventoryName, queryName, text);
+        CreateInventoryQueryResponse cqr = resource.createOrUpdate(orgName, inventoryName, queryName, text);
         assertTrue(cqr.isOk());
         assertNotNull(cqr.getId());
 
         // --- update
         String updatedText = "select cast(json_build_object('k', 'v') as varchar)";
-        CreateInventoryQueryResponse uqr = resource.createOrUpdate(inventoryName, queryName, updatedText);
+        CreateInventoryQueryResponse uqr = resource.createOrUpdate(orgName, inventoryName, queryName, updatedText);
         assertTrue(uqr.isOk());
         assertNotNull(uqr.getId());
 
         // --- get
-        InventoryQueryEntry e1 = resource.get(inventoryName, queryName);
+        InventoryQueryEntry e1 = resource.get(orgName, inventoryName, queryName);
         assertNotNull(e1);
         assertNotNull(e1.getId());
         assertEquals(inventoryName, e1.getInventoryName());
@@ -210,13 +212,13 @@ public class CrudIT extends AbstractServerIT {
 
         // --- exec
         @SuppressWarnings("unchecked")
-        List<Object> result = resource.exec(inventoryName, queryName, null);
+        List<Object> result = resource.exec(orgName, inventoryName, queryName, null);
         assertNotNull(result);
         Map<String, Object> m = (Map<String, Object>) result.get(0);
         assertEquals(Collections.singletonMap("k", "v"), m);
 
         // --- delete
-        DeleteInventoryQueryResponse dqr = resource.delete(inventoryName, queryName);
+        DeleteInventoryQueryResponse dqr = resource.delete(orgName, inventoryName, queryName);
         assertNotNull(dqr);
         assertTrue(dqr.isOk());
     }
@@ -238,26 +240,22 @@ public class CrudIT extends AbstractServerIT {
 
         // --- create
         LandingEntry entry = new LandingEntry(null, null, null, null, projectName, repositoryName, name, description, icon);
-        CreateLandingResponse result = resource.createOrUpdate(entry);
+        CreateLandingResponse result = resource.createOrUpdate(OrganizationManager.DEFAULT_ORG_NAME, entry);
         assertNotNull(result);
         assertTrue(result.isOk());
         assertNotNull(result.getId());
         assertEquals(OperationResult.CREATED, result.getResult());
 
         // --- update
-        result = resource.createOrUpdate(new LandingEntry(result.getId(), null, null, null, projectName, repositoryName, name, description, icon));
+        result = resource.createOrUpdate(OrganizationManager.DEFAULT_ORG_NAME, new LandingEntry(result.getId(), null, null, null, projectName, repositoryName, name, description, icon));
         assertNotNull(result);
         assertTrue(result.isOk());
         assertNotNull(result.getId());
         assertEquals(OperationResult.UPDATED, result.getResult());
 
         // --- list
-        List<LandingEntry> listResult = resource.list();
+        List<LandingEntry> listResult = resource.list(OrganizationManager.DEFAULT_ORG_NAME);
         assertNotNull(listResult);
-
-        // --- delete
-        DeleteLandingResponse deleteResult = resource.delete(result.getId());
-        assertNotNull(deleteResult);
     }
 
     private static ProjectEntry findProject(List<ProjectEntry> l, String name) {

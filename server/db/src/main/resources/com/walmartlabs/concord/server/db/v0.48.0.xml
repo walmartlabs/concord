@@ -244,4 +244,66 @@
 
         <dropTable tableName="ADMINS"/>
     </changeSet>
+
+    <changeSet id="48300" author="ybrigo@gmail.com">
+        <update tableName="REPOSITORIES">
+            <column name="REPO_URL" value="classpath://com/walmartlabs/concord/server/org/triggers/concord.yml"/>
+            <where>REPO_ID = 'b31b0b06-c33c-11e7-b0e9-8702fc03629f'</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="48301" author="ybrigo@gmail.com">
+        <addColumn tableName="INVENTORIES">
+            <column name="VISIBILITY" type="varchar(128)" defaultValue="PUBLIC">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="48302" author="ybrigo@gmail.com">
+        <dropUniqueConstraint tableName="INVENTORIES" constraintName="INVENTORIES_INVENTORY_NAME_KEY"/>
+        <addUniqueConstraint tableName="INVENTORIES" columnNames="ORG_ID, INVENTORY_NAME"/>
+
+        <addColumn tableName="INVENTORIES">
+            <column name="OWNER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="INVENTORIES"
+                                 baseColumnNames="OWNER_ID"
+                                 constraintName="FK_INVENTORIES_OWN_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="48303" author="ybrigo@gmail.com">
+        <createTable tableName="INVENTORY_TEAM_ACCESS">
+            <column name="INVENTORY_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TEAM_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ACCESS_LEVEL" type="varchar(128)" defaultValue="READER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="INVENTORY_TEAM_ACCESS"
+                                 baseColumnNames="INVENTORY_ID"
+                                 constraintName="FK_INV_T_A_INV"
+                                 referencedTableName="INVENTORIES"
+                                 referencedColumnNames="INVENTORY_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="INVENTORY_TEAM_ACCESS"
+                                 baseColumnNames="TEAM_ID"
+                                 constraintName="FK_INV_T_A_T"
+                                 referencedTableName="TEAMS"
+                                 referencedColumnNames="TEAM_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
 </databaseChangeLog>

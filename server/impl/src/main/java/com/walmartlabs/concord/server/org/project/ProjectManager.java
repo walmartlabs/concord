@@ -59,7 +59,7 @@ public class ProjectManager {
         return assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
     }
 
-    public UUID insert(UUID orgId, ProjectEntry entry) {
+    public UUID insert(UUID orgId, String orgName, ProjectEntry entry) {
         Map<String, RepositoryEntry> repos = entry.getRepositories();
         assertSecrets(orgId, repos);
 
@@ -72,7 +72,7 @@ public class ProjectManager {
                     entry.getVisibility(), acceptsRawPayload);
 
             if (repos != null) {
-                Map<String, UUID> ids = insertRepos(tx, orgId, pId, entry.getName(), repos, true);
+                Map<String, UUID> ids = insertRepos(tx, orgId, orgName, pId, entry.getName(), repos, true);
 
                 repos.forEach((repoName, repo) -> {
                     githubWebhookService.register(pId, ids.get(repoName), repo.getUrl());
@@ -97,7 +97,7 @@ public class ProjectManager {
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);
-                Map<String, UUID> ids = insertRepos(tx, orgId, projectId, entry.getName(), repos, true);
+                Map<String, UUID> ids = insertRepos(tx, orgId, prevEntry.getOrgName(), projectId, entry.getName(), repos, true);
                 repos.forEach((repoName, RepositoryEntry) ->
                         githubWebhookService.register(projectId, ids.get(repoName), RepositoryEntry.getUrl()));
             }
@@ -181,7 +181,7 @@ public class ProjectManager {
         }
     }
 
-    private Map<String, UUID> insertRepos(DSLContext tx, UUID orgId,
+    private Map<String, UUID> insertRepos(DSLContext tx, UUID orgId, String orgName,
                                           UUID projectId, String projectName,
                                           Map<String, RepositoryEntry> repos,
                                           boolean update) {
@@ -204,8 +204,8 @@ public class ProjectManager {
                     trim(req.getPath()),
                     secretId);
 
-            eventResource.event(Events.CONCORD_EVENT, update ? Events.Repository.repositoryUpdated(projectName, req.getName()) :
-                    Events.Repository.repositoryCreated(projectName, req.getName()));
+            eventResource.event(Events.CONCORD_EVENT, update ? Events.Repository.repositoryUpdated(orgName, projectName, req.getName()) :
+                    Events.Repository.repositoryCreated(orgName, projectName, req.getName()));
 
             ids.put(name, id);
         }

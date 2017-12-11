@@ -14,7 +14,7 @@ flows:
   - task: ansible
     in:
       # arguments: inventory name, ansible host group name, query name, query params, additional inventory variables
-      inventory: "${inventory.ansible('myInventory', 'myHostsGroup', 'endpointsByZypperVersion', {'facter_zypper_version': '1.6.333'}, myVars)}"
+      inventory: "${inventory.ansible('Default', 'myInventory', 'myHostsGroup', 'endpointsByZypperVersion', {'facter_zypper_version': '1.6.333'}, myVars)}"
       # will produce a JSON structure like this:
       # {
       #   "myHostsGroup": {

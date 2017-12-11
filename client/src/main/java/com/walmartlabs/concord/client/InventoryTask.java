@@ -21,40 +21,42 @@ public class InventoryTask extends AbstractConcordTask {
     private static final Logger log = LoggerFactory.getLogger(InventoryTask.class);
 
     public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
-                                       String inventoryName, String hostGroupName, String queryName, Map<String, Object> params) throws Exception {
-        return ansible(ctx, inventoryName, hostGroupName, queryName, params, null);
+                                       String orgName, String inventoryName,
+                                       String hostGroupName, String queryName, Map<String, Object> params) throws Exception {
+        return ansible(ctx, orgName, inventoryName, hostGroupName, queryName, params, null);
     }
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
-           String inventoryName, String hostGroupName, String queryName, Map<String, Object> params, Map<String, Object> vars) throws Exception {
+           String orgName, String inventoryName,
+                                       String hostGroupName, String queryName, Map<String, Object> params, Map<String, Object> vars) throws Exception {
 
-        List<String> hostIps = execQuery(ctx, inventoryName, queryName, params, List.class);
+        List<String> hostIps = execQuery(ctx, orgName, inventoryName, queryName, params, List.class);
         Map<String, Object> hostVars = new HashMap<>();
         hostVars.put("hosts", hostIps);
         if (vars != null && !vars.isEmpty()) {
             hostVars.put("vars", vars);
         }
 
-        log.info("ansible ['{}', '{}', '{}', '{}'] -> {}", inventoryName, hostGroupName, queryName, params, hostIps != null);
+        log.info("ansible ['{}', '{}', '{}', '{}', '{}'] -> {}", orgName, inventoryName, hostGroupName, queryName, params, hostIps != null);
 
         return Collections.singletonMap(hostGroupName, hostVars);
     }
 
     @SuppressWarnings("unchecked")
     public List<Object> query(@InjectVariable("context") Context ctx,
-            String inventoryName, String queryName, Map<String, Object> params) throws Exception {
+            String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
 
-        List<Object> result = execQuery(ctx, inventoryName, queryName, params, List.class);
+        List<Object> result = execQuery(ctx, orgName, inventoryName, queryName, params, List.class);
 
-        log.info("query ['{}', '{}', '{}'] -> {}", inventoryName, queryName, params, result != null);
+        log.info("query ['{}', '{}', '{}', '{}'] -> {}", orgName, inventoryName, queryName, params, result != null);
 
         return result;
     }
 
-    private <T> T execQuery(Context ctx, String inventoryName, String queryName, Map<String, Object> params, Class<T> clazz) throws Exception {
+    private <T> T execQuery(Context ctx, String orgName, String inventoryName, String queryName, Map<String, Object> params, Class<T> clazz) throws Exception {
         Map<String, Object> cfg = createTaskCfg(ctx);
-        String target = String.format("%s/api/v1/inventory/%s/query/%s/exec", get(cfg, Keys.BASEURL_KEY), inventoryName, queryName);
+        String target = String.format("%s/api/v1/org/%s/inventory/%s/query/%s/exec", get(cfg, Keys.BASEURL_KEY), orgName, inventoryName, queryName);
         String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
         URL url = new URL(target);

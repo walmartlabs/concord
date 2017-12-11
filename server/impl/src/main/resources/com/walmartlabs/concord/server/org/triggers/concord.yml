@@ -1,0 +1,23 @@
+flows:
+  onChange:
+  - log: "Refreshing triggers..."
+  - task: triggersRefresh
+    in:
+      org: ${event.org}
+      repository: ${event.repository}
+      project: ${event.project}
+
+  - log: "Refreshing LPs..."
+  - task: landingPageRefresh
+    in:
+      org: ${event.org}
+      repository: ${event.repository}
+      project: ${event.project}
+
+triggers:
+  - concord:
+      event: "repository.*"
+      entryPoint: "onChange"
+
+  - github:
+      entryPoint: "onChange"

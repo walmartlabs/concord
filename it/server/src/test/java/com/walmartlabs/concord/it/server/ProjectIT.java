@@ -15,11 +15,12 @@ import com.walmartlabs.concord.server.api.project.ProjectResource;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
-import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
-import com.walmartlabs.concord.server.api.trigger.TriggerResource;
+import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
+import com.walmartlabs.concord.server.api.org.trigger.TriggerResource;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.CreateUserResponse;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Test;
@@ -263,7 +264,7 @@ public class ProjectIT extends AbstractServerIT {
 
         TriggerResource triggerResource = proxy(TriggerResource.class);
         while (true) {
-            List<TriggerEntry> triggers = triggerResource.list(projectName, repoName);
+            List<TriggerEntry> triggers = triggerResource.list(OrganizationManager.DEFAULT_ORG_NAME, projectName, repoName);
             if (hasCondition("github", "repository", "abc", triggers) &&
                     hasCondition("github", "repository", "abc2", triggers) &&
                     hasCondition("oneops", "org", "myOrg", triggers)) {

@@ -6,7 +6,7 @@ import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.triggers.TriggersDao;
+import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -25,6 +25,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
 
     private static final String EVENT_SOURCE = "github";
 
+    private static final String ORG_NAME_KEY = "org";
     private static final String REPO_ID_KEY = "repositoryId";
     private static final String REPO_NAME_KEY = "repository";
     private static final String PROJECT_NAME_KEY = "project";
@@ -93,6 +94,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
         result.put(COMMIT_ID_KEY, event.get("after"));
         result.put(REPO_ID_KEY, repo.getId());
         result.put(PROJECT_NAME_KEY, project.getName());
+        result.put(ORG_NAME_KEY, project.getOrgName());
         result.putAll(conditions);
         return result;
     }

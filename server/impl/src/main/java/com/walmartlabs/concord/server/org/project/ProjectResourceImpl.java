@@ -61,7 +61,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
             return new ProjectOperationResponse(projectId, OperationResult.UPDATED);
         }
 
-        projectId = projectManager.insert(org.getId(), entry);
+        projectId = projectManager.insert(org.getId(), orgName, entry);
         return new ProjectOperationResponse(projectId, OperationResult.CREATED);
     }
 

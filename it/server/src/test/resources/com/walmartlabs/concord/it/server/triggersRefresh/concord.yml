@@ -2,5 +2,6 @@ flows:
   default:
   - task: triggersRefresh
     in:
+      org: "Default"
       repository: "githubTriggers"
       project: "concordTriggers"

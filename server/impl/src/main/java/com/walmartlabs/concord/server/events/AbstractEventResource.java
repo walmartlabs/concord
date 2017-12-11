@@ -1,14 +1,14 @@
 package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.api.trigger.TriggerEntry;
+import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.triggers.TriggersDao;
+import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
