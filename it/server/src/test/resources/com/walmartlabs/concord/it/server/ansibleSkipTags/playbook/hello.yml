@@ -1,0 +1,14 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "{{ greetings }}"
+      verbosity: 0
+    tags:
+      - "tag-1"
+
+  - debug:
+      msg: "{{ greetings2 }}"
+      verbosity: 0
+    tags:
+      - "tag-2"

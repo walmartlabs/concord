@@ -38,6 +38,8 @@ public final class AnsibleConstants {
 
     public static final String TAGS_KEY = "tags";
 
+    public static final String SKIP_TAGS_KEY = "skipTags";
+
     public static final String USER_KEY = "user";
 
     public static final String RETRY_KEY = "retry";

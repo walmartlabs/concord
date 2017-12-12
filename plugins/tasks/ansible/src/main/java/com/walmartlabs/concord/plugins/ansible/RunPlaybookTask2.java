@@ -90,7 +90,8 @@ public class RunPlaybookTask2 implements Task {
                 .withPrivateKey(toString(privateKeyPath))
                 .withVaultPasswordFile(toString(vaultPasswordPath))
                 .withUser(trim(getString(args, AnsibleConstants.USER_KEY)))
-                .withTags(trim(getString(args, AnsibleConstants.TAGS_KEY)))
+                .withTags(trim(getListAsString(args, AnsibleConstants.TAGS_KEY)))
+                .withSkipTags(trim(getListAsString(args, AnsibleConstants.SKIP_TAGS_KEY)))
                 .withExtraVars(extraVars)
                 .withLimit(getLimit(args))
                 .withDebug(debug)
@@ -194,6 +195,7 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
         addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.SKIP_TAGS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
         addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_KEY);
         addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
@@ -625,6 +627,23 @@ public class RunPlaybookTask2 implements Task {
 
     private static String getString(Map<String, Object> args, String key) {
         return (String)args.get(key);
+    }
+
+    private static String getListAsString(Map<String, Object> args, String key) {
+        Object v = args.get(key);
+        if (v == null) {
+            return null;
+        }
+
+        if (v instanceof String) {
+            return (String)v;
+        }
+
+        if (v instanceof Collection) {
+            return String.join(", ", (Collection)v);
+        }
+
+        throw new IllegalArgumentException("unexpected '" + key + "' type: " + v);
     }
 
     private static String getNameWithoutExtension(String fileName) {

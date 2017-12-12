@@ -23,6 +23,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     private Map<String, String> extraVars = Collections.emptyMap();
     private String user;
     private String tags;
+    private String skipTags;
     private String privateKey;
     private String vaultPasswordFile;
     private Map<String, String> extraEnv = Collections.emptyMap();
@@ -59,6 +60,12 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     @Override
     public PlaybookProcessBuilder withTags(String tags) {
         this.tags = tags;
+        return this;
+    }
+
+    @Override
+    public PlaybookProcessBuilder withSkipTags(String skipTags) {
+        this.skipTags = skipTags;
         return this;
     }
 
@@ -153,6 +160,11 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
         if (tags != null) {
             result.add("-t");
             result.add(tags);
+        }
+
+        if (skipTags != null) {
+            result.add("--skip-tags");
+            result.add(skipTags);
         }
 
         if (privateKey != null) {

@@ -1,0 +1,19 @@
+flows:
+  main:
+  - task: ansible
+    in:
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        greetings: "Hello, world"
+        greetings2: "Hello2, world"
+      skipTags:
+        - "tag-1"
+
+variables:
+  entryPoint: main

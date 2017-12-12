@@ -23,6 +23,7 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
     private Map<String, String> extraVars = Collections.emptyMap();
     private String user;
     private String tags;
+    private String skipTags;
     private String privateKey;
     private String vaultPasswordFile;
     private Map<String, String> extraEnv = Collections.emptyMap();
@@ -57,6 +58,12 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
     @Override
     public PlaybookProcessBuilder withTags(String tags) {
         this.tags = tags;
+        return this;
+    }
+
+    @Override
+    public PlaybookProcessBuilder withSkipTags(String skipTags) {
+        this.skipTags = skipTags;
         return this;
     }
 
@@ -156,6 +163,11 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
         if (tags != null) {
             l.add("-t");
             l.add(tags);
+        }
+
+        if (skipTags != null) {
+            l.add("--skip-tags");
+            l.add(skipTags);
         }
 
         if (privateKey != null) {

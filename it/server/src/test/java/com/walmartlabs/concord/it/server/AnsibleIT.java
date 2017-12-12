@@ -9,6 +9,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 
+import static com.walmartlabs.concord.common.IOUtils.grep;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
@@ -35,6 +36,28 @@ public class AnsibleIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*\"msg\":.*Hello, world.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testSkipTags() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleSkipTags").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*\"msg\":.*Hello2, world.*", ab);
+        assertEquals("unexpected 'Hello, world' log", 0, grep(".*Hello, world.*", ab).size());
     }
 
     @Test(timeout = 30000)

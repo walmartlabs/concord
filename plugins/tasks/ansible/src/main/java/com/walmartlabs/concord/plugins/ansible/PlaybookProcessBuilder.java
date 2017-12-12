@@ -13,6 +13,8 @@ public interface PlaybookProcessBuilder {
 
     PlaybookProcessBuilder withTags(String tags);
 
+    PlaybookProcessBuilder withSkipTags(String skipTags);
+
     PlaybookProcessBuilder withPrivateKey(String privateKey);
 
     PlaybookProcessBuilder withAttachmentsDir(String attachmentsDir);
