@@ -51,7 +51,13 @@ public class PayloadManager {
 
         UUID orgId = getOrg(input);
         UUID projectId = getProject(input, orgId);
+
         UUID repoId = getRepo(input, projectId);
+        if (repoId != null && projectId == null) {
+            // allow starting processes using a repository ID only
+            projectId = repositoryDao.getProjectId(repoId);
+        }
+
         String entryPoint = MultipartUtils.getString(input, "entryPoint");
 
         UserPrincipal initiator = UserPrincipal.getCurrent();

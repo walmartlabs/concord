@@ -11,12 +11,12 @@ export const MODAL_TYPE = "START_PROJECT_POPUP";
 class StartProjectPopup extends Component {
 
     render() {
-        const {open, onCloseFn, onConfirmFn, onProcessStateFn, projectName, repositoryName} = this.props;
+        const {open, onCloseFn, onConfirmFn, onProcessStateFn, repositoryId, repositoryName} = this.props;
         const {startResult: result, startLoading} = this.props;
 
         const startProjectFn = (ev) => {
             ev.preventDefault();
-            onConfirmFn({projectName, repositoryName});
+            onConfirmFn(repositoryId);
         };
 
         const showProcessStatusButton = result && result.instanceId;
@@ -60,14 +60,14 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     onCloseFn: () => {
-        dispatch(modal.close())
+        dispatch(modal.close());
         dispatch(projectActions.resetStart());
     },
-    onConfirmFn: (data) => dispatch(projectActions.startProject(data)),
-    onProcessStateFn: (data) => {
-        dispatch(modal.close())
+    onConfirmFn: (repositoryId) => dispatch(projectActions.startProject(repositoryId)),
+    onProcessStateFn: (instanceId) => {
+        dispatch(modal.close());
         dispatch(projectActions.resetStart());
-        dispatch(pushHistory(`/process/${data}`));
+        dispatch(pushHistory(`/process/${instanceId}`));
     }
 });
 

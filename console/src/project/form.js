@@ -66,7 +66,7 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
                                         icon='chevron right'
                                         labelPosition='right'
                                         disabled={!pristine}
-                                        onClick={startProcess(fields.get(idx).name)} />}
+                                        onClick={startProcess(fields.get(idx).name, fields.get(idx).id)} />}
                                     content={`Start a new ${fields.get(idx).name} process`}
                                     inverted
                                 />
@@ -93,9 +93,9 @@ let projectForm = (props) => {
         deletePopupFn(originalName);
     };
 
-    const startProcess = (repositoryName) => (ev) => {
+    const startProcess = (repositoryName, repositoryId) => (ev) => {
         ev.preventDefault();
-        startProcessFn(originalName, repositoryName);
+        startProcessFn(repositoryName, repositoryId);
     };
 
     return <Form onSubmit={handleSubmit} loading={submitting}>
@@ -181,8 +181,8 @@ const mapDispatchToProps = (dispatch) => ({
         dispatch(modal.open(DeleteProjectPopup.MODAL_TYPE, { onConfirmFn }));
     },
 
-    startProcessFn: (projectName, repositoryName) => {
-        dispatch(modal.open(StartProjectPopup.MODAL_TYPE, { projectName, repositoryName }));
+    startProcessFn: (repositoryName, repositoryId) => {
+        dispatch(modal.open(StartProjectPopup.MODAL_TYPE, {repositoryName, repositoryId}));
     }
 });
 

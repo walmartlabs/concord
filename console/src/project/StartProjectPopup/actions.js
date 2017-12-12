@@ -1,4 +1,5 @@
 // @flow
+import type {ConcordKey} from "../../types";
 
 const NAMESPACE = "project/StartProjectPopup";
 
@@ -10,9 +11,9 @@ const types = {
 
 export default types;
 
-export const startProject = (data: any) => ({
+export const startProject = (repositoryId: ConcordKey) => ({
     type: types.PROJECT_START_REQUEST,
-    data
+    repositoryId
 });
 
 export const resetStart = () => ({

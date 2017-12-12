@@ -3,11 +3,9 @@ import {call, fork, put, takeLatest, all} from "redux-saga/effects";
 import * as api from "./api";
 import types from "./actions";
 
-function* startProject(action: any): Generator<*, *, *> {
+function* startProject({repositoryId}: any): Generator<*, *, *> {
     try {
-        const {projectName, repositoryName} = action.data;
-
-        const response = yield call(api.startProject, projectName, repositoryName);
+        const response = yield call(api.startProject, repositoryId);
         if (response.error) {
             yield put({
                 response,
