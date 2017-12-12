@@ -25,6 +25,7 @@ projects.
 
 ### Changed
 
+- concord-client: switched to resteasy-based client;
 - concord-runner: improved stability by using a separate classloader
 to load tasks;
 - concord-server: user permissions are effectively replaced with the
