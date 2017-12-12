@@ -1,17 +1,20 @@
 package com.walmartlabs.concord.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
+import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.walmartlabs.concord.client.Keys.*;
+import static com.walmartlabs.concord.client.Keys.ACTION_KEY;
 
 @Named("project")
 public class ProjectTask extends AbstractConcordTask {
@@ -20,6 +23,12 @@ public class ProjectTask extends AbstractConcordTask {
 
     private static final String NAME_KEY = "name";
     private static final String REPOSITORIES_KEY = "repositories";
+
+    private final ObjectMapper mapper;
+
+    public ProjectTask() {
+        this.mapper = new ObjectMapper();
+    }
 
     @Override
     public void execute(Context ctx) throws Exception {
@@ -38,35 +47,27 @@ public class ProjectTask extends AbstractConcordTask {
     private void create(Context ctx) throws Exception {
         Map<String, Object> cfg = createCfg(ctx, NAME_KEY, REPOSITORIES_KEY);
 
-        Map<String, Object> req = new HashMap<>();
-        req.put("name", get(cfg, NAME_KEY));
+        Map<String, RepositoryEntry> repositories = null;
 
         Object repos = cfg.get(REPOSITORIES_KEY);
         if (repos instanceof Collection) {
-            req.put("repositories", toRepositories((Collection<Object>) repos));
+            repositories = toRepositories((Collection<Object>) repos);
         } else if (repos != null) {
             throw new IllegalArgumentException("'" + REPOSITORIES_KEY + "' must a list of repositories");
         }
 
-        String target = get(cfg, BASEURL_KEY) + "/api/v1/project";
-        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
-
-        URL url = new URL(target);
-        HttpURLConnection conn = null;
-        try {
-            conn = Http.postJson(url, sessionToken, req);
-            Map<String, Object> resp = Http.readMap(conn);
+        ProjectEntry entry = new ProjectEntry(get(cfg, NAME_KEY), repositories);
+        withClient(ctx, target -> {
+            ProjectResource proxy = target.proxy(ProjectResource.class);
+            CreateProjectResponse resp = proxy.createOrUpdate(entry);
             log.info("The project was created (or updated): {}", resp);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
+            return null;
+        });
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> toRepositories(Collection<Object> items) {
-        Map<String, Object> m = new HashMap<>();
+    private Map<String, RepositoryEntry> toRepositories(Collection<Object> items) {
+        Map<String, RepositoryEntry> result = new HashMap<>();
 
         for (Object i : items) {
             if (!(i instanceof Map)) {
@@ -80,10 +81,10 @@ public class ProjectTask extends AbstractConcordTask {
                 throw new IllegalArgumentException("Repository name is required");
             }
 
-            m.put(name, r);
+            result.put(name, parseRepository(r));
         }
 
-        return m;
+        return result;
     }
 
     private static Action getAction(Context ctx) {
@@ -93,6 +94,10 @@ public class ProjectTask extends AbstractConcordTask {
             return Action.valueOf(s.trim().toUpperCase());
         }
         throw new IllegalArgumentException("'" + ACTION_KEY + "' must be a string");
+    }
+
+    private RepositoryEntry parseRepository(Map<String, Object> r) {
+        return mapper.convertValue(r, RepositoryEntry.class);
     }
 
     private enum Action {

@@ -1,12 +1,28 @@
 package com.walmartlabs.concord.client;
 
-import com.walmartlabs.concord.sdk.*;
+import com.walmartlabs.concord.sdk.ApiConfiguration;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.Task;
+import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
 import javax.inject.Inject;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import static com.walmartlabs.concord.client.Keys.BASEURL_KEY;
 import static com.walmartlabs.concord.client.Keys.SESSION_TOKEN_KEY;
 
 public abstract class AbstractConcordTask implements Task {
@@ -14,17 +30,88 @@ public abstract class AbstractConcordTask implements Task {
     @Inject
     ApiConfiguration apiCfg;
 
+    public AbstractConcordTask() {
+        this.apiCfg = null;
+    }
+
+    protected ResteasyClient createClient() {
+        return new ResteasyClientBuilder()
+                .establishConnectionTimeout(30, TimeUnit.SECONDS)
+                .socketTimeout(30, TimeUnit.SECONDS)
+                .build();
+    }
+
+    protected <T> T withClient(Context ctx, CheckedFunction<ResteasyWebTarget, T> f) throws Exception {
+        return withClient(ctx, null, f);
+    }
+
+    protected <T> T withClient(Context ctx, String uri, CheckedFunction<ResteasyWebTarget, T> f) throws Exception {
+        ResteasyClient client = createClient();
+        client.register((ClientRequestFilter) requestContext -> {
+            MultivaluedMap<String, Object> headers = requestContext.getHeaders();
+            headers.putSingle("X-Concord-SessionToken", apiCfg.getSessionToken(ctx));
+        });
+
+        String targetUri = apiCfg.getBaseUrl();
+        if (uri != null) {
+            targetUri += "/" + uri;
+        }
+
+        ResteasyWebTarget target = client.target(targetUri);
+        try {
+            return f.apply(target);
+        } finally {
+            client.close();
+        }
+
+    }
+
+    protected <T> T request(Context ctx, String uri, Map<String, Object> input, Class<T> entityType) throws Exception {
+        return withClient(ctx, uri, target -> {
+            MultipartFormDataOutput mdo = createMDO(input);
+            GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
+            };
+
+            Response resp = target.request().post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
+            if (resp.getStatus() != Response.Status.OK.getStatusCode()) {
+                resp.close();
+                if (resp.getStatus() == 403) {
+                    throw new ForbiddenException();
+                }
+
+                throw new WebApplicationException(resp);
+            }
+
+            T e = resp.readEntity(entityType);
+            resp.close();
+            return e;
+        });
+    }
+
+    protected MultipartFormDataOutput createMDO(Map<String, Object> input) {
+        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+        input.forEach((k, v) -> {
+            if (v instanceof InputStream || v instanceof byte[]) {
+                mdo.addFormData(k, v, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            } else if (v instanceof String) {
+                mdo.addFormData(k, v, MediaType.TEXT_PLAIN_TYPE);
+            } else if (v instanceof Map) {
+                mdo.addFormData(k, v, MediaType.APPLICATION_JSON_TYPE);
+            } else if (v instanceof Boolean) {
+                mdo.addFormData(k, v.toString(), MediaType.TEXT_PLAIN_TYPE);
+            } else {
+                throw new IllegalArgumentException("Unknown input type: " + v);
+            }
+        });
+        return mdo;
+    }
+
     protected Map<String, Object> createCfg(Context ctx) {
         return createCfg(ctx, (String[]) null);
     }
 
     protected Map<String, Object> createCfg(Context ctx, String ... keys) {
         Map<String, Object> m = new HashMap<>();
-
-        String baseUrl = apiCfg.getBaseUrl();
-        if (baseUrl != null) {
-            m.put(BASEURL_KEY, baseUrl);
-        }
 
         String sessionToken = apiCfg.getSessionToken(ctx);
         if (sessionToken != null) {
@@ -48,5 +135,10 @@ public abstract class AbstractConcordTask implements Task {
             throw new IllegalArgumentException("'" + k + "' is required");
         }
         return (T) v;
+    }
+
+    @FunctionalInterface
+    protected interface CheckedFunction<T, R> {
+        R apply(T t) throws Exception;
     }
 }

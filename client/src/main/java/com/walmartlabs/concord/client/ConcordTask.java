@@ -4,27 +4,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.client.Keys.*;
+import static com.walmartlabs.concord.client.Keys.ACTION_KEY;
 
 @Named("concord")
 public class ConcordTask extends AbstractConcordTask {
 
     private static final Logger log = LoggerFactory.getLogger(ConcordTask.class);
 
-    private static long DEFAULT_KILL_TIMEOUT = 10000;
+    private static final long DEFAULT_KILL_TIMEOUT = 10000;
 
     private static final String ARCHIVE_KEY = "archive";
     private static final String ORG_KEY = "org";
@@ -81,27 +82,17 @@ public class ConcordTask extends AbstractConcordTask {
 
     @SuppressWarnings("unchecked")
     public List<String> listSubprocesses(@InjectVariable("context") Context ctx, Map<String, Object> cfg) throws Exception {
-        String instanceId = get(cfg, INSTANCE_ID_KEY);
-
-        String target = get(cfg, BASEURL_KEY) + "/api/v1/process/" + instanceId + "/subprocess";
-        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
-
+        UUID instanceId = UUID.fromString(get(cfg, INSTANCE_ID_KEY));
         Set<String> tags = getTags(cfg);
-        if (tags != null) {
-            StringBuilder b = new StringBuilder("?");
-            for (Iterator<String> i = tags.iterator(); i.hasNext(); ) {
-                b.append("tags=").append(i.next());
-                if (i.hasNext()) {
-                    b.append("&");
-                }
-            }
-            target += b;
-        }
 
-        URL url = new URL(target);
-        List<Map<String, Object>> l = Http.getJson(url, sessionToken, List.class);
-
-        return l.stream().map(e -> (String) e.get("instanceId")).collect(Collectors.toList());
+        return withClient(ctx, target -> {
+            ProcessResource proxy = target.proxy(ProcessResource.class);
+            List<ProcessEntry> result = proxy.list(instanceId, tags);
+            return result.stream()
+                    .map(ProcessEntry::getInstanceId)
+                    .map(UUID::toString)
+                    .collect(Collectors.toList());
+        });
     }
 
     public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids) throws Exception {
@@ -114,21 +105,23 @@ public class ConcordTask extends AbstractConcordTask {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, Map<String, Object> cfg, List<String> ids, long timeout) throws Exception {
-        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
         Map<String, Object> result = new HashMap<>();
 
-        ids.parallelStream().forEach(id -> {
+        ids.parallelStream().map(UUID::fromString).forEach(id -> {
             log.info("Waiting for {}...", id);
+
             try {
-                String target = get(cfg, BASEURL_KEY) + "/api/v1/process/" + id + "/waitForCompletion";
-                URL url = new URL(target + "?timeout=" + timeout);
-                Map<String, Object> m = Http.getJson(url, sessionToken, Map.class);
-                String status = (String) m.get("status");
+                ProcessStatus status = withClient(ctx, target -> {
+                    ProcessResource proxy = target.proxy(ProcessResource.class);
+                    ProcessEntry e = proxy.waitForCompletion(id, timeout);
+                    return e.getStatus();
+                });
+
                 log.info("Process {} is {}", id, status);
 
-                m.put(id, status);
-            } catch (IOException e) {
+                result.put(id.toString(), status.name());
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
@@ -164,50 +157,40 @@ public class ConcordTask extends AbstractConcordTask {
         log.info("Starting a child process (project={}, repository={}, archive={} sync={}, req={})",
                 project, repo, archive, sync, req);
 
-        String target = get(cfg, BASEURL_KEY) + "/api/v1/process";
-        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
+        String targetUri = ProcessResource.class.getAnnotation(javax.ws.rs.Path.class).value();
 
-        URL url = new URL(target);
-        HttpURLConnection conn = null;
-        try {
-            Map<String, Object> input = new HashMap<>();
+        Map<String, Object> input = new HashMap<>();
 
-            if (archive != null) {
-                input.put("archive", Files.readAllBytes(archive));
-            }
-
-            ObjectMapper om = new ObjectMapper();
-            input.put("request", om.writeValueAsBytes(req));
-
-            if (org != null) {
-                input.put("org", org);
-            }
-
-            if (project != null) {
-                input.put("project", project);
-            }
-
-            if (repo != null) {
-                input.put("repo", repo);
-            }
-
-            input.put("parentInstanceId", instanceId);
-            input.put("sync", sync);
-
-            conn = Http.postMultipart(url, sessionToken, input);
-
-            Map<String, Object> result = Http.readMap(conn);
-            String childId = (String) result.get("instanceId");
-            log.info(sync ? "Child process completed: {}" : "Started a child process: {}", childId);
-
-            ctx.setVariable(JOBS_KEY, Collections.singletonList(childId));
-            Object out = result.getOrDefault("out", Collections.emptyMap());
-            ctx.setVariable(JOB_OUT_KEY, out);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
+        if (archive != null) {
+            input.put("archive", Files.readAllBytes(archive));
         }
+
+        ObjectMapper om = new ObjectMapper();
+        input.put("request", om.writeValueAsBytes(req));
+
+        if (org != null) {
+            input.put("org", org);
+        }
+
+        if (project != null) {
+            input.put("project", project);
+        }
+
+        if (repo != null) {
+            input.put("repo", repo);
+        }
+
+        input.put("parentInstanceId", instanceId);
+        input.put("sync", sync);
+
+        StartProcessResponse resp = request(ctx, targetUri, input, StartProcessResponse.class);
+
+        String childId = resp.getInstanceId().toString();
+        log.info(sync ? "Child process completed: {}" : "Started a child process: {}", childId);
+
+        ctx.setVariable(JOBS_KEY, Collections.singletonList(childId));
+        Object out = resp.getOut() != null ? resp.getOut() : Collections.emptyMap();
+        ctx.setVariable(JOB_OUT_KEY, out);
     }
 
     @SuppressWarnings("unchecked")
@@ -242,42 +225,32 @@ public class ConcordTask extends AbstractConcordTask {
 
             int n = getInstances(cfg);
             for (int i = 0; i < n; i++) {
-                String id = forkOne(cfg);
-                ids.add(id);
+                UUID id = forkOne(ctx, cfg);
+                ids.add(id.toString());
             }
         }
 
         return ids;
     }
 
-    private String forkOne(Map<String, Object> cfg) throws Exception {
+    private UUID forkOne(Context ctx, Map<String, Object> cfg) throws Exception {
         if (cfg.containsKey(ARCHIVE_KEY)) {
             log.warn("'" + ARCHIVE_KEY + "' parameter is not supported for fork action and will be ignored");
         }
 
-        String instanceId = get(cfg, INSTANCE_ID_KEY);
-        String target = get(cfg, BASEURL_KEY) + "/api/v1/process/" + instanceId + "/fork";
-        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
+        UUID instanceId = UUID.fromString(get(cfg, INSTANCE_ID_KEY));
         boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
 
         Map<String, Object> req = createRequest(cfg);
 
         log.info("Forking the current instance (sync={}, req={})...", sync, req);
-        URL url = new URL(target + "?sync=" + sync);
-        HttpURLConnection conn = null;
-        try {
-            conn = Http.postJson(url, sessionToken, req);
 
-            Map<String, Object> result = Http.readMap(conn);
-
-            String childId = (String) result.get("instanceId");
-            log.info("Forked a child process: {}", childId);
-            return childId;
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
+        return withClient(ctx, target -> {
+            ProcessResource proxy = target.proxy(ProcessResource.class);
+            StartProcessResponse resp = proxy.fork(instanceId, req, sync, null);
+            log.info("Forked a child process: {}", resp.getInstanceId());
+            return resp.getInstanceId();
+        });
     }
 
     private void kill(Context ctx) throws Exception {
@@ -322,25 +295,11 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private void killOne(Context ctx, Map<String, Object> cfg, String instanceId) throws Exception {
-        String target = get(cfg, BASEURL_KEY) + "/api/v1/process/" + instanceId;
-        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
-
-        URL url = new URL(target);
-        HttpURLConnection conn = null;
-        try {
-            log.info("Sending kill command for {}...", instanceId);
-            conn = Http.delete(url, sessionToken);
-
-            int response = conn.getResponseCode();
-            if (response == 404) {
-                throw new IllegalArgumentException("Process not found: " + instanceId);
-            }
-            Http.assertOk(conn);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
+        withClient(ctx, target -> {
+            ProcessResource proxy = target.proxy(ProcessResource.class);
+            proxy.cancel(UUID.fromString(instanceId));
+            return null;
+        });
 
         boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
         if (sync) {
@@ -348,8 +307,8 @@ public class ConcordTask extends AbstractConcordTask {
         }
     }
 
-    private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
-        Map<String, Object> m = createCfg(ctx, BASEURL_KEY, SYNC_KEY, ENTRY_POINT_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
+    private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) throws Exception {
+        Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, ARCHIVE_KEY, PROJECT_KEY,
                 REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, DISABLE_ON_CANCEL_KEY,
                 DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY);
 

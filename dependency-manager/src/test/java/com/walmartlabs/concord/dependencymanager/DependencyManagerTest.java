@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.dependencymanager;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.URI;
@@ -10,6 +11,7 @@ import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore
 public class DependencyManagerTest {
 
     @Test(timeout = 30000)

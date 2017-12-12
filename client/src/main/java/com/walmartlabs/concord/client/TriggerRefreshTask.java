@@ -2,14 +2,10 @@ package com.walmartlabs.concord.client;
 
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.server.api.org.trigger.TriggerResource;
 
 import javax.inject.Named;
-import java.net.URL;
-import java.util.Collections;
 import java.util.Map;
-
-import static com.walmartlabs.concord.client.Keys.SESSION_TOKEN_KEY;
-import static com.walmartlabs.concord.client.Keys.BASEURL_KEY;
 
 @Named("triggersRefresh")
 public class TriggerRefreshTask extends AbstractConcordTask implements Task {
@@ -20,15 +16,15 @@ public class TriggerRefreshTask extends AbstractConcordTask implements Task {
 
     @Override
     public void execute(Context ctx) throws Exception {
-        Map<String, Object> cfg = createCfg(ctx, BASEURL_KEY, ORG_KEY, REPOSITORY_KEY, PROJECT_KEY);
+        Map<String, Object> cfg = createCfg(ctx, ORG_KEY, REPOSITORY_KEY, PROJECT_KEY);
         String orgName = get(cfg, ORG_KEY);
         String projectName = get(cfg, PROJECT_KEY);
         String repositoryName = get(cfg, REPOSITORY_KEY);
 
-        String target = get(cfg, BASEURL_KEY) + "/api/v1/org/" + orgName + "/trigger/refresh/" + projectName + "/" + repositoryName;
-        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
-
-        URL url = new URL(target);
-        Http.postJson(url, sessionToken, Collections.emptyMap());
+        withClient(ctx, target -> {
+            TriggerResource proxy = target.proxy(TriggerResource.class);
+            proxy.refresh(orgName, projectName, repositoryName);
+            return null;
+        });
     }
 }

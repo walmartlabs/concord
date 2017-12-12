@@ -30,12 +30,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DefaultJobExecutor implements JobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultJobExecutor.class);
 
     private final Configuration cfg;
+    private final DefaultDependencies defaultDependencies;
     private final LogManager logManager;
     private final DependencyManager dependencyManager;
     private final AgentApiClient client;
@@ -47,6 +49,7 @@ public class DefaultJobExecutor implements JobExecutor {
                               DependencyManager dependencyManager, AgentApiClient client) {
 
         this.cfg = cfg;
+        this.defaultDependencies = new DefaultDependencies();
         this.logManager = logManager;
         this.dependencyManager = dependencyManager;
         this.client = client;
@@ -58,7 +61,10 @@ public class DefaultJobExecutor implements JobExecutor {
     @Override
     public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
         try {
-            Collection<Path> dependencies = dependencyManager.resolve(getDependencyUris(workDir));
+            Collection<URI> depsUris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(workDir).stream())
+                    .collect(Collectors.toList());
+
+            Collection<Path> dependencies = dependencyManager.resolve(depsUris);
 
             ProcessEntry entry;
             if (canUsePrefork(workDir)) {

@@ -2,18 +2,15 @@ package com.walmartlabs.concord.client;
 
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.server.api.org.inventory.InventoryQueryResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.walmartlabs.concord.client.Keys.SESSION_TOKEN_KEY;
 
 @Named("inventory")
 public class InventoryTask extends AbstractConcordTask {
@@ -31,7 +28,7 @@ public class InventoryTask extends AbstractConcordTask {
            String orgName, String inventoryName,
                                        String hostGroupName, String queryName, Map<String, Object> params, Map<String, Object> vars) throws Exception {
 
-        List<String> hostIps = execQuery(ctx, orgName, inventoryName, queryName, params, List.class);
+        List<Object> hostIps = execQuery(ctx, orgName, inventoryName, queryName, params);
         Map<String, Object> hostVars = new HashMap<>();
         hostVars.put("hosts", hostIps);
         if (vars != null && !vars.isEmpty()) {
@@ -47,25 +44,17 @@ public class InventoryTask extends AbstractConcordTask {
     public List<Object> query(@InjectVariable("context") Context ctx,
             String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
 
-        List<Object> result = execQuery(ctx, orgName, inventoryName, queryName, params, List.class);
+        List<Object> result = execQuery(ctx, orgName, inventoryName, queryName, params);
 
         log.info("query ['{}', '{}', '{}', '{}'] -> {}", orgName, inventoryName, queryName, params, result != null);
 
         return result;
     }
 
-    private <T> T execQuery(Context ctx, String orgName, String inventoryName, String queryName, Map<String, Object> params, Class<T> clazz) throws Exception {
-        Map<String, Object> cfg = createTaskCfg(ctx);
-        String target = String.format("%s/api/v1/org/%s/inventory/%s/query/%s/exec", get(cfg, Keys.BASEURL_KEY), orgName, inventoryName, queryName);
-        String sessionToken = get(cfg, SESSION_TOKEN_KEY);
-
-        URL url = new URL(target);
-        HttpURLConnection conn = Http.postJson(url, sessionToken, params);
-
-        return Http.read(conn, clazz);
-    }
-
-    private Map<String, Object> createTaskCfg(Context ctx) {
-        return createCfg(ctx, Keys.BASEURL_KEY);
+    private List<Object> execQuery(Context ctx, String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
+        return withClient(ctx, target -> {
+            InventoryQueryResource proxy = target.proxy(InventoryQueryResource.class);
+            return proxy.exec(orgName, inventoryName, queryName, params);
+        });
     }
 }

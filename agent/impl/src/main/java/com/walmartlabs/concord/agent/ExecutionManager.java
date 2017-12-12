@@ -37,7 +37,7 @@ public class ExecutionManager {
 
     private final Object mutex = new Object();
 
-    public ExecutionManager(AgentApiClient client, Configuration cfg) throws IOException {
+    public ExecutionManager(AgentApiClient client, Configuration cfg) {
 
         this.logManager = new LogManager(cfg);
         this.cfg = cfg;

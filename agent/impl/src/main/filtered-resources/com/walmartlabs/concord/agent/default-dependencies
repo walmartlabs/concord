@@ -1,0 +1,1 @@
+mvn://com.walmartlabs.concord:concord-client:${project.version}

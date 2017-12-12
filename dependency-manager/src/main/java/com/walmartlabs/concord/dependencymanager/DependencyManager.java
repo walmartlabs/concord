@@ -11,6 +11,7 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.*;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
@@ -35,6 +36,9 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.eclipse.aether.repository.RepositoryPolicy.CHECKSUM_POLICY_IGNORE;
+import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_NEVER;
+
 public class DependencyManager {
 
     private static final Logger log = LoggerFactory.getLogger(DependencyManager.class);
@@ -45,9 +49,9 @@ public class DependencyManager {
     private static final String FILES_CACHE_DIR = "files";
     private static final String MAVEN_CACHE_DIR = "maven";
 
-    private static final MavenRepository WALMART_WARM = new MavenRepository("warm", "default", "https://nexus.prod.walmart.com/nexus/content/groups/public/");
-    private static final MavenRepository MAVEN_CENTRAL = new MavenRepository("central", "default", "https://repo.maven.apache.org/maven2/");
-    private static final MavenRepository LOCAL_M2 = new MavenRepository("local", "default", "file://" + System.getProperty("user.home") + "/.m2/repository");
+    private static final MavenRepository WALMART_WARM = new MavenRepository("warm", "default", "https://nexus.prod.walmart.com/nexus/content/groups/public/", false);
+    private static final MavenRepository MAVEN_CENTRAL = new MavenRepository("central", "default", "https://repo.maven.apache.org/maven2/", false);
+    private static final MavenRepository LOCAL_M2 = new MavenRepository("local", "default", "file://" + System.getProperty("user.home") + "/.m2/repository", true);
     private static final List<MavenRepository> DEFAULT_REPOS = Arrays.asList(LOCAL_M2, WALMART_WARM, MAVEN_CENTRAL);
 
     private final Path cacheDir;
@@ -274,7 +278,13 @@ public class DependencyManager {
 
     private static List<RemoteRepository> toRemote(List<MavenRepository> l) {
         return l.stream()
-                .map(r -> new RemoteRepository.Builder(r.getId(), r.getContentType(), r.getUrl()).build())
+                .map(r -> {
+                    RemoteRepository.Builder result = new RemoteRepository.Builder(r.getId(), r.getContentType(), r.getUrl());
+                    if (!r.isSnapshotEnabled()) {
+                        result.setSnapshotPolicy(new RepositoryPolicy(false, UPDATE_POLICY_NEVER, CHECKSUM_POLICY_IGNORE));
+                    }
+                    return result.build();
+                })
                 .collect(Collectors.toList());
     }
 
@@ -341,7 +351,7 @@ public class DependencyManager {
                 throw new RuntimeException("Missing repository 'url' value: " + s);
             }
 
-            l.add(new MavenRepository(id, contentType, url));
+            l.add(new MavenRepository(id, contentType, url, true));
         }
         return l;
     }
