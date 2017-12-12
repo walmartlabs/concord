@@ -10,6 +10,7 @@ cd target && zip -r payload.zip ./* > /dev/null && cd ..
 read -p "Username: " CURL_USER
 curl -v \
 -u ${CURL_USER} \
--H "Content-Type: application/octet-stream" \
---data-binary @target/payload.zip \
-"http://${SERVER_ADDR}/api/v1/process?sync=true&out=x&out=y&out=z"
+-F archive=@target/payload.zip \
+-F sync=true \
+-F out=x,y,z \
+http://${SERVER_ADDR}/api/v1/process

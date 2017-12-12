@@ -32,7 +32,12 @@ settings to add a new public key.
 Before we create our own user, all requests are perfomed using the default admin API key.
 This example assumes that the `ansible` template is already uploaded to the server.
 
-### 1. Create a new Concord project
+### 1. Create a new repository key
+
+Please refer to the [Generate a new key pair](http://concord.walmart.com/docs/api/secret.html#generate-a-new-key-pair) document.
+Use `mySecret` as a name of the key pair, it will be used on the next step.
+
+### 2. Create a new Concord project
 
 We are going to create a new project using the `ansible` project template. The `ansible` template
 will automatically add the necessary boilerplate - a workflow process definition to run our playbook
@@ -42,9 +47,11 @@ and necessary runtime dependencies.
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "name": "myProject", "cfg": { "template": "ansible" } }' \
-http://localhost:8001/api/v1/project
+-d '{ "name": "myProject", "cfg": { "template": "ansible" }, "repositories": { "myRepo": {"url": "git@github.com:my/repo.git", "secret": "mySecret" } } }' \
+http://localhost:8001/api/v1/org/Default/project
 ```
+
+The `secret` parameters is the name of the key created on the step 2.
 
 ```json
 {
@@ -52,28 +59,6 @@ http://localhost:8001/api/v1/project
 }
 ```
 
-### 2. Create a new repository key
-
-Please refer to the [Generate a new key pair](http://concord.walmart.com/docs/api/secret.html#generate-a-new-key-pair) document.
-Use `mySecret` as a name of the key pair, it will be used on the next step.
-
-### 3. Add a repository
-
-```
-curl -v \
--H "Content-Type: application/json" \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "name": "myRepo", "url": "git@github.com:my/repo.git", "secret": "mySecret" }' \
-http://localhost:8001/api/v1/project/myProject/repository
-```
-
-The `secret` parameters is the name of the key created on the step 2.
-
-```json
-{
-    "ok": true
-}
-```
 
 ### 4. Add a new user (optional)
 
@@ -81,11 +66,9 @@ The `secret` parameters is the name of the key created on the step 2.
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "username": "myUser", "permissions": [ "process:*:myProject" ] }' \
+-d '{ "username": "myUser" }' \
 http://localhost:8001/api/v1/user
 ```
-
-Check [the permissions description](http://concord.walmart.com/docs/api/security.md#permissions) in the documentation.
 
 ```json
 {
@@ -96,13 +79,13 @@ Check [the permissions description](http://concord.walmart.com/docs/api/security
 
 ### 5. Create an API key (optional)
 
-Use the `id` value of the user created in the previous step.
+Use the `username` value of the user created in the previous step.
 
 ```
 curl -v \
 -H "Content-Type: application/json" \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
--d '{ "userId": "9458c42e-db11-11e6-8356-07c51e4e3ef5" }' \
+-d '{ "username": "myUser" }' \
 http://localhost:8001/api/v1/apikey
 ```
 
@@ -143,9 +126,12 @@ Make a call:
 ```
 curl -v \
 -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+-F org=Default \
+-F project=myProject \
+-F repo=myRepo \
 -F request=@request.json \
 -F inventory=@inventory.ini \
-http://localhost:8001/api/v1/process/myProject:myRepo
+http://localhost:8001/api/v1/process
 ```
 
 ```json
