@@ -53,7 +53,7 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
     }
 
     private static Map<String, Object> createForkCfg(Payload payload) {
-        UUID id = payload.getParentInstanceId();
+        UUID id = payload.getHeader(Payload.PARENT_INSTANCE_ID);
         if (id == null) {
             return Collections.emptyMap();
         }

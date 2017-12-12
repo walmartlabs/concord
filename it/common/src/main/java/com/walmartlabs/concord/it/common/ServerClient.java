@@ -72,13 +72,20 @@ public class ServerClient {
         return githubKey;
     }
 
+    public StartProcessResponse start(Map<String, Object> input) {
+        String uri = ProcessResource.class.getAnnotation(Path.class).value();
+        return request(uri, input, StartProcessResponse.class);
+    }
+
+    @Deprecated
     public StartProcessResponse start(Map<String, Object> input, boolean sync) {
         return start(null, input, sync);
     }
 
+    @Deprecated
     public StartProcessResponse start(String entryPoint, Map<String, Object> input, boolean sync) {
         return request(ProcessResource.class.getAnnotation(Path.class).value() + (entryPoint != null ? "/" + entryPoint : "")
-                + "?sync=" + sync,
+                        + "?sync=" + sync,
                 input, StartProcessResponse.class);
     }
 
@@ -93,6 +100,8 @@ public class ServerClient {
                 mdo.addFormData(k, v, MediaType.APPLICATION_JSON_TYPE);
             } else if (v instanceof Boolean) {
                 mdo.addFormData(k, v.toString(), MediaType.TEXT_PLAIN_TYPE);
+            } else if (v instanceof String[]) {
+                mdo.addFormData(k, String.join(",", (String[]) v), MediaType.TEXT_PLAIN_TYPE);
             } else {
                 throw new IllegalArgumentException("Unknown input type: " + v);
             }

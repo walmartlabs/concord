@@ -27,6 +27,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static long DEFAULT_KILL_TIMEOUT = 10000;
 
     private static final String ARCHIVE_KEY = "archive";
+    private static final String ORG_KEY = "org";
     private static final String PROJECT_KEY = "project";
     private static final String REPOSITORY_KEY = "repository";
     private static final String SYNC_KEY = "sync";
@@ -43,6 +44,9 @@ public class ConcordTask extends AbstractConcordTask {
 
     @InjectVariable("concord")
     Map<String, Object> defaults;
+
+    @InjectVariable("projectInfo")
+    Map<String, Object> projectInfo;
 
     @Override
     public void execute(Context ctx) throws Exception {
@@ -135,13 +139,18 @@ public class ConcordTask extends AbstractConcordTask {
     private void start(Context ctx, String instanceId) throws Exception {
         Map<String, Object> cfg = createJobCfg(ctx, defaults);
 
+        String org = (String) cfg.get(ORG_KEY);
+        if (org == null) {
+            org = (String) projectInfo.get("orgName");
+        }
+
         String project = (String) cfg.get(PROJECT_KEY);
         String repo = (String) cfg.get(REPOSITORY_KEY);
-        Path archive = null;
 
         Map<String, Object> req = createRequest(cfg);
         boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
 
+        Path archive = null;
         if (cfg.containsKey(ARCHIVE_KEY)) {
             Path workDir = Paths.get((String) ctx.getVariable(Constants.Context.WORK_DIR_KEY));
             archive = workDir.resolve((String) cfg.get(ARCHIVE_KEY));
@@ -156,16 +165,9 @@ public class ConcordTask extends AbstractConcordTask {
                 project, repo, archive, sync, req);
 
         String target = get(cfg, BASEURL_KEY) + "/api/v1/process";
-        if (project != null) {
-            target += "/" + project;
-            if (repo != null) {
-                target += ":" + repo;
-            }
-        }
-
         String sessionToken = get(cfg, SESSION_TOKEN_KEY);
 
-        URL url = new URL(target + "?parentId=" + instanceId + "&sync=" + sync);
+        URL url = new URL(target);
         HttpURLConnection conn = null;
         try {
             Map<String, Object> input = new HashMap<>();
@@ -176,6 +178,21 @@ public class ConcordTask extends AbstractConcordTask {
 
             ObjectMapper om = new ObjectMapper();
             input.put("request", om.writeValueAsBytes(req));
+
+            if (org != null) {
+                input.put("org", org);
+            }
+
+            if (project != null) {
+                input.put("project", project);
+            }
+
+            if (repo != null) {
+                input.put("repo", repo);
+            }
+
+            input.put("parentInstanceId", instanceId);
+            input.put("sync", sync);
 
             conn = Http.postMultipart(url, sessionToken, input);
 
@@ -205,7 +222,7 @@ public class ConcordTask extends AbstractConcordTask {
                 throw new IllegalArgumentException("'" + JOBS_KEY + "' must be a list");
             }
         } else {
-            jobs = Collections.singletonList(createJobCfg(ctx, (Map<String, Object>) null));
+            jobs = Collections.singletonList(createJobCfg(ctx, null));
         }
 
         List<String> jobIds = forkMany(ctx, jobs);
@@ -331,8 +348,8 @@ public class ConcordTask extends AbstractConcordTask {
         }
     }
 
-    private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) throws Exception {
-        Map<String, Object> m = createCfg(ctx, BASEURL_KEY, SYNC_KEY, ENTRY_POINT_KEY, ARCHIVE_KEY, PROJECT_KEY,
+    private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
+        Map<String, Object> m = createCfg(ctx, BASEURL_KEY, SYNC_KEY, ENTRY_POINT_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
                 REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, DISABLE_ON_CANCEL_KEY,
                 DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY);
 

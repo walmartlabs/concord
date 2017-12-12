@@ -32,17 +32,20 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     private final OrganizationManager orgManager;
     private final ProjectDao projectDao;
     private final ProjectManager projectManager;
+    private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
 
     @Inject
     public ProjectResourceImpl(OrganizationManager orgManager,
                                ProjectDao projectDao,
                                ProjectManager projectManager,
+                               ProjectAccessManager accessManager,
                                SecretManager secretManager) {
 
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.projectManager = projectManager;
+        this.accessManager = accessManager;
         this.secretManager = secretManager;
     }
 
@@ -96,7 +99,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         }
 
         // TODO move to ProjectManager
-        projectManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
+        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
 
         String[] ps = cfgPath(path);
         Object v = projectDao.getConfigurationValue(projectId, ps);
@@ -119,7 +122,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         }
 
         // TODO move to ProjectManager
-        projectManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
 
         Map<String, Object> cfg = projectDao.getConfiguration(projectId);
         if (cfg == null) {
@@ -158,7 +161,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         }
 
         // TODO move to ProjectManager
-        projectManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
 
         Map<String, Object> cfg = projectDao.getConfiguration(projectId);
         if (cfg == null) {
@@ -201,7 +204,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
             throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        projectManager.updateAccessLevel(projectId, entry.getTeamId(), entry.getLevel());
+        accessManager.updateAccessLevel(projectId, entry.getTeamId(), entry.getLevel());
         return new GenericOperationResultResponse(OperationResult.UPDATED);
     }
 
@@ -219,7 +222,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
             throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        projectManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
+        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
 
         byte[] input = value.getBytes();
         byte[] result = secretManager.encryptData(projectName, input);

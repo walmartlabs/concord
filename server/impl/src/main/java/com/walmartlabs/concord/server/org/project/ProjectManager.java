@@ -3,19 +3,13 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOwner;
-import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
-import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.user.UserDao;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.DSLContext;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,32 +25,29 @@ public class ProjectManager {
 
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
-    private final OrganizationManager orgManager;
+    private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
     private final GithubWebhookService githubWebhookService;
     private final EventResource eventResource;
-    private final UserDao userDao;
 
     @Inject
     public ProjectManager(ProjectDao projectDao,
                           RepositoryDao repositoryDao,
-                          OrganizationManager orgManager,
+                          ProjectAccessManager accessManager,
                           SecretManager secretManager,
                           GithubWebhookService githubWebhookService,
-                          EventResource eventResource,
-                          UserDao userDao) {
+                          EventResource eventResource) {
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.orgManager = orgManager;
+        this.accessManager = accessManager;
         this.secretManager = secretManager;
         this.githubWebhookService = githubWebhookService;
         this.eventResource = eventResource;
-        this.userDao = userDao;
     }
 
     public ProjectEntry get(UUID projectId) {
-        return assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
+        return accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
     }
 
     public UUID insert(UUID orgId, String orgName, ProjectEntry entry) {
@@ -84,7 +75,7 @@ public class ProjectManager {
     }
 
     public void update(UUID projectId, ProjectEntry entry) {
-        ProjectEntry prevEntry = assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+        ProjectEntry prevEntry = accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
         UUID orgId = prevEntry.getOrgId();
 
         Map<String, RepositoryEntry> repos = entry.getRepositories();
@@ -105,7 +96,7 @@ public class ProjectManager {
     }
 
     public void delete(UUID projectId) {
-        assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
 
         projectDao.tx(tx -> {
             githubWebhookService.unregister(projectId);
@@ -122,49 +113,6 @@ public class ProjectManager {
         }
 
         return projectDao.list(orgId, userId, PROJECTS.PROJECT_NAME, true);
-    }
-
-    public void updateAccessLevel(UUID projectId, UUID teamId, ResourceAccessLevel level) {
-        assertProjectAccess(projectId, ResourceAccessLevel.OWNER, true);
-        projectDao.upsertAccessLevel(projectId, teamId, level);
-    }
-
-    public ProjectEntry assertProjectAccess(UUID projectId, ResourceAccessLevel level, boolean orgMembersOnly) {
-        ProjectEntry e = projectDao.get(projectId);
-        if (e == null) {
-            throw new ValidationErrorsException("Project not found: " + projectId);
-        }
-
-        orgManager.assertAccess(e.getOrgId(), false);
-
-        UserPrincipal p = UserPrincipal.getCurrent();
-        if (p.isAdmin()) {
-            // an admin can access any project
-            return e;
-        }
-
-        ProjectOwner owner = e.getOwner();
-        if (owner != null && owner.getId().equals(p.getId())) {
-            // the owner can do anything with his projects
-            return e;
-        }
-
-        if (orgMembersOnly && e.getVisibility() == ProjectVisibility.PUBLIC
-                && userDao.isInOrganization(p.getId(), e.getOrgId())) {
-            // organization members can access any public project in the same organization
-            return e;
-        }
-
-        if (orgMembersOnly || e.getVisibility() != ProjectVisibility.PUBLIC) {
-            // we need to check the resource's access level if the access is limited to
-            // the organization's members or the project is not public
-            if (!projectDao.hasAccessLevel(projectId, p.getId(), ResourceAccessLevel.atLeast(level))) {
-                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
-                        "the necessary access level (" + level + ") to the project: " + e.getName());
-            }
-        }
-
-        return e;
     }
 
     private void assertSecrets(UUID orgId, Map<String, RepositoryEntry> repos) {

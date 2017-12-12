@@ -43,6 +43,10 @@ public class ProjectEntry implements Serializable {
         this(null, name, null, null, null, null, null, null, null, true);
     }
 
+    public ProjectEntry(String name, ProjectVisibility visibility) {
+        this(null, name, null, null, null, null, null, visibility, null, true);
+    }
+
     public ProjectEntry(String name, Map<String, RepositoryEntry> repositories) {
         this(null, name, null, null, null, repositories, null, null, null, true);
     }

@@ -88,7 +88,7 @@ public class SecretManager {
 
         if (orgMembersOnly && e.getVisibility() == SecretVisibility.PUBLIC
                 && userDao.isInOrganization(p.getId(), e.getOrgId())) {
-            // organization members can access any public project in the same organization
+            // organization members can access any public secret in the same organization
             return e;
         }
 

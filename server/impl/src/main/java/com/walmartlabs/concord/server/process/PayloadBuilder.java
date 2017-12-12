@@ -23,16 +23,25 @@ public final class PayloadBuilder {
 
     private Payload payload;
 
-    public PayloadBuilder(UUID instanceId) {
-        this(instanceId, null);
+    public PayloadBuilder(Payload payload) {
+        this.payload = payload;
     }
 
-    public PayloadBuilder(UUID instanceId, UUID parentInstanceId) {
-        this.payload = new Payload(instanceId, parentInstanceId);
+    public PayloadBuilder(UUID instanceId) {
+        this.payload = new Payload(instanceId);
+    }
+
+    public PayloadBuilder parentInstanceId(UUID parentInstanceId) {
+        if (parentInstanceId != null) {
+            payload = payload.putHeader(Payload.PARENT_INSTANCE_ID, parentInstanceId);
+        }
+        return this;
     }
 
     public PayloadBuilder kind(ProcessKind kind) {
-        payload = payload.putHeader(Payload.PROCESS_KIND, kind);
+        if (kind != null) {
+            payload = payload.putHeader(Payload.PROCESS_KIND, kind);
+        }
         return this;
     }
 
@@ -57,7 +66,7 @@ public final class PayloadBuilder {
             }
 
             if (p.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE)) {
-                String v = p.getBodyAsString();
+                String v = p.getBodyAsString().trim();
                 Map<String, Object> m = ConfigurationUtils.toNested(name, v);
                 cfg = ConfigurationUtils.deepMerge(cfg, m);
             } else {
@@ -78,11 +87,17 @@ public final class PayloadBuilder {
     }
 
     public PayloadBuilder workspace(Path workDir) {
-        payload = payload.putHeader(Payload.WORKSPACE_DIR, workDir);
+        if (workDir != null) {
+            payload = payload.putHeader(Payload.WORKSPACE_DIR, workDir);
+        }
         return this;
     }
 
     public PayloadBuilder workspace(InputStream in) throws IOException {
+        if (in == null) {
+            return this;
+        }
+
         Path baseDir = ensureBaseDir();
 
         Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
@@ -94,10 +109,15 @@ public final class PayloadBuilder {
     }
 
     public PayloadBuilder configuration(Map<String, Object> cfg) {
+        if (cfg == null) {
+            cfg = Collections.emptyMap();
+        }
+
         Map<String, Object> prev = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (prev != null) {
             cfg = ConfigurationUtils.deepMerge(prev, cfg);
         }
+
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, cfg);
         return this;
     }

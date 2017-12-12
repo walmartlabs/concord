@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
@@ -131,7 +132,22 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     public StartProcessResponse start(MultipartInput input, UUID parentInstanceId,
                                       boolean sync, String[] out) {
 
-        return start(null, input, parentInstanceId, sync, out);
+        Payload payload;
+        try {
+            payload = payloadManager.createPayload(input);
+
+            // TODO remove after deprecating the old endpoints
+            payload = new PayloadBuilder(payload)
+                    .parentInstanceId(parentInstanceId)
+                    .outExpressions(out)
+                    .build();
+        } catch (IOException e) {
+            log.error("start -> error creating a payload: {}", e);
+            throw new WebApplicationException("Error creating a payload", e);
+        }
+
+        boolean sync2 = MultipartUtils.getBoolean(input, "sync", false);
+        return toResponse(processManager.start(payload, sync || sync2));
     }
 
     @Override

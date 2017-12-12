@@ -31,9 +31,10 @@ public interface ProcessResource {
      * @return
      */
     @POST
-    @ApiOperation("Starts a new process instance using the supplied payload archive")
+    @ApiOperation("Start a new process instance using the supplied payload archive")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     StartProcessResponse start(@ApiParam InputStream in,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
@@ -51,6 +52,7 @@ public interface ProcessResource {
     @ApiOperation("Start a new process using the specified entry point")
     @Path("/{entryPoint}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
                                @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
@@ -70,6 +72,7 @@ public interface ProcessResource {
     @Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam Map<String, Object> req,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
@@ -89,9 +92,9 @@ public interface ProcessResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     StartProcessResponse start(@ApiParam MultipartInput input,
-                               @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                               @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
-                               @ApiParam @QueryParam("out") String[] out);
+                               @ApiParam @Deprecated @QueryParam("parentId") UUID parentInstanceId,
+                               @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
+                               @ApiParam @Deprecated @QueryParam("out") String[] out);
 
     /**
      * Starts a new process instance using the specified entry point and multipart request data.
@@ -107,6 +110,7 @@ public interface ProcessResource {
     @Path("/{entryPoint}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam MultipartInput input,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,
@@ -127,6 +131,7 @@ public interface ProcessResource {
     @Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                @ApiParam InputStream in,
                                @ApiParam @QueryParam("parentId") UUID parentInstanceId,

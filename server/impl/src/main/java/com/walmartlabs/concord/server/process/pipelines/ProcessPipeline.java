@@ -22,6 +22,7 @@ public class ProcessPipeline extends Pipeline {
     @Inject
     public ProcessPipeline(Injector injector) {
         super(injector,
+                AuthorizationProcessor.class,
                 InitialQueueEntryProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,

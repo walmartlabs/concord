@@ -4,14 +4,14 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerResource;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
+import com.walmartlabs.concord.server.api.org.trigger.TriggerResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.project.ProjectManager;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -43,7 +43,7 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
     private final RepositoryDao repositoryDao;
     private final TriggersDao triggersDao;
     private final RepositoryManager repositoryManager;
-    private final ProjectManager projectManager;
+    private final ProjectAccessManager projectAccessManager;
     private final OrganizationManager orgManager;
 
     @Inject
@@ -51,8 +51,8 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
                                RepositoryDao repositoryDao,
                                TriggersDao triggersDao,
                                RepositoryManager repositoryManager,
-                               ProjectManager projectManager,
                                Configuration cfg,
+                               ProjectAccessManager projectAccessManager,
                                OrganizationManager orgManager) {
 
         super(cfg);
@@ -60,7 +60,7 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
         this.repositoryDao = repositoryDao;
         this.triggersDao = triggersDao;
         this.repositoryManager = repositoryManager;
-        this.projectManager = projectManager;
+        this.projectAccessManager = projectAccessManager;
         this.orgManager = orgManager;
     }
 
@@ -128,7 +128,7 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
             throw new ValidationErrorsException("Project not found: " + projectName);
         }
 
-        return projectManager.assertProjectAccess(id, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertProjectAccess(id, accessLevel, orgMembersOnly);
     }
 
     private static void assertAdmin() {

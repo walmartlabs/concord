@@ -88,7 +88,7 @@ public class Http {
         writer.append("Content-Disposition: form-data; name=\"").append(key).append("\"").append(CRLF);
 
         String contentType = "application/octet-stream";
-        if (value instanceof String) {
+        if (value instanceof String || value instanceof Boolean) {
             contentType = "text/plain; charset=utf-8";
         }
         writer.append("Content-Type: ").append(contentType).append(CRLF);
@@ -122,9 +122,9 @@ public class Http {
             }
 
             writer.append(CRLF);
-        } else if (value instanceof String) {
+        } else if (value instanceof String || value instanceof Boolean) {
             writer.append(CRLF);
-            writer.append((String) value).append(CRLF);
+            writer.append(value.toString()).append(CRLF);
         } else {
             throw new IllegalArgumentException("Unsupported value type: " + value);
         }

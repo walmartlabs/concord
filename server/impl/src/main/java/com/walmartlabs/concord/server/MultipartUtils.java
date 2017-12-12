@@ -3,8 +3,11 @@ package com.walmartlabs.concord.server;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
+import java.io.IOException;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +45,40 @@ public final class MultipartUtils {
             }
         }
         return false;
+    }
+
+    public static String getString(MultipartInput input, String key) {
+        try {
+            for (InputPart p : input.getParts()) {
+                String n = MultipartUtils.extractName(p);
+                if (key.equalsIgnoreCase(n)) {
+                    return p.getBodyAsString().trim();
+                }
+            }
+        } catch (IOException e) {
+            throw new WebApplicationException("Error parsing the request", e);
+        }
+        return null;
+    }
+
+    public static boolean getBoolean(MultipartInput input, String key, boolean defaultValue) {
+        String s = getString(input, key);
+        if (s == null) {
+            return defaultValue;
+        }
+        return Boolean.parseBoolean(s);
+    }
+
+    public static UUID getUuid(MultipartInput input, String key) {
+        String s = getString(input, key);
+        if (s == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(s);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException("Error parsing the request", e);
+        }
     }
 
     private MultipartUtils() {

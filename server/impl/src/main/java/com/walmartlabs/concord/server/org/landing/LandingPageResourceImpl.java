@@ -4,16 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.landing.CreateLandingResponse;
-import com.walmartlabs.concord.server.api.org.landing.DeleteLandingResponse;
 import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.org.landing.LandingPageResource;
-import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.project.ProjectManager;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -47,7 +46,7 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
     private final LandingDao landingDao;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
-    private final ProjectManager projectManager;
+    private final ProjectAccessManager projectAccessManager;
     private final RepositoryManager repositoryManager;
     private final OrganizationManager orgManager;
 
@@ -56,7 +55,7 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
                                    LandingDao landingDao,
                                    ProjectDao projectDao,
                                    RepositoryDao repositoryDao,
-                                   ProjectManager projectManager,
+                                   ProjectAccessManager projectAccessManager,
                                    RepositoryManager repositoryManager,
                                    OrganizationManager orgManager) {
 
@@ -65,7 +64,7 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
         this.landingDao = landingDao;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.projectManager = projectManager;
+        this.projectAccessManager = projectAccessManager;
         this.repositoryManager = repositoryManager;
         this.orgManager = orgManager;
     }
@@ -170,7 +169,7 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
             throw new ValidationErrorsException("Project not found: " + projectName);
         }
 
-        return projectManager.assertProjectAccess(id, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertProjectAccess(id, accessLevel, orgMembersOnly);
     }
 
     private static void assertAdmin() {

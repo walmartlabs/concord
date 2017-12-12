@@ -1,9 +1,12 @@
 package com.walmartlabs.concord.server.process;
 
+import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -26,17 +29,45 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.c
 public class PayloadManager {
 
     private final ProcessStateManager stateManager;
+    private final OrganizationDao orgDao;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
 
     @Inject
     public PayloadManager(ProcessStateManager stateManager,
+                          OrganizationDao orgDao,
                           ProjectDao projectDao,
                           RepositoryDao repositoryDao) {
 
         this.stateManager = stateManager;
+        this.orgDao = orgDao;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
+    }
+
+    public Payload createPayload(MultipartInput input) throws IOException {
+        UUID instanceId = UUID.randomUUID();
+        UUID parentInstanceId = MultipartUtils.getUuid(input, "parentInstanceId");
+
+        UUID orgId = getOrg(input);
+        UUID projectId = getProject(input, orgId);
+        UUID repoId = getRepo(input, projectId);
+        String entryPoint = MultipartUtils.getString(input, "entryPoint");
+
+        UserPrincipal initiator = UserPrincipal.getCurrent();
+
+        String[] out = getOutExpressions(input);
+
+        return new PayloadBuilder(instanceId)
+                .parentInstanceId(parentInstanceId)
+                .with(input)
+                .organization(orgId)
+                .project(projectId)
+                .repository(repoId)
+                .entryPoint(entryPoint)
+                .outExpressions(out)
+                .initiator(initiator.getUsername())
+                .build();
     }
 
     /**
@@ -49,10 +80,12 @@ public class PayloadManager {
      * @param input
      * @return
      */
+    @Deprecated
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
                                  EntryPoint entryPoint, MultipartInput input, String[] out) throws IOException {
 
-        return new PayloadBuilder(instanceId, parentInstanceId)
+        return new PayloadBuilder(instanceId)
+                .parentInstanceId(parentInstanceId)
                 .with(input)
                 .apply(p(entryPoint))
                 .initiator(initiator)
@@ -69,10 +102,12 @@ public class PayloadManager {
      * @param request
      * @return
      */
+    @Deprecated
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
                                  EntryPoint entryPoint, Map<String, Object> request, String[] out) throws IOException {
 
-        return new PayloadBuilder(instanceId, parentInstanceId)
+        return new PayloadBuilder(instanceId)
+                .parentInstanceId(parentInstanceId)
                 .initiator(initiator)
                 .apply(p(entryPoint))
                 .configuration(request)
@@ -89,10 +124,12 @@ public class PayloadManager {
      * @param in
      * @return
      */
+    @Deprecated
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
                                  EntryPoint entryPoint, InputStream in, String[] out) throws IOException {
 
-        return new PayloadBuilder(instanceId, parentInstanceId)
+        return new PayloadBuilder(instanceId)
+                .parentInstanceId(parentInstanceId)
                 .initiator(initiator)
                 .apply(p(entryPoint))
                 .workspace(in)
@@ -109,10 +146,12 @@ public class PayloadManager {
      * @param in
      * @return
      */
+    @Deprecated
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
                                  InputStream in, String[] out) throws IOException {
 
-        return new PayloadBuilder(instanceId, parentInstanceId)
+        return new PayloadBuilder(instanceId)
+                .parentInstanceId(parentInstanceId)
                 .initiator(initiator)
                 .workspace(in)
                 .outExpressions(out)
@@ -158,7 +197,8 @@ public class PayloadManager {
             throw new ProcessException(instanceId, "Can't fork '" + instanceId + "', parent state snapshot not found");
         }
 
-        return new PayloadBuilder(instanceId, parentInstanceId)
+        return new PayloadBuilder(instanceId)
+                .parentInstanceId(parentInstanceId)
                 .kind(kind)
                 .initiator(initiator)
                 .project(projectId)
@@ -183,17 +223,6 @@ public class PayloadManager {
             throw new ProcessException(payload.getInstanceId(), "The project is not accepting raw payloads: " + projectId,
                     Status.BAD_REQUEST);
         }
-    }
-
-    private static Function<PayloadBuilder, PayloadBuilder> p(EntryPoint p) {
-        if (p == null) {
-            return Function.identity();
-        }
-
-        return (b) -> b.organization(p.orgId)
-                .project(p.projectId)
-                .repository(p.repoId)
-                .entryPoint(p.flow);
     }
 
     public EntryPoint parseEntryPoint(UUID instanceId, UUID orgId, String entryPoint) {
@@ -241,6 +270,69 @@ public class PayloadManager {
         }
 
         return new PayloadManager.EntryPoint(orgId, projectId, repoId, flow);
+    }
+
+    private UUID getOrg(MultipartInput input) {
+        UUID id = MultipartUtils.getUuid(input, "orgId");
+        String name = MultipartUtils.getString(input, "org");
+        if (id == null && name != null) {
+            id = orgDao.getId(name);
+            if (id == null) {
+                throw new ValidationErrorsException("Organization not found: " + name);
+            }
+        }
+        return id;
+    }
+
+    private UUID getProject(MultipartInput input, UUID orgId) {
+        UUID id = MultipartUtils.getUuid(input, "projectId");
+        String name = MultipartUtils.getString(input, "project");
+        if (id == null && name != null) {
+            if (orgId == null) {
+                throw new ValidationErrorsException("Organization ID or name is required");
+            }
+
+            id = projectDao.getId(orgId, name);
+            if (id == null) {
+                throw new ValidationErrorsException("Project not found: " + name);
+            }
+        }
+        return id;
+    }
+
+    private UUID getRepo(MultipartInput input, UUID projectId) {
+        UUID id = MultipartUtils.getUuid(input, "repoId");
+        String name = MultipartUtils.getString(input, "repo");
+        if (id == null && name != null) {
+            if (projectId == null) {
+                throw new ValidationErrorsException("Project ID or name is required");
+            }
+
+            id = repositoryDao.getId(projectId, name);
+            if (id == null) {
+                throw new ValidationErrorsException("Repository not found: " + name);
+            }
+        }
+        return id;
+    }
+
+    private String[] getOutExpressions(MultipartInput input) {
+        String s = MultipartUtils.getString(input, "out");
+        if (s == null) {
+            return null;
+        }
+        return s.split(",");
+    }
+
+    private static Function<PayloadBuilder, PayloadBuilder> p(EntryPoint p) {
+        if (p == null) {
+            return Function.identity();
+        }
+
+        return (b) -> b.organization(p.orgId)
+                .project(p.projectId)
+                .repository(p.repoId)
+                .entryPoint(p.flow);
     }
 
     public static class EntryPoint implements Serializable {

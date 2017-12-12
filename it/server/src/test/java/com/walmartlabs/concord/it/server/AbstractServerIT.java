@@ -26,19 +26,17 @@ public abstract class AbstractServerIT {
     }
 
     protected StartProcessResponse start(Map<String, Object> input) {
-        return start(input, false);
+        return serverClient.start(input);
     }
 
+    @Deprecated
     protected StartProcessResponse start(Map<String, Object> input, boolean sync) {
         return serverClient.start(input, sync);
     }
 
+    @Deprecated
     protected StartProcessResponse start(String entryPoint, Map<String, Object> input) {
         return serverClient.start(entryPoint, input, false);
-    }
-
-    protected SecretOperationResponse postSecret(String orgName, Map<String, Object> input) {
-        return serverClient.postSecret(orgName, input);
     }
 
     protected SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) {

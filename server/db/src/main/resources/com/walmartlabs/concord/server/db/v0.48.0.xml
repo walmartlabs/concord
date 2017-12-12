@@ -306,4 +306,9 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <changeSet id="48500" author="ibodrov@gmail.com">
+        <sql>
+            update PROJECTS set VISIBILITY = 'PUBLIC' where PROJECT_ID = '${concordTriggersProjectId}'
+        </sql>
+    </changeSet>
 </databaseChangeLog>
