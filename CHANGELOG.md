@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-server: new provided variables in `projectInfo`:
+`repoCommitId`, `repoCommitAuthor` and `repoCommitMessage`;
+- concord-console: host the swagger-ui app;
+- concord-server: triggers, inventories and landing pages are moved
+into organizations;
 - concord-server, concord-console: an option to disallow raw payload
 archives for projects;
 - concord-server, concord-console: initial support for Organizations;
@@ -17,6 +22,8 @@ projects.
 
 ### Changed
 
+- concord-runner: improved stability by using a separate classloader
+to load tasks;
 - concord-server: user permissions are effectively replaced with the
 Team RBAC feature;
 - concord-console: reworked the form for creating secrets;
