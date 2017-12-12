@@ -3,10 +3,12 @@ package com.walmartlabs.concord.it.console;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.logging.LoggingPreferences;
 import org.openqa.selenium.remote.*;
@@ -28,18 +30,20 @@ public class WebDriverRule implements TestRule {
     }
 
     private void setUp() throws Exception {
-        DesiredCapabilities caps = DesiredCapabilities.chrome();
+        ChromeOptions opts = new ChromeOptions();
+
         LoggingPreferences logPrefs = new LoggingPreferences();
         logPrefs.enable(LogType.BROWSER, Level.ALL);
-        caps.setCapability(CapabilityType.LOGGING_PREFS, logPrefs);
+        opts.setCapability(CapabilityType.LOGGING_PREFS, logPrefs);
+
+        opts.addArguments("--dns-prefetch-disable");
 
         if (isRemote()) {
             URL url = new URL("http://localhost:" + ITConstants.SELENIUM_PORT + "/wd/hub");
-            RemoteWebDriver d = new RemoteWebDriver(url, caps);
+            RemoteWebDriver d = new RemoteWebDriver(url, opts);
             d.setFileDetector(new LocalFileDetector());
             driver = new Augmenter().augment(d);
         } else {
-            // TODO caps
             driver = new ChromeDriver();
         }
     }

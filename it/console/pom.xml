@@ -17,6 +17,9 @@
         <selenium.version>3.7.1</selenium.version>
         <webdriver.version>0.9.7376</webdriver.version>
         <webdriver.type>local</webdriver.type>
+
+        <!-- STRDTORC-324 -->
+        <skip.it.tests>true</skip.it.tests>
     </properties>
 
     <dependencies>
@@ -228,7 +231,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>selenium/standalone-chrome:3.7.1</name>
+                                    <name>docker.prod.walmart.com/walmartlabs/concord-selenium-chrome:3.8.1</name>
                                     <alias>selenium-chrome</alias>
                                     <run>
                                         <network>
