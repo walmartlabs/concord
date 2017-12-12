@@ -71,7 +71,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         // check the logs for the successful message
 
         byte[] ab = getLog(child.getLogFileName());
-        assertLog(".*abc.*", ab);
+        assertLog(".*abc!.*", ab);
     }
 
     @Test(timeout = 30000)

@@ -3,7 +3,7 @@ flows:
   - ${sleep.ms(30000)}
 
   onCancel:
-  - log: "abc"
+  - log: "abc!"
 
 variables:
   entryPoint: main
