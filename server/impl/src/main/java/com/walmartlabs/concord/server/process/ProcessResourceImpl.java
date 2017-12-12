@@ -16,6 +16,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChun
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -57,6 +58,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final ProcessLogsDao logsDao;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
+    private final UserDao userDao;
 
     @Inject
     public ProcessResourceImpl(ProcessManager processManager,
@@ -64,7 +66,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProcessQueueDao queueDao,
                                ProcessLogsDao logsDao,
                                PayloadManager payloadManager,
-                               ProcessStateManager stateManager) {
+                               ProcessStateManager stateManager,
+                               UserDao userDao) {
 
         this.processManager = processManager;
         this.projectDao = projectDao;
@@ -72,6 +75,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.logsDao = logsDao;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
+        this.userDao = userDao;
     }
 
     @Override
@@ -359,7 +363,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @WithTimer
     @RequiresAuthentication
     public List<ProcessEntry> list(UUID projectId, IsoDateParam beforeCreatedAt, Set<String> tags, int limit) {
-        return queueDao.list(projectId, toTimestamp(beforeCreatedAt), tags, limit);
+        Set<UUID> orgIds = null;
+        if (!isAdmin()) {
+            // non-admin users can see only their org's processes or processes w/o projects
+            orgIds = getCurrentUserOrgIds();
+        }
+        return queueDao.list(orgIds, projectId, toTimestamp(beforeCreatedAt), tags, limit);
     }
 
     @Override
@@ -461,6 +470,16 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         if (!queueDao.exists(id)) {
             throw new ValidationErrorsException("Unknown parent instance ID: " + id);
         }
+    }
+
+    private Set<UUID> getCurrentUserOrgIds() {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        return userDao.getOrgIds(p.getId());
+    }
+
+    private static boolean isAdmin() {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        return p.isAdmin();
     }
 
     private static Timestamp toTimestamp(IsoDateParam p) {

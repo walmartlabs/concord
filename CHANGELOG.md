@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server, concord-console: filter process queue by user
+organizations;
+- concord-console: add "organization" field to the process page;
 - concord-server: new provided variables in `projectInfo`:
 `repoCommitId`, `repoCommitAuthor` and `repoCommitMessage`;
 - concord-console: host the swagger-ui app;

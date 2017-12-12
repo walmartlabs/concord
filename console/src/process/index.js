@@ -84,6 +84,10 @@ class ProcessStatusPage extends Component {
                         <Table.Cell>{data.kind ? data.kind : "-"}</Table.Cell>
                     </Table.Row>
                     <Table.Row>
+                        <Table.Cell>Organization</Table.Cell>
+                        <Table.Cell>{data.orgName ? data.orgName : "-"}</Table.Cell>
+                    </Table.Row>
+                    <Table.Row>
                         <Table.Cell>Project</Table.Cell>
                         <Table.Cell>{data.projectName ? <Link to={`/project/${data.projectName}`}>{data.projectName}</Link> : "-"}</Table.Cell>
                     </Table.Row>

@@ -311,4 +311,32 @@
             update PROJECTS set VISIBILITY = 'PUBLIC' where PROJECT_ID = '${concordTriggersProjectId}'
         </sql>
     </changeSet>
+
+    <changeSet id="44550" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
+            select
+                INSTANCE_ID,
+                PROCESS_KIND,
+                PARENT_INSTANCE_ID,
+                prj.PROJECT_ID,
+                prj.PROJECT_NAME,
+                prj.ORG_ID,
+                prj.ORG_NAME,
+                CREATED_AT,
+                INITIATOR,
+                CURRENT_STATUS,
+                LAST_AGENT_ID,
+                LAST_UPDATED_AT,
+                PROCESS_TAGS
+            from PROCESS_QUEUE
+            left join
+                (select
+                    PROJECT_ID,
+                    PROJECT_NAME,
+                    ORG_ID,
+                    (select ORG_NAME from ORGANIZATIONS where ORGANIZATIONS.ORG_ID = PROJECTS.ORG_ID)
+                from PROJECTS) prj
+                on prj.PROJECT_ID = PROCESS_QUEUE.PROJECT_ID
+        </createView>
+    </changeSet>
 </databaseChangeLog>

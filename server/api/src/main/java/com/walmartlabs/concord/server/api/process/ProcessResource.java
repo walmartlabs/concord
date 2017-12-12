@@ -248,12 +248,16 @@ public interface ProcessResource {
     List<String> listAttachments(@ApiParam @PathParam("id") UUID instanceId);
 
     /**
-     * Returns entries from the process queue.
+     * List processes for all user's organizations
      *
+     * @param projectId
+     * @param beforeCreatedAt
+     * @param tags
+     * @param limit
      * @return
      */
     @GET
-    @ApiOperation("List processes")
+    @ApiOperation("List processes for all user's organizations")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> list(@ApiParam @QueryParam("projectId") UUID projectId,
                             @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,

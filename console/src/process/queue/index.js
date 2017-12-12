@@ -91,7 +91,7 @@ class QueuePage extends Component {
         }
 
         return <div>
-            <Header as="h3"><RefreshButton loading={loading} onClick={() => this.load()}/> Queue (all teams)</Header>
+            <Header as="h3"><RefreshButton loading={loading} onClick={() => this.load()}/> Queue (all available organizations)</Header>
             <DataTable cols={columns} rows={data} cellFn={cellFn(killPopupFn)} />
         </div>;
     }

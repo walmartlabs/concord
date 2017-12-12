@@ -7,7 +7,6 @@ import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static org.jooq.impl.DSL.*;
@@ -253,7 +251,7 @@ public class ProcessQueueWatchdog {
         }
 
         public List<ProcessEntry> poll(DSLContext tx, PollEntry entry, Field<Timestamp> maxAge, int maxEntries) {
-            VProcessQueue q = V_PROCESS_QUEUE.as("q");
+            ProcessQueue q = PROCESS_QUEUE.as("q");
 
             return tx.select(q.INSTANCE_ID, q.PROJECT_ID, q.INITIATOR)
                     .from(q)
@@ -285,24 +283,24 @@ public class ProcessQueueWatchdog {
 
         private Field<Number> count(DSLContext tx, Field<UUID> parentInstanceId, ProcessKind kind) {
             return tx.selectCount()
-                    .from(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
-                            .and(V_PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString())))
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
+                            .and(PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString())))
                     .asField();
         }
 
         private Condition notExistsSuccess(Field<UUID> parentInstanceId, ProcessKind kind) {
-            return notExists(selectOne().from(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
-                            .and(V_PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString()))
-                            .and(V_PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.FINISHED.toString()))));
+            return notExists(selectOne().from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
+                            .and(PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString()))
+                            .and(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.FINISHED.toString()))));
         }
 
         private Condition noRunningHandlers(Field<UUID> parentInstanceId) {
-            return notExists(selectOne().from(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
-                            .and(V_PROCESS_QUEUE.CURRENT_STATUS.in(Utils.toString(ACTIVE_PROCESS_STATUSES)))
-                            .and(V_PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
+            return notExists(selectOne().from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
+                            .and(PROCESS_QUEUE.CURRENT_STATUS.in(Utils.toString(ACTIVE_PROCESS_STATUSES)))
+                            .and(PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
         }
 
         private Condition existsMarker(Field<UUID> instanceId, String marker) {
@@ -311,9 +309,9 @@ public class ProcessQueueWatchdog {
         }
 
         private static ProcessEntry toEntry(Record3<UUID, UUID, String> r) {
-            return new ProcessEntry(r.get(V_PROCESS_QUEUE.INSTANCE_ID),
-                    r.get(V_PROCESS_QUEUE.PROJECT_ID),
-                    r.get(V_PROCESS_QUEUE.INITIATOR));
+            return new ProcessEntry(r.get(PROCESS_QUEUE.INSTANCE_ID),
+                    r.get(PROCESS_QUEUE.PROJECT_ID),
+                    r.get(PROCESS_QUEUE.INITIATOR));
         }
     }
 

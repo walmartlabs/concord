@@ -133,20 +133,16 @@ public class ProcessQueueDao extends AbstractDao {
 
     public ProcessEntry get(UUID instanceId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return get(tx, instanceId);
+            VProcessQueueRecord r = tx.selectFrom(V_PROCESS_QUEUE)
+                    .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .fetchOne();
+
+            if (r == null) {
+                return null;
+            }
+
+            return toEntry(r);
         }
-    }
-
-    public ProcessEntry get(DSLContext tx, UUID instanceId) {
-        VProcessQueueRecord r = tx.selectFrom(V_PROCESS_QUEUE)
-                .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                .fetchOne();
-
-        if (r == null) {
-            return null;
-        }
-
-        return toEntry(r);
     }
 
     public UUID getOrgId(UUID instanceId) {
@@ -165,31 +161,39 @@ public class ProcessQueueDao extends AbstractDao {
 
     public ProcessEntry poll() {
         return txResult(tx -> {
-            VProcessQueueRecord r = tx.selectFrom(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString()))
-                    .orderBy(V_PROCESS_QUEUE.CREATED_AT)
+            UUID id = tx.select(PROCESS_QUEUE.INSTANCE_ID)
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString()))
+                    .orderBy(PROCESS_QUEUE.CREATED_AT)
                     .limit(1)
                     .forUpdate()
                     .skipLocked()
-                    .fetchOne();
+                    .fetchOne(PROCESS_QUEUE.INSTANCE_ID);
 
-            if (r == null) {
+            if (id == null) {
                 return null;
             }
 
-            update(tx, r.getInstanceId(), ProcessStatus.STARTING);
+            update(tx, id, ProcessStatus.STARTING);
 
-            return toEntry(r);
+            return tx.selectFrom(V_PROCESS_QUEUE)
+                    .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(id))
+                    .fetchOne(ProcessQueueDao::toEntry);
         });
     }
 
-    public List<ProcessEntry> list() {
-        return list(null, null, null, DEFAULT_LIST_LIMIT);
-    }
-
-    public List<ProcessEntry> list(UUID projectId, Timestamp beforeCreatedAt, Set<String> tags, int limit) {
+    public List<ProcessEntry> list(Set<UUID> orgIds, UUID projectId, Timestamp beforeCreatedAt, Set<String> tags, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectWhereStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE);
+
+            if (orgIds != null && !orgIds.isEmpty()) {
+                SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
+                        .from(PROJECTS)
+                        .where(PROJECTS.ORG_ID.in(orgIds));
+
+                s.where(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds)
+                        .or(V_PROCESS_QUEUE.PROJECT_ID.isNull()));
+            }
 
             if (projectId != null) {
                 s.where(V_PROCESS_QUEUE.PROJECT_ID.eq(projectId));
@@ -263,6 +267,8 @@ public class ProcessQueueDao extends AbstractDao {
         return new ProcessEntry(r.getInstanceId(),
                 kind,
                 r.getParentInstanceId(),
+                r.getOrgId(),
+                r.getOrgName(),
                 r.getProjectId(),
                 r.getProjectName(),
                 r.getCreatedAt(),

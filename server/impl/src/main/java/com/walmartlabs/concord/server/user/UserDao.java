@@ -140,6 +140,19 @@ public class UserDao extends AbstractDao {
         }
     }
 
+    public Set<UUID> getOrgIds(UUID userId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
+                    .from(USER_TEAMS)
+                    .where(USER_TEAMS.USER_ID.eq(userId));
+
+            return tx.selectDistinct(TEAMS.ORG_ID)
+                    .from(TEAMS)
+                    .where(TEAMS.TEAM_ID.in(teamIds))
+                    .fetchSet(TEAMS.ORG_ID);
+        }
+    }
+
     private static void insertPermissions(DSLContext tx, UUID userId, Set<String> permissions) {
         if (permissions == null || permissions.isEmpty()) {
             return;
