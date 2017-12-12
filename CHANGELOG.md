@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible: `skipTags` support;
 - concord-server, concord-console: filter process queue by user
 organizations;
 - concord-console: add "organization" field to the process page;
