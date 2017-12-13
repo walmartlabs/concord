@@ -32,7 +32,7 @@ public class InventoryManager {
     }
 
     public UUID insert(UUID orgId, InventoryEntry entry) {
-        UUID parentId = assertParentInventoryAccess(orgId, entry, ResourceAccessLevel.WRITER, true);
+        UUID parentId = assertParentInventoryAccess(orgId, entry.getParent(), ResourceAccessLevel.WRITER, true);
 
         UserPrincipal p = UserPrincipal.getCurrent();
         UUID ownerId = p.getId();
@@ -45,7 +45,12 @@ public class InventoryManager {
 
         UUID parentId = assertParentInventoryAccess(prev.getOrgId(), entry.getParent(), ResourceAccessLevel.WRITER, true);
 
-        inventoryDao.update(inventoryId, entry.getName(), parentId, entry.getVisibility());
+        InventoryVisibility visibility = entry.getVisibility();
+        if (visibility == null) {
+            visibility = InventoryVisibility.PUBLIC;
+        }
+
+        inventoryDao.update(inventoryId, entry.getName(), parentId, visibility);
     }
 
     public void delete(UUID inventoryId) {
@@ -98,7 +103,7 @@ public class InventoryManager {
     }
 
     private UUID assertParentInventoryAccess(UUID orgId, InventoryEntry parent, ResourceAccessLevel level, boolean orgMembersOnly) {
-        if (parent == null) {
+        if (parent == null || (parent.getId() == null && parent.getName() == null)) {
             return null;
         }
 
@@ -106,7 +111,7 @@ public class InventoryManager {
         if (parentId == null) {
             parentId = inventoryDao.getId(orgId, parent.getName());
             if (parentId == null) {
-                throw new ValidationErrorsException("Parent inventory not found: " + parentId);
+                throw new ValidationErrorsException("Parent inventory not found: " + parent.getName());
             }
 
             assertInventoryAccess(parentId, level, orgMembersOnly);
