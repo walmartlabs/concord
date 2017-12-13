@@ -82,6 +82,72 @@ public class TeamRbacIT extends AbstractServerIT {
     }
 
     @Test(timeout = 30000)
+    public void testTeamCreators() {
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+
+        String orgName = "orgA_" + randomString();
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        TeamResource teamResource = proxy(TeamResource.class);
+
+        String teamAName = "teamA_" + randomString();
+        teamResource.createOrUpdate(orgName, new TeamEntry(teamAName));
+
+        // ---
+
+        UserResource userResource = proxy(UserResource.class);
+        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
+
+        String userAName = "userA_" + randomString();
+        userResource.createOrUpdate(new CreateUserRequest(userAName));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+
+        // ---
+
+        setApiKey(apiKeyA.getKey());
+
+        try {
+            teamResource.createOrUpdate(orgName, new TeamEntry(null, null, null, teamAName, "test"));
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        resetApiKey();
+
+        teamResource.addUsers(orgName, teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MAINTAINER)));
+
+        // ---
+
+        setApiKey(apiKeyA.getKey());
+
+        teamResource.createOrUpdate(orgName, new TeamEntry(null, null, null, teamAName, "test"));
+
+        // ---
+
+        String teamBName = "teamB_" + randomString();
+
+        try {
+            teamResource.createOrUpdate(orgName, new TeamEntry(teamBName));
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        resetApiKey();
+
+        teamResource.addUsers(orgName, teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.OWNER)));
+
+        // ---
+
+        teamResource.createOrUpdate(orgName, new TeamEntry(teamBName));
+    }
+
+    @Test(timeout = 30000)
     public void testTeamMaintainers() {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 

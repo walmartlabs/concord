@@ -43,6 +43,17 @@ public class TeamManager {
         throw new ValidationErrorsException("Team ID or name is required");
     }
 
+    public void assertAccess(UUID orgId, TeamRole requiredRole) {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (p.isAdmin()) {
+            return;
+        }
+
+        if (!teamDao.isInAnyTeam(orgId, p.getId(), TeamRole.atLeast(requiredRole))) {
+            throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't belong to any team in the organization");
+        }
+    }
+
     public TeamEntry assertAccess(UUID orgId, String teamName, TeamRole requiredRole, boolean teamMembersOnly) {
         return assertAccess(orgId, null, teamName, requiredRole, teamMembersOnly);
     }

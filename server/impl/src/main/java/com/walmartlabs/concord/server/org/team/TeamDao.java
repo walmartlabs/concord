@@ -21,6 +21,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.selectFrom;
 
 @Named
 public class TeamDao extends AbstractDao {
@@ -161,6 +162,20 @@ public class TeamDao extends AbstractDao {
                 .where(USER_TEAMS.TEAM_ID.eq(teamId)
                         .and(USER_TEAMS.USER_ID.in(userIds)))
                 .execute();
+    }
+
+    public boolean isInAnyTeam(UUID orgId, UUID userId, TeamRole... roles) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return isInAnyTeam(tx, orgId, userId, roles);
+        }
+    }
+
+    public boolean isInAnyTeam(DSLContext tx, UUID orgId, UUID userId, TeamRole... roles) {
+        SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID).from(TEAMS).where(TEAMS.ORG_ID.eq(orgId));
+        return tx.fetchExists(selectFrom(USER_TEAMS)
+                .where(USER_TEAMS.USER_ID.eq(userId)
+                        .and(USER_TEAMS.TEAM_ID.in(teamIds))
+                        .and(USER_TEAMS.TEAM_ROLE.in(Utils.toString(roles)))));
     }
 
     public boolean hasUser(UUID teamId, UUID userId, TeamRole... roles) {

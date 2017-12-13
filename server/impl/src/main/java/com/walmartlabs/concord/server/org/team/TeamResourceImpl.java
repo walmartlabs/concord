@@ -55,9 +55,11 @@ public class TeamResourceImpl implements TeamResource, Resource {
 
         UUID teamId = teamDao.getId(org.getId(), entry.getName());
         if (teamId != null) {
+            teamManager.assertAccess(org.getId(), teamId, null, TeamRole.MAINTAINER, true);
             teamDao.update(teamId, entry.getName(), entry.getDescription());
             return new CreateTeamResponse(OperationResult.UPDATED, teamId);
         } else {
+            teamManager.assertAccess(org.getId(), TeamRole.OWNER);
             teamId = teamDao.insert(org.getId(), entry.getName(), entry.getDescription());
             return new CreateTeamResponse(OperationResult.CREATED, teamId);
         }
