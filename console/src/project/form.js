@@ -109,7 +109,7 @@ let projectForm = (props) => {
         {
             text: "Private",
             value: "PRIVATE",
-            description: "Private projects can be used only by their teams.",
+            description: "Private projects can be used only by their organization's teams.",
             icon: "lock"
         }
     ];
@@ -117,7 +117,7 @@ let projectForm = (props) => {
     return <Form onSubmit={handleSubmit} loading={submitting}>
         {createNew && <Field name="name" label="Name" required />}
 
-        <Dropdown name="visibility" label="Visibility" options={visibilityOptions}/>
+        <Dropdown name="visibility" label="Visibility" options={visibilityOptions} required/>
 
         <Field name="description" label="Description" />
 
