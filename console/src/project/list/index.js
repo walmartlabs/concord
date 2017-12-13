@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
 import {Link} from "react-router";
-import {Header} from "semantic-ui-react";
+import {Header, Icon} from "semantic-ui-react";
 import RefreshButton from "../../shared/RefreshButton";
 import ErrorMessage from "../../shared/ErrorMessage";
 import DataTable from "../../shared/DataTable";
