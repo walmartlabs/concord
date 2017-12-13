@@ -1,0 +1,5 @@
+main:
+  - form: myForm
+
+form (myForm):
+  - favouriteNumbers: { type: "int+", min: 0, max: 100 }

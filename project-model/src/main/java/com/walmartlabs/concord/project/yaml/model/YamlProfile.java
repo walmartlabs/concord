@@ -1,11 +1,10 @@
 package com.walmartlabs.concord.project.yaml.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class YamlProfile implements Serializable {
 
@@ -19,8 +18,8 @@ public class YamlProfile implements Serializable {
                        @JsonProperty("configuration") Map<String, Object> configuration,
                        @JsonProperty("variables") Map<String, Object> variables) {
 
-        this.flows = flows;
-        this.forms = forms;
+        this.flows = removeNullElements(flows);
+        this.forms = removeNullElements(forms);
 
         // alias "variables" to "configuration"
         if (configuration != null) {
@@ -40,6 +39,19 @@ public class YamlProfile implements Serializable {
 
     public Map<String, Object> getConfiguration() {
         return configuration;
+    }
+
+    private static <K, V> Map<K, List<V>> removeNullElements(Map<K, List<V>> items) {
+        if (items == null) {
+            return null;
+        }
+
+        Map<K, List<V>> result = new HashMap<>();
+        items.forEach((k, v) -> {
+            result.put(k, v.stream().filter(Objects::nonNull).collect(Collectors.toList()));
+        });
+
+        return result;
     }
 
     @Override
