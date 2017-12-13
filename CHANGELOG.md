@@ -4,7 +4,8 @@
 
 ### Added
 
-- concord-console: new "visibility" field on the process form;
+- concord-console: new "visibility" field on the process and the
+secret forms;
 - ansible: `skipTags` support;
 - concord-server, concord-console: filter process queue by user
 organizations;
