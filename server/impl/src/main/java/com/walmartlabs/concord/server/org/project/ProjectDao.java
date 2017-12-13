@@ -195,7 +195,7 @@ public class ProjectDao extends AbstractDao {
                 .getProjectId();
     }
 
-    public void update(DSLContext tx, UUID id, UUID orgId, String name, String description, Map<String, Object> cfg) {
+    public void update(DSLContext tx, UUID orgId, UUID id, ProjectVisibility visibility, String name, String description, Map<String, Object> cfg) {
         UpdateSetFirstStep<ProjectsRecord> q = tx.update(PROJECTS);
 
         if (name != null) {
@@ -208,6 +208,10 @@ public class ProjectDao extends AbstractDao {
 
         if (cfg != null) {
             q.set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, serialize(cfg)));
+        }
+
+        if (visibility != null) {
+            q.set(PROJECTS.VISIBILITY, visibility.toString());
         }
 
         q.set(PROJECTS.ORG_ID, orgId)

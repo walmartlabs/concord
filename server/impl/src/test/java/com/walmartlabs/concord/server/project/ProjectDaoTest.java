@@ -3,6 +3,7 @@ package com.walmartlabs.concord.server.project;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -57,7 +58,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
         Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
-        tx(tx -> projectDao.update(tx, orgId, projectId, projectName, "new-description", newCfg2));
+        tx(tx -> projectDao.update(tx, orgId, projectId, ProjectVisibility.PRIVATE, projectName, "new-description", newCfg2));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg2, actualCfg);

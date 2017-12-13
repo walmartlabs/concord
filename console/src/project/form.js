@@ -3,7 +3,7 @@ import {connect} from "react-redux";
 import {push as pushHistory} from "react-router-redux";
 import {arrayPush as formArrayPush, change as formChange, FieldArray, reduxForm} from "redux-form";
 import {Button, Divider, Form, Message, Popup, Table} from "semantic-ui-react";
-import {Checkbox, Field} from "../shared/forms";
+import {Checkbox, Dropdown, Field} from "../shared/forms";
 import {actions as modal} from "../shared/Modal";
 import * as RepositoryPopup from "./RepositoryPopup";
 import * as DeleteProjectPopup from "./DeleteProjectPopup";
@@ -98,11 +98,29 @@ let projectForm = (props) => {
         startProcessFn(repositoryName, repositoryId);
     };
 
+    const visibilityOptions = [
+        {
+            text: "Public",
+            value: "PUBLIC",
+            description: "Public projects can be used by any user to start a process.",
+            icon: "unlock"
+        },
+        {
+            text: "Private",
+            value: "PRIVATE",
+            description: "Private projects can be used only by their teams.",
+            icon: "lock"
+        }
+    ];
+
     return <Form onSubmit={handleSubmit} loading={submitting}>
         {createNew && <Field name="name" label="Name" required />}
+
+        <Dropdown name="visibility" label="Visibility" options={visibilityOptions}/>
+
         <Field name="description" label="Description" />
 
-        <Popup trigger={<Checkbox name="acceptsRawPayload" label="Accept payload archives"/>}
+        <Popup trigger={<Checkbox name="acceptsRawPayload" label="Accept payload archives" toggle/>}
                content={"Allows users to start new processes using payload archives. " +
                "When disabled, only the configured repositories can be used to start a new process."}
                inverted/>
