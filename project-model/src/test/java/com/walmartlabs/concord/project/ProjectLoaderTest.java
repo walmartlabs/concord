@@ -27,6 +27,21 @@ public class ProjectLoaderTest {
     }
 
     @Test
+    public void testEmptyField() throws Exception {
+        ProjectLoader loader = new ProjectLoader();
+
+        URI uri = ClassLoader.getSystemResource("emptyField").toURI();
+        ProjectDefinition pd = loader.load(Paths.get(uri));
+
+        assertNotNull(pd);
+
+        assertNotNull(pd.getFlows().get("main"));
+        assertNotNull(pd.getFlows().get("other"));
+
+        assertNotNull(pd.getForms().get("myForm"));
+    }
+
+    @Test
     public void testComplex() throws Exception {
         ProjectLoader loader = new ProjectLoader();
 

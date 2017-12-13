@@ -1439,6 +1439,16 @@ public class YamlParserTest {
         verifyNoMoreInteractions(testBean);
     }
 
+    @Test
+    public void test046() throws Exception {
+        deploy("046.yml");
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+    }
+
     // FORMS (100 - 199)
 
     @Test
