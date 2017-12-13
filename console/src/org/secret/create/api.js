@@ -14,10 +14,12 @@ export const exists = (orgName: ConcordKey, secretName: ConcordKey): any => {
         });
 };
 
-export const create = ({orgName, name, secretType, storePwdType, storePassword, ...rest}: any): any => {
+export const create = ({orgName, name, visibility, secretType, storePwdType, storePassword, ...rest}: any): any => {
     const data = new FormData();
 
     data.append("name", name);
+
+    data.append("visibility", visibility);
 
     switch (secretType) {
         case secretTypes.newKeyPair: {

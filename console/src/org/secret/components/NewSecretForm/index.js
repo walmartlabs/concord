@@ -73,9 +73,30 @@ const renderStorePwdField = (storePwdTypeValue) => {
     }
 };
 
+const visibilityField = () => {
+    const visibilityOptions = [
+        {
+            text: "Public",
+            value: "PUBLIC",
+            description: "Public secrets can be used by any user.",
+            icon: "unlock"
+        },
+        {
+            text: "Private",
+            value: "PRIVATE",
+            description: "Private secrets can be used only by their organization's teams.",
+            icon: "lock"
+        }
+    ];
+    return <Dropdown name="visibility" label="Visibility" options={visibilityOptions} required/>
+};
+
 let NewSecretForm = ({handleSubmit, pristine, invalid, loading, submitting, secretTypeValue, storePwdTypeValue}) =>
     <Form onSubmit={handleSubmit} loading={loading || submitting}>
         <Field name="name" label="Name" required/>
+
+        {visibilityField()}
+
         <Dropdown name="secretType" label="Type" widget={SecretTypeDropdown} required/>
 
         {renderDataFields(secretTypeValue)}
@@ -134,6 +155,7 @@ const asyncValidate = ({name}, dispatch, {nameCheckFn}) => {
 NewSecretForm = reduxForm({
     form: "newSecretForm",
     initialValues: {
+        visibility: "PUBLIC",
         secretType: secretTypes.newKeyPair,
         storePwdType: storePwdTypes.doNotUse
     },

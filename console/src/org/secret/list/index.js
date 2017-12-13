@@ -14,11 +14,11 @@ import {getCurrentOrg} from "../../../session/reducers";
 import {actionTypes, actions, selectors, reducers, sagas} from "./effects";
 
 const columns = [
+    {key: "visibility", label: "Access", collapsing: true},
     {key: "name", label: "Name"},
     {key: "type", label: "Type"},
     {key: "storeType", label: "Store type"},
     {key: "owner", label: "Owner"},
-    {key: "visibility", label: "Access", collapsing: true},
     {key: "actions", label: "Actions", collapsing: true}
 ];
 
@@ -38,13 +38,8 @@ const cellFn = (orgName, deletePopupFn, getPublicKey) => (row, key) => {
     }
 
     if (key === visibilityKey) {
-        const v = row[key];
-        if (v === "PUBLIC") {
-            return <Popup trigger={<Icon name="unlock"/>} inverted content="Public"/>;
-        } else {
-            return <Popup trigger={<Icon name="lock"/>} inverted content="Private"/>;;
-        }
-
+        const n = row[key];
+        return <Icon name={n === "PUBLIC" ? "unlock" : "lock"} color={n === "PRIVATE" ? "red" : "grey"}/>;
     }
 
     // column with buttons (actions)
