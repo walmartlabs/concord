@@ -5,7 +5,9 @@ import com.walmartlabs.concord.server.api.org.inventory.InventoryEntry;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryOwner;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryVisibility;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -17,10 +19,12 @@ import java.util.UUID;
 public class InventoryManager {
 
     private final InventoryDao inventoryDao;
+    private final UserDao userDao;
 
     @Inject
-    public InventoryManager(InventoryDao inventoryDao) {
+    public InventoryManager(InventoryDao inventoryDao, UserDao userDao) {
         this.inventoryDao = inventoryDao;
+        this.userDao = userDao;
     }
 
     public InventoryEntry get(UUID inventoryId) {
@@ -39,9 +43,9 @@ public class InventoryManager {
     public void update(UUID inventoryId, InventoryEntry entry) {
         InventoryEntry prev = assertInventoryAccess(inventoryId, ResourceAccessLevel.WRITER, true);
 
-        UUID parentId = assertParentInventoryAccess(prev.getOrgId(), entry, ResourceAccessLevel.WRITER, true);
+        UUID parentId = assertParentInventoryAccess(prev.getOrgId(), entry.getParent(), ResourceAccessLevel.WRITER, true);
 
-        inventoryDao.update(inventoryId, entry.getName(), parentId);
+        inventoryDao.update(inventoryId, entry.getName(), parentId, entry.getVisibility());
     }
 
     public void delete(UUID inventoryId) {
@@ -77,6 +81,12 @@ public class InventoryManager {
             return e;
         }
 
+        if (orgMembersOnly && e.getVisibility() == InventoryVisibility.PUBLIC
+                && userDao.isInOrganization(p.getId(), e.getOrgId())) {
+            // organization members can access any public inventory in the same organization
+            return e;
+        }
+
         if (orgMembersOnly || e.getVisibility() != InventoryVisibility.PUBLIC) {
             if (!inventoryDao.hasAccessLevel(inventoryId, p.getId(), ResourceAccessLevel.atLeast(level))) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
@@ -87,20 +97,21 @@ public class InventoryManager {
         return e;
     }
 
-    private UUID assertParentInventoryAccess(UUID orgId, InventoryEntry entry, ResourceAccessLevel level, boolean orgMembersOnly) {
-        if (entry.getParent() == null) {
+    private UUID assertParentInventoryAccess(UUID orgId, InventoryEntry parent, ResourceAccessLevel level, boolean orgMembersOnly) {
+        if (parent == null) {
             return null;
         }
 
-        UUID parentId = entry.getParent().getId();
+        UUID parentId = parent.getId();
         if (parentId == null) {
-            parentId = inventoryDao.getId(orgId, entry.getParent().getName());
+            parentId = inventoryDao.getId(orgId, parent.getName());
             if (parentId == null) {
                 throw new ValidationErrorsException("Parent inventory not found: " + parentId);
             }
 
             assertInventoryAccess(parentId, level, orgMembersOnly);
         }
+
         return parentId;
     }
 }

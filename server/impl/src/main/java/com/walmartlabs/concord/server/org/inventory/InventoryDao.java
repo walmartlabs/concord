@@ -43,8 +43,8 @@ public class InventoryDao extends AbstractDao {
         return txResult(tx -> insert(tx, ownerId, name, orgId, parentId, visibility));
     }
 
-    public void update(UUID inventoryId, String inventoryName, UUID parentId) {
-        tx(tx -> update(tx, inventoryId, inventoryName, parentId));
+    public void update(UUID inventoryId, String inventoryName, UUID parentId, InventoryVisibility visibility) {
+        tx(tx -> update(tx, inventoryId, inventoryName, parentId, visibility));
     }
 
     public void delete(UUID inventoryId) {
@@ -162,16 +162,17 @@ public class InventoryDao extends AbstractDao {
 
         return tx.insertInto(INVENTORIES)
                 .columns(INVENTORIES.OWNER_ID, INVENTORIES.INVENTORY_NAME, INVENTORIES.ORG_ID, INVENTORIES.PARENT_INVENTORY_ID, INVENTORIES.VISIBILITY)
-                .values(value(ownerId), value(name), value(orgId), value(parentId), value(visibility.toString()))
+                .values(ownerId, name, orgId, parentId, visibility.toString())
                 .returning(INVENTORIES.INVENTORY_ID)
                 .fetchOne()
                 .getInventoryId();
     }
 
-    private void update(DSLContext tx, UUID inventoryId, String inventoryName, UUID parentId) {
+    private void update(DSLContext tx, UUID inventoryId, String inventoryName, UUID parentId, InventoryVisibility visibility) {
         tx.update(INVENTORIES)
-                .set(INVENTORIES.INVENTORY_NAME, value(inventoryName))
-                .set(INVENTORIES.PARENT_INVENTORY_ID, value(parentId))
+                .set(INVENTORIES.INVENTORY_NAME, inventoryName)
+                .set(INVENTORIES.PARENT_INVENTORY_ID, parentId)
+                .set(INVENTORIES.VISIBILITY, visibility.toString())
                 .where(INVENTORIES.INVENTORY_ID.eq(inventoryId))
                 .execute();
     }
