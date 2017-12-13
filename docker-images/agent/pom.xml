@@ -17,6 +17,15 @@
         <docker.file>docker-images/agent/Dockerfile</docker.file>
     </properties>
 
+    <!-- default dependencies, will be copied into the agent's local .m2 -->
+    <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -50,6 +59,18 @@
                                     <destFileName>runner.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-default-deps</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${docker.skip}</skip>
+                            <useRepositoryLayout>true</useRepositoryLayout>
+                            <outputDirectory>${project.build.directory}/deps</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
