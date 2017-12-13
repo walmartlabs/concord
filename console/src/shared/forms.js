@@ -38,7 +38,7 @@ const CCheckbox = ({input: {value, onChange}, meta: {error, touched}, label, req
     return <Form.Field error={invalid} required={required}>
         <SUCheckbox id={custom.name}
                     {...custom}
-                    defaultChecked={value}
+                    defaultChecked={value ? value : false}
                     label={label}
                     onChange={(ev, {checked}) => onChange(checked)}/>
         {invalid && <Label basic color="red" pointing>{error}</Label>}

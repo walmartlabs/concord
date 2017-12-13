@@ -1,5 +1,6 @@
 // @flow
 import type {ConcordId} from "../types";
+import Store from "store";
 
 import types from "./actions";
 
@@ -12,8 +13,7 @@ export default (state: any = {}, {type, ...rest}: any) => {
             return chooseDefaultOrg(Object.assign({}, state, ...rest));
         }
         case types.CHANGE_ORG: {
-            const t = getOrg(state, rest.orgId);
-            return Object.assign({}, state, {currentOrg: t});
+            return chooseOrg(state, rest.orgId);
         }
         default: {
             return state;
@@ -28,8 +28,20 @@ const chooseDefaultOrg = (state: any) => {
         throw new Error("The current user is not in any team");
     }
 
-    let o = orgs[0];
+    const prevOrg = Store.get("concord-org");
+
+    let o = prevOrg ? getOrg(state, prevOrg) : orgs[0];
+    if (!o) {
+        o = orgs[0];
+    }
+
     return Object.assign({}, state, {currentOrg: o});
+};
+
+const chooseOrg = (state: any, orgId: ConcordId) => {
+    const t = getOrg(state, orgId);
+    Store.set("concord-org", orgId);
+    return Object.assign({}, state, {currentOrg: t});
 };
 
 const getOrg = (state: any, orgId: ConcordId) => {

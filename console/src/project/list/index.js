@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import PropTypes from "prop-types";
 import {connect} from "react-redux";
 import {Link} from "react-router";
-import {Header, Icon} from "semantic-ui-react";
+import {Header} from "semantic-ui-react";
 import RefreshButton from "../../shared/RefreshButton";
 import ErrorMessage from "../../shared/ErrorMessage";
 import DataTable from "../../shared/DataTable";
@@ -56,7 +56,7 @@ class ProjectListPage extends Component {
     }
 
     render() {
-        const {loading, error, data, org} = this.props;
+        const {loading, error, data} = this.props;
 
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.load()}/>;
