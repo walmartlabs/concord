@@ -84,7 +84,8 @@ public class ProjectManager {
         projectDao.tx(tx -> {
             githubWebhookService.unregister(projectId);
 
-            projectDao.update(tx, orgId, projectId, entry.getName(), entry.getDescription(), entry.getCfg());
+            projectDao.update(tx, orgId, projectId, entry.getVisibility(), entry.getName(),
+                    entry.getDescription(), entry.getCfg());
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);
