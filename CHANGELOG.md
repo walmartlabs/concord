@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-agent: display the list of dependencies when a process
+starts;
 - concord-console: new "visibility" field on the process and the
 secret forms;
 - ansible: `skipTags` support;

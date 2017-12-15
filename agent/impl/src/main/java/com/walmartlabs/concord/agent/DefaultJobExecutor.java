@@ -58,11 +58,31 @@ public class DefaultJobExecutor implements JobExecutor {
         this.executor = Executors.newCachedThreadPool();
     }
 
+    private void logDependencies(String instanceId, Collection<URI> deps) {
+        if (deps == null || deps.isEmpty()) {
+            logManager.log(instanceId, "No external dependencies.");
+        }
+
+        List<String> l = deps.stream()
+                .map(u -> u.toString())
+                .sorted()
+                .collect(Collectors.toList());
+
+        StringBuilder b = new StringBuilder();
+        for (String s : l) {
+            b.append("\n\t").append(s);
+        }
+
+        logManager.log(instanceId, "Dependencies: %s", b);
+    }
+
     @Override
     public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
         try {
             Collection<URI> depsUris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(workDir).stream())
                     .collect(Collectors.toList());
+
+            logDependencies(instanceId, depsUris);
 
             Collection<Path> dependencies = dependencyManager.resolve(depsUris);
 
