@@ -48,7 +48,15 @@ public class YamlProfile implements Serializable {
 
         Map<K, List<V>> result = new HashMap<>();
         items.forEach((k, v) -> {
-            result.put(k, v.stream().filter(Objects::nonNull).collect(Collectors.toList()));
+            if (v == null) {
+                return;
+            }
+
+            List<V> l = v.stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            result.put(k, l);
         });
 
         return result;
