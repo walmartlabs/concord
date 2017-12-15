@@ -36,7 +36,10 @@ public class ProcessSecurityContext {
     public void storeCurrentSubject(UUID instanceId) {
         Subject s = SecurityUtils.getSubject();
         PrincipalCollection ps = s.getPrincipals();
-        stateManager.insert(instanceId, PRINCIPAL_FILE_PATH, serialize(ps));
+        stateManager.transaction(tx -> {
+            stateManager.delete(tx, instanceId, PRINCIPAL_FILE_PATH);
+            stateManager.insert(tx, instanceId, PRINCIPAL_FILE_PATH, serialize(ps));
+        });
     }
 
     public PrincipalCollection getPrincipals(UUID instanceId) {
