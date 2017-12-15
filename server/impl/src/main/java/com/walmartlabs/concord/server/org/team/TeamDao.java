@@ -5,7 +5,6 @@ import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.api.org.team.TeamEntry;
 import com.walmartlabs.concord.server.api.org.team.TeamRole;
 import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
-import com.walmartlabs.concord.server.jooq.tables.Teams;
 import com.walmartlabs.concord.server.jooq.tables.records.UserTeamsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -107,16 +106,16 @@ public class TeamDao extends AbstractDao {
                 .fetchOne(TeamDao::toEntry);
     }
 
-    public List<TeamEntry> list() {
+    public List<TeamEntry> list(UUID orgId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx);
+            return list(tx, orgId);
         }
     }
 
-    public List<TeamEntry> list(DSLContext tx) {
-        Teams t = TEAMS.as("t");
+    public List<TeamEntry> list(DSLContext tx, UUID orgId) {
         return selectTeams(tx)
-                .orderBy(t.TEAM_NAME)
+                .where(TEAMS.ORG_ID.eq(orgId))
+                .orderBy(TEAMS.TEAM_NAME)
                 .fetch(TeamDao::toEntry);
     }
 

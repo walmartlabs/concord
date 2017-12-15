@@ -7,7 +7,6 @@ import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
@@ -53,7 +52,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private static final Logger log = LoggerFactory.getLogger(ProcessResourceImpl.class);
 
     private final ProcessManager processManager;
-    private final ProjectDao projectDao;
     private final ProcessQueueDao queueDao;
     private final ProcessLogsDao logsDao;
     private final PayloadManager payloadManager;
@@ -62,7 +60,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Inject
     public ProcessResourceImpl(ProcessManager processManager,
-                               ProjectDao projectDao,
                                ProcessQueueDao queueDao,
                                ProcessLogsDao logsDao,
                                PayloadManager payloadManager,
@@ -70,7 +67,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                UserDao userDao) {
 
         this.processManager = processManager;
-        this.projectDao = projectDao;
         this.queueDao = queueDao;
         this.logsDao = logsDao;
         this.payloadManager = payloadManager;
@@ -108,6 +104,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @RequiresAuthentication
+    @Deprecated
     public StartProcessResponse start(String entryPoint, Map<String, Object> req, UUID parentInstanceId,
                                       boolean sync, String[] out) {
 
@@ -115,9 +112,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        // TODO teams
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-
         EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
 
         Payload payload;
@@ -156,6 +151,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @RequiresAuthentication
+    @Deprecated
     public StartProcessResponse start(String entryPoint, MultipartInput input, UUID parentInstanceId,
                                       boolean sync, String[] out) {
 
@@ -163,9 +159,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        // TODO teams
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-
         EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
 
         Payload payload;
@@ -182,6 +176,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     @RequiresAuthentication
+    @Deprecated
     public StartProcessResponse start(String entryPoint, InputStream in, UUID parentInstanceId,
                                       boolean sync, String[] out) {
 
@@ -194,9 +189,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         UUID instanceId = UUID.randomUUID();
 
-        // TODO teams
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-
         EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
 
         Payload payload;

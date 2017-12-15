@@ -48,7 +48,7 @@ public class UserManager {
     public UserEntry create(String username, Set<String> permissions, boolean admin) {
         UUID id = userDao.insert(username, permissions, admin);
 
-        // TODO teams
+        // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_TEAM_ID;
         teamDao.addUser(teamId, id, TeamRole.MEMBER);
 

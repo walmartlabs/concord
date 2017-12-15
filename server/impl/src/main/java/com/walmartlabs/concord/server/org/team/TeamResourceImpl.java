@@ -74,8 +74,8 @@ public class TeamResourceImpl implements TeamResource, Resource {
     @Override
     @RequiresAuthentication
     public List<TeamEntry> list(String orgName) {
-        // TODO teams
-        return null;
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        return teamDao.list(org.getId());
     }
 
     @Override
