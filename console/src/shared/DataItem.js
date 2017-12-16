@@ -62,10 +62,10 @@ export default (key: string, initial: any, loadFn: Function, saveFn: Function, d
             data: initial
         }),
 
-        deleteData: (id: any, onSuccess: [any]) => ({
+        deleteData: (args: ?any = [], onSuccess: [any]) => ({
             type: types.DATA_ITEM_DELETE_REQUEST,
             componentKey: key,
-            id,
+            args,
             onSuccess
         })
     };
@@ -166,9 +166,9 @@ export default (key: string, initial: any, loadFn: Function, saveFn: Function, d
         }
     }
 
-    function* deleteData({id, onSuccess}: any): Generator<*, *, *> {
+    function* deleteData({args, onSuccess}: any): Generator<*, *, *> {
         try {
-            const response = yield call(deleteFn, id);
+            const response = yield call(deleteFn, ...args);
 
             yield put({
                 type: types.DATA_ITEM_DELETE_RESPONSE,

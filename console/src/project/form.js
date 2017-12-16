@@ -81,7 +81,7 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
 
 let projectForm = (props) => {
     const { handleSubmit, reset, createNew, newRepositoryPopupFn, editRepositoryPopupFn, deletePopupFn, startProcessFn } = props;
-    const { originalName } = props;
+    const { org, originalName } = props;
     const { pristine, submitting, invalid } = props;
 
     const submitDisabled = pristine || submitting || invalid;
@@ -90,7 +90,7 @@ let projectForm = (props) => {
 
     const openDeletePopup = (ev) => {
         ev.preventDefault();
-        deletePopupFn(originalName);
+        deletePopupFn(org.name, originalName);
     };
 
     const startProcess = (repositoryName, repositoryId) => (ev) => {
@@ -190,9 +190,9 @@ const mapDispatchToProps = (dispatch) => ({
         dispatch(modal.open(RepositoryPopup.MODAL_TYPE, { onSuccess, initialValues, editMode: true }));
     },
 
-    deletePopupFn: (name) => {
+    deletePopupFn: (orgName, projectName) => {
         const onConfirmFn = () => {
-            dispatch(actions.deleteData(name, [modal.close()]));
+            dispatch(actions.deleteData([orgName, projectName], [modal.close()]));
             dispatch(pushHistory("/project/list"));
         };
 

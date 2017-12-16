@@ -46,10 +46,12 @@ const chooseOrg = (state: any, orgId: ConcordId) => {
 
 const getOrg = (state: any, orgId: ConcordId) => {
     const {orgs} = state;
+
     const found = orgs.filter(t => t.id === orgId);
     if (!found || found.length <= 0) {
-        throw new Error(`Organization not found: ${orgId}`);
+        return;
     }
+
     return found[0];
 };
 
