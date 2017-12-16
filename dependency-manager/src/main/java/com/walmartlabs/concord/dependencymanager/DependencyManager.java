@@ -223,12 +223,12 @@ public class DependencyManager {
         session.setRepositoryListener(new AbstractRepositoryListener() {
             @Override
             public void artifactResolving(RepositoryEvent event) {
-                log.info("artifactResolving -> {}", event);
+                log.debug("artifactResolving -> {}", event);
             }
 
             @Override
             public void artifactResolved(RepositoryEvent event) {
-                log.info("artifactResolved -> {}", event);
+                log.debug("artifactResolved -> {}", event);
             }
         });
 

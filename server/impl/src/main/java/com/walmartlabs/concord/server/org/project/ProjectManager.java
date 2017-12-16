@@ -138,7 +138,7 @@ public class ProjectManager {
         Map<String, UUID> ids = new HashMap<>();
 
         for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
-            String name = r.getKey();
+            String repoName = r.getKey();
             RepositoryEntry req = r.getValue();
 
             UUID secretId = null;
@@ -147,16 +147,21 @@ public class ProjectManager {
                 secretId = e.getId();
             }
 
-            UUID id = repositoryDao.insert(tx, projectId, name, req.getUrl(),
+            UUID id = repositoryDao.insert(tx, projectId, repoName, req.getUrl(),
                     trim(req.getBranch()),
                     trim(req.getCommitId()),
                     trim(req.getPath()),
                     secretId);
 
-            eventResource.event(Events.CONCORD_EVENT, update ? Events.Repository.repositoryUpdated(orgName, projectName, req.getName()) :
-                    Events.Repository.repositoryCreated(orgName, projectName, req.getName()));
+            Map<String, Object> ev;
+            if (update) {
+                ev = Events.Repository.repositoryUpdated(orgName, projectName, repoName);
+            } else {
+                ev = Events.Repository.repositoryCreated(orgName, projectName, repoName);
+            }
+            eventResource.event(Events.CONCORD_EVENT, ev);
 
-            ids.put(name, id);
+            ids.put(repoName, id);
         }
 
         return ids;
