@@ -13,7 +13,6 @@ import GitUrlParse from "git-url-parse";
 import * as v from "../shared/validation";
 import {actions} from "./crud";
 import {getCurrentOrg} from "../session/reducers";
-import * as c from "./RepositoryPopup/constants";
 
 const renderSourceText = (f, { commitId }) => commitId ? "Revision" : "Branch/tag";
 
