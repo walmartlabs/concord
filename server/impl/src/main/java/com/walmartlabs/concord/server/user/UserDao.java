@@ -19,6 +19,7 @@ import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PE
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.selectDistinct;
 import static org.jooq.impl.DSL.selectFrom;
 
 @Named
@@ -86,10 +87,12 @@ public class UserDao extends AbstractDao {
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID)).asField();
 
-            SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID).from(USER_TEAMS)
+            SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
+                    .from(USER_TEAMS)
                     .where(USER_TEAMS.USER_ID.eq(id));
 
-            List<OrganizationEntry> orgs = tx.select(TEAMS.ORG_ID, orgNameField).from(TEAMS)
+            List<OrganizationEntry> orgs = tx.selectDistinct(TEAMS.ORG_ID, orgNameField)
+                    .from(TEAMS)
                     .where(TEAMS.TEAM_ID.in(teamIds))
                     .fetch(e -> new OrganizationEntry(e.value1(), e.value2()));
 
