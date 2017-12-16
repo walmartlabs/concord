@@ -70,6 +70,7 @@
                         <configuration>
                             <skip>${docker.skip}</skip>
                             <useRepositoryLayout>true</useRepositoryLayout>
+                            <copyPom>true</copyPom>
                             <outputDirectory>${project.build.directory}/deps</outputDirectory>
                         </configuration>
                     </execution>
