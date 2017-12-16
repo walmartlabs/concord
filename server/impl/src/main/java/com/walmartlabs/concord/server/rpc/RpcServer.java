@@ -19,7 +19,6 @@ public class RpcServer implements Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(RpcServer.class);
 
-    private final RpcServerConfiguration cfg;
     private final Server server;
 
     @Inject
@@ -31,7 +30,6 @@ public class RpcServer implements Closeable {
                      SecretStoreServiceImpl secretStoreService,
                      EventServiceImpl eventService,
                      SlackServiceImpl slackService) throws ClientException {
-        this.cfg = cfg;
 
         this.server = ServerBuilder
                 .forPort(cfg.getPort())
@@ -64,23 +62,23 @@ public class RpcServer implements Closeable {
     private static final class LoggingTransportFilter extends ServerTransportFilter {
 
         @Override
-        public Attributes transportReady(Attributes transportAttrs) {
-            SocketAddress remoteAddr = transportAttrs.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
+        public Attributes transportReady(Attributes attrs) {
+            SocketAddress remoteAddr = attrs.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
             if (remoteAddr != null) {
                 log.info("transportReady -> {} connected", remoteAddr);
             }
 
-            return super.transportReady(transportAttrs);
+            return super.transportReady(attrs);
         }
 
         @Override
-        public void transportTerminated(Attributes transportAttrs) {
-            SocketAddress remoteAddr = transportAttrs.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
+        public void transportTerminated(Attributes attrs) {
+            SocketAddress remoteAddr = attrs != null ? attrs.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR) : null;
             if (remoteAddr != null) {
                 log.info("transportTerminated -> {} disconnected", remoteAddr);
             }
 
-            super.transportTerminated(transportAttrs);
+            super.transportTerminated(attrs);
         }
     }
 }
