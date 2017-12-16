@@ -5,7 +5,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.walmartlabs.concord.plugins.fs" level="WARN"/>
+    <logger name="io.takari.bpm.state" level="ERROR"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
