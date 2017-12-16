@@ -312,7 +312,7 @@
         </sql>
     </changeSet>
 
-    <changeSet id="44550" author="ibodrov@gmail.com">
+    <changeSet id="48550" author="ibodrov@gmail.com">
         <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
             select
                 INSTANCE_ID,
@@ -338,5 +338,15 @@
                 from PROJECTS) prj
                 on prj.PROJECT_ID = PROCESS_QUEUE.PROJECT_ID
         </createView>
+    </changeSet>
+
+    <changeSet id="48600" author="ibodrov@gmail.com">
+        <dropForeignKeyConstraint baseTableName="REPOSITORIES" constraintName="FK_REPO_RPJ_ID"/>
+        <addForeignKeyConstraint baseTableName="REPOSITORIES"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_REPO_PRJ_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
     </changeSet>
 </databaseChangeLog>
