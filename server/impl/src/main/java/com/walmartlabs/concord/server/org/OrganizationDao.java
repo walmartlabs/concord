@@ -2,9 +2,7 @@ package com.walmartlabs.concord.server.org;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Record2;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -13,6 +11,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
+import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
+import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
+import static org.jooq.impl.DSL.selectDistinct;
 
 @Named
 public class OrganizationDao extends AbstractDao {
@@ -78,11 +79,24 @@ public class OrganizationDao extends AbstractDao {
                 .execute();
     }
 
-    public List<OrganizationEntry> list() {
+    public List<OrganizationEntry> list(UUID userId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME)
-                    .from(ORGANIZATIONS)
-                    .orderBy(ORGANIZATIONS.ORG_NAME)
+            SelectJoinStep<Record2<UUID, String>> q = tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME)
+                    .from(ORGANIZATIONS);
+
+            if (userId != null) {
+                SelectConditionStep<Record1<UUID>> teamIds = selectDistinct(USER_TEAMS.TEAM_ID)
+                        .from(USER_TEAMS)
+                        .where(USER_TEAMS.USER_ID.eq(userId));
+
+                SelectConditionStep<Record1<UUID>> orgIds = selectDistinct(TEAMS.ORG_ID)
+                        .from(TEAMS)
+                        .where(TEAMS.TEAM_ID.in(teamIds));
+
+                q.where(ORGANIZATIONS.ORG_ID.in(orgIds));
+            }
+
+            return q.orderBy(ORGANIZATIONS.ORG_NAME)
                     .fetch(OrganizationDao::toEntry);
         }
     }

@@ -4,6 +4,7 @@ import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.CreateOrganizationResponse;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.OrganizationResource;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -42,6 +43,13 @@ public class OrganizationResourceImpl implements OrganizationResource, Resource 
 
     @Override
     public List<OrganizationEntry> list() {
-        return orgDao.list();
+        UUID userId = null;
+
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (!p.isAdmin()) {
+            userId = p.getId();
+        }
+
+        return orgDao.list(userId);
     }
 }
