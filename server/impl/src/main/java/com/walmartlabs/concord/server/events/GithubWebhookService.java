@@ -9,6 +9,7 @@ import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record3;
 import org.jooq.impl.DSL;
+import org.kohsuke.github.GHFileNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,14 +77,6 @@ public class GithubWebhookService {
         log.info("unregister ['{}'] -> ok", projectId);
     }
 
-    public void unregister(UUID projectId, UUID repoId) {
-        RepositoryEntry re = repositoryDao.get(projectId, repoId);
-
-        unregister(projectId, repoId, re.getUrl());
-
-        log.info("unregister ['{}', '{}'] -> ok", projectId, repoId);
-    }
-
     private void unregister(UUID projectId, UUID repoId, String repoUrl) {
         if(!needWebhookForRepository(repoUrl)) {
             log.info("unregister ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoId, repoUrl);
@@ -132,8 +125,12 @@ public class GithubWebhookService {
         }
 
         private void refreshWebhook(UUID projectId, UUID repoId, String repoUrl) {
-            unregister(projectId, repoId, repoUrl);
-            register(projectId, repoId, repoUrl);
+            try {
+                unregister(projectId, repoId, repoUrl);
+                register(projectId, repoId, repoUrl);
+            } catch (Exception e) {
+                log.warn("refreshWebhook ['{}', '{}', '{}'] -> failed: {}", projectId, repoId, repoUrl, e.getMessage());
+            }
         }
 
         private void sleep(long ms) {

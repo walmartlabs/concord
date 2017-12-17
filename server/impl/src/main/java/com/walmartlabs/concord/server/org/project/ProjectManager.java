@@ -63,7 +63,7 @@ public class ProjectManager {
                     entry.getVisibility(), acceptsRawPayload);
 
             if (repos != null) {
-                Map<String, UUID> ids = insertRepos(tx, orgId, orgName, pId, entry.getName(), repos, true);
+                Map<String, UUID> ids = insertRepos(tx, orgId, orgName, pId, entry.getName(), repos, false);
 
                 repos.forEach((repoName, repo) -> {
                     githubWebhookService.register(pId, ids.get(repoName), repo.getUrl());

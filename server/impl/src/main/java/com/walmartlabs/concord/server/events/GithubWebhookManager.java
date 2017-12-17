@@ -2,10 +2,7 @@ package com.walmartlabs.concord.server.events;
 
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
-import org.kohsuke.github.GHEvent;
-import org.kohsuke.github.GHHook;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
+import org.kohsuke.github.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +40,7 @@ public class GithubWebhookManager {
 
     public void register(String repoName, String webhookUrl) {
         try {
-            if(gh == null) {
+            if (gh == null) {
                 log.warn("register ['{}', '{}'] -> not configured, ignored", repoName, webhookUrl);
                 return;
             }
@@ -57,15 +54,17 @@ public class GithubWebhookManager {
             repo.createHook("web", config, EVENTS, true);
 
             log.info("register ['{}', '{}'] -> ok", repoName, webhookUrl);
+        } catch (GHFileNotFoundException e) {
+            log.warn("register ['{}', '{}'] -> the repository not found", repoName, webhookUrl);
         } catch (IOException e) {
             log.error("register ['{}', '{}'] -> error", repoName, webhookUrl, e);
-            throw new RuntimeException("register webhook -> error", e);
+            throw new RuntimeException("Error while registering a webook", e);
         }
     }
 
     public void unregister(String repoName, String webhookUrl) {
         try {
-            if(gh == null) {
+            if (gh == null) {
                 log.warn("unregister ['{}', '{}'] -> not configured, ignored", repoName, webhookUrl);
                 return;
             }
@@ -80,8 +79,10 @@ public class GithubWebhookManager {
             hooks.forEach(this::deleteWebhook);
 
             log.info("unregister ['{}', '{}'] -> ok", repoName, webhookUrl);
+        } catch (GHFileNotFoundException e) {
+            log.warn("unregister ['{}', '{}'] -> the webhook not found", repoName, webhookUrl);
         } catch (IOException e) {
-            log.error("unregister ['{}', '{}'] -> error", repoName, webhookUrl, e);
+            log.error("unregister ['{}', '{}'] -> error: {}", repoName, webhookUrl, e.getMessage());
         }
     }
 
