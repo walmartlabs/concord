@@ -30,5 +30,5 @@ public interface OrganizationResource {
     @GET
     @ApiOperation("List organizations")
     @Produces(MediaType.APPLICATION_JSON)
-    List<OrganizationEntry> list();
+    List<OrganizationEntry> list(@ApiParam @QueryParam("onlyCurrent") @DefaultValue("false") boolean onlyCurrent);
 }

@@ -42,12 +42,14 @@ public class OrganizationResourceImpl implements OrganizationResource, Resource 
     }
 
     @Override
-    public List<OrganizationEntry> list() {
+    public List<OrganizationEntry> list(boolean onlyCurrent) {
         UUID userId = null;
 
-        UserPrincipal p = UserPrincipal.getCurrent();
-        if (!p.isAdmin()) {
-            userId = p.getId();
+        if (onlyCurrent) {
+            UserPrincipal p = UserPrincipal.getCurrent();
+            if (!p.isAdmin()) {
+                userId = p.getId();
+            }
         }
 
         return orgDao.list(userId);
