@@ -6,6 +6,7 @@ flows:
   - log: "We know that you are ${myForm.age} years old"
   - log: "And your height is: ${myForm.money}"
   - log: "'Remember me' checked: ${myForm.rememberMe}"
+  - log: "File content: ${myForm.file}"
 
 forms:
   myForm:
@@ -15,3 +16,4 @@ forms:
   - age: { label: "Age", type: "int?" }
   - height: { label: "Height", type: "decimal?" }
   - rememberMe: { label: "Remember me", type: "boolean", value: true }
+  - file: { label: "File", type: "file"}

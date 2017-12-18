@@ -35,12 +35,17 @@ export const fetchForm = (instanceId: ConcordId, formInstanceId: ConcordId) => {
 export const submitForm = (instanceId: ConcordId, formInstanceId: ConcordId, data: mixed) => {
     console.debug("API: submitForm ['%s', '%s', %o] -> starting...", instanceId, formInstanceId, data);
 
-    const body = JSON.stringify(data);
-    const contentType = {"Content-Type": "application/json"};
+    const formData = new FormData();
+    for(const name in data) {
+        if (data[name] !== undefined) {
+            formData.append(name, data[name]);
+        }
+    }
+
+    const body = formData;
     const opts = {
         method: "POST",
         credentials: "same-origin",
-        headers: contentType,
         body: body
     };
 

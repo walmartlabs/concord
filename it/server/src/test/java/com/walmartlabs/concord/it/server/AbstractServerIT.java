@@ -75,6 +75,10 @@ public abstract class AbstractServerIT {
         serverClient.waitForLog(logFileName, pattern);
     }
 
+    protected <T> T request(String uri, Map<String, Object> input, Class<T> entityType) {
+        return serverClient.request(uri, input, entityType);
+    }
+
     private static final char[] RANDOM_CHARS = "abcdef0123456789".toCharArray();
 
     protected String randomString() {

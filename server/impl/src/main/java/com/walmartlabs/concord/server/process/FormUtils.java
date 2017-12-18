@@ -1,12 +1,17 @@
 package com.walmartlabs.concord.server.process;
 
+import com.google.common.io.CharStreams;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.DefaultFormFields;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -103,7 +108,7 @@ public final class FormUtils {
                         // default HTML checkbox will be submitted as an empty value if checked
                         return true;
                     }
-                    break;
+                    return Boolean.parseBoolean(s);
                 }
             }
         } else if (v instanceof List) {
@@ -119,6 +124,12 @@ public final class FormUtils {
                 i++;
             }
             return ll;
+        } else if (v instanceof InputStream) {
+            try (InputStream is = (InputStream) v){
+                return CharStreams.toString(new InputStreamReader(is));
+            } catch (IOException e) {
+                throw new WebApplicationException("Error reading request", e);
+            }
         } else if (v == null) {
             if (f.getType().equals(DefaultFormFields.BooleanField.TYPE)) {
                 return false;

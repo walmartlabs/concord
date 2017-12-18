@@ -11,7 +11,6 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryData;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedKeyPair;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedUsernamePassword;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -53,7 +52,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
             String name = assertName(input);
             assertUnique(org.getId(), name);
 
-            boolean generatePwd = getBoolean(input, "generatePassword", false);
+            boolean generatePwd = MultipartUtils.getBoolean(input, "generatePassword", false);
             String storePwd = getOrGenerateStorePassword(input, generatePwd);
             SecretVisibility visibility = getVisibility(input);
 
@@ -115,7 +114,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     private PublicKeyResponse createKeyPair(UUID orgId, String name, String storePassword, SecretVisibility visibility, MultipartInput input) throws IOException {
         DecryptedKeyPair k;
 
-        InputStream publicKey = getStream(input, "public");
+        InputStream publicKey = MultipartUtils.getStream(input, "public");
         if (publicKey != null) {
             InputStream privateKey = assertStream(input, "private");
             try {
@@ -131,7 +130,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     private SecretOperationResponse createUsernamePassword(UUID orgId, String name, String storePassword,
-                                                           SecretVisibility visibility, MultipartInput input) throws IOException {
+                                                           SecretVisibility visibility, MultipartInput input) {
 
         String username = assertString(input, "username");
         String password = assertString(input, "password");
@@ -157,8 +156,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
     private String getOrGenerateStorePassword(MultipartInput input, boolean generatePassword) {
         String password;
         try {
-            password = getString(input, "storePassword");
-        } catch (IOException e) {
+            password = MultipartUtils.getString(input, "storePassword");
+        } catch (WebApplicationException e) {
             throw new WebApplicationException("Can't get a password from the request", e);
         }
 
@@ -182,8 +181,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
         return s;
     }
 
-    private static SecretType assertType(MultipartInput input) throws IOException {
-        String s = getString(input, "type");
+    private static SecretType assertType(MultipartInput input) {
+        String s = MultipartUtils.getString(input, "type");
         if (s == null) {
             throw new ValidationErrorsException("'type' is required");
         }
@@ -195,26 +194,16 @@ public class SecretResourceImpl implements SecretResource, Resource {
         }
     }
 
-    private static String assertString(MultipartInput input, String key) throws IOException {
-        String s = getString(input, key);
+    private static String assertString(MultipartInput input, String key) {
+        String s = MultipartUtils.getString(input, key);
         if (s == null) {
             throw new ValidationErrorsException("Value not found: " + key);
         }
         return s;
     }
 
-    private static String getString(MultipartInput input, String key) throws IOException {
-        for (InputPart p : input.getParts()) {
-            String name = MultipartUtils.extractName(p);
-            if (key.equals(name)) {
-                return p.getBodyAsString();
-            }
-        }
-        return null;
-    }
-
-    private static SecretVisibility getVisibility(MultipartInput input) throws IOException {
-        String s = getString(input, "visibility");
+    private static SecretVisibility getVisibility(MultipartInput input) {
+        String s = MultipartUtils.getString(input, "visibility");
         if (s == null) {
             return SecretVisibility.PUBLIC;
         }
@@ -226,29 +215,11 @@ public class SecretResourceImpl implements SecretResource, Resource {
         }
     }
 
-    private static InputStream assertStream(MultipartInput input, String key) throws IOException {
-        InputStream in = getStream(input, key);
+    private static InputStream assertStream(MultipartInput input, String key) {
+        InputStream in = MultipartUtils.getStream(input, key);
         if (in == null) {
             throw new ValidationErrorsException("Value not found: " + key);
         }
         return in;
-    }
-
-    private static InputStream getStream(MultipartInput input, String key) throws IOException {
-        for (InputPart p : input.getParts()) {
-            String name = MultipartUtils.extractName(p);
-            if (key.equals(name)) {
-                return p.getBody(InputStream.class, null);
-            }
-        }
-        return null;
-    }
-
-    private static boolean getBoolean(MultipartInput input, String key, boolean defaultValue) throws IOException {
-        String s = getString(input, key);
-        if (s == null) {
-            return defaultValue;
-        }
-        return Boolean.parseBoolean(s);
     }
 }

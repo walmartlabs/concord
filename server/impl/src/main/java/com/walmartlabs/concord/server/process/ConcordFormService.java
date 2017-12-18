@@ -1,18 +1,18 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.project.ConcordFormFields;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.takari.bpm.api.ExecutionException;
-import io.takari.bpm.form.DefaultFormService;
+import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
-import io.takari.bpm.form.DefaultFormValidator;
-import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
-import io.takari.bpm.form.FormValidator;
+import io.takari.bpm.model.form.DefaultFormFields;
+import io.takari.bpm.model.form.FormField;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -48,7 +48,18 @@ public class ConcordFormService {
         this.stateManager = stateManager;
         this.resumePipeline = resumePipeline;
 
-        this.validator = new DefaultFormValidator();
+        this.validator = createFormValidator();
+    }
+
+    private static FormValidator createFormValidator() {
+        FormValidatorLocale locale = new DefaultFormValidatorLocale();
+        List<DefaultFormValidator.FieldValidator> vs = new ArrayList<>();
+        vs.add(new DefaultFormValidator.StringFieldValidator(locale));
+        vs.add(new DefaultFormValidator.IntegerFieldValidator(locale));
+        vs.add(new DefaultFormValidator.DecimalFieldValidator(locale));
+        vs.add(new DefaultFormValidator.BooleanFieldValidator(locale));
+        vs.add(new FileFieldValidator(locale));
+        return new DefaultFormValidator(vs, locale);
     }
 
     public Form get(UUID processInstanceId, String formInstanceId) {
@@ -240,4 +251,32 @@ public class ConcordFormService {
             return errors == null || errors.isEmpty();
         }
     }
+
+    public static final class FileFieldValidator implements DefaultFormValidator.FieldValidator {
+
+        private static final String[] TYPES = {ConcordFormFields.FileField.TYPE};
+
+        private final FormValidatorLocale locale;
+
+        public FileFieldValidator(FormValidatorLocale locale) {
+            this.locale = locale;
+        }
+
+        @Override
+        public String[] allowedTypes() {
+            return TYPES;
+        }
+
+        @Override
+        public ValidationError validate(String formId, FormField f, Integer idx, Object v) throws ExecutionException {
+            String fieldName = f.getName();
+
+            if (!(v instanceof String)) {
+                throw new IllegalArgumentException("Expected a file value: " + fieldName);
+            }
+
+            return null;
+        }
+    }
+
 }

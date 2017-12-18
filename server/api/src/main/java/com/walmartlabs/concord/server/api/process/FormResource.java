@@ -5,6 +5,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -50,4 +51,20 @@ public interface FormResource {
     FormSubmitResponse submit(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                               @ApiParam @PathParam("formInstanceId") @ConcordId String formInstanceId,
                               @ApiParam Map<String, Object> data);
+
+    /**
+     * Submits form instance's data, potentially resuming a suspended process.
+     *
+     * @param formInstanceId
+     * @param data
+     * @return
+     */
+    @POST
+    @ApiOperation("Submit form data")
+    @Path("/{processInstanceId}/form/{formInstanceId}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    FormSubmitResponse submit(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
+                              @ApiParam @PathParam("formInstanceId") @ConcordId String formInstanceId,
+                              @ApiParam MultipartInput data);
 }

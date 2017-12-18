@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.process.FormInstanceEntry;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.FormResource;
@@ -15,6 +16,7 @@ import io.takari.bpm.form.FormSubmitResult.ValidationError;
 import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
@@ -134,6 +136,13 @@ public class FormResourceImpl implements FormResource, Resource {
 
         Map<String, String> errors = mergeErrors(result.getErrors());
         return new FormSubmitResponse(result.getProcessInstanceId(), errors);
+    }
+
+    @Override
+    @Validate
+    @WithTimer
+    public FormSubmitResponse submit(UUID processInstanceId, String formInstanceId, MultipartInput data) {
+        return submit(processInstanceId, formInstanceId, MultipartUtils.toMap(data));
     }
 
     private static Map<String, String> mergeErrors(List<ValidationError> errors) {

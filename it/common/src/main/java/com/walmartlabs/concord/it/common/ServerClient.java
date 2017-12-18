@@ -109,7 +109,7 @@ public class ServerClient {
         return mdo;
     }
 
-    private <T> T request(String uri, Map<String, Object> input, Class<T> entityType) {
+    public <T> T request(String uri, Map<String, Object> input, Class<T> entityType) {
         WebTarget target = client.target(baseUrl + "/" + uri);
 
         MultipartFormDataOutput mdo = createMDO(input);

@@ -1,6 +1,7 @@
 package com.walmartlabs.concord.project.yaml;
 
 import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.project.ConcordFormFields;
 import com.walmartlabs.concord.project.yaml.model.YamlFormDefinition;
 import com.walmartlabs.concord.project.yaml.model.YamlFormField;
 import io.takari.bpm.model.form.DefaultFormFields.BooleanField;
@@ -72,6 +73,9 @@ public final class YamlFormConverter {
                 break;
             }
             case BooleanField.TYPE: {
+                break;
+            }
+            case ConcordFormFields.FileField.TYPE: {
                 break;
             }
             default:

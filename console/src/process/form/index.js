@@ -66,6 +66,8 @@ class ProcessForm extends Component {
                 return this.renderNumberField(f, value);
             case "boolean":
                 return this.renderBooleanField(f, value);
+            case "file":
+                return this.renderFileField(f, value);
             default:
                 return <p key={f.name}>Unknown field type: {f.type}</p>
         }
@@ -113,6 +115,22 @@ class ProcessForm extends Component {
                       disabled={submitting || completed}
                       defaultChecked={value}
                       onChange={this.handleCheckboxInput(name)}/>
+
+            {error && <Label basic color="red" pointing>{error}</Label>}
+        </Form.Field>
+    }
+
+    renderFileField({name, label, type}, value) {
+        const {data: {errors}, submitting, completed} = this.props;
+        const error = errors ? errors[name] : undefined;
+
+        return <Form.Field key={name} error={error && true}>
+            <label>{label}</label>
+
+            <Input name={name}
+                   type='file'
+                   disabled={submitting || completed}
+                   onChange={this.handleInput(name, type)}/>
 
             {error && <Label basic color="red" pointing>{error}</Label>}
         </Form.Field>
@@ -171,6 +189,8 @@ class ProcessForm extends Component {
                 v = target.valueAsNumber;
             } else if (type === "boolean") {
                 v = target.valueAsBoolean;
+            } else if (type === "file") {
+                v = target.files[0];
             }
 
             let o = {};

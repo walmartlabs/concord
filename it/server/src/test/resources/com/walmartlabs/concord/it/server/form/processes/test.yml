@@ -10,6 +10,8 @@ main:
 
   - ${log.info("test", myForm2.color)}
 
+  - log: "FILE ${myForm2.file}"
+
   - log: "AAA ${myForm2.rememberMe}"
 
 form (myForm1):
@@ -20,3 +22,4 @@ form (myForm2):
   - age: { label: "Age", type: "int?", min: 21, max: 120 }
   - color: { label: "Favorite color", type: "string", value: "red" }
   - rememberMe: { label: "Remember me", type: "boolean" }
+  - file: { label: "file", type: "file" }
