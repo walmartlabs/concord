@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: initial support for file upload
+fields.
+
+
+
 ## [0.48.0] - 2017-12-17
 
 ### Added
