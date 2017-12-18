@@ -629,6 +629,7 @@ public class RunPlaybookTask2 implements Task {
         return (String)args.get(key);
     }
 
+    @SuppressWarnings("unchecked")
     private static String getListAsString(Map<String, Object> args, String key) {
         Object v = args.get(key);
         if (v == null) {
@@ -640,7 +641,7 @@ public class RunPlaybookTask2 implements Task {
         }
 
         if (v instanceof Collection) {
-            return String.join(", ", (Collection)v);
+            return String.join(", ", (Collection<String>)v);
         }
 
         throw new IllegalArgumentException("unexpected '" + key + "' type: " + v);

@@ -1,8 +1,8 @@
 package com.walmartlabs.concord.project.yaml;
 
-import com.walmartlabs.concord.common.Task;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.*;
@@ -1176,7 +1176,7 @@ public class YamlParserTest {
 
         String key = UUID.randomUUID().toString();
         Map<String, Object> args = new HashMap<>();
-        args.put("__attr_localPath", "/tmp");
+        args.put("workDir", "/tmp");
         args.put("txId", txId);
         engine.start(key, "main", args);
 

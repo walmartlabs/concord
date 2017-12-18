@@ -46,6 +46,7 @@ public class ConverterContext implements Serializable {
         return "e_" + index++;
     }
 
+    @SuppressWarnings("unchecked")
     public Chunk convert(YamlStep s) throws YamlConverterException {
         StepConverter c = converters.get(s.getClass());
         if (c == null) {

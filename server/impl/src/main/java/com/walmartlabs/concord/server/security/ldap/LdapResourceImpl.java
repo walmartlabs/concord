@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.security.ldap;
 
-import com.walmartlabs.concord.server.api.PerformedActionType;
+import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.security.ldap.*;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.RoleDao;
@@ -14,7 +14,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.naming.NamingException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
 @Named
@@ -43,11 +42,11 @@ public class LdapResourceImpl implements LdapResource, Resource {
         UUID id = ldapDao.getId(ldapDn);
         if (id != null) {
             ldapDao.update(id, ldapDn, request.getRoles());
-            return new CreateLdapMappingResponse(id, PerformedActionType.UPDATED);
+            return new CreateLdapMappingResponse(id, OperationResult.UPDATED);
         } else {
             id = UUID.randomUUID();
             ldapDao.insert(id, ldapDn, request.getRoles());
-            return new CreateLdapMappingResponse(id, PerformedActionType.CREATED);
+            return new CreateLdapMappingResponse(id, OperationResult.CREATED);
         }
     }
 

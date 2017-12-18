@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.user;
 
-import com.walmartlabs.concord.server.api.PerformedActionType;
+import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.user.CreateRoleResponse;
 import com.walmartlabs.concord.server.api.user.DeleteRoleResponse;
 import com.walmartlabs.concord.server.api.user.RoleEntry;
@@ -35,10 +35,10 @@ public class RoleResourceImpl implements RoleResource, Resource {
 
         if (roleDao.exists(roleName)) {
             roleDao.update(roleName, entry.getDescription(), entry.getPermissions());
-            return new CreateRoleResponse(PerformedActionType.UPDATED);
+            return new CreateRoleResponse(OperationResult.UPDATED);
         } else {
             roleDao.insert(roleName, entry.getDescription(), entry.getPermissions());
-            return new CreateRoleResponse(PerformedActionType.CREATED);
+            return new CreateRoleResponse(OperationResult.CREATED);
         }
     }
 

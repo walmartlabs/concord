@@ -1,7 +1,7 @@
 package com.walmartlabs.concord.plugins.dynamic;
 
 import com.walmartlabs.concord.common.DynamicTaskRegistry;
-import com.walmartlabs.concord.common.Task;
+import com.walmartlabs.concord.sdk.Task;
 import groovy.lang.GroovyClassLoader;
 
 import javax.inject.Inject;

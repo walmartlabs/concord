@@ -4,7 +4,6 @@ import com.googlecode.junittoolbox.ParallelRunner;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
-import com.walmartlabs.concord.server.api.PerformedActionType;
 import com.walmartlabs.concord.server.api.org.inventory.*;
 import com.walmartlabs.concord.server.api.org.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
@@ -92,7 +91,7 @@ public class CrudIT extends AbstractServerIT {
 
         LdapResource ldapResource = proxy(LdapResource.class);
         CreateLdapMappingResponse clmr = ldapResource.createOrUpdate(new CreateLdapMappingRequest(ldapDn, roleA, roleB));
-        assertEquals(PerformedActionType.CREATED, clmr.getActionType());
+        assertEquals(OperationResult.CREATED, clmr.getResult());
 
         List<LdapMappingEntry> l = ldapResource.listMappings();
         assertFalse(l.isEmpty());

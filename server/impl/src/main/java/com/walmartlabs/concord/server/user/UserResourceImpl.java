@@ -1,6 +1,6 @@
 package com.walmartlabs.concord.server.user;
 
-import com.walmartlabs.concord.server.api.PerformedActionType;
+import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.user.*;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -37,10 +37,10 @@ public class UserResourceImpl implements UserResource, Resource {
         if (id == null) {
             boolean admin = request.getAdmin() != null ? request.getAdmin() : false;
             UserEntry e = userManager.create(username, request.getPermissions(), admin);
-            return new CreateUserResponse(e.getId(), PerformedActionType.CREATED);
+            return new CreateUserResponse(e.getId(), OperationResult.CREATED);
         } else {
             userDao.update(id, request.getPermissions(), request.getAdmin());
-            return new CreateUserResponse(id, PerformedActionType.UPDATED);
+            return new CreateUserResponse(id, OperationResult.UPDATED);
         }
     }
 
