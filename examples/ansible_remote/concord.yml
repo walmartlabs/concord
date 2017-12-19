@@ -7,12 +7,12 @@ flows:
   - task: ansible
     in:
       # remote user
-      user: "ibodrov"
+      user: "myuser"
 
       # export the secret using the provided name and password
       privateKey:
-        secretName: "concordSecret"
-        password: "q1"
+        secretName: "mySecret"
+        password: "myPwd"
 
       # location of the playbook
       playbook: playbook/hello.yml
@@ -21,7 +21,7 @@ flows:
       inventory:
         local:
           hosts:
-          - "build.dev.ibodrov.devtools.prod.walmart.com"
+          - "somehost.walmart.com"
 
       # pass additional variables to the playbook
       extraVars:
