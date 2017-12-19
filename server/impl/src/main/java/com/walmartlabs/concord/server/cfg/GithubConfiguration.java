@@ -1,5 +1,6 @@
 package com.walmartlabs.concord.server.cfg;
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,7 @@ public class GithubConfiguration {
     private final String webhookUrl;
     private final String githubUrl;
     private final long refreshInterval;
+    private final boolean cacheEnabled;
 
     public GithubConfiguration() throws IOException {
         Properties props = new Properties();
@@ -43,7 +45,8 @@ public class GithubConfiguration {
             this.oauthAccessToken = props.getProperty("oauthAccessToken");
             this.webhookUrl = props.getProperty("webhookUrl");
             this.githubUrl = props.getProperty("githubUrl");
-            this.refreshInterval = getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
+            this.refreshInterval = Utils.getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
+            this.cacheEnabled = Utils.getBoolean(props, "", false);
         } else {
             this.secret = "123qwe";
             this.apiUrl = null;
@@ -51,6 +54,7 @@ public class GithubConfiguration {
             this.webhookUrl = "";
             this.githubUrl = "";
             this.refreshInterval = DEFAULT_REFRESH_INTERVAL;
+            this.cacheEnabled = false;
 
             log.warn("init -> no github configuration");
         }
@@ -80,11 +84,7 @@ public class GithubConfiguration {
         return refreshInterval;
     }
 
-    private static long getLong(Properties props, String key, long defaultValue) {
-        String s = props.getProperty(key);
-        if (s == null) {
-            return defaultValue;
-        }
-        return Long.parseLong(s);
+    public boolean isCacheEnabled() {
+        return cacheEnabled;
     }
 }

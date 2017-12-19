@@ -2,6 +2,7 @@ package com.walmartlabs.concord.server.repository;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -29,12 +30,16 @@ public class CachedRepositoryManager implements RepositoryManager {
 
     private final RepositoryCacheDao repositoryDao;
 
+    private final GithubConfiguration githubConfiguration;
+
     public CachedRepositoryManager(RepositoryMetaManager repositoryMetaManager,
                                    RepositoryManager delegate,
-                                   RepositoryCacheDao repositoryDao) {
+                                   RepositoryCacheDao repositoryDao,
+                                   GithubConfiguration githubConfiguration) {
         this.repositoryMetaManager = repositoryMetaManager;
         this.delegate = delegate;
         this.repositoryDao = repositoryDao;
+        this.githubConfiguration = githubConfiguration;
     }
 
     @Override
@@ -53,7 +58,7 @@ public class CachedRepositoryManager implements RepositoryManager {
         return withLock(projectId, repoName, () -> {
             Date lastPushDate = repositoryDao.getLastPushDate(projectId, repoName);
             RepositoryMeta rm = repositoryMetaManager.readMeta(projectId, repository);
-            if (needUpdate(rm, lastPushDate)) {
+            if (!canCache(repository.getUrl()) || needUpdate(rm, lastPushDate)) {
                 Path result = delegate.fetch(projectId, repository);
                 repositoryMetaManager.writeMeta(projectId, repository, new RepositoryMeta(lastPushDate));
                 log.info("fetch ['{}', '{}'] -> updated", projectId, repoName);
@@ -77,6 +82,10 @@ public class CachedRepositoryManager implements RepositoryManager {
 
     private boolean needUpdate(RepositoryMeta rm, Date lastPushDate) {
         return rm == null || rm.getPushDate().before(lastPushDate);
+    }
+
+    private boolean canCache(String repoUrl) {
+        return repoUrl.contains(githubConfiguration.getGithubUrl());
     }
 
     @Named

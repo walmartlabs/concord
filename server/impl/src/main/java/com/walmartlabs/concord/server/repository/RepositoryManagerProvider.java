@@ -43,10 +43,10 @@ public class RepositoryManagerProvider implements Provider<RepositoryManager> {
     @Override
     public RepositoryManager get() {
         RepositoryManager rm = new RepositoryManagerImpl(cfg, githubRepositoryProvider, classpathRepositoryProvider, projectDao);
-        if (githubConfiguration.getApiUrl() == null) {
-            return rm;
+        if (githubConfiguration.isCacheEnabled()) {
+            return new CachedRepositoryManager(repositoryMetaManager, rm, repositoryDao, githubConfiguration);
         } else {
-            return new CachedRepositoryManager(repositoryMetaManager, rm, repositoryDao);
+            return rm;
         }
     }
 }
