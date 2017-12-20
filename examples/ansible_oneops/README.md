@@ -1,6 +1,6 @@
 # Ansible
 
-Example of running an Ansible playbook on a remote host without creating a project.
+Example of getting IP addresses from OneOps to use with Ansible.
 
 ## Running
 

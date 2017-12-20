@@ -1,0 +1,6 @@
+---
+- hosts: myServers
+  tasks:
+  - debug:
+      msg: "{{ greetings }}"
+      verbosity: 0

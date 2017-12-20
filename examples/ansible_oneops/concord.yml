@@ -1,0 +1,50 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.48.0"
+  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.33.0"
+  arguments:
+    # default values for the form
+    authForm:
+      baseUrl: "https://oneops.prod.walmart.com/"
+
+flows:
+  default:
+  # ask the user to fill the form
+  - form: authForm
+    yield: true
+
+  - task: ansible
+    in:
+      # remote user
+      user: "myuser"
+
+      # export the secret using the provided name and password
+      privateKey:
+        secretName: ${authForm.secretName}
+        password: ${authForm.secretPwd}
+
+      # location of the playbook
+      playbook: playbook/hello.yml
+
+      # inventory data, should match the playbook's host groups
+      inventory:
+        myServers:
+          # getting IPs from OneOps
+          hosts: ${oneops.getIPs(authForm, authForm.platform, 'compute')}
+
+      # pass additional variables to the playbook
+      extraVars:
+        greetings: "Hi there!"
+
+forms:
+  authForm:
+  # OneOps parameters
+  - apiToken: {type: "string", inputType: "password", label: "OneOps API token"}
+  - org: {type: "string", label: "OneOps organization"}
+  - asm: {type: "string", label: "OneOps assembly"}
+  - env: {type: "string", label: "OneOps environment"}
+  - platform: {type: "string", label: "OneOps platform"}
+  # the secret's password
+  - secretName: {type: "string", label: "Secret name"}
+  - secretPwd: {type: "string", inputType: "password", label: "Password"}
+
