@@ -7,6 +7,6 @@ flows:
   - task: ansible
     in:
       playbook: playbook/hello.yml
-      dynamicInventoryFile: inventory.sh
+      dynamicInventoryFile: my_inventory.sh
       extraVars:
         greetings: "Hi there!"

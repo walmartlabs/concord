@@ -3,7 +3,7 @@
 SERVER_ADDR="$1"
 
 rm -rf target && mkdir target
-cp -R concord.yml playbook inventory.sh target/
+cp -R concord.yml playbook my_inventory.sh target/
 
 cd target && zip -r payload.zip ./* > /dev/null && cd ..
 
