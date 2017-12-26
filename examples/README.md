@@ -55,6 +55,7 @@
 
 ## Expert
 
+* [ansible_oneops_replace](ansible_oneops_replace) - using triggers to run a playbook on OneOps VM replacement events;
 * [fork](fork) - starting a subprocess;
 * [fork_join](fork_join) - starting multiple subprocesses and waiting for completion;
 * [logback_config](logback_config) - overriding logging configuration;
