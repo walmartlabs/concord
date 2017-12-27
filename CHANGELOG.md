@@ -1,5 +1,19 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: the button to manually refresh a project's
+repository cache.
+
+### Changed
+
+- concord-server: skip the repository cache if the repository's
+webhook is not registered (yet).
+
+
+
 ## [0.48.0] - 2017-12-17
 
 ### Added
