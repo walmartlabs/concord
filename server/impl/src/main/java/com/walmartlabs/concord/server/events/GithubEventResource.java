@@ -12,8 +12,8 @@ import java.util.UUID;
 public interface GithubEventResource {
 
     @POST
-    @Path("/push/{projectId}/{repoId}")
+    @Path("/push/{projectId}/{repoName}")
     @Consumes(MediaType.APPLICATION_JSON)
     String push(@PathParam("projectId") UUID projectId,
-                @PathParam("repoId") UUID repoId, Map<String, Object> event);
+                @PathParam("repoName") String repoName, Map<String, Object> event);
 }

@@ -36,8 +36,10 @@ public class RepositoryEntry implements Serializable {
     @ConcordKey
     private final String secret;
 
+    private final Long webhookId;
+
     public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, null);
+        this(null, null, name, url, null, null, null, null, null);
     }
 
     @JsonCreator
@@ -49,7 +51,8 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("branch") String branch,
                            @JsonProperty("commitId") String commitId,
                            @JsonProperty("path") String path,
-                           @JsonProperty("secret") String secret) {
+                           @JsonProperty("secret") String secret,
+                           @JsonProperty("webhookId") Long webhookId) {
 
         this.id = id;
         this.projectId = projectId;
@@ -59,6 +62,7 @@ public class RepositoryEntry implements Serializable {
         this.commitId = commitId;
         this.path = path;
         this.secret = secret;
+        this.webhookId = webhookId;
     }
 
     public UUID getId() {
@@ -93,6 +97,10 @@ public class RepositoryEntry implements Serializable {
         return secret;
     }
 
+    public Long getWebhookId() {
+        return webhookId;
+    }
+
     @Override
     public String toString() {
         return "RepositoryEntry{" +
@@ -104,6 +112,7 @@ public class RepositoryEntry implements Serializable {
                 ", commitId='" + commitId + '\'' +
                 ", path='" + path + '\'' +
                 ", secret='" + secret + '\'' +
+                ", webhookId=" + webhookId +
                 '}';
     }
 }

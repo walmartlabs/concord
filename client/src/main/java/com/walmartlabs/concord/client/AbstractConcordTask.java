@@ -63,7 +63,6 @@ public abstract class AbstractConcordTask implements Task {
         } finally {
             client.close();
         }
-
     }
 
     protected <T> T request(Context ctx, String uri, Map<String, Object> input, Class<T> entityType) throws Exception {

@@ -40,6 +40,11 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     public void doFilterInternal(ServletRequest request, ServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        if (!githubCfg.isEnabled()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         HttpServletRequest req = WebUtils.toHttp(request);
         super.doFilterInternal(new CachingRequestWrapper(req), response, filterChain);
     }

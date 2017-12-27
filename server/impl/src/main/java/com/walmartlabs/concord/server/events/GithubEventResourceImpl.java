@@ -53,10 +53,12 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
     }
 
     @Override
-    public String push(UUID projectId, UUID repoId, Map<String, Object> event) {
+    public String push(UUID projectId, String repoName, Map<String, Object> event) {
         if (event == null) {
             return "ok";
         }
+
+        UUID repoId = repositoryDao.getId(projectId, repoName);
 
         String eventBranch = getBranch(event);
         RepositoryEntry repo = repositoryDao.get(projectId, repoId);

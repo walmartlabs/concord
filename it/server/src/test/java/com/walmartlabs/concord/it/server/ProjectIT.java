@@ -318,7 +318,7 @@ public class ProjectIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
         CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName,
                 Collections.singletonMap(repoName,
-                        new RepositoryEntry(null, null, repoName, repoUrl, tag, commitId, null, null))));
+                        new RepositoryEntry(null, null, repoName, repoUrl, tag, commitId, null, null, null))));
         assertTrue(cpr.isOk());
     }
 

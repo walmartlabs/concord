@@ -5,6 +5,7 @@ import com.walmartlabs.concord.sdk.Task;
 import com.walmartlabs.concord.server.api.org.trigger.TriggerResource;
 
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import java.util.Map;
 
 @Named("triggersRefresh")
@@ -21,10 +22,14 @@ public class TriggerRefreshTask extends AbstractConcordTask implements Task {
         String projectName = get(cfg, PROJECT_KEY);
         String repositoryName = get(cfg, REPOSITORY_KEY);
 
-        withClient(ctx, target -> {
+        Response resp = withClient(ctx, target -> {
             TriggerResource proxy = target.proxy(TriggerResource.class);
-            proxy.refresh(orgName, projectName, repositoryName);
-            return null;
+            return proxy.refresh(orgName, projectName, repositoryName);
         });
+
+        int response = resp.getStatus();
+        if (response < 200 || response >= 300) {
+            throw new RuntimeException("Triggers refresh error: " + resp.getStatus());
+        }
     }
 }

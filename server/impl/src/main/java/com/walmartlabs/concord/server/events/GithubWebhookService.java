@@ -1,15 +1,12 @@
 package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
-import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import org.eclipse.sisu.EagerSingleton;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
-import org.jooq.Record3;
+import org.jooq.Record4;
 import org.jooq.impl.DSL;
-import org.kohsuke.github.GHFileNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +17,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
+import static org.jooq.impl.DSL.value;
 
 @Named
 @EagerSingleton
@@ -29,16 +27,13 @@ public class GithubWebhookService {
 
     private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
 
-    private final RepositoryDao repositoryDao;
     private final GithubConfiguration cfg;
     private final GithubWebhookManager webhookManager;
 
     @Inject
-    public GithubWebhookService(RepositoryDao repositoryDao,
-                                GithubConfiguration cfg,
+    public GithubWebhookService(GithubConfiguration cfg,
                                 GithubWebhookManager webhookManager,
                                 RefresherDao refresherDao) {
-        this.repositoryDao = repositoryDao;
         this.cfg = cfg;
         this.webhookManager = webhookManager;
 
@@ -46,8 +41,8 @@ public class GithubWebhookService {
     }
 
     private void init(RefresherDao dao) {
-        if (this.cfg.getApiUrl() == null || this.cfg.getRefreshInterval() <= 0) {
-            log.info("init -> webhook refresh disabled");
+        if (!this.cfg.isEnabled() || this.cfg.getRefreshInterval() <= 0) {
+            log.info("init -> the webhook refresh is disabled");
             return;
         }
 
@@ -57,47 +52,44 @@ public class GithubWebhookService {
         t.start();
     }
 
-    public void register(UUID projectId, UUID repoId, String repoUrl) {
+    public Long register(UUID projectId, String repoName, String repoUrl) {
         if(!needWebhookForRepository(repoUrl)) {
-            log.info("register ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoId, repoUrl);
-            return;
+            log.info("register ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoName, repoUrl);
+            return null;
         }
 
-        String webhookUrl = createWebHookUrl(projectId, repoId);
+        String webhookUrl = createWebHookUrl(projectId, repoName);
         String githubRepoName = GithubUtils.getRepositoryName(repoUrl);
 
-        webhookManager.register(githubRepoName, webhookUrl);
+        Long id = webhookManager.register(githubRepoName, webhookUrl);
 
         log.info("register ['{}', '{}', '{}'] -> ok (git repo: '{}')",
-                projectId, repoId, repoUrl, githubRepoName);
+                projectId, repoName, repoUrl, githubRepoName);
+
+        return id;
     }
 
-    public void unregister(UUID projectId) {
-        repositoryDao.list(projectId).forEach(re -> unregister(projectId, re.getId(), re.getUrl()));
-        log.info("unregister ['{}'] -> ok", projectId);
-    }
-
-    private void unregister(UUID projectId, UUID repoId, String repoUrl) {
+    public void unregister(UUID projectId, String repoName, String repoUrl) {
         if(!needWebhookForRepository(repoUrl)) {
-            log.info("unregister ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoId, repoUrl);
+            log.info("unregister ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoName, repoUrl);
             return;
         }
 
-        String webhookUrl = createWebHookUrl(projectId, repoId);
+        String webhookUrl = createWebHookUrl(projectId, repoName);
         String githubRepoName = GithubUtils.getRepositoryName(repoUrl);
 
         webhookManager.unregister(githubRepoName, webhookUrl);
 
         log.info("unregister ['{}', '{}', '{}'] -> ok (git repo: '{}')",
-                projectId, repoId, repoUrl, githubRepoName);
+                projectId, repoName, repoUrl, githubRepoName);
     }
 
     private boolean needWebhookForRepository(String repoUrl) {
         return repoUrl.contains(cfg.getGithubUrl());
     }
 
-    private String createWebHookUrl(UUID projectId, UUID repoId) {
-        return cfg.getWebhookUrl() + "/" + projectId + "/" + repoId;
+    private String createWebHookUrl(UUID projectId, String repoName) {
+        return cfg.getWebhookUrl() + "/" + projectId + "/" + repoName;
     }
 
     private class HookRefresher implements Runnable {
@@ -113,7 +105,7 @@ public class GithubWebhookService {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     List<Entity> repositories = dao.list();
-                    repositories.forEach(r -> refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoUrl()));
+                    repositories.forEach(r -> refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoName(), r.getRepoUrl()));
                     log.info("run -> {} repositories processed", repositories.size());
 
                     sleep(cfg.getRefreshInterval());
@@ -124,12 +116,13 @@ public class GithubWebhookService {
             }
         }
 
-        private void refreshWebhook(UUID projectId, UUID repoId, String repoUrl) {
+        private void refreshWebhook(UUID projectId, UUID repoId, String repoName, String repoUrl) {
             try {
-                unregister(projectId, repoId, repoUrl);
-                register(projectId, repoId, repoUrl);
+                unregister(projectId, repoName, repoUrl);
+                Long hookId = register(projectId, repoName, repoUrl);
+                dao.update(repoId, hookId);
             } catch (Exception e) {
-                log.warn("refreshWebhook ['{}', '{}', '{}'] -> failed: {}", projectId, repoId, repoUrl, e.getMessage());
+                log.warn("refreshWebhook ['{}', '{}', '{}'] -> failed: {}", projectId, repoName, repoUrl, e.getMessage());
             }
         }
 
@@ -152,15 +145,24 @@ public class GithubWebhookService {
 
         public List<Entity> list() {
             try (DSLContext tx = DSL.using(cfg)) {
-                return tx.select(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_ID, REPOSITORIES.REPO_URL)
+                return tx.select(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_ID, REPOSITORIES.REPO_NAME, REPOSITORIES.REPO_URL)
                         .from(REPOSITORIES)
                         .fetch(RefresherDao::toEntry);
             }
         }
 
-        private static Entity toEntry(Record3<UUID, UUID, String> r) {
+        public void update(UUID repoId, Long hookId) {
+            tx(tx ->
+                tx.update(REPOSITORIES)
+                        .set(REPOSITORIES.WEBHOOK_ID, value(hookId))
+                        .where(REPOSITORIES.REPO_ID.eq(repoId))
+                        .execute());
+        }
+
+        private static Entity toEntry(Record4<UUID, UUID, String, String> r) {
             return new Entity(r.get(REPOSITORIES.PROJECT_ID),
                     r.get(REPOSITORIES.REPO_ID),
+                    r.get(REPOSITORIES.REPO_NAME),
                     r.get(REPOSITORIES.REPO_URL));
         }
     }
@@ -169,11 +171,13 @@ public class GithubWebhookService {
 
         private final UUID projectId;
         private final UUID repoId;
+        private final String repoName;
         private final String repoUrl;
 
-        private Entity(UUID projectId, UUID repoId, String repoUrl) {
+        private Entity(UUID projectId, UUID repoId, String repoName, String repoUrl) {
             this.projectId = projectId;
             this.repoId = repoId;
+            this.repoName = repoName;
             this.repoUrl = repoUrl;
         }
 
@@ -183,6 +187,10 @@ public class GithubWebhookService {
 
         public UUID getRepoId() {
             return repoId;
+        }
+
+        public String getRepoName() {
+            return repoName;
         }
 
         public String getRepoUrl() {

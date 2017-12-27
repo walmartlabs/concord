@@ -44,7 +44,7 @@ public class RepositoryManagerProvider implements Provider<RepositoryManager> {
     public RepositoryManager get() {
         RepositoryManager rm = new RepositoryManagerImpl(cfg, githubRepositoryProvider, classpathRepositoryProvider, projectDao);
         if (githubConfiguration.isCacheEnabled()) {
-            return new CachedRepositoryManager(repositoryMetaManager, rm, repositoryDao, githubConfiguration);
+            return new CachedRepositoryManager(repositoryMetaManager, rm, repositoryDao);
         } else {
             return rm;
         }

@@ -29,20 +29,20 @@ public class GithubWebhookManager {
     @Inject
     public GithubWebhookManager(GithubConfiguration cfg) throws IOException {
         this.cfg = cfg;
-        if(cfg.getApiUrl() == null) {
-            log.warn("github api url not configured");
-            this.gh = null;
-        } else {
-            log.info("connecting to github api '{}'", cfg.getApiUrl());
+        if(cfg.isEnabled()) {
+            log.info("init -> connecting to the GitHub API '{}'", cfg.getApiUrl());
             this.gh = GitHub.connectToEnterprise(cfg.getApiUrl(), cfg.getOauthAccessToken());
+        } else {
+            log.warn("init -> the GitHub APU URL is not configured, skipping");
+            this.gh = null;
         }
     }
 
-    public void register(String repoName, String webhookUrl) {
+    public Long register(String repoName, String webhookUrl) {
         try {
             if (gh == null) {
                 log.warn("register ['{}', '{}'] -> not configured, ignored", repoName, webhookUrl);
-                return;
+                return null;
             }
             GHRepository repo = gh.getRepository(repoName);
 
@@ -51,14 +51,16 @@ public class GithubWebhookManager {
             config.put("content_type", "json");
             config.put("secret", cfg.getSecret());
 
-            repo.createHook("web", config, EVENTS, true);
+            GHHook hook = repo.createHook("web", config, EVENTS, true);
 
-            log.info("register ['{}', '{}'] -> ok", repoName, webhookUrl);
+            log.info("register ['{}', '{}'] -> ok (id: {})", repoName, webhookUrl, hook.getId());
+            return hook.getId();
         } catch (GHFileNotFoundException e) {
             log.warn("register ['{}', '{}'] -> the repository not found", repoName, webhookUrl);
+            return null;
         } catch (IOException e) {
             log.error("register ['{}', '{}'] -> error", repoName, webhookUrl, e);
-            throw new RuntimeException("Error while registering a webook", e);
+            return null;
         }
     }
 

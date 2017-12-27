@@ -15,14 +15,14 @@ public class GithubCallbackIT extends AbstractServerIT {
     private static final String AUTH = "sha1=047cfb383db684bdfccc2c333698b70ee98e65d2";
 
     private static final UUID concordTriggersProject = UUID.fromString("ad76f1e2-c33c-11e7-8064-f7371c66fa77");
-    private static final UUID concordTriggersRepoId = UUID.fromString("b31b0b06-c33c-11e7-b0e9-8702fc03629f");
+    private static final String concordTriggersRepoName = "triggers";
 
     @Test(timeout = 30000)
     public void test() throws Exception {
         setGithubKey(AUTH);
 
         GithubEventResource githubResource = proxy(GithubEventResource.class);
-        String result = githubResource.push(concordTriggersProject, concordTriggersRepoId, new HashMap<>());
+        String result = githubResource.push(concordTriggersProject, concordTriggersRepoName, new HashMap<>());
         assertNotNull(result);
         assertEquals("ok", result);
     }

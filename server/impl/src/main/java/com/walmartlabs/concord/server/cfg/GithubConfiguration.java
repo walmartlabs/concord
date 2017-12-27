@@ -21,6 +21,7 @@ public class GithubConfiguration {
     private static final String CFG_KEY = "GITHUB_CFG";
     private static final long DEFAULT_REFRESH_INTERVAL = 60000;
 
+    private final boolean enabled;
     private final String secret;
     private final String apiUrl;
     private final String oauthAccessToken;
@@ -47,17 +48,25 @@ public class GithubConfiguration {
             this.githubUrl = props.getProperty("githubUrl");
             this.refreshInterval = Utils.getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
             this.cacheEnabled = Utils.getBoolean(props, "", false);
+
+            this.enabled = true;
         } else {
-            this.secret = "123qwe";
+            this.secret = null;
             this.apiUrl = null;
             this.oauthAccessToken = null;
-            this.webhookUrl = "";
+            this.webhookUrl = null;
             this.githubUrl = "";
             this.refreshInterval = DEFAULT_REFRESH_INTERVAL;
             this.cacheEnabled = false;
 
+            this.enabled = false;
+
             log.warn("init -> no github configuration");
         }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public String getSecret() {

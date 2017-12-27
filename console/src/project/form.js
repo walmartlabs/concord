@@ -13,10 +13,11 @@ import GitUrlParse from "git-url-parse";
 import * as v from "../shared/validation";
 import {actions} from "./crud";
 import {getCurrentOrg} from "../session/reducers";
+import {actions as repoActions, selectors as repoSelectors} from "./repository";
 
 const renderSourceText = (f, { commitId }) => commitId ? "Revision" : "Branch/tag";
 
-const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupFn, startProcess) => ({ fields }) => {
+const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupFn, startProcess, refreshRepo, refreshLoading, refreshResult, refreshError) => ({ fields }) => {
     const newFn = (ev) => {
         ev.preventDefault();
         newRepositoryPopupFn();
@@ -26,6 +27,8 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
         ev.preventDefault();
         editRepositoryPopupFn(idx, fields.get(idx));
     };
+
+    const refreshIcon = refreshError ? "warning sign" : (refreshResult ? "check" : "refresh");
 
     return <Form.Field>
         <Button basic icon="add" onClick={newFn} content="Add repository" />
@@ -38,6 +41,7 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
                         <Table.HeaderCell collapsing>Source</Table.HeaderCell>
                         <Table.HeaderCell collapsing>Path</Table.HeaderCell>
                         <Table.HeaderCell collapsing>Secret</Table.HeaderCell>
+                        <Table.HeaderCell collapsing />
                         <Table.HeaderCell collapsing />
                         <Table.HeaderCell collapsing />
                     </Table.Row>
@@ -71,6 +75,20 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
                                     inverted
                                 />
                             </Table.Cell>
+                            <Table.Cell>
+                                <Popup
+                                    trigger={<Button
+                                        primary
+                                        loading={refreshLoading}
+                                        disabled={!pristine}
+                                        positive={refreshResult}
+                                        negative={refreshError && true}
+                                        icon={refreshIcon}
+                                        onClick={refreshRepo(fields.get(idx).name, fields.get(idx).id)} />}
+                                    inverted
+                                    content={`Refresh repository ${fields.get(idx).name}`}
+                                />
+                            </Table.Cell>
                         </Table.Row>
                     ))}
                 </Table.Body>
@@ -80,9 +98,11 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
 };
 
 let projectForm = (props) => {
-    const { handleSubmit, reset, createNew, newRepositoryPopupFn, editRepositoryPopupFn, deletePopupFn, startProcessFn } = props;
+    const { handleSubmit, reset, createNew, newRepositoryPopupFn, editRepositoryPopupFn, deletePopupFn, startProcessFn, refreshRepoFn } = props;
     const { org, originalName } = props;
     const { pristine, submitting, invalid } = props;
+
+    const { refreshLoading, refreshResult, refreshError } = props;
 
     const submitDisabled = pristine || submitting || invalid;
     const resetDisabled = pristine || submitting;
@@ -96,6 +116,11 @@ let projectForm = (props) => {
     const startProcess = (repositoryName, repositoryId) => (ev) => {
         ev.preventDefault();
         startProcessFn(repositoryName, repositoryId);
+    };
+
+    const refreshRepo = (repositoryName, repositoryId) => (ev) => {
+        ev.preventDefault();
+        refreshRepoFn(org.name, originalName, repositoryName);
     };
 
     const visibilityOptions = [
@@ -126,7 +151,7 @@ let projectForm = (props) => {
                inverted/>
 
         <Divider horizontal>Repositories</Divider>
-        <FieldArray name="repositories" component={renderRepositories(pristine, newRepositoryPopupFn, editRepositoryPopupFn, startProcess)} />
+        <FieldArray name="repositories" component={renderRepositories(pristine, newRepositoryPopupFn, editRepositoryPopupFn, startProcess, refreshRepo, refreshLoading, refreshResult, refreshError)} />
 
         <Divider horizontal>Configuration</Divider>
         <Message size="tiny" info>Not supported yet. Please use the REST API to update the configuration
@@ -167,8 +192,11 @@ projectForm = reduxForm({
     keepDirtyOnReinitialize: true
 })(projectForm);
 
-const mapStateToProps = ({session}) => ({
-    org: getCurrentOrg(session)
+const mapStateToProps = ({session, repository}) => ({
+    org: getCurrentOrg(session),
+    refreshLoading: repoSelectors.isRefreshLoading(repository),
+    refreshResult: repoSelectors.getRefreshResult(repository),
+    refreshError: repoSelectors.getRefreshError(repository)
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -201,6 +229,10 @@ const mapDispatchToProps = (dispatch) => ({
 
     startProcessFn: (repositoryName, repositoryId) => {
         dispatch(modal.open(StartProjectPopup.MODAL_TYPE, {repositoryName, repositoryId}));
+    },
+
+    refreshRepoFn: (orgName, projectName, repositoryName) => {
+        dispatch(repoActions.refreshRepository(orgName, projectName, repositoryName));
     }
 });
 
