@@ -92,7 +92,10 @@ public class GithubRepositoryProvider implements RepositoryProvider {
                 log.info("fetch ['{}', '{}'] -> repository updated", uri, branch);
                 return;
             }
-        } catch (GitAPIException e) {
+        } catch (RepositoryException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("fetch ['{}', '{}', '{}'] -> error", uri, branch, dest, e);
             throw new RepositoryException("Error while updating a repository", e);
         }
 
@@ -113,7 +116,7 @@ public class GithubRepositoryProvider implements RepositoryProvider {
                 result = repo.log().setMaxCount(1).call().iterator();
             } catch (NoHeadException e) {
                 return null;
-            } catch (GitAPIException e) {
+            } catch (Exception e) {
                 log.error("getInfo ['{}'] -> error", path, e);
                 throw new RepositoryException("Error while getting a repository info", e);
             }
@@ -141,7 +144,9 @@ public class GithubRepositoryProvider implements RepositoryProvider {
                     .call();
 
             log.info("fetchByCommit ['{}', '{}'] -> initial clone completed", uri, commitId);
-        } catch (GitAPIException e) {
+        } catch (RepositoryException e) {
+            throw e;
+        } catch (Exception e) {
             throw new RepositoryException("Error while updating a repository", e);
         }
     }
@@ -169,7 +174,8 @@ public class GithubRepositoryProvider implements RepositoryProvider {
             return Git.open(path.toFile());
         } catch (RepositoryNotFoundException e) {
             // ignore
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("openRepo ['{}'] -> error", path, e);
             throw new RepositoryException("Error while opening a repository", e);
         }
 
@@ -204,7 +210,8 @@ public class GithubRepositoryProvider implements RepositoryProvider {
             cloneSubmodules(uri, repo, transportCallback);
 
             return repo;
-        } catch (ConfigInvalidException | IOException | GitAPIException e) {
+        } catch (Exception e) {
+            log.error("cloneRepo ['{}', '{}', '{}'] -> error", uri, path, branch, e);
             throw new RepositoryException("Error while cloning a repository", e);
         }
     }
