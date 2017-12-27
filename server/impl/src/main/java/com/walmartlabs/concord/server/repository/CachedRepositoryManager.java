@@ -73,7 +73,7 @@ public class CachedRepositoryManager implements RepositoryManager {
         return withLock(projectId, repoName, () -> {
             Date lastPushDate = repositoryDao.getLastPushDate(projectId, repoName);
             RepositoryMeta rm = repositoryMetaManager.readMeta(projectId, repository);
-            if (needUpdate(rm, lastPushDate)) {
+            if (repository.getWebhookId() == null || needUpdate(rm, lastPushDate)) {
                 Path result = delegate.fetch(projectId, repository);
                 repositoryMetaManager.writeMeta(projectId, repository, new RepositoryMeta(lastPushDate));
                 log.info("fetch ['{}', '{}'] -> updated", projectId, repoName);

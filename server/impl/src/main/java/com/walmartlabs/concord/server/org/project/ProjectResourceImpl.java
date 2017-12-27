@@ -24,13 +24,11 @@ import com.google.common.base.Splitter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
+import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectResource;
+import com.walmartlabs.concord.server.api.org.project.*;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import org.sonatype.siesta.Resource;
@@ -41,10 +39,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+import static com.walmartlabs.concord.server.repository.CachedRepositoryManager.RepositoryCacheDao;
 
 @Named
 public class ProjectResourceImpl implements ProjectResource, Resource {
@@ -54,19 +51,25 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     private final ProjectManager projectManager;
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
+    private final EventResource eventResource;
+    private final RepositoryCacheDao repositoryCacheDao;
 
     @Inject
     public ProjectResourceImpl(OrganizationManager orgManager,
                                ProjectDao projectDao,
                                ProjectManager projectManager,
                                ProjectAccessManager accessManager,
-                               SecretManager secretManager) {
+                               SecretManager secretManager,
+                               EventResource eventResource,
+                               RepositoryCacheDao repositoryCacheDao) {
 
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.projectManager = projectManager;
         this.accessManager = accessManager;
         this.secretManager = secretManager;
+        this.eventResource = eventResource;
+        this.repositoryCacheDao = repositoryCacheDao;
     }
 
     @Override
@@ -248,6 +251,35 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         byte[] result = secretManager.encryptData(projectName, input);
 
         return new EncryptValueResponse(result);
+    }
+
+    @Override
+    public GenericOperationResultResponse refreshRepository(String orgName, String projectName, String repositoryName) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+
+        UUID projectId = projectDao.getId(org.getId(), projectName);
+        if (projectId == null) {
+            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+        }
+
+        ProjectEntry prj = accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
+
+        Map<String, RepositoryEntry> repos = prj.getRepositories();
+        if (repos == null || !repos.containsKey(repositoryName)) {
+            throw new WebApplicationException("Repository not found: " + projectName, Status.NOT_FOUND);
+        }
+
+        repositoryCacheDao.updateLastPushDate(repos.get(repositoryName).getId(), new Date());
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("event", "repositoryRefresh");
+        event.put("org", orgName);
+        event.put("project", projectName);
+        event.put("repository", repositoryName);
+
+        eventResource.event("concord", event);
+
+        return new GenericOperationResultResponse(OperationResult.UPDATED);
     }
 
     private static String[] cfgPath(String s) {

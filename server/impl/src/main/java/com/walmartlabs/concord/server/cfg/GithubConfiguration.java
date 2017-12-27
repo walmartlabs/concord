@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,12 +41,14 @@ public class GithubConfiguration {
     private static final String CFG_KEY = "GITHUB_CFG";
     private static final long DEFAULT_REFRESH_INTERVAL = 60000;
 
+    private final boolean enabled;
     private final String secret;
     private final String apiUrl;
     private final String oauthAccessToken;
     private final String webhookUrl;
     private final String githubUrl;
     private final long refreshInterval;
+    private final boolean cacheEnabled;
 
     public GithubConfiguration() throws IOException {
         Properties props = new Properties();
@@ -63,17 +66,27 @@ public class GithubConfiguration {
             this.oauthAccessToken = props.getProperty("oauthAccessToken");
             this.webhookUrl = props.getProperty("webhookUrl");
             this.githubUrl = props.getProperty("githubUrl");
-            this.refreshInterval = getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
+            this.refreshInterval = Utils.getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
+            this.cacheEnabled = Utils.getBoolean(props, "", false);
+
+            this.enabled = true;
         } else {
-            this.secret = "123qwe";
+            this.secret = null;
             this.apiUrl = null;
             this.oauthAccessToken = null;
-            this.webhookUrl = "";
+            this.webhookUrl = null;
             this.githubUrl = "";
             this.refreshInterval = DEFAULT_REFRESH_INTERVAL;
+            this.cacheEnabled = false;
+
+            this.enabled = false;
 
             log.warn("init -> no github configuration");
         }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public String getSecret() {
@@ -100,11 +113,7 @@ public class GithubConfiguration {
         return refreshInterval;
     }
 
-    private static long getLong(Properties props, String key, long defaultValue) {
-        String s = props.getProperty(key);
-        if (s == null) {
-            return defaultValue;
-        }
-        return Long.parseLong(s);
+    public boolean isCacheEnabled() {
+        return cacheEnabled;
     }
 }

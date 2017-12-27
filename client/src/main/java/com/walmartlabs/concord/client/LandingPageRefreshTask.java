@@ -25,6 +25,7 @@ import com.walmartlabs.concord.sdk.Task;
 import com.walmartlabs.concord.server.api.org.landing.LandingPageResource;
 
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import java.util.Map;
 
 @Named("landingPageRefresh")
@@ -41,10 +42,14 @@ public class LandingPageRefreshTask extends AbstractConcordTask implements Task 
         String projectName = get(cfg, PROJECT_KEY);
         String repositoryName = get(cfg, REPOSITORY_KEY);
 
-        withClient(ctx, target -> {
+        Response resp = withClient(ctx, target -> {
             LandingPageResource proxy = target.proxy(LandingPageResource.class);
-            proxy.refresh(orgName, projectName, repositoryName);
-            return null;
+            return proxy.refresh(orgName, projectName, repositoryName);
         });
+
+        int response = resp.getStatus();
+        if (response < 200 || response >= 300) {
+            throw new RuntimeException("Landing page refresh error: " + resp.getStatus());
+        }
     }
 }

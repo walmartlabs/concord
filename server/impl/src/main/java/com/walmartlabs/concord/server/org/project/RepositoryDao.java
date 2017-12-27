@@ -69,16 +69,16 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
-        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId));
+    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, Long hookId) {
+        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId, hookId));
     }
 
-    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
+    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, Long hookId) {
         return tx.insertInto(REPOSITORIES)
                 .columns(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
                         REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
-                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID)
-                .values(projectId, repositoryName, url, branch, commitId, path, secretId)
+                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID, REPOSITORIES.WEBHOOK_ID)
+                .values(projectId, repositoryName, url, branch, commitId, path, secretId, hookId)
                 .returning(REPOSITORIES.REPO_ID)
                 .fetchOne()
                 .getRepoId();
@@ -119,20 +119,28 @@ public class RepositoryDao extends AbstractDao {
         return list(projectId, null, false);
     }
 
+    public List<RepositoryEntry> list(DSLContext tx, UUID projectId) {
+        return list(tx, projectId, null, false);
+    }
+
     public List<RepositoryEntry> list(UUID projectId, Field<?> sortField, boolean asc) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record8<UUID, UUID, String, String, String, String, String, String>> query = selectRepositoryEntry(tx)
-                    .where(REPOSITORIES.PROJECT_ID.eq(projectId));
-
-            if (sortField != null) {
-                query.orderBy(asc ? sortField.asc() : sortField.desc());
-            }
-
-            return query.fetch(RepositoryDao::toEntry);
+            return list(tx, projectId, sortField, asc);
         }
     }
 
-    private static SelectJoinStep<Record8<UUID, UUID, String, String, String, String, String, String>> selectRepositoryEntry(DSLContext tx) {
+    public List<RepositoryEntry> list(DSLContext tx, UUID projectId, Field<?> sortField, boolean asc) {
+        SelectConditionStep<Record9<UUID, UUID, String, String, String, String, String, Long, String>> query = selectRepositoryEntry(tx)
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId));
+
+        if (sortField != null) {
+            query.orderBy(asc ? sortField.asc() : sortField.desc());
+        }
+
+        return query.fetch(RepositoryDao::toEntry);
+    }
+
+    private static SelectJoinStep<Record9<UUID, UUID, String, String, String, String, String, Long, String>> selectRepositoryEntry(DSLContext tx) {
         return tx.select(REPOSITORIES.REPO_ID,
                 REPOSITORIES.PROJECT_ID,
                 REPOSITORIES.REPO_NAME,
@@ -140,12 +148,13 @@ public class RepositoryDao extends AbstractDao {
                 REPOSITORIES.REPO_BRANCH,
                 REPOSITORIES.REPO_COMMIT_ID,
                 REPOSITORIES.REPO_PATH,
+                REPOSITORIES.WEBHOOK_ID,
                 SECRETS.SECRET_NAME)
                 .from(REPOSITORIES)
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
     }
 
-    private static RepositoryEntry toEntry(Record8<UUID, UUID, String, String, String, String, String, String> r) {
+    private static RepositoryEntry toEntry(Record9<UUID, UUID, String, String, String, String, String, Long, String> r) {
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
                 r.get(REPOSITORIES.PROJECT_ID),
                 r.get(REPOSITORIES.REPO_NAME),
@@ -153,6 +162,7 @@ public class RepositoryDao extends AbstractDao {
                 r.get(REPOSITORIES.REPO_BRANCH),
                 r.get(REPOSITORIES.REPO_COMMIT_ID),
                 r.get(REPOSITORIES.REPO_PATH),
-                r.get(SECRETS.SECRET_NAME));
+                r.get(SECRETS.SECRET_NAME),
+                r.get(REPOSITORIES.WEBHOOK_ID));
     }
 }

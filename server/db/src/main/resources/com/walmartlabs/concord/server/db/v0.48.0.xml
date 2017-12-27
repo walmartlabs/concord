@@ -349,4 +349,12 @@
                                  referencedColumnNames="PROJECT_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
+
+    <changeSet id="48700" author="ybrigo@gmail.com">
+        <addColumn tableName="REPOSITORIES">
+            <column name="WEBHOOK_ID" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
