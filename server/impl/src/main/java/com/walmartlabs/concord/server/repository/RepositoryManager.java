@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.repository;
  */
 
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryException;
 
 import java.nio.file.Path;
 import java.util.UUID;
@@ -32,7 +33,7 @@ public interface RepositoryManager {
 
     void testConnection(UUID orgId, String uri, String branch, String commitId, String path, String secretName);
 
-    Path fetch(UUID projectId, RepositoryEntry repository);
+    Path fetch(UUID projectId, RepositoryEntry repository) throws RepositoryException;
 
     RepositoryInfo getInfo(RepositoryEntry repository, Path path);
 

@@ -113,7 +113,7 @@ public class RepositoryProcessor implements PayloadProcessor {
 
                 IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
                 log.info("process ['{}'] -> copy from {} to {}", instanceId, src, dst);
-            } catch (IOException | RepositoryException e) {
+            } catch (Exception e) {
                 log.error("process ['{}'] -> repository error", instanceId, e);
                 logManager.error(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
                 throw new ProcessException(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
