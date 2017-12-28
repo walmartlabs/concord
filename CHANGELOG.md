@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [0.48.1] - 2017-12-27
 
 ### Added
 
@@ -10,7 +10,9 @@ repository cache.
 ### Changed
 
 - concord-server: skip the repository cache if the repository's
-webhook is not registered (yet).
+webhook is not registered (yet);
+- concord-server: fixed an bug preventing startup errors from
+being logged in process logs. 
 
 
 
