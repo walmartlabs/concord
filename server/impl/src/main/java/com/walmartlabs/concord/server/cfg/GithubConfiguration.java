@@ -67,7 +67,7 @@ public class GithubConfiguration {
             this.webhookUrl = props.getProperty("webhookUrl");
             this.githubUrl = props.getProperty("githubUrl");
             this.refreshInterval = Utils.getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
-            this.cacheEnabled = Utils.getBoolean(props, "", false);
+            this.cacheEnabled = Utils.getBoolean(props, "cacheEnabled", false);
 
             this.enabled = true;
         } else {

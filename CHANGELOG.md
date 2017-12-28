@@ -9,6 +9,14 @@ fields.
 
 
 
+## [0.48.2] - 2017-12-28
+
+### Changed
+
+- concord-server: fixed key names in the GitHub configuration file. 
+
+
+
 ## [0.48.1] - 2017-12-27
 
 ### Added
