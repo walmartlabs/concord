@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: initial support for file upload
+fields.
+
+
+
 ## [0.48.1] - 2017-12-27
 
 ### Added
@@ -13,15 +22,6 @@ repository cache.
 webhook is not registered (yet);
 - concord-server: fixed an bug preventing startup errors from
 being logged in process logs. 
-
-
-
-## [0.48.0] - 2017-12-17
-
-### Added
-
-- concord-server, concord-console: initial support for file upload
-fields.
 
 
 
