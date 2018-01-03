@@ -9,8 +9,8 @@ SERVER_ADDR="$1"
 
 # create inventory
 echo -e "\nCreating an inventory ..."
-curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: application/json" -d "{\"name\": \"$INVENTORY_NAME\"}" "http://${SERVER_ADDR}/api/v1/inventory"
+curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: application/json" -d "{\"name\": \"$INVENTORY_NAME\"}" "http://${SERVER_ADDR}/api/v1/org/Default/inventory"
 
 # create query
 echo -e "\nCreating a query ..."
-curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: text/plain" --data-binary @query.sql "http://${SERVER_ADDR}/api/v1/inventory/$INVENTORY_NAME/query/${QUERY_NAME}"
+curl -f -u ${CURL_USER}:${CURL_PASSOWRD} -H "Content-Type: text/plain" --data-binary @query.sql "http://${SERVER_ADDR}/api/v1/org/Default/inventory/$INVENTORY_NAME/query/${QUERY_NAME}"
