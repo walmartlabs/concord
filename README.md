@@ -3,6 +3,11 @@
 
 ## Building
 
+Install Python dependencies:
+```
+pip install grpcio-tools
+```
+
 ```
 git clone ... 
 cd concord
