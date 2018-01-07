@@ -35,7 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Constraint(validatedBy = {})
 public @interface ConcordKey {
 
-    static final String PATTERN = "^[0-9a-zA-Z][0-9a-zA-Z_@.]{2,128}$";
+    static final String PATTERN = "^[0-9a-zA-Z][0-9a-zA-Z_@.\\-~]{2,128}$";
 
     String message() default "{concord.validation.constraints.ConcordKey.message}";
 

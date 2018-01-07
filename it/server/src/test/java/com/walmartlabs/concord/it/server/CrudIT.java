@@ -24,6 +24,8 @@ import com.googlecode.junittoolbox.ParallelRunner;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.OrganizationResource;
 import com.walmartlabs.concord.server.api.org.inventory.*;
 import com.walmartlabs.concord.server.api.org.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
@@ -31,7 +33,9 @@ import com.walmartlabs.concord.server.api.org.landing.LandingPageResource;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
+import com.walmartlabs.concord.server.api.org.secret.SecretResource;
 import com.walmartlabs.concord.server.api.org.team.TeamEntry;
+import com.walmartlabs.concord.server.api.org.team.TeamResource;
 import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
 import com.walmartlabs.concord.server.api.project.DeleteProjectResponse;
@@ -277,23 +281,43 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(listResult);
     }
 
+    @Test(timeout = 30000)
+    public void testDashes() {
+        String orgName = randomString() + "-test~";
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        organizationResource.get(orgName);
+
+        // ---
+
+        String teamName = randomString() + "-test~";
+
+        TeamResource teamResource = proxy(TeamResource.class);
+        teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+
+        teamResource.get(orgName, teamName);
+
+        // ---
+
+        String projectName = randomString() + "-test~";
+
+        com.walmartlabs.concord.server.api.org.project.ProjectResource projectResource = proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
+        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+
+        projectResource.get(orgName, projectName);
+
+        // ---
+
+        String secretName = randomString() + "-test~";
+        addPlainSecret(orgName, secretName, true, null, new byte[] {0, 1, 2, 3});
+
+        SecretResource secretResource = proxy(SecretResource.class);
+        secretResource.delete(orgName, secretName);
+    }
+
     private static ProjectEntry findProject(List<ProjectEntry> l, String name) {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
-    }
-
-    private static RepositoryEntry findRepository(List<RepositoryEntry> l, String name) {
-        return l.stream().filter(e -> name.equals(e.getName())).findAny().orElse(null);
-    }
-
-    private static SecretEntry findSecret(List<SecretEntry> l, String name) {
-        return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
-    }
-
-    private static TeamEntry findTeam(List<TeamEntry> l, String name) {
-        return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
-    }
-
-    private static TeamUserEntry findTeamUser(List<TeamUserEntry> l, String name) {
-        return l.stream().filter(e -> name.equals(e.getUsername())).findAny().orElse(null);
     }
 }

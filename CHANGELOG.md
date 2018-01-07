@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: allow hyphens and tildes in entity names;
 - concord-server, concord-console: initial support for file upload
 fields.
 
