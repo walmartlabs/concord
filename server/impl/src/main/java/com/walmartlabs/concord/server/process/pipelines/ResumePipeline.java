@@ -33,6 +33,7 @@ public class ResumePipeline extends Pipeline {
     public ResumePipeline(Injector injector) {
         super(injector,
                 ResumeStateStoringProcessor.class,
+                FormFilesStoringProcessor.class,
                 ResumeDataMergingProcessor.class,
                 RequestDataStoringProcessor.class,
                 StateImportingProcessor.class,

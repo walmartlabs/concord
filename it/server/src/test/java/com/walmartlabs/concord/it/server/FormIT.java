@@ -98,6 +98,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*" + firstName + " " + lastName + ".*", ab);
         assertLog(".*100323.*", ab);
         assertLog(".*red.*", ab);
+        assertLog(".*FILE_PATH _form_files/myForm2/file.*", ab);
         assertLog(".*FILE file-content.*", ab);
         assertLog(".*AAA true.*", ab);
     }

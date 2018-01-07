@@ -94,6 +94,11 @@ public final class InternalConstants extends Constants {
          * File which contains data of process' OUT variables.
          */
         public static final String OUT_VALUES_FILE_NAME = "out.json";
+
+        /**
+         * Directory which contains submitted form files.
+         */
+        public static final String FORM_FILES = "_form_files";
     }
 
     public static final class Flows extends Constants.Flows {

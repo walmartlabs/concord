@@ -31,7 +31,6 @@ import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
-import io.takari.bpm.model.form.DefaultFormFields;
 import io.takari.bpm.model.form.FormField;
 
 import javax.inject.Inject;
@@ -78,7 +77,7 @@ public class ConcordFormService {
         vs.add(new DefaultFormValidator.IntegerFieldValidator(locale));
         vs.add(new DefaultFormValidator.DecimalFieldValidator(locale));
         vs.add(new DefaultFormValidator.BooleanFieldValidator(locale));
-        vs.add(new FileFieldValidator(locale));
+        vs.add(new FileFieldValidator());
         return new DefaultFormValidator(vs, locale);
     }
 
@@ -154,6 +153,7 @@ public class ConcordFormService {
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
             m.put(InternalConstants.Request.ARGUMENTS_KEY, args);
+            m.put(InternalConstants.Files.FORM_FILES, data.remove(InternalConstants.Files.FORM_FILES));
             resume(UUID.fromString(f.getProcessBusinessKey()), f.getEventName(), m);
         };
 
@@ -276,19 +276,13 @@ public class ConcordFormService {
 
         private static final String[] TYPES = {ConcordFormFields.FileField.TYPE};
 
-        private final FormValidatorLocale locale;
-
-        public FileFieldValidator(FormValidatorLocale locale) {
-            this.locale = locale;
-        }
-
         @Override
         public String[] allowedTypes() {
             return TYPES;
         }
 
         @Override
-        public ValidationError validate(String formId, FormField f, Integer idx, Object v) throws ExecutionException {
+        public ValidationError validate(String formId, FormField f, Integer idx, Object v) {
             String fieldName = f.getName();
 
             if (!(v instanceof String)) {

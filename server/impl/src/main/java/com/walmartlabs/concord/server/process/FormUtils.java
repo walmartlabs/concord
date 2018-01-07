@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.google.common.io.CharStreams;
+import com.walmartlabs.concord.project.ConcordFormFields;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.DefaultFormFields;
@@ -31,11 +31,15 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.walmartlabs.concord.project.InternalConstants.Files.FORM_FILES;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public final class FormUtils {
 
@@ -73,7 +77,10 @@ public final class FormUtils {
     public static Map<String, Object> convert(FormValidatorLocale locale, Form form, Map<String, Object> m) throws ValidationException {
         FormDefinition fd = form.getFormDefinition();
 
+        Map<String, String> tmpFiles = new HashMap<>();
         Map<String, Object> m2 = new HashMap<>();
+        m2.put(FORM_FILES, tmpFiles);
+
         for (FormField f : fd.getFields()) {
             String k = f.getName();
 
@@ -85,7 +92,13 @@ public final class FormUtils {
                 continue;
             }
 
-            m2.put(k, v);
+            if (f.getType().equals(ConcordFormFields.FileField.TYPE)) {
+                String wsFileName = "_form_files/" + form.getFormDefinition().getName() + "/" + f.getName();
+                tmpFiles.put(wsFileName, (String)v);
+                m2.put(k, wsFileName);
+            } else {
+                m2.put(k, v);
+            }
         }
         return m2;
     }
@@ -145,10 +158,14 @@ public final class FormUtils {
             }
             return ll;
         } else if (v instanceof InputStream) {
-            try (InputStream is = (InputStream) v){
-                return CharStreams.toString(new InputStreamReader(is));
-            } catch (IOException e) {
-                throw new WebApplicationException("Error reading request", e);
+            if (f.getType().equals(ConcordFormFields.FileField.TYPE)) {
+                try (InputStream is = (InputStream) v){
+                    Path tmp = Files.createTempFile(f.getName(), ".tmp");
+                    Files.copy(is, tmp, REPLACE_EXISTING);
+                    return tmp.toString();
+                } catch (IOException e) {
+                    throw new WebApplicationException("Error reading file for form field '" + f.getName() + "'", e);
+                }
             }
         } else if (v == null) {
             if (f.getType().equals(DefaultFormFields.BooleanField.TYPE)) {

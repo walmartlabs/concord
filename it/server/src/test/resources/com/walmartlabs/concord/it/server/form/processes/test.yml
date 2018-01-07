@@ -10,7 +10,9 @@ main:
 
   - ${log.info("test", myForm2.color)}
 
-  - log: "FILE ${myForm2.file}"
+  - log: "FILE_PATH ${myForm2.file}"
+
+  - log: "FILE ${resource.asString(myForm2.file)}"
 
   - log: "AAA ${myForm2.rememberMe}"
 
