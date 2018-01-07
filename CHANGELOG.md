@@ -7,6 +7,11 @@
 - concord-server, concord-console: initial support for file upload
 fields.
 
+### Changed
+
+- concord-console: the repository refresh button now opens a pop-up
+window.
+
 
 
 ## [0.48.2] - 2017-12-28

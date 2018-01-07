@@ -86,8 +86,8 @@ public class ProjectManager {
                 Map<String, RepositoryEntry> r = new HashMap<>();
 
                 repos.forEach((repoName, re) -> {
-                    Long hookId = githubWebhookService.register(pId, re.getName(), re.getUrl());
-                    r.put(re.getName(), new RepositoryEntry(re.getId(), re.getProjectId(), re.getName(),
+                    Long hookId = githubWebhookService.register(pId, repoName, re.getUrl());
+                    r.put(repoName, new RepositoryEntry(re.getId(), re.getProjectId(), re.getName(),
                             re.getUrl(), re.getBranch(), re.getCommitId(), re.getPath(), re.getSecret(), hookId));
                 });
 

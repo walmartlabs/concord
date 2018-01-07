@@ -129,7 +129,7 @@ public interface ProjectResource {
      */
     @POST
     @ApiOperation("Refresh an existing repository")
-    @Path("/{orgName}/{projectName}/repository/{repositoryName}/refresh")
+    @Path("/{orgName}/project/{projectName}/repository/{repositoryName}/refresh")
     @Produces(MediaType.APPLICATION_JSON)
     GenericOperationResultResponse refreshRepository(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                                      @ApiParam @PathParam("projectName") @ConcordKey String projectName,

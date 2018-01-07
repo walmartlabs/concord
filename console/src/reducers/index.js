@@ -37,6 +37,7 @@ import {reducers as modal} from "../shared/Modal";
 import {reducers as landingList} from "../landing/list";
 import {reducers as secretList} from "../org/secret/list";
 import {reducers as secretForm} from "../org/secret/create/effects";
+import {reducers as repositoryRefresh} from "../project/RepositoryRefreshPopup";
 
 export default {
     session,
@@ -56,6 +57,7 @@ export default {
     modal,
     secretList,
     secretForm,
+    repositoryRefresh,
     
     form: formReducer
 };

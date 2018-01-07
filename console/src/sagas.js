@@ -35,6 +35,7 @@ import {sagas as repository} from "./project/repository";
 import {sagas as secret} from "./org/secret/list";
 import {sagas as secretNew} from "./org/secret/create";
 import {sagas as landingList} from "./landing/list";
+import {sagas as repositoryRefresh} from "./project/RepositoryRefreshPopup";
 
 export default function*(): Generator<*, *, *> {
     yield all([
@@ -53,6 +54,7 @@ export default function*(): Generator<*, *, *> {
         fork(repository),
         fork(secret),
         fork(secretNew),
-        fork(landingList)
+        fork(landingList),
+        fork(repositoryRefresh)
     ]);
 }

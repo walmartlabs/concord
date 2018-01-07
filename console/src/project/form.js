@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,12 +27,12 @@ import {actions as modal} from "../shared/Modal";
 import * as RepositoryPopup from "./RepositoryPopup";
 import * as DeleteProjectPopup from "./DeleteProjectPopup";
 import * as StartProjectPopup from "./StartProjectPopup/StartProjectPopup";
+import * as RepositoryRefreshPopup from "./RepositoryRefreshPopup";
 import * as api from "./api";
 import GitUrlParse from "git-url-parse";
 import * as v from "../shared/validation";
 import {actions} from "./crud";
 import {getCurrentOrg} from "../session/reducers";
-import {actions as repoActions, selectors as repoSelectors} from "./repository";
 
 const renderSourceText = (f, { commitId }) => commitId ? "Revision" : "Branch/tag";
 
@@ -97,15 +97,15 @@ const renderRepositories = (pristine, newRepositoryPopupFn, editRepositoryPopupF
                             <Table.Cell>
                                 <Popup
                                     trigger={<Button
-                                        primary
+                                        basic
                                         loading={refreshLoading}
                                         disabled={!pristine}
                                         positive={refreshResult}
                                         negative={refreshError && true}
                                         icon={refreshIcon}
-                                        onClick={refreshRepo(fields.get(idx).name, fields.get(idx).id)} />}
+                                        onClick={refreshRepo(fields.get(idx).name)}/>}
                                     inverted
-                                    content={`Refresh repository ${fields.get(idx).name}`}
+                                    content={`Refresh repository "${fields.get(idx).name}"`}
                                 />
                             </Table.Cell>
                         </Table.Row>
@@ -137,7 +137,7 @@ let projectForm = (props) => {
         startProcessFn(repositoryName, repositoryId);
     };
 
-    const refreshRepo = (repositoryName, repositoryId) => (ev) => {
+    const refreshRepo = (repositoryName) => (ev) => {
         ev.preventDefault();
         refreshRepoFn(org.name, originalName, repositoryName);
     };
@@ -211,11 +211,8 @@ projectForm = reduxForm({
     keepDirtyOnReinitialize: true
 })(projectForm);
 
-const mapStateToProps = ({session, repository}) => ({
-    org: getCurrentOrg(session),
-    refreshLoading: repoSelectors.isRefreshLoading(repository),
-    refreshResult: repoSelectors.getRefreshResult(repository),
-    refreshError: repoSelectors.getRefreshError(repository)
+const mapStateToProps = ({session}) => ({
+    org: getCurrentOrg(session)
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -251,7 +248,7 @@ const mapDispatchToProps = (dispatch) => ({
     },
 
     refreshRepoFn: (orgName, projectName, repositoryName) => {
-        dispatch(repoActions.refreshRepository(orgName, projectName, repositoryName));
+        dispatch(modal.open(RepositoryRefreshPopup.MODAL_TYPE, {orgName, projectName, repositoryName}));
     }
 });
 

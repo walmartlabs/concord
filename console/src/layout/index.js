@@ -32,6 +32,7 @@ import RepositoryPopup from "../project/RepositoryPopup";
 import DeleteProjectPopup from "../project/DeleteProjectPopup";
 import StartProjectPopup from "../project/StartProjectPopup/StartProjectPopup";
 import OrgSwitchDropdown from "../org/components/OrgSwitchDropdown";
+import RepositoryRefreshPopup from "../project/RepositoryRefreshPopup";
 
 import "./styles.css";
 
@@ -43,6 +44,7 @@ MODAL_TYPES[RepositoryPopup.MODAL_TYPE] = RepositoryPopup;
 MODAL_TYPES[DeleteProjectPopup.MODAL_TYPE] = DeleteProjectPopup;
 MODAL_TYPES[StartProjectPopup.MODAL_TYPE] = StartProjectPopup;
 MODAL_TYPES[ShowSecretPublicKey.MODAL_TYPE] = ShowSecretPublicKey;
+MODAL_TYPES[RepositoryRefreshPopup.MODAL_TYPE] = RepositoryRefreshPopup;
 
 const layout = ({fullScreen, user: {displayName, org, loggedIn}, title, children, doLogout, router}) => {
     if (fullScreen) {
