@@ -31,7 +31,7 @@ platforms:
       lb:
         listeners: '["tcp 5432 tcp 5432"]'
         lbmethod: 'roundrobin'
-        ecv_map: '{"5432" : "GET /notused"}'
+        ecv_map: '{"5432": "GET /notused"}'
 
       secgroup:
         inbound: '[
@@ -143,6 +143,11 @@ platforms:
         ]'
         lbmethod: 'roundrobin'
         stickiness: true
+        ecv_map: '{
+          "8080": "GET /index.html",
+          "8001": "GET /api/v1/server/ping",
+          "8101": "GET /notused"
+        }'
 
       storage:
         storage:
