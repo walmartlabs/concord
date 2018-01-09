@@ -48,7 +48,9 @@ public class CommonDataSourceProvider extends AbstractDataSourceProvider {
 
     @Inject
     public CommonDataSourceProvider(DatabaseConfiguration cfg, Set<DatabaseChangeLogProvider> changeLogs) {
-        super(cfg.getUrl(), cfg.getDriverClassName(), cfg.getUsername(), cfg.getPassword());
+        super(cfg.getUrl(), cfg.getDriverClassName(),
+                cfg.getUsername(), cfg.getPassword(),
+                cfg.getMaxPoolSize());
         this.changeLogs = changeLogs;
     }
 

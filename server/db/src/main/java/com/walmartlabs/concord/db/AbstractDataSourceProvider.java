@@ -35,12 +35,17 @@ public abstract class AbstractDataSourceProvider implements Provider<DataSource>
     private final String driverClassName;
     private final String username;
     private final String password;
+    private final int maxPoolSize;
 
-    public AbstractDataSourceProvider(String url, String driverClassName, String username, String password) {
+    public AbstractDataSourceProvider(String url, String driverClassName,
+                                      String username, String password,
+                                      int maxPoolSize) {
+
         this.url = url;
         this.driverClassName = driverClassName;
         this.username = username;
         this.password = password;
+        this.maxPoolSize = maxPoolSize;
     }
 
     @Override
@@ -57,7 +62,7 @@ public abstract class AbstractDataSourceProvider implements Provider<DataSource>
         ds.setMaxLifetime(Long.MAX_VALUE);
 
         ds.setMinimumIdle(1);
-        ds.setMaximumPoolSize(10);
+        ds.setMaximumPoolSize(maxPoolSize);
 
         ds.setLeakDetectionThreshold(10000);
 

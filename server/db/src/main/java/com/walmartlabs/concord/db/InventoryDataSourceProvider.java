@@ -30,6 +30,8 @@ public class InventoryDataSourceProvider extends AbstractDataSourceProvider {
 
     @Inject
     public InventoryDataSourceProvider(@Named("inventory") DatabaseConfiguration cfg) {
-        super(cfg.getUrl(), cfg.getDriverClassName(), cfg.getUsername(), cfg.getPassword());
+        super(cfg.getUrl(), cfg.getDriverClassName(),
+                cfg.getUsername(), cfg.getPassword(),
+                cfg.getMaxPoolSize());
     }
 }

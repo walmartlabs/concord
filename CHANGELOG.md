@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: configurable DB connection pool size.
+
+
+
 ## [0.49.0] - 2018-01-07
 
 ### Added

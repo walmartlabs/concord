@@ -31,13 +31,18 @@ public class DatabaseConfiguration implements Serializable {
     private final String url;
     private final String username;
     private final String password;
+    private final int maxPoolSize;
 
-    public DatabaseConfiguration(SQLDialect dialect, String driverClassName, String url, String username, String password) {
+    public DatabaseConfiguration(SQLDialect dialect, String driverClassName, String url,
+                                 String username, String password,
+                                 int maxPoolSize) {
+
         this.dialect = dialect;
         this.driverClassName = driverClassName;
         this.url = url;
         this.username = username;
         this.password = password;
+        this.maxPoolSize = maxPoolSize;
     }
 
     public SQLDialect getDialect() {
@@ -58,5 +63,9 @@ public class DatabaseConfiguration implements Serializable {
 
     public String getPassword() {
         return password;
+    }
+
+    public int getMaxPoolSize() {
+        return maxPoolSize;
     }
 }

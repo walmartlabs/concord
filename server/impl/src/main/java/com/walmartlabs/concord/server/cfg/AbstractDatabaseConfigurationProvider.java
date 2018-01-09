@@ -40,18 +40,23 @@ public abstract class AbstractDatabaseConfigurationProvider implements Provider<
     public static final String DB_URL_KEY = "DB_URL";
     public static final String DEFAULT_DB_URL = "jdbc:postgresql://localhost:5432/postgres";
 
+    public static final String DEFAULT_DB_MAX_POOL_SIZE = "10";
+
     private final String userNameKey;
     private final String defaultUserName;
     private final String passwordKey;
     private final String defaultPassword;
+    private final String maxPoolSizeKey;
 
     public AbstractDatabaseConfigurationProvider(String userNameKey, String defaultUserName,
-                                                 String passwordKey, String defaultPassword) {
+                                                 String passwordKey, String defaultPassword,
+                                                 String maxPoolSizeKey) {
 
         this.userNameKey = userNameKey;
         this.defaultUserName = defaultUserName;
         this.passwordKey = passwordKey;
         this.defaultPassword = defaultPassword;
+        this.maxPoolSizeKey = maxPoolSizeKey;
 
         this.log = LoggerFactory.getLogger(this.getClass());
     }
@@ -63,8 +68,10 @@ public abstract class AbstractDatabaseConfigurationProvider implements Provider<
         String url = Utils.getEnv(DB_URL_KEY, DEFAULT_DB_URL);
         String username = Utils.getEnv(userNameKey, defaultUserName);
         String password = Utils.getEnv(passwordKey, defaultPassword);
+        int maxPoolSize = Integer.parseInt(Utils.getEnv(maxPoolSizeKey, DEFAULT_DB_MAX_POOL_SIZE));
 
-        log.info("get -> using: {} - {}@{}", dialect, username, url);
-        return new DatabaseConfiguration(SQLDialect.valueOf(dialect), driverClassName, url, username, password);
+        log.info("get -> using: {} - {}@{}, maxPoolSize={}", dialect, username, url, maxPoolSize);
+        return new DatabaseConfiguration(SQLDialect.valueOf(dialect), driverClassName, url,
+                username, password, maxPoolSize);
     }
 }

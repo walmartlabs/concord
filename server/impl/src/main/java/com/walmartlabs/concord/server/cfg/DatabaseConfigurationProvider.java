@@ -33,7 +33,9 @@ public class DatabaseConfigurationProvider extends AbstractDatabaseConfiguration
     public static final String DB_PASSWORD_KEY = "DB_PASSWORD";
     public static final String DEFAULT_DB_PASSWORD = "q1";
 
+    public static final String DB_MAX_POOL_SIZE_KEY = "DB_MAX_POOL_SIZE";
+
     public DatabaseConfigurationProvider() {
-        super(DB_USERNAME_KEY, DEFAULT_DB_USERNAME, DB_PASSWORD_KEY, DEFAULT_DB_PASSWORD);
+        super(DB_USERNAME_KEY, DEFAULT_DB_USERNAME, DB_PASSWORD_KEY, DEFAULT_DB_PASSWORD, DB_MAX_POOL_SIZE_KEY);
     }
 }

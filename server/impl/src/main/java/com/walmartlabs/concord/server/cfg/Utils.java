@@ -40,14 +40,14 @@ public final class Utils {
         return Long.parseLong(s);
     }
 
-    private Utils() {
-    }
-
     public static boolean getBoolean(Properties props, String key, boolean defaultValue) {
         String s = props.getProperty(key);
         if (s == null) {
             return defaultValue;
         }
         return Boolean.parseBoolean(s);
+    }
+
+    private Utils() {
     }
 }
