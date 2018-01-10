@@ -7,6 +7,11 @@
 - concord-server: limit the maximum allowed size of process files;
 - concord-server: configurable DB connection pool size.
 
+### Changed
+
+- concord-console: fixed the issue with new projects overwriting the
+previously opened ones. 
+
 
 
 ## [0.49.0] - 2018-01-07
