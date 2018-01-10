@@ -59,7 +59,7 @@ public class RepositoryConfiguration implements Serializable {
     }
 
     private static Path getEnvOrTemp(String key, String tempPrefix) throws IOException {
-        String s = System.getenv(REPO_CACHE_DIR_KEY);
+        String s = System.getenv(key);
         return s != null ? Paths.get(s).toAbsolutePath() : Files.createTempDirectory(tempPrefix);
     }
 }
