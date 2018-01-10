@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: limit the maximum allowed size of process files;
 - concord-server: configurable DB connection pool size.
 
 

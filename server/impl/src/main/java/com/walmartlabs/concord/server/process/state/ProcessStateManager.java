@@ -53,6 +53,7 @@ import static org.jooq.impl.DSL.value;
 public class ProcessStateManager extends AbstractDao {
 
     private static final String PATH_SEPARATOR = "/";
+    private static final long MAX_IMPORT_BATCH_SIZE_BYTES = 64 * 1024 * 1024;
 
     @Inject
     protected ProcessStateManager(Configuration cfg) {
@@ -285,6 +286,8 @@ public class ProcessStateManager extends AbstractDao {
         tx.connection(conn -> {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
+                    private long bytesInBatch = 0;
+
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         Path p = src.relativize(file);
@@ -309,8 +312,20 @@ public class ProcessStateManager extends AbstractDao {
                                 ps.setBinaryStream(4, in);
                             }
                             ps.addBatch();
+
+                            bytesInBatch += Files.size(file);
                         } catch (SQLException e) {
                             throw Throwables.propagate(e);
+                        }
+
+                        // limit the size of the batch
+                        if (bytesInBatch >= MAX_IMPORT_BATCH_SIZE_BYTES) {
+                            try {
+                                ps.executeBatch();
+                            } catch (Exception e) {
+                                throw Throwables.propagate(e);
+                            }
+                            bytesInBatch = 0;
                         }
 
                         return FileVisitResult.CONTINUE;

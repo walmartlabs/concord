@@ -22,7 +22,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -39,10 +42,16 @@ public class StateImportingProcessor implements PayloadProcessor {
     private static final Logger log = LoggerFactory.getLogger(StateImportingProcessor.class);
 
     private final ProcessStateManager stateManager;
+    private final LogManager logManager;
+    private final ProcessStateConfiguration cfg;
 
     @Inject
-    public StateImportingProcessor(ProcessStateManager stateManager) {
+    public StateImportingProcessor(ProcessStateManager stateManager, LogManager logManager,
+                                   ProcessStateConfiguration cfg) {
+
         this.stateManager = stateManager;
+        this.logManager = logManager;
+        this.cfg = cfg;
     }
 
     @Override
@@ -52,7 +61,7 @@ public class StateImportingProcessor implements PayloadProcessor {
 
         stateManager.transaction(tx -> {
             stateManager.delete(tx, instanceId);
-            stateManager.importPath(tx, instanceId, workspace, StateImportingProcessor::filter);
+            stateManager.importPath(tx, instanceId, workspace, (path -> filter(instanceId, workspace, path)));
         });
 
         Path dir = payload.getHeader(Payload.BASE_DIR, workspace);
@@ -70,7 +79,7 @@ public class StateImportingProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private static boolean filter(Path p) {
+    private boolean filter(UUID instanceId, Path baseDir, Path p) {
         if (p.isAbsolute()) {
             log.warn("filter ['{}'] -> can't filter absolute paths", p);
             return true;
@@ -81,6 +90,16 @@ public class StateImportingProcessor implements PayloadProcessor {
             if (n.matches(i)) {
                 return false;
             }
+        }
+
+        try {
+            Path f = baseDir.resolve(p);
+            if (Files.isRegularFile(f) && Files.size(f) >= cfg.getMaxFileSize()) {
+                logManager.warn(instanceId, "{} is larger than the allowed limit, skipping...", p);
+                return false;
+            }
+        } catch (IOException e) {
+            logManager.error(instanceId, "Error while importing a process file: {}", p, e);
         }
 
         return true;
