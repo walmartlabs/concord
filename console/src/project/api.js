@@ -40,7 +40,8 @@ export const fetchProject = (orgName: ConcordKey, name: ConcordKey): Promise<any
 export const updateProject = (data: any): Promise<any> => {
     console.debug("API: updateProject ['%o'] -> starting...", data);
 
-    const {orgName, ...rest} = data;
+    // make sure we are not submitting IDs
+    const {orgName, id, ...rest} = data;
 
     const opts = {
         method: "POST",

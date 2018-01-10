@@ -19,6 +19,7 @@
  */
 import React, {Component} from "react";
 import {connect} from "react-redux";
+import {reset as resetForm} from "redux-form";
 import {push as pushHistory} from "react-router-redux";
 import {Header, Loader} from "semantic-ui-react";
 import ErrorMessage from "../shared/ErrorMessage";
@@ -136,6 +137,7 @@ const mapStateToProps = ({project, session}, {params: {projectName}}) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     reset: () => {
+        dispatch(resetForm("project"));
         dispatch(actions.resetData());
     },
 
