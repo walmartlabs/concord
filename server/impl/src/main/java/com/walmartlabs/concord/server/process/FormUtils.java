@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -142,6 +143,15 @@ public final class FormUtils {
                         return true;
                     }
                     return Boolean.parseBoolean(s);
+                }
+                case ConcordFormFields.FileField.TYPE: {
+                    try {
+                        Path tmp = Files.createTempFile(f.getName(), ".tmp");
+                        Files.write(tmp, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+                        return tmp.toString();
+                    } catch (IOException e) {
+                        throw new WebApplicationException("Error reading file for form field '" + f.getName() + "'", e);
+                    }
                 }
             }
         } else if (v instanceof List) {
