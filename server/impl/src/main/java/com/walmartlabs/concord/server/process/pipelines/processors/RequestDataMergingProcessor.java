@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,10 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 public class RequestDataMergingProcessor implements PayloadProcessor {
@@ -51,12 +47,10 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     public static final List<String> DEFAULT_PROFILES = Collections.singletonList("default");
 
     private final ProjectDao projectDao;
-    private final LogManager logManager;
 
     @Inject
-    public RequestDataMergingProcessor(ProjectDao projectDao, LogManager logManager) {
+    public RequestDataMergingProcessor(ProjectDao projectDao) {
         this.projectDao = projectDao;
-        this.logManager = logManager;
     }
 
     @Override
@@ -82,6 +76,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
         // create the resulting configuration
         Map<String, Object> m = ConfigurationUtils.deepMerge(projectCfg, profileCfg, workspaceCfg, attachedCfg, req);
+        m.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
 
@@ -141,13 +136,26 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private List<String> getActiveProfiles(List<Map<String, Object>> mm) {
         for (Map<String, Object> m : mm) {
-            List<String> v = (List<String>) m.get(InternalConstants.Request.ACTIVE_PROFILES_KEY);
-            if (v != null) {
-                return v;
+            Object o = m.get(InternalConstants.Request.ACTIVE_PROFILES_KEY);
+            if (o == null) {
+                continue;
+            }
+
+            if (o instanceof String) {
+                String s = (String) o;
+                String[] as = s.trim().split(",");
+                return Arrays.asList(as);
+            } else if (o instanceof List) {
+                return (List<String>) o;
+            } else {
+                throw new IllegalArgumentException("Invalid '" + InternalConstants.Request.ACTIVE_PROFILES_KEY +
+                        "' value. Expected a JSON array or a comma-delimeted list of profiles, got: " + o);
             }
         }
+
         return DEFAULT_PROFILES;
     }
 }

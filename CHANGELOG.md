@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed parsing of the `activeProfiles` property when
+the multipart process endpoint is used.
+
+
+
 ## [0.50.0] - 2017-01-10
 
 ### Added
