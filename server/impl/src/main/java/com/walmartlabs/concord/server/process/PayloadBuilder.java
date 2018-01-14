@@ -193,12 +193,12 @@ public final class PayloadBuilder {
         Path baseDir = payload.getHeader(Payload.BASE_DIR);
         if (baseDir == null) {
             baseDir = Files.createTempDirectory("payload");
-            payload.putHeader(Payload.BASE_DIR, baseDir);
+            payload = payload.putHeader(Payload.BASE_DIR, baseDir);
         }
         return baseDir;
     }
 
-    private Path ensureWorkDir() throws IOException {
+    private void ensureWorkDir() throws IOException {
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
         if (workDir == null) {
             Path baseDir = ensureBaseDir();
@@ -210,8 +210,6 @@ public final class PayloadBuilder {
 
             payload = payload.putHeader(Payload.WORKSPACE_DIR, workDir);
         }
-
-        return workDir;
     }
 
     public Payload build() throws IOException {
