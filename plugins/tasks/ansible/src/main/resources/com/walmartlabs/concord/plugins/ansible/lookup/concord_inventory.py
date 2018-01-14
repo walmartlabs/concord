@@ -30,22 +30,24 @@ class LookupModule(LookupBase):
         ret = []
 
         if len(terms) < 2:
-            raise AnsibleError('Invalid lookup format. Expected: inventoryName, queryName')
+            raise AnsibleError('Invalid lookup format. Expected: orgName, inventoryName, queryName')
 
-        inventoryName = terms[0]
-        queryName, resultParams = _parse_parameters(terms[1])
-        queryParams = terms[2]
+        orgName = terms[0]
+        inventoryName = terms[1]
+        queryName, resultParams = _parse_parameters(terms[2])
+        queryParams = terms[3]
 
         concordBaseUrl = os.environ['CONCORD_BASEURL']
-        concordApiKey = os.environ['CONCORD_APIKEY']
+        concordSessionToken = os.environ['CONCORD_SESSION_TOKEN']
+        # concordApiKey = os.environ['CONCORD_APIKEY']
 
-        headers = {'Authorization': concordApiKey, 'Content-type': 'application/json'}
-        url = concordBaseUrl + '/api/v1/inventory/' + inventoryName + '/query/' + queryName + "/exec"
+        headers = {'X-Concord-SessionToken': concordSessionToken, 'Content-type': 'application/json'}
+        url = concordBaseUrl + '/api/v1/org/' + orgName + '/inventory/' + inventoryName + '/query/' + queryName + "/exec"
 
         r = requests.post(url, headers=headers, data=json.dumps(queryParams))
 
         if r.status_code != requests.codes.ok:
-            raise AnsibleError('Invalid server respone: ' + str(r.status_code))
+            raise AnsibleError('Invalid server response: ' + str(r.status_code))
 
         resultElement = resultParams['result']
         if resultElement != -1:

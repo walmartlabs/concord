@@ -82,7 +82,7 @@ public class InventoryManager {
     public InventoryEntry assertInventoryAccess(UUID orgId, String inventoryName, ResourceAccessLevel level, boolean orgMembersOnly) {
         UUID inventoryId = inventoryDao.getId(orgId, inventoryName);
         if (inventoryId == null) {
-            throw new ValidationErrorsException("Inventory not found: " + inventoryId);
+            throw new ValidationErrorsException("Inventory not found: " + inventoryName);
         }
 
         return assertInventoryAccess(inventoryId, level, orgMembersOnly);

@@ -4,6 +4,10 @@
 
 ### Changed
 
+- ansible: the inventory lookup plugin now uses the session token
+provided by the server;
+- ansible: the inventory lookup plugin was updated to support the new
+Organizations feature;
 - concord-server: fixed parsing of the `activeProfiles` property when
 the multipart process endpoint is used.
 

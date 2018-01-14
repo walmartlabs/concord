@@ -41,9 +41,9 @@ public class RunPlaybookTask2 implements Task {
     private static final Logger log = LoggerFactory.getLogger(RunPlaybookTask2.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
-    private static final String CALLBACK_DIR = "_callbacks";
     private static final String PYTHON_LIB_DIR = "_python_lib";
-    private static final String LOOKUP_DIR = "lookup";
+    private static final String CALLBACK_PLUGINS_DIR = "_callbacks";
+    private static final String LOOKUP_PLUGINS_DIR = "_lookups";
 
     private final RpcConfiguration rpcCfg;
     private final SecretStore secretStore;
@@ -94,15 +94,10 @@ public class RunPlaybookTask2 implements Task {
             privateKeyPath = workDir.relativize(privateKeyPath);
         }
 
-        final Map<String, String> env = addExtraEnv(defaultEnv(), args);
-
         processCallback(workDir);
+        processLookup(workDir);
 
-        getConcordCfg(context, "apiKey")
-                .ifPresent(key -> {
-                    processLookup(workDir);
-                    env.put("CONCORD_APIKEY", key);
-                });
+        final Map<String, String> env = addExtraEnv(defaultEnv(), args);
 
         PlaybookProcessBuilder b = pb.build(playbook, inventoryPath.toString())
                 .withAttachmentsDir(toString(attachmentsPath))
@@ -158,6 +153,7 @@ public class RunPlaybookTask2 implements Task {
         env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
         env.put("CONCORD_BASEURL", apiCfg.getBaseUrl());
+        env.put("CONCORD_SESSION_TOKEN", apiCfg.getSessionToken(context));
         return env;
     }
 
@@ -168,19 +164,15 @@ public class RunPlaybookTask2 implements Task {
         copyResourceToFile("/server_pb2.py", libDir.resolve("server_pb2.py"));
         copyResourceToFile("/server_pb2_grpc.py", libDir.resolve("server_pb2_grpc.py"));
 
-        Path callbackDir = workDir.resolve(CALLBACK_DIR);
+        Path callbackDir = workDir.resolve(CALLBACK_PLUGINS_DIR);
         Files.createDirectories(callbackDir);
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
     }
 
-    private void processLookup(Path workDir) {
-        Path callbackDir = workDir.resolve(LOOKUP_DIR);
-        try {
-            Files.createDirectories(callbackDir);
-            copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", callbackDir.resolve("concord_inventory.py"));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    private void processLookup(Path workDir) throws IOException {
+        Path lookupDir = workDir.resolve(LOOKUP_PLUGINS_DIR);
+        Files.createDirectories(lookupDir);
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", lookupDir.resolve("concord_inventory.py"));
     }
 
     private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
@@ -303,9 +295,9 @@ public class RunPlaybookTask2 implements Task {
         throw new IOException("Inventory file not found: " + p.toAbsolutePath());
     }
 
-    private static Map<String, Object> makeCfg(Map<String, Object> cfg, String baseDir) {
+    private static Map<String, Object> makeAnsibleCfg(Map<String, Object> cfg) {
         Map<String, Object> m = new HashMap<>();
-        m.put("defaults", makeDefaults(baseDir));
+        m.put("defaults", makeDefaults());
         m.put("ssh_connection", makeSshConnCfg());
 
         if (cfg != null) {
@@ -315,7 +307,7 @@ public class RunPlaybookTask2 implements Task {
         return m;
     }
 
-    private static Map<String, Object> makeDefaults(String baseDir) {
+    private static Map<String, Object> makeDefaults() {
         Map<String, Object> m = new HashMap<>();
 
         // disable puppet / chef fact gathering, significant speed/performance increase - usually unneeded
@@ -332,11 +324,8 @@ public class RunPlaybookTask2 implements Task {
         m.put("remote_tmp", "/tmp/ansible/$USER");
 
         // add plugins path
-        if (!"".equals(baseDir) && !baseDir.endsWith("/")) {
-            baseDir = baseDir + "/";
-        }
-        m.put("callback_plugins", baseDir + CALLBACK_DIR);
-        m.put("lookup_plugins", baseDir + LOOKUP_DIR);
+        m.put("callback_plugins", CALLBACK_PLUGINS_DIR);
+        m.put("lookup_plugins", LOOKUP_PLUGINS_DIR);
 
         return m;
     }
@@ -365,7 +354,7 @@ public class RunPlaybookTask2 implements Task {
         }
 
         Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
-        return createCfgFile(tmpDir, makeCfg(cfg, ""), debug);
+        return createCfgFile(tmpDir, makeAnsibleCfg(cfg), debug);
     }
 
     @SuppressWarnings("unchecked")

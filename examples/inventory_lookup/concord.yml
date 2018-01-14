@@ -1,9 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.48.0"
-  arguments:
-    concord:
-      apiKey: "iCKnYBTPCbaikaRV6GdJDw" # user "demo"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.51.0"
 
 flows:
   default:
