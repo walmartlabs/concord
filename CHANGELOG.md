@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- ansible: make the org parameter optional for the inventory lookup
+plugin. 
+
 ### Changed
 
 - concord-server: fixed the issue preventing the process from being

@@ -3,4 +3,6 @@
   tasks:
   - debug:
       msg: "greetings {{ lookup('concord_inventory', 'Default', 'myInventory2', 'lookupQuery result=0', {'qparam1':'qparam1-value'}) }}"
+      # if the process was started using a project, then the org parameter can be omitted:
+      # msg: "greetings {{ lookup('concord_inventory', 'myInventory2', 'lookupQuery result=0', {'qparam1':'qparam1-value'}) }}"
       verbosity: 0

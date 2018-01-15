@@ -152,8 +152,15 @@ public class RunPlaybookTask2 implements Task {
         env.put("CONCORD_HOST", rpcCfg.getServerHost());
         env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
-        env.put("CONCORD_BASEURL", apiCfg.getBaseUrl());
+        env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
         env.put("CONCORD_SESSION_TOKEN", apiCfg.getSessionToken(context));
+
+        Map<String, Object> projectInfo = (Map<String, Object>) context.getVariable(Constants.Request.PROJECT_INFO_KEY);
+        String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;
+        if (orgName != null) {
+            env.put("CONCORD_CURRENT_ORG_NAME", orgName);
+        }
+
         return env;
     }
 
