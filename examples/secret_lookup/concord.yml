@@ -1,0 +1,17 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.51.0"
+
+flows:
+  default:
+  - task: ansible
+    in:
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        greetings: "Hi there!"

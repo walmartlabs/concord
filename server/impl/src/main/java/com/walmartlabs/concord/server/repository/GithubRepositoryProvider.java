@@ -24,11 +24,11 @@ import com.google.common.base.Throwables;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.project.RepositoryException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedSecret;
@@ -176,7 +176,7 @@ public class GithubRepositoryProvider implements RepositoryProvider {
             return null;
         }
 
-        DecryptedSecret s = secretManager.getSecret(orgId, secretName, null);
+        DecryptedSecret s = secretManager.getSecret(orgId, secretName, SecretType.KEY_PAIR, null);
         if (s == null) {
             throw new RepositoryException("Secret not found: " + secretName);
         }

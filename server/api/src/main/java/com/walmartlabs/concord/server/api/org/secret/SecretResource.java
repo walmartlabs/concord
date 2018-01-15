@@ -32,6 +32,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Api(value = "Secrets", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
@@ -45,6 +46,14 @@ public interface SecretResource {
     @Produces(MediaType.APPLICATION_JSON)
     SecretOperationResponse create(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam MultipartInput input);
+
+    @POST
+    @ApiOperation("Retrieves a binary data secret using the provided password")
+    @Path("/{orgName}/secret/{secretName}/data")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    Response getData(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                     @ApiParam @PathParam("secretName") @ConcordKey String secretName,
+                     @ApiParam MultipartInput input);
 
     @GET
     @ApiOperation("Retrieves the public key of a key pair")

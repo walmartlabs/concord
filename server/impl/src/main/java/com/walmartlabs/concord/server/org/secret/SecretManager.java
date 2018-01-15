@@ -167,16 +167,12 @@ public class SecretManager {
     }
 
     public DecryptedKeyPair getKeyPair(UUID orgId, String name) {
-        DecryptedSecret e = getSecret(orgId, name, null);
+        DecryptedSecret e = getSecret(orgId, name, SecretType.KEY_PAIR, null);
         if (e == null) {
             return null;
         }
 
         Secret s = e.getSecret();
-        if (!(s instanceof KeyPair)) {
-            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected a key pair, got: " + e.getClass());
-        }
-
         KeyPair k = (KeyPair) s;
         return new DecryptedKeyPair(e.getId(), k.getPublicKey());
     }
@@ -190,12 +186,16 @@ public class SecretManager {
         return RandomStringUtils.random(SECRET_PASSWORD_LENGTH, SECRET_PASSWORD_CHARS);
     }
 
-    public DecryptedSecret getSecret(UUID orgId, String name, String password) {
+    public DecryptedSecret getSecret(UUID orgId, String name, SecretType expectedType, String password) {
         assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
 
         SecretDataEntry e = secretDao.getByName(orgId, name);
         if (e == null) {
             return null;
+        }
+
+        if (e.getType() != expectedType) {
+            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected " + expectedType + ", got: " + e.getType());
         }
 
         SecretStoreType providedStoreType = getStoreType(password);
@@ -228,16 +228,12 @@ public class SecretManager {
     }
 
     public KeyPair getKeyPair(UUID orgId, String name, String password) {
-        DecryptedSecret e = getSecret(orgId, name, password);
+        DecryptedSecret e = getSecret(orgId, name, SecretType.KEY_PAIR, password);
         if (e == null) {
             return null;
         }
 
         Secret s = e.getSecret();
-        if (!(s instanceof KeyPair)) {
-            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected a key pair, got: " + e.getClass());
-        }
-
         return (KeyPair) s;
     }
 

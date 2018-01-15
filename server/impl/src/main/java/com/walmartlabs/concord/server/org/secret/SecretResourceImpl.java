@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
@@ -30,6 +31,7 @@ import com.walmartlabs.concord.server.api.org.secret.*;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryData;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedKeyPair;
+import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedSecret;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedUsernamePassword;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
@@ -39,6 +41,8 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,6 +96,17 @@ public class SecretResourceImpl implements SecretResource, Resource {
         } catch (IOException e) {
             throw new WebApplicationException("Error while processing the request: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public Response getData(String orgName, String secretName, MultipartInput input) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        String storePwd = assertString(input, "storePassword");
+
+        DecryptedSecret s = secretManager.getSecret(org.getId(), secretName, SecretType.DATA, storePwd);
+        BinaryDataSecret d = (BinaryDataSecret) s.getSecret();
+        return Response.ok(d.getData(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .build();
     }
 
     @Override

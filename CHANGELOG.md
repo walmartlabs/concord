@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: an endpoint to export binary data secrets;
+- ansible: add a lookup plugin for retrieving "single value" secrets;
 - ansible: make the org parameter optional for the inventory lookup
 plugin. 
 

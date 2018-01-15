@@ -95,7 +95,7 @@ public class RunPlaybookTask2 implements Task {
         }
 
         processCallback(workDir);
-        processLookup(workDir);
+        processLookups(workDir);
 
         final Map<String, String> env = addExtraEnv(defaultEnv(), args);
 
@@ -176,10 +176,11 @@ public class RunPlaybookTask2 implements Task {
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
     }
 
-    private void processLookup(Path workDir) throws IOException {
+    private void processLookups(Path workDir) throws IOException {
         Path lookupDir = workDir.resolve(LOOKUP_PLUGINS_DIR);
         Files.createDirectories(lookupDir);
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", lookupDir.resolve("concord_inventory.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_secret.py", lookupDir.resolve("concord_secret.py"));
     }
 
     private static void copyResourceToFile(String resourceName, Path dest) throws IOException {

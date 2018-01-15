@@ -1,0 +1,7 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      # the org name can be optional if the process was started from a project
+      msg: "We got {{ lookup('concord_secret', 'Default', 'mySecret', 'myPassword') }}"
+      verbosity: 0
