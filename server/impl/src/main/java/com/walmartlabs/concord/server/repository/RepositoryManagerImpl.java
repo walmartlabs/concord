@@ -68,7 +68,7 @@ public class RepositoryManagerImpl implements RepositoryManager {
     public void testConnection(UUID orgId, String uri, String branch, String commitId, String path, String secretName) {
         Path tmpDir = null;
         try {
-            tmpDir = Files.createTempDirectory("repository");
+            tmpDir = IOUtils.createTempDir("repository");
 
             RepositoryEntry repo = new RepositoryEntry(null, null, null, uri, branch, commitId, path, secretName, null);
             getProvider(uri).fetch(orgId, repo, tmpDir);

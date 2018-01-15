@@ -131,23 +131,41 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     @WithTimer
     public void uploadAttachments(TAttachments request, StreamObserver<Empty> responseObserver) {
         UUID instanceId = UUID.fromString(request.getInstanceId());
+        Path tmpIn = null;
+        Path tmpDir = null;
         try {
             // TODO cfg
             byte[] data = request.getData().toByteArray();
 
-            Path tmpIn = Files.createTempFile("attachments", ".zip");
+            tmpIn = Files.createTempFile("attachments", ".zip");
             Files.write(tmpIn, data);
 
-            Path tmpDir = Files.createTempDirectory("attachments");
+            tmpDir = IOUtils.createTempDir("attachments");
             IOUtils.unzip(tmpIn, tmpDir);
 
+            Path finalTmpDir = tmpDir;
             stateManager.transaction(tx -> {
                 stateManager.delete(tx, instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
-                stateManager.importPath(tx, instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
+                stateManager.importPath(tx, instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, finalTmpDir);
             });
         } catch (IOException e) {
             responseObserver.onError(e);
             return;
+        } finally {
+            if (tmpDir != null) {
+                try {
+                    IOUtils.deleteRecursively(tmpDir);
+                } catch (IOException e) {
+                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
+                }
+            }
+            if (tmpIn != null) {
+                try {
+                    Files.delete(tmpIn);
+                } catch (IOException e) {
+                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
+                }
+            }
         }
 
         responseObserver.onNext(Empty.getDefaultInstance());

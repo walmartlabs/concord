@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -60,6 +60,6 @@ public class RepositoryConfiguration implements Serializable {
 
     private static Path getEnvOrTemp(String key, String tempPrefix) throws IOException {
         String s = System.getenv(key);
-        return s != null ? Paths.get(s).toAbsolutePath() : Files.createTempDirectory(tempPrefix);
+        return s != null ? Paths.get(s).toAbsolutePath() : IOUtils.createTempDir(tempPrefix);
     }
 }

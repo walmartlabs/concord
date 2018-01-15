@@ -22,6 +22,7 @@ package com.walmartlabs.concord.agent;
 
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.walmartlabs.concord.common.IOUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -163,7 +164,7 @@ public class Configuration {
     private static Path getDir(String key, String defaultPrefix) throws IOException {
         String s = System.getenv(key);
         if (s == null) {
-            return Files.createTempDirectory(defaultPrefix);
+            return IOUtils.createTempDir(defaultPrefix);
         }
 
         Path p = Paths.get(s);

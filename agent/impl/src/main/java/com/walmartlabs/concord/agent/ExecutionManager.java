@@ -173,7 +173,7 @@ public class ExecutionManager {
     private Path extract(Path in) throws ExecutionException {
         Path baseDir = cfg.getPayloadDir();
         try {
-            Path dst = Files.createTempDirectory(baseDir, "workDir");
+            Path dst = IOUtils.createTempDir(baseDir, "workDir");
             Files.createDirectories(dst);
             IOUtils.unzip(in, dst);
             return dst;

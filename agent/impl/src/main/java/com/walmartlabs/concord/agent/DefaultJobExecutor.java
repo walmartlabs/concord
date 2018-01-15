@@ -176,7 +176,7 @@ public class DefaultJobExecutor implements JobExecutor {
         HashCode hc = hash(cmd);
 
         ProcessEntry entry = pool.take(hc, () -> {
-            Path forkDir = Files.createTempDirectory("prefork");
+            Path forkDir = IOUtils.createTempDir("prefork");
             return start(forkDir, cmd);
         });
 
@@ -220,7 +220,7 @@ public class DefaultJobExecutor implements JobExecutor {
     }
 
     private ProcessEntry startOneTime(String instanceId, Path workDir, String[] cmd) throws IOException {
-        Path procDir = Files.createTempDirectory("onetime");
+        Path procDir = IOUtils.createTempDir("onetime");
 
         Path payloadDir = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
         Files.move(workDir, payloadDir, StandardCopyOption.ATOMIC_MOVE);

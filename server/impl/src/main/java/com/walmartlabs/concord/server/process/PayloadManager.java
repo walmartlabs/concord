@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.org.OrganizationDao;
@@ -36,7 +37,6 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -193,7 +193,7 @@ public class PayloadManager {
      * @return
      */
     public Payload createResumePayload(UUID instanceId, String eventName, Map<String, Object> req) throws IOException {
-        Path tmpDir = Files.createTempDirectory("payload");
+        Path tmpDir = IOUtils.createTempDir("payload");
 
         if (!stateManager.export(instanceId, copyTo(tmpDir))) {
             throw new ProcessException(instanceId, "Can't resume '" + instanceId + "', state snapshot not found");
@@ -218,7 +218,7 @@ public class PayloadManager {
     public Payload createFork(UUID instanceId, UUID parentInstanceId, ProcessKind kind,
                               String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
 
-        Path tmpDir = Files.createTempDirectory("payload");
+        Path tmpDir = IOUtils.createTempDir("payload");
         if (!stateManager.export(parentInstanceId, copyTo(tmpDir))) {
             throw new ProcessException(instanceId, "Can't fork '" + instanceId + "', parent state snapshot not found");
         }

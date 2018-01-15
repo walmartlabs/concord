@@ -77,7 +77,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final UserDao userDao;
-
+    
     @Inject
     public ProcessResourceImpl(ProcessManager processManager,
                                ProcessQueueDao queueDao,

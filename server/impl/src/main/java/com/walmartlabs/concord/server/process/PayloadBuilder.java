@@ -192,7 +192,7 @@ public final class PayloadBuilder {
     private Path ensureBaseDir() throws IOException {
         Path baseDir = payload.getHeader(Payload.BASE_DIR);
         if (baseDir == null) {
-            baseDir = Files.createTempDirectory("payload");
+            baseDir = IOUtils.createTempDir("payload");
             payload = payload.putHeader(Payload.BASE_DIR, baseDir);
         }
         return baseDir;

@@ -20,10 +20,11 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -37,7 +38,7 @@ public class TemplateConfiguration {
 
     public TemplateConfiguration() throws IOException {
         String s = System.getenv(CACHE_DIR_KEY);
-        this.cacheDir = s != null ? Paths.get(s) : Files.createTempDirectory("templateCache");
+        this.cacheDir = s != null ? Paths.get(s) : IOUtils.createTempDir("templateCache");
     }
 
     public Path getCacheDir() {

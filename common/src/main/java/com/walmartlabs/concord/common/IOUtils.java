@@ -35,6 +35,22 @@ import java.util.Set;
 
 public final class IOUtils {
 
+    private static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
+
+    private static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
+
+    public static Path createTempFile(String prefix, String suffix) throws IOException {
+        return Files.createTempFile(TMP_DIR, prefix, suffix);
+    }
+
+    public static Path createTempDir(Path dir, String prefix) throws IOException {
+        return Files.createTempDirectory(dir, prefix);
+    }
+
+    public static Path createTempDir(String prefix) throws IOException {
+        return Files.createTempDirectory(TMP_DIR, prefix);
+    }
+
     public static boolean matches(Path p, String... filters) {
         String n = p.getName(p.getNameCount() - 1).toString();
         for (String f : filters) {
@@ -213,6 +229,14 @@ public final class IOUtils {
         });
 
         return true;
+    }
+
+    private static String getEnv(String key, String defaultValue) {
+        String s = System.getenv(key);
+        if (s == null) {
+            return defaultValue;
+        }
+        return s;
     }
 
     private IOUtils() {
