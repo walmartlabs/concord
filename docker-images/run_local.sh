@@ -10,6 +10,9 @@ docker rm -f db dind agent server console
 docker run -d \
 --name db \
 -e 'POSTGRES_PASSWORD=q1' \
+-e 'PGDATA=/var/lib/postgresql/data/pgdata' \
+--mount source=concordDB,target=/var/lib/postgresql/data \
+-p 5432:5432 \
 --network=host \
 hub.docker.prod.walmart.com/library/postgres:latest
 
