@@ -1,0 +1,24 @@
+flows:
+  default:
+  - log: "Running the default flow..."
+
+  onEvent:
+  - log: "Received ${event}"
+
+  onEvent2:
+  - log: "${msg}"
+
+triggers:
+  - mySystem:
+      # listen for "mySystem" events that have myVar=abc
+      myVar: "abc"
+      entryPoint: onEvent
+
+  - mySystem:
+      # using regular expressions to match the data
+      myVar: "test.*"
+      entryPoint: onEvent2
+      # passing additional variables
+      arguments:
+        msg: "We got ${event}"
+
