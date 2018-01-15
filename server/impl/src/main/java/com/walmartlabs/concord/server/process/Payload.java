@@ -30,7 +30,6 @@ import java.util.*;
 
 public class Payload {
 
-    public static final HeaderKey<Boolean> HAS_QUEUE_RECORD = HeaderKey.register("_hasQueueRecord", Boolean.class);
     public static final HeaderKey<UUID> PARENT_INSTANCE_ID = HeaderKey.register("_parentInstanceId", UUID.class);
     public static final HeaderKey<UUID> ORGANIZATION_ID = HeaderKey.register("_orgId", UUID.class);
     public static final HeaderKey<UUID> PROJECT_ID = HeaderKey.register("_projectId", UUID.class);

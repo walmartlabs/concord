@@ -42,13 +42,14 @@ public class FailProcessor implements ExceptionProcessor {
     @Override
     @WithTimer
     public void process(Payload payload, Exception e) {
-        boolean hasQueueRecord = payload.getHeader(Payload.HAS_QUEUE_RECORD, false);
+        UUID instanceId = payload.getInstanceId();
+
+        boolean hasQueueRecord = queueDao.exists(instanceId);
         if (!hasQueueRecord) {
             // the process failed before we had a chance to create the initial queue record
             return;
         }
 
-        UUID instanceId = payload.getInstanceId();
         queueDao.update(instanceId, ProcessStatus.FAILED);
     }
 }

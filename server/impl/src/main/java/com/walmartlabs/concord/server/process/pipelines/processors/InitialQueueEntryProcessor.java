@@ -50,6 +50,6 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
 
         queueDao.insertInitial(instanceId, kind, parentInstanceId, projectId, initiator);
 
-        return chain.process(payload.putHeader(Payload.HAS_QUEUE_RECORD, true));
+        return chain.process(payload);
     }
 }
