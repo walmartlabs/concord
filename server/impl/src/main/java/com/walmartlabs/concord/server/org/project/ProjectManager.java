@@ -78,7 +78,7 @@ public class ProjectManager {
         UUID ownerId = p.getId();
 
         return projectDao.txResult(tx -> {
-            boolean acceptsRawPayload = entry.getAcceptsRawPayload() != null ? entry.getAcceptsRawPayload() : true;
+            boolean acceptsRawPayload = entry.getAcceptsRawPayload() != null ? entry.getAcceptsRawPayload() : false;
             UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), ownerId, entry.getCfg(),
                     entry.getVisibility(), acceptsRawPayload);
 
@@ -107,7 +107,7 @@ public class ProjectManager {
 
         projectDao.tx(tx -> {
             projectDao.update(tx, orgId, projectId, entry.getVisibility(), entry.getName(),
-                    entry.getDescription(), entry.getCfg());
+                    entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload());
 
             if (repos != null) {
                 repositoryDao.list(tx, projectId)

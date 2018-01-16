@@ -11,6 +11,8 @@ plugin.
 
 ### Changed
 
+- concord-server: the "Accept payload archives" flag now correctly
+updates;
 - concord-server: fixed the issue preventing the process from being
 marked as FAILED on YML syntax errors;
 - concord-server: fixed parsing of the `activeProfiles` property when

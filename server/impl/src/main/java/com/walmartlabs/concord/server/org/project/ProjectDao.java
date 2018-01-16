@@ -217,7 +217,8 @@ public class ProjectDao extends AbstractDao {
                 .getProjectId();
     }
 
-    public void update(DSLContext tx, UUID orgId, UUID id, ProjectVisibility visibility, String name, String description, Map<String, Object> cfg) {
+    public void update(DSLContext tx, UUID orgId, UUID id, ProjectVisibility visibility,
+                       String name, String description, Map<String, Object> cfg, Boolean acceptsRawPayload) {
         UpdateSetFirstStep<ProjectsRecord> q = tx.update(PROJECTS);
 
         if (name != null) {
@@ -234,6 +235,10 @@ public class ProjectDao extends AbstractDao {
 
         if (visibility != null) {
             q.set(PROJECTS.VISIBILITY, visibility.toString());
+        }
+
+        if (acceptsRawPayload != null) {
+            q.set(PROJECTS.ACCEPTS_RAW_PAYLOAD, acceptsRawPayload);
         }
 
         q.set(PROJECTS.ORG_ID, orgId)
