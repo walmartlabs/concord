@@ -4,14 +4,12 @@ configuration:
   arguments:
     myVars:
       ansible_connection: "local"
-    concord:
-      apiKey: "iCKnYBTPCbaikaRV6GdJDw" # user "demo"
 
 flows:
   default:
   - task: ansible
     in:
-      # arguments: inventory name, ansible host group name, query name, query params, additional inventory variables
+      # arguments: org name, inventory name, ansible host group name, query name, query params, additional inventory variables
       inventory: "${inventory.ansible('Default', 'myInventory', 'myHostsGroup', 'endpointsByZypperVersion', {'facter_zypper_version': '1.6.333'}, myVars)}"
       # will produce a JSON structure like this:
       # {

@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord: make the organization name parameter optional for the
+inventory task; 
 - concord-server: an endpoint to export binary data secrets;
 - ansible: add a lookup plugin for retrieving "single value" secrets;
 - ansible: make the org parameter optional for the inventory lookup

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryQueryResource;
@@ -38,15 +39,25 @@ public class InventoryTask extends AbstractConcordTask {
     private static final Logger log = LoggerFactory.getLogger(InventoryTask.class);
 
     public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
+                                       String inventoryName,
+                                       String hostGroupName, String queryName, Map<String, Object> params) throws Exception {
+
+        String orgName = getOrg(ctx);
+        return ansible(ctx, orgName, inventoryName, hostGroupName, queryName, params, null);
+    }
+
+    public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
                                        String orgName, String inventoryName,
                                        String hostGroupName, String queryName, Map<String, Object> params) throws Exception {
+
         return ansible(ctx, orgName, inventoryName, hostGroupName, queryName, params, null);
     }
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
-           String orgName, String inventoryName,
-                                       String hostGroupName, String queryName, Map<String, Object> params, Map<String, Object> vars) throws Exception {
+                                       String orgName, String inventoryName,
+                                       String hostGroupName, String queryName, Map<String, Object> params,
+                                       Map<String, Object> vars) throws Exception {
 
         List<Object> hostIps = execQuery(ctx, orgName, inventoryName, queryName, params);
         Map<String, Object> hostVars = new HashMap<>();
@@ -60,9 +71,15 @@ public class InventoryTask extends AbstractConcordTask {
         return Collections.singletonMap(hostGroupName, hostVars);
     }
 
-    @SuppressWarnings("unchecked")
     public List<Object> query(@InjectVariable("context") Context ctx,
-            String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
+                              String inventoryName, String queryName, Map<String, Object> params) throws Exception {
+
+        String orgName = getOrg(ctx);
+        return query(ctx, orgName, inventoryName, queryName, params);
+    }
+
+    public List<Object> query(@InjectVariable("context") Context ctx,
+                              String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
 
         List<Object> result = execQuery(ctx, orgName, inventoryName, queryName, params);
 
@@ -76,5 +93,15 @@ public class InventoryTask extends AbstractConcordTask {
             InventoryQueryResource proxy = target.proxy(InventoryQueryResource.class);
             return proxy.exec(orgName, inventoryName, queryName, params);
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String getOrg(Context ctx) {
+        Map<String, Object> m = (Map<String, Object>) ctx.getVariable(Constants.Request.PROJECT_INFO_KEY);
+        if (m == null) {
+            return null;
+        }
+
+        return (String) m.get("orgName");
     }
 }
