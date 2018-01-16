@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
+import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
@@ -110,6 +111,8 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
             return parseBasicAuth(h);
         } else {
+            validateApiKey(h);
+
             // disable session creation for api token users
             request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
 
@@ -151,6 +154,14 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         return loggedId;
+    }
+
+    private static void validateApiKey(String s) {
+        try {
+            Base64.getDecoder().decode(s);
+        } catch (IllegalArgumentException e) {
+            throw new AuthenticationException("Invalid API token");
+        }
     }
 
     private static void forceBasicAuthIfNeeded(ServletRequest request, ServletResponse response) {
