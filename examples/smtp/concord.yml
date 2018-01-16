@@ -1,16 +1,16 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:0.48.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:0.50.0"
   arguments:
-    smtpServer:
-      host: "localhost"
-      port: 25
+  # can be overridden
+  #  smtpServer:
+  #    host: "localhost"
+  #    port: 25
 
 flows:
   default:
   - task: smtp
     in:
-      smtp: ${smtpServer}
       mail:
         from: ${initiator.attributes.mail}
         to: ${initiator.attributes.mail}
