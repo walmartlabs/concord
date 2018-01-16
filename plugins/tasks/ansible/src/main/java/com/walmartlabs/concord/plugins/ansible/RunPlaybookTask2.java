@@ -301,7 +301,7 @@ public class RunPlaybookTask2 implements Task {
         }
 
         // we can't continue without an inventory
-        throw new IOException("Inventory file not found: " + p.toAbsolutePath());
+        throw new IOException("Inventory is not defined");
     }
 
     private static Map<String, Object> makeAnsibleCfg(Map<String, Object> cfg) {
