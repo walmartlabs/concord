@@ -176,7 +176,7 @@ public class GithubRepositoryProvider implements RepositoryProvider {
             return null;
         }
 
-        DecryptedSecret s = secretManager.getSecret(orgId, secretName, SecretType.KEY_PAIR, null);
+        DecryptedSecret s = secretManager.getSecret(orgId, secretName, null, null);
         if (s == null) {
             throw new RepositoryException("Secret not found: " + secretName);
         }

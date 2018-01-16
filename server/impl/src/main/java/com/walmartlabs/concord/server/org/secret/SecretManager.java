@@ -194,7 +194,7 @@ public class SecretManager {
             return null;
         }
 
-        if (e.getType() != expectedType) {
+        if (expectedType != null && e.getType() != expectedType) {
             throw new IllegalArgumentException("Invalid secret type: " + name + ", expected " + expectedType + ", got: " + e.getType());
         }
 
