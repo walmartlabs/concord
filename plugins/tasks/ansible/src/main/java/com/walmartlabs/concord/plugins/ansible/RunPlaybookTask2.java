@@ -210,8 +210,9 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.CONFIG_KEY);
         addIfPresent(ctx, args, AnsibleConstants.PLAYBOOK_KEY);
         addIfPresent(ctx, args, AnsibleConstants.EXTRA_VARS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.EXTRA_ENV_KEY);
         addIfPresent(ctx, args, AnsibleConstants.INVENTORY_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_FILE_NAME);
+        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
         addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
@@ -606,7 +607,7 @@ public class RunPlaybookTask2 implements Task {
 
     @SuppressWarnings("unchecked")
     private static Map<String, String> addExtraEnv(Map<String, String> env, Map<String, Object> m) {
-        Map<String, String> extraEnv = (Map<String, String>) m.get(AnsibleConstants.EXTRA_ENV);
+        Map<String, String> extraEnv = (Map<String, String>) m.get(AnsibleConstants.EXTRA_ENV_KEY);
         if (extraEnv == null || extraEnv.isEmpty()) {
             return env;
         }

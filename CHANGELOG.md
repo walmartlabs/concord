@@ -14,6 +14,8 @@ plugin.
 
 ### Changed
 
+- ansible: `inventoryFile` and `extraEnv` were ignored when the
+plugin was invoked using the task syntax;
 - concord-server: the "Accept payload archives" flag now correctly
 updates;
 - concord-server: fixed the issue preventing the process from being

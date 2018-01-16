@@ -40,7 +40,7 @@ public final class AnsibleConstants {
 
     public static final String EXTRA_VARS_KEY = "extraVars";
 
-    public static final String EXTRA_ENV = "extraEnv";
+    public static final String EXTRA_ENV_KEY = "extraEnv";
 
     public static final String INVENTORY_FILE_KEY = "inventoryFile";
 
