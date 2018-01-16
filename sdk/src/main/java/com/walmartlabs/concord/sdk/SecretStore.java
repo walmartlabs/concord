@@ -38,5 +38,10 @@ public interface SecretStore {
                                           String name,
                                           String password) throws Exception;
 
+    String exportAsFile(String instanceId,
+                        String workDir,
+                        String name,
+                        String password) throws Exception;
+
     String decryptString(String instanceId, String s) throws Exception;
 }

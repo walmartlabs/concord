@@ -4,6 +4,7 @@
 
 ### Added
 
+- crypto: a method to export a single value secret as a file;
 - concord: make the organization name parameter optional for the
 inventory task; 
 - concord-server: an endpoint to export binary data secrets;

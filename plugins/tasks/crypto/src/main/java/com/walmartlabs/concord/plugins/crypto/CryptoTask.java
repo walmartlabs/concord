@@ -22,13 +22,8 @@ package com.walmartlabs.concord.plugins.crypto;
 
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
-import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.sdk.SecretStoreService;
-import com.walmartlabs.concord.sdk.RpcClient;
-import com.walmartlabs.concord.sdk.SecretStore;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +73,7 @@ public class CryptoTask implements Task, SecretStore {
 
         Secret s = get(instanceId, name, password);
         if (!(s instanceof KeyPair)) {
-            throw new IllegalArgumentException("Expected a key pair: ");
+            throw new IllegalArgumentException("Expected a key pair");
         }
 
         KeyPair kp = (KeyPair) s;
@@ -106,7 +101,7 @@ public class CryptoTask implements Task, SecretStore {
                                                  String password) throws Exception {
         Secret s = get(instanceId, name, password);
         if (!(s instanceof UsernamePassword)) {
-            throw new IllegalArgumentException("Expected a key pair: ");
+            throw new IllegalArgumentException("Expected a credentials secret");
         }
 
         UsernamePassword up = (UsernamePassword) s;
@@ -115,6 +110,28 @@ public class CryptoTask implements Task, SecretStore {
         m.put("username", up.getUsername());
         m.put("password", new String(up.getPassword()));
         return m;
+    }
+
+    @Override
+    public String exportAsFile(@InjectVariable("txId") String instanceId,
+                               @InjectVariable("workDir") String workDir,
+                               String name,
+                               String password) throws Exception {
+
+        Secret s = get(instanceId, name, password);
+        if (!(s instanceof BinaryDataSecret)) {
+            throw new IllegalArgumentException("Expected a single value secret");
+        }
+
+        BinaryDataSecret bds = (BinaryDataSecret) s;
+
+        Path baseDir = Paths.get(workDir);
+        Path tmpDir = assertTempDir(baseDir);
+
+        Path p = Files.createTempFile(tmpDir, "file", ".bin");
+        Files.write(p, bds.getData());
+
+        return baseDir.relativize(p).toString();
     }
 
     @Override
