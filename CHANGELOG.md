@@ -16,6 +16,8 @@ plugin.
 
 ### Changed
 
+- concord-server: form `values` are now correctly added to the
+process context after the form is submitted submit;
 - ansible: updated to 2.4.2;
 - ansible: `inventoryFile` and `extraEnv` were ignored when the
 plugin was invoked using the task syntax;

@@ -1,0 +1,11 @@
+flows:
+  default:
+  - form: myForm
+    values:
+      a: 123
+      b: "hello"
+  - log: "we got ${myForm.a} ${myForm.b} ${myForm.c}"
+
+forms:
+  myForm:
+  - c: {type: "string", value: "234"}
