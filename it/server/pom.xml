@@ -16,6 +16,7 @@
     <properties>
         <deps.dir>${project.build.directory}/deps</deps.dir>
         <docker.host.addr>127.0.0.1</docker.host.addr>
+        <it.server.port>58001</it.server.port>
     </properties>
 
     <dependencies>
@@ -289,6 +290,9 @@
                                     <name>hub.docker.prod.walmart.com/library/postgres</name>
                                     <alias>db</alias>
                                     <run>
+                                        <ports>
+                                            <port>it.db.port:5432</port>
+                                        </ports>
                                         <env>
                                             <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
                                         </env>
@@ -301,12 +305,9 @@
                                     <name>walmartlabs/concord-server</name>
                                     <alias>server</alias>
                                     <run>
-                                        <ports>
-                                            <port>it.server.port:8001</port>
-                                        </ports>
-                                        <links>
-                                            <link>db</link>
-                                        </links>
+                                        <network>
+                                            <mode>host</mode>
+                                        </network>
                                         <volumes>
                                             <bind>
                                                 <volume>/tmp:/tmp</volume>
@@ -316,13 +317,15 @@
                                             </bind>
                                         </volumes>
                                         <env>
-                                            <DB_URL>jdbc:postgresql://db:5432/postgres</DB_URL>
+                                            <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
                                             <DB_DIALECT>POSTGRES</DB_DIALECT>
                                             <DB_DRIVER>org.postgresql.Driver</DB_DRIVER>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
                                             <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
+                                            <CONCORD_SERVER_PORT>${it.server.port}</CONCORD_SERVER_PORT>
+                                            <RPC_SERVER_PORT>58101</RPC_SERVER_PORT>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
@@ -334,25 +337,12 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>docker.prod.walmart.com/walmartlabs/concord-dind</name>
-                                    <alias>dind</alias>
-                                    <run>
-                                        <privileged>true</privileged>
-                                        <volumes>
-                                            <bind>
-                                                <volume>/tmp:/tmp</volume>
-                                            </bind>
-                                        </volumes>
-                                    </run>
-                                </image>
-                                <image>
                                     <name>walmartlabs/concord-agent</name>
                                     <alias>agent</alias>
                                     <run>
-                                        <links>
-                                            <link>dind</link>
-                                            <link>server</link>
-                                        </links>
+                                        <network>
+                                            <mode>host</mode>
+                                        </network>
                                         <volumes>
                                             <bind>
                                                 <!-- allows the agent to pick up local dependencies -->
@@ -361,6 +351,8 @@
                                             </bind>
                                         </volumes>
                                         <env>
+                                            <SERVER_API_BASE_URL>http://localhost:${it.server.port}/</SERVER_API_BASE_URL>
+                                            <SERVER_RPC_PORT>58101</SERVER_RPC_PORT>
                                             <WORKERS_COUNT>3</WORKERS_COUNT>
                                         </env>
                                     </run>

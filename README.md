@@ -45,10 +45,8 @@ To automatically start and stop the server and the agent using docker, use the
 `docker` profile:
 
 ```
-./mvnw verify -Pit -Pdocker -Ddocker.host.addr=172.17.0.1
+./mvnw verify -Pit -Pdocker
 ```
-
-The `docker.host.addr` value must be set to the IP address of `docker0` interface.
 
 ## Documentation
 
