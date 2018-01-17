@@ -31,4 +31,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>walmart</id>
+            <properties>
+                <docker.file>docker-images/base/Dockerfile.walmart</docker.file>
+            </properties>
+        </profile>
+    </profiles>
 </project>

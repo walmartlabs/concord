@@ -14,6 +14,7 @@
     <packaging>takari-jar</packaging>
 
     <properties>
+        <db.image>library/postgres</db.image>
         <db.baseDir>${project.build.directory}/db</db.baseDir>
         <db.changeLogPath>com/walmartlabs/concord/server/db/liquibase.xml</db.changeLogPath>
         <db.host>localhost</db.host>
@@ -108,7 +109,7 @@
                 <configuration>
                     <images>
                         <image>
-                            <name>hub.docker.prod.walmart.com/library/postgres</name>
+                            <name>${db.image}</name>
                             <alias>db</alias>
                             <run>
                                 <ports>
@@ -199,6 +200,7 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
+                <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
                 <db.host>${env.CI_DB_HOST}</db.host>
                 <db.port>5432</db.port>
             </properties>
@@ -216,6 +218,13 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+
+        <profile>
+            <id>walmart</id>
+            <properties>
+                <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
+            </properties>
         </profile>
     </profiles>
 </project>
