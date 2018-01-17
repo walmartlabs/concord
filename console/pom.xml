@@ -26,7 +26,7 @@
                 <configuration>
                     <includes>
                         <include>**/*.js</include>
-                        <include>**/*.js</include>
+                        <include>**/*.jsx</include>
                     </includes>
                 </configuration>
             </plugin>
