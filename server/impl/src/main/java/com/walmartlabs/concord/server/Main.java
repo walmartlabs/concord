@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.walmartlabs.concord.server.cfg.Utils;
 import com.walmartlabs.concord.server.security.SecurityModule;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
@@ -39,7 +40,9 @@ public class Main {
     public static void main(String[] args) throws Exception {
         long t1 = System.currentTimeMillis();
 
-        Server server = new Server(8001, true) {
+        int port = Integer.parseInt(Utils.getEnv("CONCORD_SERVER_PORT", "8001"));
+
+        Server server = new Server(port, true) {
 
             @Override
             protected void configureRewriteHandler(RewriteHandler h) {

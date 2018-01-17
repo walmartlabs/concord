@@ -58,7 +58,7 @@
         <commons.email.version>1.5</commons.email.version>
         <commons.lang.version>3.7</commons.lang.version>
         <commons.pool.version>2.4.3</commons.pool.version>
-        <docker.plugin.version>0.22.1</docker.plugin.version>
+        <docker.plugin.version>0.23.0</docker.plugin.version>
         <github.api.version>1.90</github.api.version>
         <glassfish.el.version>3.0.1-b08</glassfish.el.version>
         <greenmail.version>1.5.6</greenmail.version>
