@@ -94,8 +94,8 @@ public class RunPlaybookTask2 implements Task {
             privateKeyPath = workDir.relativize(privateKeyPath);
         }
 
-        processCallback(workDir);
-        processLookups(workDir);
+        processCallback(workDir, tmpDir);
+        processLookups(workDir, tmpDir);
 
         final Map<String, String> env = addExtraEnv(defaultEnv(), args);
 
@@ -164,20 +164,21 @@ public class RunPlaybookTask2 implements Task {
         return env;
     }
 
-    private void processCallback(Path workDir) throws IOException {
+    private void processCallback(Path workDir, Path tmpDir) throws IOException {
         Path libDir = workDir.resolve(PYTHON_LIB_DIR);
         Files.createDirectories(libDir);
 
         copyResourceToFile("/server_pb2.py", libDir.resolve("server_pb2.py"));
         copyResourceToFile("/server_pb2_grpc.py", libDir.resolve("server_pb2_grpc.py"));
 
-        Path callbackDir = workDir.resolve(CALLBACK_PLUGINS_DIR);
+        Path callbackDir = tmpDir.resolve(CALLBACK_PLUGINS_DIR);
         Files.createDirectories(callbackDir);
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_trace.py", callbackDir.resolve("concord_trace.py"));
     }
 
-    private void processLookups(Path workDir) throws IOException {
-        Path lookupDir = workDir.resolve(LOOKUP_PLUGINS_DIR);
+    private void processLookups(Path workDir, Path tmpDir) throws IOException {
+        Path lookupDir = tmpDir.resolve(LOOKUP_PLUGINS_DIR);
         Files.createDirectories(lookupDir);
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", lookupDir.resolve("concord_inventory.py"));
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_secret.py", lookupDir.resolve("concord_secret.py"));

@@ -21,7 +21,6 @@ def mkdir_p(path):
 
 class CallbackModule(CallbackBase):
     CALLBACK_VERSION = 2.0
-    CALLBACK_TYPE = 'notification'
     CALLBACK_NAME = 'concord_trace'
     CALLBACK_NEEDS_WHITELIST = False
 

@@ -102,9 +102,9 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         String templatePath = "file://" + ITConstants.DEPENDENCIES_DIR + "/ansible-template.jar";
 
-        String projectName = "project@" + randomString();
-        String repoSecretName = "repoSecret@" + randomString();
-        String repoName = "repo@" + randomString();
+        String projectName = "project_" + randomString();
+        String repoSecretName = "repoSecret_" + randomString();
+        String repoName = "repo_" + randomString();
         String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
         String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
 
@@ -151,9 +151,9 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         String templatePath = "file://" + ITConstants.DEPENDENCIES_DIR + "/ansible-template.jar";
 
-        String projectName = "project@" + randomString();
-        String repoSecretName = "repoSecret@" + randomString();
-        String repoName = "repo@" + randomString();
+        String projectName = "project_" + randomString();
+        String repoSecretName = "repoSecret_" + randomString();
+        String repoName = "repo_" + randomString();
         String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
         String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
 

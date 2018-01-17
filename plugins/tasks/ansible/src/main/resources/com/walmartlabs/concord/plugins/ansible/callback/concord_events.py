@@ -17,6 +17,9 @@ import server_pb2
 import server_pb2_grpc
 
 class CallbackModule(CallbackBase):
+    CALLBACK_VERSION = 2.0
+    CALLBACK_NAME = 'concord_events'
+    CALLBACK_NEEDS_WHITELIST = False
 
     def __init__(self):
         super(CallbackModule, self).__init__()

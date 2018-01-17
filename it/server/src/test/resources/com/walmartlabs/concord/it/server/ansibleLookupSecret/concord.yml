@@ -2,6 +2,8 @@ flows:
   default:
   - task: ansible
     in:
+      debug: true
+      verbose: 3
       playbook: "playbook/hello.yml"
       inventory:
         local:
