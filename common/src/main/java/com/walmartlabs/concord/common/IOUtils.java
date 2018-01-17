@@ -39,6 +39,16 @@ public final class IOUtils {
 
     private static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
 
+    static {
+        try {
+            if (!Files.exists(TMP_DIR)) {
+                Files.createDirectories(TMP_DIR);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static Path createTempFile(String prefix, String suffix) throws IOException {
         return Files.createTempFile(TMP_DIR, prefix, suffix);
     }
