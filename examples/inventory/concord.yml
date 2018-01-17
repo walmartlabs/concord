@@ -1,24 +1,26 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.48.0"
-  arguments:
-    myVars:
-      ansible_connection: "local"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.51.0"
 
 flows:
   default:
   - task: ansible
     in:
-      # arguments: org name, inventory name, ansible host group name, query name, query params, additional inventory variables
-      inventory: "${inventory.ansible('Default', 'myInventory', 'myHostsGroup', 'endpointsByZypperVersion', {'facter_zypper_version': '1.6.333'}, myVars)}"
+      # arguments: [org name], inventory name, ansible host group name, query name, query params, [additional inventory variables]
+      inventory: "${inventory.ansible('Default', 'myInventory', 'myHostsGroup', 'endpointsByZypperVersion', {'facter_zypper_version': '1.6.333'})}"
       # will produce a JSON structure like this:
       # {
       #   "myHostsGroup": {
-      #     "hosts": ["55.193.40.129"],
-      #     "vars": {
-      #       "ansible_connection": "local"
+      #     "hosts":["55.193.40.129"]
+      #   },
+      #   "_meta": {
+      #     "hostvars":{
+      #       "55.193.40.129":{
+      #         "ansible_connection":"local"
+      #       }
       #     }
       #   }
+      # }
 
       playbook: playbook/hello.yml
       extraVars:
