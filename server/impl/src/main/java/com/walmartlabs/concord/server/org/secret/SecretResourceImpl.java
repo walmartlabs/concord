@@ -105,8 +105,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
         DecryptedSecret s = secretManager.getSecret(org.getId(), secretName, SecretType.DATA, storePwd);
         BinaryDataSecret d = (BinaryDataSecret) s.getSecret();
-        return Response.ok(d.getData(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .build();
+        return Response.ok(d.getData()).build();
     }
 
     @Override

@@ -5,7 +5,7 @@ if [ -z $LDAP_PROPERTIES ]; then
 fi
 echo "LDAP_PROPERTIES: ${LDAP_PROPERTIES}"
 
-docker rm -f db agent server console
+docker rm -f db dind agent server console
 
 docker run -d \
 --name db \
@@ -27,11 +27,19 @@ docker run -d \
 walmartlabs/concord-server
 
 docker run -d \
+--privileged \
+--name dind \
+-v /tmp:/tmp \
+--network=host \
+docker.prod.walmart.com/walmartlabs/concord-dind \
+-H tcp://127.0.0.1:6666
+
+docker run -d \
 --name agent \
 -v /tmp:/tmp \
 -v ${HOME}:${HOME}:ro \
 -v ${HOME}/.m2/repository:/root/.m2/repository:ro \
--e 'DOCKER_HOST=tcp://localhost:2375' \
+-e 'DOCKER_HOST=tcp://localhost:6666' \
 --network=host \
 walmartlabs/concord-agent
 

@@ -51,6 +51,7 @@ public interface SecretResource {
     @ApiOperation("Retrieves a binary data secret using the provided password")
     @Path("/{orgName}/secret/{secretName}/data")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response getData(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                      @ApiParam @PathParam("secretName") @ConcordKey String secretName,
                      @ApiParam MultipartInput input);
