@@ -16,7 +16,7 @@
     <properties>
         <deps.dir>${project.build.directory}/deps</deps.dir>
         <docker.host.addr>127.0.0.1</docker.host.addr>
-        <it.server.port>58001</it.server.port>
+        <it.server.port>8001</it.server.port>
     </properties>
 
     <dependencies>
@@ -325,7 +325,7 @@
                                             <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
                                             <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
                                             <CONCORD_SERVER_PORT>${it.server.port}</CONCORD_SERVER_PORT>
-                                            <RPC_SERVER_PORT>58101</RPC_SERVER_PORT>
+                                            <RPC_SERVER_PORT>8101</RPC_SERVER_PORT>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
@@ -352,7 +352,7 @@
                                         </volumes>
                                         <env>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}/</SERVER_API_BASE_URL>
-                                            <SERVER_RPC_PORT>58101</SERVER_RPC_PORT>
+                                            <SERVER_RPC_PORT>8101</SERVER_RPC_PORT>
                                             <WORKERS_COUNT>3</WORKERS_COUNT>
                                         </env>
                                     </run>

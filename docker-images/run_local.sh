@@ -5,7 +5,7 @@ if [ -z $LDAP_PROPERTIES ]; then
 fi
 echo "LDAP_PROPERTIES: ${LDAP_PROPERTIES}"
 
-docker rm -f db dind agent server console
+docker rm -f db agent server console
 
 docker run -d \
 --name db \
