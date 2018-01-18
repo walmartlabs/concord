@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- docker: add non-root users for the server and agent containers;
+- dependency-manager: ignore checksums, cache the intermediate data.
+
+
 ## [0.51.0] - 2017-01-17
 
 ### Added
