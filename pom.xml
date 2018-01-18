@@ -32,18 +32,6 @@
         <module>it</module>
     </modules>
 
-    <distributionManagement>
-        <repository>
-            <id>${public-release.serverId}</id>
-            <url>${public-release.url}</url>
-        </repository>
-
-        <snapshotRepository>
-            <id>${public-snapshot.serverId}</id>
-            <url>${public-snapshot.url}</url>
-        </snapshotRepository>
-    </distributionManagement>
-
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -109,13 +97,6 @@
         <sshd.version>1.6.0</sshd.version>
         <swagger.version>1.5.13</swagger.version>
         <wiremock.version>2.12.0</wiremock.version>
-
-        <public.serverId>walmart-gec</public.serverId>
-        <public.nexusUrl>http://gec-nexus.prod.glb.prod.walmart.com/nexus</public.nexusUrl>
-        <public-release.serverId>${public.serverId}</public-release.serverId>
-        <public-release.url>${public.nexusUrl}/content/repositories/devtools</public-release.url>
-        <public-snapshot.serverId>${public.serverId}</public-snapshot.serverId>
-        <public-snapshot.url>${public.nexusUrl}/content/repositories/devtools-snapshots</public-snapshot.url>
     </properties>
 
     <dependencyManagement>
@@ -511,32 +492,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <repositories>
-        <repository>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>walmart-gec</id>
-            <url>http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/groups/devtools-public</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>walmart-gec</id>
-            <url>http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/groups/devtools-public</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <build>
         <plugins>
             <plugin>
@@ -707,4 +662,57 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>walmart</id>
+
+            <properties>
+                <public.serverId>walmart-gec</public.serverId>
+                <public.nexusUrl>http://gec-nexus.prod.glb.prod.walmart.com/nexus</public.nexusUrl>
+                <public-release.serverId>${public.serverId}</public-release.serverId>
+                <public-release.url>${public.nexusUrl}/content/repositories/devtools</public-release.url>
+                <public-snapshot.serverId>${public.serverId}</public-snapshot.serverId>
+                <public-snapshot.url>${public.nexusUrl}/content/repositories/devtools-snapshots</public-snapshot.url>
+            </properties>
+
+            <repositories>
+                <repository>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                    <id>walmart-gec</id>
+                    <url>http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/groups/devtools-public</url>
+                </repository>
+            </repositories>
+
+            <pluginRepositories>
+                <pluginRepository>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                    <id>walmart-gec</id>
+                    <url>http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/groups/devtools-public</url>
+                </pluginRepository>
+            </pluginRepositories>
+
+            <distributionManagement>
+                <repository>
+                    <id>${public-release.serverId}</id>
+                    <url>${public-release.url}</url>
+                </repository>
+
+                <snapshotRepository>
+                    <id>${public-snapshot.serverId}</id>
+                    <url>${public-snapshot.url}</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 </project>

@@ -89,4 +89,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>walmart</id>
+            <properties>
+                <docker.file>docker-images/ansible/Dockerfile.walmart</docker.file>
+            </properties>
+        </profile>
+    </profiles>
 </project>
