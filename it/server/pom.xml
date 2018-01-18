@@ -315,7 +315,7 @@
                                                 <volume>/tmp:/tmp</volume>
                                                 <!-- allows the server to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}</volume>
-                                                <volume>${settings.localRepository}:/root/.m2/repository</volume>
+                                                <volume>${settings.localRepository}:/home/concord/.m2/repository</volume>
                                             </bind>
                                         </volumes>
                                         <env>
@@ -361,7 +361,7 @@
                                             <bind>
                                                 <!-- allows the agent to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}</volume>
-                                                <volume>${settings.localRepository}:/root/.m2/repository</volume>
+                                                <volume>${settings.localRepository}:/home/concord/.m2/repository</volume>
                                             </bind>
                                         </volumes>
                                         <env>

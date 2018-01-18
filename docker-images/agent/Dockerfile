@@ -10,10 +10,13 @@ RUN pip install --upgrade pip pbr ansible==2.4.2 pywinrm kerberos requests_kerbe
 
 RUN yum -y install docker-client
 
-COPY docker-images/agent/target/deps/ /root/.m2/repository/
+COPY docker-images/agent/target/deps/ /home/concord/.m2/repository
+RUN chown -R concord:concord /home/concord/.m2
 
 ADD docker-images/agent/target/dist/agent.tar.gz /opt/concord/agent/
 COPY docker-images/agent/target/dist/runner.jar /opt/concord/agent/runner/runner.jar
 COPY docker-images/agent/src/main/docker/start.sh /opt/concord/agent/
+RUN chown -R concord:concord /opt/concord
 
+USER concord
 CMD ["bash", "/opt/concord/agent/start.sh"]

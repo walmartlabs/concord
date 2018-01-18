@@ -13,3 +13,5 @@ RUN yum-config-manager --disable base extras updates && \
     yum clean all
 
 RUN pip install -i https://nexus.prod.walmart.com/nexus/content/repositories/pypi-proxy/simple dumb-init
+
+RUN groupadd concord && useradd -g concord -m -s /sbin/nologin concord

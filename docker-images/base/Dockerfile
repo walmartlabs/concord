@@ -10,3 +10,5 @@ RUN yum -y --enablerepo=extras install epel-release && \
     yum clean all
 
 RUN pip install dumb-init
+
+RUN groupadd concord && useradd -g concord -m -s /sbin/nologin concord

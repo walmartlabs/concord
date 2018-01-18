@@ -10,8 +10,6 @@ docker rm -f db dind agent server console
 docker run -d \
 --name db \
 -e 'POSTGRES_PASSWORD=q1' \
--e 'PGDATA=/var/lib/postgresql/data/pgdata' \
---mount source=concordDB,target=/var/lib/postgresql/data \
 -p 5432:5432 \
 --network=host \
 hub.docker.prod.walmart.com/library/postgres:latest
@@ -20,6 +18,7 @@ docker run -d \
 --name server \
 -v /tmp:/tmp \
 -v ${HOME}:${HOME}:ro \
+-v ${HOME}/.m2/repository:/home/concord/.m2/repository:ro \
 -v ${LDAP_PROPERTIES}:/opt/concord/conf/ldap.properties:ro \
 -e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
 -e 'DB_URL=jdbc:postgresql://localhost:5432/postgres' \
@@ -38,7 +37,7 @@ docker run -d \
 --name agent \
 -v /tmp:/tmp \
 -v ${HOME}:${HOME}:ro \
--v ${HOME}/.m2/repository:/root/.m2/repository:ro \
+-v ${HOME}/.m2/repository:/home/concord/.m2/repository:ro \
 -e 'DOCKER_HOST=tcp://localhost:6666' \
 --network=host \
 walmartlabs/concord-agent
