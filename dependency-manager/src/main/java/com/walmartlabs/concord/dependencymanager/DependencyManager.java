@@ -78,6 +78,7 @@ public class DependencyManager {
     private final List<RemoteRepository> repositories;
     private final Object mutex = new Object();
     private final RepositorySystem maven = newMavenRepositorySystem();
+    private final RepositoryCache mavenCache = new DefaultRepositoryCache();
 
     public DependencyManager(Path cacheDir) {
         this(cacheDir, readCfg());
@@ -226,6 +227,8 @@ public class DependencyManager {
 
     private DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system) throws IOException {
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        session.setCache(mavenCache);
+        session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
 
         Path baseDir = cacheDir.resolve(MAVEN_CACHE_DIR);
         if (!Files.exists(baseDir)) {
