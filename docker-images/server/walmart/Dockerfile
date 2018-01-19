@@ -1,4 +1,6 @@
-FROM walmartlabs/concord-base:latest
+ARG concord_version=latest
+
+FROM docker.prod.walmart.com/walmartlabs/concord-base:$concord_version
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 EXPOSE 8001

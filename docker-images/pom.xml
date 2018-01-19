@@ -54,6 +54,8 @@
                                     <argument>-f</argument>
                                     <argument>${docker.file}</argument>
 
+                                    <argument>--build-arg=concord_version=${project.version}</argument>
+
                                     <argument>--network</argument>
                                     <argument>host</argument>
 

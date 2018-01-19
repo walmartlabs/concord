@@ -1,4 +1,6 @@
-FROM walmartlabs/concord-base:latest
+ARG concord_version=latest
+
+FROM walmartlabs/concord-base:$concord_version
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 ENV DOCKER_HOST tcp://dind:2375

@@ -36,6 +36,7 @@
         <profile>
             <id>walmart</id>
             <properties>
+                <docker.tagbase>docker.prod.walmart.com/walmartlabs/concord-base</docker.tagbase>
                 <docker.file>docker-images/base/walmart/Dockerfile</docker.file>
             </properties>
         </profile>

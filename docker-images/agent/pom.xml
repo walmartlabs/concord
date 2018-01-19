@@ -92,6 +92,7 @@
         <profile>
             <id>walmart</id>
             <properties>
+                <docker.tagbase>docker.prod.walmart.com/walmartlabs/concord-agent</docker.tagbase>
                 <docker.file>docker-images/agent/walmart/Dockerfile</docker.file>
             </properties>
         </profile>

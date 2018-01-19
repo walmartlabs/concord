@@ -1,4 +1,6 @@
-FROM walmartlabs/concord-base
+ARG concord_version=latest
+
+FROM walmartlabs/concord-base:$concord_version
 MAINTAINER "Yury Brigadirenko" <ybrigadirenko@walmartlabs.com>
 
 RUN mkdir -p /workspace

@@ -36,6 +36,7 @@
         <profile>
             <id>walmart</id>
             <properties>
+                <docker.tagbase>docker.prod.walmart.com/walmartlabs/concord-ansible</docker.tagbase>
                 <docker.file>docker-images/ansible/walmart/Dockerfile</docker.file>
             </properties>
         </profile>

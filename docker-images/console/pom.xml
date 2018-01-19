@@ -14,7 +14,7 @@
 
     <properties>
         <docker.tagbase>walmartlabs/concord-console</docker.tagbase>
-        <docker.file>docker-images/console/Dockerfile</docker.file>
+        <docker.file>docker-images/console/oss/Dockerfile</docker.file>
     </properties>
 
     <dependencies>
@@ -106,6 +106,10 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
+            <properties>
+                <docker.tagbase>docker.prod.walmart.com/walmartlabs/concord-console</docker.tagbase>
+                <docker.file>docker-images/console/walmart/Dockerfile</docker.file>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
