@@ -14,7 +14,7 @@
 
     <properties>
         <docker.tagbase>walmartlabs/concord-agent</docker.tagbase>
-        <docker.file>docker-images/agent/Dockerfile</docker.file>
+        <docker.file>docker-images/agent/oss/Dockerfile</docker.file>
     </properties>
 
     <!-- default dependencies, will be copied into the agent's local .m2 -->
@@ -94,7 +94,7 @@
         <profile>
             <id>walmart</id>
             <properties>
-                <docker.file>docker-images/ansible/Dockerfile.walmart</docker.file>
+                <docker.file>docker-images/agent/walmart/Dockerfile</docker.file>
             </properties>
         </profile>
     </profiles>

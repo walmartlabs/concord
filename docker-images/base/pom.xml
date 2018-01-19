@@ -14,7 +14,7 @@
 
     <properties>
         <docker.tagbase>walmartlabs/concord-base</docker.tagbase>
-        <docker.file>docker-images/base/Dockerfile</docker.file>
+        <docker.file>docker-images/base/oss/Dockerfile</docker.file>
     </properties>
 
     <build>
@@ -36,7 +36,7 @@
         <profile>
             <id>walmart</id>
             <properties>
-                <docker.file>docker-images/base/Dockerfile.walmart</docker.file>
+                <docker.file>docker-images/base/walmart/Dockerfile</docker.file>
             </properties>
         </profile>
     </profiles>
