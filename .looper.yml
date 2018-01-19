@@ -33,15 +33,29 @@ flows:
       - dockerImage:
           dockerfile: "docker-images/base/walmart/Dockerfile"
           tags:
-            - "docker.prod.walmart.com/walmartlabs/concord-base:latest-snapshot"
-          push: false
+            - "docker.prod.walmart.com/walmartlabs/concord-base:latest-snapshot-pr"
+          push: true
       - dockerImage:
-          dockerfile: "docker-images/server/Dockerfile"
+          dockerfile: "docker-images/ansible/walmart/Dockerfile"
           tags:
-            - "docker.prod.walmart.com/walmartlabs/concord-base:latest-snapshot"
+            - "docker.prod.walmart.com/walmartlabs/concord-ansible:latest-snapshot-pr"
           buildArgs:
-            concord_version: "latest-snapshot"
-          push: false
+            concord_version: "latest-snapshot-pr"
+          push: true
+      - dockerImage:
+          dockerfile: "docker-images/server/walmart/Dockerfile"
+          tags:
+            - "docker.prod.walmart.com/walmartlabs/concord-server:latest-snapshot-pr"
+          buildArgs:
+            concord_version: "latest-snapshot-pr"
+          push: true
+      - dockerImage:
+          dockerfile: "docker-images/console/walmart/Dockerfile"
+          tags:
+            - "docker.prod.walmart.com/walmartlabs/concord-console:latest-snapshot-pr"
+          buildArgs:
+            concord_version: "latest-snapshot-pr"
+          push: true
 
   cleanup:
     - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
