@@ -33,14 +33,14 @@ flows:
       - dockerImage:
           dockerfile: "docker-images/base/walmart/Dockerfile"
           tags:
-            - "walmartlabs/concord-base:latest"
-            - "walmartlabs/concord-base:latest-snapshot"
+            - "docker.prod.walmart.com/walmartlabs/concord-base:latest-snapshot"
           push: false
       - dockerImage:
           dockerfile: "docker-images/server/Dockerfile"
           tags:
-            - "walmartlabs/concord-server:latest"
-            - "walmartlabs/concord-base:latest-snapshot"
+            - "docker.prod.walmart.com/walmartlabs/concord-base:latest-snapshot"
+          buildArgs:
+            concord_version: "latest-snapshot"
           push: false
 
   cleanup:
