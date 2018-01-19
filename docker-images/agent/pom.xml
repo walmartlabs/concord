@@ -39,7 +39,6 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <skip>${docker.skip}</skip>
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.agent</groupId>
@@ -68,7 +67,6 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <skip>${docker.skip}</skip>
                             <useRepositoryLayout>true</useRepositoryLayout>
                             <copyPom>true</copyPom>
                             <addParentPoms>true</addParentPoms>

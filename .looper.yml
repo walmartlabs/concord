@@ -17,40 +17,37 @@ envs:
 tools:
   jdk: 8
   maven: 3.5.0
-  sonarscanner: 3.0.3.778
 
 docker:
   - name: "concord-looper-agent"
     image: "docker.prod.walmart.com/walmartlabs/concord-looper-agent:latest"
 
 flows:
-  runsonar:
-    - sonar("Sonar"):
-      - (name sonar) mvn -Plooper -Pwalmart -e -B -fae $SONAR_MAVEN_GOAL
-      - (name hygieiaPublish) hygieia.publishSonar()
-
   build:
     - node(docker-daemon):
       - dockerAgent(concord-looper-agent):
         - call: cleanup
-        - (name build) mvn -U -B -s $MVN_SETTINGS clean install -Plooper -Pwalmart
-
-  build_and_deploy:
-    - node(docker-daemon):
-      - dockerAgent(concord-looper-agent):
-        - call: cleanup
-        - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -Plooper -Pwalmart
-        - (name hygieiaPublish) hygieia.publishBuild()
+        - (name build) mvn -U -B -s $MVN_SETTINGS clean install -DskipTests
+        - ws_snapshot: binaries
+      - ws_restore: binaries
+      - dockerImage:
+          dockerfile: "docker-images/base/walmart/Dockerfile"
+          tags:
+            - "walmartlabs/concord-base:latest"
+            - "walmartlabs/concord-base:latest-snapshot"
+          push: false
+      - dockerImage:
+          dockerfile: "docker-images/server/Dockerfile"
+          tags:
+            - "walmartlabs/concord-server:latest"
+            - "walmartlabs/concord-base:latest-snapshot"
+          push: false
 
   cleanup:
     - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
 
   default:
-    try:
-      - call: build_and_deploy
-      - call: runsonar
-    finally:
-      - hygieia.publishBuild()
+    - call: build
 
   pr:
     - call: build

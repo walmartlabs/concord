@@ -40,7 +40,6 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <skip>${docker.skip}</skip>
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord</groupId>
@@ -87,16 +86,6 @@
                     <nodeVersion>v${node.version}</nodeVersion>
                     <workingDirectory>${basedir}</workingDirectory>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>docker-build</id>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

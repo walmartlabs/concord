@@ -30,7 +30,6 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <skip>${docker.skip}</skip>
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.server</groupId>
