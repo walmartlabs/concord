@@ -24,7 +24,7 @@ platforms:
       database:
         dbname: 'concord'
         username: 'sa'
-        password: 'c0nc0rdDb'
+        password: '{{dbPassword}}'
       postgresql:
         version: '9.6'
         port: '5432'
@@ -157,7 +157,7 @@ platforms:
       volume:
         vol-docker:
           size: "20%FREE"
-                  
+
       user:
         user-jpise:
           system_account: true
@@ -211,7 +211,7 @@ scale:
 environment:
   global_dns: true
   subdomain: '{{environmentName}}.{{assemblyName}}.{{organization}}'
-  availability: Reduandant 
+  availability: Reduandant
   profile: 'PROD'
   debug: false
   autoscale: false
