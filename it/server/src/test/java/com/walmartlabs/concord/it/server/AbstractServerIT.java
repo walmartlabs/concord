@@ -21,12 +21,15 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.it.common.ServerClient;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import com.walmartlabs.concord.server.api.org.secret.SecretOperationResponse;
+import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.After;
 import org.junit.Before;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -112,5 +115,17 @@ public abstract class AbstractServerIT {
         }
 
         return b.toString();
+    }
+
+    protected static Path createTempDir() throws IOException {
+        Path tmpDir = Files.createTempDirectory("test");
+        Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+        return tmpDir;
+    }
+
+    protected static Path createTempFile(String suffix) throws IOException {
+        Path tmpDir = Files.createTempFile("test", suffix);
+        Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rw-r--r--"));
+        return tmpDir;
     }
 }

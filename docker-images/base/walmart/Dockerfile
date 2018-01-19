@@ -14,4 +14,4 @@ RUN yum-config-manager --disable base extras updates && \
 
 RUN pip install -i https://nexus.prod.walmart.com/nexus/content/repositories/pypi-proxy/simple dumb-init
 
-RUN groupadd concord && useradd -g concord -m -s /sbin/nologin concord
+RUN groupadd -g 456 concord && useradd --no-log-init -u 456 -g concord -m -s /sbin/nologin concord

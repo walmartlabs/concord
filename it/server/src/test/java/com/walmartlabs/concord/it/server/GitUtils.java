@@ -23,18 +23,20 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 
 public final class GitUtils {
 
     public static Path createBareRepository(Path data) throws Exception {
         // init bare repository
-        Path repo = Files.createTempDirectory("test");
+        Path repo = createTempDir();
         Git.init().setBare(true).setDirectory(repo.toFile()).call();
 
         // clone the repository into a new directory
-        Path workdir = Files.createTempDirectory("test");
+        Path workdir = createTempDir();
         Git git = Git.cloneRepository()
                 .setDirectory(workdir.toFile())
                 .setURI("file://" + repo.toString())
@@ -49,6 +51,12 @@ public final class GitUtils {
         git.push().call();
 
         return repo;
+    }
+
+    protected static Path createTempDir() throws IOException {
+        Path tmpDir = Files.createTempDirectory("test");
+        Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+        return tmpDir;
     }
 
     private GitUtils() {

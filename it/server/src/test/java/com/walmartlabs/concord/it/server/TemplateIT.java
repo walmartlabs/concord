@@ -87,7 +87,7 @@ public class TemplateIT extends AbstractServerIT {
     }
 
     private static Path createTemplate() throws IOException {
-        Path tmpDir = Files.createTempDirectory("template");
+        Path tmpDir = createTempDir();
 
         Path metaPath = tmpDir.resolve(TemplateScriptProcessor.REQUEST_DATA_TEMPLATE_FILE_NAME);
         Files.write(metaPath, META_JS.getBytes());
@@ -98,7 +98,7 @@ public class TemplateIT extends AbstractServerIT {
         Path procPath = processesPath.resolve("hello.yml");
         Files.write(procPath, PROCESS_YAML.getBytes());
 
-        Path tmpZip = Files.createTempFile("template", ".zip");
+        Path tmpZip = createTempFile(".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmpZip))) {
             IOUtils.zip(zip, tmpDir);
         }

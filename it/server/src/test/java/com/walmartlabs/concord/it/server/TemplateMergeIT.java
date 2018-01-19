@@ -72,7 +72,7 @@ public class TemplateMergeIT extends AbstractServerIT {
 
     private static Path createTemplate() throws Exception {
         byte[] ab = archive(TemplateMergeIT.class.getResource("templateMerge/template").toURI());
-        Path p = Files.createTempFile("template", ".zip");
+        Path p = createTempFile(".zip");
         Files.write(p, ab);
         return p;
     }
