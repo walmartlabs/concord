@@ -35,9 +35,9 @@ import java.util.Set;
 
 public final class IOUtils {
 
-    private static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
+    public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
 
-    private static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
+    public static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
 
     static {
         try {

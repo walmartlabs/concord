@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import io.takari.bpm.event.Event;
 import io.takari.bpm.event.EventStorage;
 import io.takari.bpm.event.ExpiredEvent;
@@ -53,7 +54,7 @@ public class FileEventStorage implements EventStorage {
         Path p = dir.resolve(event.getId().toString());
 
         try {
-            Path tmp = Files.createTempFile(event.getId().toString(), "event");
+            Path tmp = IOUtils.createTempFile(event.getId().toString(), "event");
             try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(tmp))) {
                 out.writeObject(event);
             }

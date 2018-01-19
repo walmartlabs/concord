@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
@@ -103,7 +104,7 @@ public class ProcessManager {
         UUID instanceId = p.getInstanceId();
 
         // TODO this probably can be replaced with an in-memory buffer
-        Path tmp = Files.createTempFile("payload", ".zip");
+        Path tmp = IOUtils.createTempFile("payload", ".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
             stateManager.export(instanceId, zipTo(zip));
         }

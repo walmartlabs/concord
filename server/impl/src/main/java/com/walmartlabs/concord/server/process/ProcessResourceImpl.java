@@ -336,7 +336,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
         Optional<Path> o = stateManager.get(instanceId, resource, src -> {
             try {
-                Path tmp = Files.createTempFile("attachment", ".bin");
+                Path tmp = IOUtils.createTempFile("attachment", ".bin");
                 try (OutputStream dst = Files.newOutputStream(tmp)) {
                     IOUtils.copy(src, dst);
                 }

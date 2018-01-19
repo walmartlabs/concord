@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormStorage;
@@ -46,7 +47,7 @@ public class FileFormStorage implements FormStorage {
         UUID id = form.getFormInstanceId();
         Path p = dir.resolve(id.toString());
         try {
-            Path tmp = Files.createTempFile(id.toString(), "form");
+            Path tmp = IOUtils.createTempFile(id.toString(), "form");
             try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(tmp))) {
                 out.writeObject(form);
             }

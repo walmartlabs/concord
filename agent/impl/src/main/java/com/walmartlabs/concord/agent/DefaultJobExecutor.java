@@ -244,6 +244,7 @@ public class DefaultJobExecutor implements JobExecutor {
 
         // TODO constants
         Map<String, String> env = b.environment();
+        env.put(IOUtils.TMP_DIR_KEY, IOUtils.TMP_DIR.toAbsolutePath().toString());
         env.put("_CONCORD_ATTACHMENTS_DIR", payloadDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .toAbsolutePath().toString());
 
@@ -403,8 +404,7 @@ public class DefaultJobExecutor implements JobExecutor {
 
         Path tmp;
         try {
-            // TODO cfg
-            tmp = Files.createTempFile("attachments", ".zip");
+            tmp = IOUtils.createTempFile("attachments", ".zip");
             try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
                 IOUtils.zip(zip, attachmentsDir);
             }

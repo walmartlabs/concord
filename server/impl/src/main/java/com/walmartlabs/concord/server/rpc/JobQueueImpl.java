@@ -137,7 +137,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
             // TODO cfg
             byte[] data = request.getData().toByteArray();
 
-            tmpIn = Files.createTempFile("attachments", ".zip");
+            tmpIn = IOUtils.createTempFile("attachments", ".zip");
             Files.write(tmpIn, data);
 
             tmpDir = IOUtils.createTempDir("attachments");

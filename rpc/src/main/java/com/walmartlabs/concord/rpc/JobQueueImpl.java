@@ -22,6 +22,7 @@ package com.walmartlabs.concord.rpc;
 
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.rpc.TJobQueueGrpc.TJobQueueBlockingStub;
 import com.walmartlabs.concord.sdk.ClientException;
 import io.grpc.ManagedChannel;
@@ -101,7 +102,7 @@ public final class JobQueueImpl implements JobQueue {
                 public void onNext(TJobResponse value) {
                     try {
                         if (dst == null) {
-                            dst = Files.createTempFile("payload", ".zip");
+                            dst = IOUtils.createTempFile("payload", ".zip");
                         }
 
                         instanceId = value.getInstanceId();
