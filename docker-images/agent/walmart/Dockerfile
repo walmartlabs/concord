@@ -10,8 +10,8 @@ RUN pip install --upgrade -i https://nexus.prod.walmart.com/nexus/content/reposi
 
 RUN yum -y install docker-client
 
-COPY docker-images/agent/target/deps/ /opt/concord/deps/
-RUN chown -R concord:concord /opt/concord/deps
+COPY docker-images/agent/target/deps/ /home/concord/.m2/repository
+RUN chown -R concord:concord /home/concord/.m2
 
 ADD docker-images/agent/target/dist/agent.tar.gz /opt/concord/agent/
 COPY docker-images/agent/target/dist/runner.jar /opt/concord/agent/runner/runner.jar
