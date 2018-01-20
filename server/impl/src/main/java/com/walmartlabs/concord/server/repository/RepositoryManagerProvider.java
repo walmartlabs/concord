@@ -39,8 +39,7 @@ public class RepositoryManagerProvider implements Provider<RepositoryManager> {
     private final RepositoryMetaManager repositoryMetaManager;
     private final RepositoryCacheDao repositoryDao;
     private final GithubConfiguration githubConfiguration;
-    private final GithubRepositoryProvider githubRepositoryProvider;
-    private final ClasspathRepositoryProvider classpathRepositoryProvider;
+    private final RepositoryProvider githubRepositoryProvider;
     private final ProjectDao projectDao;
 
     @Inject
@@ -48,21 +47,19 @@ public class RepositoryManagerProvider implements Provider<RepositoryManager> {
                                      RepositoryMetaManager repositoryMetaManager,
                                      RepositoryCacheDao repositoryDao,
                                      GithubConfiguration githubConfiguration,
-                                     GithubRepositoryProvider githubRepositoryProvider,
-                                     ClasspathRepositoryProvider classpathRepositoryProvider,
+                                     RepositoryProvider githubRepositoryProvider,
                                      ProjectDao projectDao) {
         this.cfg = cfg;
         this.repositoryMetaManager = repositoryMetaManager;
         this.repositoryDao = repositoryDao;
         this.githubConfiguration = githubConfiguration;
         this.githubRepositoryProvider = githubRepositoryProvider;
-        this.classpathRepositoryProvider = classpathRepositoryProvider;
         this.projectDao = projectDao;
     }
 
     @Override
     public RepositoryManager get() {
-        RepositoryManager rm = new RepositoryManagerImpl(cfg, githubRepositoryProvider, classpathRepositoryProvider, projectDao);
+        RepositoryManager rm = new RepositoryManagerImpl(cfg, githubRepositoryProvider, new ClasspathRepositoryProvider(), projectDao);
         if (githubConfiguration.isCacheEnabled()) {
             return new CachedRepositoryManager(repositoryMetaManager, rm, repositoryDao);
         } else {

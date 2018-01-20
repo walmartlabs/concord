@@ -28,7 +28,6 @@ import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.project.RepositoryException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedSecret;
@@ -55,8 +54,6 @@ import org.eclipse.jgit.util.FS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -67,17 +64,15 @@ import java.util.*;
 import static org.eclipse.jgit.transport.CredentialItem.Password;
 import static org.eclipse.jgit.transport.CredentialItem.Username;
 
-@Named
-public class GithubRepositoryProvider implements RepositoryProvider {
+public class JGitRepositoryProvider implements RepositoryProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(GithubRepositoryProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(JGitRepositoryProvider.class);
 
     private static final String DEFAULT_BRANCH = "master";
 
     private final SecretManager secretManager;
 
-    @Inject
-    public GithubRepositoryProvider(SecretManager secretManager) {
+    public JGitRepositoryProvider(SecretManager secretManager) {
         this.secretManager = secretManager;
     }
 

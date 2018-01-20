@@ -49,6 +49,7 @@ public class GithubConfiguration {
     private final String githubUrl;
     private final long refreshInterval;
     private final boolean cacheEnabled;
+    private final boolean useJgit;
 
     public GithubConfiguration() throws IOException {
         Properties props = new Properties();
@@ -68,6 +69,7 @@ public class GithubConfiguration {
             this.githubUrl = props.getProperty("githubUrl");
             this.refreshInterval = Utils.getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
             this.cacheEnabled = Utils.getBoolean(props, "cacheEnabled", false);
+            this.useJgit = Utils.getBoolean(props, "useJgit", false);
 
             this.enabled = true;
         } else {
@@ -78,6 +80,7 @@ public class GithubConfiguration {
             this.githubUrl = "";
             this.refreshInterval = DEFAULT_REFRESH_INTERVAL;
             this.cacheEnabled = false;
+            this.useJgit = false;
 
             this.enabled = false;
 
@@ -115,5 +118,9 @@ public class GithubConfiguration {
 
     public boolean isCacheEnabled() {
         return cacheEnabled;
+    }
+
+    public boolean isUseJgit() {
+        return useJgit;
     }
 }

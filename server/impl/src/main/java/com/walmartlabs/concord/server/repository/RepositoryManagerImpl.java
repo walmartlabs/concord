@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.org.project.RepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,8 +55,8 @@ public class RepositoryManagerImpl implements RepositoryManager {
     private final ProjectDao projectDao;
 
     public RepositoryManagerImpl(RepositoryConfiguration cfg,
-                                 GithubRepositoryProvider githubRepositoryProvider,
-                                 ClasspathRepositoryProvider classpathRepositoryProvider,
+                                 RepositoryProvider githubRepositoryProvider,
+                                 RepositoryProvider classpathRepositoryProvider,
                                  ProjectDao projectDao) {
 
         this.cfg = cfg;
