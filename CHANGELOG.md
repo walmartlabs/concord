@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: avoid creation of multiple webhooks for the same
+GIT repository urls registered in different projects;
 - docker: add non-root users for the server and agent containers;
 - dependency-manager: ignore checksums, cache the intermediate data.
 
