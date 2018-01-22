@@ -86,9 +86,9 @@ public class ProjectManager {
                 Map<String, RepositoryEntry> r = new HashMap<>();
 
                 repos.forEach((repoName, re) -> {
-                    Long hookId = githubWebhookService.register(pId, repoName, re.getUrl());
+                    boolean success = githubWebhookService.register(pId, repoName, re.getUrl());
                     r.put(repoName, new RepositoryEntry(re.getId(), re.getProjectId(), re.getName(),
-                            re.getUrl(), re.getBranch(), re.getCommitId(), re.getPath(), re.getSecret(), hookId));
+                            re.getUrl(), re.getBranch(), re.getCommitId(), re.getPath(), re.getSecret(), success));
                 });
 
                 insertRepos(tx, orgId, orgName, pId, entry.getName(), r, false);
@@ -110,17 +110,14 @@ public class ProjectManager {
                     entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload());
 
             if (repos != null) {
-                repositoryDao.list(tx, projectId)
-                        .forEach(re -> githubWebhookService.unregister(projectId, re.getName(), re.getUrl()));
-
                 repositoryDao.deleteAll(tx, projectId);
 
                 Map<String, RepositoryEntry> r = new HashMap<>();
 
                 repos.forEach((repoName, re) -> {
-                    Long hookId = githubWebhookService.register(projectId, re.getName(), re.getUrl());
+                    boolean success = githubWebhookService.register(projectId, re.getName(), re.getUrl());
                     r.put(re.getName(), new RepositoryEntry(re.getId(), re.getProjectId(), re.getName(),
-                            re.getUrl(), re.getBranch(), re.getCommitId(), re.getPath(), re.getSecret(), hookId));
+                            re.getUrl(), re.getBranch(), re.getCommitId(), re.getPath(), re.getSecret(), success));
                 });
 
                 insertRepos(tx, orgId, prevEntry.getOrgName(), projectId, entry.getName(), repos, true);
@@ -131,11 +128,7 @@ public class ProjectManager {
     public void delete(UUID projectId) {
         accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
 
-        projectDao.tx(tx -> {
-            repositoryDao.list(tx, projectId)
-                    .forEach(re -> githubWebhookService.unregister(projectId, re.getName(), re.getUrl()));
-            projectDao.delete(tx, projectId);
-        });
+        projectDao.delete(projectId);
     }
 
     public List<ProjectEntry> list(UUID orgId) {
@@ -185,7 +178,7 @@ public class ProjectManager {
                     trim(req.getCommitId()),
                     trim(req.getPath()),
                     secretId,
-                    req.getWebhookId());
+                    req.isHasWebHook());
 
             Map<String, Object> ev;
             if (update) {

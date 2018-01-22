@@ -95,10 +95,10 @@ public class CrudIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(projectName1,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, null))));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, false))));
 
         projectResource.createOrUpdate(new ProjectEntry(projectName2,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, null))));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, false))));
     }
 
     @Test(timeout = 30000)
@@ -259,7 +259,7 @@ public class CrudIT extends AbstractServerIT {
 
         projectResource.createOrUpdate(new ProjectEntry(projectName,
                 Collections.singletonMap(repositoryName,
-                        new RepositoryEntry(null, null, repositoryName, "http://localhost", null, null, null, null, null))));
+                        new RepositoryEntry(null, null, repositoryName, "http://localhost", null, null, null, null, false))));
 
         // --- create
         LandingEntry entry = new LandingEntry(null, null, null, null, projectName, repositoryName, name, description, icon);

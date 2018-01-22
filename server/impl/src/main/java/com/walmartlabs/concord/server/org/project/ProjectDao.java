@@ -140,7 +140,7 @@ public class ProjectDao extends AbstractDao {
                 return null;
             }
 
-            Result<Record9<UUID, UUID, String, String, String, String, String, Long, String>> repos = tx.select(
+            Result<Record9<UUID, UUID, String, String, String, String, String, Boolean, String>> repos = tx.select(
                     REPOSITORIES.REPO_ID,
                     REPOSITORIES.PROJECT_ID,
                     REPOSITORIES.REPO_NAME,
@@ -148,7 +148,7 @@ public class ProjectDao extends AbstractDao {
                     REPOSITORIES.REPO_BRANCH,
                     REPOSITORIES.REPO_COMMIT_ID,
                     REPOSITORIES.REPO_PATH,
-                    REPOSITORIES.WEBHOOK_ID,
+                    REPOSITORIES.HAS_WEBHOOK,
                     SECRETS.SECRET_NAME)
                     .from(REPOSITORIES)
                     .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID))
@@ -156,7 +156,7 @@ public class ProjectDao extends AbstractDao {
                     .fetch();
 
             Map<String, RepositoryEntry> m = new HashMap<>();
-            for (Record9<UUID, UUID, String, String, String, String, String, Long, String> repo : repos) {
+            for (Record9<UUID, UUID, String, String, String, String, String, Boolean, String> repo : repos) {
                 m.put(repo.get(REPOSITORIES.REPO_NAME),
                         new RepositoryEntry(
                                 repo.get(REPOSITORIES.REPO_ID),
@@ -167,7 +167,7 @@ public class ProjectDao extends AbstractDao {
                                 repo.get(REPOSITORIES.REPO_COMMIT_ID),
                                 repo.get(REPOSITORIES.REPO_PATH),
                                 repo.get(SECRETS.SECRET_NAME),
-                                repo.get(REPOSITORIES.WEBHOOK_ID)));
+                                repo.get(REPOSITORIES.HAS_WEBHOOK)));
             }
 
             Map<String, Object> cfg = deserialize(r.get(cfgField));

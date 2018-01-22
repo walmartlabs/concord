@@ -56,6 +56,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final RepositoryCacheDao repositoryCacheDao;
+    private final GithubWebhookManager webhookManager;
 
     @Inject
     public GithubEventResourceImpl(ProjectDao projectDao,
@@ -63,47 +64,56 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
                                    RepositoryDao repositoryDao,
                                    RepositoryCacheDao repositoryCacheDao,
                                    PayloadManager payloadManager,
-                                   ProcessManager processManager) {
+                                   ProcessManager processManager,
+                                   GithubWebhookManager webhookManager) {
 
         super(payloadManager, processManager, triggersDao, projectDao);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.repositoryCacheDao = repositoryCacheDao;
+        this.webhookManager = webhookManager;
     }
 
     @Override
-    public String push(UUID projectId, String repoName, Map<String, Object> event) {
+    public String push(Map<String, Object> event) {
         if (event == null) {
             return "ok";
         }
 
-        UUID repoId = repositoryDao.getId(projectId, repoName);
+        Map<String, Object> repo = (Map<String, Object>) event.getOrDefault("repository", Collections.emptyMap());
+        String repoName = (String)repo.get("full_name");
+        if (repoName == null) {
+            return "ok";
+        }
+
+        List<RepositoryEntry> repos = repositoryDao.find(repoName);
+        if (repos.isEmpty()) {
+            log.info("push ['{}'] -> repository not found, delete webhook", repoName);
+            webhookManager.unregister(repoName);
+            return "ok";
+        }
 
         String eventBranch = getBranch(event);
-        RepositoryEntry repo = repositoryDao.get(projectId, repoId);
-        if (repo == null) {
-            log.warn("push ['{}', '{}', '{}'] -> repo not found", projectId, repoId, eventBranch);
-            return "ok";
+
+        for (RepositoryEntry r :repos) {
+            String rBranch = Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH);
+            if (!rBranch.equals(eventBranch)) {
+                continue;
+            }
+
+            repositoryCacheDao.updateLastPushDate(r.getId(), new Date());
+
+            ProjectEntry project = projectDao.get(r.getProjectId());
+
+            Map<String, Object> triggerConditions = buildConditions(r, event);
+            Map<String, Object> triggerEvent = buildTriggerEvent(event, r, project, triggerConditions);
+
+            String eventId = r.getId().toString();
+            int count = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent);
+
+            log.info("event ['{}', '{}', '{}'] -> {} processes started", eventId, triggerConditions, triggerEvent, count);
         }
-
-        ProjectEntry project = projectDao.get(projectId);
-
-        String repoBranch = Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH);
-        if (!repoBranch.equals(eventBranch)) {
-            log.info("push ['{}', '{}', '{}'] -> ignore, expected branch '{}'", project, repoId, eventBranch, repoBranch);
-            return "ok";
-        }
-
-        repositoryCacheDao.updateLastPushDate(repoId, new Date());
-
-        Map<String, Object> triggerConditions = buildConditions(repo, event);
-        Map<String, Object> triggerEvent = buildTriggerEvent(event, repo, project, triggerConditions);
-
-        String eventId = repoId.toString();
-        int count = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent);
-
-        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
 
         return "ok";
     }

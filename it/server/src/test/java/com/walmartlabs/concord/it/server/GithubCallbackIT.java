@@ -20,10 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.events.GithubEventResource;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +36,6 @@ public class GithubCallbackIT extends AbstractServerIT {
     // for empty event and '123qwe' secret
     private static final String AUTH = "sha1=047cfb383db684bdfccc2c333698b70ee98e65d2";
 
-    private static final UUID concordTriggersProject = UUID.fromString("ad76f1e2-c33c-11e7-8064-f7371c66fa77");
     private static final String concordTriggersRepoName = "triggers";
 
     @Test(timeout = 30000)
@@ -42,7 +43,9 @@ public class GithubCallbackIT extends AbstractServerIT {
         setGithubKey(AUTH);
 
         GithubEventResource githubResource = proxy(GithubEventResource.class);
-        String result = githubResource.push(concordTriggersProject, concordTriggersRepoName, new HashMap<>());
+        Map<String, Object> event = new HashMap<>();
+        event.put("repository", ImmutableMap.of("full_name", concordTriggersRepoName));
+        String result = githubResource.push(event);
         assertNotNull(result);
         assertEquals("ok", result);
     }

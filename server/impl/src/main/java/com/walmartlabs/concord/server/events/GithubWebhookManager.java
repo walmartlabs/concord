@@ -58,53 +58,54 @@ public class GithubWebhookManager {
         }
     }
 
-    public Long register(String repoName, String webhookUrl) {
+    public Long register(String githubRepoName) {
         try {
             if (gh == null) {
-                log.warn("register ['{}', '{}'] -> not configured, ignored", repoName, webhookUrl);
+                log.warn("register ['{}'] -> not configured, ignored", githubRepoName);
                 return null;
             }
-            GHRepository repo = gh.getRepository(repoName);
+            GHRepository repo = gh.getRepository(githubRepoName);
 
             final Map<String, String> config = new HashMap<>();
-            config.put("url", webhookUrl);
+            config.put("url", cfg.getWebhookUrl());
             config.put("content_type", "json");
             config.put("secret", cfg.getSecret());
 
             GHHook hook = repo.createHook("web", config, EVENTS, true);
 
-            log.info("register ['{}', '{}'] -> ok (id: {})", repoName, webhookUrl, hook.getId());
+            log.info("register ['{}'] -> ok (id: {})", githubRepoName, hook.getId());
             return hook.getId();
         } catch (GHFileNotFoundException e) {
-            log.warn("register ['{}', '{}'] -> the repository not found", repoName, webhookUrl);
+            log.warn("register ['{}'] -> the repository not found", githubRepoName);
             return null;
         } catch (IOException e) {
-            log.error("register ['{}', '{}'] -> error", repoName, webhookUrl, e);
+            log.error("register ['{}'] -> error", githubRepoName, e);
             return null;
         }
     }
 
-    public void unregister(String repoName, String webhookUrl) {
+    public void unregister(String githubRepoName) {
         try {
             if (gh == null) {
-                log.warn("unregister ['{}', '{}'] -> not configured, ignored", repoName, webhookUrl);
+                log.warn("unregister ['{}'] -> not configured, ignored", githubRepoName);
                 return;
             }
 
-            GHRepository repo = gh.getRepository(repoName);
+            GHRepository repo = gh.getRepository(githubRepoName);
 
             List<GHHook> hooks = repo.getHooks().stream()
                     .filter(h -> h.getConfig() != null)
-                    .filter(h -> webhookUrl.equals(h.getConfig().get("url")))
+                    .filter(h -> h.getConfig().get("url") != null)
+                    .filter(h -> h.getConfig().get("url").startsWith(cfg.getWebhookUrl()))
                     .collect(Collectors.toList());
 
             hooks.forEach(this::deleteWebhook);
 
-            log.info("unregister ['{}', '{}'] -> ok", repoName, webhookUrl);
+            log.info("unregister ['{}'] -> ok", githubRepoName);
         } catch (GHFileNotFoundException e) {
-            log.warn("unregister ['{}', '{}'] -> the webhook not found", repoName, webhookUrl);
+            log.warn("unregister ['{}'] -> the webhook not found", githubRepoName);
         } catch (IOException e) {
-            log.error("unregister ['{}', '{}'] -> error: {}", repoName, webhookUrl, e.getMessage());
+            log.error("unregister ['{}'] -> error: {}", githubRepoName, e.getMessage());
         }
     }
 

@@ -56,10 +56,10 @@ public class RepositoryEntry implements Serializable {
     @ConcordKey
     private final String secret;
 
-    private final Long webhookId;
+    private final boolean hasWebHook;
 
     public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, null, null);
+        this(null, null, name, url, null, null, null, null, false);
     }
 
     @JsonCreator
@@ -72,7 +72,7 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("commitId") String commitId,
                            @JsonProperty("path") String path,
                            @JsonProperty("secret") String secret,
-                           @JsonProperty("webhookId") Long webhookId) {
+                           @JsonProperty("hasWebHook") boolean hasWebHook) {
 
         this.id = id;
         this.projectId = projectId;
@@ -82,7 +82,7 @@ public class RepositoryEntry implements Serializable {
         this.commitId = commitId;
         this.path = path;
         this.secret = secret;
-        this.webhookId = webhookId;
+        this.hasWebHook = hasWebHook;
     }
 
     public UUID getId() {
@@ -117,8 +117,8 @@ public class RepositoryEntry implements Serializable {
         return secret;
     }
 
-    public Long getWebhookId() {
-        return webhookId;
+    public boolean isHasWebHook() {
+        return hasWebHook;
     }
 
     @Override
@@ -132,7 +132,7 @@ public class RepositoryEntry implements Serializable {
                 ", commitId='" + commitId + '\'' +
                 ", path='" + path + '\'' +
                 ", secret='" + secret + '\'' +
-                ", webhookId=" + webhookId +
+                ", hasWebHook=" + hasWebHook +
                 '}';
     }
 }

@@ -72,33 +72,31 @@ public class GithubWebhookService {
         t.start();
     }
 
-    public Long register(UUID projectId, String repoName, String repoUrl) {
+    public boolean register(UUID projectId, String repoName, String repoUrl) {
         if(!needWebhookForRepository(repoUrl)) {
             log.info("register ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoName, repoUrl);
-            return null;
+            return false;
         }
 
-        String webhookUrl = createWebHookUrl(projectId, repoName);
         String githubRepoName = GithubUtils.getRepositoryName(repoUrl);
 
-        Long id = webhookManager.register(githubRepoName, webhookUrl);
+        Long id = webhookManager.register(githubRepoName);
 
-        log.info("register ['{}', '{}', '{}'] -> ok (git repo: '{}')",
-                projectId, repoName, repoUrl, githubRepoName);
+        log.info("register ['{}', '{}', '{}'] -> {} (git repo: '{}')",
+                projectId, repoName, repoUrl, id, githubRepoName);
 
-        return id;
+        return id != null;
     }
 
-    public void unregister(UUID projectId, String repoName, String repoUrl) {
+    private void unregister(UUID projectId, String repoName, String repoUrl) {
         if(!needWebhookForRepository(repoUrl)) {
             log.info("unregister ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoName, repoUrl);
             return;
         }
 
-        String webhookUrl = createWebHookUrl(projectId, repoName);
         String githubRepoName = GithubUtils.getRepositoryName(repoUrl);
 
-        webhookManager.unregister(githubRepoName, webhookUrl);
+        webhookManager.unregister(githubRepoName);
 
         log.info("unregister ['{}', '{}', '{}'] -> ok (git repo: '{}')",
                 projectId, repoName, repoUrl, githubRepoName);
@@ -106,10 +104,6 @@ public class GithubWebhookService {
 
     private boolean needWebhookForRepository(String repoUrl) {
         return repoUrl.contains(cfg.getGithubUrl());
-    }
-
-    private String createWebHookUrl(UUID projectId, String repoName) {
-        return cfg.getWebhookUrl() + "/" + projectId + "/" + repoName;
     }
 
     private class HookRefresher implements Runnable {
@@ -139,8 +133,8 @@ public class GithubWebhookService {
         private void refreshWebhook(UUID projectId, UUID repoId, String repoName, String repoUrl) {
             try {
                 unregister(projectId, repoName, repoUrl);
-                Long hookId = register(projectId, repoName, repoUrl);
-                dao.update(repoId, hookId);
+                boolean success = register(projectId, repoName, repoUrl);
+                dao.update(repoId, success);
             } catch (Exception e) {
                 log.warn("refreshWebhook ['{}', '{}', '{}'] -> failed: {}", projectId, repoName, repoUrl, e.getMessage());
             }
@@ -171,10 +165,10 @@ public class GithubWebhookService {
             }
         }
 
-        public void update(UUID repoId, Long hookId) {
+        public void update(UUID repoId, boolean hasWebHook) {
             tx(tx ->
                 tx.update(REPOSITORIES)
-                        .set(REPOSITORIES.WEBHOOK_ID, value(hookId))
+                        .set(REPOSITORIES.HAS_WEBHOOK, value(hasWebHook))
                         .where(REPOSITORIES.REPO_ID.eq(repoId))
                         .execute());
         }
