@@ -11,6 +11,7 @@
 * [multiple_flows](multiple_flows) - multiple flows in a single YAML file;
 * [oneops](oneops) - OneOps integration example;
 * [out](out) - how to use process OUT variables;
+* [out_groovy](out_groovy) - using OUT variables coming from Groovy scripts;
 * [project_file](project_file) - basic usage of a `concord.yml` project file;
 * [slack](slack) - sending a message to a Slack channel;
 * [smtp](smtp) - using SMTP task;
