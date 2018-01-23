@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +68,7 @@ public class GithubConfiguration {
             this.githubUrl = props.getProperty("githubUrl");
             this.refreshInterval = Utils.getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
             this.cacheEnabled = Utils.getBoolean(props, "cacheEnabled", false);
-            this.useJgit = Utils.getBoolean(props, "useJgit", false);
+            this.useJgit = Utils.getBoolean(props, "useJgit", true);
 
             this.enabled = true;
         } else {
@@ -80,7 +79,7 @@ public class GithubConfiguration {
             this.githubUrl = "";
             this.refreshInterval = DEFAULT_REFRESH_INTERVAL;
             this.cacheEnabled = false;
-            this.useJgit = false;
+            this.useJgit = true;
 
             this.enabled = false;
 
