@@ -1,8 +1,8 @@
 .mainMenu {
-    border: none !important;
-    border-radius: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
 }
 
 .mainContent {
-    overflow-y: auto;
+  overflow-y: auto;
 }

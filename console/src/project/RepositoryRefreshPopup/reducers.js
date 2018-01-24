@@ -18,52 +18,52 @@
  * =====
  */
 // @flow
-import {combineReducers} from "redux";
-import types from "./actions";
+import { combineReducers } from 'redux';
+import types from './actions';
 
-const refreshResult = (state: any = null, {type, response, error}: any) => {
-    switch (type) {
-        case types.REPOSITORY_REFRESH_RESPONSE:
-            if (error) {
-                return false;
-            }
-            return response;
-        case types.REPOSITORY_REFRESH_REQUEST:
-        case types.REPOSITORY_REFRESH_RESET:
-            return null;
-        default:
-            return state;
-    }
+const refreshResult = (state: any = null, { type, response, error }: any) => {
+  switch (type) {
+    case types.REPOSITORY_REFRESH_RESPONSE:
+      if (error) {
+        return false;
+      }
+      return response;
+    case types.REPOSITORY_REFRESH_REQUEST:
+    case types.REPOSITORY_REFRESH_RESET:
+      return null;
+    default:
+      return state;
+  }
 };
 
-const refreshing = (state = false, {type}: any) => {
-    switch (type) {
-        case types.REPOSITORY_REFRESH_REQUEST:
-            return true;
-        case types.REPOSITORY_REFRESH_RESPONSE:
-        case types.REPOSITORY_REFRESH_RESET:
-            return false;
-        default:
-            return state;
-    }
+const refreshing = (state = false, { type }: any) => {
+  switch (type) {
+    case types.REPOSITORY_REFRESH_REQUEST:
+      return true;
+    case types.REPOSITORY_REFRESH_RESPONSE:
+    case types.REPOSITORY_REFRESH_RESET:
+      return false;
+    default:
+      return state;
+  }
 };
 
-const refreshError = (state: any = null, {type, error, message}: any) => {
-    switch (type) {
-        case types.REPOSITORY_REFRESH_RESPONSE:
-            if (!error) {
-                return null;
-            }
-            return message;
-        case types.REPOSITORY_REFRESH_REQUEST:
-        case types.REPOSITORY_REFRESH_RESET:
-            return null;
-        default:
-            return state;
-    }
+const refreshError = (state: any = null, { type, error, message }: any) => {
+  switch (type) {
+    case types.REPOSITORY_REFRESH_RESPONSE:
+      if (!error) {
+        return null;
+      }
+      return message;
+    case types.REPOSITORY_REFRESH_REQUEST:
+    case types.REPOSITORY_REFRESH_RESET:
+      return null;
+    default:
+      return state;
+  }
 };
 
-export default combineReducers({refreshResult, refreshing, refreshError});
+export default combineReducers({ refreshResult, refreshing, refreshError });
 
 export const isRefreshing = (state: any) => state && state.refreshing;
 export const getRefreshResult = (state: any) => state && state.refreshResult;

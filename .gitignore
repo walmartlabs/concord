@@ -11,6 +11,8 @@ pom.xml.versionsBackup
 .settings
 .pmdruleset.xml
 .pmd
+.vscode
+.DS_Store
 nohup.out
 node_modules/
 nb-configuration.xml

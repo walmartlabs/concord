@@ -18,27 +18,43 @@
  * =====
  */
 // @flow
-import type {ConcordKey} from "../../types";
-import * as common from "../../api";
+import type { ConcordKey } from '../../types';
+import * as common from '../../api';
 
-export const refreshRepository = (orgName: ConcordKey, projectName: ConcordKey, repositoryName: ConcordKey): Promise<any> => {
-    console.debug("API: refreshRepository ['%s', '%s', '%s'] -> starting...", orgName, projectName, repositoryName);
+export const refreshRepository = (
+  orgName: ConcordKey,
+  projectName: ConcordKey,
+  repositoryName: ConcordKey
+): Promise<any> => {
+  console.debug(
+    "API: refreshRepository ['%s', '%s', '%s'] -> starting...",
+    orgName,
+    projectName,
+    repositoryName
+  );
 
-    const opts = {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    };
+  const opts = {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
 
-    return fetch(`/api/v1/org/${orgName}/project/${projectName}/repository/${repositoryName}/refresh`, opts)
-        .then(response => {
-            if (!response.ok) {
-                return common.parseError(response);
-            }
+  return fetch(
+    `/api/v1/org/${orgName}/project/${projectName}/repository/${repositoryName}/refresh`,
+    opts
+  ).then((response) => {
+    if (!response.ok) {
+      return common.parseError(response);
+    }
 
-            console.debug("API: refreshRepository ['%s', '%s', '%s'] -> done", orgName, projectName, repositoryName);
-            return true;
-        });
+    console.debug(
+      "API: refreshRepository ['%s', '%s', '%s'] -> done",
+      orgName,
+      projectName,
+      repositoryName
+    );
+    return true;
+  });
 };

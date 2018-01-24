@@ -17,9 +17,9 @@
  * limitations under the License.
  * =====
  */
-import * as actions from "./actions";
-import reducers from "./reducers";
-import * as selectors from "./reducers";
-import sagas from "./sagas";
+import * as actions from './actions';
+import reducers from './reducers';
+import * as selectors from './reducers';
+import sagas from './sagas';
 
-export {actions, selectors, reducers, sagas};
+export { actions, selectors, reducers, sagas };

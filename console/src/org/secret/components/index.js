@@ -17,4 +17,4 @@
  * limitations under the License.
  * =====
  */
-export { default as NewSecretForm } from "./NewSecretForm";
+export { default as NewSecretForm } from './NewSecretForm';

@@ -1,26 +1,26 @@
 html {
-    height: 100% !important;
-    min-height: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
 }
 
 body {
-    min-height: 100% !important;
+  min-height: 100% !important;
 }
 
 #root {
-    height: 100% !important;
-    min-height: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
 }
 
 .maxHeight {
-    min-height: 100% !important;
+  min-height: 100% !important;
 }
 
 .tight {
-    padding: 0 !important;
-    margin: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .hidden {
-    display: none !important;
+  display: none !important;
 }
