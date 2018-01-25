@@ -62,7 +62,7 @@ const renderDataFields = (secretTypeValue) => {
       return (
         <Form.Group unstackable widths={2}>
           <Field name="username" label="Username" required />
-          <Field name="password" label="Password" required />
+          <Field name="password" label="Password" type="password" required />
         </Form.Group>
       );
     }
