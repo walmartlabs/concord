@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: JGit is replaced with the GIT CLI tool, improving
+the support for submodules and large repositories.
+
+
+
 ## [0.52.0] - 2017-01-23
 
 ### Changed
