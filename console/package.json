@@ -23,15 +23,17 @@
     "react-semantic-redux-form": "^1.1.4",
     "react-test-renderer": "^15.6.1",
     "redux-devtools-extension": "^2.13.2",
+    "shx": "^0.2.2",
     "watchman": "^0.1.8"
   },
   "dependencies": {
-    "react-copy-to-clipboard": "^5.0.1",
     "git-url-parse": "^7.0.1",
     "js-cookie": "2.1.4",
+    "lato-font": "^3.0.0",
     "moment": "2.19.1",
     "prop-types": "15.6.0",
     "react": "15.6.2",
+    "react-copy-to-clipboard": "^5.0.1",
     "react-dom": "15.6.2",
     "react-redux": "5.0.6",
     "react-router": "3.0.5",
@@ -46,7 +48,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build":
+      "shx --silent sed -i @import /*import node_modules/semantic-ui-css/semantic.min.css > /dev/null 2>&1 && react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "coverage": "npm test -- --coverage",
     "eject": "react-scripts eject",

@@ -41,6 +41,8 @@ import SecretList from './org/secret/list';
 import CreateSecretPage from './org/secret/create';
 import { actions as session } from './session';
 import './index.css';
+import 'lato-font/css/lato-font.min.css';
+import 'semantic-ui-css/semantic.min.css';
 
 const store = configureStore(hashHistory, reducers);
 
