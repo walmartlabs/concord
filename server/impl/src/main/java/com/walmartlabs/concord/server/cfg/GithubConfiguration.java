@@ -68,7 +68,7 @@ public class GithubConfiguration {
             this.githubUrl = props.getProperty("githubUrl");
             this.refreshInterval = Utils.getLong(props, "refreshInterval", DEFAULT_REFRESH_INTERVAL);
             this.cacheEnabled = Utils.getBoolean(props, "cacheEnabled", false);
-            this.useJgit = Utils.getBoolean(props, "useJgit", true);
+            this.useJgit = Utils.getBoolean(props, "useJgit", false);
 
             this.enabled = true;
         } else {
@@ -79,7 +79,7 @@ public class GithubConfiguration {
             this.githubUrl = "";
             this.refreshInterval = DEFAULT_REFRESH_INTERVAL;
             this.cacheEnabled = false;
-            this.useJgit = true;
+            this.useJgit = false;
 
             this.enabled = false;
 

@@ -31,19 +31,20 @@ import com.walmartlabs.concord.server.org.project.RepositoryException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
@@ -112,10 +113,120 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         }
 
         checkoutCommand(dest, rev.name());
+
+        if (hasGitModules(dest)) {
+            fetchSubmodules(dest, secret);
+        }
+    }
+
+    private void fetchSubmodules(Path dest, Secret secret) {
+        launchCommand(dest, "submodule", "init");
+
+        launchCommand(dest, "submodule", "sync");
+
+        submoduleUpdate(dest, secret);
     }
 
     // based on the code from https://github.com/jenkinsci/git-plugin
     // MIT License, Copyright 2014 Nicolas De loof
+
+    /* git config --get-regex applies the regex to match keys, and returns all matches (including substring matches).
+     * Thus, a config call:
+     *   git config -f .gitmodules --get-regexp "^submodule\.([^ ]+)\.url"
+     * will report two lines of output if the submodule URL includes ".url":
+     *   submodule.modules/JENKINS-46504.url.path modules/JENKINS-46504.url
+     *   submodule.modules/JENKINS-46504.url.url https://github.com/MarkEWaite/JENKINS-46054.url
+     * The code originally used the same pattern for get-regexp and for output parsing.
+     * By using the same pattern in both places, it incorrectly took the first line
+     * of output as the URL of a submodule (when it is instead the path of a submodule).
+     */
+    private final static String SUBMODULE_REMOTE_PATTERN_CONFIG_KEY = "^submodule\\.([^ ]+)\\.url";
+
+    /* See comments for SUBMODULE_REMOTE_PATTERN_CONFIG_KEY to explain why this
+     * regular expression string adds the trailing space character as part of its match.
+     * Without the trailing whitespace character in the pattern, too many matches are found.
+     */
+    /* Package protected for testing */
+    final static String SUBMODULE_REMOTE_PATTERN_STRING = SUBMODULE_REMOTE_PATTERN_CONFIG_KEY + "\\b\\s";
+
+    private void submoduleUpdate(Path dest, Secret secret) {
+        List<String> args = new ArrayList<>();
+        args.add("submodule");
+        args.add("update");
+
+        args.add("--init");
+        args.add("--recursive");
+
+        // We need to call submodule update for each configured
+        // submodule. Note that we can't reliably depend on the
+        // getSubmodules() since it is possible "HEAD" doesn't exist,
+        // and we don't really want to recursively find all possible
+        // submodules, just the ones for this super project. Thus,
+        // loop through the config output and parse it for configured
+        // modules.
+        String cfgOutput = null;
+        try {
+            // We might fail if we have no modules, so catch this
+            // exception and just return.
+            cfgOutput = launchCommand(dest, "config", "-f", ".gitmodules", "--get-regexp", SUBMODULE_REMOTE_PATTERN_CONFIG_KEY);
+        } catch (RepositoryException e) {
+            log.info("No submodules found.");
+            return;
+        }
+
+        // Use a matcher to find each configured submodule name, and
+        // then run the submodule update command with the provided
+        // path.
+        Pattern pattern = Pattern.compile(SUBMODULE_REMOTE_PATTERN_STRING, Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(cfgOutput);
+        while (matcher.find()) {
+            List<String> perModuleArgs = new ArrayList<>(args);
+            String sModuleName = matcher.group(1);
+
+            // Find the URL for this submodule
+            URIish urIish = null;
+            try {
+                urIish = new URIish(getSubmoduleUrl(dest, sModuleName));
+            } catch (URISyntaxException e) {
+                log.error("Invalid repository for " + sModuleName);
+                throw new RepositoryException("Invalid repository for " + sModuleName);
+            }
+
+            // Find the path for this submodule
+            String sModulePath = getSubmodulePath(dest, sModuleName);
+
+            perModuleArgs.add(sModulePath);
+            launchCommandWithCredentials(dest, perModuleArgs, secret);
+        }
+    }
+
+    private String getSubmoduleUrl(Path dest, String name) {
+        String result = launchCommand(dest, "config", "--get", "submodule." + name + ".url");
+        String s = firstLine(result);
+        return s != null ? s.trim() : s;
+    }
+
+    private String getSubmodulePath(Path dest, String name) {
+        String result = launchCommand(dest, "config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
+        String s = firstLine(result);
+        return s != null ? s.trim() : s;
+    }
+
+    private String firstLine(String result) {
+        BufferedReader reader = new BufferedReader(new StringReader(result));
+        String line;
+        try {
+            line = reader.readLine();
+            if (line == null)
+                return null;
+            if (reader.readLine() != null)
+                throw new RepositoryException("Unexpected multiple lines: " + result);
+        } catch (IOException e) {
+            throw new RepositoryException("Error parsing result", e);
+        }
+
+        return line;
+    }
 
     private ObjectId getCommitRevision(Path dest, String commitId) {
         try {
@@ -144,9 +255,9 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             String fqbn;
             if (branchSpec.startsWith(repository + "/")) {
                 fqbn = "refs/remotes/" + branchSpec;
-            } else if(branchSpec.startsWith("remotes/" + repository + "/")) {
+            } else if (branchSpec.startsWith("remotes/" + repository + "/")) {
                 fqbn = "refs/" + branchSpec;
-            } else if(branchSpec.startsWith("refs/heads/")) {
+            } else if (branchSpec.startsWith("refs/heads/")) {
                 fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
             } else {
                 //Try branchSpec as it is - e.g. "refs/tags/mytag"
@@ -202,6 +313,11 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         }
         return true;
     }
+
+    private boolean hasGitModules(Path dest) {
+        return Files.exists(dest.resolve(".gitmodules"));
+    }
+
 
     private void cloneCommand(Path dest, String url, Secret secret, boolean shallow) {
         log.info("Cloning repository '{}' into '{}'", url, dest.toString());
@@ -281,7 +397,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
                 KeyPair keyPair = (KeyPair) secret;
 
                 key = createSshKeyFile(keyPair);
-                ssh =  createUnixGitSSH(key);
+                ssh = createUnixGitSSH(key);
 
                 env.put("GIT_SSH", ssh.toAbsolutePath().toString());
 
@@ -317,7 +433,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     private String launchCommand(Path workDir, String... args) throws RepositoryException {
         List<String> listArgs = Arrays.asList(args);
         Map<String, String> env = new HashMap<>();
-        return launchCommand(workDir,env, listArgs);
+        return launchCommand(workDir, env, listArgs);
     }
 
     private String launchCommand(Path workDir, Map<String, String> envVars, List<String> args) {
