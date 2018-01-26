@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- docker: Walmart images are now include Walmart's Root CA SSL
+certificates.
+
 ### Changed
 
 - concord-server: JGit is replaced with the GIT CLI tool, improving
