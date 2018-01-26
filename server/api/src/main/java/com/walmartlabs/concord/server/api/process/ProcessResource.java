@@ -250,7 +250,7 @@ public interface ProcessResource {
      */
     @GET
     @ApiOperation("Download a process' attachment")
-    @Path("/{id}/attachment/{name}")
+    @Path("/{id}/attachment/{name:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response downloadAttachment(@ApiParam @PathParam("id") UUID instanceId,
                                 @PathParam("name") @NotNull @Size(min = 1) String attachmentName);

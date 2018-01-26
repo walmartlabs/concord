@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: support for nested paths when retrieving
+attachments;
 - docker: Walmart images are now include Walmart's Root CA SSL
 certificates.
 
