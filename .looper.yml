@@ -58,13 +58,13 @@ flows:
         - (name build) mvn -U -B -s $MVN_SETTINGS clean install -DskipTests
         - ws_snapshot: binaries
       - ws_restore: binaries
-      - call: buildImages(concord_version = latest-snapshot-looper)
+      - call: buildImages
 
   cleanup:
     - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
 
   default:
-    - call: build
+    - call: build(concord_version = latest-master-looper)
 
   pr:
-    - call: build
+    - call: build(concord_version = latest-pr-looper)
