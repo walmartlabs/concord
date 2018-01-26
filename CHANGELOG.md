@@ -11,6 +11,7 @@ certificates.
 
 ### Changed
 
+- concord-console: embed the Semantic UI resources;
 - concord-server: JGit is replaced with the GIT CLI tool, improving
 the support for submodules and large repositories.
 
