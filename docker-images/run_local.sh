@@ -12,7 +12,7 @@ docker run -d \
 -e 'POSTGRES_PASSWORD=q1' \
 -p 5432:5432 \
 --network=host \
-hub.docker.prod.walmart.com/library/postgres:latest
+library/postgres:latest
 
 docker run -d \
 --name server \
@@ -30,7 +30,7 @@ docker run -d \
 --name dind \
 -v /tmp:/tmp \
 --network=host \
-docker.prod.walmart.com/walmartlabs/concord-dind \
+docker:stable-dind \
 -H tcp://127.0.0.1:6666
 
 docker run -d \
