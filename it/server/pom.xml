@@ -15,6 +15,8 @@
 
     <properties>
         <db.image>library/postgres</db.image>
+        <server.image>walmartlabs/concord-server</server.image>
+        <agent.image>walmartlabs/concord-agent</agent.image>
         <dind.image>docker:stable-dind</dind.image>
         <deps.dir>${project.build.directory}/deps</deps.dir>
         <docker.host.addr>127.0.0.1</docker.host.addr>
@@ -304,7 +306,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>walmartlabs/concord-server</name>
+                                    <name>${server.image}</name>
                                     <alias>server</alias>
                                     <run>
                                         <network>
@@ -351,7 +353,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>walmartlabs/concord-agent</name>
+                                    <name>${agent.image}</name>
                                     <alias>agent</alias>
                                     <run>
                                         <network>
@@ -382,7 +384,9 @@
             <id>walmart</id>
             <properties>
                 <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
+                <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
                 <dind.image>docker.prod.walmart.com/walmartlabs/concord-dind</dind.image>
+                <agent.image>docker.prod.walmart.com/walmartlabs/concord-agent</agent.image>
             </properties>
         </profile>
     </profiles>
