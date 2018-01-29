@@ -1,0 +1,17 @@
+configuration:
+  arguments:
+    # alternatively, a form, an encrypted value or an external
+    # service can be used to retrieve the password
+    pwd: "12345678"
+
+flows:
+  default:
+
+  # exporting secrets as files
+  - set:
+      myFileA: ${crypto.exportAsFile('myFileA', pwd)}
+      myFileB: ${crypto.exportAsFile('myFileB', pwd)}
+
+  # the resulting variables will contain the path of the exported files
+  - log: "My file A: ${myFileA}"
+  - log: "My file B: ${myFileB}"

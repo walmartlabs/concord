@@ -52,6 +52,7 @@
 * [forms_wizard](forms_wizard) - multi-step forms;
 * [inventory](inventory) - using Concord Inventory to retrieve Ansible's inventory data;
 * [inventory_lookup](inventory_lookup) - using the inventory lookup plugin for Ansible;
+* [secret_files](secret_files) - how to store and export secrets as files;
 * [secrets_lookup](secret_lookup) - using the secret lookup plugin for Ansible;
 * [secrets](secrets) - working with Concord's Secrets storage;
 
