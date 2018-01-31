@@ -81,6 +81,8 @@ public final class AnsibleConstants {
 
     public static final String VERBOSE_LEVEL_KEY = "verbose";
 
+    public static final String DOCKER_OPTS_KEY = "dockerOpts";
+
     private AnsibleConstants() {
     }
 }

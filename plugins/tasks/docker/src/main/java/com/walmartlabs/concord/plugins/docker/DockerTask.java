@@ -50,7 +50,9 @@ public class DockerTask implements Task {
     @InjectVariable(Constants.Context.TX_ID_KEY)
     String txId;
 
-    public void call(String dockerImage, boolean forcePull, boolean debug, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
+    public void call(String dockerImage, boolean forcePull, boolean debug,
+                     String cmd, Map<String, Object> env, String payloadPath,
+                     List<Map.Entry<String, String>> options) {
         try {
             Path workDir = Paths.get(payloadPath);
             Path containerDir = Paths.get(VOLUME_CONTAINER_DEST);
@@ -63,6 +65,7 @@ public class DockerTask implements Task {
                     .env(stringify(env))
                     .entryPoint(entryPoint.toAbsolutePath().toString())
                     .forcePull(forcePull)
+                    .options(options)
                     .debug(debug)
                     .build();
 
@@ -80,11 +83,11 @@ public class DockerTask implements Task {
                         new IllegalStateException("Docker process finished with with exit code " + code));
             }
 
-            log.info("call ['{}', '{}', '{}'] -> done", dockerImage, cmd, payloadPath);
+            log.info("call ['{}', '{}', '{}', '{}'] -> done", dockerImage, cmd, payloadPath, options);
         } catch (BpmnError e) {
             throw e;
         } catch (Exception e) {
-            log.error("call ['{}', '{}', '{}'] -> error", dockerImage, cmd, payloadPath, e);
+            log.error("call ['{}', '{}', '{}', '{}'] -> error", dockerImage, cmd, payloadPath, options, e);
             throw new BpmnError("dockerError", e);
         }
     }

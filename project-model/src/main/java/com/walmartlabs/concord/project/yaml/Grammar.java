@@ -21,6 +21,7 @@ package com.walmartlabs.concord.project.yaml;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
+import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
 import com.walmartlabs.concord.project.yaml.model.*;
 import io.takari.bpm.model.ScriptTask;
 import io.takari.parc.Parser;
@@ -294,7 +295,8 @@ public class Grammar {
                                     (String) options.get("cmd"),
                                     (boolean) options.getOrDefault("forcePull", true),
                                     (boolean) options.getOrDefault("debug", false),
-                                    (Map<String, Object>) options.get("env")))));
+                                    (Map<String, Object>) options.get("env"),
+                                    DockerOptionsConverter.convert(options)))));
 
     // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",

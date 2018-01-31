@@ -4,3 +4,6 @@ main:
     env:
       x: 123
       y: ${txId}
+    hosts:
+      - foo:10.0.0.3
+      - bar:10.7.3.21

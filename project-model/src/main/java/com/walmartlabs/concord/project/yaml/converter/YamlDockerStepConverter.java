@@ -41,7 +41,8 @@ public class YamlDockerStepConverter implements StepConverter<YamlDockerStep> {
                 s.isDebug(),
                 s.getCmd(),
                 s.getEnv(),
-                "${" + InternalConstants.Context.WORK_DIR_KEY + "}");
+                "${" + InternalConstants.Context.WORK_DIR_KEY + "}",
+                s.getOptions());
         ELCall call = createELCall("docker", args);
 
         c.addElement(new ServiceTask(id, ExpressionType.SIMPLE, call.getExpression(), call.getArgs(), null, true));

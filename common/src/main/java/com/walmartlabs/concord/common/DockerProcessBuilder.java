@@ -38,7 +38,9 @@ public class DockerProcessBuilder {
     private String workdir;
     private List<String> args = new ArrayList<>();
     private Map<String, String> env;
-    private List<AbstractMap.SimpleEntry<String, String>> volumes = new ArrayList<>();
+    private List<Map.Entry<String, String>> volumes = new ArrayList<>();
+    private List<Map.Entry<String, String>> options = new ArrayList<>();
+
     private String entryPoint;
     private boolean cleanup = true;
     private boolean debug = false;
@@ -106,6 +108,12 @@ public class DockerProcessBuilder {
             c.add("--entrypoint");
             c.add(entryPoint);
         }
+        options.forEach(o -> {
+            c.add(o.getKey());
+            if (o.getValue() != null) {
+                c.add(o.getValue());
+            }
+        });
         c.add(q(image));
         if (args != null) {
             args.forEach(a -> c.add(q(a)));
@@ -177,11 +185,30 @@ public class DockerProcessBuilder {
         return this;
     }
 
+    public DockerProcessBuilder options(List<Map.Entry<String, String>> options) {
+        this.options.addAll(options);
+        return this;
+    }
+
     private static String q(String s) {
         if (s == null) {
             return null;
         }
 
         return "'" + s + "'";
+    }
+
+    public static class DockerOptionsBuilder {
+
+        private List<Map.Entry<String, String>> options = new ArrayList<>();
+
+        public DockerOptionsBuilder etcHost(String host) {
+            this.options.add(new AbstractMap.SimpleEntry<>("--add-host", host));
+            return this;
+        }
+
+        public List<Map.Entry<String, String>> build() {
+            return options;
+        }
     }
 }

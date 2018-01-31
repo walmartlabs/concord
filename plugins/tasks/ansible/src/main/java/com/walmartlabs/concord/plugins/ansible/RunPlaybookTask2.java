@@ -23,6 +23,7 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
 import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,6 @@ public class RunPlaybookTask2 implements Task {
         this.secretStore = secretStore;
     }
 
-    @SuppressWarnings("unchecked")
     private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilderFactory pb) throws Exception {
         boolean debug = getBoolean(args, AnsibleConstants.DEBUG_KEY, false);
 
@@ -80,7 +80,7 @@ public class RunPlaybookTask2 implements Task {
 
         Path inventoryPath = workDir.relativize(getInventoryPath(args, workDir, tmpDir));
 
-        Map<String, String> extraVars = (Map<String, String>) args.get(AnsibleConstants.EXTRA_VARS_KEY);
+        Map<String, String> extraVars = getMap(args, AnsibleConstants.EXTRA_VARS_KEY);
 
         Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
 
@@ -190,12 +190,16 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Using the docker image: {}", dockerImageName);
+
+        List<Map.Entry<String,String>> dockerOpts = DockerOptionsConverter.convert(getMap(args, AnsibleConstants.DOCKER_OPTS_KEY));
+        log.info("Using the docker options: {}", dockerOpts);
+
         run(args, payloadPath, (playbookPath, inventoryPath) ->
                 new DockerPlaybookProcessBuilder(txId, dockerImageName, payloadPath, playbookPath, inventoryPath)
-                        .withForcePull((boolean) args.getOrDefault(AnsibleConstants.FORCE_PULL_KEY, true)));
+                        .withForcePull(getBoolean(args, AnsibleConstants.FORCE_PULL_KEY, true))
+                        .withDockerOptions(dockerOpts));
     }
 
     @SuppressWarnings("unchecked")
@@ -227,6 +231,7 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.RETRY_KEY);
         addIfPresent(ctx, args, AnsibleConstants.LIMIT_KEY);
         addIfPresent(ctx, args, AnsibleConstants.SAVE_RETRY_FILE);
+        addIfPresent(ctx, args, AnsibleConstants.DOCKER_OPTS_KEY);
 
         String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
@@ -620,13 +625,12 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private static Optional<String> getConcordCfg(Context ctx, String key) {
-        Map<String, String> cfg = (Map<String, String>) ctx.getVariable("concord");
-        if (cfg == null) {
-            return Optional.empty();
+    private static <K, V> Map<K, V> getMap(Map<String, Object> args, String key) {
+        Map<K, V> result = (Map<K, V>) args.get(key);
+        if (result != null) {
+            return result;
         }
-
-        return Optional.ofNullable(cfg.get(key));
+        return null;
     }
 
     private static boolean getBoolean(Map<String, Object> args, String key, boolean defaultValue) {

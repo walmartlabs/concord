@@ -47,6 +47,8 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     private String privateKey;
     private String vaultPasswordFile;
     private Map<String, String> extraEnv = Collections.emptyMap();
+    private List<Map.Entry<String, String>> dockerOpts = Collections.emptyList();
+
     private boolean debug = false;
     private boolean forcePull = true;
     private int verboseLevel = 0;
@@ -125,7 +127,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
         return this;
     }
 
-    public PlaybookProcessBuilder withForcePull(boolean forcePull) {
+    public DockerPlaybookProcessBuilder withForcePull(boolean forcePull) {
         this.forcePull = forcePull;
         return this;
     }
@@ -133,6 +135,11 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     @Override
     public PlaybookProcessBuilder withLimit(String limit) {
         this.limit = limit;
+        return this;
+    }
+
+    public DockerPlaybookProcessBuilder withDockerOptions(List<Map.Entry<String, String>> dockerOpts) {
+        this.dockerOpts = dockerOpts;
         return this;
     }
 
@@ -148,6 +155,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
                 .arg(playbook)
                 .arg("-i", inventory)
                 .args(buildAdditionalArgs())
+                .options(dockerOpts)
                 .debug(debug)
                 .forcePull(forcePull)
                 .build();

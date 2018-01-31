@@ -1202,13 +1202,21 @@ public class YamlParserTest {
 
         // ---
         ArgumentCaptor<Map<String, Object>> c = ArgumentCaptor.forClass(Map.class);
-        verify(task, times(1)).call(eq("test-image"), anyBoolean(), anyBoolean(), eq("test-cmd"), c.capture(), eq("/tmp"));
+        ArgumentCaptor<List<Map.Entry<String, String>>> optionsCaptor = ArgumentCaptor.forClass(List.class);
+
+        verify(task, times(1)).call(eq("test-image"), anyBoolean(), anyBoolean(), eq("test-cmd"), c.capture(), eq("/tmp"), optionsCaptor.capture());
 
         Map<String, Object> m = c.getValue();
         assertNotNull(m);
         assertEquals(2, m.size());
         assertEquals(123, m.get("x"));
         assertEquals(txId, m.get("y"));
+
+        List<Map.Entry<String, String>> opts = optionsCaptor.getValue();
+        assertNotNull(opts);
+        assertEquals(2, opts.size());
+        assertEquals("--add-host", opts.get(0).getKey());
+        assertEquals("foo:10.0.0.3", opts.get(0).getValue());
     }
 
     @Test
@@ -1795,7 +1803,9 @@ public class YamlParserTest {
 
     private static class DockerTask implements Task {
 
-        public void call(String dockerImage, boolean forcePull, boolean debug, String cmd, Map<String, Object> env, String payloadPath) throws Exception {
+        public void call(String dockerImage, boolean forcePull, boolean debug, String cmd,
+                         Map<String, Object> env, String payloadPath,
+                         List<Map.Entry<String, String>> options) throws Exception {
         }
     }
 
