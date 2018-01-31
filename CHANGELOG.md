@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- ansible, docker: support for `--add-host` in the Ansible and Docker
+tasks.
+
+
+
 ## [0.53.0] - 2017-01-28
 
 ### Added
