@@ -55,6 +55,11 @@ public class TeamDao extends AbstractDao {
         super.tx(t);
     }
 
+    @Override
+    protected <T> T txResult(TxResult<T> t) {
+        return super.txResult(t);
+    }
+
     public UUID getId(UUID orgId, String name) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(TEAMS.TEAM_ID)
@@ -158,10 +163,10 @@ public class TeamDao extends AbstractDao {
     }
 
     public void addUser(UUID teamId, UUID userId, TeamRole role) {
-        tx(tx -> addUsers(tx, teamId, userId, role));
+        tx(tx -> addUser(tx, teamId, userId, role));
     }
 
-    public void addUsers(DSLContext tx, UUID teamId, UUID userId, TeamRole role) {
+    public void addUser(DSLContext tx, UUID teamId, UUID userId, TeamRole role) {
         tx.insertInto(USER_TEAMS)
                 .columns(USER_TEAMS.TEAM_ID, USER_TEAMS.USER_ID, USER_TEAMS.TEAM_ROLE)
                 .values(teamId, userId, role.toString())

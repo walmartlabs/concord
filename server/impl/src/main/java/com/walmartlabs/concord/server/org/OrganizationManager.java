@@ -63,7 +63,7 @@ public class OrganizationManager {
 
             // ...add the current user to the default new as an OWNER
             UUID teamId = teamDao.insert(tx, orgId, TeamManager.DEFAULT_TEAM_NAME, "Default team");
-            teamDao.addUsers(tx, teamId, p.getId(), TeamRole.OWNER);
+            teamDao.addUser(tx, teamId, p.getId(), TeamRole.OWNER);
 
             return orgId;
         });

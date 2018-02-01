@@ -80,7 +80,15 @@ public class TeamResourceImpl implements TeamResource, Resource {
             return new CreateTeamResponse(OperationResult.UPDATED, teamId);
         } else {
             teamManager.assertAccess(org.getId(), TeamRole.OWNER);
-            teamId = teamDao.insert(org.getId(), entry.getName(), entry.getDescription());
+            teamId = teamDao.txResult(tx -> {
+                UUID tId = teamDao.insert(tx, org.getId(), entry.getName(), entry.getDescription());
+
+                // add the current user as a team maintainer
+                UUID userId = UserPrincipal.getCurrent().getId();
+                teamDao.addUser(tx, tId, userId, TeamRole.MAINTAINER);
+
+                return tId;
+            });
             return new CreateTeamResponse(OperationResult.CREATED, teamId);
         }
     }
@@ -122,7 +130,7 @@ public class TeamResourceImpl implements TeamResource, Resource {
                     role = TeamRole.MEMBER;
                 }
 
-                teamDao.addUsers(tx, t.getId(), userId, role);
+                teamDao.addUser(tx, t.getId(), userId, role);
             }
         });
 

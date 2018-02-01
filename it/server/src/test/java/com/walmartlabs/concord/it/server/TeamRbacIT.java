@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.org.team.TeamManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -210,6 +211,56 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(apiKeyA.getKey());
         teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
+    }
+
+    @Test(timeout = 30000)
+    public void testNewTeamOwner() {
+        String userA = "userA_" + randomString();
+
+        UserResource userResource = proxy(UserResource.class);
+        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
+
+        userResource.createOrUpdate(new CreateUserRequest(userA));
+        CreateApiKeyResponse userAKey = apiKeyResource.create(new CreateApiKeyRequest(userA));
+
+        String userB = "userA_" + randomString();
+
+        userResource.createOrUpdate(new CreateUserRequest(userB));
+        CreateApiKeyResponse userBKey = apiKeyResource.create(new CreateApiKeyRequest(userB));
+
+        // ---
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+
+        String orgName = "orgA_" + randomString();
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        TeamResource teamResource = proxy(TeamResource.class);
+        teamResource.addUsers(orgName, TeamManager.DEFAULT_TEAM_NAME, Collections.singleton(new TeamUserEntry(userA, TeamRole.OWNER)));
+
+        // ---
+
+        setApiKey(userBKey.getKey());
+
+        // ---
+
+        String teamName = "teamA_" + randomString();
+        try {
+            teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        setApiKey(userAKey.getKey());
+
+        // ---
+
+        teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userB, TeamRole.MEMBER)));
     }
 
     @Test(timeout = 30000)
