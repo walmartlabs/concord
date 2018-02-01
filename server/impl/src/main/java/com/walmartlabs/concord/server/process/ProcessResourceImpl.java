@@ -24,9 +24,11 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.IsoDateParam;
+import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
@@ -77,6 +79,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final UserDao userDao;
+    private final ProjectAccessManager projectAccessManager;
     
     @Inject
     public ProcessResourceImpl(ProcessManager processManager,
@@ -84,7 +87,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                ProcessLogsDao logsDao,
                                PayloadManager payloadManager,
                                ProcessStateManager stateManager,
-                               UserDao userDao) {
+                               UserDao userDao,
+                               ProjectAccessManager projectAccessManager) {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
@@ -92,6 +96,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.userDao = userDao;
+        this.projectAccessManager = projectAccessManager;
     }
 
     @Override
@@ -456,8 +461,13 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @WithTimer
     @RequiresAuthentication
     public Response downloadState(UUID instanceId) {
-        if (!stateManager.exists(instanceId)) {
+        ProcessEntry p = queueDao.get(instanceId);
+        if (p == null) {
             throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+
+        if (p.getProjectId() != null) {
+            projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.READER, false);
         }
 
         StreamingOutput out = output -> {

@@ -7,6 +7,10 @@
 - ansible, docker: support for `--add-host` in the Ansible and Docker
 tasks.
 
+### Changed
+
+- concord-server: apply RBAC to the process state download endpoint.
+
 
 
 ## [0.53.0] - 2017-01-28
