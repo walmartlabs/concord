@@ -9,6 +9,8 @@ tasks.
 
 ### Changed
 
+- docker: automatically update `pip` to the latest version;
+- docker: more Walmart-specific CA certificates;
 - concord-server: when a new team is created, automatically add the
 current user as the team's `MAINTAINER`;
 - concord-server: apply RBAC to the process state download endpoint.
