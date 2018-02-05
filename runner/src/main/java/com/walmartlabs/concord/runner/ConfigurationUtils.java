@@ -22,7 +22,7 @@ package com.walmartlabs.concord.runner;
 
 public final class ConfigurationUtils {
 
-    public static String getEnv(String key, String def) {
+    public static String getSystemProperty(String key, String def) {
         String value = System.getProperty(key);
         if (value != null) {
             return value;

@@ -23,6 +23,8 @@ package com.walmartlabs.concord.agent;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,6 +34,8 @@ import java.util.Properties;
 import java.util.UUID;
 
 public class Configuration {
+
+    private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
     public static final String SERVER_HOST_KEY = "SERVER_HOST";
     public static final String SERVER_RPC_PORT_KEY = "SERVER_RPC_PORT";
@@ -68,7 +72,10 @@ public class Configuration {
         try {
             this.serverHost = getEnv(SERVER_HOST_KEY, "localhost");
             this.serverRpcPort = Integer.parseInt(getEnv(SERVER_RPC_PORT_KEY, "8101"));
+            log.info("Using the RPC address {}:{}...", serverHost, serverRpcPort);
+
             this.serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://" + serverHost + ":8001");
+            log.info("Using the API address: {}", serverApiBaseUrl);
 
             this.logDir = getDir(LOG_DIR_KEY, "logDir");
             this.logMaxDelay = Long.parseLong(getEnv(LOG_MAX_DELAY_KEY, "250")); // 250ms

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.it.server;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,33 +22,45 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.Test;
 
+import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class DockerIT extends AbstractServerIT {
+public class DockerAnsibleIT extends AbstractServerIT {
 
     @Test(timeout = 30000)
     public void test() throws Exception {
-        byte[] payload = archive(DockerIT.class.getResource("docker").toURI());
+        byte[] payload = archive(DockerIT.class.getResource("dockerAnsible").toURI(),
+                ITConstants.DEPENDENCIES_DIR);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.image", ITConstants.DOCKER_ANSIBLE_IMAGE);
         StartProcessResponse spr = start(input);
 
+        // --
+
         ProcessResource processResource = proxy(ProcessResource.class);
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
         assertNotNull(pir.getLogFileName());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*DOCKER: Hello, world.*", ab);
+        assertLog(".*\"msg\": \"Hello from Docker!\".*", ab);
+
+        // --
+
+        Response resp = processResource.downloadAttachment(pir.getInstanceId(), "ansible_stats.json");
+        assertEquals(200, resp.getStatus());
     }
 }

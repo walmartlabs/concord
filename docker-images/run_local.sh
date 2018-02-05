@@ -5,13 +5,12 @@ if [ -z $LDAP_PROPERTIES ]; then
 fi
 echo "LDAP_PROPERTIES: ${LDAP_PROPERTIES}"
 
-docker rm -f db dind agent server console
+docker rm -f db agent server console
 
 docker run -d \
 --name db \
 -e 'POSTGRES_PASSWORD=q1' \
 -p 5432:5432 \
---network=host \
 library/postgres:latest
 
 docker run -d \
@@ -26,19 +25,11 @@ docker run -d \
 walmartlabs/concord-server
 
 docker run -d \
---privileged \
---name dind \
--v /tmp:/tmp \
---network=host \
-docker:stable-dind \
--H tcp://127.0.0.1:6666
-
-docker run -d \
 --name agent \
 -v /tmp:/tmp \
 -v ${HOME}:${HOME}:ro \
 -v ${HOME}/.m2/repository:/home/concord/.m2/repository:ro \
--e 'DOCKER_HOST=tcp://localhost:6666' \
+-e 'DOCKER_HOST=tcp://127.0.0.1:2375' \
 --network=host \
 walmartlabs/concord-agent
 

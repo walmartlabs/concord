@@ -1,7 +1,3 @@
 flows:
   default:
   - task: brokenDeps
-
-configuration:
-  dependencies:
-  - mvn://com.walmartlabs.concord.it.tasks:broken-deps:LATEST

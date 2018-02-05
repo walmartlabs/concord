@@ -25,7 +25,7 @@ import com.walmartlabs.concord.sdk.RpcConfiguration;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import static com.walmartlabs.concord.runner.ConfigurationUtils.getEnv;
+import static com.walmartlabs.concord.runner.ConfigurationUtils.getSystemProperty;
 
 @Named
 @Singleton
@@ -38,8 +38,8 @@ public class RpcConfigurationImpl implements RpcConfiguration {
     private final int rpcServerPort;
 
     public RpcConfigurationImpl() {
-        this.rpcServerHost = getEnv(SERVER_HOST_KEY, "localhost");
-        this.rpcServerPort = Integer.parseInt(getEnv(SERVER_PORT_KEY, "8101"));
+        this.rpcServerHost = getSystemProperty(SERVER_HOST_KEY, "localhost");
+        this.rpcServerPort = Integer.parseInt(getSystemProperty(SERVER_PORT_KEY, "8101"));
     }
 
     @Override

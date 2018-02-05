@@ -24,30 +24,48 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class DockerProcessBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(DockerProcessBuilder.class);
+
+    public static final String CONCORD_DOCKER_LOCAL_MODE_KEY = "CONCORD_DOCKER_LOCAL_MODE";
     public static final String CONCORD_TX_ID_LABEL = "concordTxId";
+    private static final String DEFAULT_USER = "concord";
 
     private final String image;
 
     private String name;
-    private Map<String, String> labels;
+    private String user = DEFAULT_USER;
     private String workdir;
+    private String entryPoint;
+
     private List<String> args = new ArrayList<>();
     private Map<String, String> env;
+    private Map<String, String> labels;
     private List<Map.Entry<String, String>> volumes = new ArrayList<>();
     private List<Map.Entry<String, String>> options = new ArrayList<>();
 
-    private String entryPoint;
     private boolean cleanup = true;
     private boolean debug = false;
     private boolean forcePull = true;
+    private boolean generateUsers = false;
+    private boolean exposeHostUsers = true;
+    private boolean useHostUser = true;
+    private boolean useHostNetwork = true;
 
     public DockerProcessBuilder(String image) {
         this.image = image;
+
+        if (Boolean.parseBoolean(System.getenv(CONCORD_DOCKER_LOCAL_MODE_KEY))) {
+            this.exposeHostUsers = true;
+            this.useHostUser = true;
+        }
     }
 
     public Process build() throws IOException {
@@ -67,13 +85,17 @@ public class DockerProcessBuilder {
                 .start();
     }
 
-    private String buildCmd() {
+    private String buildCmd() throws IOException {
         List<String> c = new ArrayList<>();
         c.add("docker");
         c.add("run");
         if (name != null) {
             c.add("--name");
             c.add(q(name));
+        }
+        if (user != null && !useHostUser) {
+            c.add("-u");
+            c.add(user);
         }
         if (cleanup) {
             c.add("--rm");
@@ -108,6 +130,29 @@ public class DockerProcessBuilder {
             c.add("--entrypoint");
             c.add(entryPoint);
         }
+        if (generateUsers) {
+            Path tmp = IOUtils.createTempFile("passwd", ".docker");
+            try (InputStream src = DockerProcessBuilder.class.getResourceAsStream("dockerPasswd");
+                 OutputStream dst = Files.newOutputStream(tmp)) {
+                IOUtils.copy(src, dst);
+            }
+            c.add("-v");
+            c.add(tmp.toAbsolutePath().toString() + ":/etc/passwd:ro");
+        }
+        if (exposeHostUsers) {
+            c.add("-v");
+            c.add("/etc/passwd:/etc/passwd:ro");
+        }
+        if (useHostUser) {
+            c.add("-u");
+            c.add("`id -u`:`id -g`");
+
+            c.add("-e");
+            c.add("HOME=/tmp");
+        }
+        if (useHostNetwork) {
+            c.add("--net=host");
+        }
         options.forEach(o -> {
             c.add(o.getKey());
             if (o.getValue() != null) {
@@ -123,6 +168,11 @@ public class DockerProcessBuilder {
 
     public DockerProcessBuilder name(String name) {
         this.name = name;
+        return this;
+    }
+
+    public DockerProcessBuilder user(String user) {
+        this.user = user;
         return this;
     }
 
@@ -182,6 +232,26 @@ public class DockerProcessBuilder {
 
     public DockerProcessBuilder forcePull(boolean forcePull) {
         this.forcePull = forcePull;
+        return this;
+    }
+
+    public DockerProcessBuilder generateUsers(boolean generateUsers) {
+        this.generateUsers = generateUsers;
+        return this;
+    }
+
+    public DockerProcessBuilder exposeHostUsers(boolean exposeHostUsers) {
+        this.exposeHostUsers = exposeHostUsers;
+        return this;
+    }
+
+    public DockerProcessBuilder useHostUser(boolean useHostUser) {
+        this.useHostUser = useHostUser;
+        return this;
+    }
+
+    public DockerProcessBuilder useHostNetwork(boolean useHostNetwork) {
+        this.useHostNetwork = useHostNetwork;
         return this;
     }
 

@@ -14,13 +14,16 @@
     <packaging>takari-jar</packaging>
 
     <properties>
+        <ansible.image>walmartlabs/concord-ansible</ansible.image>
         <db.image>library/postgres</db.image>
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <dind.image>docker:stable-dind</dind.image>
         <deps.dir>${project.build.directory}/deps</deps.dir>
-        <docker.host.addr>127.0.0.1</docker.host.addr>
+        <docker.host.addr>localhost</docker.host.addr>
+        <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <it.server.port>8001</it.server.port>
+        <it.server.rpc.port>8101</it.server.rpc.port>
     </properties>
 
     <dependencies>
@@ -184,9 +187,11 @@
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
+                        <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
                         <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
+                        <IT_DOCKER_ANSIBLE_IMAGE>${ansible.image}</IT_DOCKER_ANSIBLE_IMAGE>
                     </environmentVariables>
                 </configuration>
             </plugin>
@@ -316,8 +321,9 @@
                                             <bind>
                                                 <volume>/tmp:/tmp</volume>
                                                 <!-- allows the server to pick up local dependencies -->
-                                                <volume>${deps.dir}:${deps.dir}</volume>
-                                                <volume>${settings.localRepository}:/home/concord/.m2/repository</volume>
+                                                <volume>${deps.dir}:${deps.dir}:ro</volume>
+                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro
+                                                </volume>
                                             </bind>
                                         </volumes>
                                         <env>
@@ -328,8 +334,6 @@
                                             <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
                                             <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
-                                            <CONCORD_SERVER_PORT>${it.server.port}</CONCORD_SERVER_PORT>
-                                            <RPC_SERVER_PORT>8101</RPC_SERVER_PORT>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
@@ -341,18 +345,6 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>${dind.image}</name>
-                                    <alias>dind</alias>
-                                    <run>
-                                        <privileged>true</privileged>
-                                        <volumes>
-                                            <bind>
-                                                <volume>/tmp:/tmp</volume>
-                                            </bind>
-                                        </volumes>
-                                    </run>
-                                </image>
-                                <image>
                                     <name>${agent.image}</name>
                                     <alias>agent</alias>
                                     <run>
@@ -361,15 +353,18 @@
                                         </network>
                                         <volumes>
                                             <bind>
+                                                <volume>/tmp:/tmp</volume>
                                                 <!-- allows the agent to pick up local dependencies -->
-                                                <volume>${deps.dir}:${deps.dir}</volume>
-                                                <volume>${settings.localRepository}:/home/concord/.m2/repository</volume>
+                                                <volume>${deps.dir}:${deps.dir}:ro</volume>
+                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
+                                            <SERVER_HOST>localhost</SERVER_HOST>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
-                                            <SERVER_RPC_PORT>8101</SERVER_RPC_PORT>
+                                            <SERVER_RPC_PORT>${it.server.rpc.port}</SERVER_RPC_PORT>
                                             <WORKERS_COUNT>3</WORKERS_COUNT>
+                                            <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
                                         </env>
                                     </run>
                                 </image>
@@ -383,6 +378,7 @@
         <profile>
             <id>walmart</id>
             <properties>
+                <ansible.image>docker.prod.walmart.com/walmartlabs/concord-ansible</ansible.image>
                 <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
                 <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
                 <dind.image>docker.prod.walmart.com/walmartlabs/concord-dind</dind.image>

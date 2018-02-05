@@ -28,7 +28,7 @@ import javax.inject.Named;
 
 import java.util.Map;
 
-import static com.walmartlabs.concord.runner.ConfigurationUtils.getEnv;
+import static com.walmartlabs.concord.runner.ConfigurationUtils.getSystemProperty;
 
 @Named
 public class ApiConfigurationImpl implements ApiConfiguration {
@@ -38,7 +38,7 @@ public class ApiConfigurationImpl implements ApiConfiguration {
     private final String baseUrl;
 
     public ApiConfigurationImpl() {
-        this.baseUrl = getEnv(BASE_URL_KEY, "http://localhost:8001");
+        this.baseUrl = getSystemProperty(BASE_URL_KEY, "http://localhost:8001");
     }
 
     @Override

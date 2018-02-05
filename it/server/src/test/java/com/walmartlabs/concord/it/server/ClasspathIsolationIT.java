@@ -25,7 +25,8 @@ import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -37,9 +38,16 @@ public class ClasspathIsolationIT extends AbstractServerIT {
     public void testBrokenDeps() throws Exception {
         byte[] payload = archive(ClasspathIsolationIT.class.getResource("brokenDeps").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
 
+        Map<String, Object> cfg = new HashMap<>();
+        cfg.put("dependencies", new String[]{"mvn://com.walmartlabs.concord.it.tasks:broken-deps:" + ITConstants.PROJECT_VERSION});
+        input.put("request", cfg);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
         byte[] ab = getLog(pir.getLogFileName());
 

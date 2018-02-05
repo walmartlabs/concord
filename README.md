@@ -27,7 +27,7 @@ You can build docker images using this commands:
 #### Prerequisites
 
 Prerequisites:
-- Docker;
+- Docker, listening on `tcp://127.0.0.1:2375`;
 - Ansible 2.4.2+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
 - Java must be available in `$PATH` as `java`.

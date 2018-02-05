@@ -24,12 +24,16 @@ import com.google.common.base.Strings;
 
 public final class ITConstants {
 
+    public static final String PROJECT_VERSION;
     public static final String SERVER_URL;
     public static final String DEPENDENCIES_DIR;
     public static final String GIT_SERVER_URL_PATTERN;
     public static final String SMTP_SERVER_HOST;
+    public static final String DOCKER_ANSIBLE_IMAGE;
 
     static {
+        PROJECT_VERSION = env("IT_PROJECT_VERSION", "LATEST");
+
         SERVER_URL = "http://localhost:" + env("IT_SERVER_PORT", "8001");
         DEPENDENCIES_DIR = System.getenv("IT_DEPS_DIR");
 
@@ -38,6 +42,8 @@ public final class ITConstants {
         GIT_SERVER_URL_PATTERN = "ssh://git@" + gitHost + ":%d/";
 
         SMTP_SERVER_HOST = dockerAddr;
+
+        DOCKER_ANSIBLE_IMAGE = env("IT_DOCKER_ANSIBLE_IMAGE", "walmartlabs/concord-ansible");
     }
 
     private static String env(String k, String def) {

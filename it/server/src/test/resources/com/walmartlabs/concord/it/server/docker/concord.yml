@@ -1,6 +1,8 @@
 flows:
   main:
-  - docker: walmartlabs/concord-base
+  - docker: ${image}
+    debug: true
+    forcePull: false
     cmd: echo "Hello, ${name}"
 
 variables:

@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- ansible, docker: use a non-root user to run all Docker processes
+(including `ansible-playbook`);
+- docker: run Docker containers in the host's network.
+
+
+
 ## [0.54.0] - 2017-02-01
 
 ### Added
