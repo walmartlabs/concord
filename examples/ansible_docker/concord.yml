@@ -10,6 +10,8 @@ flows:
       dockerImage: "docker.prod.walmart.com/walmartlabs/concord-ansible:latest"
       # rest of the parameters are the usual
       playbook: playbook/hello.yml
+      debug: true
+      verbose: 3
       inventory:
         local:
           hosts:

@@ -1,11 +1,12 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.51.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.53.0"
 
 flows:
   default:
   - task: ansible
     in:
+      dockerImage: "docker.prod.walmart.com/walmartlabs/concord-ansible:latest"
       playbook: playbook/hello.yml
       inventory:
         local:
