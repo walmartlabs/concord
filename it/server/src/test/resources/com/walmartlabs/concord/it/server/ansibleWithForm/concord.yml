@@ -1,0 +1,22 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.54.0"
+
+flows:
+  default:
+  - form: myForm
+  - task: ansible
+    in:
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+          - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        msg: ${myForm.msg}
+
+forms:
+  myForm:
+  - msg: { type: "string" }

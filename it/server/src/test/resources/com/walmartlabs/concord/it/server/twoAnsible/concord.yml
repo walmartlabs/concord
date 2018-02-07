@@ -1,0 +1,21 @@
+flows:
+  default:
+  - call: runAnsible
+    in:
+      msg: "Hello!"
+  - call: runAnsible
+    in:
+      msg: "Bye-bye!"
+
+  runAnsible:
+  - task: ansible
+    in:
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+          - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        msg: ${msg}

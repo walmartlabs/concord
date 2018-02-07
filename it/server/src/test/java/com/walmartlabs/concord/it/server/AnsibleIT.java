@@ -20,19 +20,21 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.server.api.process.*;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 import static org.junit.Assert.assertEquals;
 
 public class AnsibleIT extends AbstractServerIT {
@@ -99,5 +101,64 @@ public class AnsibleIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Hello, Concord.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testTwoAnsibleRuns() throws Exception {
+        URI dir = AnsibleIT.class.getResource("twoAnsible").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*\"msg\":.*Hello!.*", ab);
+        assertLog(".*\"msg\":.*Bye-bye!.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testWithForm() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleWithForm").toURI();
+        byte[] payload = archive(dir);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+
+        // ---
+
+        FormResource formResource = proxy(FormResource.class);
+        List<FormListEntry> forms = formResource.list(pir.getInstanceId());
+        assertEquals(1, forms.size());
+
+        formResource.submit(pir.getInstanceId(), forms.get(0).getFormInstanceId(), Collections.singletonMap("msg", "Hello!"));
+
+        // ---
+
+        pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*\"msg\":.*Hello!.*", ab);
     }
 }
