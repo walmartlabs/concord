@@ -55,16 +55,22 @@ public class DockerProcessBuilder {
     private boolean debug = false;
     private boolean forcePull = true;
     private boolean generateUsers = false;
-    private boolean exposeHostUsers = true;
-    private boolean useHostUser = true;
+    private boolean exposeHostUsers = false;
+    private boolean useHostUser = false;
     private boolean useHostNetwork = true;
 
     public DockerProcessBuilder(String image) {
         this.image = image;
 
-        if (Boolean.parseBoolean(System.getenv(CONCORD_DOCKER_LOCAL_MODE_KEY))) {
+        if (Boolean.parseBoolean(env(CONCORD_DOCKER_LOCAL_MODE_KEY, "true"))) {
+            // in the "local docker mode" we run all Docker processes using the current OS user's UID/GID
+            // in order to do that, we need to mount the local /etc/passwd inside of the container
+            log.warn("Running in the local Docker mode. Consider setting {}=false in the production environment.", CONCORD_DOCKER_LOCAL_MODE_KEY);
+
             this.exposeHostUsers = true;
             this.useHostUser = true;
+        } else {
+            this.generateUsers = true;
         }
     }
 
@@ -235,21 +241,6 @@ public class DockerProcessBuilder {
         return this;
     }
 
-    public DockerProcessBuilder generateUsers(boolean generateUsers) {
-        this.generateUsers = generateUsers;
-        return this;
-    }
-
-    public DockerProcessBuilder exposeHostUsers(boolean exposeHostUsers) {
-        this.exposeHostUsers = exposeHostUsers;
-        return this;
-    }
-
-    public DockerProcessBuilder useHostUser(boolean useHostUser) {
-        this.useHostUser = useHostUser;
-        return this;
-    }
-
     public DockerProcessBuilder useHostNetwork(boolean useHostNetwork) {
         this.useHostNetwork = useHostNetwork;
         return this;
@@ -266,6 +257,11 @@ public class DockerProcessBuilder {
         }
 
         return "'" + s + "'";
+    }
+
+    private static String env(String k, String defaultValue) {
+        String s = System.getenv(k);
+        return s != null ? s : defaultValue;
     }
 
     public static class DockerOptionsBuilder {

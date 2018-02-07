@@ -1,2 +1,0 @@
-root:x:0:0:root:/root:/bin/bash
-concord:x:456:456::/tmp:/sbin/nologin

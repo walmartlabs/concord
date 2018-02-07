@@ -52,6 +52,8 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER_LOCAL_MODE_KEY;
+
 public class DefaultJobExecutor implements JobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultJobExecutor.class);
@@ -247,6 +249,13 @@ public class DefaultJobExecutor implements JobExecutor {
         env.put(IOUtils.TMP_DIR_KEY, IOUtils.TMP_DIR.toAbsolutePath().toString());
         env.put("_CONCORD_ATTACHMENTS_DIR", payloadDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .toAbsolutePath().toString());
+
+        // pass through the docker mode
+        String dockerMode = System.getenv(CONCORD_DOCKER_LOCAL_MODE_KEY);
+        if (dockerMode != null) {
+            log.info("Using Docker mode: {}", dockerMode);
+            env.put(CONCORD_DOCKER_LOCAL_MODE_KEY, dockerMode);
+        }
 
         Process p = b.start();
         return new ProcessEntry(p, workDir);

@@ -29,6 +29,7 @@ docker run -d \
 --link dind \
 --link server \
 -v /tmp:/tmp \
+-e 'CONCORD_DOCKER_LOCAL_MODE=false' \
 docker.prod.walmart.com/walmartlabs/concord-agent:${VERSION}
 
 docker run -d \

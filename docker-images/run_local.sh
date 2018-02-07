@@ -30,6 +30,7 @@ docker run -d \
 -v ${HOME}:${HOME}:ro \
 -v ${HOME}/.m2/repository:/home/concord/.m2/repository:ro \
 -e 'DOCKER_HOST=tcp://127.0.0.1:2375' \
+-e 'CONCORD_DOCKER_LOCAL_MODE=false' \
 --network=host \
 walmartlabs/concord-agent
 
