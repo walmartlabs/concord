@@ -1,13 +1,5 @@
 configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.34.0"
-
   arguments:
-    concord:
-      # default parameters, can be overridden with `in` parameters of
-      # the task
-      baseUrl: "http://server.dev.concord.devtools.prod.walmart.com:8001"
-      apiKey: "lzfJQL4u2gsH7toQveFYSQ"
     myName: "Concord"
 
 flows:

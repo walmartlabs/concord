@@ -1,14 +1,3 @@
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.34.0"
-
-  arguments:
-    concord:
-      # default parameters, can be overridden with `in` parameters of
-      # the task
-      baseUrl: "http://localhost:8001"
-      apiKey: "auBy4eDWrKWsyhiDp3AQiw"
-
 flows:
   default:
   # "forks" the current process as multiple subprocesses
@@ -20,10 +9,17 @@ flows:
       # the parent's cancellation only
       disableOnCancel: true
       jobs:
-        - entryPoint: aJob
-          instances: 1
-          arguments:
-            color: "green"
+      # spawn multiple jobs with different parameters
+      - entryPoint: aJob
+        arguments:
+          color: "red"
+      - entryPoint: aJob
+        arguments:
+          color: "green"
+      - entryPoint: aJob
+        arguments:
+            color: "blue"
+
 
     # out variable "myJobs" will contain a list of process IDs
     out:
