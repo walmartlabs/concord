@@ -36,14 +36,25 @@ public class ProcessStateConfiguration implements Serializable {
     public static final String MAX_FILE_SIZE_KEY = "MAX_FILE_SIZE";
     public static final String DEFAULT_MAX_FILE_SIZE = "67108864"; // 64Mb
 
+    public static final String MAX_STATE_AGE_KEY = "CONCORD_MAX_STATE_AGE";
+    public static final String DEFAULT_MAX_STATE_AGE = "604800000"; // 7 days
+
     private final long maxFileSize;
+    private final long maxStateAge;
 
     public ProcessStateConfiguration() {
         this.maxFileSize = Long.parseLong(Utils.getEnv(MAX_FILE_SIZE_KEY, DEFAULT_MAX_FILE_SIZE));
         log.info("init -> max file size: {} bytes", maxFileSize);
+
+        this.maxStateAge = Long.parseLong(Utils.getEnv(MAX_STATE_AGE_KEY, DEFAULT_MAX_STATE_AGE));
+        log.info("init -> max state age: {}ms", maxStateAge);
     }
 
     public long getMaxFileSize() {
         return maxFileSize;
+    }
+
+    public long getMaxStateAge() {
+        return maxStateAge;
     }
 }

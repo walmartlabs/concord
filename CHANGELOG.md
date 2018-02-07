@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-server: configurable max state age;
 - ansible, docker: use a non-root user to run all Docker processes
 (including `ansible-playbook`);
 - docker: run Docker containers in the host's network.

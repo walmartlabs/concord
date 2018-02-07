@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import org.eclipse.sisu.EagerSingleton;
 import org.jooq.Configuration;
 import org.jooq.Record1;
@@ -49,7 +50,6 @@ public class ProcessCleaner {
 
     private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toMillis(1);
     private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
-    private static final long AGE_CUTOFF = TimeUnit.DAYS.toMillis(7); // TODO cfg
 
     private static final String[] REMOVE_STATUSES = {
             ProcessStatus.FINISHED.toString(),
@@ -59,12 +59,12 @@ public class ProcessCleaner {
     };
 
     @Inject
-    public ProcessCleaner(CleanerDao cleanerDao) {
-        init(cleanerDao);
+    public ProcessCleaner(CleanerDao cleanerDao, ProcessStateConfiguration cfg) {
+        init(cleanerDao, cfg.getMaxStateAge());
     }
 
-    private void init(CleanerDao cleanerDao) {
-        Worker w = new Worker(cleanerDao);
+    private void init(CleanerDao cleanerDao, long maxAge) {
+        Worker w = new Worker(cleanerDao, maxAge);
 
         Thread t = new Thread(w, "process-state-cleaner");
         t.start();
@@ -73,16 +73,18 @@ public class ProcessCleaner {
     private static final class Worker implements Runnable {
 
         private final CleanerDao cleanerDao;
+        private final long maxAge;
 
-        private Worker(CleanerDao cleanerDao) {
+        private Worker(CleanerDao cleanerDao, long maxAge) {
             this.cleanerDao = cleanerDao;
+            this.maxAge = maxAge;
         }
 
         @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    Timestamp cutoff = new Timestamp(System.currentTimeMillis() - AGE_CUTOFF);
+                    Timestamp cutoff = new Timestamp(System.currentTimeMillis() - maxAge);
                     cleanerDao.deleteOldState(cutoff);
                     cleanerDao.deleteOrphans();
                     sleep(CLEANUP_INTERVAL);
