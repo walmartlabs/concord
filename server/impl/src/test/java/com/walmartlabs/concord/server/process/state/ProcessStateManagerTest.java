@@ -20,10 +20,12 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
+import com.google.common.base.Charsets;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,9 +33,48 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.UUID;
 
-@Ignore
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 public class ProcessStateManagerTest extends AbstractDaoTest {
 
+    @Test
+    public void testUpdateState() throws Exception {
+        UUID instanceId = UUID.randomUUID();
+        Path baseDir = Files.createTempDirectory("testImport");
+
+        writeTempFile(baseDir.resolve("file-1"), "123".getBytes());
+        writeTempFile(baseDir.resolve("file-2"), "456".getBytes());
+
+        // ---
+        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration());
+        stateManager.transaction(tx -> {
+            stateManager.importPath(tx, instanceId, null, baseDir);
+        });
+
+        Path tmpDir = Files.createTempDirectory("testExport");
+
+        boolean result = stateManager.export(instanceId, copyTo(tmpDir));
+        assertTrue(result);
+        assertFileContent("123", tmpDir.resolve("file-1"));
+        assertFileContent("456", tmpDir.resolve("file-2"));
+
+        // --- update
+
+        writeTempFile(baseDir.resolve("file-1"), "123-up".getBytes());
+
+        stateManager.transaction(tx -> {
+            stateManager.importPath(tx, instanceId, null, baseDir);
+        });
+
+        result = stateManager.export(instanceId, copyTo(tmpDir));
+        assertTrue(result);
+        assertFileContent("123-up", tmpDir.resolve("file-1"));
+        assertFileContent("456", tmpDir.resolve("file-2"));
+    }
+
+    @Ignore
     @Test
     public void testLargeImport() throws Exception {
         int files = 100;
@@ -57,5 +98,16 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         stateManager.transaction(tx -> {
             stateManager.importPath(tx, UUID.randomUUID(), "/", baseDir);
         });
+    }
+
+    private static void assertFileContent(String expected, Path f) throws IOException {
+        String str = com.google.common.io.Files.toString(f.toFile(), Charsets.UTF_8);
+        assertEquals(expected, str);
+    }
+
+    private static void writeTempFile(Path p, byte[] ab) throws IOException {
+        try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE)) {
+            out.write(ab);
+        }
     }
 }

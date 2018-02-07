@@ -281,6 +281,8 @@ public class ProcessStateManager extends AbstractDao {
         String sql = tx.insertInto(PROCESS_STATE)
                 .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA)
                 .values((UUID) null, null, null, null)
+                .onConflict(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH)
+                .doUpdate().set(PROCESS_STATE.UNIX_MODE, (Short)null).set(PROCESS_STATE.ITEM_DATA, (byte[])null)
                 .getSQL();
 
         tx.connection(conn -> {
@@ -310,6 +312,10 @@ public class ProcessStateManager extends AbstractDao {
                             ps.setInt(3, unixMode);
                             try (InputStream in = Files.newInputStream(file)) {
                                 ps.setBinaryStream(4, in);
+                            }
+                            ps.setInt(5, unixMode);
+                            try (InputStream in = Files.newInputStream(file)) {
+                                ps.setBinaryStream(6, in);
                             }
                             ps.addBatch();
 
