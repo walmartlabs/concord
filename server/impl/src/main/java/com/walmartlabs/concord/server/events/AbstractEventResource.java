@@ -23,10 +23,7 @@ package com.walmartlabs.concord.server.events;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import org.apache.shiro.SecurityUtils;
@@ -73,7 +70,7 @@ public abstract class AbstractEventResource {
             args.put("event", event);
 
             UUID orgId = projectDao.getOrgId(t.getProjectId());
-            UUID instanceId = startProcess(orgId, t.getProjectName(), t.getRepositoryName(), t.getEntryPoint(), args);
+            UUID instanceId = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), args);
             log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, instanceId, t);
         }
 
@@ -84,23 +81,29 @@ public abstract class AbstractEventResource {
         return EventMatcher.matches(conditions, t.getConditions());
     }
 
-    private UUID startProcess(UUID orgId, String projectName, String repoName, String flowName, Map<String, Object> args) {
+    private UUID startProcess(UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) {
         UUID instanceId = UUID.randomUUID();
 
         String initiator = getInitiator();
 
-        PayloadManager.EntryPoint ep = payloadManager.createEntryPoint(instanceId, orgId, projectName, repoName, flowName);
         Map<String, Object> request = new HashMap<>();
         request.put(Constants.Request.ARGUMENTS_KEY, args);
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, null, initiator, ep, request, null);
+            payload = new PayloadBuilder(instanceId)
+                    .initiator(initiator)
+                    .organization(orgId)
+                    .project(projectId)
+                    .repository(repoId)
+                    .entryPoint(flowName)
+                    .configuration(request)
+                    .build();
         } catch (ProcessException e) {
-            log.error("startProcess ['{}', '{}', '{}'] -> error creating a payload", projectName, repoName, flowName, e);
+            log.error("startProcess ['{}', '{}', '{}', '{}'] -> error creating a payload", orgId, projectId, repoId, flowName, e);
             throw e;
         } catch (Exception e) {
-            log.error("startProcess ['{}', '{}', '{}'] -> error creating a payload", projectName, repoName, flowName, e);
+            log.error("startProcess ['{}', '{}', '{}', '{}'] -> error creating a payload", orgId, projectId, repoId, flowName, e);
             throw new ProcessException(instanceId, "Error while creating a payload: " + e.getMessage(), e);
         }
 
