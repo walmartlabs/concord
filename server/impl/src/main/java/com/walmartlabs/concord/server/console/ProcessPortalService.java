@@ -28,6 +28,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 @Path("/api/service/process_portal")
+@Deprecated
 public interface ProcessPortalService {
 
     @GET
