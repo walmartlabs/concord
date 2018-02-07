@@ -4,6 +4,7 @@
 
 ### Changed
 
+- ansible: updated to 2.4.3;
 - concord-server: configurable max state age;
 - ansible, docker: use a non-root user to run all Docker processes
 (including `ansible-playbook`);

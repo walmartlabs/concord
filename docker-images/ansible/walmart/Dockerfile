@@ -13,6 +13,6 @@ ENV ANSIBLE_RETRY_FILES_ENABLED false
 RUN yum -y install gcc python-devel python-pip libffi-devel openssl-devel krb5-devel krb5-libs krb5-workstation openssh-clients sshpass util-linux python && yum clean all
 
 RUN umask 0022
-RUN pip install --upgrade -i https://nexus.prod.walmart.com/nexus/content/repositories/pypi-proxy/simple pip pbr ansible==2.4.2 pywinrm==0.3.0 kerberos requests_kerberos ujson grpcio grpcio-tools docker-py
+RUN pip install --upgrade -i https://nexus.prod.walmart.com/nexus/content/repositories/pypi-proxy/simple pip pbr ansible==2.4.3 pywinrm==0.3.0 kerberos requests_kerberos ujson grpcio grpcio-tools docker-py
 
 USER concord
