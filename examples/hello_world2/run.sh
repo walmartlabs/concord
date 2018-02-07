@@ -3,9 +3,9 @@
 SERVER_ADDR="$1"
 
 rm -rf target && mkdir target
-cp -R concord.yml _main.json target/
+cp -R concord.yml target/
 
 cd target && zip -r payload.zip ./* > /dev/null && cd ..
 
 read -p "Username: " CURL_USER
-curl -u ${CURL_USER} -F archive=@target/payload.zip http://${SERVER_ADDR}/api/v1/process
+curl -u ${CURL_USER} -F archive=@target/payload.zip -F arguments.hello.name=Concord http://${SERVER_ADDR}/api/v1/process
