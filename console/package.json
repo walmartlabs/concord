@@ -48,8 +48,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build":
-      "shx --silent sed -i @import /*import node_modules/semantic-ui-css/semantic.min.css > /dev/null 2>&1 && react-scripts build",
+    "build": "shx --silent sed -i @import /*import node_modules/semantic-ui-css/semantic.min.css > /dev/null 2>&1 && react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "coverage": "npm test -- --coverage",
     "eject": "react-scripts eject",
@@ -57,8 +56,7 @@
     "server": "babel-node --presets es2015 scripts/server.js",
     "storybook": "start-storybook -p 9009 -s public",
     "build-storybook": "build-storybook -s public",
-    "pretty":
-      "prettier --tab-width 2 --print-width 100 --single-quote --jsx-bracket-same-line --arrow-parens 'always' parser 'typescript' --write 'src/**/*.{js,jsx,json,css}'"
+    "pretty": "prettier --tab-width 2 --print-width 100 --single-quote --jsx-bracket-same-line --arrow-parens 'always' parser 'typescript' --write 'src/**/*.{js,jsx,json,css}'"
   },
   "proxy": "http://localhost:8001/"
 }
