@@ -37,6 +37,7 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.c
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Ignore("requires a local DB instance")
 public class ProcessStateManagerTest extends AbstractDaoTest {
 
     @Test
