@@ -130,6 +130,11 @@ public class Constants {
          * Declares a list of OUT variables or expressions.
          */
         public static final String OUT_EXPRESSIONS_KEY = "out";
+
+        /**
+         * Enables additional debug logging for various states of execution.
+         */
+        public static final String DEBUG_KEY = "debug";
     }
 
     /**

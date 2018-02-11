@@ -2,9 +2,15 @@
 
 ## [Unreleased]
 
-### Changed
+### Added
 
+- concord-agent: the new `debug` configuration parameter to log the
+resolved dependencies of a process.
+
+### Changed
+ 
 - ansible: updated to 2.4.3;
+- concord-client: `org` parameter was ignored;
 - concord-server: configurable max state age;
 - ansible, docker: use a non-root user to run all Docker processes
 (including `ansible-playbook`);

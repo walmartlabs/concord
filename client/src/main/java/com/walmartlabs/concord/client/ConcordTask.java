@@ -174,7 +174,7 @@ public class ConcordTask extends AbstractConcordTask {
             throw new IllegalArgumentException("'" + ARCHIVE_KEY + "' and/or '" + PROJECT_KEY + "' are required");
         }
 
-        log.info("Starting a child process (project={}, repository={}, archive={} sync={}, req={})",
+        log.info("Starting a child process (project={}, repository={}, archive={}, sync={}, req={})",
                 project, repo, archive, sync, req);
 
         String targetUri = ProcessResource.class.getAnnotation(javax.ws.rs.Path.class).value();
@@ -327,8 +327,8 @@ public class ConcordTask extends AbstractConcordTask {
         }
     }
 
-    private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) throws Exception {
-        Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, ARCHIVE_KEY, PROJECT_KEY,
+    private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
+        Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
                 REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, DISABLE_ON_CANCEL_KEY,
                 DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY);
 

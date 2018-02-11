@@ -34,6 +34,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.rpc.AgentApiClient;
 import com.walmartlabs.concord.rpc.JobQueue;
 import com.walmartlabs.concord.sdk.ClientException;
+import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,7 @@ public class DefaultJobExecutor implements JobExecutor {
         this.executor = Executors.newCachedThreadPool();
     }
 
-    private void logDependencies(String instanceId, Collection<URI> deps) {
+    private void logDependencies(String instanceId, Collection<?> deps) {
         if (deps == null || deps.isEmpty()) {
             logManager.log(instanceId, "No external dependencies.");
         }
@@ -101,20 +102,26 @@ public class DefaultJobExecutor implements JobExecutor {
     @Override
     public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
         try {
+            boolean debugMode = debugMode(workDir);
+
             Collection<URI> depsUris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(workDir).stream())
                     .collect(Collectors.toList());
 
-            logDependencies(instanceId, depsUris);
+            Collection<Path> resolvedDeps = dependencyManager.resolve(depsUris);
 
-            Collection<Path> dependencies = dependencyManager.resolve(depsUris);
+            if (debugMode) {
+                logDependencies(instanceId, resolvedDeps);
+            } else {
+                logDependencies(instanceId, depsUris);
+            }
 
             ProcessEntry entry;
             if (canUsePrefork(workDir)) {
-                String[] cmd = createCommand(dependencies, workDir);
+                String[] cmd = createCommand(resolvedDeps, workDir);
                 entry = fork(instanceId, workDir, cmd);
             } else {
                 log.info("start ['{}'] -> can't use a pre-forked instance", instanceId);
-                String[] cmd = createCommand(dependencies, workDir);
+                String[] cmd = createCommand(resolvedDeps, workDir);
                 entry = startOneTime(instanceId, workDir, cmd);
             }
 
@@ -470,5 +477,20 @@ public class DefaultJobExecutor implements JobExecutor {
         return String.join(":", Arrays.stream(as)
                 .filter(s -> s != null && !s.trim().isEmpty())
                 .collect(Collectors.toList()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static boolean debugMode(Path workDir) throws IOException {
+        Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        if (!Files.exists(p)) {
+            return false;
+        }
+
+        ObjectMapper om = new ObjectMapper();
+        try (InputStream in = Files.newInputStream(p)) {
+            Map<String, Object> m = om.readValue(in, Map.class);
+            Object v = m.get(Constants.Request.DEBUG_KEY);
+            return Boolean.TRUE.equals(v);
+        }
     }
 }
