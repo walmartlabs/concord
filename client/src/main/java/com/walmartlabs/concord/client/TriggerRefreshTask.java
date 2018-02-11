@@ -49,6 +49,7 @@ public class TriggerRefreshTask extends AbstractConcordTask implements Task {
 
         int response = resp.getStatus();
         if (response < 200 || response >= 300) {
+            // TODO actual error message
             throw new RuntimeException("Triggers refresh error: " + resp.getStatus());
         }
     }

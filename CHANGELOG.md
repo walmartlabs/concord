@@ -10,6 +10,11 @@
 (including `ansible-playbook`);
 - docker: run Docker containers in the host's network.
 
+### Breaking
+
+- concord-server: the trigger endpoint address is made to conform
+path patterns of the rest of the organization endpoints.
+
 
 
 ## [0.54.0] - 2017-02-01

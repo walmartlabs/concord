@@ -50,11 +50,7 @@ public abstract class AbstractConcordTask implements Task {
     @Inject
     ApiConfiguration apiCfg;
 
-    public AbstractConcordTask() {
-        this.apiCfg = null;
-    }
-
-    protected ResteasyClient createClient() {
+    private ResteasyClient createClient() {
         return new ResteasyClientBuilder()
                 .establishConnectionTimeout(30, TimeUnit.SECONDS)
                 .socketTimeout(30, TimeUnit.SECONDS)
@@ -65,7 +61,7 @@ public abstract class AbstractConcordTask implements Task {
         return withClient(ctx, null, f);
     }
 
-    protected <T> T withClient(Context ctx, String uri, CheckedFunction<ResteasyWebTarget, T> f) throws Exception {
+    private <T> T withClient(Context ctx, String uri, CheckedFunction<ResteasyWebTarget, T> f) throws Exception {
         ResteasyClient client = createClient();
         client.register((ClientRequestFilter) requestContext -> {
             MultivaluedMap<String, Object> headers = requestContext.getHeaders();
@@ -107,7 +103,7 @@ public abstract class AbstractConcordTask implements Task {
         });
     }
 
-    protected MultipartFormDataOutput createMDO(Map<String, Object> input) {
+    private MultipartFormDataOutput createMDO(Map<String, Object> input) {
         MultipartFormDataOutput mdo = new MultipartFormDataOutput();
         input.forEach((k, v) -> {
             if (v instanceof InputStream || v instanceof byte[]) {

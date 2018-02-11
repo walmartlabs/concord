@@ -44,7 +44,7 @@ public interface TriggerResource {
      */
     @GET
     @ApiOperation("List trigger definitions")
-    @Path("/{orgName}/trigger/refresh/{projectName}/{repositoryName}")
+    @Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
     @Produces(MediaType.APPLICATION_JSON)
     List<TriggerEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                             @ApiParam @PathParam("projectName") @ConcordKey String projectName,
@@ -69,7 +69,7 @@ public interface TriggerResource {
      */
     @POST
     @ApiOperation("Refresh trigger definitions for the specified project and repository")
-    @Path("/{orgName}/trigger/refresh/{projectName}/{repositoryName}")
+    @Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
     Response refresh(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                      @ApiParam @PathParam("projectName") @ConcordKey String projectName,
                      @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);

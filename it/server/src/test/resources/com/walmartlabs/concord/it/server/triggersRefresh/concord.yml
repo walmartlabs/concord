@@ -2,6 +2,6 @@ flows:
   default:
   - task: triggersRefresh
     in:
-      org: "Default"
-      repository: "githubTriggers"
+      org: "ConcordSystem"
       project: "concordTriggers"
+      repository: "triggers"
