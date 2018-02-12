@@ -36,6 +36,7 @@ library/docker:stable-dind
 docker run -d \
 --name agent \
 --link server \
+--link dind \
 -v /tmp:/tmp \
 -e 'CONCORD_DOCKER_LOCAL_MODE=false' \
 walmartlabs/concord-agent
@@ -43,6 +44,5 @@ walmartlabs/concord-agent
 docker run -d \
 --name console \
 --link server \
---link dind \
 -p 8080:8080 \
 walmartlabs/concord-console
