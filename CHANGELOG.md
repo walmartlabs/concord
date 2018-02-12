@@ -9,6 +9,7 @@ resolved dependencies of a process.
 
 ### Changed
  
+- concord-client: use polling while waiting for the process to end;
 - ansible: updated to 2.4.3;
 - concord-client: `org` parameter was ignored;
 - concord-server: configurable max state age;

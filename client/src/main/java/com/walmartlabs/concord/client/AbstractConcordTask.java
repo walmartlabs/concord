@@ -33,11 +33,7 @@ import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -88,18 +84,25 @@ public abstract class AbstractConcordTask implements Task {
             };
 
             Response resp = target.request().post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
-            if (resp.getStatus() != Response.Status.OK.getStatusCode()) {
-                resp.close();
-                if (resp.getStatus() == 403) {
-                    throw new ForbiddenException();
+            try {
+                if (resp.getStatus() != Response.Status.OK.getStatusCode()) {
+                    if (resp.getStatus() == 403) {
+                        throw new ForbiddenException();
+                    }
+
+                    if (isJson(resp)) {
+                        Object details = resp.readEntity(Object.class);
+                        throw new WebApplicationException(details.toString(), resp);
+                    } else {
+                        throw new WebApplicationException(resp);
+                    }
                 }
 
-                throw new WebApplicationException(resp);
+                T e = resp.readEntity(entityType);
+                return e;
+            } finally {
+                resp.close();
             }
-
-            T e = resp.readEntity(entityType);
-            resp.close();
-            return e;
         });
     }
 
@@ -150,6 +153,16 @@ public abstract class AbstractConcordTask implements Task {
             throw new IllegalArgumentException("'" + k + "' is required");
         }
         return (T) v;
+    }
+
+    private static boolean isJson(Response resp) {
+        String contentType = resp.getHeaderString(HttpHeaders.CONTENT_TYPE);
+        if (contentType == null) {
+            return false;
+        }
+
+        contentType = contentType.toLowerCase();
+        return contentType.contains("json");
     }
 
     @FunctionalInterface

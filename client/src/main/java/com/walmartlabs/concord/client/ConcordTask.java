@@ -32,10 +32,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.Keys.ACTION_KEY;
@@ -46,6 +48,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final Logger log = LoggerFactory.getLogger(ConcordTask.class);
 
     private static final long DEFAULT_KILL_TIMEOUT = 10000;
+    private static final long DEFAULT_POLL_DELAY = 5000;
 
     private static final String ARCHIVE_KEY = "archive";
     private static final String ORG_KEY = "org";
@@ -116,33 +119,41 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids) throws Exception {
-        return waitForCompletion(ctx, defaults, ids, -1);
+        return waitForCompletion(ctx, ids, -1);
     }
 
     public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout) throws Exception {
-        return waitForCompletion(ctx, defaults, ids, timeout);
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, Map<String, Object> cfg, List<String> ids, long timeout) throws Exception {
-
         Map<String, Object> result = new HashMap<>();
 
         ids.parallelStream().map(UUID::fromString).forEach(id -> {
             log.info("Waiting for {}...", id);
 
-            try {
-                ProcessStatus status = withClient(ctx, target -> {
-                    ProcessResource proxy = target.proxy(ProcessResource.class);
-                    ProcessEntry e = proxy.waitForCompletion(id, timeout);
-                    return e.getStatus();
-                });
+            long t1 = System.currentTimeMillis();
+            while (true) {
+                try {
+                    ProcessStatus s = withClient(ctx, target -> {
+                        ProcessResource proxy = target.proxy(ProcessResource.class);
+                        ProcessEntry e = proxy.get(id);
+                        return e.getStatus();
+                    });
 
-                log.info("Process {} is {}", id, status);
+                    if (s == ProcessStatus.FAILED || s == ProcessStatus.FINISHED || s == ProcessStatus.CANCELLED) {
+                        result.put(id.toString(), s.name());
+                        break;
+                    } else {
+                        long t2 = System.currentTimeMillis();
+                        if (timeout > 0) {
+                            long dt = t2 - t1;
+                            if (dt >= timeout) {
+                                throw new TimeoutException("Timeout waiting for " + id + ": " + dt);
+                            }
+                        }
 
-                result.put(id.toString(), status.name());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                        Thread.sleep(DEFAULT_POLL_DELAY);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
 
@@ -201,16 +212,30 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         input.put("parentInstanceId", instanceId);
-        input.put("sync", sync);
 
         StartProcessResponse resp = request(ctx, targetUri, input, StartProcessResponse.class);
 
         String childId = resp.getInstanceId().toString();
         log.info(sync ? "Child process completed: {}" : "Started a child process: {}", childId);
 
-        ctx.setVariable(JOBS_KEY, Collections.singletonList(childId));
-        Object out = resp.getOut() != null ? resp.getOut() : Collections.emptyMap();
-        ctx.setVariable(JOB_OUT_KEY, out);
+        List<String> jobs = Collections.singletonList(childId);
+        ctx.setVariable(JOBS_KEY, jobs);
+
+        if (sync) {
+            waitForCompletion(ctx, jobs);
+
+            Object out = withClient(ctx, target -> {
+                ProcessResource processResource = target.proxy(ProcessResource.class);
+                Response r = processResource.downloadAttachment(UUID.fromString(childId), "out.json");
+                if (r.getStatus() == 200) {
+                    String s = r.readEntity(String.class);
+                    return om.readValue(s, Map.class);
+                }
+                return null;
+            });
+
+            ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -323,7 +348,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
         if (sync) {
-            waitForCompletion(ctx, cfg, Collections.singletonList(instanceId), DEFAULT_KILL_TIMEOUT);
+            waitForCompletion(ctx, Collections.singletonList(instanceId), DEFAULT_KILL_TIMEOUT);
         }
     }
 

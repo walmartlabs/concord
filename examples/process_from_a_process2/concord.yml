@@ -1,12 +1,3 @@
-configuration:
-  dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:concord-tasks:0.34.0"
-
-  arguments:
-    concord:
-      # default parameters, can be overridden with `in` parameters of the task
-      apiKey: "auBy4eDWrKWsyhiDp3AQiw"
-
 flows:
   default:
   # starts a process and retrieves it's variable value
@@ -28,4 +19,3 @@ flows:
       repository: default
       sync: true
   - log: "Done! ${jobs[0]} is completed"
-
