@@ -15,7 +15,7 @@ docker run -d \
 -e 'PGDATA=/var/lib/postgresql/data/pgdata' \
 --mount source=concordDB,target=/var/lib/postgresql/data \
 -p 5432:5432 \
-hub.docker.prod.walmart.com/library/postgres:latest
+library/postgres:latest
 
 docker run -d \
 --link db \
@@ -29,14 +29,12 @@ docker run -d \
 walmartlabs/concord-server
 
 docker run -d \
---privileged \
 --name dind \
--v /tmp:/tmp \
-docker.prod.walmart.com/walmartlabs/concord-dind
+--privileged \
+library/docker:stable-dind
 
 docker run -d \
 --name agent \
---link dind \
 --link server \
 -v /tmp:/tmp \
 -e 'CONCORD_DOCKER_LOCAL_MODE=false' \
@@ -45,5 +43,6 @@ walmartlabs/concord-agent
 docker run -d \
 --name console \
 --link server \
+--link dind \
 -p 8080:8080 \
 walmartlabs/concord-console
