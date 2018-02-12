@@ -35,6 +35,8 @@ public class InventoryQueryEntry implements Serializable {
 
     private final UUID id;
 
+    private final UUID inventoryId;
+
     @NotNull
     @ConcordKey
     private final String inventoryName;
@@ -49,10 +51,12 @@ public class InventoryQueryEntry implements Serializable {
     @JsonCreator
     public InventoryQueryEntry(@JsonProperty("id") UUID id,
                                @JsonProperty("name") String name,
+                               @JsonProperty("inventoryId") UUID inventoryId,
                                @JsonProperty("inventoryName") String inventoryName,
                                @JsonProperty("text") String text) {
         this.id = id;
         this.name = name;
+        this.inventoryId = inventoryId;
         this.inventoryName = inventoryName;
         this.text = text;
     }
@@ -63,6 +67,10 @@ public class InventoryQueryEntry implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public UUID getInventoryId() {
+        return inventoryId;
     }
 
     public String getInventoryName() {
@@ -77,6 +85,7 @@ public class InventoryQueryEntry implements Serializable {
     public String toString() {
         return "InventoryQueryEntry{" +
                 "id=" + id +
+                ", inventoryId='" + inventoryId + '\'' +
                 ", inventoryName='" + inventoryName + '\'' +
                 ", name='" + name + '\'' +
                 ", text='" + text + '\'' +

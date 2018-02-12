@@ -61,8 +61,10 @@ public class InventoryQueryExecDao extends AbstractDao {
             return null;
         }
 
+        String sql = q.getText() + " and inventory_id = cast(? AS uuid)";
+
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.resultQuery(q.getText(), val(serialize(params)))
+            return tx.resultQuery(sql, val(serialize(params)), val(q.getInventoryId()))
                     .fetch(this::toExecResult);
         }
     }

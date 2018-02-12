@@ -23,10 +23,7 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryQueryEntry;
 import com.walmartlabs.concord.server.jooq.tables.InventoryQueries;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.Record4;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -61,10 +58,11 @@ public class InventoryQueryDao extends AbstractDao {
             InventoryQueries q = INVENTORY_QUERIES.as("q");
             Field<String> inventoryNameField = select(INVENTORIES.INVENTORY_NAME).from(INVENTORIES).where(INVENTORIES.INVENTORY_ID.eq(q.INVENTORY_ID)).asField();
 
-            Record4<UUID, String, String, String> r =
+            Record5<UUID, String, UUID, String, String> r =
                     tx.select(
                         q.QUERY_ID,
                         q.QUERY_NAME,
+                        q.INVENTORY_ID,
                         inventoryNameField,
                         q.QUERY_TEXT)
                     .from(q)
@@ -75,7 +73,7 @@ public class InventoryQueryDao extends AbstractDao {
                 return null;
             }
 
-            return new InventoryQueryEntry(r.get(q.QUERY_ID), r.get(q.QUERY_NAME), r.get(inventoryNameField), r.get(q.QUERY_TEXT));
+            return new InventoryQueryEntry(r.get(q.QUERY_ID), r.get(q.QUERY_NAME), r.get(q.INVENTORY_ID), r.get(inventoryNameField), r.get(q.QUERY_TEXT));
         }
     }
 
