@@ -27,6 +27,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
+import org.sonatype.siesta.MediaTypes;
 
 import javax.inject.Inject;
 import javax.ws.rs.ForbiddenException;
@@ -62,6 +63,7 @@ public abstract class AbstractConcordTask implements Task {
         client.register((ClientRequestFilter) requestContext -> {
             MultivaluedMap<String, Object> headers = requestContext.getHeaders();
             headers.putSingle("X-Concord-SessionToken", apiCfg.getSessionToken(ctx));
+            headers.add("Accept", MediaTypes.VND_VALIDATION_ERRORS_V1_JSON);
         });
 
         String targetUri = apiCfg.getBaseUrl();
@@ -72,6 +74,13 @@ public abstract class AbstractConcordTask implements Task {
         ResteasyWebTarget target = client.target(targetUri);
         try {
             return f.apply(target);
+        } catch (WebApplicationException e) {
+            Response resp = e.getResponse();
+            if (isJson(resp)) {
+                Object details = resp.readEntity(Object.class);
+                throw new WebApplicationException(details.toString(), resp);
+            }
+            throw e;
         } finally {
             client.close();
         }
@@ -104,6 +113,18 @@ public abstract class AbstractConcordTask implements Task {
                 resp.close();
             }
         });
+    }
+
+    protected static void assertResponse(Response resp) {
+        int response = resp.getStatus();
+        if (response < 200 || response >= 300) {
+            if(isJson(resp)) {
+                Object details = resp.readEntity(Object.class);
+                throw new WebApplicationException(details.toString(), resp);
+            } else {
+                throw new WebApplicationException(resp);
+            }
+        }
     }
 
     private MultipartFormDataOutput createMDO(Map<String, Object> input) {

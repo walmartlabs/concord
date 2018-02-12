@@ -47,9 +47,6 @@ public class LandingPageRefreshTask extends AbstractConcordTask implements Task 
             return proxy.refresh(orgName, projectName, repositoryName);
         });
 
-        int response = resp.getStatus();
-        if (response < 200 || response >= 300) {
-            throw new RuntimeException("Landing page refresh error: " + resp.getStatus());
-        }
+        assertResponse(resp);
     }
 }
