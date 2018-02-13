@@ -27,10 +27,8 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
-import org.sonatype.siesta.MediaTypes;
 
 import javax.inject.Inject;
-import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
@@ -63,7 +61,7 @@ public abstract class AbstractConcordTask implements Task {
         client.register((ClientRequestFilter) requestContext -> {
             MultivaluedMap<String, Object> headers = requestContext.getHeaders();
             headers.putSingle("X-Concord-SessionToken", apiCfg.getSessionToken(ctx));
-            headers.add("Accept", MediaTypes.VND_VALIDATION_ERRORS_V1_JSON);
+            headers.add("Accept", MediaType.WILDCARD);
         });
 
         String targetUri = apiCfg.getBaseUrl();
@@ -74,13 +72,6 @@ public abstract class AbstractConcordTask implements Task {
         ResteasyWebTarget target = client.target(targetUri);
         try {
             return f.apply(target);
-        } catch (WebApplicationException e) {
-            Response resp = e.getResponse();
-            if (isJson(resp)) {
-                Object details = resp.readEntity(Object.class);
-                throw new WebApplicationException(details.toString(), resp);
-            }
-            throw e;
         } finally {
             client.close();
         }
@@ -93,25 +84,15 @@ public abstract class AbstractConcordTask implements Task {
             };
 
             Response resp = target.request().post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
-            try {
-                if (resp.getStatus() != Response.Status.OK.getStatusCode()) {
-                    if (resp.getStatus() == 403) {
-                        throw new ForbiddenException();
-                    }
-
-                    if (isJson(resp)) {
-                        Object details = resp.readEntity(Object.class);
-                        throw new WebApplicationException(details.toString(), resp);
-                    } else {
-                        throw new WebApplicationException(resp);
-                    }
+            if (resp.getStatus() < 200 || resp.getStatus() >= 400) {
+                if (isJson(resp)) {
+                    Object details = resp.readEntity(Object.class);
+                    throw new WebApplicationException(details.toString(), resp);
                 }
-
-                T e = resp.readEntity(entityType);
-                return e;
-            } finally {
-                resp.close();
             }
+
+            T e = resp.readEntity(entityType);
+            return e;
         });
     }
 
