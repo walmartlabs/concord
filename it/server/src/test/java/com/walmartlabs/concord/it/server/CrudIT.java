@@ -208,10 +208,14 @@ public class CrudIT extends AbstractServerIT {
         String inventoryName = "inventory_" + randomString();
         String queryName = "queryName_" + randomString();
         String text = "text_" + randomString();
-        ;
 
         InventoryResource inventoryResource = proxy(InventoryResource.class);
         inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
+
+        // ---
+
+        InventoryDataResource inventoryDataResource = proxy(InventoryDataResource.class);
+        inventoryDataResource.data(orgName, inventoryName, "/test", Collections.singletonMap("k", "v"));
 
         // --- create
 
@@ -220,7 +224,7 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(cqr.getId());
 
         // --- update
-        String updatedText = "select cast(json_build_object('k', 'v') as varchar)";
+        String updatedText = "select item_data::text from inventory_data";
         CreateInventoryQueryResponse uqr = resource.createOrUpdate(orgName, inventoryName, queryName, updatedText);
         assertTrue(uqr.isOk());
         assertNotNull(uqr.getId());

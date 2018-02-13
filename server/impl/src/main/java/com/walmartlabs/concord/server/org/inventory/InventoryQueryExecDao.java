@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryQueryEntry;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
+import org.jooq.QueryPart;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
 
@@ -61,10 +62,27 @@ public class InventoryQueryExecDao extends AbstractDao {
             return null;
         }
 
-        String sql = q.getText() + " and inventory_id = cast(? AS uuid)";
+        String sql = q.getText();
+
+        // TODO a better way to add the inventory filter
+        String sqlLow = sql.toLowerCase();
+        if (sqlLow.contains(" from inventory_data")) {
+            if (sqlLow.contains(" where ")) {
+                sql += " and inventory_data.inventory_id = cast(? AS uuid)";
+            } else {
+                sql += " where inventory_data.inventory_id = cast(? AS uuid)";
+            }
+        }
 
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.resultQuery(sql, val(serialize(params)), val(q.getInventoryId()))
+            QueryPart[] args;
+            if (params == null) {
+                args = new QueryPart[]{val(q.getInventoryId())};
+            } else {
+                args = new QueryPart[]{val(serialize(params)), val(q.getInventoryId())};
+            }
+
+            return tx.resultQuery(sql, args)
                     .fetch(this::toExecResult);
         }
     }
