@@ -450,7 +450,9 @@ public class RunPlaybookTask2 implements Task {
                 throw new IllegalArgumentException("Password is required to export a private key");
             }
 
-            Map<String, String> keyPair = secretStore.exportKeyAsFile(txId, workDir.toAbsolutePath().toString(), name, password);
+            String orgName = (String) m.get("org");
+
+            Map<String, String> keyPair = secretStore.exportKeyAsFile(txId, orgName, workDir.toAbsolutePath().toString(), name, password);
             p = Paths.get(keyPair.get("private"));
         } else {
             p = getPath(args, AnsibleConstants.PRIVATE_KEY_FILE_KEY, workDir);

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.sdk.SecretStoreService;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -50,17 +51,19 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
     private static final Logger log = LoggerFactory.getLogger(SecretStoreService.class);
 
     private final SecretManager secretManager;
+    private final OrganizationDao orgDao;
     private final ProcessQueueDao queueDao;
     private final ProcessSecurityContext securityContext;
     private final LogManager logManager;
 
     @Inject
     public SecretStoreServiceImpl(SecretManager secretManager,
-                                  ProcessQueueDao queueDao,
+                                  OrganizationDao orgDao, ProcessQueueDao queueDao,
                                   ProcessSecurityContext securityContext,
                                   LogManager logManager) {
 
         this.secretManager = secretManager;
+        this.orgDao = orgDao;
         this.queueDao = queueDao;
         this.securityContext = securityContext;
         this.logManager = logManager;
@@ -83,7 +86,18 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
         }
 
         UUID instanceId = UUID.fromString(sId);
-        UUID orgId = getOrgId(instanceId, secretName);
+
+        UUID orgId;
+        String orgName = request.getOrgName();
+        if (orgName != null && !orgName.trim().isEmpty()) {
+            orgId = orgDao.getId(orgName);
+            if (orgId == null) {
+                responseObserver.onError(new IllegalArgumentException("Organization '" + orgName + "' not found"));
+                return;
+            }
+        } else {
+            orgId = getOrgId(instanceId, secretName);
+        }
 
         try {
             securityContext.runAsInitiator(instanceId, () -> {
@@ -168,6 +182,7 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
                     "Consider moving those secrets into your organization.", secretName);
             return OrganizationManager.DEFAULT_ORG_ID;
         }
+
         return id;
     }
 

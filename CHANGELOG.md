@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- crypto: ability to export secrets from organizations other than
+the current.
+
+
+
 ## [0.55.0] - 2017-02-13
 
 ### Added

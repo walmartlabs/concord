@@ -28,8 +28,19 @@ public interface SecretStore {
                           String name,
                           String password) throws Exception;
 
+    String exportAsString(String instanceId,
+                          String orgName,
+                          String name,
+                          String password) throws Exception;
+
     Map<String, String> exportKeyAsFile(String instanceId,
                                         String workDir,
+                                        String name,
+                                        String password) throws Exception;
+
+    Map<String, String> exportKeyAsFile(String instanceId,
+                                        String workDir,
+                                        String orgName,
                                         String name,
                                         String password) throws Exception;
 
@@ -38,8 +49,20 @@ public interface SecretStore {
                                           String name,
                                           String password) throws Exception;
 
+    Map<String, String> exportCredentials(String instanceId,
+                                          String workDir,
+                                          String orgName,
+                                          String name,
+                                          String password) throws Exception;
+
     String exportAsFile(String instanceId,
                         String workDir,
+                        String name,
+                        String password) throws Exception;
+
+    String exportAsFile(String instanceId,
+                        String workDir,
+                        String orgName,
                         String name,
                         String password) throws Exception;
 

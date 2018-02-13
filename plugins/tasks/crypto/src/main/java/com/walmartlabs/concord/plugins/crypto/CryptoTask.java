@@ -53,7 +53,16 @@ public class CryptoTask implements Task, SecretStore {
                                  String name,
                                  String password) throws Exception {
 
-        Secret s = get(instanceId, name, password);
+        return exportAsString(instanceId, null, name, password);
+    }
+
+    @Override
+    public String exportAsString(@InjectVariable("txId") String instanceId,
+                                 String orgName,
+                                 String name,
+                                 String password) throws Exception {
+
+        Secret s = get(instanceId, orgName, name, password);
 
         if (!(s instanceof BinaryDataSecret)) {
             throw new IllegalArgumentException("The secret '" + name + "'can't be exported as a string");
@@ -69,9 +78,19 @@ public class CryptoTask implements Task, SecretStore {
                                                String name,
                                                String password) throws Exception {
 
+        return exportKeyAsFile(instanceId, workDir, null, name, password);
+    }
+
+    @Override
+    public Map<String, String> exportKeyAsFile(@InjectVariable("txId") String instanceId,
+                                               @InjectVariable("workDir") String workDir,
+                                               String orgName,
+                                               String name,
+                                               String password) throws Exception {
+
         log.info("Exporting a key pair: {}", name);
 
-        Secret s = get(instanceId, name, password);
+        Secret s = get(instanceId, orgName, name, password);
         if (!(s instanceof KeyPair)) {
             throw new IllegalArgumentException("Expected a key pair");
         }
@@ -99,7 +118,17 @@ public class CryptoTask implements Task, SecretStore {
                                                  @InjectVariable("workDir") String workDir,
                                                  String name,
                                                  String password) throws Exception {
-        Secret s = get(instanceId, name, password);
+
+        return exportCredentials(instanceId, workDir, null, name, password);
+    }
+
+    @Override
+    public Map<String, String> exportCredentials(@InjectVariable("txId") String instanceId,
+                                                 @InjectVariable("workDir") String workDir,
+                                                 String orgName,
+                                                 String name,
+                                                 String password) throws Exception {
+        Secret s = get(instanceId, orgName, name, password);
         if (!(s instanceof UsernamePassword)) {
             throw new IllegalArgumentException("Expected a credentials secret");
         }
@@ -118,7 +147,17 @@ public class CryptoTask implements Task, SecretStore {
                                String name,
                                String password) throws Exception {
 
-        Secret s = get(instanceId, name, password);
+        return exportAsFile(instanceId, workDir, null, name, password);
+    }
+
+    @Override
+    public String exportAsFile(@InjectVariable("txId") String instanceId,
+                               @InjectVariable("workDir") String workDir,
+                               String orgName,
+                               String name,
+                               String password) throws Exception {
+
+        Secret s = get(instanceId, orgName, name, password);
         if (!(s instanceof BinaryDataSecret)) {
             throw new IllegalArgumentException("Expected a single value secret");
         }
@@ -139,8 +178,8 @@ public class CryptoTask implements Task, SecretStore {
         return secretStoreService.decryptString(instanceId, s);
     }
 
-    private Secret get(String instanceId, String name, String password) throws Exception {
-        Secret s = secretStoreService.fetch(instanceId, name, password);
+    private Secret get(String instanceId, String orgName, String name, String password) throws Exception {
+        Secret s = secretStoreService.fetch(instanceId, orgName, name, password);
         if (s == null) {
             throw new IllegalArgumentException("Secret not found: " + name);
         }

@@ -159,6 +159,7 @@ message TFetchSecretRequest {
     string instanceId = 1;
     string secretName = 2;
     string password = 3;
+    string orgName = 4;
 }
 
 enum TSecretType {

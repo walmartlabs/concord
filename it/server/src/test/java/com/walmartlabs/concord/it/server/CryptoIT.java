@@ -21,6 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.OrganizationResource;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
@@ -82,6 +84,40 @@ public class CryptoIT extends AbstractServerIT {
         // ---
 
         test("cryptoFile", secretName, storePassword, ".*We got " + secretValue + ".*");
+    }
+
+    @Test(timeout = 30000)
+    public void testExportAsFileWithOrg() throws Exception {
+        String orgName = "org@" + randomString();
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String secretName = "secret@" + randomString();
+        String secretValue = "value@" + randomString();
+        String storePassword = "store@" + randomString();
+
+        addPlainSecret(orgName, secretName, false, storePassword, secretValue.getBytes());
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("cryptoFileWithOrg").toURI());
+
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "archive", payload,
+                "arguments.secretName", secretName,
+                "arguments.pwd", storePassword,
+                "arguments.secretOrgName", orgName));
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*We got " + secretValue + ".*", ab);
     }
 
     private void test(String project, String secretName, String storePassword, String log) throws Exception {

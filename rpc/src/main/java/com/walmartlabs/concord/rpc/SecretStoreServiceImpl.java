@@ -46,15 +46,19 @@ public class SecretStoreServiceImpl implements SecretStoreService {
     }
 
     @Override
-    public Secret fetch(String instanceId, String secretName, String password) throws ClientException {
+    public Secret fetch(String instanceId, String orgName, String secretName, String password) throws ClientException {
         TSecretStoreServiceBlockingStub blockingStub = TSecretStoreServiceGrpc.newBlockingStub(channel)
                 .withDeadlineAfter(FETCH_TIMEOUT, TimeUnit.MILLISECONDS);
 
-        TFetchSecretResponse resp = blockingStub.fetch(TFetchSecretRequest.newBuilder()
+        TFetchSecretRequest.Builder req = TFetchSecretRequest.newBuilder()
                 .setInstanceId(instanceId)
                 .setSecretName(secretName)
-                .setPassword(password)
-                .build());
+                .setPassword(password);
+        if (orgName != null) {
+            req.setOrgName(orgName);
+        }
+
+        TFetchSecretResponse resp = blockingStub.fetch(req.build());
 
         TFetchSecretStatus status = resp.getStatus();
         if (status == TFetchSecretStatus.SECRET_NOT_FOUND) {
