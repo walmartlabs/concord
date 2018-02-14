@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -39,13 +41,19 @@ public class UserPrincipal implements Serializable {
     private final String username;
     private final LdapInfo ldapInfo;
     private final boolean admin;
+    private final UserType type;
 
-    public UserPrincipal(String realm, UUID id, String username, LdapInfo ldapInfo, boolean admin) {
+    public UserPrincipal(String realm, UserEntry e, LdapInfo ldapInfo) {
+        this(realm, e.getId(), e.getName(), ldapInfo, e.isAdmin(), e.getType());
+    }
+
+    public UserPrincipal(String realm, UUID id, String username, LdapInfo ldapInfo, boolean admin, UserType type) {
         this.realm = realm;
         this.id = id;
         this.username = username;
         this.ldapInfo = ldapInfo;
         this.admin = admin;
+        this.type = type;
     }
 
     public String getRealm() {
@@ -68,6 +76,10 @@ public class UserPrincipal implements Serializable {
         return admin;
     }
 
+    public UserType getType() {
+        return type;
+    }
+
     @Override
     public String toString() {
         return "UserPrincipal{" +
@@ -76,6 +88,7 @@ public class UserPrincipal implements Serializable {
                 ", username='" + username + '\'' +
                 ", ldapInfo=" + ldapInfo +
                 ", admin=" + admin +
+                ", type=" + type +
                 '}';
     }
 }

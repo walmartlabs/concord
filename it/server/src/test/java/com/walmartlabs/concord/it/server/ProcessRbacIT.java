@@ -36,6 +36,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.api.user.UserType;
 import org.junit.Test;
 
 import javax.ws.rs.WebApplicationException;
@@ -63,7 +64,7 @@ public class ProcessRbacIT extends AbstractServerIT {
         UserResource userResource = proxy(UserResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
         CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
@@ -108,7 +109,7 @@ public class ProcessRbacIT extends AbstractServerIT {
         resetApiKey();
 
         String userBName = "userB_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userBName));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
 
         CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
 

@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,14 +70,14 @@ public class TeamRbacIT extends AbstractServerIT {
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName, UserType.LOCAL));
 
         teamResource.addUsers(orgAName, teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
 
         String userBName = "userB_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userBName));
-        CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
+        CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName, UserType.LOCAL));
 
         teamResource.addUsers(orgBName, teamBName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
 
@@ -122,8 +123,8 @@ public class TeamRbacIT extends AbstractServerIT {
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName, UserType.LOCAL));
 
         // ---
 
@@ -188,13 +189,13 @@ public class TeamRbacIT extends AbstractServerIT {
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
 
         teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MAINTAINER)));
 
         String userBName = "userB_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userBName));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
 
         // ---
@@ -220,12 +221,12 @@ public class TeamRbacIT extends AbstractServerIT {
         UserResource userResource = proxy(UserResource.class);
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
 
-        userResource.createOrUpdate(new CreateUserRequest(userA));
+        userResource.createOrUpdate(new CreateUserRequest(userA, UserType.LOCAL));
         CreateApiKeyResponse userAKey = apiKeyResource.create(new CreateApiKeyRequest(userA));
 
         String userB = "userA_" + randomString();
 
-        userResource.createOrUpdate(new CreateUserRequest(userB));
+        userResource.createOrUpdate(new CreateUserRequest(userB, UserType.LOCAL));
         CreateApiKeyResponse userBKey = apiKeyResource.create(new CreateApiKeyRequest(userB));
 
         // ---
@@ -283,11 +284,11 @@ public class TeamRbacIT extends AbstractServerIT {
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
 
         String userBName = "userB_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userBName));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
 
         // ---
@@ -381,11 +382,11 @@ public class TeamRbacIT extends AbstractServerIT {
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
 
         String userBName = "userB_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userBName));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
 
         // ---

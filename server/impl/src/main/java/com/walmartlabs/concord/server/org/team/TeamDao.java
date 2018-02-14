@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.api.org.team.TeamEntry;
 import com.walmartlabs.concord.server.api.org.team.TeamRole;
 import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.jooq.tables.records.UserTeamsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -159,6 +160,7 @@ public class TeamDao extends AbstractDao {
                 .fetch((Record3<UUID, String, String> r) ->
                         new TeamUserEntry(r.get(USERS.USER_ID),
                                 r.get(USERS.USERNAME),
+                                UserType.valueOf(r.get(USERS.USER_TYPE)),
                                 TeamRole.valueOf(r.get(USER_TEAMS.TEAM_ROLE))));
     }
 

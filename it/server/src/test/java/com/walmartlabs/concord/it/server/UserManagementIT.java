@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.CreateUserResponse;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.api.user.UserType;
 import org.junit.Test;
 
 import javax.ws.rs.ForbiddenException;
@@ -44,7 +45,7 @@ public class UserManagementIT extends AbstractServerIT {
         String username = "user_" + randomString();
         Set<String> permissions = Collections.singleton("user:delete");
 
-        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, permissions, false));
+        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, UserType.LOCAL, permissions, false));
         assertTrue(cur.isOk());
 
         // ---
@@ -63,7 +64,7 @@ public class UserManagementIT extends AbstractServerIT {
         UserResource userResource = proxy(UserResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName, null, false));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL, null, false));
 
         // ---
 
@@ -76,7 +77,7 @@ public class UserManagementIT extends AbstractServerIT {
 
         String userBName = "userB_" + randomString();
         try {
-            userResource.createOrUpdate(new CreateUserRequest(userBName, null, false));
+            userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL, null, false));
             fail("should fail");
         } catch (ForbiddenException e) {
         }
@@ -84,11 +85,11 @@ public class UserManagementIT extends AbstractServerIT {
         // ---
 
         resetApiKey();
-        userResource.createOrUpdate(new CreateUserRequest(userAName, null, true));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL, null, true));
 
         // ---
 
         setApiKey(apiKey.getKey());
-        userResource.createOrUpdate(new CreateUserRequest(userBName, null, false));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL, null, false));
     }
 }

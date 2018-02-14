@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.api.user.UserType;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -63,7 +64,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         UserResource userResource = proxy(UserResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
         CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));

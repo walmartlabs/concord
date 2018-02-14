@@ -38,22 +38,30 @@ public class CreateUserRequest implements Serializable {
 
     private final Boolean admin;
 
-    public CreateUserRequest(String username) {
-        this(username, null, false);
+    private final UserType type;
+
+    public CreateUserRequest(String username, UserType type) {
+        this(username, type, null, false);
     }
 
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
+                             @JsonProperty("userType") UserType type,
                              @JsonProperty("permissions") Set<String> permissions,
                              @JsonProperty("admin") Boolean admin) {
 
         this.username = username;
+        this.type = type;
         this.permissions = permissions;
         this.admin = admin;
     }
 
     public String getUsername() {
         return username;
+    }
+
+    public UserType getType() {
+        return type;
     }
 
     public Set<String> getPermissions() {
@@ -70,6 +78,7 @@ public class CreateUserRequest implements Serializable {
                 "username='" + username + '\'' +
                 ", permissions=" + permissions +
                 ", admin=" + admin +
+                ", type=" + type +
                 '}';
     }
 }

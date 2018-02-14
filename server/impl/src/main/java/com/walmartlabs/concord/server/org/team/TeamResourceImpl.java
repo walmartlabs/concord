@@ -24,6 +24,7 @@ import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.team.*;
 import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
@@ -123,7 +124,12 @@ public class TeamResourceImpl implements TeamResource, Resource {
 
         teamDao.tx(tx -> {
             for (TeamUserEntry u : users) {
-                UUID userId = getOrCreateUserId(u.getUsername());
+                UserType type = u.getUserType();
+                if (type == null) {
+                    type = UserPrincipal.getCurrent().getType();
+                }
+
+                UUID userId = getOrCreateUserId(u.getUsername(), type);
 
                 TeamRole role = u.getRole();
                 if (role == null) {
@@ -168,8 +174,8 @@ public class TeamResourceImpl implements TeamResource, Resource {
         }
     }
 
-    private UUID getOrCreateUserId(String username) {
-        UserEntry user = userManager.getOrCreate(username);
+    private UUID getOrCreateUserId(String username, UserType type) {
+        UserEntry user = userManager.getOrCreate(username, type);
 
         if (user == null) {
             try {
@@ -181,7 +187,7 @@ public class TeamResourceImpl implements TeamResource, Resource {
                 throw new WebApplicationException("Error while retrieving LDAP data: " + e.getMessage(), e);
             }
 
-            user = userManager.getOrCreate(username);
+            user = userManager.getOrCreate(username, type);
         }
 
         return user.getId();

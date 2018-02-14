@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -130,8 +131,8 @@ public class LdapRealm extends AbstractLdapRealm {
             throw new AuthenticationException("LDAP data not found: " + username);
         }
 
-        UserEntry user = userManager.getOrCreate(username);
-        UserPrincipal p = new UserPrincipal(REALM_NAME, user.getId(), user.getName(), ldapInfo, user.isAdmin());
+        UserEntry user = userManager.getOrCreate(username, UserType.LDAP);
+        UserPrincipal p = new UserPrincipal(REALM_NAME, user, ldapInfo);
 
         return new SimpleAccount(Arrays.asList(p, t), t, getName());
     }

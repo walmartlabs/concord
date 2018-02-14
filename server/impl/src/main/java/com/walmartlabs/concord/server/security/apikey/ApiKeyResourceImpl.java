@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.security.apikey.DeleteApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -55,10 +56,10 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
 
     @Override
     @Validate
-    public CreateApiKeyResponse create(CreateApiKeyRequest request) {
-        UUID userId = assertUserId(request.getUserId());
+    public CreateApiKeyResponse create(CreateApiKeyRequest req) {
+        UUID userId = assertUserId(req.getUserId());
         if (userId == null) {
-            userId = assertUsername(request.getUsername());
+            userId = assertUsername(req.getUsername(), req.getUserType());
         }
 
         if (userId == null) {
@@ -86,7 +87,7 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
         return new DeleteApiKeyResponse();
     }
 
-    private UUID assertUsername(String username) {
+    private UUID assertUsername(String username, UserType type) {
         if (username == null) {
             return null;
         }
@@ -101,7 +102,11 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
             }
         }
 
-        UserEntry entry = userManager.getOrCreate(username);
+        if (type == null) {
+            type = UserPrincipal.getCurrent().getType();
+        }
+
+        UserEntry entry = userManager.getOrCreate(username, type);
         return entry.getId();
     }
 

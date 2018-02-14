@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.CreateUserResponse;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.api.user.UserType;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -46,10 +47,10 @@ public class InitiatorIT extends AbstractServerIT {
         String username = "user_" + randomString();
 
         UserResource userResource = proxy(UserResource.class);
-        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, Collections.singleton("*"), false));
+        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, UserType.LOCAL, Collections.singleton("*"), false));
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(cur.getId(), username));
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(username));
 
         setApiKey(cakr.getKey());
 

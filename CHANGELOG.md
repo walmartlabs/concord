@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: new user's `type` attribute (`LOCAL` or `LDAP`);
 - crypto: ability to export secrets from organizations other than
 the current.
 

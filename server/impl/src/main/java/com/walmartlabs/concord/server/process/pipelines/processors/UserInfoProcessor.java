@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -78,7 +79,7 @@ public class UserInfoProcessor implements PayloadProcessor {
         }
 
         LdapInfo ldapInfo = p.getLdapInfo();
-        if (ldapInfo == null) {
+        if (ldapInfo == null && p.getType() == UserType.LDAP) {
             try {
                 ldapInfo = ldapManager.getInfo(p.getUsername());
             } catch (NamingException e) {

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.server.api.org.team.TeamRole;
 import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -44,14 +45,14 @@ public class UserManager {
         this.teamDao = teamDao;
     }
 
-    public UserEntry getOrCreate(String username) {
-        return getOrCreate(username, null, false);
+    public UserEntry getOrCreate(String username, UserType userType) {
+        return getOrCreate(username, userType, null, false);
     }
 
-    public UserEntry getOrCreate(String username, Set<String> permissions, boolean admin) {
+    public UserEntry getOrCreate(String username, UserType type, Set<String> permissions, boolean admin) {
         UUID id = userDao.getId(username);
         if (id == null) {
-            return create(username, permissions, admin);
+            return create(username, type, permissions, admin);
         }
         return userDao.get(id);
     }
@@ -65,8 +66,12 @@ public class UserManager {
         return Optional.ofNullable(id);
     }
 
-    public UserEntry create(String username, Set<String> permissions, boolean admin) {
-        UUID id = userDao.insert(username, permissions, admin);
+    public UserEntry create(String username, UserType type, Set<String> permissions, boolean admin) {
+        if (type == null) {
+            type = UserPrincipal.getCurrent().getType();
+        }
+
+        UUID id = userDao.insert(username, type, permissions, admin);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_TEAM_ID;

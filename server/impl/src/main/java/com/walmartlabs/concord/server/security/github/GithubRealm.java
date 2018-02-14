@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.security.github;
 
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -69,7 +68,7 @@ public class GithubRealm extends AuthorizingRealm {
 
         return userManager.get(userId)
                 .map(u -> {
-                    UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), null, u.isAdmin());
+                    UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), null, u.isAdmin(), u.getType());
                     return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
                 })
                 .orElse(null);

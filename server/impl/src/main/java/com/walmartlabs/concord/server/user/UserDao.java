@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.user;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.api.user.UserType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -50,14 +51,14 @@ public class UserDao extends AbstractDao {
         super(cfg);
     }
 
-    public UUID insert(String username, Set<String> permissions, boolean admin) {
-        return txResult(tx -> insert(tx, username, permissions, admin));
+    public UUID insert(String username, UserType type, Set<String> permissions, boolean admin) {
+        return txResult(tx -> insert(tx, username, type, permissions, admin));
     }
 
-    public UUID insert(DSLContext tx, String username, Set<String> permissions, boolean admin) {
+    public UUID insert(DSLContext tx, String username, UserType type, Set<String> permissions, boolean admin) {
         UUID id = tx.insertInto(USERS)
-                .columns(USERS.USERNAME, USERS.IS_ADMIN)
-                .values(username, admin)
+                .columns(USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_TYPE)
+                .values(username, admin, type.toString())
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
 
@@ -88,7 +89,7 @@ public class UserDao extends AbstractDao {
 
     public UserEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record3<UUID, String, Boolean> r = tx.select(USERS.USER_ID, USERS.USERNAME, USERS.IS_ADMIN)
+            Record4<UUID, String, String, Boolean> r = tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN)
                     .from(USERS)
                     .where(USERS.USER_ID.eq(id))
                     .fetchOne();
@@ -120,7 +121,8 @@ public class UserDao extends AbstractDao {
                     r.get(USERS.USERNAME),
                     new HashSet<>(perms),
                     new HashSet<>(orgs),
-                    r.get(USERS.IS_ADMIN));
+                    r.get(USERS.IS_ADMIN),
+                    UserType.valueOf(r.get(USERS.USER_TYPE)));
         }
     }
 

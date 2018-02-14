@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.api.user.UserType;
 import org.junit.Test;
 
 import javax.ws.rs.ForbiddenException;
@@ -40,13 +41,13 @@ public class ApiKeyIT extends AbstractServerIT {
         String userBName = "userB_" + randomString();
 
         UserResource userResource = proxy(UserResource.class);
-        userResource.createOrUpdate(new CreateUserRequest(userAName));
-        userResource.createOrUpdate(new CreateUserRequest(userBName));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
 
         // ---
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(null, userAName));
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(userAName));
         assertTrue(cakr.isOk());
 
         // ---
@@ -54,14 +55,14 @@ public class ApiKeyIT extends AbstractServerIT {
         setApiKey(cakr.getKey());
 
         try {
-            apiKeyResource.create(new CreateApiKeyRequest(null, userBName));
+            apiKeyResource.create(new CreateApiKeyRequest(userBName));
             fail("Should fail");
         } catch (ForbiddenException e) {
         }
 
         // ---
 
-        cakr = apiKeyResource.create(new CreateApiKeyRequest(null, userAName));
+        cakr = apiKeyResource.create(new CreateApiKeyRequest(userAName));
         assertTrue(cakr.isOk());
     }
 }

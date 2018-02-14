@@ -40,6 +40,7 @@ import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
 import com.walmartlabs.concord.server.api.user.CreateUserRequest;
 import com.walmartlabs.concord.server.api.user.CreateUserResponse;
 import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -48,7 +49,6 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -327,13 +327,13 @@ public class ProjectIT extends AbstractServerIT {
                                         String commitId, String tag) {
 
         UserResource userResource = proxy(UserResource.class);
-        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(userName, permissions, false));
+        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(userName, UserType.LOCAL, permissions, false));
         assertTrue(cur.isOk());
 
         UUID userId = cur.getId();
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(userId, null));
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(userId, null, UserType.LOCAL));
         assertTrue(cakr.isOk());
 
         String apiKey = cakr.getKey();

@@ -48,18 +48,18 @@ public class UserResourceImpl implements UserResource, Resource {
 
     @Override
     @Validate
-    public CreateUserResponse createOrUpdate(CreateUserRequest request) {
+    public CreateUserResponse createOrUpdate(CreateUserRequest req) {
         assertAdmin();
 
-        String username = request.getUsername();
+        String username = req.getUsername();
 
         UUID id = userDao.getId(username);
         if (id == null) {
-            boolean admin = request.getAdmin() != null ? request.getAdmin() : false;
-            UserEntry e = userManager.create(username, request.getPermissions(), admin);
+            boolean admin = req.getAdmin() != null ? req.getAdmin() : false;
+            UserEntry e = userManager.create(username, req.getType(), req.getPermissions(), admin);
             return new CreateUserResponse(e.getId(), OperationResult.CREATED);
         } else {
-            userDao.update(id, request.getPermissions(), request.getAdmin());
+            userDao.update(id, req.getPermissions(), req.getAdmin());
             return new CreateUserResponse(id, OperationResult.UPDATED);
         }
     }

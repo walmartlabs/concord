@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.api.user.UserType;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -33,18 +34,25 @@ public class TeamUserEntry implements Serializable {
 
     private final UUID id;
     private final String username;
+    private final UserType userType;
     private final TeamRole role;
 
     public TeamUserEntry(String username, TeamRole role) {
-        this(null, username, role);
+        this(null, username, null, role);
+    }
+
+    public TeamUserEntry(String username, UserType userType, TeamRole role) {
+        this(null, username, userType, role);
     }
 
     @JsonCreator
     public TeamUserEntry(@JsonProperty("id") UUID id,
                          @JsonProperty("username") String username,
+                         @JsonProperty("userType") UserType userType,
                          @JsonProperty("role") TeamRole role) {
         this.id = id;
         this.username = username;
+        this.userType = userType;
         this.role = role;
     }
 
@@ -56,6 +64,10 @@ public class TeamUserEntry implements Serializable {
         return username;
     }
 
+    public UserType getUserType() {
+        return userType;
+    }
+
     public TeamRole getRole() {
         return role;
     }
@@ -65,6 +77,7 @@ public class TeamUserEntry implements Serializable {
         return "TeamUserEntry{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
+                ", userType=" + userType +
                 ", role=" + role +
                 '}';
     }
