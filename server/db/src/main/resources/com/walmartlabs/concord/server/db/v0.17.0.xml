@@ -18,6 +18,7 @@
         </addColumn>
     </changeSet>
 
+    <!-- removed in 0.57.0+
     <changeSet id="17600" author="ibodrov@gmail.com">
         <insert tableName="ROLES">
             <column name="ROLE_NAME">devtools-admin</column>
@@ -41,6 +42,7 @@
             <column name="ROLE_NAME">devtools-admin</column>
         </insert>
     </changeSet>
+    -->
 
     <changeSet id="17900" author="ibodrov@gmail.com">
         <createTable tableName="PROJECT_KV_STORE" remarks="KV store">

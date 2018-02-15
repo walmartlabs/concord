@@ -27,7 +27,10 @@ import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.apache.shiro.authc.*;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.SimpleAccount;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -83,7 +86,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
         if (!"sessionkey".equals(p.getRealm())) {
             return null;
         }
-        return authorizer.getAuthorizationInfo(p, null);
+        return authorizer.getAuthorizationInfo(p);
     }
 
     private boolean isFinished(ProcessEntry process) {

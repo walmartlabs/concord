@@ -14,6 +14,7 @@
         <modifyDataType tableName="API_KEYS" columnName="USER_ID" newDataType="uuid"/>
     </changeSet>
 
+    <!-- removed in 0.57.0+
     <changeSet id="31020" author="ibodrov@gmail.com">
         <dropForeignKeyConstraint baseTableName="USER_PERMISSIONS" constraintName="FK_PERMISSIONS_USER"/>
     </changeSet>
@@ -21,6 +22,7 @@
     <changeSet id="31030" author="ibodrov@gmail.com">
         <modifyDataType tableName="USER_PERMISSIONS" columnName="USER_ID" newDataType="uuid"/>
     </changeSet>
+    -->
 
     <changeSet id="31040" author="ibodrov@gmail.com">
         <modifyDataType tableName="USERS" columnName="USER_ID" newDataType="uuid"/>
@@ -33,12 +35,14 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <!-- removed in 0.57.0+
     <changeSet id="31060" author="ibodrov@gmail.com">
         <addForeignKeyConstraint constraintName="FK_PERMISSIONS_USER"
                                  baseTableName="USER_PERMISSIONS" baseColumnNames="USER_ID"
                                  referencedTableName="USERS" referencedColumnNames="USER_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
+    -->
 
     <!-- API_KEY.KEY_ID -->
 
@@ -48,6 +52,7 @@
 
     <!-- LDAP_GROUP_MAPPINGS.MAPPING_ID -->
 
+    <!-- removed in 0.57.0+
     <changeSet id="31080" author="ibodrov@gmail.com">
         <modifyDataType tableName="LDAP_GROUP_MAPPINGS" columnName="MAPPING_ID" newDataType="uuid"/>
     </changeSet>
@@ -68,6 +73,7 @@
                                  referencedTableName="LDAP_GROUP_MAPPINGS" referencedColumnNames="MAPPING_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
+    -->
 
     <!-- PROCESS_QUEUE.INSTANCE_ID -->
 

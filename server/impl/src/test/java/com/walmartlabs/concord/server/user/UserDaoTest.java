@@ -29,8 +29,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Base64;
-import java.util.Collections;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNull;
@@ -50,9 +48,8 @@ public class UserDaoTest extends AbstractDaoTest {
     @Test
     public void testInsertDelete() throws Exception {
         String username = "user#" + System.currentTimeMillis();
-        Set<String> permissions = Collections.singleton("*");
 
-        UUID userId = userDao.insert(username, UserType.LOCAL, permissions, false);
+        UUID userId = userDao.insert(username, UserType.LOCAL, false);
 
         String s = "key#" + System.currentTimeMillis();
         String apiKey = Base64.getEncoder().encodeToString(s.getBytes());

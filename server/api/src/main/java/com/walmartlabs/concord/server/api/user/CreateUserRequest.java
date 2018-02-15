@@ -26,7 +26,6 @@ import com.walmartlabs.concord.common.validation.ConcordUsername;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Set;
 
 public class CreateUserRequest implements Serializable {
 
@@ -34,25 +33,21 @@ public class CreateUserRequest implements Serializable {
     @ConcordUsername
     private final String username;
 
-    private final Set<String> permissions;
-
     private final Boolean admin;
 
     private final UserType type;
 
     public CreateUserRequest(String username, UserType type) {
-        this(username, type, null, false);
+        this(username, type, false);
     }
 
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
                              @JsonProperty("userType") UserType type,
-                             @JsonProperty("permissions") Set<String> permissions,
                              @JsonProperty("admin") Boolean admin) {
 
         this.username = username;
         this.type = type;
-        this.permissions = permissions;
         this.admin = admin;
     }
 
@@ -64,10 +59,6 @@ public class CreateUserRequest implements Serializable {
         return type;
     }
 
-    public Set<String> getPermissions() {
-        return permissions;
-    }
-
     public Boolean getAdmin() {
         return admin;
     }
@@ -76,7 +67,6 @@ public class CreateUserRequest implements Serializable {
     public String toString() {
         return "CreateUserRequest{" +
                 "username='" + username + '\'' +
-                ", permissions=" + permissions +
                 ", admin=" + admin +
                 ", type=" + type +
                 '}';

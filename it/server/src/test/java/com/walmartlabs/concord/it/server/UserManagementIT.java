@@ -43,9 +43,8 @@ public class UserManagementIT extends AbstractServerIT {
         UserResource userResource = proxy(UserResource.class);
 
         String username = "user_" + randomString();
-        Set<String> permissions = Collections.singleton("user:delete");
 
-        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, UserType.LOCAL, permissions, false));
+        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, UserType.LOCAL, false));
         assertTrue(cur.isOk());
 
         // ---
@@ -64,7 +63,7 @@ public class UserManagementIT extends AbstractServerIT {
         UserResource userResource = proxy(UserResource.class);
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL, null, false));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL, false));
 
         // ---
 
@@ -77,7 +76,7 @@ public class UserManagementIT extends AbstractServerIT {
 
         String userBName = "userB_" + randomString();
         try {
-            userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL, null, false));
+            userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL, false));
             fail("should fail");
         } catch (ForbiddenException e) {
         }
@@ -85,11 +84,11 @@ public class UserManagementIT extends AbstractServerIT {
         // ---
 
         resetApiKey();
-        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL, null, true));
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL, true));
 
         // ---
 
         setApiKey(apiKey.getKey());
-        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL, null, false));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL, false));
     }
 }

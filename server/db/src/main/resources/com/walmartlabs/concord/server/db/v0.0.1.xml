@@ -72,6 +72,7 @@
 
     <!-- USER_PERMISSIONS -->
 
+    <!-- removed in 0.57.0+
     <changeSet id="1300" author="ibodrov@gmail.com">
         <createTable tableName="USER_PERMISSIONS" remarks="User permissions">
             <column name="USER_ID" type="varchar(36)" remarks="ID of a user">
@@ -96,6 +97,7 @@
             <column name="PERMISSION">*:*:*</column>
         </insert>
     </changeSet>
+    -->
 
     <!-- API_KEYS -->
 

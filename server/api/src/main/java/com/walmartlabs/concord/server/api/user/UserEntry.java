@@ -35,7 +35,6 @@ public class UserEntry implements Serializable {
 
     private final UUID id;
     private final String name;
-    private final Set<String> permissions;
     private final Set<OrganizationEntry> orgs;
     private final boolean admin;
     private final UserType type;
@@ -43,14 +42,12 @@ public class UserEntry implements Serializable {
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
-                     @JsonProperty("permissions") Set<String> permissions,
                      @JsonProperty("orgs") Set<OrganizationEntry> orgs,
                      @JsonProperty("admin") boolean admin,
                      @JsonProperty("type") UserType type) {
 
         this.id = id;
         this.name = name;
-        this.permissions = permissions;
         this.orgs = orgs;
         this.admin = admin;
         this.type = type;
@@ -62,10 +59,6 @@ public class UserEntry implements Serializable {
 
     public String getName() {
         return name;
-    }
-
-    public Set<String> getPermissions() {
-        return permissions;
     }
 
     public Set<OrganizationEntry> getOrgs() {
@@ -85,7 +78,6 @@ public class UserEntry implements Serializable {
         return "UserEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", permissions=" + permissions +
                 ", orgs=" + orgs +
                 ", admin=" + admin +
                 ", type=" + type +

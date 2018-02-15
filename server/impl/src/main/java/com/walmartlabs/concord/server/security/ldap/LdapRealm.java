@@ -41,8 +41,6 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 
 @Named
 public class LdapRealm extends AbstractLdapRealm {
@@ -51,7 +49,6 @@ public class LdapRealm extends AbstractLdapRealm {
     public static final String REALM_NAME = "ldap";
 
     private final UserManager userManager;
-    private final LdapDao ldapDao;
     private final LdapManager ldapManager;
     private final ConcordShiroAuthorizer authorizer;
 
@@ -60,13 +57,11 @@ public class LdapRealm extends AbstractLdapRealm {
     @Inject
     public LdapRealm(LdapConfiguration cfg,
                      UserManager userManager,
-                     LdapDao ldapDao,
                      ConcordLdapContextFactory ctxFactory,
                      LdapManager ldapManager,
                      ConcordShiroAuthorizer authorizer) {
 
         this.userManager = userManager;
-        this.ldapDao = ldapDao;
         this.ldapManager = ldapManager;
         this.authorizer = authorizer;
 
@@ -138,7 +133,7 @@ public class LdapRealm extends AbstractLdapRealm {
     }
 
     @Override
-    protected AuthorizationInfo queryForAuthorizationInfo(PrincipalCollection principals, LdapContextFactory ldapContextFactory) throws NamingException {
+    protected AuthorizationInfo queryForAuthorizationInfo(PrincipalCollection principals, LdapContextFactory ldapContextFactory) {
         UserPrincipal p = (UserPrincipal) principals.getPrimaryPrincipal();
         if (!"ldap".equals(p.getRealm())) {
             return null;
@@ -149,9 +144,7 @@ public class LdapRealm extends AbstractLdapRealm {
             throw new AuthorizationException("LDAP data not found: " + p.getUsername());
         }
 
-        Collection<String> roles = new HashSet<>();
-        roles.addAll(ldapDao.getRoles(i.getGroups()));
-        return authorizer.getAuthorizationInfo(p, roles);
+        return authorizer.getAuthorizationInfo(p);
     }
 
     private static String normalizeUsername(String s) {

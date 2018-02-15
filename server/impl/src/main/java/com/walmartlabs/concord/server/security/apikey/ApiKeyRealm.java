@@ -70,6 +70,6 @@ public class ApiKeyRealm extends AuthorizingRealm {
         if (!"apikey".equals(p.getRealm())) {
             return null;
         }
-        return authorizer.getAuthorizationInfo(p, null);
+        return authorizer.getAuthorizationInfo(p);
     }
 }

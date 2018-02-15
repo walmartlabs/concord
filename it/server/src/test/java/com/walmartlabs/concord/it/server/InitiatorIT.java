@@ -47,7 +47,7 @@ public class InitiatorIT extends AbstractServerIT {
         String username = "user_" + randomString();
 
         UserResource userResource = proxy(UserResource.class);
-        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, UserType.LOCAL, Collections.singleton("*"), false));
+        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(username, UserType.LOCAL, false));
 
         ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
         CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(username));

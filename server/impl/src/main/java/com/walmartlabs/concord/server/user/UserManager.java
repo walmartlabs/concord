@@ -30,7 +30,6 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 @Named
@@ -46,13 +45,13 @@ public class UserManager {
     }
 
     public UserEntry getOrCreate(String username, UserType userType) {
-        return getOrCreate(username, userType, null, false);
+        return getOrCreate(username, userType, false);
     }
 
-    public UserEntry getOrCreate(String username, UserType type, Set<String> permissions, boolean admin) {
+    public UserEntry getOrCreate(String username, UserType type, boolean admin) {
         UUID id = userDao.getId(username);
         if (id == null) {
-            return create(username, type, permissions, admin);
+            return create(username, type, admin);
         }
         return userDao.get(id);
     }
@@ -66,12 +65,12 @@ public class UserManager {
         return Optional.ofNullable(id);
     }
 
-    public UserEntry create(String username, UserType type, Set<String> permissions, boolean admin) {
+    public UserEntry create(String username, UserType type, boolean admin) {
         if (type == null) {
             type = UserPrincipal.getCurrent().getType();
         }
 
-        UUID id = userDao.insert(username, type, permissions, admin);
+        UUID id = userDao.insert(username, type, admin);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_TEAM_ID;

@@ -6,6 +6,7 @@
 
     <!-- ROLES -->
 
+    <!-- removed in 0.57.0+
     <changeSet id="3000" author="ibodrov@gmail.com">
         <createTable tableName="ROLES" remarks="User roles">
             <column name="ROLE_NAME" type="varchar(128)">
@@ -16,9 +17,11 @@
             </column>
         </createTable>
     </changeSet>
+    -->
 
     <!-- ROLE_PERMISSIONS -->
 
+    <!-- removed in 0.57.0+
     <changeSet id="3100" author="ibodrov@gmail.com">
         <createTable tableName="ROLE_PERMISSIONS" remarks="Mapping between roles and permissions">
             <column name="ROLE_NAME" type="varchar(128)">
@@ -44,9 +47,11 @@
             <column name="ROLE_NAME"/>
         </createIndex>
     </changeSet>
+    -->
 
     <!-- LDAP_GROUP_MAPPINGS -->
 
+    <!-- removed in 0.57.0+
     <changeSet id="3200" author="ibodrov@gmail.com">
         <createTable tableName="LDAP_GROUP_MAPPINGS" remarks="LDAP groups used for mapping to permissions">
             <column name="MAPPING_ID" type="varchar(36)">
@@ -63,9 +68,11 @@
             <column name="LDAP_DN"/>
         </createIndex>
     </changeSet>
+    -->
 
     <!-- LDAP_GROUP_ROLES -->
 
+    <!-- removed in 0.57.0+
     <changeSet id="3300" author="ibodrov">
         <createTable tableName="LDAP_GROUP_ROLES" remarks="Roles, associated with group mappings">
             <column name="MAPPING_ID" type="varchar(36)">
@@ -85,4 +92,5 @@
                                  referencedColumnNames="ROLE_NAME"
                                  onDelete="CASCADE"/>
     </changeSet>
+    -->
 </databaseChangeLog>

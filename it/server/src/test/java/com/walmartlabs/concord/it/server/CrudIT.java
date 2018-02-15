@@ -32,20 +32,12 @@ import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.org.landing.LandingPageResource;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretResource;
 import com.walmartlabs.concord.server.api.org.team.TeamEntry;
 import com.walmartlabs.concord.server.api.org.team.TeamResource;
-import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
 import com.walmartlabs.concord.server.api.project.DeleteProjectResponse;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingRequest;
-import com.walmartlabs.concord.server.api.security.ldap.CreateLdapMappingResponse;
-import com.walmartlabs.concord.server.api.security.ldap.LdapMappingEntry;
-import com.walmartlabs.concord.server.api.security.ldap.LdapResource;
-import com.walmartlabs.concord.server.api.user.RoleEntry;
-import com.walmartlabs.concord.server.api.user.RoleResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -99,37 +91,6 @@ public class CrudIT extends AbstractServerIT {
 
         projectResource.createOrUpdate(new ProjectEntry(projectName2,
                 Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, false))));
-    }
-
-    @Test(timeout = 30000)
-    public void testLdapMappings() throws Exception {
-        String roleA = "roleA_" + randomString();
-        String roleB = "roleB_" + randomString();
-        String ldapDn = "testDn_" + randomString();
-
-        RoleResource roleResource = proxy(RoleResource.class);
-        roleResource.createOrUpdate(new RoleEntry(roleA, "A", "1", "2"));
-        roleResource.createOrUpdate(new RoleEntry(roleB, "B", "2", "3"));
-
-        // ---
-
-        LdapResource ldapResource = proxy(LdapResource.class);
-        CreateLdapMappingResponse clmr = ldapResource.createOrUpdate(new CreateLdapMappingRequest(ldapDn, roleA, roleB));
-        assertEquals(OperationResult.CREATED, clmr.getResult());
-
-        List<LdapMappingEntry> l = ldapResource.listMappings();
-        assertFalse(l.isEmpty());
-
-        boolean found = false;
-        for (LdapMappingEntry e : l) {
-            if (e.getId().equals(clmr.getId())) {
-                found = true;
-                break;
-            }
-        }
-        assertTrue(found);
-
-        ldapResource.deleteMapping(clmr.getId());
     }
 
     @Test(timeout = 30000)

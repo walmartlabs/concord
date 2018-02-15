@@ -80,6 +80,6 @@ public class GithubRealm extends AuthorizingRealm {
         if (!REALM_NAME.equals(p.getRealm())) {
             return null;
         }
-        return authorizer.getAuthorizationInfo(p, null);
+        return authorizer.getAuthorizationInfo(p);
     }
 }

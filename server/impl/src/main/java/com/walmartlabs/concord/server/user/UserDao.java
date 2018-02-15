@@ -36,11 +36,9 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
-import static com.walmartlabs.concord.server.jooq.tables.UserPermissions.USER_PERMISSIONS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.selectDistinct;
 import static org.jooq.impl.DSL.selectFrom;
 
 @Named
@@ -51,18 +49,16 @@ public class UserDao extends AbstractDao {
         super(cfg);
     }
 
-    public UUID insert(String username, UserType type, Set<String> permissions, boolean admin) {
-        return txResult(tx -> insert(tx, username, type, permissions, admin));
+    public UUID insert(String username, UserType type, boolean admin) {
+        return txResult(tx -> insert(tx, username, type, admin));
     }
 
-    public UUID insert(DSLContext tx, String username, UserType type, Set<String> permissions, boolean admin) {
+    public UUID insert(DSLContext tx, String username, UserType type, boolean admin) {
         UUID id = tx.insertInto(USERS)
                 .columns(USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_TYPE)
                 .values(username, admin, type.toString())
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
-
-        insertPermissions(tx, id, permissions);
 
         return id;
     }
@@ -73,7 +69,7 @@ public class UserDao extends AbstractDao {
                 .execute());
     }
 
-    public void update(UUID id, Set<String> permissions, Boolean admin) {
+    public void update(UUID id, Boolean admin) {
         tx(tx -> {
             if (admin != null) {
                 tx.update(USERS)
@@ -81,9 +77,6 @@ public class UserDao extends AbstractDao {
                         .where(USERS.USER_ID.eq(id))
                         .execute();
             }
-
-            deletePermissions(tx, id);
-            insertPermissions(tx, id, permissions);
         });
     }
 
@@ -99,11 +92,6 @@ public class UserDao extends AbstractDao {
             }
 
             // TODO join?
-            List<String> perms = tx.select(USER_PERMISSIONS.PERMISSION)
-                    .from(USER_PERMISSIONS)
-                    .where(USER_PERMISSIONS.USER_ID.eq(id))
-                    .fetchInto(String.class);
-
             Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID)).asField();
@@ -119,7 +107,6 @@ public class UserDao extends AbstractDao {
 
             return new UserEntry(r.get(USERS.USER_ID),
                     r.get(USERS.USERNAME),
-                    new HashSet<>(perms),
                     new HashSet<>(orgs),
                     r.get(USERS.IS_ADMIN),
                     UserType.valueOf(r.get(USERS.USER_TYPE)));
@@ -176,25 +163,5 @@ public class UserDao extends AbstractDao {
                     .where(TEAMS.TEAM_ID.in(teamIds))
                     .fetchSet(TEAMS.ORG_ID);
         }
-    }
-
-    private static void insertPermissions(DSLContext tx, UUID userId, Set<String> permissions) {
-        if (permissions == null || permissions.isEmpty()) {
-            return;
-        }
-
-        BatchBindStep b = tx.batch(tx.insertInto(USER_PERMISSIONS)
-                .columns(USER_PERMISSIONS.USER_ID, USER_PERMISSIONS.PERMISSION)
-                .values((UUID) null, null));
-
-        for (String p : permissions) {
-            b.bind(userId, p);
-        }
-
-        b.execute();
-    }
-
-    private static void deletePermissions(DSLContext tx, UUID userId) {
-        tx.deleteFrom(USER_PERMISSIONS).where(USER_PERMISSIONS.USER_ID.eq(userId)).execute();
     }
 }
