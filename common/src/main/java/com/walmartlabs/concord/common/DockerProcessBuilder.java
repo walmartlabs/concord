@@ -36,7 +36,7 @@ public class DockerProcessBuilder {
 
     public static final String CONCORD_DOCKER_LOCAL_MODE_KEY = "CONCORD_DOCKER_LOCAL_MODE";
     public static final String CONCORD_TX_ID_LABEL = "concordTxId";
-    private static final String DEFAULT_USER = "concord";
+    private static final String DEFAULT_USER = "456"; // as in dockerPasswd
 
     private final String image;
 

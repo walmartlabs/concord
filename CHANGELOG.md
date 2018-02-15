@@ -8,6 +8,11 @@
 - crypto: ability to export secrets from organizations other than
 the current.
 
+### Changed
+
+- concord-docker: fixed the `unable to find user concord: no matching
+entries in passwd file` issue.
+
 
 
 ## [0.55.0] - 2017-02-13
