@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
@@ -38,6 +39,9 @@ import java.util.regex.Pattern;
 public final class MultipartUtils {
 
     private static final Pattern PART_NAME_PATTERN = Pattern.compile("name=\"(.*)\"");
+    private static final String JSON_FIELD_SUFFIX = "/jsonField";
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static Map<String, Object> toMap(MultipartInput input) {
         Map<String, Object> result = new HashMap<>();
@@ -49,7 +53,11 @@ public final class MultipartUtils {
                     throw new WebApplicationException("Invalid attachment name: " + name);
                 }
 
-                if (p.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE)) {
+                if (name.endsWith(JSON_FIELD_SUFFIX)) {
+                    name = name.substring(0, name.length() - JSON_FIELD_SUFFIX.length());
+                    Object v = objectMapper.readValue(p.getBodyAsString(), Object.class);
+                    result.put(name, v);
+                } else if (p.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE)) {
                     String v = p.getBodyAsString().trim();
                     result.put(name, v);
                 } else {

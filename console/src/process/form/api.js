@@ -21,7 +21,7 @@
 import type { ConcordId } from '../../types';
 import { defaultError } from '../../api';
 
-export const listForms = (instanceId: ConcordId) => {
+export const listForms = (instanceId: ConcordId): Promise<any> => {
   console.debug("API: listForms ['%s'] -> starting...", instanceId);
   return fetch(`/api/v1/process/${instanceId}/form`, { credentials: 'same-origin' })
     .then((response) => {
@@ -36,7 +36,7 @@ export const listForms = (instanceId: ConcordId) => {
     });
 };
 
-export const fetchForm = (instanceId: ConcordId, formInstanceId: ConcordId) => {
+export const fetchForm = (instanceId: ConcordId, formInstanceId: ConcordId): Promise<any> => {
   console.debug("API: fetchForm ['%s', '%s'] -> starting...", instanceId, formInstanceId);
   return fetch(`/api/v1/process/${instanceId}/form/${formInstanceId}`, {
     credentials: 'same-origin'
@@ -58,7 +58,7 @@ export const fetchForm = (instanceId: ConcordId, formInstanceId: ConcordId) => {
     });
 };
 
-export const submitForm = (instanceId: ConcordId, formInstanceId: ConcordId, data: mixed) => {
+export const submitForm = (instanceId: ConcordId, formInstanceId: ConcordId, data: any) : Promise<any> => {
   console.debug(
     "API: submitForm ['%s', '%s', %o] -> starting...",
     instanceId,
@@ -68,8 +68,17 @@ export const submitForm = (instanceId: ConcordId, formInstanceId: ConcordId, dat
 
   const formData = new FormData();
   for (const name in data) {
-    if (data[name] !== undefined) {
-      formData.append(name, data[name]);
+    let key = name;
+    let x = data[name];
+
+    // special case: a JSON object encoded as a string in a multipart/form-data field
+    if (x instanceof Array) {
+        x = JSON.stringify(x);
+        key = key + "/jsonField";
+    }
+
+    if (x !== undefined) {
+      formData.append(key, x);
     }
   }
 
@@ -99,7 +108,7 @@ export const submitForm = (instanceId: ConcordId, formInstanceId: ConcordId, dat
     });
 };
 
-export const startSession = (instanceId: ConcordId, formInstanceId: ConcordId) => {
+export const startSession = (instanceId: ConcordId, formInstanceId: ConcordId): Promise<any> => {
   console.debug("API: startSession ['%s', '%s'] -> starting...", instanceId, formInstanceId);
 
   const opts = {

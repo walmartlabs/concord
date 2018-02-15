@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
@@ -33,10 +34,12 @@ import java.util.UUID;
 public class FailProcessor implements ExceptionProcessor {
 
     private final ProcessQueueDao queueDao;
+    private final LogManager logManager;
 
     @Inject
-    public FailProcessor(ProcessQueueDao queueDao) {
+    public FailProcessor(ProcessQueueDao queueDao, LogManager logManager) {
         this.queueDao = queueDao;
+        this.logManager = logManager;
     }
 
     @Override
@@ -50,6 +53,7 @@ public class FailProcessor implements ExceptionProcessor {
             return;
         }
 
+        logManager.error(instanceId, "Process failed: {}", e.getMessage());
         queueDao.update(instanceId, ProcessStatus.FAILED);
     }
 }

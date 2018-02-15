@@ -26,7 +26,7 @@ import * as processApi from '../api';
 import * as formApi from '../form/api';
 import * as constants from '../constants';
 
-const STATUS_REFRESH_DELAY = 250;
+const STATUS_REFRESH_DELAY = 1000;
 
 function* nextForm({ instanceId }): Generator<*, *, *> {
   try {

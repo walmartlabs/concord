@@ -1,5 +1,19 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: additional logging in case of process statup
+errors.
+
+### Changed
+
+- concord-server, concord-console: fix handling of multi-select
+dropdowns;
+
+
+
 ## [0.56.0] - 2017-02-14
 
 ### Added
