@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-client: `concord` task's `repo` is an alias for
+`repository` now;
 - concord-client: `project` task now works with organizations other
 than `Default`;
 - concord-client: `concord` task now accepts `payload` parameter

@@ -55,11 +55,13 @@ public class ConcordTask extends AbstractConcordTask {
 
     @Deprecated
     private static final String ARCHIVE_KEY = "archive";
+    @Deprecated
+    private static final String REPOSITORY_KEY = "repository";
 
     private static final String PAYLOAD_KEY = "payload";
     private static final String ORG_KEY = "org";
     private static final String PROJECT_KEY = "project";
-    private static final String REPOSITORY_KEY = "repository";
+    private static final String REPO_KEY = "repo";
     private static final String SYNC_KEY = "sync";
     private static final String ENTRY_POINT_KEY = "entryPoint";
     private static final String ARGUMENTS_KEY = "arguments";
@@ -175,7 +177,11 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         String project = (String) cfg.get(PROJECT_KEY);
-        String repo = (String) cfg.get(REPOSITORY_KEY);
+
+        String repo = (String) cfg.get(REPO_KEY);
+        if (repo == null) {
+            repo = (String) cfg.get(REPOSITORY_KEY);
+        }
 
         Map<String, Object> req = createRequest(cfg);
         boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
@@ -356,7 +362,7 @@ public class ConcordTask extends AbstractConcordTask {
 
     private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
         Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, PAYLOAD_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
-                REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, DISABLE_ON_CANCEL_KEY,
+                REPO_KEY, REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, DISABLE_ON_CANCEL_KEY,
                 DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY);
 
         if (job != null) {
