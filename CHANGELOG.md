@@ -43,6 +43,7 @@ resolved dependencies of a process.
 
 ### Changed
  
+- concord-server: fixed incorrect inventory query filtering;
 - concord-client: use polling while waiting for the process to end;
 - ansible: updated to 2.4.3;
 - concord-client: `org` parameter was ignored;
