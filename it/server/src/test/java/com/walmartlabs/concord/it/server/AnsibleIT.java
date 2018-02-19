@@ -26,8 +26,11 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,9 +38,7 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.assertEquals;
 
 public class AnsibleIT extends AbstractServerIT {
@@ -168,7 +169,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test(timeout = 30000)
     public void testWithFormSuspensionPostAnsible() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleWithPostFormSuspension/payload").toURI();
-        byte[] payload = archive(dir,ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
         // --
 
@@ -205,5 +206,29 @@ public class AnsibleIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Hello!.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testExtenalPlaybook() throws Exception{
+
+        URI dir = AnsibleIT.class.getResource("ansibleExternalPlaybook/payload").toURI();
+        URL playbookUrl = AnsibleIT.class.getResource("ansibleExternalPlaybook/playbook/hello.yml");
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        File playbook = Paths.get(playbookUrl.toURI()).toFile();
+        input.put("myplaybook.yml", new FileInputStream(playbook));
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
     }
 }

@@ -1,0 +1,6 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "External playbook"
+      verbosity: 0
