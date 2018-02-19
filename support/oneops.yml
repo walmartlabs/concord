@@ -64,6 +64,12 @@ platforms:
           username: 'caavere'
           description: 'Cody Averett'
           authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCye54Q1TRdwkNIKL4OxemcR93X0Z1/NS4qc0HUX2S6iWVlUDaAEqsXlp8yN8mTQhl2qlGG9e/TN5JmmvcW3Luo8Wpt0c+XWBE30XVEWNcXlmjjP2L07IzVqbUP3HKJY1xV4ptwh3n/KGh0XrAOBWl0Qyy1LeTl+nR8SFGBYHsoBpNhg6X4tzaw8EHbA1terckfbwD5jiM998q5Xgl/ebu6buNjWw8M3nxLyrCPyZ4ZkuAwspPIKZJotWkG7vKLOtSPwT8OMKQt4oy93DKvIgCz/bAviw4gGny9XeKfle8NZZes3QS2LIu4RGYCURrhzEe+FX/7qrx68uSfSnBtm0pD Cody.Averett@walmart.com"]'
+        user-mtkunke:
+          system_account: true
+          sudoer: true
+          username: 'mtkunke'
+          description: 'Matthew Kunkel'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZatRXaoGc4JWBBNGwsfqF68QMTZ1BlB7LR4Y0TdKU0cEjZwSSE+RJJJoswV4OENm0S9Ma7ZLcRT2R5QVBOtKNzHlnKYqfN+w9UG/fzaP11L6H4OkSVq3hA2mr57jhsn0i3dvM/zf3XMrYn4XpwQafQLEnc9jYqPBpaWdTsraO7AMEMPhBXoNrCqzKInxzNRhBWRAbfpY06zF6jFMseU2GhGp3aiOkyPlJGPDGIjW0v5iY7mGpLZWFXRqpYLlEFPHSxO0cQLqmHt8HPZdpCH12pVxX/Q6KGiTdxViINA8WImWQYgX5M3XZJ12G+DjJ1SPsofVWLBdt7fkGxh//9AKJ matthew.kunkel@walmart.com"]'
 
       fqdn:
          aliases: ["concorddb"]
@@ -107,6 +113,12 @@ platforms:
           username: 'caavere'
           description: 'Cody Averett'
           authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCye54Q1TRdwkNIKL4OxemcR93X0Z1/NS4qc0HUX2S6iWVlUDaAEqsXlp8yN8mTQhl2qlGG9e/TN5JmmvcW3Luo8Wpt0c+XWBE30XVEWNcXlmjjP2L07IzVqbUP3HKJY1xV4ptwh3n/KGh0XrAOBWl0Qyy1LeTl+nR8SFGBYHsoBpNhg6X4tzaw8EHbA1terckfbwD5jiM998q5Xgl/ebu6buNjWw8M3nxLyrCPyZ4ZkuAwspPIKZJotWkG7vKLOtSPwT8OMKQt4oy93DKvIgCz/bAviw4gGny9XeKfle8NZZes3QS2LIu4RGYCURrhzEe+FX/7qrx68uSfSnBtm0pD Cody.Averett@walmart.com"]'
+        user-mtkunke:
+          system_account: true
+          sudoer: true
+          username: 'mtkunke'
+          description: 'Matthew Kunkel'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZatRXaoGc4JWBBNGwsfqF68QMTZ1BlB7LR4Y0TdKU0cEjZwSSE+RJJJoswV4OENm0S9Ma7ZLcRT2R5QVBOtKNzHlnKYqfN+w9UG/fzaP11L6H4OkSVq3hA2mr57jhsn0i3dvM/zf3XMrYn4XpwQafQLEnc9jYqPBpaWdTsraO7AMEMPhBXoNrCqzKInxzNRhBWRAbfpY06zF6jFMseU2GhGp3aiOkyPlJGPDGIjW0v5iY7mGpLZWFXRqpYLlEFPHSxO0cQLqmHt8HPZdpCH12pVxX/Q6KGiTdxViINA8WImWQYgX5M3XZJ12G+DjJ1SPsofVWLBdt7fkGxh//9AKJ matthew.kunkel@walmart.com"]'
 
       secgroup:
         inbound: '[
@@ -183,6 +195,12 @@ platforms:
           username: 'caavere'
           description: 'Cody Averett'
           authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCye54Q1TRdwkNIKL4OxemcR93X0Z1/NS4qc0HUX2S6iWVlUDaAEqsXlp8yN8mTQhl2qlGG9e/TN5JmmvcW3Luo8Wpt0c+XWBE30XVEWNcXlmjjP2L07IzVqbUP3HKJY1xV4ptwh3n/KGh0XrAOBWl0Qyy1LeTl+nR8SFGBYHsoBpNhg6X4tzaw8EHbA1terckfbwD5jiM998q5Xgl/ebu6buNjWw8M3nxLyrCPyZ4ZkuAwspPIKZJotWkG7vKLOtSPwT8OMKQt4oy93DKvIgCz/bAviw4gGny9XeKfle8NZZes3QS2LIu4RGYCURrhzEe+FX/7qrx68uSfSnBtm0pD Cody.Averett@walmart.com"]'
+        user-mtkunke:
+          system_account: true
+          sudoer: true
+          username: 'mtkunke'
+          description: 'Matthew Kunkel'
+          authorized_keys: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZatRXaoGc4JWBBNGwsfqF68QMTZ1BlB7LR4Y0TdKU0cEjZwSSE+RJJJoswV4OENm0S9Ma7ZLcRT2R5QVBOtKNzHlnKYqfN+w9UG/fzaP11L6H4OkSVq3hA2mr57jhsn0i3dvM/zf3XMrYn4XpwQafQLEnc9jYqPBpaWdTsraO7AMEMPhBXoNrCqzKInxzNRhBWRAbfpY06zF6jFMseU2GhGp3aiOkyPlJGPDGIjW0v5iY7mGpLZWFXRqpYLlEFPHSxO0cQLqmHt8HPZdpCH12pVxX/Q6KGiTdxViINA8WImWQYgX5M3XZJ12G+DjJ1SPsofVWLBdt7fkGxh//9AKJ matthew.kunkel@walmart.com"]'
 
       secgroup:
         inbound: '[
