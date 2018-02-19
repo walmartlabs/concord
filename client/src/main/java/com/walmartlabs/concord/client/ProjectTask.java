@@ -21,11 +21,12 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
+import com.walmartlabs.concord.server.api.org.project.ProjectResource;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,7 @@ public class ProjectTask extends AbstractConcordTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectTask.class);
 
+    private static final String ORG_KEY = "org";
     private static final String NAME_KEY = "name";
     private static final String REPOSITORIES_KEY = "repositories";
 
@@ -65,24 +67,46 @@ public class ProjectTask extends AbstractConcordTask {
 
     @SuppressWarnings("unchecked")
     private void create(Context ctx) throws Exception {
-        Map<String, Object> cfg = createCfg(ctx, NAME_KEY, REPOSITORIES_KEY);
+        Map<String, Object> cfg = createCfg(ctx, ORG_KEY, NAME_KEY, REPOSITORIES_KEY);
 
-        Map<String, RepositoryEntry> repositories = null;
-
-        Object repos = cfg.get(REPOSITORIES_KEY);
-        if (repos instanceof Collection) {
-            repositories = toRepositories((Collection<Object>) repos);
-        } else if (repos != null) {
-            throw new IllegalArgumentException("'" + REPOSITORIES_KEY + "' must a list of repositories");
-        }
+        String orgName = getOrgName(ctx, cfg);
+        Map<String, RepositoryEntry> repositories = toRepositories(cfg);
 
         ProjectEntry entry = new ProjectEntry(get(cfg, NAME_KEY), repositories);
         withClient(ctx, target -> {
             ProjectResource proxy = target.proxy(ProjectResource.class);
-            CreateProjectResponse resp = proxy.createOrUpdate(entry);
+            ProjectOperationResponse resp = proxy.createOrUpdate(orgName, entry);
             log.info("The project was created (or updated): {}", resp);
             return null;
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private String getOrgName(Context ctx, Map<String, Object> cfg) {
+        String s = (String) cfg.get(ORG_KEY);
+        if (s == null) {
+            Map<String, Object> projectInfo = (Map<String, Object>) ctx.getVariable(Constants.Request.PROJECT_INFO_KEY);
+            if (projectInfo != null) {
+                s = (String) projectInfo.get("orgName");
+            }
+        }
+
+        if (s == null) {
+            throw new IllegalArgumentException("'" + ORG_KEY + "' is required");
+        }
+
+        return s;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, RepositoryEntry> toRepositories(Map<String, Object> cfg) {
+        Object repos = cfg.get(REPOSITORIES_KEY);
+        if (repos instanceof Collection) {
+            return toRepositories((Collection<Object>) repos);
+        } else if (repos != null) {
+            throw new IllegalArgumentException("'" + REPOSITORIES_KEY + "' must a list of repositories");
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

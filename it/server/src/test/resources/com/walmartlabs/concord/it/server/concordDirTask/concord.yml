@@ -1,0 +1,10 @@
+flows:
+  default:
+  - task: concord
+    in:
+      action: start
+      payload: myPayload
+      sync: true
+      outVars:
+        - msg
+  - log: "Done! ${jobOut.msg}"

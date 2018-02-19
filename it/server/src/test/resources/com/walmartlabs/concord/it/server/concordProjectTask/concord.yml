@@ -1,0 +1,7 @@
+flows:
+  default:
+  - task: project
+    in:
+      action: create
+      name: ${newProjectName}
+  - log: "Done!"

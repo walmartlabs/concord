@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-client: `project` task now works with organizations other
+than `Default`;
+- concord-client: `concord` task now accepts `payload` parameter
+instead of `archive`, which can be either a path to a ZIP archive or
+a path to a directory;
 - concord-server: additional logging in case of process statup
 errors.
 

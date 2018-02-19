@@ -21,6 +21,7 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
@@ -28,11 +29,13 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +53,10 @@ public class ConcordTask extends AbstractConcordTask {
     private static final long DEFAULT_KILL_TIMEOUT = 10000;
     private static final long DEFAULT_POLL_DELAY = 5000;
 
+    @Deprecated
     private static final String ARCHIVE_KEY = "archive";
+
+    private static final String PAYLOAD_KEY = "payload";
     private static final String ORG_KEY = "org";
     private static final String PROJECT_KEY = "project";
     private static final String REPOSITORY_KEY = "repository";
@@ -174,15 +180,11 @@ public class ConcordTask extends AbstractConcordTask {
         Map<String, Object> req = createRequest(cfg);
         boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
 
-        Path archive = null;
-        if (cfg.containsKey(ARCHIVE_KEY)) {
-            Path workDir = Paths.get((String) ctx.getVariable(Constants.Context.WORK_DIR_KEY));
-            archive = workDir.resolve((String) cfg.get(ARCHIVE_KEY));
-            if (!Files.exists(archive) || !Files.isRegularFile(archive)) {
-                throw new IllegalArgumentException("File not found: " + archive);
-            }
-        } else if (project == null) {
-            throw new IllegalArgumentException("'" + ARCHIVE_KEY + "' and/or '" + PROJECT_KEY + "' are required");
+        Path workDir = Paths.get((String) ctx.getVariable(Constants.Context.WORK_DIR_KEY));
+        Path archive = archivePayload(workDir, cfg);
+
+        if (project == null && archive == null) {
+            throw new IllegalArgumentException("'" + PAYLOAD_KEY + "' and/or '" + PROJECT_KEY + "' are required");
         }
 
         log.info("Starting a child process (project={}, repository={}, archive={}, sync={}, req={})",
@@ -353,7 +355,7 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
-        Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
+        Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, PAYLOAD_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
                 REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, DISABLE_ON_CANCEL_KEY,
                 DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY);
 
@@ -362,6 +364,32 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         return m;
+    }
+
+    private static Path archivePayload(Path workDir, Map<String, Object> cfg) throws IOException {
+        String s = (String) cfg.get(PAYLOAD_KEY);
+        if (s == null) {
+            s = (String) cfg.get(ARCHIVE_KEY);
+        }
+
+        if (s == null) {
+            return null;
+        }
+
+        Path path = workDir.resolve(s);
+        if (!Files.exists(path)) {
+            throw new IllegalArgumentException("File or directory not found: " + path);
+        }
+
+        if (Files.isDirectory(path)) {
+            Path tmp = IOUtils.createTempFile("payload", ".zip");
+            try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
+                IOUtils.zip(out, path);
+            }
+            return tmp;
+        }
+
+        return path;
     }
 
     @SuppressWarnings("unchecked")

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
@@ -46,7 +47,7 @@ public class ProjectInfoProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        Map<String, Object> m = createProcessInfo(payload);
+        Map<String, Object> m = createProjectInfo(payload);
 
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (req == null) {
@@ -64,10 +65,13 @@ public class ProjectInfoProcessor implements PayloadProcessor {
         return chain.process(payload.putHeader(Payload.REQUEST_DATA_MAP, req));
     }
 
-    public Map<String, Object> createProcessInfo(Payload p) {
+    public Map<String, Object> createProjectInfo(Payload p) {
         UUID projectId = p.getHeader(Payload.PROJECT_ID);
         if (projectId == null) {
-            return Collections.emptyMap();
+            Map<String, Object> m = new HashMap<>();
+            m.put("orgId", OrganizationManager.DEFAULT_ORG_ID.toString());
+            m.put("orgName", OrganizationManager.DEFAULT_ORG_NAME);
+            return m;
         }
 
         ProjectEntry e = projectDao.get(projectId);

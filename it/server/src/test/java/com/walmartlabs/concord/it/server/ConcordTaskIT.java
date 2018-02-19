@@ -45,8 +45,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
+import static org.junit.Assert.assertEquals;
 
 public class ConcordTaskIT extends AbstractServerIT {
 
@@ -103,6 +103,46 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         ProcessResource processResource = proxy(ProcessResource.class);
         ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FINISHED);
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Done!.*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testStartDirectory() throws Exception {
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordDirTask").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Done! Hello!.*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testCreateProject() throws Exception {
+        String projectName = "project_" + randomString();
+
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordProjectTask").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.newProjectName", projectName);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
 
         // ---
 
