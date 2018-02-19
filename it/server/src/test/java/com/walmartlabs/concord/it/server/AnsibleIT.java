@@ -20,10 +20,13 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.google.common.io.Files;
 import com.walmartlabs.concord.server.api.process.*;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
@@ -160,5 +163,47 @@ public class AnsibleIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*\"msg\":.*Hello!.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testWithFormSuspensionPostAnsible() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleWithPostFormSuspension/payload").toURI();
+        byte[] payload = archive(dir,ITConstants.DEPENDENCIES_DIR);
+
+        // --
+
+        URI playbookUri = AnsibleIT.class.getResource("ansibleWithPostFormSuspension/playbook/hello.yml").toURI();
+        File playbookFileContent = new File(playbookUri);
+        InputStream playbookStream = Files.asByteSource(playbookFileContent).openStream();
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("playbook.yml", playbookStream);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+
+        // ---
+
+        FormResource formResource = proxy(FormResource.class);
+        List<FormListEntry> forms = formResource.list(pir.getInstanceId());
+        assertEquals(1, forms.size());
+
+        formResource.submit(pir.getInstanceId(), forms.get(0).getFormInstanceId(), Collections.singletonMap("msg", "Hello!"));
+
+        // ---
+
+        pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello!.*", ab);
     }
 }

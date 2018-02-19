@@ -24,3 +24,4 @@ flow-typed/
 npm-debug.log
 jmeter.log
 dependency-reduced-pom.xml
+.arcconfig

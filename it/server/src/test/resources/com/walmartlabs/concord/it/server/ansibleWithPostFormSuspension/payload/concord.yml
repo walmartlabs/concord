@@ -1,0 +1,20 @@
+flows:
+  default:
+    - call: runAnsible
+    - form: myForm
+    - log : "${myForm.msg}"
+
+  runAnsible:
+  - task: ansible
+    in:
+      playbook: playbook.yml
+      inventory:
+        local:
+          hosts:
+          - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+
+forms:
+  myForm:
+  - msg: { label: "msg", type: "string" }
