@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.api.org.project;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
-import com.walmartlabs.concord.server.api.project.DeleteRepositoryResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -119,19 +118,4 @@ public interface ProjectResource {
     EncryptValueResponse encrypt(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                  @ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                  @ApiParam String value);
-
-    /**
-     * Refresh a repository.
-     *
-     * @param projectName
-     * @param repositoryName
-     * @return
-     */
-    @POST
-    @ApiOperation("Refresh an existing repository")
-    @Path("/{orgName}/project/{projectName}/repository/{repositoryName}/refresh")
-    @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse refreshRepository(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                     @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                     @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
 }

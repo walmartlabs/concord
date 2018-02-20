@@ -62,6 +62,10 @@ public class RepositoryEntry implements Serializable {
         this(null, null, name, url, null, null, null, null, false);
     }
 
+    public RepositoryEntry(String name, RepositoryEntry e) {
+        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.secret, e.hasWebHook);
+    }
+
     @JsonCreator
 
     public RepositoryEntry(@JsonProperty("id") UUID id,

@@ -41,6 +41,11 @@ public class RepositoryDao extends AbstractDao {
         super(cfg);
     }
 
+    @Override
+    protected void tx(Tx t) {
+        super.tx(t);
+    }
+
     public UUID getId(UUID projectId, String repoName) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(REPOSITORIES.REPO_ID)

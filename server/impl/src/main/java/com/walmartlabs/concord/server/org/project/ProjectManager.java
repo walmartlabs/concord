@@ -24,8 +24,6 @@ import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
-import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -33,7 +31,6 @@ import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -45,6 +42,7 @@ public class ProjectManager {
 
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
+    private final RepositoryManager repositoryManager;
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
     private final GithubWebhookService githubWebhookService;
@@ -53,6 +51,7 @@ public class ProjectManager {
     @Inject
     public ProjectManager(ProjectDao projectDao,
                           RepositoryDao repositoryDao,
+                          RepositoryManager repositoryManager,
                           ProjectAccessManager accessManager,
                           SecretManager secretManager,
                           GithubWebhookService githubWebhookService,
@@ -60,6 +59,7 @@ public class ProjectManager {
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
+        this.repositoryManager = repositoryManager;
         this.accessManager = accessManager;
         this.secretManager = secretManager;
         this.githubWebhookService = githubWebhookService;
@@ -83,15 +83,10 @@ public class ProjectManager {
                     entry.getVisibility(), acceptsRawPayload);
 
             if (repos != null) {
-                Map<String, RepositoryEntry> r = new HashMap<>();
-
-                repos.forEach((repoName, re) -> {
-                    boolean success = githubWebhookService.register(pId, repoName, re.getUrl());
-                    r.put(repoName, new RepositoryEntry(re.getId(), re.getProjectId(), re.getName(),
-                            re.getUrl(), re.getBranch(), re.getCommitId(), re.getPath(), re.getSecret(), success));
+                repos.forEach((k, v) -> {
+                    githubWebhookService.register(pId, k, v.getUrl());
+                    repositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v);
                 });
-
-                insertRepos(tx, orgId, orgName, pId, entry.getName(), r, false);
             }
 
             return pId;
@@ -111,16 +106,11 @@ public class ProjectManager {
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);
-
-                Map<String, RepositoryEntry> r = new HashMap<>();
-
-                repos.forEach((repoName, re) -> {
-                    boolean success = githubWebhookService.register(projectId, re.getName(), re.getUrl());
-                    r.put(re.getName(), new RepositoryEntry(re.getId(), re.getProjectId(), re.getName(),
-                            re.getUrl(), re.getBranch(), re.getCommitId(), re.getPath(), re.getSecret(), success));
+                repos.forEach((k, v) -> {
+                    githubWebhookService.register(projectId, v.getName(), v.getUrl());
+                    repositoryManager.insert(tx, orgId, prevEntry.getOrgName(), projectId, prevEntry.getName(), v);
                 });
-
-                insertRepos(tx, orgId, prevEntry.getOrgName(), projectId, entry.getName(), repos, true);
+                insertRepos(tx, projectId, repos);
             }
         });
     }
@@ -156,55 +146,7 @@ public class ProjectManager {
         }
     }
 
-    private Map<String, UUID> insertRepos(DSLContext tx, UUID orgId, String orgName,
-                                          UUID projectId, String projectName,
-                                          Map<String, RepositoryEntry> repos,
-                                          boolean update) {
+    private void insertRepos(DSLContext tx, UUID projectId, Map<String, RepositoryEntry> repos) {
 
-        Map<String, UUID> ids = new HashMap<>();
-
-        for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
-            String repoName = r.getKey();
-            RepositoryEntry req = r.getValue();
-
-            UUID secretId = null;
-            if (req.getSecret() != null) {
-                SecretEntry e = secretManager.assertAccess(orgId, null, req.getSecret(), ResourceAccessLevel.READER, false);
-                secretId = e.getId();
-            }
-
-            UUID id = repositoryDao.insert(tx, projectId, repoName, req.getUrl(),
-                    trim(req.getBranch()),
-                    trim(req.getCommitId()),
-                    trim(req.getPath()),
-                    secretId,
-                    req.isHasWebHook());
-
-            Map<String, Object> ev;
-            if (update) {
-                ev = Events.Repository.repositoryUpdated(orgName, projectName, repoName);
-            } else {
-                ev = Events.Repository.repositoryCreated(orgName, projectName, repoName);
-            }
-            eventResource.event(Events.CONCORD_EVENT, ev);
-
-            ids.put(repoName, id);
-        }
-
-        return ids;
-    }
-
-    private static String trim(String s) {
-        if (s == null) {
-            return null;
-        }
-
-        s = s.trim();
-
-        if (s.isEmpty()) {
-            return null;
-        }
-
-        return s;
     }
 }

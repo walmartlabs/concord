@@ -39,7 +39,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.repository.CachedRepositoryManager.RepositoryCacheDao;
 
@@ -51,30 +54,26 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     private final ProjectManager projectManager;
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
-    private final EventResource eventResource;
-    private final RepositoryCacheDao repositoryCacheDao;
 
     @Inject
     public ProjectResourceImpl(OrganizationManager orgManager,
                                ProjectDao projectDao,
                                ProjectManager projectManager,
                                ProjectAccessManager accessManager,
-                               SecretManager secretManager,
-                               EventResource eventResource,
-                               RepositoryCacheDao repositoryCacheDao) {
+                               SecretManager secretManager) {
 
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.projectManager = projectManager;
         this.accessManager = accessManager;
         this.secretManager = secretManager;
-        this.eventResource = eventResource;
-        this.repositoryCacheDao = repositoryCacheDao;
     }
 
     @Override
     @Validate
     public ProjectOperationResponse createOrUpdate(String orgName, ProjectEntry entry) {
+        entry = normalize(entry);
+
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         UUID projectId = entry.getId();
@@ -87,7 +86,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
             return new ProjectOperationResponse(projectId, OperationResult.UPDATED);
         }
 
-        projectId = projectManager.insert(org.getId(), orgName, entry);
+        projectId = projectManager.insert(org.getId(), org.getName(), entry);
         return new ProjectOperationResponse(projectId, OperationResult.CREATED);
     }
 
@@ -253,35 +252,6 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         return new EncryptValueResponse(result);
     }
 
-    @Override
-    public GenericOperationResultResponse refreshRepository(String orgName, String projectName, String repositoryName) {
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-
-        UUID projectId = projectDao.getId(org.getId(), projectName);
-        if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
-        }
-
-        ProjectEntry prj = accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
-
-        Map<String, RepositoryEntry> repos = prj.getRepositories();
-        if (repos == null || !repos.containsKey(repositoryName)) {
-            throw new WebApplicationException("Repository not found: " + projectName, Status.NOT_FOUND);
-        }
-
-        repositoryCacheDao.updateLastPushDate(repos.get(repositoryName).getId(), new Date());
-
-        Map<String, Object> event = new HashMap<>();
-        event.put("event", "repositoryRefresh");
-        event.put("org", orgName);
-        event.put("project", projectName);
-        event.put("repository", repositoryName);
-
-        eventResource.event("concord", event);
-
-        return new GenericOperationResultResponse(OperationResult.UPDATED);
-    }
-
     private static String[] cfgPath(String s) {
         if (s == null) {
             return new String[0];
@@ -289,5 +259,23 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
 
         List<String> l = Splitter.on("/").omitEmptyStrings().splitToList(s);
         return l.toArray(new String[l.size()]);
+    }
+
+    private static ProjectEntry normalize(ProjectEntry e) {
+        Map<String, RepositoryEntry> repos = e.getRepositories();
+        if (repos != null) {
+            Map<String, RepositoryEntry> m = new HashMap<>(repos);
+
+            repos.forEach((k, v) -> {
+                if (v.getName() == null) {
+                    RepositoryEntry r = new RepositoryEntry(k, v);
+                    m.put(k, r);
+                }
+            });
+
+            e = ProjectEntry.replace(e, m);
+        }
+
+        return e;
     }
 }
