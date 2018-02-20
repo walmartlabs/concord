@@ -35,9 +35,9 @@ let loginForm = (props) => {
     <div className="flexbox-container">
       <Card centered>
         <CardContent>
-          <div className="crop">
-            <Image id="strati-logo" src="/strati-logo.png" size="medium" />
-          </div>
+
+          <Image id="strati-logo" src="/concord.svg" size="medium" className="logo"/>
+
           <Dimmer active={loading} inverted>
             <Loader />
           </Dimmer>
