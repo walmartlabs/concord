@@ -20,41 +20,83 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.*;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Collection;
+import java.util.Map;
+
+import static com.walmartlabs.concord.plugins.slack.SlackConfiguration.*;
 
 @Named("slack")
 public class SlackTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(SlackTask.class);
 
-    private final SlackService slackService;
-
-    @Inject
-    public SlackTask(RpcClient rpcClient) {
-        this.slackService = rpcClient.getSlackService();
-    }
-
     @Override
+    @SuppressWarnings("unchecked")
     public void execute(Context ctx) throws Exception {
-        String instanceId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
         String channelId = (String) ctx.getVariable("channelId");
         String text = (String) ctx.getVariable("text");
-        call(instanceId, channelId, text);
+        String iconEmoji = (String) ctx.getVariable("iconEmoji");
+        String username = (String) ctx.getVariable("username");
+        Collection<Object> attachments = (Collection) ctx.getVariable("attachments");
+
+        call(ctx, channelId, text, iconEmoji, username, attachments);
     }
 
-    public void call(@InjectVariable("txId") String instanceId, String channelId, String text) throws Exception {
-        try {
-            slackService.notify(instanceId, channelId, text);
-            log.info("call ['{}', '{}'] -> done", channelId, text);
+    public void call(@InjectVariable("context") Context ctx, String channelId, String text) {
+        call(ctx, channelId, text, null, null, null);
+    }
+
+    public void call(@InjectVariable("context") Context ctx,
+                     String channelId, String text,
+                     String iconEmoji, String username, Collection<Object> attachments) {
+
+        try(SlackClient client = new SlackClient(buildCfg(ctx))) {
+            SlackClient.Response r = client.message(channelId, text, iconEmoji, username, attachments);
+            if (!r.isOk()) {
+                log.warn("Error sending a Slack message: {}", r.getError());
+            } else {
+                log.info("Slack message sent into '{}' channel", channelId);
+            }
         } catch (Exception e) {
-            log.error("call ['{}', '{}'] -> error", channelId, text, e);
-            throw new BpmnError("slackError", e);
+            log.error("call ['{}', '{}', '{}', '{}', '{}'] -> error",
+                    channelId, text, iconEmoji, username, attachments, e);
+            throw new RuntimeException("slack task error: ", e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static SlackConfiguration buildCfg(Context ctx) {
+        Map<String, Object> slackParams = (Map<String, Object>) ctx.getVariable("slackCfg");
+
+        SlackConfiguration cfg = new SlackConfiguration(getString(slackParams, "authToken"));
+        cfg.setProxy(getString(slackParams, "proxyAddress"), getInteger(slackParams, "proxyPort"));
+        cfg.setConnectTimeout(getInteger(slackParams, "connectTimeout", DEFAULT_CONNECT_TIMEOUT));
+        cfg.setSoTimeout(getInteger(slackParams, "soTimeout", DEFAULT_SO_TIMEOUT));
+
+        return cfg;
+    }
+
+    private static Integer getInteger(Map<String, Object> params, String name) {
+        return (Integer)params.get(name);
+    }
+
+    private static int getInteger(Map<String, Object> params, String name, int defaultValue) {
+        Integer result = getInteger(params, name);
+        if (result != null) {
+            return result;
+        }
+        return defaultValue;
+    }
+
+    private static String getString(Map<String, Object> params, String name) {
+        return (String)params.get(name);
     }
 }

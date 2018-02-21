@@ -48,8 +48,7 @@ public class RpcServer implements Closeable {
                      ProcessHeartbeatServiceImpl heartbeatService,
                      KvServiceImpl kvService,
                      SecretStoreServiceImpl secretStoreService,
-                     EventServiceImpl eventService,
-                     SlackServiceImpl slackService) throws ClientException {
+                     EventServiceImpl eventService) throws ClientException {
 
         this.server = ServerBuilder
                 .forPort(cfg.getPort())
@@ -59,7 +58,6 @@ public class RpcServer implements Closeable {
                 .addService(kvService)
                 .addService(secretStoreService)
                 .addService(eventService)
-                .addService(slackService)
                 .addTransportFilter(new LoggingTransportFilter())
                 .build();
 

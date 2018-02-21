@@ -54,11 +54,6 @@ public class RpcClientImpl implements RpcClient {
         return client.getEventService();
     }
 
-    @Override
-    public SlackService getSlackService() {
-        return client.getSlackService();
-    }
-
     public ProcessHeartbeatService getHeartbeatService() {
         return client.getHeartbeatService();
     }

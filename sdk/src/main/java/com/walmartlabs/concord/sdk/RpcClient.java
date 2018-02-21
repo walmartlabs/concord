@@ -27,6 +27,4 @@ public interface RpcClient {
     SecretStoreService getSecretStoreService();
 
     EventService getEventService();
-
-    SlackService getSlackService();
 }

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.rpc;
 import com.walmartlabs.concord.sdk.EventService;
 import com.walmartlabs.concord.sdk.KvService;
 import com.walmartlabs.concord.sdk.SecretStoreService;
-import com.walmartlabs.concord.sdk.SlackService;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -36,7 +35,6 @@ public class RunnerApiClient {
     private final KvService kvService;
     private final SecretStoreService secretStoreService;
     private final EventService eventService;
-    private final SlackService slackService;
 
     public RunnerApiClient(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port)
@@ -47,7 +45,6 @@ public class RunnerApiClient {
         this.kvService = new KvServiceImpl(channel);
         this.secretStoreService = new SecretStoreServiceImpl(channel);
         this.eventService = new EventServiceImpl(channel);
-        this.slackService = new SlackServiceImpl(channel);
     }
 
     public void stop() {
@@ -68,10 +65,6 @@ public class RunnerApiClient {
 
     public EventService getEventService() {
         return eventService;
-    }
-
-    public SlackService getSlackService() {
-        return slackService;
     }
 
     public ProcessHeartbeatService getHeartbeatService() {

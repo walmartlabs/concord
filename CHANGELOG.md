@@ -4,6 +4,8 @@
 
 ### Added
 
+- slack: support for the `task` syntax, includes new messaging
+options such as `icon_emoji` and `attachments`;
 - ansible: filter for removing sensitive data from the logs;
 - concord-client: `concord` task's `repo` is an alias for
 `repository` now;
