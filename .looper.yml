@@ -50,6 +50,13 @@ flows:
         buildArgs:
           concord_version: "${concord_version}"
         push: true
+    - dockerImage:
+        dockerfile: "docker-images/agent/walmart/Dockerfile"
+        tags:
+          - "docker.prod.walmart.com/walmartlabs/concord-agent:${concord_version}"
+        buildArgs:
+          concord_version: $concord_version
+        push: true
 
   build:
     - node(docker-daemon):
