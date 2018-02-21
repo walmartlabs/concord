@@ -175,6 +175,7 @@ public class RunPlaybookTask2 implements Task {
         Files.createDirectories(callbackDir);
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_trace.py", callbackDir.resolve("concord_trace.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_protectdata.py", callbackDir.resolve("concord_protectdata.py"));
     }
 
     private void processLookups(Path workDir, Path tmpDir) throws IOException {
@@ -341,6 +342,9 @@ public class RunPlaybookTask2 implements Task {
         // add plugins path
         m.put("callback_plugins", CALLBACK_PLUGINS_DIR);
         m.put("lookup_plugins", LOOKUP_PLUGINS_DIR);
+
+        // enable the log filtering plugin
+        m.put("stdout_callback", "concord_protectdata");
 
         return m;
     }

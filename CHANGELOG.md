@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible: filter for removing sensitive data from the logs;
 - concord-client: `concord` task's `repo` is an alias for
 `repository` now;
 - concord-client: `project` task now works with organizations other
