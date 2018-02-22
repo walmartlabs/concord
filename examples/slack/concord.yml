@@ -5,7 +5,7 @@ flows:
       channelId: "C5W9ELY7Q"
       text: "Process ${txId} is completed"
       username: "my bot"
-      icon_emoji: ":chart_with_upwards_trend:"
+      iconEmoji: ":chart_with_upwards_trend:"
       attachments:
         - fallback: "Book your flights at https://flights.example.com/book/r123456"
           actions:
