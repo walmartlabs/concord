@@ -15,6 +15,11 @@ envs:
       CONCORD_API_TOKEN: ENC[T1dy4zsvOVkdoDbFyimDBAAa64/OPXdb04rMfaIHfyY=]
       CONCORD_SECRET_PWD: ENC[kEzaZJe5TNNs02USeRjxvQ==]
 
+triggers:
+  - manual:
+      name: "Perform a release"
+      call: release
+
 tools:
   jdk: 8
   maven: 3.5.0
@@ -22,9 +27,6 @@ tools:
 docker:
   - name: "concord-looper-agent"
     image: "docker.prod.walmart.com/walmartlabs/concord-looper-agent:latest"
-tools:
-  jdk: 8
-  maven: 3.5.0
 
 flows:
   buildImages:
@@ -98,8 +100,13 @@ flows:
     - call: build(concord_version = latest-pr-looper)
 #    - call: deploy(concord_version = latest-pr-looper)
 
-  release(ui Perform a release):
-    - mvn -U -B -s $MVN_SETTINGS release:prepare release:perform
-    - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
-    - call: buildImages(concord_version = ${RELEASE_VERSION})
-#    - call: deploy(concord_version = ${RELEASE_VERSION})
+  release:
+    - node(docker-daemon):
+      - dockerAgent(concord-looper-agent):
+        - call: cleanup
+        - mvn -U -B -s $MVN_SETTINGS release:prepare release:perform
+        - ws_snapshot: binaries
+      - ws_restore: binaries
+      - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
+      - call: buildImages(concord_version = ${RELEASE_VERSION})
+#    - call: deploy(concord_version = latest-pr-looper)
