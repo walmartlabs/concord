@@ -691,6 +691,12 @@
                             <skip>true</skip>
                         </configuration>
                     </plugin>
+                    <plugin>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <configuration>
+                            <pushChanges>true</pushChanges>
+                        </configuration>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
