@@ -22,7 +22,7 @@ triggers:
 
 tools:
   jdk: 8
-  maven: 3.5.0
+  maven: 3.5.2
 
 docker:
   - name: "concord-looper-agent"
@@ -102,6 +102,7 @@ flows:
 
   release:
     - node(docker-daemon):
+      - exposeVars(maven)
       - dockerAgent(concord-looper-agent):
         - call: cleanup
         - mvn -U -B -s $MVN_SETTINGS release:prepare release:perform
