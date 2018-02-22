@@ -1,7 +1,10 @@
-from ansible.plugins.callback import CallbackBase
+from __future__ import (absolute_import)
+__metaclass__ = type
+
+from ansible.plugins.callback.default import CallbackModule as CallbackModule_default
 import collections
 
-class CallbackModule(CallbackBase):
+class CallbackModule(CallbackModule_default):
 
     '''
     This is the callback interface, which will search for any sensitive data in stdout and enable no_log = true on that particular tasks.
@@ -14,8 +17,9 @@ class CallbackModule(CallbackBase):
     CALLBACK_NEEDS_WHITELIST = False
 
     def __init__(self):
+        super(CallbackModule, self).__init__()
         self.secret_list = ['password', 'pwd', 'credentials', 'secret', 'ansible_password', 'vaultpassword']
-        print("Log filter is enabled...")
+        print "Log filter is enabled..."
     
     def hide_password(self, result):
         ret = {}
@@ -29,11 +33,11 @@ class CallbackModule(CallbackBase):
         return ret
 
     def v2_playbook_on_task_start(self, task, is_conditional):
-        print("TASK", "[",task.get_name(),"]" , "********************************************************************")
+        print "TASK", "[",task.get_name(),"]" , "*************************************************************************"
         task_args = task._attributes.get('args')
         for k, v in task_args.iteritems():
            if any(s in str(v).lower() for s in self.secret_list):
-             print("***********THIS TASK CONTAINS SENSITIVE INFORMATION. ENABLING NO_LOG******************")
+             print "*********** THIS TASK CONTAINS SENSITIVE INFORMATION. ENABLING NO_LOG ******************"
              task.no_log = True     
     
     def _dump_results(self, result,  indent=None, sort_keys=True, keep_invocation=False):
