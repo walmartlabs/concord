@@ -12,6 +12,9 @@ envs:
       DOCKER_HOST: "tcp://docker.dev.concord-ci.devtools.prod.walmart.com:2375"
       DOCKER_API_VERSION: "1.22"
 
+      # until we get proper .m2 caching
+      CONCORD_BUILD_DEPS_URL: https://repository.walmart.com/content/repositories/devtools/com/walmartlabs/concord/build-dependencies/0.0.1/build-dependencies-0.0.1.gz
+
       CONCORD_API_TOKEN: ENC[T1dy4zsvOVkdoDbFyimDBAAa64/OPXdb04rMfaIHfyY=]
       CONCORD_SECRET_PWD: ENC[kEzaZJe5TNNs02USeRjxvQ==]
 
@@ -68,10 +71,16 @@ flows:
     - node(docker-daemon):
       - dockerAgent(concord-looper-agent):
         - call: cleanup
+        - call: fetchDeps
         - (name build) mvn -U -B -s $MVN_SETTINGS clean install -DskipTests
         - ws_snapshot: binaries
       - ws_restore: binaries
       - call: buildImages
+
+  # poor man's .m2 cache
+  fetchDeps:
+    - mkdir -p target && mkdir -p ~/.m2/repository
+    - curl --silent --insecure ${CONCORD_BUILD_DEPS_URL} | tar xz -C ~/.m2/repository
 
   cleanup:
     - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
@@ -105,6 +114,7 @@ flows:
       - exposeVars(maven)
       - dockerAgent(concord-looper-agent):
         - call: cleanup
+        - call: fetchDeps
         - mvn -U -B -s $MVN_SETTINGS release:prepare release:perform
         - ws_snapshot: binaries
       - ws_restore: binaries
