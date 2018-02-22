@@ -271,6 +271,12 @@ public class ServerClient {
         assertEquals(msg, 1, grep(pattern, ab).size());
     }
 
+    public static void assertNoLog(String pattern, byte[] ab) throws IOException {
+        String msg = "Expected: " + pattern + "\n"
+                + "Got: " + new String(ab);
+        assertEquals(msg, 0, grep(pattern, ab).size());
+    }
+
     public static void assertLog(String pattern, int times, byte[] ab) throws IOException {
         assertEquals(times, grep(pattern, ab).size());
     }

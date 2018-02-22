@@ -35,8 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.assertEquals;
 
 public class AnsibleLookupIT extends AbstractServerIT {
@@ -80,7 +79,8 @@ public class AnsibleLookupIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Explicit org " + secretValue + ".*", ab);
-        assertLog(".*Implicit org " + secretValue + ".*", ab);
+        assertNoLog(".*Explicit org " + secretValue + ".*", ab);
+        assertNoLog(".*Implicit org " + secretValue + ".*", ab);
+        assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 }
