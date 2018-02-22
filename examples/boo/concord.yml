@@ -10,7 +10,8 @@ flows:
   - task: boo
     in:
       booTemplateLocation: "example.yml"
-      oneopsApiHost: "https://oneops.prod.walmart.com"
+      oneopsBaseUrl: "https://oneops.prod.walmart.com"
+      oneopsApiHost: "http://cms.prod-1312.core.oneops.prod.walmart.com:8080"
       apiKey: ${credentialsForm.apiKey}
       org: ${credentialsForm.org}
       asm: ${credentialsForm.asm}

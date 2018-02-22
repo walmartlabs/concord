@@ -1,6 +1,6 @@
 ---
 boo:
-  oneops_host: '{{oneopsApiHost}}'
+  oneops_host: '{{oneopsBaseUrl}}'
   organization: '{{org}}'
   api_key: '{{apiKey}}'
   email: '{{email}}'
