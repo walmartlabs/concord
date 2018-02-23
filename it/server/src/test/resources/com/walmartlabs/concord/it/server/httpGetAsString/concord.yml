@@ -1,0 +1,4 @@
+
+flows:
+  default:
+  - log: "${http.asString('http://localhost:8001/api/v1/server/ping')}"

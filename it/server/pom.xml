@@ -55,6 +55,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock</artifactId>
+            <version>2.14.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
             <version>${project.version}</version>

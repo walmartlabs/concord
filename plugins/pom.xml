@@ -20,6 +20,7 @@
         <module>tasks/docker</module>
         <module>tasks/dynamic-tasks</module>
         <module>tasks/example</module>
+        <module>tasks/http</module>
         <module>tasks/kv</module>
         <module>tasks/locale</module>
         <module>tasks/log</module>
@@ -30,5 +31,6 @@
         <module>tasks/smtp</module>
         <module>tasks/variables</module>
         <module>templates/ansible</module>
+
     </modules>
 </project>
