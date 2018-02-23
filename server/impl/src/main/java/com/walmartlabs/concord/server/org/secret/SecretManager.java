@@ -223,7 +223,7 @@ public class SecretManager {
             byte[] ab = SecretUtils.decrypt(s.getData(), pwd, salt);
             return new SecretDataEntry(s, ab);
         } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error decrypting a secret: " + name);
+            throw new SecurityException("Error decrypting a secret: " + name, e);
         }
     }
 
@@ -350,7 +350,7 @@ public class SecretManager {
         try {
             KeyPairUtils.validateKeyPair(pub, priv);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid key pair data");
+            throw new IllegalArgumentException("Invalid key pair data", e);
         }
     }
 

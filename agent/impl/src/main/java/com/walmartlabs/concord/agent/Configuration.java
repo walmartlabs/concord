@@ -176,11 +176,7 @@ public class Configuration {
 
         Path p = Paths.get(s);
         if (!Files.exists(p)) {
-            try {
-                Files.createDirectories(p);
-            } catch (IOException e) {
-                throw new RuntimeException("Can't create a directory: " + p, e);
-            }
+            Files.createDirectories(p);
         }
         return p;
     }

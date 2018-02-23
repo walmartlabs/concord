@@ -160,7 +160,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         try {
             Base64.getDecoder().decode(s);
         } catch (IllegalArgumentException e) {
-            throw new AuthenticationException("Invalid API token");
+            throw new AuthenticationException("Invalid API token: " + e.getMessage());
         }
     }
 

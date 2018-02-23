@@ -100,6 +100,8 @@ public class RepositoryManagerImpl implements RepositoryManager {
             try {
                 provider.fetch(orgId, repository, localPath);
             } catch (RepositoryException e) {
+                log.warn("fetch ['{}', '{}'] -> error: {}, retrying...", projectId, repository, e.getMessage());
+
                 try {
                     IOUtils.deleteRecursively(localPath);
                 } catch (IOException ee) {

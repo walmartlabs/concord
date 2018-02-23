@@ -345,7 +345,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         if (origin != null) {
             URI originUri = URI.create(origin);
             String originScheme = originUri.getScheme();
-            if (originScheme.equalsIgnoreCase("https")) {
+            if ("https".equalsIgnoreCase(originScheme)) {
                 scheme = originScheme;
             }
         }

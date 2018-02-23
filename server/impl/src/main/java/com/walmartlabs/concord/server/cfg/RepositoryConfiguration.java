@@ -27,13 +27,12 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Named
 @Singleton
-public class RepositoryConfiguration implements Serializable {
+public class RepositoryConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryConfiguration.class);
 

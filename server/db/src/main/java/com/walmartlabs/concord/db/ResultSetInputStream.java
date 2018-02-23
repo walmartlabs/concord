@@ -20,6 +20,9 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -28,6 +31,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class ResultSetInputStream extends InputStream {
+
+    private static final Logger log = LoggerFactory.getLogger(ResultSetInputStream.class);
 
     public static InputStream open(Connection conn, PreparedStatement ps, int columnIndex) throws SQLException {
         ResultSet rs = null;
@@ -52,7 +57,7 @@ public class ResultSetInputStream extends InputStream {
         try {
             c.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error while closing a resource", e);
         }
     }
 

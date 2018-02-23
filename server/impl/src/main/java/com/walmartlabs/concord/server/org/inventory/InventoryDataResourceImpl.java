@@ -30,7 +30,9 @@ import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
+import java.util.UUID;
 
 @Named
 public class InventoryDataResourceImpl implements InventoryDataResource, Resource {
@@ -52,20 +54,20 @@ public class InventoryDataResourceImpl implements InventoryDataResource, Resourc
     }
 
     @Override
-    public Object get(String orgName, String inventoryName, String itemPath) throws IOException {
+    public Object get(String orgName, String inventoryName, String itemPath) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
 
-        return JsonBuilder.build(inventoryDataDao.get(inventory.getId(), itemPath));
+        return build(inventory.getId(), itemPath);
     }
 
     @Override
-    public Object data(String orgName, String inventoryName, String itemPath, Object data) throws IOException {
+    public Object data(String orgName, String inventoryName, String itemPath, Object data) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.WRITER, true);
 
         inventoryDataDao.merge(inventory.getId(), itemPath, data);
-        return JsonBuilder.build(inventoryDataDao.get(inventory.getId(), itemPath));
+        return build(inventory.getId(), itemPath);
     }
 
     @Override
@@ -76,5 +78,13 @@ public class InventoryDataResourceImpl implements InventoryDataResource, Resourc
         inventoryDataDao.delete(inventory.getId(), itemPath);
 
         return new DeleteInventoryDataResponse();
+    }
+
+    private Object build(UUID inventoryId, String itemPath) {
+        try {
+            return JsonBuilder.build(inventoryDataDao.get(inventoryId, itemPath));
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while building the response: " + e.getMessage(), e);
+        }
     }
 }

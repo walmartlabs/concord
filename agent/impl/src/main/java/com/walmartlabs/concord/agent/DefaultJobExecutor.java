@@ -145,7 +145,7 @@ public class DefaultJobExecutor implements JobExecutor {
             try {
                 logManager.log(instanceId, proc.getInputStream());
             } catch (IOException e) {
-                log.warn("start ['{}', '{}'] -> error while saving a log file", instanceId, workDir);
+                log.warn("start ['{}', '{}'] -> error while saving a log file: {}", instanceId, workDir, e.getMessage());
             }
 
             int code;

@@ -46,7 +46,7 @@ public interface InventoryDataResource {
     @Produces(MediaType.APPLICATION_JSON)
     Object get(@ApiParam @PathParam("orgName") String orgName,
                @ApiParam @PathParam("inventoryName") String inventoryName,
-               @ApiParam @PathParam("itemPath") String itemPath) throws Exception;
+               @ApiParam @PathParam("itemPath") String itemPath);
 
     /**
      * Modifies inventory data
@@ -65,7 +65,7 @@ public interface InventoryDataResource {
     Object data(@ApiParam @PathParam("orgName") String orgName,
                 @ApiParam @PathParam("inventoryName") String inventoryName,
                 @ApiParam @PathParam("itemPath") String itemPath,
-                @ApiParam Object data) throws Exception;
+                @ApiParam Object data);
 
     /**
      * Deletes inventory data

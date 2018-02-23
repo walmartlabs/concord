@@ -51,7 +51,7 @@ public class YamlSwitchExprConverter implements StepConverter<YamlSwitchExpr> {
         Seq<YamlStep> defaultSteps = null;
         for(KV<String, Seq<YamlStep>> v : s.getCaseSteps().toList()) {
             String caseKey = v.getKey();
-            if(caseKey.equals("default")) {
+            if("default".equals(caseKey)) {
                 defaultSteps = v.getValue();
                 continue;
             }
