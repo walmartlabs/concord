@@ -1,0 +1,10 @@
+flows:
+  default:
+
+  - task: http
+    in:
+      method: GET
+      url: http://localhost:8001/api/v1/server/ping
+      response: json
+      out: rsp
+  - log: "Out Response: ${rsp.success}"

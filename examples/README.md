@@ -5,8 +5,9 @@
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
 * [boo](boo) - using OneOps Boo;
 * [forms](forms) - using basic forms;
-* [hello_world](hello_world) - a simple example demostrating how to pass a variable to a process;
+* [hello_world](hello_world) - a simple example demonstrating how to pass a variable to a process;
 * [hello_world2](hello_world2) - how to send external parameters;
+* [http](http) - a simple example demonstrating how to call restful endpoints
 * [in_variables](in_variables) - how to use IN-variables when calling a flow;
 * [multiple_flows](multiple_flows) - multiple flows in a single YAML file;
 * [oneops](oneops) - OneOps integration example;

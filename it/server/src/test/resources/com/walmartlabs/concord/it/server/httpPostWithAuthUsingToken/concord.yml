@@ -1,0 +1,17 @@
+flows:
+  default:
+
+  - task: http
+    in:
+      method: POST
+      url: ${url}
+      auth:
+        basic:
+          token: ${authToken}
+      body:
+        obj:
+          nestedVar: 123
+      request: json
+      response: json
+      out: rsp
+  - log: "Out Response: ${rsp.success}"

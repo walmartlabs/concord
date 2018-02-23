@@ -1,0 +1,12 @@
+flows:
+  default:
+  - task: http
+    in:
+     method: GET
+     auth:
+      basic:
+        token: ${authToken}
+     url: ${url}
+     response: "json"
+     out: rsp
+  - log: "Out Response: ${rsp.success}"
