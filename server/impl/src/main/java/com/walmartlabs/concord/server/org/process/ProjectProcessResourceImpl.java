@@ -20,9 +20,12 @@ package com.walmartlabs.concord.server.org.process;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.org.process.ProjectProcessResource;
-import com.walmartlabs.concord.server.api.process.*;
+import com.walmartlabs.concord.server.api.process.FormListEntry;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.console.CustomFormService;
 import com.walmartlabs.concord.server.console.FormSessionResponse;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
@@ -106,6 +109,7 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
         if (uriInfo != null) {
             Map<String, Object> args = new HashMap<>();
             args.put("requestInfo", RequestInfoProcessor.createRequestInfo(uriInfo));
+            args.putAll(parseArguments(uriInfo));
             req.put(InternalConstants.Request.ARGUMENTS_KEY, args);
         }
 
@@ -165,6 +169,28 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
         return Response.status(Status.MOVED_PERMANENTLY)
                 .header(HttpHeaders.LOCATION, fsr.getUri())
                 .build();
+    }
+
+    private static Map<String, Object> parseArguments(UriInfo uriInfo) {
+        Map<String, Object> result = new HashMap<>();
+
+        for (Map.Entry<String, List<String>> e : uriInfo.getQueryParameters(true).entrySet()) {
+            String k = e.getKey();
+            if (!k.startsWith("arguments.")) {
+                continue;
+            }
+            k = k.substring("arguments.".length());
+
+            Object v = e.getValue();
+            if (e.getValue().size() == 1) {
+                v = e.getValue().get(0);
+            }
+
+            Map<String, Object> m = ConfigurationUtils.toNested(k, v);
+            result = ConfigurationUtils.deepMerge(result, m);
+        }
+
+        return result;
     }
 
     private UUID getOrg(String orgName) {
