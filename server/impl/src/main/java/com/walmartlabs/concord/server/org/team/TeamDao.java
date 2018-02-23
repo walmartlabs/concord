@@ -152,16 +152,16 @@ public class TeamDao extends AbstractDao {
     }
 
     public List<TeamUserEntry> listUsers(DSLContext tx, UUID teamId) {
-        return tx.select(USERS.USER_ID, USERS.USERNAME, USER_TEAMS.TEAM_ROLE)
+        return tx.select(USERS.USER_ID, USERS.USERNAME, USERS.USER_TYPE, USER_TEAMS.TEAM_ROLE)
                 .from(USER_TEAMS)
                 .innerJoin(USERS).on(USERS.USER_ID.eq(USER_TEAMS.USER_ID))
                 .where(USER_TEAMS.TEAM_ID.eq(teamId))
                 .orderBy(USERS.USERNAME)
-                .fetch((Record3<UUID, String, String> r) ->
-                        new TeamUserEntry(r.get(USERS.USER_ID),
-                                r.get(USERS.USERNAME),
-                                UserType.valueOf(r.get(USERS.USER_TYPE)),
-                                TeamRole.valueOf(r.get(USER_TEAMS.TEAM_ROLE))));
+                .fetch((Record4<UUID, String, String, String> r) ->
+                        new TeamUserEntry(r.value1(),
+                                r.value2(),
+                                UserType.valueOf(r.value3()),
+                                TeamRole.valueOf(r.value4())));
     }
 
     public void addUser(UUID teamId, UUID userId, TeamRole role) {
