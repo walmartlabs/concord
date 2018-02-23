@@ -130,11 +130,7 @@
             <artifactId>docker-tasks</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-            <artifactId>http-tasks</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

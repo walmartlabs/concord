@@ -1,2 +1,3 @@
 mvn://com.walmartlabs.concord:concord-client:${project.version}
 mvn://com.walmartlabs.concord.plugins.basic:slack-tasks:${project.version}
+mvn://com.walmartlabs.concord.plugins.basic:http-tasks:${project.version}

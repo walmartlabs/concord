@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- new task: `http`. Provides a simple HTTP client with JSON support.
+
 ### Changed
 
 - concord-server: fixed retrieval of team users.
