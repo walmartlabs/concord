@@ -88,6 +88,10 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
         UUID instanceId = UUID.fromString(sId);
 
         String orgName = request.getOrgName();
+        if (orgName != null && orgName.trim().isEmpty()) {
+            orgName = null;
+        }
+
         UUID orgId = getOrgId(instanceId, orgName, secretName);
 
         try {
@@ -168,9 +172,11 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
 
     private UUID getOrgId(UUID instanceId, String orgName, String secretName) {
         UUID id = null;
+
         if (orgName != null) {
             id = orgDao.getId(orgName);
             if (id == null) {
+                logManager.error(instanceId, "Error while exporting a secret - organization not found: ", orgName);
                 throw new IllegalArgumentException("Organization '" + orgName + "' not found");
             }
         }
