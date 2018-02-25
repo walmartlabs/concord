@@ -128,6 +128,7 @@ public class CryptoTask implements Task, SecretStore {
                                                  String orgName,
                                                  String name,
                                                  String password) throws Exception {
+
         Secret s = get(instanceId, orgName, name, password);
         if (!(s instanceof UsernamePassword)) {
             throw new IllegalArgumentException("Expected a credentials secret");

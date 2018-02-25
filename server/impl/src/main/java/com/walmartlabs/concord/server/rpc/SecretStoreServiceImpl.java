@@ -87,17 +87,8 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
 
         UUID instanceId = UUID.fromString(sId);
 
-        UUID orgId;
         String orgName = request.getOrgName();
-        if (orgName != null && !orgName.trim().isEmpty()) {
-            orgId = orgDao.getId(orgName);
-            if (orgId == null) {
-                responseObserver.onError(new IllegalArgumentException("Organization '" + orgName + "' not found"));
-                return;
-            }
-        } else {
-            orgId = getOrgId(instanceId, secretName);
-        }
+        UUID orgId = getOrgId(instanceId, orgName, secretName);
 
         try {
             securityContext.runAsInitiator(instanceId, () -> {
@@ -175,8 +166,19 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
         }
     }
 
-    private UUID getOrgId(UUID instanceId, String secretName) {
-        UUID id = queueDao.getOrgId(instanceId);
+    private UUID getOrgId(UUID instanceId, String orgName, String secretName) {
+        UUID id = null;
+        if (orgName != null) {
+            id = orgDao.getId(orgName);
+            if (id == null) {
+                throw new IllegalArgumentException("Organization '" + orgName + "' not found");
+            }
+        }
+
+        if (id == null) {
+            id = queueDao.getOrgId(instanceId);
+        }
+
         if (id == null) {
             logManager.warn(instanceId, "Using a secret from the default organization: {}. " +
                     "Consider moving those secrets into your organization.", secretName);

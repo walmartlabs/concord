@@ -456,7 +456,7 @@ public class RunPlaybookTask2 implements Task {
 
             String orgName = (String) m.get("org");
 
-            Map<String, String> keyPair = secretStore.exportKeyAsFile(txId, orgName, workDir.toAbsolutePath().toString(), name, password);
+            Map<String, String> keyPair = secretStore.exportKeyAsFile(txId, workDir.toAbsolutePath().toString(), orgName, name, password);
             p = Paths.get(keyPair.get("private"));
         } else {
             p = getPath(args, AnsibleConstants.PRIVATE_KEY_FILE_KEY, workDir);

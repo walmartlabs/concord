@@ -8,6 +8,9 @@
 
 ### Changed
 
+- ansible: fixed exporting of key pairs;
+- concord-server: fixed handling of secret requests w/o an
+organization;
 - concord-server: fixed retrieval of team users.
 
 
