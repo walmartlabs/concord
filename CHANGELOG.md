@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: trim usernames on login.
+
+
+
 ## [0.58.0] - 2017-02-25
 
 ### Changed

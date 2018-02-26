@@ -192,7 +192,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             throw new IllegalArgumentException("Invalid basic auth header");
         }
 
-        String username = s.substring(0, idx);
+        String username = s.substring(0, idx).trim();
         String password = s.substring(idx + 1, s.length());
 
         return new UsernamePasswordToken(username, password);
