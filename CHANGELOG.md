@@ -5,13 +5,6 @@
 ### Changed
 
 - concord-server: trim usernames on login.
-
-
-
-## [0.58.0] - 2017-02-25
-
-### Changed
-
 - ansible: the task now prepends user-provided `callback_plugins` and
 `lookup_plugins` values with the default values. 
 
