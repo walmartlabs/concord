@@ -231,4 +231,29 @@ public class AnsibleIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, pir.getStatus());
     }
+
+    @Test(timeout = 30000)
+    public void testMergeDefaults() throws Exception{
+        URI dir = AnsibleIT.class.getResource("ansibleMergeDefaults").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*_callbacks:myCallbackDir.*", ab);
+    }
 }

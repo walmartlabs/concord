@@ -311,13 +311,25 @@ public class RunPlaybookTask2 implements Task {
         throw new IOException("Inventory is not defined");
     }
 
-    private static Map<String, Object> makeAnsibleCfg(Map<String, Object> cfg) {
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> makeAnsibleCfg(Map<String, Object> userCfg) {
+        Map<String, Object> defaults = makeDefaults();
+
         Map<String, Object> m = new HashMap<>();
-        m.put("defaults", makeDefaults());
+        m.put("defaults", defaults);
         m.put("ssh_connection", makeSshConnCfg());
 
-        if (cfg != null) {
-            return ConfigurationUtils.deepMerge(m, cfg);
+        if (userCfg != null) {
+            m = ConfigurationUtils.deepMerge(m, userCfg);
+
+            // prepend plugin paths with default values
+            Map<String, Object> userDefaults = (Map<String, Object>) userCfg.get("defaults");
+            if (userDefaults != null) {
+                Map<String, Object> mergedDefaults = (Map<String, Object>) m.get("defaults");
+
+                mergedDefaults.put("callback_plugins", mergePaths(defaults, userDefaults, "callback_plugins"));
+                mergedDefaults.put("lookup_plugins", mergePaths(defaults, userDefaults, "lookup_plugins"));
+            }
         }
 
         return m;
@@ -347,6 +359,21 @@ public class RunPlaybookTask2 implements Task {
         m.put("stdout_callback", "concord_protectdata");
 
         return m;
+    }
+
+    private static String mergePaths(Map<String, Object> defaults, Map<String, Object> user, String key) {
+        String a = (String) defaults.get(key);
+
+        if (user == null) {
+            return a;
+        }
+
+        String b = (String) user.get(key);
+        if (b == null) {
+            return a;
+        }
+
+        return a + ":" + b;
     }
 
     private static Map<String, Object> makeSshConnCfg() {

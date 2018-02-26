@@ -1,0 +1,17 @@
+flows:
+  default:
+  - task: ansible
+    in:
+      playbook: playbook/hello.yml
+      debug: true
+      config:
+        defaults:
+          callback_plugins: "myCallbackDir"
+      inventory:
+        local:
+          hosts:
+          - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        greetings: "hello!"

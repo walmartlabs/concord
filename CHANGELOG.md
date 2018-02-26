@@ -2,6 +2,15 @@
 
 ## [0.58.0] - 2017-02-25
 
+### Changed
+
+- ansible: the task now prepends user-provided `callback_plugins` and
+`lookup_plugins` values with the default values. 
+
+
+
+## [0.58.0] - 2017-02-25
+
 ### Added
 
 - new task: `http`. Provides a simple HTTP client with JSON support.
