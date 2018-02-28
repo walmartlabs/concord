@@ -103,7 +103,7 @@ flows:
 
   default:
     - call: build(concord_version = latest-master-looper)
-    - call: deployEnv(concord_version = latest-master-looper)
+#    - call: deployEnv(concord_version = latest-master-looper)
 
   pr:
     - call: build(concord_version = latest-pr-looper)
