@@ -47,6 +47,13 @@ public interface SecretResource {
     SecretOperationResponse create(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam MultipartInput input);
 
+    @GET
+    @ApiOperation("Get an existing secret")
+    @Path("/{orgName}/secret/{secretName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    SecretEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                    @ApiParam @PathParam("secretName") @ConcordKey String secretName);
+
     @POST
     @ApiOperation("Retrieves a binary data secret using the provided password")
     @Path("/{orgName}/secret/{secretName}/data")

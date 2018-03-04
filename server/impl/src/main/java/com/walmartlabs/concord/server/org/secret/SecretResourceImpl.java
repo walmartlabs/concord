@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
+import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.secret.*;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryData;
@@ -41,7 +42,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
@@ -96,6 +96,12 @@ public class SecretResourceImpl implements SecretResource, Resource {
         } catch (IOException e) {
             throw new WebApplicationException("Error while processing the request: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public SecretEntry get(String orgName, String secretName) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        return secretManager.assertAccess(org.getId(), null, secretName, ResourceAccessLevel.READER, false);
     }
 
     @Override

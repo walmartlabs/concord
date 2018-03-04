@@ -119,45 +119,35 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public SecretDataEntry get(UUID id) {
+    public SecretEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return selectSecretDataEntry(tx)
+            return selectEntry(tx)
                     .where(SECRETS.SECRET_ID.eq(id))
-                    .fetchOne(SecretDao::toDataEntry);
+                    .fetchOne(SecretDao::toEntry);
         }
     }
 
-    public SecretDataEntry getByName(UUID orgId, String name) {
+    public SecretEntry getByName(UUID orgId, String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return selectSecretDataEntry(tx)
+            return selectEntry(tx)
                     .where(SECRETS.ORG_ID.eq(orgId)
                             .and(SECRETS.SECRET_NAME.eq(name)))
-                    .fetchOne(SecretDao::toDataEntry);
+                    .fetchOne(SecretDao::toEntry);
+        }
+    }
+
+    public byte[] getData(UUID id) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(SECRETS.SECRET_DATA)
+                    .from(SECRETS)
+                    .where(SECRETS.SECRET_ID.eq(id))
+                    .fetchOne(SECRETS.SECRET_DATA);
         }
     }
 
     public List<SecretEntry> list(UUID orgId, Field<?> sortField, boolean asc) {
-        Field<String> orgName = select(ORGANIZATIONS.ORG_NAME)
-                .from(ORGANIZATIONS)
-                .where(ORGANIZATIONS.ORG_ID.eq(SECRETS.ORG_ID)).asField();
-
-        Field<String> ownerUsernameField = select(USERS.USERNAME)
-                .from(USERS)
-                .where(USERS.USER_ID.eq(SECRETS.OWNER_ID))
-                .asField();
-
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record9<UUID, String, UUID, String, UUID, String, String, String, String>> query = tx
-                    .select(SECRETS.SECRET_ID,
-                            SECRETS.SECRET_NAME,
-                            SECRETS.ORG_ID,
-                            orgName,
-                            SECRETS.OWNER_ID,
-                            ownerUsernameField,
-                            SECRETS.SECRET_TYPE,
-                            SECRETS.SECRET_STORE_TYPE,
-                            SECRETS.VISIBILITY)
-                    .from(SECRETS);
+            SelectJoinStep<Record9<UUID, String, UUID, String, UUID, String, String, String, String>> query = selectEntry(tx);
 
             if (orgId != null) {
                 query.where(SECRETS.ORG_ID.eq(orgId));
@@ -167,14 +157,7 @@ public class SecretDao extends AbstractDao {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
             }
 
-            return query.fetch(r -> new SecretEntry(r.get(SECRETS.SECRET_ID),
-                    r.get(SECRETS.SECRET_NAME),
-                    r.get(SECRETS.ORG_ID),
-                    r.get(orgName),
-                    SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
-                    SecretStoreType.valueOf(r.get(SECRETS.SECRET_STORE_TYPE)),
-                    SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
-                    toOwner(r.get(SECRETS.OWNER_ID), r.get(ownerUsernameField))));
+            return query.fetch(SecretDao::toEntry);
         }
     }
 
@@ -214,7 +197,40 @@ public class SecretDao extends AbstractDao {
                 .execute();
     }
 
-    private static SelectJoinStep<Record10<UUID, String, UUID, String, UUID, String, String, String, String, byte[]>> selectSecretDataEntry(DSLContext tx) {
+    private static SelectJoinStep<Record9<UUID, String, UUID, String, UUID, String, String, String, String>> selectEntry(DSLContext tx) {
+        Field<String> orgName = select(ORGANIZATIONS.ORG_NAME)
+                .from(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_ID.eq(SECRETS.ORG_ID)).asField();
+
+        Field<String> ownerUsernameField = select(USERS.USERNAME)
+                .from(USERS)
+                .where(USERS.USER_ID.eq(SECRETS.OWNER_ID))
+                .asField();
+
+        return tx.select(SECRETS.SECRET_ID,
+                SECRETS.SECRET_NAME,
+                SECRETS.ORG_ID,
+                orgName,
+                SECRETS.OWNER_ID,
+                ownerUsernameField,
+                SECRETS.SECRET_TYPE,
+                SECRETS.SECRET_STORE_TYPE,
+                SECRETS.VISIBILITY)
+                .from(SECRETS);
+    }
+
+    private static SecretEntry toEntry(Record9<UUID, String, UUID, String, UUID, String, String, String, String> r) {
+        return new SecretEntry(r.get(SECRETS.SECRET_ID),
+                r.get(SECRETS.SECRET_NAME),
+                r.get(SECRETS.ORG_ID),
+                r.value4(),
+                SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
+                SecretStoreType.valueOf(r.get(SECRETS.SECRET_STORE_TYPE)),
+                SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
+                toOwner(r.get(SECRETS.OWNER_ID), r.value6()));
+    }
+
+    private static SelectJoinStep<Record10<UUID, String, UUID, String, UUID, String, String, String, String, byte[]>> selectDataEntry(DSLContext tx) {
         Field<String> orgName = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
                 .where(ORGANIZATIONS.ORG_ID.eq(SECRETS.ORG_ID)).asField();
@@ -261,7 +277,7 @@ public class SecretDao extends AbstractDao {
 
         private final byte[] data;
 
-        public SecretDataEntry(SecretDataEntry s, byte[] data) {
+        public SecretDataEntry(SecretEntry s, byte[] data) {
             this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getType(), s.getStoreType(),
                     s.getVisibility(), s.getOwner(), data);
         }

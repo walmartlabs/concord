@@ -189,7 +189,7 @@ public class SecretManager {
     public DecryptedSecret getSecret(UUID orgId, String name, SecretType expectedType, String password) {
         assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
 
-        SecretDataEntry e = secretDao.getByName(orgId, name);
+        SecretEntry e = secretDao.getByName(orgId, name);
         if (e == null) {
             return null;
         }
@@ -201,26 +201,28 @@ public class SecretManager {
         SecretStoreType providedStoreType = getStoreType(password);
         assertStoreType(name, providedStoreType, e.getStoreType());
 
+        byte[] data = secretDao.getData(e.getId());
+
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
-        Secret s = decrypt(e.getType(), e.getData(), pwd, salt);
+        Secret s = decrypt(e.getType(), data, pwd, salt);
         return new DecryptedSecret(e.getId(), s);
     }
 
     public SecretDataEntry getRaw(UUID orgId, String name, String password) {
-        assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
-
-        SecretDataEntry s = secretDao.getByName(orgId, name);
+        SecretEntry s = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
         if (s == null) {
             return null;
         }
+
+        byte[] data = secretDao.getData(s.getId());
 
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
         try {
-            byte[] ab = SecretUtils.decrypt(s.getData(), pwd, salt);
+            byte[] ab = SecretUtils.decrypt(data, pwd, salt);
             return new SecretDataEntry(s, ab);
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error decrypting a secret: " + name, e);
