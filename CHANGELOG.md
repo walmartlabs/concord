@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-server: allow removal of secrets that are in use;
 - concord-server: trim usernames on login.
 - ansible: the task now prepends user-provided `callback_plugins` and
 `lookup_plugins` values with the default values. 

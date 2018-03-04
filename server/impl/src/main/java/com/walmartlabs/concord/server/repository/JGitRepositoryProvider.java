@@ -79,7 +79,6 @@ public class JGitRepositoryProvider implements RepositoryProvider {
     @Override
     public void fetch(UUID orgId, RepositoryEntry repository, Path dest) {
         Secret secret = getSecret(orgId, repository.getSecret());
-
         if (repository.getCommitId() != null) {
             fetchByCommit(repository.getUrl(), repository.getCommitId(), secret, dest);
         } else {

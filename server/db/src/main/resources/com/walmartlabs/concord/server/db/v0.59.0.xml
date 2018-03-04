@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="59000" author="ibodrov@gmail.com">
+        <dropForeignKeyConstraint baseTableName="REPOSITORIES"
+                                  constraintName="FK_RP_SCR_ID"/>
+
+        <addForeignKeyConstraint baseTableName="REPOSITORIES"
+                                 baseColumnNames="SECRET_ID"
+                                 constraintName="FK_RP_SCR_ID"
+                                 referencedTableName="SECRETS"
+                                 referencedColumnNames="SECRET_ID"
+                                 onDelete="SET NULL"/>
+    </changeSet>
+</databaseChangeLog>

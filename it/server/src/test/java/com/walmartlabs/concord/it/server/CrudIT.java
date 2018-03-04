@@ -282,6 +282,44 @@ public class CrudIT extends AbstractServerIT {
         secretResource.delete(orgName, secretName);
     }
 
+    @Test(timeout = 30000)
+    public void testSecrets() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        addPlainSecret(orgName, secretName, false, null, "hey".getBytes());
+
+        // ---
+
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+
+        com.walmartlabs.concord.server.api.org.project.ProjectResource projectResource = proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
+        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName,
+                Collections.singletonMap(repoName,
+                        new RepositoryEntry(null, null, repoName, "git@localhost:/test", null, null, null, secretName,false))));
+
+        // ---
+
+        SecretResource secretResource = proxy(SecretResource.class);
+        secretResource.delete(orgName, secretName);
+
+        /// ---
+
+        ProjectEntry projectEntry = projectResource.get(orgName, projectName);
+        Map<String, RepositoryEntry> repos = projectEntry.getRepositories();
+        assertEquals(1, repos.size());
+
+        RepositoryEntry repo = repos.get(repoName);
+        assertNotNull(repo);
+        assertNull(repo.getSecret());
+    }
+
     private static ProjectEntry findProject(List<ProjectEntry> l, String name) {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
