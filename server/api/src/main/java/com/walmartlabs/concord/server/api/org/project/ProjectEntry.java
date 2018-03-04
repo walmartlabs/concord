@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.api.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,10 +74,6 @@ public class ProjectEntry implements Serializable {
 
     public ProjectEntry(String name, Map<String, RepositoryEntry> repositories) {
         this(null, name, null, null, null, repositories, null, null, null, true);
-    }
-
-    public ProjectEntry(UUID orgId, String name) {
-        this(null, name, null, orgId, null, null, null, null, null, true);
     }
 
     @JsonCreator
@@ -158,5 +154,9 @@ public class ProjectEntry implements Serializable {
                 ", owner=" + owner +
                 ", acceptsRawPayload=" + acceptsRawPayload +
                 '}';
+    }
+
+    public ProjectEntry(String name, UUID id) {
+        this(id, name, null, null, null, null, null, null, null, true);
     }
 }

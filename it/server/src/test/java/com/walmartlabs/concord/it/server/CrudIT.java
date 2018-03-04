@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ import com.googlecode.junittoolbox.ParallelRunner;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
+import com.walmartlabs.concord.server.api.org.CreateOrganizationResponse;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.OrganizationResource;
 import com.walmartlabs.concord.server.api.org.inventory.*;
@@ -33,6 +34,7 @@ import com.walmartlabs.concord.server.api.org.landing.LandingPageResource;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretResource;
+import com.walmartlabs.concord.server.api.org.team.CreateTeamResponse;
 import com.walmartlabs.concord.server.api.org.team.TeamEntry;
 import com.walmartlabs.concord.server.api.org.team.TeamResource;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
@@ -56,26 +58,40 @@ public class CrudIT extends AbstractServerIT {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
         String projectName = "project_" + randomString();
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
-        assertTrue(cpr.isOk());
+        String updateProjectName = "updateProject_" + randomString();
 
-        cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
-        assertTrue(cpr.isOk());
+        // --- create
 
-        // ---
+        CreateProjectResponse createProjectResponse = projectResource.createOrUpdate(new ProjectEntry(projectName));
+        assertTrue(createProjectResponse.isOk());
+        assertNotNull(createProjectResponse.getId());
 
-        ProjectEntry e1 = projectResource.get(projectName);
-        assertNotNull(e1);
+        // --- update
 
-        CreateProjectResponse cpr2 = projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.emptyMap()));
-        assertTrue(cpr2.isOk());
+        CreateProjectResponse updateProjectResponse = projectResource.createOrUpdate(new ProjectEntry(updateProjectName, createProjectResponse.getId()));
+        assertEquals(updateProjectResponse.getResult(),OperationResult.UPDATED);
+        assertEquals(createProjectResponse.getId(), updateProjectResponse.getId());
 
-        List<ProjectEntry> l = projectResource.list(null, null, false);
-        ProjectEntry e2 = findProject(l, projectName);
-        assertNotNull(e2);
+        // --- get
 
-        DeleteProjectResponse dpr = projectResource.delete(projectName);
-        assertTrue(dpr.isOk());
+        ProjectEntry projectEntry = projectResource.get(updateProjectName);
+        assertEquals(projectEntry.getId(), createProjectResponse.getId());
+
+        // --- create
+
+        createProjectResponse = projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.emptyMap()));
+        assertTrue(createProjectResponse.isOk());
+
+        // --- list
+
+        List<ProjectEntry> projectList = projectResource.list(null, null, false);
+        projectEntry = findProject(projectList, projectName);
+        assertNotNull(projectEntry);
+
+        // --- delete
+
+        DeleteProjectResponse deleteProjectResponse = projectResource.delete(projectName);
+        assertTrue(deleteProjectResponse.isOk());
     }
 
     @Test(timeout = 30000)
@@ -99,6 +115,7 @@ public class CrudIT extends AbstractServerIT {
 
         String orgName = OrganizationManager.DEFAULT_ORG_NAME;
         String inventoryName = "inventory_" + randomString();
+        String updatedInventoryName = "updateInventory_" + randomString();
 
         // --- create
 
@@ -108,24 +125,19 @@ public class CrudIT extends AbstractServerIT {
 
         // --- update
 
-        CreateInventoryResponse uir = inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
-        assertTrue(uir.isOk());
-        assertNotNull(uir.getId());
+        CreateInventoryResponse updateInventoryResponse = inventoryResource.createOrUpdate(orgName, new InventoryEntry(cir.getId(), updatedInventoryName, null, null, null, null, null));
+        assertEquals(updateInventoryResponse.getResult(),OperationResult.UPDATED);
+        assertEquals(updateInventoryResponse.getId(), cir.getId());
 
         // --- get
 
-        InventoryEntry i1 = inventoryResource.get(orgName, inventoryName);
-        assertNotNull(i1);
-        assertNotNull(i1.getId());
-        assertEquals(uir.getId(), i1.getId());
-        assertEquals(inventoryName, i1.getName());
-        assertEquals(orgName, i1.getOrgName());
-        assertNull(i1.getParent());
+        InventoryEntry inventoryEntry = inventoryResource.get(orgName, updatedInventoryName);
+        assertNotNull(inventoryEntry);
 
         // --- delete
 
-        GenericOperationResultResponse dpr = inventoryResource.delete(orgName, inventoryName);
-        assertTrue(dpr.getResult() == OperationResult.DELETED);
+        GenericOperationResultResponse deleteInventoryResponse = inventoryResource.delete(orgName, updatedInventoryName);
+        assertTrue(deleteInventoryResponse.getResult() == OperationResult.DELETED);
     }
 
     @Test(timeout = 30000)
@@ -276,10 +288,40 @@ public class CrudIT extends AbstractServerIT {
         // ---
 
         String secretName = randomString() + "-test~";
-        addPlainSecret(orgName, secretName, true, null, new byte[] {0, 1, 2, 3});
+        addPlainSecret(orgName, secretName, true, null, new byte[]{0, 1, 2, 3});
 
         SecretResource secretResource = proxy(SecretResource.class);
         secretResource.delete(orgName, secretName);
+    }
+    @Test(timeout = 30000)
+    public void testTeam() throws Exception
+    {
+        String teamName = "team_" + randomString();
+        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
+        TeamResource teamResource = proxy(TeamResource.class);
+
+        // Create
+        CreateTeamResponse teamResponse = teamResource.createOrUpdate(orgName,new TeamEntry(teamName));
+        assertTrue(teamResponse.isOk());
+        assertNotNull(teamResponse.getId());
+        assertEquals(teamResponse.getResult(), OperationResult.CREATED);
+
+        // Update Team by Name
+        CreateTeamResponse updateTeamResponse = teamResource.createOrUpdate(orgName,new TeamEntry(null,null,null,teamName,"Update Description") );
+        assertEquals(updateTeamResponse.getId(), teamResponse.getId());
+        assertEquals(updateTeamResponse.getResult(),OperationResult.UPDATED);
+
+        // Update Team by ID
+        String updatedTeamName = "UpdatedName_"+ randomString();
+        CreateTeamResponse updateTeamById = teamResource.createOrUpdate(orgName,new TeamEntry(teamResponse.getId(),null,null,updatedTeamName,"Name is updated"));
+        assertEquals(teamResponse.getId(),updateTeamById.getId());
+        assertEquals(updateTeamResponse.getResult(),OperationResult.UPDATED);
+
+        // Get
+        TeamEntry teamEntry = teamResource.get(orgName,updatedTeamName);
+        assertEquals(teamResponse.getId(), teamEntry.getId());
+        assertEquals(updatedTeamName,teamEntry.getName());
+
     }
 
     @Test(timeout = 30000)
@@ -323,4 +365,42 @@ public class CrudIT extends AbstractServerIT {
     private static ProjectEntry findProject(List<ProjectEntry> l, String name) {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
+
+    @Test(timeout = 30000)
+    public void testOrganization() throws Exception {
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+
+        String organizationName = "organization_" + randomString();
+        String updatedOrganizationName = "updateOrganization_" + randomString();
+
+        // --- create
+
+        CreateOrganizationResponse createOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(organizationName));
+        assertTrue(createOrganizationResponse.isOk());
+        assertNotNull(createOrganizationResponse.getId());
+
+        // --- update
+
+        CreateOrganizationResponse updateOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(createOrganizationResponse.getId(),updatedOrganizationName));
+        assertEquals(updateOrganizationResponse.getResult(),OperationResult.UPDATED);
+        assertEquals(updateOrganizationResponse.getId(), createOrganizationResponse.getId());
+
+        // --- get
+
+        OrganizationEntry organizationEntry = organizationResource.get(updatedOrganizationName);
+        assertNotNull(organizationEntry);
+        assertEquals(createOrganizationResponse.getId(), organizationEntry.getId());
+
+        // --- list
+
+        List<OrganizationEntry> organizationEntryList = organizationResource.list(true);
+        assertNotNull(organizationEntryList);
+        organizationEntry = findOrganization(organizationEntryList, updatedOrganizationName);
+        assertNotNull(organizationEntry);
+    }
+
+    private static OrganizationEntry findOrganization(List<OrganizationEntry> l, String name) {
+        return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
+    }
+
 }

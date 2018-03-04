@@ -46,7 +46,7 @@ public class ProjectInfoIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(orgId, projectName));
+        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, orgId, null, null, null, null, null, true));
 
         String entryPoint = projectName;
 

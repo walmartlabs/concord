@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,15 +60,18 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
     public CreateInventoryResponse createOrUpdate(String orgName, InventoryEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
-        UUID inventoryId = inventoryDao.getId(org.getId(), entry.getName());
+        UUID inventoryId = entry.getId();
+        if (inventoryId == null) {
+            inventoryId = inventoryDao.getId(org.getId(), entry.getName());
+        }
 
         if (inventoryId != null) {
             inventoryManager.update(inventoryId, entry);
             return new CreateInventoryResponse(OperationResult.UPDATED, inventoryId);
-        } else {
-            inventoryId = inventoryManager.insert(org.getId(), entry);
-            return new CreateInventoryResponse(OperationResult.CREATED, inventoryId);
         }
+
+        inventoryId = inventoryManager.insert(org.getId(), entry);
+        return new CreateInventoryResponse(OperationResult.CREATED, inventoryId);
     }
 
     @Override
