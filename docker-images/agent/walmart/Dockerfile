@@ -1,6 +1,4 @@
-ARG concord_version=latest
-
-FROM docker.prod.walmart.com/walmartlabs/concord-ansible:$concord_version
+FROM docker.prod.walmart.com/walmartlabs/concord-ansible:latest
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 ENV DOCKER_HOST tcp://dind:2375

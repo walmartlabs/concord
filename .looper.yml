@@ -34,18 +34,6 @@ docker:
 flows:
   buildImages:
     - dockerImage:
-        dockerfile: "docker-images/base/walmart/Dockerfile"
-        tags:
-          - "docker.prod.walmart.com/walmartlabs/concord-base:${concord_version}"
-        push: true
-    - dockerImage:
-        dockerfile: "docker-images/ansible/walmart/Dockerfile"
-        tags:
-          - "docker.prod.walmart.com/walmartlabs/concord-ansible:${concord_version}"
-        buildArgs:
-          concord_version: ${concord_version}
-        push: true
-    - dockerImage:
         dockerfile: "docker-images/server/walmart/Dockerfile"
         tags:
           - "docker.prod.walmart.com/walmartlabs/concord-server:${concord_version}"
