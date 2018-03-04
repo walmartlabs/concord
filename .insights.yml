@@ -1,0 +1,9 @@
+team:
+- id: 20906
+product:
+- id: C0AF273F-7470-4A8B-B76E-190F00FFF920
+languages:
+- JavaScript
+- JVM
+cloud:
+- autoRestart: false
