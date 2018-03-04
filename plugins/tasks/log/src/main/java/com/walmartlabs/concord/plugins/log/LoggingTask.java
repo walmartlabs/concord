@@ -35,6 +35,9 @@ public class LoggingTask implements Task {
         log.info(s);
     }
 
+    /**
+     * @deprecated use {@link #info(String)} or {@link #call(String)}
+     */
     @Deprecated
     public void info(String logName, String s) {
         log.info("{} - {}", logName, s);
@@ -44,6 +47,9 @@ public class LoggingTask implements Task {
         log.warn(s);
     }
 
+    /**
+     * @deprecated use {@link #warn(String)} or {@link #call(String)}
+     */
     @Deprecated
     public void warn(String logName, String s) {
         log.warn("{} - {}", logName, s);

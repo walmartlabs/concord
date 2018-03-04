@@ -507,7 +507,7 @@ public class ProcessStateManager extends AbstractDao {
         private final String[] ignored;
         private final OpenOption[] options;
 
-        private CopyConsumer(Path dst, String[] ignored, OpenOption[] options) {
+        private CopyConsumer(Path dst, String[] ignored, OpenOption[] options) { //NOSONAR
             this.dst = dst;
             this.ignored = ignored;
             this.options = options;

@@ -32,7 +32,7 @@ public class EncryptValueRequest implements Serializable {
     private final String value;
 
     @JsonCreator
-    public EncryptValueRequest(@JsonProperty("value") String value) {
+    public EncryptValueRequest(@JsonProperty("value") String value) { //NOSONAR
         this.value = value;
     }
 

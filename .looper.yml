@@ -26,6 +26,7 @@ triggers:
 tools:
   jdk: 8
   maven: 3.5.2
+  sonarscanner: 3.0.3.778
 
 docker:
   - name: "concord-looper-agent"
@@ -61,9 +62,14 @@ flows:
         - call: cleanup
         - call: fetchDeps
         - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests
+        - call: runsonar
         - ws_snapshot: binaries
       - ws_restore: binaries
       - call: buildImages
+
+  runsonar:
+    - sonar("Sonar"):
+      - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
 
   # poor man's .m2 cache
   fetchDeps:

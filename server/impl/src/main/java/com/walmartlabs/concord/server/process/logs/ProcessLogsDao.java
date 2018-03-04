@@ -110,7 +110,7 @@ public class ProcessLogsDao extends AbstractDao {
         private final int start;
         private final byte[] data;
 
-        public ProcessLogChunk(int start, byte[] data) {
+        public ProcessLogChunk(int start, byte[] data) { //NOSONAR
             this.start = start;
             this.data = data;
         }

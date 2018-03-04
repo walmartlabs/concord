@@ -127,6 +127,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync, out);
     }
 
+    /**
+     * @deprecated prefer {@link #start(MultipartInput, UUID, boolean, String[])}
+     */
     @Override
     @RequiresAuthentication
     @Deprecated
@@ -174,6 +177,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return toResponse(processManager.start(payload, sync || sync2));
     }
 
+    /**
+     * @deprecated prefer {@link #start(MultipartInput, UUID, boolean, String[])}
+     */
     @Override
     @RequiresAuthentication
     @Deprecated
@@ -198,6 +204,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return toResponse(processManager.start(payload, sync));
     }
 
+    /**
+     * @deprecated prefer {@link #start(MultipartInput, UUID, boolean, String[])}
+     */
     @Override
     @Validate
     @RequiresAuthentication

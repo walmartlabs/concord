@@ -27,7 +27,7 @@ import java.util.Set;
 
 public final class Posix {
 
-    public static final int DEFAULT_UNIX_MODE = 0644;
+    public static final int DEFAULT_UNIX_MODE = 420; // 0644
 
     public static int unixMode(Set<PosixFilePermission> s) {
         if (s == null || s.isEmpty()) {
@@ -38,31 +38,31 @@ public final class Posix {
         for (PosixFilePermission p : s) {
             switch (p) {
                 case OWNER_EXECUTE:
-                    i += 0100;
+                    i += 64;  // 0100
                     break;
                 case OWNER_WRITE:
-                    i += 0200;
+                    i += 128; // 0200
                     break;
                 case OWNER_READ:
-                    i += 0400;
+                    i += 256; // 0400
                     break;
                 case GROUP_EXECUTE:
-                    i += 0010;
+                    i += 8;   // 0010
                     break;
                 case GROUP_WRITE:
-                    i += 0020;
+                    i += 16;  // 0020
                     break;
                 case GROUP_READ:
-                    i += 0040;
+                    i += 32;  // 0040
                     break;
                 case OTHERS_EXECUTE:
-                    i += 0001;
+                    i += 1;   // 0001
                     break;
                 case OTHERS_WRITE:
-                    i += 0002;
+                    i += 2;   // 0002
                     break;
                 case OTHERS_READ:
-                    i += 0004;
+                    i += 4;   // 0004
                     break;
             }
         }
@@ -76,31 +76,31 @@ public final class Posix {
 
         Set<PosixFilePermission> s = new HashSet<>();
 
-        if ((unixMode & 0100) == 0100) {
+        if ((unixMode & 64) == 64) {   // 0100
             s.add(PosixFilePermission.OWNER_EXECUTE);
         }
-        if ((unixMode & 0200) == 0200) {
+        if ((unixMode & 128) == 128) { // 0200
             s.add(PosixFilePermission.OWNER_WRITE);
         }
-        if ((unixMode & 0400) == 0400) {
+        if ((unixMode & 256) == 256) { // 0400
             s.add(PosixFilePermission.OWNER_READ);
         }
-        if ((unixMode & 0010) == 0010) {
+        if ((unixMode & 8) == 8) {     // 0010
             s.add(PosixFilePermission.GROUP_EXECUTE);
         }
-        if ((unixMode & 0020) == 0020) {
+        if ((unixMode & 16) == 16) {   // 0020
             s.add(PosixFilePermission.GROUP_WRITE);
         }
-        if ((unixMode & 0040) == 0040) {
+        if ((unixMode & 32) == 32) {   // 0040
             s.add(PosixFilePermission.GROUP_READ);
         }
-        if ((unixMode & 0001) == 0001) {
+        if ((unixMode & 1) == 1) {     // 0001
             s.add(PosixFilePermission.OTHERS_EXECUTE);
         }
-        if ((unixMode & 0002) == 0002) {
+        if ((unixMode & 2) == 2) {     // 0002
             s.add(PosixFilePermission.OTHERS_WRITE);
         }
-        if ((unixMode & 0004) == 0004) {
+        if ((unixMode & 4) == 4) {     // 0004
             s.add(PosixFilePermission.OTHERS_READ);
         }
 

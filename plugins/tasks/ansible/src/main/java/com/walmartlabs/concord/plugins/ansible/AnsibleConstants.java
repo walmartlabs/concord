@@ -70,6 +70,10 @@ public final class AnsibleConstants {
 
     public static final String LAST_RETRY_FILE = "ansible.retry";
 
+    /**
+     * @deprecated set the path explicitly using
+     * {@link #VAULT_PASSWORD_FILE_KEY} input parameter
+     */
     @Deprecated
     public static final String VAULT_PASSWORD_FILE_PATH = "_vaultPassword";
 

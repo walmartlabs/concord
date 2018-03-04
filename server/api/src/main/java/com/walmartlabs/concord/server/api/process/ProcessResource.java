@@ -48,6 +48,7 @@ public interface ProcessResource {
      * @param in
      * @param parentInstanceId
      * @param sync
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
      */
     @POST
@@ -66,6 +67,7 @@ public interface ProcessResource {
      * @param entryPoint
      * @param parentInstanceId
      * @param sync
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
      */
     @POST
@@ -85,6 +87,7 @@ public interface ProcessResource {
      * @param req
      * @param parentInstanceId
      * @param sync
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
      */
     @POST
@@ -123,6 +126,7 @@ public interface ProcessResource {
      * @param input
      * @param parentInstanceId
      * @param sync
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
      */
     @POST
@@ -144,6 +148,7 @@ public interface ProcessResource {
      * @param in
      * @param parentInstanceId
      * @param sync
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
      */
     @POST

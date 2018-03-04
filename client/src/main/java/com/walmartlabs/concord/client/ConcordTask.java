@@ -53,8 +53,15 @@ public class ConcordTask extends AbstractConcordTask {
     private static final long DEFAULT_KILL_TIMEOUT = 10000;
     private static final long DEFAULT_POLL_DELAY = 5000;
 
+    /**
+     * @deprecated use {@link #PAYLOAD_KEY}
+     */
     @Deprecated
     private static final String ARCHIVE_KEY = "archive";
+
+    /**
+     * @deprecated use {@link #REPO_KEY}
+     */
     @Deprecated
     private static final String REPOSITORY_KEY = "repository";
 

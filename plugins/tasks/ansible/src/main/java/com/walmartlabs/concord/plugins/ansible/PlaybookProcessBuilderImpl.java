@@ -28,6 +28,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * @deprecated prefer {@link DockerPlaybookProcessBuilder}
+ */
 @Deprecated
 public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
 

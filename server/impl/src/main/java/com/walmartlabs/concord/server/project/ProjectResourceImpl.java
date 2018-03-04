@@ -37,6 +37,9 @@ import javax.ws.rs.core.Response.Status;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * @deprecated prefer {@link com.walmartlabs.concord.server.org.project.ProjectResourceImpl}
+ */
 @Named
 @Deprecated
 public class ProjectResourceImpl implements ProjectResource, Resource {

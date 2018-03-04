@@ -327,7 +327,7 @@ public class Grammar {
     // procDef := FIELD_NAME steps
     private static final Parser<Atom, YamlProcessDefinition> procDef = label("Process definition",
             satisfyToken(JsonToken.FIELD_NAME).bind(a ->
-                    steps.map(steps -> new YamlProcessDefinition(a.name, steps))));
+                    steps.map(items -> new YamlProcessDefinition(a.name, items))));
 
     // formDef := formName formFields
     private static final Parser<Atom, YamlFormDefinition> formDef = label("Form definition",
@@ -349,5 +349,8 @@ public class Grammar {
 
     public static Parser<Atom, Seq<YamlDefinition>> getDefinitions() {
         return defs;
+    }
+
+    private Grammar() {
     }
 }

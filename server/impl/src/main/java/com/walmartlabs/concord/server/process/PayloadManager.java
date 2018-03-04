@@ -104,6 +104,7 @@ public class PayloadManager {
      * @param parentInstanceId
      * @param initiator
      * @param input
+     * @deprecated prefer {@link #createPayload(MultipartInput)}
      * @return
      */
     @Deprecated
@@ -126,6 +127,7 @@ public class PayloadManager {
      * @param parentInstanceId
      * @param initiator
      * @param request
+     * @deprecated prefer {@link #createPayload(MultipartInput)}
      * @return
      */
     @Deprecated
@@ -148,6 +150,7 @@ public class PayloadManager {
      * @param parentInstanceId
      * @param initiator
      * @param in
+     * @deprecated prefer {@link #createPayload(MultipartInput)}
      * @return
      */
     @Deprecated
@@ -170,6 +173,7 @@ public class PayloadManager {
      * @param parentInstanceId
      * @param initiator
      * @param in
+     * @deprecated prefer {@link #createPayload(MultipartInput)}
      * @return
      */
     @Deprecated

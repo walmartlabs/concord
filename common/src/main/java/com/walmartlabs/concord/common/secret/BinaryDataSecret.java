@@ -26,7 +26,7 @@ public class BinaryDataSecret implements Secret {
 
     private final byte[] data;
 
-    public BinaryDataSecret(byte[] data) {
+    public BinaryDataSecret(byte[] data) { //NOSONAR
         this.data = data;
     }
 

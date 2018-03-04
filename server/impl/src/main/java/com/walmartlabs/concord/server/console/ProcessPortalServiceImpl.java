@@ -39,6 +39,9 @@ import java.util.Map;
 
 import static javax.ws.rs.core.Response.Status;
 
+/**
+ * @deprecated prefer {@link com.walmartlabs.concord.server.org.process.ProjectProcessResourceImpl}
+ */
 @Named
 @Deprecated
 public class ProcessPortalServiceImpl implements ProcessPortalService, Resource {

@@ -114,7 +114,6 @@ public interface ProjectResource {
     @Path("/{orgName}/project/{projectName}/encrypt")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
-    @Deprecated
     EncryptValueResponse encrypt(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                  @ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                  @ApiParam String value);

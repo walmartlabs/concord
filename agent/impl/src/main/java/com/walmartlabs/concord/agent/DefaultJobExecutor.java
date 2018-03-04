@@ -152,12 +152,14 @@ public class DefaultJobExecutor implements JobExecutor {
             try {
                 code = proc.waitFor();
             } catch (Exception e) {
-                throw handleError(instanceId, workDir, proc, e.getMessage());
+                handleError(instanceId, workDir, proc, e.getMessage());
+                throw new JobExecutorException("Error while executing a job: " + e.getMessage());
             }
 
             if (code != 0) {
                 log.warn("exec ['{}'] -> finished with {}", instanceId, code);
-                throw handleError(instanceId, workDir, proc, "Process exit code: " + code);
+                handleError(instanceId, workDir, proc, "Process exit code: " + code);
+                throw new JobExecutorException("Error while executing a job, process exit code: " + code);
             }
 
             log.info("exec ['{}'] -> finished with {}", instanceId, code);
@@ -169,7 +171,7 @@ public class DefaultJobExecutor implements JobExecutor {
                 postProcess(instanceId, payloadDir);
             } catch (ExecutionException e) {
                 log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
-                throw handleError(instanceId, workDir, proc, e.getMessage());
+                handleError(instanceId, workDir, proc, e.getMessage());
             }
 
             try {
@@ -268,15 +270,13 @@ public class DefaultJobExecutor implements JobExecutor {
         return new ProcessEntry(p, workDir);
     }
 
-    private JobExecutorException handleError(String id, Path workDir, Process proc, String error) {
+    private void handleError(String id, Path workDir, Process proc, String error) {
         log.warn("handleError ['{}', '{}'] -> execution error: {}", id, workDir, error);
         logManager.log(id, "Error: " + error);
 
         if (Utils.kill(proc)) {
             log.warn("handleError ['{}', '{}'] -> killed by agent", id, workDir);
         }
-
-        throw new JobExecutorException("Error while executing a job: " + error);
     }
 
     private String[] createCommand(Collection<Path> dependencies, Path workDir) {

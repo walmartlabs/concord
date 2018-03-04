@@ -70,7 +70,7 @@ public class UsernamePassword implements Secret {
     private final String username;
     private final char[] password;
 
-    public UsernamePassword(String username, char[] password) {
+    public UsernamePassword(String username, char[] password) { //NOSONAR
         this.username = username;
         this.password = password;
     }

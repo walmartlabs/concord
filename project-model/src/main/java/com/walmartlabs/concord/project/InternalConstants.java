@@ -34,6 +34,7 @@ public final class InternalConstants extends Constants {
          * Process definition attribute: path to a local directory, containing agent's payload
          *
          * @see Constants.Context#WORK_DIR_KEY
+         * @deprecated use {@link #WORK_DIR_KEY} directly in a flow
          */
         @Deprecated
         public static final String LOCAL_PATH_ATTR = "localPath";
@@ -42,6 +43,7 @@ public final class InternalConstants extends Constants {
          * Execution context variable: path to a local directory, containing agent's payload.
          *
          * @see Constants.Context#WORK_DIR_KEY
+         * @deprecated use {@link #WORK_DIR_KEY} directly in a flow
          */
         @Deprecated
         public static final String LOCAL_PATH_KEY = ProcessDefinition.ATTRIBUTE_KEY_PREFIX + LOCAL_PATH_ATTR;
@@ -49,7 +51,7 @@ public final class InternalConstants extends Constants {
         /**
          * Execution context.
          *
-         * @deprecated Use {@link Constants.Context#CONTEXT_KEY}
+         * @deprecated use {@link Constants.Context#CONTEXT_KEY}
          */
         @Deprecated
         public static final String EXECUTION_CONTEXT_KEY = "execution";

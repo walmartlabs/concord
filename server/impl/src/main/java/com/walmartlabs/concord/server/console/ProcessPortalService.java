@@ -27,6 +27,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+/**
+ * @deprecated prefer {@link com.walmartlabs.concord.server.api.org.process.ProjectProcessResource}
+ */
 @Path("/api/service/process_portal")
 @Deprecated
 public interface ProcessPortalService {

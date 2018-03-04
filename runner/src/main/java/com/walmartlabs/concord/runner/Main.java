@@ -277,10 +277,10 @@ public class Main {
 
             // force exit
             System.exit(0);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // try to unroll nested exceptions to get a meaningful one
-            e = unroll(e);
-            log.error("main -> unhandled exception", e);
+            Throwable t = unroll(e);
+            log.error("main -> unhandled exception", t);
             System.exit(1);
         }
     }

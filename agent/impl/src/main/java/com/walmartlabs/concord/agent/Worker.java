@@ -211,7 +211,7 @@ public class Worker implements Runnable {
         private final byte[] ab;
         private final int len;
 
-        private Chunk(byte[] ab, int len) {
+        private Chunk(byte[] ab, int len) { //NOSONAR
             this.ab = ab;
             this.len = len;
         }
