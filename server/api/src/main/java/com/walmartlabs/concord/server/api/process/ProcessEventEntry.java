@@ -27,22 +27,30 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProcessEventEntry implements Serializable {
 
+    private final UUID id;
     private final ProcessEventType eventType;
     private final Date eventDate;
     private final Object data;
 
     @JsonCreator
-    public ProcessEventEntry(@JsonProperty("eventType") ProcessEventType eventType,
+    public ProcessEventEntry(@JsonProperty("id") UUID id,
+                             @JsonProperty("eventType") ProcessEventType eventType,
                              @JsonProperty("eventDate") Date eventDate,
                              @JsonProperty("data") String data) {
 
+        this.id = id;
         this.eventType = eventType;
         this.eventDate = eventDate;
         this.data = data;
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public ProcessEventType getEventType() {

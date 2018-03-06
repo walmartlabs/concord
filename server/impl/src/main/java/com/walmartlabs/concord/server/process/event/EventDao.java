@@ -25,7 +25,8 @@ import com.walmartlabs.concord.server.api.process.ProcessEventEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEventType;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
-import org.jooq.Record3;
+import org.jooq.Record4;
+import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -47,15 +48,25 @@ public class EventDao extends AbstractDao {
         super(cfg);
     }
 
-    public List<ProcessEventEntry> list(UUID instanceId) {
+    public List<ProcessEventEntry> list(UUID instanceId, Timestamp afterTimestamp, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
 
-            return tx.select(PROCESS_EVENTS.EVENT_TYPE,
-                    PROCESS_EVENTS.EVENT_DATE,
-                    PROCESS_EVENTS.EVENT_DATA.cast(String.class))
+            SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx
+                    .select(PROCESS_EVENTS.EVENT_ID, PROCESS_EVENTS.EVENT_TYPE,
+                            PROCESS_EVENTS.EVENT_DATE,
+                            PROCESS_EVENTS.EVENT_DATA.cast(String.class))
                     .from(PROCESS_EVENTS)
-                    .where(PROCESS_EVENTS.INSTANCE_ID.eq(instanceId))
-                    .orderBy(PROCESS_EVENTS.EVENT_DATE)
+                    .where(PROCESS_EVENTS.INSTANCE_ID.eq(instanceId));
+
+            if (afterTimestamp != null) {
+                q.and(PROCESS_EVENTS.EVENT_DATE.greaterThan(afterTimestamp));
+            }
+
+            if (limit > 0) {
+                q.limit(limit);
+            }
+
+            return q.orderBy(PROCESS_EVENTS.EVENT_DATE)
                     .fetch(EventDao::toEntry);
         }
     }
@@ -77,7 +88,7 @@ public class EventDao extends AbstractDao {
                 .execute();
     }
 
-    private static ProcessEventEntry toEntry(Record3<String, Timestamp, String> r) {
-        return new ProcessEventEntry(ProcessEventType.valueOf(r.value1()), r.value2(), r.value3());
+    private static ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
+        return new ProcessEventEntry(r.value1(), ProcessEventType.valueOf(r.value2()), r.value3(), r.value4());
     }
 }

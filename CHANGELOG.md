@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: the process event endpoint now accepts `limit` and
+`after` query parameters.
+
 ### Changed
 
 - concord-server: allow removal of secrets that are in use;

@@ -20,15 +20,13 @@ package com.walmartlabs.concord.server.api.process;
  * =====
  */
 
+import com.walmartlabs.concord.server.api.IsoDateParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
@@ -47,5 +45,7 @@ public interface ProcessEventResource {
     @ApiOperation("List process events")
     @Path("/{processInstanceId}/event")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId);
+    List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
+                                 @ApiParam @QueryParam("after") IsoDateParam afterTimestamp,
+                                 @ApiParam @QueryParam("limit") @DefaultValue("-1") int limit);
 }

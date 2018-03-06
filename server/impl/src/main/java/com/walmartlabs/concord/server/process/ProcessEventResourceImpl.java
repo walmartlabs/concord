@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.ProcessEventEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEventResource;
 import com.walmartlabs.concord.server.process.event.EventDao;
@@ -27,6 +28,7 @@ import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,7 +43,11 @@ public class ProcessEventResourceImpl implements ProcessEventResource, Resource 
     }
 
     @Override
-    public List<ProcessEventEntry> list(UUID processInstanceId) {
-        return eventDao.list(processInstanceId);
+    public List<ProcessEventEntry> list(UUID processInstanceId, IsoDateParam afterTimestamp, int limit) {
+        Timestamp ts = null;
+        if (afterTimestamp != null) {
+            ts = Timestamp.from(afterTimestamp.getValue().toInstant());
+        }
+        return eventDao.list(processInstanceId, ts, limit);
     }
 }

@@ -15,4 +15,19 @@
                                  referencedColumnNames="SECRET_ID"
                                  onDelete="SET NULL"/>
     </changeSet>
+
+    <changeSet id="59100" author="ibodrov@gmail.com">
+        <addColumn tableName="PROCESS_EVENTS">
+            <column name="EVENT_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="59110" author="ibodrov@gmail.com">
+        <createIndex tableName="PROCESS_EVENTS" indexName="IDX_PROC_EV_I_ID_DT">
+            <column name="INSTANCE_ID"/>
+            <column name="EVENT_DATE"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>
