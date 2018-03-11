@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [0.59.0] - 2018-03-11
 
 ### Added
 
@@ -16,7 +16,7 @@
 
 
 
-## [0.58.0] - 2017-02-25
+## [0.58.0] - 2018-02-25
 
 ### Added
 
@@ -31,7 +31,7 @@ organization;
 
 
 
-## [0.57.0] - 2017-02-22
+## [0.57.0] - 2018-02-22
 
 ### Added
 
@@ -55,7 +55,7 @@ dropdowns;
 
 
 
-## [0.56.0] - 2017-02-14
+## [0.56.0] - 2018-02-14
 
 ### Added
 
@@ -70,7 +70,7 @@ entries in passwd file` issue.
 
 
 
-## [0.55.0] - 2017-02-13
+## [0.55.0] - 2018-02-13
 
 ### Added
 
@@ -95,7 +95,7 @@ path patterns of the rest of the organization endpoints.
 
 
 
-## [0.54.0] - 2017-02-01
+## [0.54.0] - 2018-02-01
 
 ### Added
 
@@ -112,7 +112,7 @@ current user as the team's `MAINTAINER`;
 
 
 
-## [0.53.0] - 2017-01-28
+## [0.53.0] - 2018-01-28
 
 ### Added
 
@@ -129,7 +129,7 @@ the support for submodules and large repositories.
 
 
 
-## [0.52.0] - 2017-01-23
+## [0.52.0] - 2018-01-23
 
 ### Changed
 
@@ -139,7 +139,8 @@ GIT repository urls registered in different projects;
 - dependency-manager: ignore checksums, cache the intermediate data.
 
 
-## [0.51.0] - 2017-01-17
+
+## [0.51.0] - 2018-01-17
 
 ### Added
 
@@ -169,7 +170,7 @@ the multipart process endpoint is used.
 
 
 
-## [0.50.0] - 2017-01-10
+## [0.50.0] - 2018-01-10
 
 ### Added
 
