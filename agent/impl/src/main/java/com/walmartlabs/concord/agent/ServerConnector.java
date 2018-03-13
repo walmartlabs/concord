@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.agent.docker.OldImageSweeper;
+import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.rpc.AgentApiClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +34,13 @@ public class ServerConnector {
     private static final Logger log = LoggerFactory.getLogger(ServerConnector.class);
 
     private AgentApiClient client;
+
     private Thread[] workers;
     private Thread executionCleanup;
     private Thread commandHandler;
-    private Thread dockerSweeper;
+
+    private Thread orphanSweeper;
+    private Thread oldImageSweeper;
 
     public void start(Configuration cfg) throws IOException {
         String agentId = cfg.getAgentId();
@@ -67,18 +72,29 @@ public class ServerConnector {
             w.start();
         }
 
-        if (cfg.isDockerSweeperEnabled()) {
-            long t = cfg.getDockerSweeperPeriod();
-            dockerSweeper = new Thread(new DockerSweeper(executionManager, t),
+        if (cfg.isDockerOrphanSweeperEnabled()) {
+            long t = cfg.getDockerOrphanSweeperPeriod();
+            orphanSweeper = new Thread(new OrphanSweeper(executionManager, t),
                     "docker-sweeper");
-            dockerSweeper.start();
+            orphanSweeper.start();
+        }
+
+        if (cfg.isDockerOldImageSweeperEnabled()) {
+            long t = cfg.getDockerOldImageSweeperPeriod();
+            oldImageSweeper = new Thread(new OldImageSweeper(t));
+            oldImageSweeper.start();
         }
     }
 
     public synchronized void stop() {
-        if (dockerSweeper != null) {
-            dockerSweeper.interrupt();
-            dockerSweeper = null;
+        if (oldImageSweeper != null) {
+            oldImageSweeper.interrupt();
+            oldImageSweeper = null;
+        }
+
+        if (orphanSweeper != null) {
+            orphanSweeper.interrupt();
+            orphanSweeper = null;
         }
 
         if (commandHandler != null) {

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.docker;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,20 +20,19 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.agent.ExecutionManager;
 import com.walmartlabs.concord.common.DockerProcessBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class DockerSweeper implements Runnable {
+public class OrphanSweeper implements Runnable {
 
-    private static final Logger log = LoggerFactory.getLogger(DockerSweeper.class);
+    private static final Logger log = LoggerFactory.getLogger(OrphanSweeper.class);
 
     private static final String[] PS_CMD = {"docker", "ps", "-a",
             "--filter", "label=" + DockerProcessBuilder.CONCORD_TX_ID_LABEL,
@@ -44,7 +43,7 @@ public class DockerSweeper implements Runnable {
     private final ExecutionManager executionManager;
     private final long period;
 
-    public DockerSweeper(ExecutionManager executionManager, long period) {
+    public OrphanSweeper(ExecutionManager executionManager, long period) {
         this.executionManager = executionManager;
         this.period = period;
     }
@@ -88,37 +87,19 @@ public class DockerSweeper implements Runnable {
     }
 
     private static Map<String, String> findContainers() throws IOException, InterruptedException {
-        Process b = new ProcessBuilder()
-                .command(PS_CMD)
-                .redirectErrorStream(true)
-                .start();
-
-        int code = b.waitFor();
-        if (code != 0) {
-            throw new IOException("Error while retrieving the list of containers: docker exit code " + code);
-        }
-
         Map<String, String> ids = new HashMap<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(b.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                int idx = line.indexOf(" ");
-                if (idx < 0 || idx + 1 >= line.length()) {
-                    log.warn("findContainers -> invalid line: {}", line);
-                    continue;
-                }
-
-                String k = line.substring(0, idx);
-                String v = line.substring(idx + 1, line.length());
-
-                ids.put(k, v);
+        Utils.exec(PS_CMD, line -> {
+            int idx = line.indexOf(" ");
+            if (idx < 0 || idx + 1 >= line.length()) {
+                log.warn("findContainers -> invalid line: {}", line);
+                return;
             }
-        }
 
+            String k = line.substring(0, idx);
+            String v = line.substring(idx + 1, line.length());
+
+            ids.put(k, v);
+        });
         return ids;
     }
 

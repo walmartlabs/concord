@@ -48,8 +48,11 @@ public class Configuration {
     public static final String RUNNER_PATH = "RUNNER_PATH";
     public static final String WORKERS_COUNT_KEY = "WORKERS_COUNT";
     public static final String MAX_PREFORK_AGE_KEY = "MAX_PREFORK_AGE";
-    public static final String DOCKER_SWEEPER_ENABLED_KEY = "DOCKER_SWEEPER_ENABLED";
-    public static final String DOCKER_SWEEPER_PERIOD_KEY = "DOCKER_SWEEPER_PERIOD";
+
+    public static final String DOCKER_ORPHAN_SWEEPER_ENABLED_KEY = "DOCKER_ORPHAN_SWEEPER_ENABLED";
+    public static final String DOCKER_ORPHAN_SWEEPER_PERIOD_KEY = "DOCKER_ORPHAN_SWEEPER_PERIOD";
+    public static final String DOCKER_OLD_IMAGE_SWEEPER_ENABLED_KEY = "DOCKER_OLD_IMAGE_SWEEPER_ENABLED";
+    public static final String DOCKER_OLD_IMAGE_SWEEPER_PERIOD_KEY = "DOCKER_OLD_IMAGE_SWEEPER_PERIOD";
 
     private final String agentId;
     private final String serverHost;
@@ -63,8 +66,10 @@ public class Configuration {
     private final Path runnerPath;
     private final int workersCount;
     private final long maxPreforkAge;
-    private final boolean dockerSweeperEnabled;
-    private final long dockerSweeperPeriod;
+    private final boolean dockerOrphanSweeperEnabled;
+    private final long dockerOrphanSweeperPeriod;
+    private final boolean dockerOldImageSweeperEnabled;
+    private final long dockerOldImageSweeperPeriod;
 
     public Configuration() {
         this.agentId = UUID.randomUUID().toString();
@@ -97,8 +102,11 @@ public class Configuration {
 
             this.maxPreforkAge = Long.parseLong(getEnv(MAX_PREFORK_AGE_KEY, "30000"));
 
-            this.dockerSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_SWEEPER_ENABLED_KEY, "false"));
-            this.dockerSweeperPeriod = Long.parseLong(getEnv(DOCKER_SWEEPER_PERIOD_KEY, "900000")); // 15 min
+            this.dockerOrphanSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_ORPHAN_SWEEPER_ENABLED_KEY, "false"));
+            this.dockerOrphanSweeperPeriod = Long.parseLong(getEnv(DOCKER_ORPHAN_SWEEPER_PERIOD_KEY, "900000")); // 15 min
+
+            this.dockerOldImageSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_OLD_IMAGE_SWEEPER_ENABLED_KEY, "false"));
+            this.dockerOldImageSweeperPeriod = Long.parseLong(getEnv(DOCKER_OLD_IMAGE_SWEEPER_PERIOD_KEY, "3600000")); // 1 hour
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -152,12 +160,20 @@ public class Configuration {
         return maxPreforkAge;
     }
 
-    public boolean isDockerSweeperEnabled() {
-        return dockerSweeperEnabled;
+    public boolean isDockerOrphanSweeperEnabled() {
+        return dockerOrphanSweeperEnabled;
     }
 
-    public long getDockerSweeperPeriod() {
-        return dockerSweeperPeriod;
+    public long getDockerOrphanSweeperPeriod() {
+        return dockerOrphanSweeperPeriod;
+    }
+
+    public boolean isDockerOldImageSweeperEnabled() {
+        return dockerOldImageSweeperEnabled;
+    }
+
+    public long getDockerOldImageSweeperPeriod() {
+        return dockerOldImageSweeperPeriod;
     }
 
     private static String getEnv(String key, String defaultValue) {
