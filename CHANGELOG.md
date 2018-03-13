@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: an endpoint to download a single state file.
+
+
+
 ## [0.59.0] - 2018-03-11
 
 ### Added

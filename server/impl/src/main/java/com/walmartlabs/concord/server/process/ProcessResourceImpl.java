@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,7 +80,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final ProcessStateManager stateManager;
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
-    
+
     @Inject
     public ProcessResourceImpl(ProcessManager processManager,
                                ProcessQueueDao queueDao,
@@ -490,6 +490,34 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 .build();
     }
 
+    @Override
+    @Validate
+    @WithTimer
+    public Response downloadState(UUID instanceId, String fileName) {
+        ProcessEntry p = queueDao.get(instanceId);
+        if (p == null) {
+            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+
+        if (p.getProjectId() != null) {
+            projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.READER, false);
+        }
+
+        StreamingOutput out = output -> {
+            Path tmp = stateManager.get(instanceId, fileName, ProcessResourceImpl::copyToTmp)
+                    .orElseThrow(() -> new WebApplicationException("State file not found: " + fileName, Status.NOT_FOUND));
+
+            try (InputStream in = Files.newInputStream(tmp)) {
+                IOUtils.copy(in, output);
+            } finally {
+                Files.delete(tmp);
+            }
+        };
+
+        return Response.ok(out)
+                .build();
+    }
+
     private StartProcessResponse toResponse(ProcessResult r) {
         return new StartProcessResponse(r.getInstanceId(), r.getOut());
     }
@@ -538,6 +566,18 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             return in.available() <= 0;
         } catch (IOException e) {
             throw new WebApplicationException("Internal error", e);
+        }
+    }
+
+    private static Optional<Path> copyToTmp(InputStream in) {
+        try {
+            Path p = IOUtils.createTempFile("state", ".bin");
+            try (OutputStream out = Files.newOutputStream(p)) {
+                IOUtils.copy(in, out);
+            }
+            return Optional.of(p);
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while copying a state file: " + e.getMessage(), e);
         }
     }
 }

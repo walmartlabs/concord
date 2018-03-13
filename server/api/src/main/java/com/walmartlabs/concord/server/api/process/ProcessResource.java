@@ -325,4 +325,11 @@ public interface ProcessResource {
     @Path("/{id}/state/snapshot")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response downloadState(@ApiParam @PathParam("id") UUID instanceId);
+
+    @GET
+    @ApiOperation("Download a single file from a process state snapshot")
+    @Path("/{id}/state/snapshot/{name:.*}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    Response downloadState(@ApiParam @PathParam("id") UUID instanceId,
+                           @ApiParam @PathParam("name") @NotNull @Size(min = 1) String fileName);
 }
