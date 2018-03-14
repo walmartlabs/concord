@@ -82,7 +82,7 @@ public class HttpTaskRequest implements Request {
     public Request withResponseType(ResponseType responseType) {
         String acceptType = getAcceptType(responseType);
         if (acceptType != null && !acceptType.isEmpty()) {
-            this.request.setHeader(HttpHeaders.ACCEPT, getAcceptType(responseType));
+            this.request.setHeader(HttpHeaders.ACCEPT, acceptType);
         }
 
         return this;
@@ -127,12 +127,8 @@ public class HttpTaskRequest implements Request {
      * @return Specific {@link MediaType} or null in case of invalid {@link ResponseType}
      */
     private String getAcceptType(ResponseType responseType) {
-        if (ResponseType.JSON == responseType) {
-            return MediaType.APPLICATION_JSON;
-        } else if (ResponseType.FILE == responseType) {
-            return MediaType.APPLICATION_OCTET_STREAM;
-        } else if (ResponseType.STRING == responseType) {
-            return MediaType.TEXT_PLAIN;
+        if (ResponseType.ANY == responseType) {
+            return MediaType.WILDCARD;
         }
 
         return null;

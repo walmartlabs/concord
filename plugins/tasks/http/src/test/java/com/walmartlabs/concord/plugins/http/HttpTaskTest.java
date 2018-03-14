@@ -45,7 +45,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     public void testExecuteGetRequestForJson() throws Exception {
         initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/json");
         task.execute(mockContext);
-        verify(getRequestedFor(urlEqualTo("/json")).withHeader("Accept", equalTo("application/json")));
+        verify(getRequestedFor(urlEqualTo("/json")));
         assertEquals(response.getStatusCode(), 200);
         assertTrue(response.getErrorString().length() == 0);
     }
@@ -54,7 +54,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     public void testExecuteGetRequestForString() throws Exception {
         initCxtForRequest(mockContext, "GET", "string", "string", "http://localhost:8089/string");
         task.execute(mockContext);
-        verify(getRequestedFor(urlEqualTo("/string")).withHeader("Accept", equalTo("text/plain")));
+        verify(getRequestedFor(urlEqualTo("/string")));
     }
 
     @Test
@@ -63,7 +63,6 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         when(mockContext.getVariable("body")).thenReturn("{ \"request\": \"PostTest\" }");
         task.execute(mockContext);
         verify(postRequestedFor(urlEqualTo("/post"))
-                .withHeader("Accept", equalTo("application/json"))
                 .withHeader("Content-Type", equalTo("application/json")));
     }
 
@@ -77,12 +76,11 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         when(mockContext.getVariable("body")).thenReturn(complexObject);
         task.execute(mockContext);
         verify(postRequestedFor(urlEqualTo("/post"))
-                .withHeader("Accept", equalTo("application/json"))
                 .withHeader("Content-Type", equalTo("application/json")));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentExceptionExceptionForRequest() throws Exception {
+    public void testIllegalArgumentExceptionForRequest() throws Exception {
         task.execute(mockContext);
     }
 
@@ -116,14 +114,32 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     @Test(expected = IllegalArgumentException.class)
     public void testForMissingWorkDirForFileGetRequest() throws Exception {
         // Working directory is mandatory for response type file
-        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:8089/file");
+        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:8089/stringFile");
         task.execute(mockContext);
 
     }
 
     @Test
     public void testFileGetRequestWithWorkDir() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:8089/file");
+        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:8089/stringFile");
+        when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
+        task.execute(mockContext);
+        assertNotNull(response);
+        assertTrue(response.isSuccess());
+    }
+
+    @Test
+    public void testFileGetWithResponseTypeString() throws Exception {
+        initCxtForRequest(mockContext, "GET", "json", "string", "http://localhost:8089/stringFile");
+        when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
+        task.execute(mockContext);
+        assertNotNull(response);
+        assertTrue(response.isSuccess());
+    }
+
+    @Test
+    public void testFileGetWithResponseTypeJSON() throws Exception {
+        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/JSONFile");
         when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
         task.execute(mockContext);
         assertNotNull(response);

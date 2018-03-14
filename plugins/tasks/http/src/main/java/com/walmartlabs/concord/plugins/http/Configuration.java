@@ -171,7 +171,7 @@ public class Configuration {
         Builder withRequestType(RequestType requestType);
 
         /**
-         * Used to specify the response type which later maps to Accept header of the request.
+         * Used to specify the response type, which later use to parse the response from endpoint.
          *
          * @param responseType {@link ResponseType} type of the response (file, json, string)
          * @return instance of this {@link Builder}

@@ -56,6 +56,7 @@ import java.security.NoSuchAlgorithmException;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import static com.walmartlabs.concord.plugins.http.HttpTaskUtils.getHttpEntity;
+import static com.walmartlabs.concord.plugins.http.HttpTaskUtils.isValidJSON;
 
 public class SimpleHttpClient {
 
@@ -69,7 +70,6 @@ public class SimpleHttpClient {
         this.client = createClient();
         this.request = buildHttpUriRequest(config);
     }
-
 
     /**
      * Factory method to create {@link SimpleHttpClient} objects
@@ -104,13 +104,16 @@ public class SimpleHttpClient {
                     responseString = storeFile(httpResponse.getEntity());
                 } else {
                     responseString = EntityUtils.toString(httpResponse.getEntity());
+                    // For response type JSON, the response must contain valid json string
+                    if (config.getResponseType() == ResponseType.JSON && !isValidJSON(responseString)) {
+                        throw new IllegalStateException("Invalid JSON response received -> " + responseString);
+                    }
                 }
 
                 response.setSuccess(true);
                 response.setContent(responseString);
             } else {
                 response.setErrorString(EntityUtils.toString(httpResponse.getEntity()));
-
             }
             response.setStatusCode(httpResponse.getStatusLine().getStatusCode());
 
@@ -219,7 +222,7 @@ public class SimpleHttpClient {
         return HttpTaskRequest.Post(cfg.getUrl())
                 .withBasicAuth(cfg.getEncodedAuthToken())
                 .withRequestType(cfg.getRequestType())
-                .withResponseType(cfg.getResponseType())
+                .withResponseType(ResponseType.ANY)
                 .withBody(getHttpEntity(cfg.getBody(), cfg.getRequestType()))
                 .get();
     }
@@ -234,7 +237,7 @@ public class SimpleHttpClient {
         return HttpTaskRequest.Get(cfg.getUrl())
                 .withBasicAuth(cfg.getEncodedAuthToken())
                 .withRequestType(cfg.getRequestType())
-                .withResponseType(cfg.getResponseType())
+                .withResponseType(ResponseType.ANY)
                 .get();
     }
 

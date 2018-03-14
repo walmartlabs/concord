@@ -60,7 +60,8 @@ public abstract class AbstractHttpTaskTest {
         stubForGetSecureEndpoint();
         stubForPostSecureEndpoint();
         stubForPostRequestForRequestTypeFile();
-        stubForGetRequestForResponseTypeFile();
+        stubForGetRequestForResponseTypeStringFile();
+        stubForGetRequestForResponseTypeJSONFile();
         stubForUnsuccessfulResponse();
 
     }
@@ -148,20 +149,36 @@ public abstract class AbstractHttpTaskTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                .withBody("Success"))
+                        .withBody("{\n" +
+                                "  \"testObject\": {\n" +
+                                "    \"testString\": \"hello\",\n" +
+                                "    \"testInteger\": \"2\"\n" +
+                                "  }\n" +
+                                "}"))
         );
     }
 
 
-    protected void stubForGetRequestForResponseTypeFile() {
-        rule.stubFor(get(urlEqualTo("/file"))
-                .withHeader("Accept", equalTo("application/octet-stream"))
+    protected void stubForGetRequestForResponseTypeStringFile() {
+        rule.stubFor(get(urlEqualTo("/stringFile"))
+                .withHeader("Accept", equalTo("*/*"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/octet-stream")
                         .withBodyFile("file.bin"))
         );
     }
+
+    protected void stubForGetRequestForResponseTypeJSONFile() {
+        rule.stubFor(get(urlEqualTo("/JSONFile"))
+                .withHeader("Accept", equalTo("*/*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/octet-stream")
+                        .withBodyFile("jsonFile.bin"))
+        );
+    }
+
 
     protected void stubForUnsuccessfulResponse() {
         rule.stubFor(get(urlEqualTo("/unsuccessful"))

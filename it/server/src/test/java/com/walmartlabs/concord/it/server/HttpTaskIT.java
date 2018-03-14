@@ -59,10 +59,10 @@ public class HttpTaskIT extends AbstractServerIT {
     @Before
     public void setup() {
 
-        stubForGetSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword,mockHttpPathPassword);
-        stubForPostSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword,mockHttpPathPassword);
-        stubForGetSecureTokenEndpoint(mockHttpAuthToken,mockHttpPathToken);
-        stubForPostSecureTokenEndpoint(mockHttpAuthToken,mockHttpPathToken);
+        stubForGetSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
+        stubForPostSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
+        stubForGetSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
+        stubForPostSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
 
     }
 
@@ -112,7 +112,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl+mockHttpPort+mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl + mockHttpPort + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessResource processResource = proxy(ProcessResource.class);
@@ -133,7 +133,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl+mockHttpPort+mockHttpPathToken);
+        input.put("arguments.url", mockHttpBaseUrl + mockHttpPort + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
         ProcessResource processResource = proxy(ProcessResource.class);
@@ -155,7 +155,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl+mockHttpPort+mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl + mockHttpPort + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessResource processResource = proxy(ProcessResource.class);
@@ -176,7 +176,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl+mockHttpPort+mockHttpPathToken);
+        input.put("arguments.url", mockHttpBaseUrl + mockHttpPort + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
         ProcessResource processResource = proxy(ProcessResource.class);
@@ -210,16 +210,20 @@ public class HttpTaskIT extends AbstractServerIT {
                 .withBasicAuth(user, password)
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("Authorized"))
+                        .withBody("{\n" +
+                                "  \"Authorized\": \"true\"\n" +
+                                "}"))
         );
     }
 
     private void stubForGetSecureTokenEndpoint(String authToken, String url) {
         rule.stubFor(get(urlEqualTo(url))
-                .withHeader("Authorization", equalTo("Basic "+authToken))
+                .withHeader("Authorization", equalTo("Basic " + authToken))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("Authorized"))
+                        .withBody("{\n" +
+                                "  \"Authorized\": \"true\"\n" +
+                                "}"))
         );
     }
 
@@ -228,16 +232,20 @@ public class HttpTaskIT extends AbstractServerIT {
                 .withBasicAuth(user, password)
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("Authorized"))
+                        .withBody("{\n" +
+                                "  \"Authorized\": \"true\"\n" +
+                                "}"))
         );
     }
 
     private void stubForPostSecureTokenEndpoint(String authToken, String url) {
         rule.stubFor(post(urlEqualTo(url))
-                .withHeader("Authorization", equalTo("Basic "+authToken))
+                .withHeader("Authorization", equalTo("Basic " + authToken))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("Authorized"))
+                        .withBody("{\n" +
+                                "  \"Authorized\": \"true\"\n" +
+                                "}"))
         );
     }
 }

@@ -107,7 +107,7 @@ public final class HttpTaskUtils {
      * @param body json string
      * @return true if json is valid
      */
-    private static boolean isValidJSON(String body) {
+    public static boolean isValidJSON(String body) {
         ObjectMapper om = new ObjectMapper();
         try {
             om.readTree(body);

@@ -95,7 +95,7 @@ public class HttpTask implements Task {
         GET,
         POST;
 
-        static public boolean isMember(String aName) {
+        public static boolean isMember(String aName) {
             RequestMethodType[] requestMethodTypes = RequestMethodType.values();
             for (RequestMethodType requestMethodType : requestMethodTypes)
                 if (requestMethodType.name().equalsIgnoreCase(aName))
@@ -110,7 +110,7 @@ public class HttpTask implements Task {
         FILE,
         STRING;
 
-        static public boolean isMember(String aName) {
+        public static boolean isMember(String aName) {
             RequestType[] requestTypes = RequestType.values();
             for (RequestType requestType : requestTypes)
                 if (requestType.name().equalsIgnoreCase(aName))
@@ -123,9 +123,10 @@ public class HttpTask implements Task {
     public enum ResponseType {
         JSON,
         FILE,
-        STRING;
+        STRING,
+        ANY;
 
-        static public boolean isMember(String aName) {
+        public static boolean isMember(String aName) {
             ResponseType[] responseTypes = ResponseType.values();
             for (ResponseType responseType : responseTypes)
                 if (responseType.name().equalsIgnoreCase(aName))

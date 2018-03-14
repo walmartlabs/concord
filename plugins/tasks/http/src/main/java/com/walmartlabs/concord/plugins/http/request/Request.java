@@ -44,7 +44,8 @@ public interface Request {
     Request withRequestType(RequestType requestType);
 
     /**
-     * Method to set the Accept header in the request
+     * Method to set the response type, which will later use to parse the
+     * response from endpoint
      *
      * @param responseType {@link ResponseType}
      * @return Instance of this Request
