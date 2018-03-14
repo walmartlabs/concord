@@ -25,13 +25,13 @@ import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
@@ -44,7 +44,6 @@ public class SessionKeyRealm extends AuthorizingRealm {
 
     private final ProcessSecurityContext processSecurityContext;
     private final ProcessQueueDao processQueueDao;
-    private final ConcordShiroAuthorizer authorizer;
 
     private static final Set<ProcessStatus> FINISHED_STATUSES = ImmutableSet.of(
             ProcessStatus.FINISHED,
@@ -54,11 +53,9 @@ public class SessionKeyRealm extends AuthorizingRealm {
 
     @Inject
     public SessionKeyRealm(ProcessSecurityContext processSecurityContext,
-                           ProcessQueueDao processQueueDao,
-                           ConcordShiroAuthorizer authorizer) {
+                           ProcessQueueDao processQueueDao) {
         this.processSecurityContext = processSecurityContext;
         this.processQueueDao = processQueueDao;
-        this.authorizer = authorizer;
     }
 
     @Override
@@ -86,7 +83,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
         if (!"sessionkey".equals(p.getRealm())) {
             return null;
         }
-        return authorizer.getAuthorizationInfo(p);
+        return new SimpleAuthorizationInfo();
     }
 
     private boolean isFinished(ProcessEntry process) {

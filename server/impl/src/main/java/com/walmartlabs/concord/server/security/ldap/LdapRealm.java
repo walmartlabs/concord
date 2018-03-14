@@ -23,12 +23,12 @@ package com.walmartlabs.concord.server.security.ldap;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
-import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.ldap.AbstractLdapRealm;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
@@ -50,7 +50,6 @@ public class LdapRealm extends AbstractLdapRealm {
 
     private final UserManager userManager;
     private final LdapManager ldapManager;
-    private final ConcordShiroAuthorizer authorizer;
 
     private final String usernameSuffix;
 
@@ -58,12 +57,10 @@ public class LdapRealm extends AbstractLdapRealm {
     public LdapRealm(LdapConfiguration cfg,
                      UserManager userManager,
                      ConcordLdapContextFactory ctxFactory,
-                     LdapManager ldapManager,
-                     ConcordShiroAuthorizer authorizer) {
+                     LdapManager ldapManager) {
 
         this.userManager = userManager;
         this.ldapManager = ldapManager;
-        this.authorizer = authorizer;
 
         this.url = cfg.getUrl();
         this.searchBase = cfg.getSearchBase();
@@ -144,7 +141,7 @@ public class LdapRealm extends AbstractLdapRealm {
             throw new AuthorizationException("LDAP data not found: " + p.getUsername());
         }
 
-        return authorizer.getAuthorizationInfo(p);
+        return new SimpleAuthorizationInfo();
     }
 
     private static String normalizeUsername(String s) {

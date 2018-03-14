@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.github;
  * =====
  */
 
-import com.walmartlabs.concord.server.security.ConcordShiroAuthorizer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationException;
@@ -28,6 +27,7 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
@@ -44,12 +44,10 @@ public class GithubRealm extends AuthorizingRealm {
     private static final String USER = "github";
 
     private final UserManager userManager;
-    private final ConcordShiroAuthorizer authorizer;
 
     @Inject
-    public GithubRealm(UserManager userManager, ConcordShiroAuthorizer authorizer) {
+    public GithubRealm(UserManager userManager) {
         this.userManager = userManager;
-        this.authorizer = authorizer;
     }
 
     @Override
@@ -80,6 +78,6 @@ public class GithubRealm extends AuthorizingRealm {
         if (!REALM_NAME.equals(p.getRealm())) {
             return null;
         }
-        return authorizer.getAuthorizationInfo(p);
+        return new SimpleAuthorizationInfo();
     }
 }
