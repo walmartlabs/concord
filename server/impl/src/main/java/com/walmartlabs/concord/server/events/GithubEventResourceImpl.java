@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.events;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,11 +22,10 @@ package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -63,11 +62,10 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
                                    TriggersDao triggersDao,
                                    RepositoryDao repositoryDao,
                                    RepositoryCacheDao repositoryCacheDao,
-                                   PayloadManager payloadManager,
                                    ProcessManager processManager,
                                    GithubWebhookManager webhookManager) {
 
-        super(payloadManager, processManager, triggersDao, projectDao);
+        super(processManager, triggersDao, projectDao);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -82,7 +80,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
         }
 
         Map<String, Object> repo = (Map<String, Object>) event.getOrDefault("repository", Collections.emptyMap());
-        String repoName = (String)repo.get("full_name");
+        String repoName = (String) repo.get("full_name");
         if (repoName == null) {
             return "ok";
         }
@@ -96,7 +94,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
 
         String eventBranch = getBranch(event);
 
-        for (RepositoryEntry r :repos) {
+        for (RepositoryEntry r : repos) {
             String rBranch = Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH);
             if (!rBranch.equals(eventBranch)) {
                 continue;

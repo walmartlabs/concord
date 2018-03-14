@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,9 +30,11 @@ import com.walmartlabs.concord.server.console.CustomFormService;
 import com.walmartlabs.concord.server.console.FormSessionResponse;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.org.OrganizationDao;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
+import com.walmartlabs.concord.server.process.PayloadBuilder;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -64,24 +66,30 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
 
     private static final long STATUS_REFRESH_DELAY = 250;
 
-    private final PayloadManager payloadManager;
     private final ProcessManager processManager;
     private final OrganizationDao orgDao;
     private final ProcessQueueDao queueDao;
     private final ConcordFormService formService;
     private final CustomFormService customFormService;
     private final ResponseTemplates responseTemplates;
+    private final ProjectDao projectDao;
+    private final RepositoryDao repositoryDao;
 
     @Inject
-    public ProjectProcessResourceImpl(PayloadManager payloadManager, ProcessManager processManager,
-                                      OrganizationDao orgDao, ProcessQueueDao queueDao,
-                                      ConcordFormService formService, CustomFormService customFormService) {
-        this.payloadManager = payloadManager;
+    public ProjectProcessResourceImpl(ProcessManager processManager,
+                                      OrganizationDao orgDao,
+                                      ProcessQueueDao queueDao,
+                                      ConcordFormService formService,
+                                      CustomFormService customFormService,
+                                      ProjectDao projectDao, RepositoryDao repositoryDao) {
+
         this.processManager = processManager;
         this.orgDao = orgDao;
         this.queueDao = queueDao;
         this.formService = formService;
         this.customFormService = customFormService;
+        this.projectDao = projectDao;
+        this.repositoryDao = repositoryDao;
         this.responseTemplates = new ResponseTemplates();
     }
 
@@ -116,14 +124,22 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
         UUID instanceId = UUID.randomUUID();
 
         try {
-            UUID orgId = getOrg(orgName);
-            PayloadManager.EntryPoint ep = payloadManager.createEntryPoint(instanceId, orgId, projectName, repoName, entryPoint);
+            UUID orgId = getOrgId(orgName);
+            UUID projectId = getProjectId(orgId, projectName);
+            UUID repoId = getRepoId(projectId, repoName);
 
-            Payload payload = payloadManager.createPayload(instanceId, null, getInitiator(), ep, req, null);
+            Payload payload = new PayloadBuilder(instanceId)
+                    .organization(orgId)
+                    .project(projectId)
+                    .repository(repoId)
+                    .entryPoint(entryPoint)
+                    .initiator(getInitiator())
+                    .configuration(req)
+                    .build();
 
             processManager.start(payload, false);
         } catch (Exception e) {
-            return processError(null, e.getMessage());
+            return processError(instanceId, e.getMessage());
         }
 
         while (true) {
@@ -193,10 +209,42 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
         return result;
     }
 
-    private UUID getOrg(String orgName) {
+    private UUID getOrgId(String orgName) {
         UUID id = orgDao.getId(orgName);
         if (id == null) {
             throw new ValidationErrorsException("Organization not found: " + orgName);
+        }
+        return id;
+    }
+
+    private UUID getProjectId(UUID orgId, String projectName) {
+        if (projectName == null) {
+            return null;
+        }
+
+        if (orgId == null) {
+            throw new ValidationErrorsException("Organization name is required");
+        }
+
+        UUID id = projectDao.getId(orgId, projectName);
+        if (id == null) {
+            throw new ValidationErrorsException("Project not found: " + projectName);
+        }
+        return id;
+    }
+
+    private UUID getRepoId(UUID projectId, String repoName) {
+        if (repoName == null) {
+            return null;
+        }
+
+        if (projectId == null) {
+            throw new ValidationErrorsException("Project name is required");
+        }
+
+        UUID id = repositoryDao.getId(projectId, repoName);
+        if (id == null) {
+            throw new ValidationErrorsException("Repository not found: " + repoName);
         }
         return id;
     }

@@ -87,6 +87,7 @@ public class AgentCommandsDao extends AbstractDao {
         return o.map(this::convert);
     }
 
+    @SuppressWarnings("unchecked")
     private AgentCommand convert(AgentCommandsRecord r) {
         UUID commandId = r.getCommandId();
         String agentId = r.getAgentId();

@@ -53,7 +53,6 @@ public class ConsoleService implements Resource {
     private final ProjectDao projectDao;
     private final RepositoryManager repositoryManager;
     private final UserManager userManager;
-    private final SecretManager secretManager;
     private final SecretDao secretDao;
     private final OrganizationManager orgManager;
 
@@ -61,13 +60,11 @@ public class ConsoleService implements Resource {
     public ConsoleService(ProjectDao projectDao,
                           RepositoryManager repositoryManager,
                           UserManager userManager,
-                          SecretManager secretManager,
                           SecretDao secretDao, OrganizationManager orgManager) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
         this.userManager = userManager;
-        this.secretManager = secretManager;
         this.secretDao = secretDao;
         this.orgManager = orgManager;
     }

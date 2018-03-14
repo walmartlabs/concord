@@ -64,7 +64,7 @@ public abstract class AbstractDao {
             sql = sqlFn.apply(create);
         }
 
-        Connection conn = cfg.connectionProvider().acquire();
+        Connection conn = cfg.connectionProvider().acquire(); // NOSONAR
         PreparedStatement ps = null;
         try {
             ps = conn.prepareStatement(sql);
@@ -82,16 +82,6 @@ public abstract class AbstractDao {
             JDBCUtils.safeClose(conn);
             throw new DataAccessException("Error while opening a stream", e);
         }
-    }
-
-    private void executeUpdate(DSLContext create, Function<DSLContext, String> sqlFn, PreparedStatementHandler h) {
-        String sql = sqlFn.apply(create);
-        create.connection(conn -> {
-            try (PreparedStatement ps = conn.prepareCall(sql)) {
-                h.apply(ps);
-                ps.executeUpdate();
-            }
-        });
     }
 
     public interface Tx {

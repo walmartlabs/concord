@@ -46,7 +46,6 @@ public class ProjectManager {
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
     private final GithubWebhookService githubWebhookService;
-    private final EventResource eventResource;
 
     @Inject
     public ProjectManager(ProjectDao projectDao,
@@ -54,8 +53,7 @@ public class ProjectManager {
                           RepositoryManager repositoryManager,
                           ProjectAccessManager accessManager,
                           SecretManager secretManager,
-                          GithubWebhookService githubWebhookService,
-                          EventResource eventResource) {
+                          GithubWebhookService githubWebhookService) {
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -63,7 +61,6 @@ public class ProjectManager {
         this.accessManager = accessManager;
         this.secretManager = secretManager;
         this.githubWebhookService = githubWebhookService;
-        this.eventResource = eventResource;
     }
 
     public ProjectEntry get(UUID projectId) {

@@ -135,6 +135,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
 
     @Override
     @Validate
+    @SuppressWarnings("unchecked")
     public GenericOperationResultResponse updateConfiguration(String orgName, String projectName, String path, Object data) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 

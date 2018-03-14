@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.events;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,9 +23,8 @@ package com.walmartlabs.concord.server.events;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.api.events.OneOpsEventResource;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -61,12 +60,11 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
     private final ObjectMapper objectMapper;
 
     @Inject
-    public OneOpsEventResourceImpl(PayloadManager payloadManager,
-                                   ProcessManager processManager,
+    public OneOpsEventResourceImpl(ProcessManager processManager,
                                    TriggersDao triggersDao,
                                    ProjectDao projectDao) {
 
-        super(payloadManager, processManager, triggersDao, projectDao);
+        super(processManager, triggersDao, projectDao);
         this.objectMapper = new ObjectMapper();
     }
 
@@ -105,8 +103,8 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
 
     private static Map<String, Object> buildTriggerEvent(Map<String, Object> event,
                                                          Map<String, Object> conditions) {
-        Map<String, Object> result = new HashMap<>();
-        result.putAll(conditions);
+
+        Map<String, Object> result = new HashMap<>(conditions);
         result.put("payload", event);
         return result;
     }

@@ -41,16 +41,13 @@ public abstract class AbstractEventResource {
 
     private final Logger log;
 
-    private final PayloadManager payloadManager;
     private final ProcessManager processManager;
     private final TriggersDao triggersDao;
     private final ProjectDao projectDao;
 
-    public AbstractEventResource(PayloadManager payloadManager,
-                                 ProcessManager processManager,
+    public AbstractEventResource(ProcessManager processManager,
                                  TriggersDao triggersDao, ProjectDao projectDao) {
 
-        this.payloadManager = payloadManager;
         this.processManager = processManager;
         this.triggersDao = triggersDao;
         this.projectDao = projectDao;

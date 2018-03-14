@@ -35,7 +35,7 @@ public class ResultSetInputStream extends InputStream {
     private static final Logger log = LoggerFactory.getLogger(ResultSetInputStream.class);
 
     public static InputStream open(Connection conn, PreparedStatement ps, int columnIndex) throws SQLException {
-        ResultSet rs = null;
+        ResultSet rs = null; // NOSONAR
         try {
             rs = ps.executeQuery();
             if (!rs.next()) {

@@ -39,17 +39,14 @@ public class InventoryDataResourceImpl implements InventoryDataResource, Resourc
 
     private final OrganizationManager orgManager;
     private final InventoryManager inventoryManager;
-    private final InventoryDao inventoryDao;
     private final InventoryDataDao inventoryDataDao;
 
     @Inject
     public InventoryDataResourceImpl(OrganizationManager orgManager,
                                      InventoryManager inventoryManager,
-                                     InventoryDao inventoryDao,
                                      InventoryDataDao inventoryDataDao) {
         this.orgManager = orgManager;
         this.inventoryManager = inventoryManager;
-        this.inventoryDao = inventoryDao;
         this.inventoryDataDao = inventoryDataDao;
     }
 
