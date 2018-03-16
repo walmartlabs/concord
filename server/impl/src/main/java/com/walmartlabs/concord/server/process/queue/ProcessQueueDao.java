@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,7 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -98,24 +99,28 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void update(UUID instanceId, ProcessStatus status) {
-        update(instanceId, status, (Set<String>) null);
+        update(instanceId, status, (Set<String>) null, null);
     }
 
-    public void update(UUID instanceId, ProcessStatus status, Set<String> tags) {
-        tx(tx -> update(tx, instanceId, status, tags));
+    public void update(UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt) {
+        tx(tx -> update(tx, instanceId, status, tags, startAt));
     }
 
     public void update(DSLContext tx, UUID instanceId, ProcessStatus status) {
-        update(tx, instanceId, status, null);
+        update(tx, instanceId, status, null, null);
     }
 
-    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags) {
+    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt) {
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
 
         if (tags != null) {
             q.set(PROCESS_QUEUE.PROCESS_TAGS, toArray(tags));
+        }
+
+        if (startAt != null) {
+            q.set(PROCESS_QUEUE.START_AT, Timestamp.from(startAt));
         }
 
         int i = q
@@ -183,7 +188,9 @@ public class ProcessQueueDao extends AbstractDao {
         return txResult(tx -> {
             UUID id = tx.select(PROCESS_QUEUE.INSTANCE_ID)
                     .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString()))
+                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
+                            .and(or(PROCESS_QUEUE.START_AT.isNull(),
+                                    PROCESS_QUEUE.START_AT.le(currentTimestamp()))))
                     .orderBy(PROCESS_QUEUE.CREATED_AT)
                     .limit(1)
                     .forUpdate()
