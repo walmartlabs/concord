@@ -79,6 +79,11 @@ public class InventoryManager {
         inventoryDao.delete(inventoryId);
     }
 
+    public void updateAccessLevel(UUID inventoryId, UUID teamId, ResourceAccessLevel level) {
+        assertInventoryAccess(inventoryId, ResourceAccessLevel.OWNER, true);
+        inventoryDao.upsertAccessLevel(inventoryId, teamId, level);
+    }
+
     public InventoryEntry assertInventoryAccess(UUID orgId, String inventoryName, ResourceAccessLevel level, boolean orgMembersOnly) {
         UUID inventoryId = inventoryDao.getId(orgId, inventoryName);
         if (inventoryId == null) {

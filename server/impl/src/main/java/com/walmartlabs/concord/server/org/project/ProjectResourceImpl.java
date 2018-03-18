@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,13 +24,15 @@ import com.google.common.base.Splitter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
-import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.*;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.org.team.TeamDao;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -44,8 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.repository.CachedRepositoryManager.RepositoryCacheDao;
-
 @Named
 public class ProjectResourceImpl implements ProjectResource, Resource {
 
@@ -54,19 +54,25 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     private final ProjectManager projectManager;
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
+    private final OrganizationDao orgDao;
+    private final TeamDao teamDao;
 
     @Inject
     public ProjectResourceImpl(OrganizationManager orgManager,
                                ProjectDao projectDao,
                                ProjectManager projectManager,
                                ProjectAccessManager accessManager,
-                               SecretManager secretManager) {
+                               SecretManager secretManager,
+                               OrganizationDao orgDao,
+                               TeamDao teamDao) {
 
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.projectManager = projectManager;
         this.accessManager = accessManager;
         this.secretManager = secretManager;
+        this.orgDao = orgDao;
+        this.teamDao = teamDao;
     }
 
     @Override
@@ -227,7 +233,9 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
             throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        accessManager.updateAccessLevel(projectId, entry.getTeamId(), entry.getLevel());
+        UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, entry);
+
+        accessManager.updateAccessLevel(projectId, teamId, entry.getLevel());
         return new GenericOperationResultResponse(OperationResult.UPDATED);
     }
 

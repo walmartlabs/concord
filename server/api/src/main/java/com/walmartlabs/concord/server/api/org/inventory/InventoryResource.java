@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.api.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.api.org.inventory;
  * =====
  */
 
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -37,7 +39,7 @@ public interface InventoryResource {
     /**
      * Returns an existing inventory.
      *
-     * @param orgName organization's name
+     * @param orgName       organization's name
      * @param inventoryName inventory's name
      * @return inventory
      */
@@ -52,7 +54,7 @@ public interface InventoryResource {
      * Create or update a inventory.
      *
      * @param orgName organization's name
-     * @param entry inventory's data
+     * @param entry   inventory's data
      * @return
      */
     @POST
@@ -63,10 +65,20 @@ public interface InventoryResource {
     CreateInventoryResponse createOrUpdate(@ApiParam @PathParam("orgName") String orgName,
                                            @ApiParam @Valid InventoryEntry entry);
 
+
+    @POST
+    @ApiOperation("Updates the access level for the specified inventory")
+    @Path("/{orgName}/inventory/{inventoryName}/access")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    GenericOperationResultResponse updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                     @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                                     @ApiParam @Valid ResourceAccessEntry entry);
+
     /**
      * Creates a new inventory or updates an existing one.
      *
-     * @param orgName organization's name
+     * @param orgName       organization's name
      * @param inventoryName inventory's name
      * @return
      */

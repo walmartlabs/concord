@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ public class InventoryDao extends AbstractDao {
     }
 
     public UUID getId(UUID orgId, String inventoryName) {
-        try(DSLContext tx = DSL.using(cfg)) {
+        try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(INVENTORIES.INVENTORY_ID)
                     .from(INVENTORIES)
                     .where(INVENTORIES.INVENTORY_NAME.eq(inventoryName).and(INVENTORIES.ORG_ID.eq(orgId)))
@@ -110,9 +110,9 @@ public class InventoryDao extends AbstractDao {
                             INVENTORIES.VISIBILITY.getName(),
                             INVENTORIES.OWNER_ID.getName(),
                             USERS.USERNAME.getName())
-                    .as(s1.unionAll(s2))
-                    .select().from(nodes)
-                    .fetch(InventoryDao::toEntity);
+                            .as(s1.unionAll(s2))
+                            .select().from(nodes)
+                            .fetch(InventoryDao::toEntity);
 
             if (items.isEmpty()) {
                 return null;
@@ -121,6 +121,20 @@ public class InventoryDao extends AbstractDao {
             return buildEntity(inventoryId, items);
         }
     }
+
+    public void upsertAccessLevel(UUID inventoryId, UUID teamId, ResourceAccessLevel level) {
+        tx(tx -> upsertAccessLevel(tx, inventoryId, teamId, level));
+    }
+
+    public void upsertAccessLevel(DSLContext tx, UUID inventoryId, UUID teamId, ResourceAccessLevel level) {
+        tx.insertInto(INVENTORY_TEAM_ACCESS)
+                .columns(INVENTORY_TEAM_ACCESS.INVENTORY_ID, INVENTORY_TEAM_ACCESS.TEAM_ID, INVENTORY_TEAM_ACCESS.ACCESS_LEVEL)
+                .values(inventoryId, teamId, level.toString())
+                .onDuplicateKeyUpdate()
+                .set(INVENTORY_TEAM_ACCESS.ACCESS_LEVEL, level.toString())
+                .execute();
+    }
+
 
     public boolean hasAccessLevel(UUID inventoryId, UUID userId, ResourceAccessLevel... levels) {
         try (DSLContext tx = DSL.using(cfg)) {

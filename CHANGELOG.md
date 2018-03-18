@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: a method to update access levels of inventories;
 - concord-server: `startAt` process parameter to schedule process
 executions;
 - concord-agent: a cleanup job to remove old Docker images (keeps two

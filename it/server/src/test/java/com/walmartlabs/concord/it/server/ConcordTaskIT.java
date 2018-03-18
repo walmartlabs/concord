@@ -89,7 +89,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         // grant the team access to the project
 
-        projectResource.updateAccessLevel(orgName, projectName, new ResourceAccessEntry(ctr.getId(), ResourceAccessLevel.READER));
+        projectResource.updateAccessLevel(orgName, projectName, new ResourceAccessEntry(ctr.getId(), orgName, teamName, ResourceAccessLevel.READER));
 
         // start a new process using the project as the user A
 

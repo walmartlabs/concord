@@ -23,15 +23,23 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
+import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.inventory.CreateInventoryResponse;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryEntry;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryResource;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessUtils;
+import com.walmartlabs.concord.server.org.team.TeamDao;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Named
@@ -40,23 +48,31 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
     private final InventoryManager inventoryManager;
     private final InventoryDao inventoryDao;
     private final OrganizationManager orgManager;
+    private final OrganizationDao orgDao;
+    private final TeamDao teamDao;
 
     @Inject
-    public InventoryResourceImpl(InventoryManager inventoryManager, InventoryDao inventoryDao, OrganizationManager orgManager) {
+    public InventoryResourceImpl(InventoryManager inventoryManager,
+                                 InventoryDao inventoryDao,
+                                 OrganizationManager orgManager,
+                                 OrganizationDao orgDao,
+                                 TeamDao teamDao) {
+
         this.inventoryManager = inventoryManager;
         this.inventoryDao = inventoryDao;
         this.orgManager = orgManager;
+        this.orgDao = orgDao;
+        this.teamDao = teamDao;
     }
 
     @Override
     public InventoryEntry get(String orgName, String inventoryName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        UUID inventoryId = assertInventory(org.getId(), inventoryName);
-
-        return inventoryManager.get(inventoryId);
+        return assertInventory(org.getId(), inventoryName, ResourceAccessLevel.READER, false);
     }
 
     @Override
+    @Validate
     public CreateInventoryResponse createOrUpdate(String orgName, InventoryEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -75,25 +91,38 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
     }
 
     @Override
+    @Validate
+    public GenericOperationResultResponse updateAccessLevel(String orgName, String inventoryName, ResourceAccessEntry entry) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+
+        UUID inventoryId = inventoryDao.getId(org.getId(), inventoryName);
+        if (inventoryId == null) {
+            throw new WebApplicationException("Inventory not found: " + inventoryName, Response.Status.NOT_FOUND);
+        }
+
+        UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, entry);
+
+        inventoryManager.updateAccessLevel(inventoryId, teamId, entry.getLevel());
+
+        return new GenericOperationResultResponse(OperationResult.UPDATED);
+    }
+
+    @Override
     public GenericOperationResultResponse delete(String orgName, String inventoryName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
-        UUID inventoryId = assertInventory(org.getId(), inventoryName);
+        InventoryEntry i = assertInventory(org.getId(), inventoryName, ResourceAccessLevel.OWNER, false);
 
-        inventoryManager.delete(inventoryId);
+        inventoryManager.delete(i.getId());
 
         return new GenericOperationResultResponse(OperationResult.DELETED);
     }
 
-    private UUID assertInventory(UUID orgId, String inventoryName) {
+    private InventoryEntry assertInventory(UUID orgId, String inventoryName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {
         if (inventoryName == null) {
             throw new ValidationErrorsException("A valid inventory name is required");
         }
 
-        UUID id = inventoryDao.getId(orgId, inventoryName);
-        if (id == null) {
-            throw new ValidationErrorsException("Inventory not found: " + inventoryName);
-        }
-        return id;
+        return inventoryManager.assertInventoryAccess(orgId, inventoryName, accessLevel, orgMembersOnly);
     }
 }

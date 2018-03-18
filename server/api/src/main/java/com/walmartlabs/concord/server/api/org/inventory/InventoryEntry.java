@@ -55,6 +55,10 @@ public class InventoryEntry implements Serializable {
         this(null, name, null, null, null, null, null);
     }
 
+    public InventoryEntry(String name, InventoryVisibility visibility) {
+        this(null, name, null, null, visibility, null, null);
+    }
+
     @JsonCreator
     public InventoryEntry(@JsonProperty("id") UUID id,
                           @JsonProperty("name") String name,

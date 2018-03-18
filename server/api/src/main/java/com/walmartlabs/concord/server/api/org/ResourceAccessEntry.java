@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -32,22 +33,43 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class ResourceAccessEntry implements Serializable {
 
-    @NotNull
     private final UUID teamId;
+
+    @ConcordKey
+    private final String orgName;
+
+    @ConcordKey
+    private final String teamName;
 
     @NotNull
     private final ResourceAccessLevel level;
 
+    public ResourceAccessEntry(String orgName, String teamName, ResourceAccessLevel level) {
+        this(null, orgName, teamName, level);
+    }
+
     @JsonCreator
     public ResourceAccessEntry(@JsonProperty("teamId") UUID teamId,
+                               @JsonProperty("orgName") String orgName,
+                               @JsonProperty("teamName") String teamName,
                                @JsonProperty("level") ResourceAccessLevel level) {
 
         this.teamId = teamId;
+        this.orgName = orgName;
+        this.teamName = teamName;
         this.level = level;
     }
 
     public UUID getTeamId() {
         return teamId;
+    }
+
+    public String getOrgName() {
+        return orgName;
+    }
+
+    public String getTeamName() {
+        return teamName;
     }
 
     public ResourceAccessLevel getLevel() {
@@ -56,8 +78,10 @@ public class ResourceAccessEntry implements Serializable {
 
     @Override
     public String toString() {
-        return "ProjectAccessEntry{" +
-                ", teamId=" + teamId +
+        return "ResourceAccessEntry{" +
+                "teamId=" + teamId +
+                ", orgName='" + orgName + '\'' +
+                ", teamName='" + teamName + '\'' +
                 ", level=" + level +
                 '}';
     }

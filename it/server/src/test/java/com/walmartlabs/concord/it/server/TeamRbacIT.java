@@ -22,6 +22,9 @@ package com.walmartlabs.concord.it.server;
 
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.server.api.org.*;
+import com.walmartlabs.concord.server.api.org.inventory.InventoryEntry;
+import com.walmartlabs.concord.server.api.org.inventory.InventoryResource;
+import com.walmartlabs.concord.server.api.org.inventory.InventoryVisibility;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.ProjectResource;
 import com.walmartlabs.concord.server.api.org.secret.SecretResource;
@@ -337,7 +340,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
 
         setApiKey(apiKeyA.getKey());
-        orgProjectResource.updateAccessLevel(orgName, projectName, new ResourceAccessEntry(ctr.getId(), ResourceAccessLevel.WRITER));
+        orgProjectResource.updateAccessLevel(orgName, projectName, new ResourceAccessEntry(ctr.getId(), orgName, teamName, ResourceAccessLevel.WRITER));
 
         // ---
 
@@ -431,5 +434,78 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(apiKeyA.getKey());
         secretResource.delete(orgAName, secretAName);
+    }
+
+    @Test(timeout = 30000)
+    public void testInventory() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String teamName = "teamA_" + randomString();
+
+        TeamResource teamResource = proxy(TeamResource.class);
+        teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+
+        // ---
+
+        String inventoryName = "inv_" + randomString();
+
+        InventoryResource inventoryResource = proxy(InventoryResource.class);
+        inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName, InventoryVisibility.PRIVATE));
+
+        // ---
+
+        inventoryResource.updateAccessLevel(orgName, inventoryName, new ResourceAccessEntry(orgName, teamName, ResourceAccessLevel.READER));
+
+        // ---
+
+        String userAName = "userA_" + randomString();
+        String userBName = "userB_" + randomString();
+
+        UserResource userResource = proxy(UserResource.class);
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
+        userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
+
+        // ---
+
+        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
+        CreateApiKeyResponse cakrA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+        CreateApiKeyResponse cakrB = apiKeyResource.create(new CreateApiKeyRequest(userBName));
+
+        // ---
+
+        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+
+        // ---
+
+        setApiKey(cakrA.getKey());
+
+        inventoryResource.get(orgName, inventoryName);
+
+        // ---
+
+        setApiKey(cakrB.getKey());
+
+        try {
+            inventoryResource.get(orgName, inventoryName);
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        resetApiKey();
+
+        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
+
+        // ---
+
+        setApiKey(cakrB.getKey());
+
+        inventoryResource.get(orgName, inventoryName);
     }
 }
