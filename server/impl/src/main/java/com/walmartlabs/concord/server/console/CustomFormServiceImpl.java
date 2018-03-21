@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
@@ -44,6 +45,7 @@ import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import io.takari.bpm.model.form.FormField.Cardinality;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -153,6 +155,17 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                                     UUID processInstanceId, String formInstanceId,
                                     MultivaluedMap<String, String> data) {
 
+        return continueSession(uriInfo, headers, processInstanceId, formInstanceId, FormUtils.convert(data));
+    }
+
+    @Override
+    public Response continueSession(UriInfo uriInfo, HttpHeaders headers, UUID processInstanceId, String formInstanceId, MultipartInput data) {
+        return continueSession(uriInfo, headers, processInstanceId, formInstanceId, MultipartUtils.toMap(data));
+    }
+
+    private Response continueSession(UriInfo uriInfo, HttpHeaders headers,
+                                    UUID processInstanceId, String formInstanceId,
+                                    Map<String, Object> data) {
         // TODO locking
         Form form = assertForm(processInstanceId, formInstanceId);
 
@@ -169,7 +182,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
         try {
             Map<String, Object> m = new HashMap<>();
             try {
-                m = FormUtils.convert(validatorLocale, form, FormUtils.convert(data));
+                m = FormUtils.convert(validatorLocale, form, data);
 
                 FormSubmitResult r = formService.submit(processInstanceId, formInstanceId, m);
                 if (r.isValid()) {

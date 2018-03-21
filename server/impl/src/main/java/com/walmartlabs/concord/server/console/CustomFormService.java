@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.console;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordId;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -44,4 +45,14 @@ public interface CustomFormService {
                              @PathParam("processInstanceId") UUID processInstanceId,
                              @PathParam("formInstanceId") @ConcordId String formInstanceId,
                              MultivaluedMap<String, String> data);
+
+    @POST
+    @Path("{processInstanceId}/{formInstanceId}/continue")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    Response continueSession(@Context UriInfo uriInfo,
+                             @Context HttpHeaders headers,
+                             @PathParam("processInstanceId") UUID processInstanceId,
+                             @PathParam("formInstanceId") @ConcordId String formInstanceId,
+                             MultipartInput data);
 }

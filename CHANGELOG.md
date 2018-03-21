@@ -11,6 +11,11 @@ executions;
 latest versions).
 - concord-server: an endpoint to download a single state file.
 
+### Changed
+
+- concord-server: fixed an issue, preventing file upload fields from
+working with custom forms.
+
 
 
 ## [0.59.0] - 2018-03-11
