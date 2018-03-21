@@ -20,10 +20,12 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
+import java.io.Serializable;
+
 /**
  * Hold the response information for HttpTask
  */
-public class HttpTaskResponse {
+public class HttpTaskResponse implements Serializable {
     /**
      * True for any Success family status code
      */
