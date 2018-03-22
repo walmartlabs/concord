@@ -176,7 +176,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     @Override
     @Validate
     public GenericOperationResultResponse updateConfiguration(String orgName, String projectName, Object data) {
-        return updateConfiguration(projectName, "/", data);
+        return updateConfiguration(orgName, projectName, "/", data);
     }
 
     @Override
