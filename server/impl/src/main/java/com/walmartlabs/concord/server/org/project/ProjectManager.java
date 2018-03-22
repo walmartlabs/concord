@@ -113,7 +113,7 @@ public class ProjectManager {
     }
 
     public void delete(UUID projectId) {
-        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.OWNER, true);
 
         projectDao.delete(projectId);
     }

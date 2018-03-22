@@ -1,5 +1,14 @@
 # Change log
 
+### [Unreleased]
+
+### Changed
+
+- concord-server: OWNER access level is now required to delete a
+project.
+
+
+
 ## [0.60.0] - 2018-03-22
 
 ### Added
