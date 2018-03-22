@@ -165,6 +165,7 @@ public class InjectVariableELResolver extends ELResolver {
         return result;
     }
 
+    @SuppressWarnings("deprecation")
     private static String getInjectedVariableName(Parameter p) {
         InjectVariable iv = p.getAnnotation(InjectVariable.class);
         if (iv != null) {

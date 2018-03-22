@@ -48,6 +48,7 @@ public class DynamicTaskRegistryImpl extends AbstractTaskRegistry implements Dyn
         return get(key, injector);
     }
 
+    @SuppressWarnings("deprecation")
     public void register(Class<? extends Task> taskClass) {
         Named n = taskClass.getAnnotation(Named.class);
         if (n == null) {

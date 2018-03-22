@@ -28,11 +28,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -80,7 +82,7 @@ public abstract class AbstractHttpTaskTest {
         doAnswer((Answer<Void>) invocation -> {
             response = (HttpTaskResponse) invocation.getArguments()[1];
             return null;
-        }).when(ctx).setVariable(anyString(), anyObject());
+        }).when(ctx).setVariable(anyString(), any());
     }
 
     protected void stubForJsonResponse() {

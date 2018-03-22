@@ -64,6 +64,7 @@ public class TaskResolver extends ServiceTaskResolver {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private static String getAnnotationValue(Field f) {
         InjectVariable iv = f.getAnnotation(InjectVariable.class);
         if (iv != null) {

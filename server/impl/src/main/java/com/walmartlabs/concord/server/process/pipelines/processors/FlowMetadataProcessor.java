@@ -89,6 +89,7 @@ public class FlowMetadataProcessor implements PayloadProcessor {
         return ProjectDefinitionUtils.getFlow(pd, profiles, key) != null;
     }
 
+    @SuppressWarnings("unchecked")
     private static boolean getBoolean(Payload payload, String key) {
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (req == null) {

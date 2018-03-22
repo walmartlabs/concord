@@ -277,6 +277,7 @@ public class Configuration {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Configuration build(Context ctx) {
             validateMandatory(ctx);
 
@@ -339,7 +340,5 @@ public class Configuration {
                 throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + " method");
             }
         }
-
     }
-
 }

@@ -174,6 +174,7 @@ public class CrudIT extends AbstractServerIT {
     }
 
     @Test(timeout = 30000)
+    @SuppressWarnings("unchecked")
     public void testInventoryQuery() throws Exception {
         InventoryQueryResource resource = proxy(InventoryQueryResource.class);
 

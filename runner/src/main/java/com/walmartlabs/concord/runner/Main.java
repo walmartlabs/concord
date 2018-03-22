@@ -188,7 +188,7 @@ public class Main {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     private static Map<String, Object> createArgs(String instanceId, Path workDir, Map<String, Object> cfg) {
         Map<String, Object> m = new LinkedHashMap<>();
 

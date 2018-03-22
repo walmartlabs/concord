@@ -38,6 +38,7 @@ public interface StepConverter<T extends YamlStep> {
 
     Chunk convert(ConverterContext ctx, T s) throws YamlConverterException;
 
+    @SuppressWarnings("unchecked")
     default void applyErrorBlock(ConverterContext ctx, Chunk c, String attachedRef, Map<String, Object> opts) throws YamlConverterException {
         if (opts == null) {
             return;
@@ -69,6 +70,7 @@ public interface StepConverter<T extends YamlStep> {
         return new SourceMap(Significance.HIGH, String.valueOf(l.getSourceRef()), l.getLineNr(), l.getColumnNr(), description);
     }
 
+    @SuppressWarnings("unchecked")
     default Set<VariableMapping> getVarMap(Map<String, Object> options, String key) {
         if (options == null) {
             return null;

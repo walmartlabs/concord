@@ -32,10 +32,12 @@ public class HeaderKey<T> extends Key<T> {
         return (HeaderKey<T>) index.register(name, type);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> HeaderKey<Collection<T>> registerCollection(String name) {
         return (HeaderKey<Collection<T>>) index.register(name, Collection.class);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> HeaderKey<Set<T>> registerSet(String name) {
         return (HeaderKey<Set<T>>) index.register(name, Set.class);
     }

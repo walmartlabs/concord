@@ -31,6 +31,7 @@ import java.util.*;
 public class TagsExtractingProcessor implements PayloadProcessor {
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
 

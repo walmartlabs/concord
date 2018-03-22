@@ -288,6 +288,7 @@ public class Grammar {
             many(kv).map(Grammar::toMap));
 
     // docker := FIELD_NAME "docker" VALUE_STRING dockerOptions
+    @SuppressWarnings("unchecked")
     private static final Parser<Atom, YamlStep> docker = label("Docker call",
             satisfyField("docker").then(satisfyToken(JsonToken.VALUE_STRING)).bind(a ->
                     dockerOptions.map(options ->

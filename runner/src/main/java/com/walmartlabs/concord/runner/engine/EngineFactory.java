@@ -71,6 +71,7 @@ public class EngineFactory {
         this.rpcClient = rpcClient;
     }
 
+    @SuppressWarnings("deprecation")
     public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles) {
         Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
         Path stateDir = attachmentsDir.resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
@@ -135,6 +136,7 @@ public class EngineFactory {
         private final Collection<String> activeProfiles;
         private final Map<String, String> attributes;
 
+        @SuppressWarnings("deprecation")
         private ProjectDefinitionAdapter(ProjectDefinition project, Collection<String> activeProfiles, Path baseDir) {
             this.project = project;
             this.activeProfiles = activeProfiles;

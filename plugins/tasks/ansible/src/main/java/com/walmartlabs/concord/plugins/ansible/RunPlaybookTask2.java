@@ -146,6 +146,7 @@ public class RunPlaybookTask2 implements Task {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String,String> defaultEnv() {
         final Map<String, String> env = new HashMap<>();
         env.put("PYTHONPATH", PYTHON_LIB_DIR);
@@ -203,7 +204,7 @@ public class RunPlaybookTask2 implements Task {
                         .withDockerOptions(dockerOpts));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
         run(args, payloadPath, (playbookPath, inventoryPath) ->
                 new PlaybookProcessBuilderImpl(payloadPath, playbookPath, inventoryPath));
@@ -511,6 +512,7 @@ public class RunPlaybookTask2 implements Task {
         return p.toAbsolutePath();
     }
 
+    @SuppressWarnings("deprecation")
     private static Path getVaultPasswordFilePath(Map<String, Object> args, Path workDir, Path tmpDir) throws IOException {
         // check if there is a path to a vault password file
         Path p = getPath(args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY, workDir);
