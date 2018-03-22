@@ -1,0 +1,4 @@
+flows:
+  default:
+  - set:
+      msg: "Hello!"

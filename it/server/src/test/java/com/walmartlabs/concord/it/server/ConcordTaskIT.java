@@ -40,6 +40,8 @@ import com.walmartlabs.concord.server.api.user.UserResource;
 import com.walmartlabs.concord.server.api.user.UserType;
 import org.junit.Test;
 
+import javax.xml.bind.DatatypeConverter;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -148,5 +150,27 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Done!.*", ab);
+    }
+
+    @Test(timeout = 90000)
+    public void testStartAt() throws Exception {
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordDirTask").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.SECOND, 30);
+        input.put("arguments.startAt", DatatypeConverter.printDateTime(c));
+
+        StartProcessResponse spr = start(input);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Done! Hello!.*", ab);
     }
 }

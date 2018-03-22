@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,6 +78,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String INSTANCES_KEY = "instances";
     private static final String INSTANCE_ID_KEY = "instanceId";
     private static final String TAGS_KEY = "tags";
+    private static final String START_AT_KEY = "startAt";
     private static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
     private static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
     private static final String JOB_OUT_KEY = "jobOut";
@@ -226,6 +228,11 @@ public class ConcordTask extends AbstractConcordTask {
             input.put("repo", repo);
         }
 
+        String startAt = getStartAt(cfg);
+        if (startAt != null) {
+            input.put("startAt", startAt);
+        }
+
         input.put("parentInstanceId", instanceId);
 
         StartProcessResponse resp = request(ctx, targetUri, input, StartProcessResponse.class);
@@ -369,7 +376,7 @@ public class ConcordTask extends AbstractConcordTask {
 
     private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
         Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, PAYLOAD_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
-                REPO_KEY, REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, DISABLE_ON_CANCEL_KEY,
+                REPO_KEY, REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, START_AT_KEY, DISABLE_ON_CANCEL_KEY,
                 DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY);
 
         if (job != null) {
@@ -498,6 +505,25 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         return i;
+    }
+
+    private static String getStartAt(Map<String, Object> cfg) {
+        Object v = cfg.get(START_AT_KEY);
+        if (v == null) {
+            return null;
+        }
+
+        if (v instanceof String) {
+            return (String) v;
+        } else if (v instanceof Date) {
+            Calendar c = Calendar.getInstance();
+            c.setTime((Date) v);
+            return DatatypeConverter.printDateTime(c);
+        } else if (v instanceof Calendar) {
+            return DatatypeConverter.printDateTime((Calendar) v);
+        } else {
+            throw new IllegalArgumentException("'" + START_AT_KEY + "' must be a string, java.util.Date or java.util.Calendar value. Got: " + v);
+        }
     }
 
     private enum Action {

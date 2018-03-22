@@ -2,6 +2,10 @@
 
 ### [Unreleased]
 
+### Added
+
+- concord-client: support for the new `startAt` parameter.
+
 ### Changed
 
 - concord-server: OWNER access level is now required to delete a
