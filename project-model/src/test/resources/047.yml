@@ -1,0 +1,10 @@
+main:
+  - myFlowA
+  - myFlowB
+
+myFlowA:
+  - ${testBean.toString("myFlowA")}
+  - exit
+
+myFlowB:
+  - ${testBean.toString("myFlowB")}

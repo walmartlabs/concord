@@ -259,6 +259,11 @@ public class Grammar {
     private static final Parser<Atom, YamlStep> callProc = label("Process call",
             satisfyToken(JsonToken.VALUE_STRING).map(a -> new YamlCall(a.location, (String) a.value, null)));
 
+    // exit := VALUE_STRING
+    private static final Parser<Atom, YamlStep> exit = label("Exit call",
+            satisfy((Atom a) -> a.token == JsonToken.VALUE_STRING && "exit".equals(a.value))
+                .map(a -> new YamlExit(a.location)));
+
     // event := FIELD_NAME "event" VALUE_STRING
     private static final Parser<Atom, YamlStep> event = label("Event (debug only)",
             satisfyField("event").then(satisfyToken(JsonToken.VALUE_STRING))
@@ -305,7 +310,7 @@ public class Grammar {
                     choice(choice(docker, group, switchExpr, ifExpr, exprFull, formCall, vars), taskFull, callFull, event, errorReturn, script, taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
-    private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, callProc, stepObject);
+    private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, exit, callProc, stepObject);
 
     // steps := START_ARRAY step+ END_ARRAY
     static {
