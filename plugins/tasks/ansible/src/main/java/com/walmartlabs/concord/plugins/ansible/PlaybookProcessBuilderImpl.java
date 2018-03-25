@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.PrivilegedAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -167,7 +168,7 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
             log.info("build -> env: {}", env);
         }
 
-        return b.start();
+        return PrivilegedAction.perform("task", () -> b.start());
     }
 
     private String[] formatCmd() throws IOException {

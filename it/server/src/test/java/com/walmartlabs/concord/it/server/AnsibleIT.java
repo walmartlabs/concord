@@ -134,7 +134,7 @@ public class AnsibleIT extends AbstractServerIT {
     @Test(timeout = 30000)
     public void testWithForm() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleWithForm").toURI();
-        byte[] payload = archive(dir);
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
         // ---
 

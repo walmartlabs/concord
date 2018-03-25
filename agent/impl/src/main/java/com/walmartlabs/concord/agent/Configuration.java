@@ -54,6 +54,8 @@ public class Configuration {
     public static final String DOCKER_OLD_IMAGE_SWEEPER_ENABLED_KEY = "DOCKER_OLD_IMAGE_SWEEPER_ENABLED";
     public static final String DOCKER_OLD_IMAGE_SWEEPER_PERIOD_KEY = "DOCKER_OLD_IMAGE_SWEEPER_PERIOD";
 
+    public static final String RUNNER_SECURITY_MANAGER_ENABLED_KEY = "RUNNER_SECURITY_MANAGER_ENABLED";
+
     private final String agentId;
     private final String serverHost;
     private final int serverRpcPort;
@@ -70,6 +72,7 @@ public class Configuration {
     private final long dockerOrphanSweeperPeriod;
     private final boolean dockerOldImageSweeperEnabled;
     private final long dockerOldImageSweeperPeriod;
+    private final boolean runnerSecurityManagerEnabled;
 
     public Configuration() {
         this.agentId = UUID.randomUUID().toString();
@@ -107,6 +110,8 @@ public class Configuration {
 
             this.dockerOldImageSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_OLD_IMAGE_SWEEPER_ENABLED_KEY, "false"));
             this.dockerOldImageSweeperPeriod = Long.parseLong(getEnv(DOCKER_OLD_IMAGE_SWEEPER_PERIOD_KEY, "3600000")); // 1 hour
+
+            this.runnerSecurityManagerEnabled = Boolean.parseBoolean(getEnv(RUNNER_SECURITY_MANAGER_ENABLED_KEY, "false"));
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -174,6 +179,10 @@ public class Configuration {
 
     public long getDockerOldImageSweeperPeriod() {
         return dockerOldImageSweeperPeriod;
+    }
+
+    public boolean isRunnerSecurityManagerEnabled() {
+        return runnerSecurityManagerEnabled;
     }
 
     private static String getEnv(String key, String defaultValue) {

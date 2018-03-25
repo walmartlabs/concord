@@ -307,6 +307,9 @@ public class DefaultJobExecutor implements JobExecutor {
         l.add("-Drpc.server.port=" + cfg.getServerRpcPort());
         l.add("-Dapi.baseUrl=" + cfg.getServerApiBaseUrl());
 
+        // Runner's security manager
+        l.add("-Dconcord.securityManager.enabled=" + cfg.isRunnerSecurityManagerEnabled());
+
         // classpath
         l.add("-cp");
 

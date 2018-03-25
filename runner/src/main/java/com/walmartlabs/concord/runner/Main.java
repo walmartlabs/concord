@@ -51,6 +51,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -283,6 +284,15 @@ public class Main {
             log.error("main -> unhandled exception", t);
             System.exit(1);
         }
+    }
+
+    private static void installSecurityManager() {
+        String s = System.getProperty("concord.securityManager.enable");
+        if (!"true".equals(s)) {
+            return;
+        }
+
+        System.setSecurityManager(new ConcordSecurityManager());
     }
 
     private static Throwable unroll(Throwable e) {

@@ -86,9 +86,9 @@ public class DockerProcessBuilder {
             log.info("CMD: {}", (Object) cmd);
         }
 
-        return new ProcessBuilder(cmd)
+        return PrivilegedAction.perform("docker", () -> new ProcessBuilder(cmd)
                 .redirectErrorStream(true)
-                .start();
+                .start());
     }
 
     private String buildCmd() throws IOException {
