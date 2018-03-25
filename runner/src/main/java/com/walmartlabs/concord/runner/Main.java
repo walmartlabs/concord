@@ -23,9 +23,12 @@ package com.walmartlabs.concord.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.matcher.Matcher;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
@@ -33,6 +36,8 @@ import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
@@ -45,6 +50,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -86,6 +92,13 @@ public class Main {
         String instanceId = new String(Files.readAllBytes(idPath));
 
         heartbeat.start(instanceId);
+
+        Map<String, Object> policy = readPolicyRules(baseDir);
+        if (policy.isEmpty()) {
+            PolicyEngineHolder.INSTANCE.setEngine(null);
+        } else {
+            PolicyEngineHolder.INSTANCE.setEngine(new PolicyEngine(policy));
+        }
 
         String eventName = readResumeEvent(baseDir);
         if (eventName == null) {
@@ -186,6 +199,20 @@ public class Main {
             return objectMapper.readValue(in, Map.class);
         } catch (IOException e) {
             throw new ExecutionException("Error while reading request data", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> readPolicyRules(Path ws) throws ExecutionException {
+        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD).resolve(InternalConstants.Files.POLICY);
+        if (!Files.exists(policyFile)) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            return objectMapper.readValue(policyFile.toFile(), Map.class);
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading policy rules");
         }
     }
 
@@ -337,7 +364,22 @@ public class Main {
             }
         };
 
-        return Guice.createInjector(tasks, m);
+        Module taskCallModule = new AbstractModule() {
+            @Override
+            protected void configure() {
+                install(new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bindInterceptor(
+                                TaskCallInterceptor.CLASS_MATCHER,
+                                TaskCallInterceptor.METHOD_MATCHER,
+                                new TaskCallInterceptor(PolicyEngineHolder.INSTANCE));
+                    }
+                });
+            }
+        };
+
+        return Guice.createInjector(tasks, m, taskCallModule);
     }
 
     private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {

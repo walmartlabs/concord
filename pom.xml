@@ -19,6 +19,7 @@
     <modules>
         <module>sdk</module>
         <module>common</module>
+        <module>policy-engine</module>
         <module>client</module>
         <module>dependency-manager</module>
         <module>project-model</module>
@@ -85,6 +86,7 @@
         <maven.prj.version>2.2.1</maven.prj.version>
         <maven.resolver.version>1.1.0</maven.resolver.version>
         <maven.resolver.provider.version>3.5.0</maven.resolver.provider.version>
+        <maven.artifact.version>3.5.0</maven.artifact.version>
         <metrics.version>3.2.2</metrics.version>
         <mockito.version>2.13.0</mockito.version>
         <mustache.version>0.9.5</mustache.version>

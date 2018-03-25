@@ -101,6 +101,16 @@ public final class InternalConstants extends Constants {
          * Directory which contains submitted form files.
          */
         public static final String FORM_FILES = "_form_files";
+
+        /**
+         * Concord system files.
+         */
+        public static final String CONCORD = ".concord";
+
+        /**
+         * Policy file.
+         */
+        public static final String POLICY = "policy.json";
     }
 
     public static final class Flows extends Constants.Flows {

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="61200" author="ybrigo@gmail.com">
+        <createTable tableName="POLICIES">
+            <column name="POLICY_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="POLICY_NAME" type="varchar(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="RULES" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="61201" author="ybrigo@gmail.com">
+        <createTable tableName="POLICY_LINKS">
+            <column name="ORG_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="POLICY_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="POLICY_LINKS"
+                                 baseColumnNames="ORG_ID"
+                                 constraintName="FK_POLICY_LINK_REPO_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="POLICY_LINKS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_POLICY_LINK_PROJECT_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="POLICY_LINKS"
+                                 baseColumnNames="POLICY_ID"
+                                 constraintName="FK_POLICY_LINK_POLICY_ID"
+                                 referencedTableName="POLICIES"
+                                 referencedColumnNames="POLICY_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="61202" author="ybrigo@gmail.com">
+        <createIndex tableName="POLICY_LINKS" indexName="IDX_POLICY_LINK_1" unique="true">
+            <column name="ORG_ID"/>
+            <column name="PROJECT_ID"/>
+            <column name="POLICY_ID"/>
+        </createIndex>
+        <modifySql>
+            <append value="where ORG_ID is not null and PROJECT_ID is not null"/>
+        </modifySql>
+    </changeSet>
+    <changeSet id="61203" author="ybrigo@gmail.com">
+        <createIndex tableName="POLICY_LINKS" indexName="IDX_POLICY_LINK_2" unique="true">
+            <column name="POLICY_ID"/>
+        </createIndex>
+        <modifySql>
+            <append value="WHERE ORG_ID is null and PROJECT_ID is null"/>
+        </modifySql>
+    </changeSet>
+    <changeSet id="61204" author="ybrigo@gmail.com">
+        <createIndex tableName="POLICY_LINKS" indexName="IDX_POLICY_LINK_3" unique="true">
+            <column name="ORG_ID"/>
+            <column name="POLICY_ID"/>
+        </createIndex>
+        <modifySql>
+            <append value="WHERE ORG_ID is not null and PROJECT_ID is null"/>
+        </modifySql>
+    </changeSet>
+    <changeSet id="61205" author="ybrigo@gmail.com">
+        <createIndex tableName="POLICY_LINKS" indexName="IDX_POLICY_LINK_4" unique="true">
+            <column name="PROJECT_ID"/>
+            <column name="POLICY_ID"/>
+        </createIndex>
+        <modifySql>
+            <append value="WHERE ORG_ID is null and PROJECT_ID is not null"/>
+        </modifySql>
+    </changeSet>
+</databaseChangeLog>

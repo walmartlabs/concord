@@ -77,7 +77,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
 
         try {
             URI uri = getUri(instanceId, s);
-            Path template = dependencyManager.resolveSingle(uri);
+            Path template = dependencyManager.resolveSingle(uri).getPath();
             payload = process(payload, template);
 
             return chain.process(payload);

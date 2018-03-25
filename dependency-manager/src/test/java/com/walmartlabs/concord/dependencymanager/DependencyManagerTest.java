@@ -41,7 +41,7 @@ public class DependencyManagerTest {
         URI uriB = new URI("mvn://com.walmartlabs.concord:concord-project-model:0.43.0?scope=runtime");
 
         DependencyManager m = new DependencyManager(tmpDir);
-        Collection<Path> paths = m.resolve(Arrays.asList(uriA, uriB));
+        Collection<DependencyEntity> paths = m.resolve(Arrays.asList(uriA, uriB));
         assertEquals(10, paths.size());
     }
 }

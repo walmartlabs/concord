@@ -29,7 +29,11 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.policyengine.CheckResult;
+import com.walmartlabs.concord.policyengine.DependencyRule;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.rpc.AgentApiClient;
 import com.walmartlabs.concord.rpc.JobQueue;
@@ -84,6 +88,7 @@ public class DefaultJobExecutor implements JobExecutor {
     private void logDependencies(String instanceId, Collection<?> deps) {
         if (deps == null || deps.isEmpty()) {
             logManager.log(instanceId, "No external dependencies.");
+            return;
         }
 
         List<String> l = deps.stream()
@@ -100,14 +105,18 @@ public class DefaultJobExecutor implements JobExecutor {
     }
 
     @Override
-    public JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException {
+    public JobInstance start(String instanceId, Path workDir, String entryPoint) {
         try {
             boolean debugMode = debugMode(workDir);
 
             Collection<URI> depsUris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(workDir).stream())
                     .collect(Collectors.toList());
 
-            Collection<Path> resolvedDeps = dependencyManager.resolve(depsUris);
+            Collection<DependencyEntity> resolvedDepEntities = dependencyManager.resolve(depsUris);
+
+            checkDependencies(instanceId, workDir, resolvedDepEntities);
+
+            Collection<Path> resolvedDeps = resolvedDepEntities.stream().map(DependencyEntity::getPath).collect(Collectors.toList());
 
             if (debugMode) {
                 logDependencies(instanceId, resolvedDeps);
@@ -137,6 +146,27 @@ public class DefaultJobExecutor implements JobExecutor {
             CompletableFuture<?> f = new CompletableFuture<>();
             f.completeExceptionally(e);
             return createJobInstance(instanceId, null, f);
+        }
+    }
+
+    private void checkDependencies(String instanceId, Path workDir, Collection<DependencyEntity> resolvedDepEntities) throws IOException {
+        Map<String, Object> policyRules = readPolicyRules(workDir);
+        if (policyRules.isEmpty()) {
+            return;
+        }
+
+        logManager.info(instanceId, "Checking the dependency policy");
+
+        CheckResult<DependencyRule, DependencyEntity> result = new PolicyEngine(policyRules).getDependencyPolicy().check(resolvedDepEntities);
+        result.getWarn().forEach(d -> {
+            logManager.warn(instanceId, "Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity().toString(), d.getRule().toString());
+        });
+        result.getDeny().forEach(d -> {
+            logManager.error(instanceId, "Artifact '{}' is forbidden by the dependency policy {}", d.getEntity().toString(), d.getRule().toString());
+        });
+
+        if (!result.getDeny().isEmpty()) {
+            throw new RuntimeException("Found forbidden dependencies");
         }
     }
 
@@ -495,5 +525,15 @@ public class DefaultJobExecutor implements JobExecutor {
             Object v = m.get(Constants.Request.DEBUG_KEY);
             return Boolean.TRUE.equals(v);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> readPolicyRules(Path ws) throws IOException {
+        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD).resolve(InternalConstants.Files.POLICY);
+        if (!Files.exists(policyFile)) {
+            return Collections.emptyMap();
+        }
+
+        return objectMapper.readValue(policyFile.toFile(), Map.class);
     }
 }

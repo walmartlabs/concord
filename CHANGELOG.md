@@ -1,9 +1,11 @@
 # Change log
 
-### [Unreleased]
+## [Unreleased]
 
 ### Added
 
+- concord-server, concord-agent, concord-runner: initial support for
+process policies;
 - concord-project-model: `exit` step to terminate execution of
 the flow w/o throwing an error;
 - concord-client: support for the new `startAt` parameter.

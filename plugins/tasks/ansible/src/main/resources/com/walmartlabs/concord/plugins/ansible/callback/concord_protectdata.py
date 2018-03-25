@@ -8,7 +8,7 @@ class CallbackModule(CallbackModule_default):
 
     '''
     This is the callback interface, which will search for any sensitive data in stdout and enable no_log = true on that particular tasks.
-    Also this will search for all Key, Value pairs in the ansible stdout and mask the value of corresponding keys that has got the sensitive information in it.
+    Also this will search for all Key, Value pairs in the Ansible stdout and mask the value of corresponding keys that has got the sensitive information in it.
     '''
 
     CALLBACK_VERSION = 2.0
@@ -27,7 +27,7 @@ class CallbackModule(CallbackModule_default):
             if isinstance(value, collections.Mapping):
                 ret[key] = self.hide_password(value)
             elif any (x in str(value).lower() for x in self.secret_list) or any (y in str(key).lower() for y in self.secret_list):
-                    ret[key] = "******" 
+                    ret[key] = "******"
             else:       
                     ret[key] = value
         return ret

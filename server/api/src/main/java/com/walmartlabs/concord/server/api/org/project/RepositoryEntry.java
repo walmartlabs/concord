@@ -67,7 +67,6 @@ public class RepositoryEntry implements Serializable {
     }
 
     @JsonCreator
-
     public RepositoryEntry(@JsonProperty("id") UUID id,
                            @JsonProperty("projectId") UUID projectId,
                            @JsonProperty("name") String name,

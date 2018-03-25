@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.common.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+
+import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 
 public class LogManager {
 
@@ -71,6 +74,18 @@ public class LogManager {
         }
     }
 
+    public void info(String id, String log, Object... args) {
+        log(id, LogUtils.formatMessage(LogLevel.INFO, log, args));
+    }
+
+    public void warn(String id, String log, Object... args) {
+        log(id, LogUtils.formatMessage(LogLevel.WARN, log, args));
+    }
+
+    public void error(String id, String log, Object... args) {
+        log(id, LogUtils.formatMessage(LogLevel.ERROR, log, args));
+    }
+
     public void log(String id, InputStream src) throws IOException {
         Path f = logFile(id);
         try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
@@ -99,6 +114,16 @@ public class LogManager {
 
     public Path open(String id) {
         return logFile(id);
+    }
+
+    private void log(String id, String message) {
+        Path f = logFile(id);
+        try (OutputStream out = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+            out.write(message.getBytes());
+            out.flush();
+        } catch (IOException e) {
+            throw new RuntimeException("Error writing to a log file: " + f, e);
+        }
     }
 
     private Path logFile(String id) {

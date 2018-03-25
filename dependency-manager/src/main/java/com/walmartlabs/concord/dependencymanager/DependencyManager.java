@@ -91,19 +91,22 @@ public class DependencyManager {
         this.repositories = toRemote(repositories);
     }
 
-    public Collection<Path> resolve(Collection<URI> items) throws IOException {
+    public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
         if (items == null || items.isEmpty()) {
             return Collections.emptySet();
         }
 
         DependencyList deps = categorize(items);
 
-        Collection<Path> paths = new HashSet<>();
-        paths.addAll(resolveDirectLinks(deps.directLinks));
-        paths.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies));
-        paths.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies));
-
-        return paths;
+        Collection<DependencyEntity> result = new HashSet<>();
+        result.addAll(resolveDirectLinks(deps.directLinks));
+        result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies).stream()
+                .map(DependencyManager::toDependency)
+                .collect(Collectors.toList()));
+        result.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies).stream()
+                .map(DependencyManager::toDependency)
+                .collect(Collectors.toList()));
+        return result;
     }
 
     private DependencyList categorize(Collection<URI> items) throws IOException {
@@ -134,21 +137,26 @@ public class DependencyManager {
         return new DependencyList(mavenTransitiveDependencies, mavenSingleDependencies, directLinks);
     }
 
-    public Path resolveSingle(URI item) throws IOException {
+    public DependencyEntity resolveSingle(URI item) throws IOException {
         String scheme = item.getScheme();
         if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
             String id = item.getAuthority();
-            Artifact artifact = new DefaultArtifact(id);
-            return resolveMavenSingle(new MavenDependency(artifact, JavaScopes.COMPILE));
+            Artifact artifact = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE));
+            return toDependency(artifact);
         } else {
-            return resolveFile(item);
+            return new DependencyEntity(resolveFile(item), item);
         }
     }
 
-    private Collection<Path> resolveDirectLinks(Collection<URI> items) throws IOException {
-        Collection<Path> paths = new HashSet<>();
+    private static DependencyEntity toDependency(Artifact artifact) {
+        return new DependencyEntity(artifact.getFile().toPath(),
+                artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
+    }
+
+    private Collection<DependencyEntity> resolveDirectLinks(Collection<URI> items) throws IOException {
+        Collection<DependencyEntity> paths = new HashSet<>();
         for (URI item : items) {
-            paths.add(resolveFile(item));
+            paths.add(new DependencyEntity(resolveFile(item), item));
         }
         return paths;
     }
@@ -174,7 +182,7 @@ public class DependencyManager {
         }
     }
 
-    private Path resolveMavenSingle(MavenDependency dep) throws IOException {
+    private Artifact resolveMavenSingle(MavenDependency dep) throws IOException {
         RepositorySystemSession session = newRepositorySystemSession(maven);
 
         ArtifactRequest req = new ArtifactRequest();
@@ -184,22 +192,22 @@ public class DependencyManager {
         synchronized (mutex) {
             try {
                 ArtifactResult r = maven.resolveArtifact(session, req);
-                return r.getArtifact().getFile().toPath();
+                return r.getArtifact();
             } catch (ArtifactResolutionException e) {
                 throw new IOException(e);
             }
         }
     }
 
-    private Collection<Path> resolveMavenSingleDependencies(Collection<MavenDependency> deps) throws IOException {
-        Collection<Path> paths = new HashSet<>();
+    private Collection<Artifact> resolveMavenSingleDependencies(Collection<MavenDependency> deps) throws IOException {
+        Collection<Artifact> paths = new HashSet<>();
         for (MavenDependency dep : deps) {
             paths.add(resolveMavenSingle(dep));
         }
         return paths;
     }
 
-    private Collection<Path> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps) throws IOException {
+    private Collection<Artifact> resolveMavenTransitiveDependencies(Collection<MavenDependency> deps) throws IOException {
         RepositorySystem system = newMavenRepositorySystem();
         RepositorySystemSession session = newRepositorySystemSession(system);
 
@@ -213,11 +221,9 @@ public class DependencyManager {
 
         synchronized (mutex) {
             try {
-                Collection<ArtifactResult> r = system.resolveDependencies(session, dependencyRequest)
-                        .getArtifactResults();
-
-                return r.stream()
-                        .map(a -> a.getArtifact().getFile().toPath())
+                return system.resolveDependencies(session, dependencyRequest)
+                        .getArtifactResults().stream()
+                        .map(ArtifactResult::getArtifact)
                         .collect(Collectors.toSet());
             } catch (DependencyResolutionException e) {
                 throw new IOException(e);
