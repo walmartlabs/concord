@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-server: send empty JSON if a project's cfg is empty;
 - concord-server: use basic auth for the interactive process
 endpoints. 
 
