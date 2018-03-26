@@ -63,6 +63,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     private static final String[] FORCE_BASIC_AUTH_URLS = {
             "/forms/.*",
             "/api/service/process_portal/.*",
+            "/api/v1/org/.*/project/.*/repo/.*/start/.*",
             "/jolokia/.*"
     };
 

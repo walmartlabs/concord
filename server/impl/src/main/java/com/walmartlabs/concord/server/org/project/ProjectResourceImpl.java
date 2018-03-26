@@ -41,10 +41,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 public class ProjectResourceImpl implements ProjectResource, Resource {
@@ -133,6 +130,10 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         Object v = projectDao.getConfigurationValue(projectId, ps);
 
         if (v == null) {
+            if (path == null || path.isEmpty()) {
+                return Collections.emptyMap();
+            }
+
             throw new WebApplicationException("Value not found: " + path, Status.NOT_FOUND);
         }
 

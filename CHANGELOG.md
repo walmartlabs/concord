@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: use basic auth for the interactive process
+endpoints. 
+
+
+
 ## [0.61.0] - 2018-03-25
 
 ### Added
