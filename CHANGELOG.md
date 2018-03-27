@@ -1,12 +1,12 @@
 # Change log
 
-## [0.62.0] - 2018-03-26
+## [0.61.1] - 2018-03-26
 
 ### Changed
 
 - concord-server: send empty JSON if a project's cfg is empty;
 - concord-server: use basic auth for the interactive process
-endpoints. 
+endpoints.
 
 
 
