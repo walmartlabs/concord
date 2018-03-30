@@ -40,24 +40,24 @@ import { reducers as secretForm } from '../org/secret/create/effects';
 import { reducers as repositoryRefresh } from '../project/RepositoryRefreshPopup';
 
 export default {
-  session,
-  login,
-  about,
-  process,
-  queue,
-  log,
-  processForm,
-  wizard,
-  portal,
-  project,
-  projectList,
-  projectStart,
-  repository,
-  landingList,
-  modal,
-  secretList,
-  secretForm,
-  repositoryRefresh,
+    session,
+    login,
+    about,
+    process,
+    queue,
+    log,
+    processForm,
+    wizard,
+    portal,
+    project,
+    projectList,
+    projectStart,
+    repository,
+    landingList,
+    modal,
+    secretList,
+    secretForm,
+    repositoryRefresh,
 
-  form: formReducer
+    form: formReducer
 };

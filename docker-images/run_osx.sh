@@ -1,15 +1,18 @@
 #!/bin/bash
 
-if [ -z $LDAP_PROPERTIES ]; then
-    LDAP_PROPERTIES="/opt/concord/conf/ldap.properties"
+if [ -z $LDAP_CFG ]; then
+    LDAP_CFG="/opt/concord/conf/ldap.properties"
 fi
-echo "LDAP_PROPERTIES: ${LDAP_PROPERTIES}"
+echo "LDAP_CFG: ${LDAP_CFG}"
 
 docker rm -f db dind agent server console
 
 docker run -d \
 --name db \
 -e 'POSTGRES_PASSWORD=q1' \
+-e 'PGDATA=/var/lib/postgresql/data/pgdata' \
+--mount source=concordDB,target=/var/lib/postgresql/data \
+-p 5432:5432 \
 hub.docker.prod.walmart.com/library/postgres:latest
 
 docker run -d \
@@ -17,7 +20,7 @@ docker run -d \
 --name server \
 -p 8001:8001 \
 -v /tmp:/tmp \
--v ${LDAP_PROPERTIES}:/opt/concord/conf/ldap.properties:ro \
+-v ${LDAP_CFG}:/opt/concord/conf/ldap.properties:ro \
 -e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
 docker.prod.walmart.com/walmartlabs/concord-server

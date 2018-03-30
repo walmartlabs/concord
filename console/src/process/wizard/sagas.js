@@ -29,60 +29,60 @@ import * as constants from '../constants';
 const STATUS_REFRESH_DELAY = 1000;
 
 function* nextForm({ instanceId }): Generator<*, *, *> {
-  try {
-    let forms = [];
+    try {
+        let forms = [];
 
-    while (true) {
-      forms = yield call(formApi.listForms, instanceId);
-      if (forms && forms.length > 0) {
-        break;
-      }
+        while (true) {
+            forms = yield call(formApi.listForms, instanceId);
+            if (forms && forms.length > 0) {
+                break;
+            }
 
-      const { status } = yield call(processApi.fetchStatus, instanceId);
+            const { status } = yield call(processApi.fetchStatus, instanceId);
 
-      const stopped = constants.finalStatuses.includes(status);
+            const stopped = constants.finalStatuses.includes(status);
 
-      if (stopped) {
-        yield put(pushHistory(`/process/${instanceId}`));
-        return;
-      }
+            if (stopped) {
+                yield put(pushHistory(`/process/${instanceId}`));
+                return;
+            }
 
-      yield call(delay, STATUS_REFRESH_DELAY);
+            yield call(delay, STATUS_REFRESH_DELAY);
+        }
+
+        const { formInstanceId, custom } = forms[0];
+        const yieldFlow = forms[0]['yield'];
+
+        if (custom) {
+            // a form with branding
+            let { uri } = yield call(formApi.startSession, instanceId, formInstanceId);
+
+            // we can't proxy html resources using create-react-app
+            // so we have to use another server to serve our custom forms
+            // this is only for the development
+            if (process.env.NODE_ENV !== 'production') {
+                uri = 'http://localhost:8080' + uri;
+            }
+
+            window.location.replace(uri);
+        } else {
+            // regular form
+            const path = {
+                pathname: `/process/${instanceId}/form/${formInstanceId}`,
+                query: { fullScreen: true, wizard: true, yieldFlow: yieldFlow }
+            };
+            yield put(replaceHistory(path));
+        }
+    } catch (e) {
+        yield put({
+            type: types.PROCESS_WIZARD_CANCEL,
+            instanceId,
+            error: true,
+            message: e.message || 'Error while loading a process'
+        });
     }
-
-    const { formInstanceId, custom } = forms[0];
-    const yieldFlow = forms[0]['yield'];
-
-    if (custom) {
-      // a form with branding
-      let { uri } = yield call(formApi.startSession, instanceId, formInstanceId);
-
-      // we can't proxy html resources using create-react-app
-      // so we have to use another server to serve our custom forms
-      // this is only for the development
-      if (process.env.NODE_ENV !== 'production') {
-        uri = 'http://localhost:8080' + uri;
-      }
-
-      window.location.replace(uri);
-    } else {
-      // regular form
-      const path = {
-        pathname: `/process/${instanceId}/form/${formInstanceId}`,
-        query: { fullScreen: true, wizard: true, yieldFlow: yieldFlow }
-      };
-      yield put(replaceHistory(path));
-    }
-  } catch (e) {
-    yield put({
-      type: types.PROCESS_WIZARD_CANCEL,
-      instanceId,
-      error: true,
-      message: e.message || 'Error while loading a process'
-    });
-  }
 }
 
 export default function*(): Generator<*, *, *> {
-  yield fork(takeLatest, types.PROCESS_WIZARD_NEXT_FORM, nextForm);
+    yield fork(takeLatest, types.PROCESS_WIZARD_NEXT_FORM, nextForm);
 }

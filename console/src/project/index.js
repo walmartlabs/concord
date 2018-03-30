@@ -34,25 +34,25 @@ import { getCurrentOrg } from '../session/reducers';
  * @return {*}
  */
 const rawToForm = (data) => {
-  if (!data.repositories) {
-    return data;
-  }
-
-  const repos = [];
-  for (const k in data.repositories) {
-    const src = data.repositories[k];
-
-    const dst = { name: k, ...src };
-    dst.sourceType = repoConstants.BRANCH_SOURCE_TYPE;
-    if (dst.commitId) {
-      dst.sourceType = repoConstants.REV_SOURCE_TYPE;
+    if (!data.repositories) {
+        return data;
     }
 
-    repos.push(dst);
-  }
+    const repos = [];
+    for (const k in data.repositories) {
+        const src = data.repositories[k];
 
-  data.repositories = repos;
-  return data;
+        const dst = { name: k, ...src };
+        dst.sourceType = repoConstants.BRANCH_SOURCE_TYPE;
+        if (dst.commitId) {
+            dst.sourceType = repoConstants.REV_SOURCE_TYPE;
+        }
+
+        repos.push(dst);
+    }
+
+    data.repositories = repos;
+    return data;
 };
 
 /**
@@ -60,98 +60,98 @@ const rawToForm = (data) => {
  * @param data
  */
 const formToRaw = (data) => {
-  if (!data.repositories) {
+    if (!data.repositories) {
+        return data;
+    }
+
+    const repos = {};
+    for (const src of data.repositories) {
+        const dst = Object.assign({}, src);
+        delete dst.name;
+        repos[src.name] = dst;
+    }
+
+    data.repositories = repos;
     return data;
-  }
-
-  const repos = {};
-  for (const src of data.repositories) {
-    const dst = Object.assign({}, src);
-    delete dst.name;
-    repos[src.name] = dst;
-  }
-
-  data.repositories = repos;
-  return data;
 };
 
 class ProjectPage extends Component {
-  componentDidMount() {
-    this.load();
-  }
-
-  componentDidUpdate(prevProps) {
-    const { projectName: prevProjectName } = prevProps;
-    const { projectName: currentProjectName } = this.props;
-
-    if (!prevProjectName || prevProjectName !== currentProjectName) {
-      this.load();
-    }
-  }
-
-  load() {
-    const { createNew, reset } = this.props;
-    if (createNew) {
-      reset();
-      return;
+    componentDidMount() {
+        this.load();
     }
 
-    const { loadData, projectName, org } = this.props;
-    loadData(org.name, projectName);
-  }
+    componentDidUpdate(prevProps) {
+        const { projectName: prevProjectName } = prevProps;
+        const { projectName: currentProjectName } = this.props;
 
-  handleSave(data) {
-    const { saveData, org } = this.props;
-    saveData(org.name, data);
-  }
-
-  render() {
-    const { data, createNew, error, loading } = this.props;
-
-    if (error) {
-      return <ErrorMessage message={error} retryFn={() => this.load()} />;
+        if (!prevProjectName || prevProjectName !== currentProjectName) {
+            this.load();
+        }
     }
 
-    if (loading) {
-      return <Loader active />;
+    load() {
+        const { createNew, reset } = this.props;
+        if (createNew) {
+            reset();
+            return;
+        }
+
+        const { loadData, projectName, org } = this.props;
+        loadData(org.name, projectName);
     }
 
-    return (
-      <div>
-        <Header as="h3">{createNew ? 'New project' : `Project ${data.name}`}</Header>
-        <ProjectForm
-          createNew={createNew}
-          originalName={data.name}
-          initialValues={rawToForm(data)}
-          onSubmit={(data) => this.handleSave(data)}
-        />
-      </div>
-    );
-  }
+    handleSave(data) {
+        const { saveData, org } = this.props;
+        saveData(org.name, data);
+    }
+
+    render() {
+        const { data, createNew, error, loading } = this.props;
+
+        if (error) {
+            return <ErrorMessage message={error} retryFn={() => this.load()} />;
+        }
+
+        if (loading) {
+            return <Loader active />;
+        }
+
+        return (
+            <div>
+                <Header as="h3">{createNew ? 'New project' : `Project ${data.name}`}</Header>
+                <ProjectForm
+                    createNew={createNew}
+                    originalName={data.name}
+                    initialValues={rawToForm(data)}
+                    onSubmit={(data) => this.handleSave(data)}
+                />
+            </div>
+        );
+    }
 }
 
 const mapStateToProps = ({ project, session }, { params: { projectName } }) => ({
-  org: getCurrentOrg(session),
-  projectName: projectName,
-  createNew: projectName === '_new',
-  data: selectors.getData(project),
-  error: selectors.getError(project),
-  loading: selectors.isLoading(project)
+    org: getCurrentOrg(session),
+    projectName: projectName,
+    createNew: projectName === '_new',
+    data: selectors.getData(project),
+    error: selectors.getError(project),
+    loading: selectors.isLoading(project)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  reset: () => {
-    dispatch(resetForm('project'));
-    dispatch(actions.resetData());
-  },
+    reset: () => {
+        dispatch(resetForm('project'));
+        dispatch(actions.resetData());
+    },
 
-  loadData: (orgName, projectName) => dispatch(actions.loadData([orgName, projectName])),
+    loadData: (orgName, projectName) => dispatch(actions.loadData([orgName, projectName])),
 
-  saveData: (orgName, data) => {
-    const o = formToRaw(data);
-    o.orgName = orgName;
-    dispatch(actions.saveData(o, [pushHistory('/project/list')]));
-  }
+    saveData: (orgName, data) => {
+        const o = formToRaw(data);
+        o.orgName = orgName;
+        dispatch(actions.saveData(o, [pushHistory('/project/list')]));
+    }
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProjectPage);

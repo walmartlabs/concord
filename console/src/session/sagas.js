@@ -30,42 +30,42 @@ import * as api from './api';
 const SESSION_COOKIE_NAME = 'JSESSIONID';
 
 function* checkAuth({ destination }): Generator<*, *, *> {
-  const isLoggedIn = yield select(({ session }) => selectors.isLoggedIn(session));
-  if (isLoggedIn) {
-    return;
-  }
+    const isLoggedIn = yield select(({ session }) => selectors.isLoggedIn(session));
+    if (isLoggedIn) {
+        return;
+    }
 
-  // TODO use redux wrapper?
-  const hasSessionCookie = Cookies.get(SESSION_COOKIE_NAME);
-  if (hasSessionCookie) {
-    yield put(login.doRefresh());
-  } else {
-    yield put(actions.update({ params: { destination } }));
+    // TODO use redux wrapper?
+    const hasSessionCookie = Cookies.get(SESSION_COOKIE_NAME);
+    if (hasSessionCookie) {
+        yield put(login.doRefresh());
+    } else {
+        yield put(actions.update({ params: { destination } }));
 
-    // preserve the fullscreen toggle
-    const fullScreen = destination && destination.query && destination.query.fullScreen;
-    yield put(replaceHistory({ pathname: '/login', query: { fullScreen } }));
-  }
+        // preserve the fullscreen toggle
+        const fullScreen = destination && destination.query && destination.query.fullScreen;
+        yield put(replaceHistory({ pathname: '/login', query: { fullScreen } }));
+    }
 }
 
 function* doLogout(): Generator<*, *, *> {
-  try {
-    yield call(api.logout);
+    try {
+        yield call(api.logout);
 
-    yield put(actions.setCurrent({}));
+        yield put(actions.setCurrent({}));
 
-    // TODO use redux wrapper?
-    Cookies.remove(SESSION_COOKIE_NAME);
+        // TODO use redux wrapper?
+        Cookies.remove(SESSION_COOKIE_NAME);
 
-    yield put(login.doRefresh());
-  } catch (e) {
-    console.error('Logout error', e);
-  }
+        yield put(login.doRefresh());
+    } catch (e) {
+        console.error('Logout error', e);
+    }
 }
 
 export default function*(): Generator<*, *, *> {
-  yield all([
-    fork(takeEvery, types.CHECK_AUTH, checkAuth),
-    fork(takeEvery, types.LOGOUT, doLogout)
-  ]);
+    yield all([
+        fork(takeEvery, types.CHECK_AUTH, checkAuth),
+        fork(takeEvery, types.LOGOUT, doLogout)
+    ]);
 }

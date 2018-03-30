@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-// @flow
+// @ts-check
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -40,68 +40,68 @@ import Project from './project';
 import SecretList from './org/secret/list';
 import CreateSecretPage from './org/secret/create';
 import { actions as session } from './session';
-import './index.css';
 import 'lato-font/css/lato-font.min.css';
 import 'semantic-ui-css/semantic.min.css';
+import './index.css';
 
 const store = configureStore(hashHistory, reducers);
 
 const history = syncHistoryWithStore(hashHistory, store);
 
 const checkAuth = ({ location: { pathname, query } }) => {
-  let destination = null;
-  if (pathname !== '/login') {
-    destination = { pathname, query };
-  }
+    let destination = null;
+    if (pathname !== '/login') {
+        destination = { pathname, query };
+    }
 
-  store.dispatch(session.checkAuth(destination));
+    store.dispatch(session.checkAuth(destination));
 };
 
 ReactDOM.render(
-  <Provider store={store}>
-    <Router history={history}>
-      <Route path="login" component={LoginForm} />
-      <Route path="/" component={Layout}>
-        <IndexRedirect to="process" />
-        <Route path="process" onEnter={checkAuth}>
-          <IndexRedirect to="queue" />
-          <Route path="queue" component={ProcessQueue} />
-          <Route path="portal/start" component={ProcessPortal} />
-          <Route path=":instanceId/log" component={ProcessLogViewer} />
-          <Route path=":instanceId/form/:formInstanceId" component={ProcessForm} />
-          <Route path=":instanceId/wizard" component={ProcessWizard} />
-          <Route path=":instanceId" component={ProcessStatus} />
-        </Route>
+    <Provider store={store}>
+        <Router history={history}>
+            <Route path="login" component={LoginForm} />
+            <Route path="/" component={Layout}>
+                <IndexRedirect to="process" />
+                <Route path="process" onEnter={checkAuth}>
+                    <IndexRedirect to="queue" />
+                    <Route path="queue" component={ProcessQueue} />
+                    <Route path="portal/start" component={ProcessPortal} />
+                    <Route path=":instanceId/log" component={ProcessLogViewer} />
+                    <Route path=":instanceId/form/:formInstanceId" component={ProcessForm} />
+                    <Route path=":instanceId/wizard" component={ProcessWizard} />
+                    <Route path=":instanceId" component={ProcessStatus} />
+                </Route>
 
-        <Route path="project" onEnter={checkAuth}>
-          <IndexRedirect to="list" />
-          <Route path="list" component={ProjectList} />
-          <Route path=":projectName" component={Project} />
-        </Route>
+                <Route path="project" onEnter={checkAuth}>
+                    <IndexRedirect to="list" />
+                    <Route path="list" component={ProjectList} />
+                    <Route path=":projectName" component={Project} />
+                </Route>
 
-        <Route path="secret" onEnter={checkAuth}>
-          <IndexRedirect to="list" />
-          <Route path="list" component={SecretList} />
-          <Route path="_new" component={CreateSecretPage} />
-        </Route>
+                <Route path="secret" onEnter={checkAuth}>
+                    <IndexRedirect to="list" />
+                    <Route path="list" component={SecretList} />
+                    <Route path="_new" component={CreateSecretPage} />
+                </Route>
 
-        <Route path="landing" onEnter={checkAuth}>
-          <IndexRedirect to="list" />
-          <Route path="list" component={LandingList} />
-          <Route path=":landingName" component={Project} />
-        </Route>
+                <Route path="landing" onEnter={checkAuth}>
+                    <IndexRedirect to="list" />
+                    <Route path="list" component={LandingList} />
+                    <Route path=":landingName" component={Project} />
+                </Route>
 
-        <Route path="system" onEnter={checkAuth}>
-          <IndexRedirect to="about" />
-          <Route path="about" component={AboutPage} />
-        </Route>
+                <Route path="system" onEnter={checkAuth}>
+                    <IndexRedirect to="about" />
+                    <Route path="about" component={AboutPage} />
+                </Route>
 
-        {/* for backwards compatibility */}
-        <Route path="portal/start">
-          <IndexRedirect to="/process/portal/start" />
-        </Route>
-      </Route>
-    </Router>
-  </Provider>,
-  document.getElementById('root')
+                {/* for backwards compatibility */}
+                <Route path="portal/start">
+                    <IndexRedirect to="/process/portal/start" />
+                </Route>
+            </Route>
+        </Router>
+    </Provider>,
+    document.getElementById('root')
 );

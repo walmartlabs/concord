@@ -23,8 +23,8 @@ import types from './actions';
 import * as common from '../../reducers/common';
 
 const submitting = common.booleanTrigger(
-  types.PROCESS_PORTAL_START_REQUEST,
-  types.PROCESS_PORTAL_START_RESPONSE
+    types.PROCESS_PORTAL_START_REQUEST,
+    types.PROCESS_PORTAL_START_RESPONSE
 );
 const error = common.error(types.PROCESS_PORTAL_START_RESPONSE);
 

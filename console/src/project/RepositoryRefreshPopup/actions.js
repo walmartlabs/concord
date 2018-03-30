@@ -23,24 +23,24 @@ import type { ConcordKey } from '../../types';
 const NAMESPACE = 'repository';
 
 const types = {
-  REPOSITORY_REFRESH_REQUEST: `${NAMESPACE}/refresh/request`,
-  REPOSITORY_REFRESH_RESPONSE: `${NAMESPACE}/refresh/response`,
-  REPOSITORY_REFRESH_RESET: `${NAMESPACE}/refresh/reset`
+    REPOSITORY_REFRESH_REQUEST: `${NAMESPACE}/refresh/request`,
+    REPOSITORY_REFRESH_RESPONSE: `${NAMESPACE}/refresh/response`,
+    REPOSITORY_REFRESH_RESET: `${NAMESPACE}/refresh/reset`
 };
 
 export default types;
 
 export const refreshRepository = (
-  orgName: ConcordKey,
-  projectName: ConcordKey,
-  repositoryName: ConcordKey
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    repositoryName: ConcordKey
 ) => ({
-  type: types.REPOSITORY_REFRESH_REQUEST,
-  orgName,
-  projectName,
-  repositoryName
+    type: types.REPOSITORY_REFRESH_REQUEST,
+    orgName,
+    projectName,
+    repositoryName
 });
 
 export const resetRefresh = () => ({
-  type: types.REPOSITORY_REFRESH_RESET
+    type: types.REPOSITORY_REFRESH_RESET
 });

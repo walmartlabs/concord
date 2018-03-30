@@ -30,42 +30,47 @@ import './styles.css';
 const isThere = (x) => x !== undefined && x !== null;
 
 let loginForm = (props) => {
-  const { apiError, loading, handleSubmit } = props;
-  return (
-    <div className="flexbox-container">
-      <Card centered>
-        <CardContent>
+    const { apiError, loading, handleSubmit } = props;
+    return (
+        <div className="flexbox-container">
+            <Card centered>
+                <CardContent>
+                    <Image id="strati-logo" src="/concord.svg" size="medium" className="logo" />
 
-          <Image id="strati-logo" src="/concord.svg" size="medium" className="logo"/>
+                    <Dimmer active={loading} inverted>
+                        <Loader />
+                    </Dimmer>
 
-          <Dimmer active={loading} inverted>
-            <Loader />
-          </Dimmer>
+                    <Form error={isThere(apiError)} onSubmit={handleSubmit}>
+                        <Field name="username" label="Username" icon="user" required />
+                        <Field
+                            name="password"
+                            label="Password"
+                            type="password"
+                            icon="lock"
+                            required
+                        />
 
-          <Form error={isThere(apiError)} onSubmit={handleSubmit}>
-            <Field name="username" label="Username" icon="user" required />
-            <Field name="password" label="Password" type="password" icon="lock" required />
-
-            <Message error content={apiError} />
-            <Form.Button primary fluid>
-              Login
-            </Form.Button>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
-  );
+                        <Message error content={apiError} />
+                        <Form.Button primary fluid>
+                            Login
+                        </Form.Button>
+                    </Form>
+                </CardContent>
+            </Card>
+        </div>
+    );
 };
 
 loginForm = reduxForm({ form: 'login' })(loginForm);
 
 const mapStateToProps = ({ login }) => ({
-  apiError: selectors.getError(login),
-  loading: selectors.isSubmitting(login)
+    apiError: selectors.getError(login),
+    loading: selectors.isSubmitting(login)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  onSubmit: ({ username, password }) => dispatch(actions.doLogin(username, password))
+    onSubmit: ({ username, password }) => dispatch(actions.doLogin(username, password))
 });
 
 // re-export public stuff

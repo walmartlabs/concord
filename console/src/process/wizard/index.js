@@ -27,31 +27,31 @@ import reducers from './reducers';
 import sagas from './sagas';
 
 class ProcessWizard extends Component {
-  componentDidMount() {
-    const { startFn, instanceId } = this.props;
-    startFn(instanceId);
-  }
-
-  render() {
-    const { error } = this.props;
-    if (error) {
-      return <ErrorMessage message={error} />;
+    componentDidMount() {
+        const { startFn, instanceId } = this.props;
+        startFn(instanceId);
     }
-    return (
-      <div>
-        <Loader active />
-      </div>
-    );
-  }
+
+    render() {
+        const { error } = this.props;
+        if (error) {
+            return <ErrorMessage message={error} />;
+        }
+        return (
+            <div>
+                <Loader active />
+            </div>
+        );
+    }
 }
 
 const mapStateToProps = ({ wizard }, { params }) => ({
-  instanceId: params.instanceId,
-  error: selectors.getError(wizard)
+    instanceId: params.instanceId,
+    error: selectors.getError(wizard)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  startFn: (instanceId) => dispatch(actions.showNextForm(instanceId))
+    startFn: (instanceId) => dispatch(actions.showNextForm(instanceId))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProcessWizard);

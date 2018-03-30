@@ -32,82 +32,85 @@ import { getCurrentOrg } from '../../session/reducers';
 const { actions, reducers, selectors, sagas } = DataItem('project/list', [], api.listProjects);
 
 const columns = [
-  { key: 'visibility', label: 'Access', collapsing: true },
-  { key: 'name', label: 'Project', collapsing: true },
-  { key: 'description', label: 'Description' }
+    { key: 'visibility', label: 'Access', collapsing: true },
+    { key: 'name', label: 'Project', collapsing: true },
+    { key: 'description', label: 'Description' }
 ];
 
 const projectNameKey = 'name';
 const visibilityKey = 'visibility';
 
 const cellFn = (row, key) => {
-  if (key === visibilityKey) {
-    const n = row[key];
-    return (
-      <Icon name={n === 'PUBLIC' ? 'unlock' : 'lock'} color={n === 'PRIVATE' ? 'red' : 'grey'} />
-    );
-  }
+    if (key === visibilityKey) {
+        const n = row[key];
+        return (
+            <Icon
+                name={n === 'PUBLIC' ? 'unlock' : 'lock'}
+                color={n === 'PRIVATE' ? 'red' : 'grey'}
+            />
+        );
+    }
 
-  // link to the project page
-  if (key === projectNameKey) {
-    const n = row[key];
-    return <Link to={`/project/${n}`}>{n}</Link>;
-  }
+    // link to the project page
+    if (key === projectNameKey) {
+        const n = row[key];
+        return <Link to={`/project/${n}`}>{n}</Link>;
+    }
 
-  return row[key];
+    return row[key];
 };
 
 class ProjectListPage extends Component {
-  componentDidMount() {
-    this.load();
-  }
-
-  componentDidUpdate(prevProps) {
-    const { org: currentOrg } = this.props;
-    const { org: prevOrg } = prevProps;
-    if (currentOrg !== prevOrg) {
-      this.load();
-    }
-  }
-
-  load() {
-    const { loadData, org } = this.props;
-    loadData(org.name);
-  }
-
-  render() {
-    const { loading, error, data } = this.props;
-
-    if (error) {
-      return <ErrorMessage message={error} retryFn={() => this.load()} />;
+    componentDidMount() {
+        this.load();
     }
 
-    return (
-      <div>
-        <Header as="h3">
-          <RefreshButton loading={loading} onClick={() => this.load()} /> Projects
-        </Header>
-        <DataTable cols={columns} rows={data ? data : []} cellFn={cellFn} />
-      </div>
-    );
-  }
+    componentDidUpdate(prevProps) {
+        const { org: currentOrg } = this.props;
+        const { org: prevOrg } = prevProps;
+        if (currentOrg !== prevOrg) {
+            this.load();
+        }
+    }
+
+    load() {
+        const { loadData, org } = this.props;
+        loadData(org.name);
+    }
+
+    render() {
+        const { loading, error, data } = this.props;
+
+        if (error) {
+            return <ErrorMessage message={error} retryFn={() => this.load()} />;
+        }
+
+        return (
+            <div>
+                <Header as="h3">
+                    <RefreshButton loading={loading} onClick={() => this.load()} /> Projects
+                </Header>
+                <DataTable cols={columns} rows={data ? data : []} cellFn={cellFn} />
+            </div>
+        );
+    }
 }
 
 ProjectListPage.propTypes = {
-  loading: PropTypes.bool,
-  error: PropTypes.any,
-  data: PropTypes.array
+    loading: PropTypes.bool,
+    error: PropTypes.any,
+    data: PropTypes.array
 };
 
 const mapStateToProps = ({ projectList, session }) => ({
-  org: getCurrentOrg(session),
-  loading: selectors.isLoading(projectList),
-  error: selectors.getError(projectList),
-  data: selectors.getData(projectList)
+    org: getCurrentOrg(session),
+    loading: selectors.isLoading(projectList),
+    error: selectors.getError(projectList),
+    data: selectors.getData(projectList)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  loadData: (orgName) => dispatch(actions.loadData([orgName]))
+    loadData: (orgName) => dispatch(actions.loadData([orgName]))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProjectListPage);

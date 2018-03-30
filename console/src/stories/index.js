@@ -34,9 +34,9 @@ import { NewSecretForm } from '../org/secret/components';
 storiesOf('Welcome', module).add('to Storybook', () => <Welcome showApp={linkTo('Button')} />);
 
 storiesOf('Button', module)
-  .add('with text', () => <Button onClick={action('clicked')}>Hello Button</Button>)
-  .add('with some emoji', () => <Button onClick={action('clicked')}>😀 😎 👍 💯</Button>);
+    .add('with text', () => <Button onClick={action('clicked')}>Hello Button</Button>)
+    .add('with some emoji', () => <Button onClick={action('clicked')}>😀 😎 👍 💯</Button>);
 
 storiesOf('Team Secrets', module)
-  .addDecorator((story) => <Provider story={story()} />)
-  .add('New Secret Form', () => <NewSecretForm onSubmit={action('Mock form submit!')} />);
+    .addDecorator((story) => <Provider story={story()} />)
+    .add('New Secret Form', () => <NewSecretForm onSubmit={action('Mock form submit!')} />);

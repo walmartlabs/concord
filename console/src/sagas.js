@@ -38,23 +38,23 @@ import { sagas as landingList } from './landing/list';
 import { sagas as repositoryRefresh } from './project/RepositoryRefreshPopup';
 
 export default function*(): Generator<*, *, *> {
-  yield all([
-    fork(session),
-    fork(about),
-    fork(loginForm),
-    fork(process),
-    fork(processQueue),
-    fork(processLog),
-    fork(form),
-    fork(wizard),
-    fork(portal),
-    fork(project),
-    fork(projectList),
-    fork(projectStart),
-    fork(repository),
-    fork(secret),
-    fork(secretNew),
-    fork(landingList),
-    fork(repositoryRefresh)
-  ]);
+    yield all([
+        fork(session),
+        fork(about),
+        fork(loginForm),
+        fork(process),
+        fork(processQueue),
+        fork(processLog),
+        fork(form),
+        fork(wizard),
+        fork(portal),
+        fork(project),
+        fork(projectList),
+        fork(projectStart),
+        fork(repository),
+        fork(secret),
+        fork(secretNew),
+        fork(landingList),
+        fork(repositoryRefresh)
+    ]);
 }

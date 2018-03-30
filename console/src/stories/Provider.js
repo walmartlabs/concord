@@ -27,5 +27,5 @@ import { hashHistory } from 'react-router';
 const store = configureStore(hashHistory, reducers);
 
 export default function Provider({ story }) {
-  return <ReduxProvider store={store}>{story}</ReduxProvider>;
+    return <ReduxProvider store={store}>{story}</ReduxProvider>;
 }

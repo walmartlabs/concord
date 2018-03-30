@@ -1,8 +1,12 @@
-.mainMenu {
-  border: none !important;
-  border-radius: 0 !important;
+.mainContent {
+    overflow-y: auto;
 }
 
-.mainContent {
-  overflow-y: auto;
+.expand::before {
+    content: '';
+    position: absolute;
+    top: -5%;
+    left: -5%;
+    right: -5%;
+    bottom: -5%;
 }

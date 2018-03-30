@@ -20,28 +20,69 @@
 // @flow
 import * as common from '../../api';
 
-export const loadData = (sortBy: string = 'lastUpdatedAt', sortDir: string = common.sort.DESC) => {
-  console.debug("API: loadData ['%s', '%s'] -> starting...", sortBy, sortDir);
-
-  const query = common.queryParams({
-    sortBy,
-    asc: String(common.sort.ASC === sortDir)
-  });
-
-  return fetch(`/api/v1/process?${query}`, { credentials: 'same-origin' })
-    .then((response) => {
-      if (!response.ok) {
-        throw common.defaultError(response);
-      }
-      return response.json();
-    })
-    .then((json) => {
-      console.debug(
-        "API: loadData ['%s', '%s'] -> done, got %d row(s)",
+export const loadData = (
+    sortBy: string = 'lastUpdatedAt',
+    sortDir: string = common.sort.DESC,
+    projectId: string = '',
+    org: string,
+    beforeCreatedAt: string,
+    tags: string[],
+    limit: string = '30'
+): Promise<any> => {
+    console.debug(
+        "API: loadData ['%s', '%s', '%s', '%s', '%s'] -> starting...",
         sortBy,
         sortDir,
-        json.length
-      );
-      return json;
+        projectId,
+        org,
+        limit
+    );
+
+    const query = common.queryParams({
+        sortBy,
+        asc: String(common.sort.ASC === sortDir),
+        limit
     });
+
+    return fetch(`/api/v1/process?${query}`, { credentials: 'same-origin' })
+        .then((response) => {
+            if (!response.ok) {
+                throw common.defaultError(response);
+            }
+            return response.json();
+        })
+        .then((json) => {
+            console.debug(
+                "API: loadData ['%s', '%s'] -> done, got %d row(s)",
+                sortBy,
+                sortDir,
+                json.length
+            );
+            return json;
+        });
+};
+
+export const fetchProjectProcesses = (projectId: string): Promise<any> => {
+    console.debug("API: fetchProjectProcesses ['%s'] -> starting...", projectId);
+
+    const query = common.queryParams({
+        projectId
+    });
+
+    //TODO: incrementally query the processes and remove hardcoded limit
+    return fetch(`/api/v1/process?${query}&limit=100`, { credentials: 'same-origin' })
+        .then((response) => {
+            if (!response.ok) {
+                throw common.defaultError(response);
+            }
+            return response.json();
+        })
+        .then((json) => {
+            console.debug(
+                "API: fetchProjectProcesses ['%s'] -> done, got %d row(s)",
+                projectId,
+                json.length
+            );
+            return json;
+        });
 };

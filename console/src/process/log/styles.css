@@ -1,11 +1,11 @@
 .logViewer {
-  font-family: monospace;
-  white-space: pre-wrap;
-  margin-top: 10px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    margin-top: 10px;
 }
 
 .sticky {
-  position: fixed !important;
-  top: 20px !important;
-  right: 30px !important;
+    position: fixed !important;
+    top: 20px !important;
+    right: 30px !important;
 }

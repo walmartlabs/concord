@@ -27,41 +27,41 @@ import reducers from './reducers';
 import sagas from './sagas';
 
 class PortalPage extends Component {
-  componentDidMount() {
-    const { entryPoint, startFn } = this.props;
-    startFn(entryPoint);
-  }
-
-  componentDidUpdate(prevProps) {
-    const { entryPoint, startFn } = this.props;
-    if (entryPoint !== prevProps.entryPoint) {
-      startFn(entryPoint);
-    }
-  }
-
-  render() {
-    const { submitting, error } = this.props;
-
-    if (error) {
-      return <ErrorMessage message={error} />;
+    componentDidMount() {
+        const { entryPoint, startFn } = this.props;
+        startFn(entryPoint);
     }
 
-    return (
-      <div>
-        <Loader active={submitting} />
-      </div>
-    );
-  }
+    componentDidUpdate(prevProps) {
+        const { entryPoint, startFn } = this.props;
+        if (entryPoint !== prevProps.entryPoint) {
+            startFn(entryPoint);
+        }
+    }
+
+    render() {
+        const { submitting, error } = this.props;
+
+        if (error) {
+            return <ErrorMessage message={error} />;
+        }
+
+        return (
+            <div>
+                <Loader active={submitting} />
+            </div>
+        );
+    }
 }
 
 const mapStateToProps = ({ portal }, { location: { query } }) => ({
-  entryPoint: query.entryPoint,
-  error: selectors.getError(portal),
-  submitting: selectors.getIsSubmitting(portal)
+    entryPoint: query.entryPoint,
+    error: selectors.getError(portal),
+    submitting: selectors.getIsSubmitting(portal)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  startFn: (entryPoint) => dispatch(actions.startProcess(entryPoint))
+    startFn: (entryPoint) => dispatch(actions.startProcess(entryPoint))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(PortalPage);

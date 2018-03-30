@@ -31,44 +31,42 @@ import './styles.css';
 export const MODAL_TYPE = 'SHOW_SECRET_PUBLIC_KEY_POPUP';
 
 const showSecretPublicKey = ({ open, orgName, name, error, publicKey, onCloseFn, inFlightFn }) => {
-  const inFlight = inFlightFn(orgName, name);
+    const inFlight = inFlightFn(orgName, name);
 
-  return (
-    <Modal open={open} dimmer="inverted">
-      <Modal.Header>{name}</Modal.Header>
-      <Modal.Content>
-        {error && <ErrorMessage message={error} />}
-        {publicKey && (
-          <div>
-            <b>Public key: </b>
-            <CopyToClipboard text={publicKey}>
-              <Button icon="copy" size="mini" basic />
-            </CopyToClipboard>
-            <TextArea id="publicKeyValue" className="secretData">
-              {publicKey}
-            </TextArea>
-          </div>
-        )}
-      </Modal.Content>
-      <Modal.Actions>
-        <Button disabled={inFlight} onClick={onCloseFn}>
-          Close
-        </Button>
-      </Modal.Actions>
-    </Modal>
-  );
+    return (
+        <Modal open={open}>
+            <Modal.Header>{name}</Modal.Header>
+            <Modal.Content>
+                {error && <ErrorMessage message={error} />}
+                {publicKey && (
+                    <div>
+                        <b>Public key: </b>
+                        <CopyToClipboard text={publicKey}>
+                            <Button icon="copy" size="mini" basic />
+                        </CopyToClipboard>
+                        <TextArea id="publicKeyValue" className="secretData" value={publicKey} />
+                    </div>
+                )}
+            </Modal.Content>
+            <Modal.Actions>
+                <Button disabled={inFlight} onClick={onCloseFn}>
+                    Close
+                </Button>
+            </Modal.Actions>
+        </Modal>
+    );
 };
 
 showSecretPublicKey.MODAL_TYPE = MODAL_TYPE;
 
 const mapStateToProps = ({ secretList }) => ({
-  inFlightFn: (orgName, name) => selectors.isInFlight(secretList, orgName, name),
-  error: selectors.getPublicKeyError(secretList),
-  publicKey: selectors.getPublicKey(secretList)
+    inFlightFn: (orgName, name) => selectors.isInFlight(secretList, orgName, name),
+    error: selectors.getPublicKeyError(secretList),
+    publicKey: selectors.getPublicKey(secretList)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  onCloseFn: () => dispatch(modal.close())
+    onCloseFn: () => dispatch(modal.close())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(showSecretPublicKey);
