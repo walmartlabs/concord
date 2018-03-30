@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.rpc;
  * =====
  */
 
+import com.google.common.base.Strings;
 import com.google.protobuf.ByteString;
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.sdk.SecretStoreService;
@@ -79,11 +80,8 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
             return;
         }
 
-        String secretPassword = request.getPassword();
-        if (secretPassword == null) {
-            responseObserver.onError(new IllegalArgumentException("Secret's password is required"));
-            return;
-        }
+        // request.password, when not provided, comes as empty string and needs to be converted into null value
+        String secretPassword  = Strings.isNullOrEmpty(request.getPassword()) ? null : request.getPassword();
 
         UUID instanceId = UUID.fromString(sId);
 
