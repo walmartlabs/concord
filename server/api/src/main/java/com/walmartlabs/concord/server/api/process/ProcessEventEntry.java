@@ -20,10 +20,7 @@ package com.walmartlabs.concord.server.api.process;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -34,8 +31,13 @@ public class ProcessEventEntry implements Serializable {
 
     private final UUID id;
     private final ProcessEventType eventType;
-    private final Date eventDate;
     private final Object data;
+
+    /**
+     * should match the format in {@link com.walmartlabs.concord.server.api.IsoDateParam}
+     */
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssX")
+    private final Date eventDate;
 
     @JsonCreator
     public ProcessEventEntry(@JsonProperty("id") UUID id,

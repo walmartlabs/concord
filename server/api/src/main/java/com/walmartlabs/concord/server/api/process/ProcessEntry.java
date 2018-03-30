@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.api.process;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -40,13 +41,16 @@ public class ProcessEntry implements Serializable {
     private final String orgName;
     private final UUID projectId;
     private final String projectName;
-    private final Date createdAt;
     private final String initiator;
     private final ProcessStatus status;
     private final String lastAgentId;
-    private final Date lastUpdatedAt;
     private final String logFileName;
     private final Set<String> tags;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssX")
+    private final Date createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssX")
+    private final Date lastUpdatedAt;
 
     @JsonCreator
     public ProcessEntry(@JsonProperty("instanceId") UUID instanceId,
