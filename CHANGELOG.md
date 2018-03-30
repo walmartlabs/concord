@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: new UI layout;
+- concord-console: visualization of Ansible stats;
 - concord-server: make `orgName` optional when `teamName` is used
 when setting a resource's access level.
 
