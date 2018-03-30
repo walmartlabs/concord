@@ -9,6 +9,7 @@ when setting a resource's access level.
 
 ### Changed
 
+- ansible: make `privateKey`'s password optional;
 - concord-agent: ship `http-tasks` with the docker image; 
 - concord-console: disable TLS 1.0.
 
