@@ -1,6 +1,7 @@
 #!/bin/bash
 
 VERSION="0.61.1"
+BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 docker rm -f db dind agent server console
 
@@ -32,6 +33,8 @@ docker run -d \
 --link dind \
 --link server \
 -v /tmp:/tmp \
+-v ${BASE_DIR}/mvn.json:/opt/concord/conf/mvn.json:ro \
+-e 'CONCORD_MAVEN_CFG=/opt/concord/conf/mvn.json' \
 -e 'CONCORD_DOCKER_LOCAL_MODE=false' \
 docker.prod.walmart.com/walmartlabs/concord-agent:${VERSION}
 
