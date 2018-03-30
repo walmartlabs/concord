@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.google.common.base.Throwables;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.apache.shiro.SecurityUtils;
@@ -38,6 +40,8 @@ import java.io.*;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 @Named
 public class ProcessSecurityContext {
@@ -46,11 +50,15 @@ public class ProcessSecurityContext {
 
     private final ProcessStateManager stateManager;
     private final Injector injector;
+    private final Cache<UUID, PrincipalCollection> principalCache;
 
     @Inject
     public ProcessSecurityContext(ProcessStateManager stateManager, Injector injector) {
         this.stateManager = stateManager;
         this.injector = injector;
+        this.principalCache = CacheBuilder.newBuilder()
+                .expireAfterAccess(1, TimeUnit.MINUTES)
+                .build();
     }
 
     public void storeCurrentSubject(UUID instanceId) {
@@ -63,7 +71,12 @@ public class ProcessSecurityContext {
     }
 
     public PrincipalCollection getPrincipals(UUID instanceId) {
-        return stateManager.get(instanceId, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize).orElse(null);
+        try {
+            return principalCache.get(instanceId,
+                    () -> stateManager.get(instanceId, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize).orElse(null));
+        } catch (ExecutionException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     public <T> T runAsInitiator(UUID instanceId, Callable<T> c) throws Exception {
