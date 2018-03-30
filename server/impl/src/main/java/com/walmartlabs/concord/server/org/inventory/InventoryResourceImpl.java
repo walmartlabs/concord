@@ -100,7 +100,7 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
             throw new WebApplicationException("Inventory not found: " + inventoryName, Response.Status.NOT_FOUND);
         }
 
-        UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, entry);
+        UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
 
         inventoryManager.updateAccessLevel(inventoryId, teamId, entry.getLevel());
 

@@ -2,8 +2,14 @@
 
 ### [Unreleased]
 
+### Added
+
+- concord-server: make `orgName` optional when `teamName` is used
+when setting a resource's access level.
+
 ### Changed
 
+- concord-agent: ship `http-tasks` with the docker image; 
 - concord-console: disable TLS 1.0.
 
 

@@ -234,7 +234,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
             throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, entry);
+        UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
 
         accessManager.updateAccessLevel(projectId, teamId, entry.getLevel());
         return new GenericOperationResultResponse(OperationResult.UPDATED);

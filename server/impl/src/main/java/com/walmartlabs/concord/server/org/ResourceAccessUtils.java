@@ -27,17 +27,21 @@ import java.util.UUID;
 
 public final class ResourceAccessUtils {
 
-    public static UUID getTeamId(OrganizationDao orgDao, TeamDao teamDao, ResourceAccessEntry e) {
+    public static UUID getTeamId(OrganizationDao orgDao, TeamDao teamDao, UUID baseOrgId, ResourceAccessEntry e) {
         UUID id = e.getTeamId();
         if (id != null) {
             return id;
         }
 
-        if (e.getOrgName() == null || e.getTeamName() == null) {
-            throw new IllegalArgumentException("You must specify either a team ID or an organization and a team name.");
+        if (e.getTeamName() == null) {
+            throw new IllegalArgumentException("You must specify an organization and/or a team name.");
         }
 
-        UUID orgId = orgDao.getId(e.getOrgName());
+        UUID orgId = baseOrgId;
+        if (e.getOrgName() != null) {
+            orgId = orgDao.getId(e.getOrgName());
+        }
+
         if (orgId == null) {
             throw new IllegalArgumentException("Organization not found: " + e.getOrgName());
         }
