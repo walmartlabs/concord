@@ -1,5 +1,13 @@
 # Change log
 
+### [Unreleased]
+
+### Changed
+
+- concord-console: disable TLS 1.0.
+
+
+
 ## [0.61.1] - 2018-03-26
 
 ### Changed
