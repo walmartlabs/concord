@@ -36,7 +36,7 @@ public final class SecretUtils {
             byte[] ab = decrypt(input, password, hash);
             return deserializer.apply(ab);
         } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error decrypting a key pair", e);
+            throw new SecurityException("Error decrypting", e);
         }
     }
 

@@ -52,8 +52,12 @@ public class SecretStoreServiceImpl implements SecretStoreService {
 
         TFetchSecretRequest.Builder req = TFetchSecretRequest.newBuilder()
                 .setInstanceId(instanceId)
-                .setSecretName(secretName)
-                .setPassword(password);
+                .setSecretName(secretName);
+
+        if (password != null){
+            req.setPassword(password);
+        }
+
         if (orgName != null) {
             req.setOrgName(orgName);
         }

@@ -478,10 +478,6 @@ public class RunPlaybookTask2 implements Task {
             }
 
             String password = (String) m.get("password");
-            if (password == null) {
-                throw new IllegalArgumentException("Password is required to export a private key");
-            }
-
             String orgName = (String) m.get("org");
 
             Map<String, String> keyPair = secretStore.exportKeyAsFile(txId, workDir.toAbsolutePath().toString(), orgName, name, password);
