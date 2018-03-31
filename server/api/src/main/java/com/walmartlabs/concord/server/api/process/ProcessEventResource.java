@@ -36,6 +36,19 @@ import java.util.UUID;
 public interface ProcessEventResource {
 
     /**
+     * Register a process event.
+     *
+     * @param processInstanceId
+     * @param req
+     */
+    @POST
+    @ApiOperation(value = "Register a process event", authorizations = {@Authorization("session_key")})
+    @Path("/{processInstanceId}/event")
+    @Consumes(MediaType.APPLICATION_JSON)
+    void event(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
+               @ApiParam ProcessEventRequest req);
+
+    /**
      * List process events.
      *
      * @param processInstanceId

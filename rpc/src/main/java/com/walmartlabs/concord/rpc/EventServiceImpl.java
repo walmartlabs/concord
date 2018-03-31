@@ -33,6 +33,10 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @deprecated use the corresponding REST API endpoint
+ */
+@Deprecated
 public class EventServiceImpl implements EventService {
 
     private static final long REQUEST_TIMEOUT = 5000;

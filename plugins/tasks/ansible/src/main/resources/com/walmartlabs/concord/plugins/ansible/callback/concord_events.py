@@ -5,16 +5,8 @@ from ansible.plugins.callback import CallbackBase
 from ansible.module_utils.six import string_types
 
 import os
-import time
+import requests
 import ujson as json
-import grpc
-import time
-import json
-
-from google.protobuf import timestamp_pb2
-
-import server_pb2
-import server_pb2_grpc
 
 class CallbackModule(CallbackBase):
     CALLBACK_VERSION = 2.0
@@ -26,27 +18,23 @@ class CallbackModule(CallbackBase):
 
         print("Ansible event recording started...")
 
-        self.playbook = None
-        concord_host = os.environ['CONCORD_HOST']
-        concord_port = os.environ['CONCORD_PORT']
-        self.instanceId = os.environ['CONCORD_INSTANCE_ID']
+        baseUrl = os.environ['CONCORD_BASE_URL']
+        instanceId = os.environ['CONCORD_INSTANCE_ID']
+        sessionToken = os.environ['CONCORD_SESSION_TOKEN']
 
-        self.channel = grpc.insecure_channel(concord_host + ':' + concord_port)
-        self.service = server_pb2_grpc.TEventServiceStub(self.channel)
+        self.targetUrl = baseUrl + '/api/v1/process/' + instanceId + '/event'
+
+        s = requests.Session()
+        s.headers.update({'X-Concord-SessionToken': sessionToken, 'Content-type': 'application/json'})
+
+        self.session = s
 
     def handle_event(self, event):
-        # print("---> event: {}".format(json.dumps(event)))
-
-        now = time.time()
-        seconds = int(now)
-        nanos = int((now - seconds) * 10**9)
-        timestamp = timestamp_pb2.Timestamp(seconds=seconds, nanos=nanos)
-
-        self.service.onEvent(server_pb2.TEventRequest(
-            instanceId=self.instanceId,
-            type=1,
-            date=timestamp,
-            data=json.dumps(event)))
+        r = self.session.post(self.targetUrl, data=json.dumps({
+            'eventType': 'ANSIBLE',
+            'data': event
+        }))
+        r.raise_for_status()
 
     def cleanup_results(self, result):
         abridged_result = self._strip_internal_keys(result)

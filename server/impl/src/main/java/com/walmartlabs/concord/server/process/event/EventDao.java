@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
+import static org.jooq.impl.DSL.currentTimestamp;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.value;
 
@@ -71,11 +72,11 @@ public class EventDao extends AbstractDao {
         }
     }
 
-    public void insert(UUID instanceId, ProcessEventType eventType, Date eventDate, String eventData) {
-        tx(tx -> insert(tx, instanceId, eventType, eventDate, eventData));
+    public void insert(UUID instanceId, ProcessEventType eventType, String eventData) {
+        tx(tx -> insert(tx, instanceId, eventType, eventData));
     }
 
-    public void insert(DSLContext tx, UUID instanceId, ProcessEventType eventType, Date eventDate, String eventData) {
+    public void insert(DSLContext tx, UUID instanceId, ProcessEventType eventType, String eventData) {
         tx.insertInto(PROCESS_EVENTS)
                 .columns(PROCESS_EVENTS.INSTANCE_ID,
                         PROCESS_EVENTS.EVENT_TYPE,
@@ -83,7 +84,7 @@ public class EventDao extends AbstractDao {
                         PROCESS_EVENTS.EVENT_DATA)
                 .values(value(instanceId),
                         value(eventType.name()),
-                        value(new Timestamp(eventDate.getTime())),
+                        currentTimestamp(),
                         field("?::jsonb", eventData))
                 .execute();
     }

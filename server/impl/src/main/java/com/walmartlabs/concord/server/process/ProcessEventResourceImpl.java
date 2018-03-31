@@ -20,14 +20,18 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.ProcessEventEntry;
+import com.walmartlabs.concord.server.api.process.ProcessEventRequest;
 import com.walmartlabs.concord.server.api.process.ProcessEventResource;
 import com.walmartlabs.concord.server.process.event.EventDao;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.WebApplicationException;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
@@ -36,10 +40,24 @@ import java.util.UUID;
 public class ProcessEventResourceImpl implements ProcessEventResource, Resource {
 
     private final EventDao eventDao;
+    private final ObjectMapper objectMapper;
 
     @Inject
     public ProcessEventResourceImpl(EventDao eventDao) {
         this.eventDao = eventDao;
+        this.objectMapper = new ObjectMapper();
+    }
+
+    @Override
+    public void event(UUID processInstanceId, ProcessEventRequest req) {
+        String data;
+        try {
+            data = objectMapper.writeValueAsString(req.getData());
+        } catch (IOException e) {
+            throw new WebApplicationException("Error while serializing the event's data: " + e.getMessage(), e);
+        }
+
+        eventDao.insert(processInstanceId, req.getEventType(), data);
     }
 
     @Override

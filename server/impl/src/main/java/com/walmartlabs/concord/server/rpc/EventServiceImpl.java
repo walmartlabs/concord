@@ -25,6 +25,7 @@ import com.google.protobuf.util.Timestamps;
 import com.walmartlabs.concord.rpc.TEventRequest;
 import com.walmartlabs.concord.rpc.TEventServiceGrpc;
 import com.walmartlabs.concord.rpc.TEventType;
+import com.walmartlabs.concord.server.api.process.ProcessEventRequest;
 import com.walmartlabs.concord.server.api.process.ProcessEventType;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.event.EventDao;
@@ -35,7 +36,11 @@ import javax.inject.Named;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * @deprecated in favor of {@link com.walmartlabs.concord.server.api.process.ProcessEventResource#event(UUID, ProcessEventRequest)}
+ */
 @Named
+@Deprecated
 public class EventServiceImpl extends TEventServiceGrpc.TEventServiceImplBase {
 
     private final EventDao eventDao;
@@ -50,9 +55,8 @@ public class EventServiceImpl extends TEventServiceGrpc.TEventServiceImplBase {
     public void onEvent(TEventRequest request, StreamObserver<Empty> responseObserver) {
         UUID instanceId = UUID.fromString(request.getInstanceId());
         byte[] data = request.getData().toByteArray();
-        Date eventDate = new Date(Timestamps.toMillis(request.getDate()));
 
-        eventDao.insert(instanceId, convert(request.getType()), eventDate, new String(data));
+        eventDao.insert(instanceId, convert(request.getType()), new String(data));
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
@@ -68,5 +72,4 @@ public class EventServiceImpl extends TEventServiceGrpc.TEventServiceImplBase {
                 throw new IllegalArgumentException("Unsupported event type: " + type);
         }
     }
-
 }
