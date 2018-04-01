@@ -17,7 +17,7 @@ when setting a resource's access level.
 
 
 
-## [0.61.1] - 2018-03-26
+## [0.62.1] - 2018-03-26
 
 ### Changed
 
