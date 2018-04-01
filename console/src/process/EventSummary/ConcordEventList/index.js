@@ -48,7 +48,8 @@ export class ConnectedEventList extends React.Component {
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
-                            {eventsByType.ELEMENT.map((value, index, arr) => {
+                            {eventsByType.ELEMENT &&
+                                eventsByType.ELEMENT.map((value, index, arr) => {
                                 return (
                                     <Table.Row key={index}>
                                         <Table.Cell>

@@ -33,10 +33,9 @@ import { delay } from 'redux-saga';
 import types, { pollingFailure, responseProjectProcesses, errorProjectProcesses } from './actions';
 import * as constants from './constants';
 import * as api from './api';
-import * as moment from 'moment';
 import * as queueApi from './queue/api';
 
-const STATUS_REFRESH_DELAY = 3000;
+const STATUS_REFRESH_DELAY = 5000;
 
 function* loadProcessData(action: any): Generator<*, *, *> {
     const { instanceId } = action;
@@ -104,7 +103,7 @@ function* kill(action: any): Generator<*, *, *> {
     }
 }
 
-function* loadEventData(action: any, add: boolean): Generator<*, *, *> {
+function* loadEventData(action: any): Generator<*, *, *> {
     const { instanceId, limit, after } = action;
     try {
         const response = yield call(api.fetchConcordEvents, instanceId, limit, after);
@@ -132,7 +131,8 @@ function* loadAnsibleStats(action: any): Generator<*, *, *> {
     }
 }
 
-function* startPollingData(instanceId: string): Generator<*, *, *> {
+// TODO: Refactor into separate parallel sagas
+export function* startPollingData(instanceId: string): Generator<*, *, *> {
     try {
         const actionState = {
             pollStatus: true,
@@ -141,6 +141,18 @@ function* startPollingData(instanceId: string): Generator<*, *, *> {
             pullAllEvents: false,
             statusIsFinalized: false
         };
+
+        // TODO: make DRY
+        // Pull status data out of state
+        const { status } = yield select(({ process }) => process.data);
+
+        actionState.statusIsFinalized = constants.finalStatuses.includes(status);
+
+        // Check if we should poll events or pull all events
+        if (actionState.statusIsFinalized) {
+            actionState.pollEvents = false;
+            actionState.pullAllEvents = true;
+        }
 
         while (true) {
             if (
@@ -158,6 +170,7 @@ function* startPollingData(instanceId: string): Generator<*, *, *> {
                 yield fork(loadProcessData, { instanceId });
             }
 
+            // TODO: make DRY
             // Pull status data out of state
             const { status } = yield select(({ process }) => process.data);
 
@@ -176,25 +189,25 @@ function* startPollingData(instanceId: string): Generator<*, *, *> {
             }
 
             // PollEvents incrementally if status is not Finalized
-            // Poll All events at once one time if status is Finalized
+            // Else poll All events at once one time if status is Finalized
             if (actionState.pollEvents) {
                 let timestamp = null;
 
                 let events = yield select(({ process }) => process.events.data);
 
                 if (events.length > 0) {
-                    timestamp = moment(events[events.length - 1].eventDate, moment.ISO_8601);
+                    timestamp = events[events.length - 1].eventDate;
                 }
 
                 yield fork(loadEventData, {
                     instanceId,
                     limit: '100',
-                    after: timestamp
+                    after: timestamp || null
                 });
 
+                // Check if we should poll events or pull all events
                 if (actionState.statusIsFinalized) {
                     actionState.pollEvents = false;
-                    actionState.pullAllEvents = true;
                 }
             } else if (actionState.pullAllEvents) {
                 yield fork(loadEventData, { instanceId });
@@ -214,7 +227,7 @@ function* startPollingData(instanceId: string): Generator<*, *, *> {
     }
 }
 
-function* process_poller({ instanceId }) {
+export function* process_poller({ instanceId }) {
     yield take(types.START_POLL_FOR_DATA);
     const pollingTask = yield fork(startPollingData, instanceId);
     yield take(types.STOP_POLL_FOR_DATA);

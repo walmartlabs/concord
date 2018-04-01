@@ -101,7 +101,7 @@ const events = combineReducers({
                 return [];
             case types.EVENT_DATA_ADD:
                 return _.uniqBy(state.concat(data), (e) => {
-                    return e.eventDate;
+                    return e.id;
                 });
             default:
                 return state;

@@ -29,13 +29,7 @@ export const sort = {
 export const queryParams = (params: { [id: mixed]: string }) => {
     const esc = encodeURIComponent;
 
-    let validParams = _.omitBy(params, function(v) {
-        return _.isUndefined(v);
-    });
-
-    validParams = _.omitBy(validParams, function(v) {
-        return _.isNull(v);
-    });
+    let validParams = _.omitBy(params, (v) => typeof v === 'undefined' || v === null);
 
     return Object.keys(validParams)
         .map((k) => {

@@ -36,7 +36,7 @@ public class ProcessEventEntry implements Serializable {
     /**
      * should match the format in {@link com.walmartlabs.concord.server.api.IsoDateParam}
      */
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssX")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private final Date eventDate;
 
     @JsonCreator
