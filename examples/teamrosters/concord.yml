@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:teamrosters-task:0.34.0"
+  - "mvn://com.walmartlabs.concord.plugins:teamrosters-task:0.38.0"
 
 flows:
   default:

@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:boo-task:0.36.6"
+  - "mvn://com.walmartlabs.concord.plugins:boo-task:0.38.0"
 
 flows:
   default:

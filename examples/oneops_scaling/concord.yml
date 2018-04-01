@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.34.0"
+  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.38.0"
 
   arguments:
     # form defaults
