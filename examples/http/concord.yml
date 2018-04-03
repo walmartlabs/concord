@@ -1,16 +1,10 @@
 flows:
   default:
   - log: "${http.asString('http://localhost:8001/api/v1/server/ping')}"
+
   - task: http
     in:
       method: GET
       url: http://localhost:8001/api/v1/server/ping
       response: json
-      out: httpsResponse
-  - if: ${httpsResponse.success} # HttpTaskResponse object
-    then:
-     - log: "Response received: ${httpsResponse.content}"
-
-configuration:
-  arguments:
-    name: "Concord"
+  - log: "Response received: ${response}"

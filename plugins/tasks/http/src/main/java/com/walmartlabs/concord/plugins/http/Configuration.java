@@ -36,6 +36,7 @@ import static javax.xml.transform.OutputKeys.METHOD;
  * @see SimpleHttpClient
  */
 public class Configuration {
+
     private String url;
     private String encodedAuthToken;
     private RequestType requestType;
@@ -51,6 +52,7 @@ public class Configuration {
                           ResponseType responseType,
                           String workDir,
                           Object body) {
+
         this.methodType = methodType;
         this.url = url;
         this.encodedAuthToken = authToken;

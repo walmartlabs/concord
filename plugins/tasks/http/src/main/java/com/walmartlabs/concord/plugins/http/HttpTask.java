@@ -29,9 +29,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.CONTENT_KEY;
-import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.OUT_KEY;
-import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.SUCCESS_KEY;
+import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
 
 /**
  * Http task to support the direct http calls from concord.yml file. It uses the Apache HttpClient to
@@ -43,6 +41,7 @@ public class HttpTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(HttpTask.class);
 
+    private static final String DEFAULT_OUT_VAR = "response";
 
     @Override
     public void execute(Context ctx) throws Exception {
@@ -77,7 +76,6 @@ public class HttpTask implements Task {
         log.info("Request method: {}", config.getMethodType());
 
         Map<String, Object> response = SimpleHttpClient.create(config).execute().getResponse();
-
         log.info("Success response: {}", response.get(SUCCESS_KEY));
 
         return response;
@@ -90,7 +88,11 @@ public class HttpTask implements Task {
      * @param returnResponse response returned from endpoint
      */
     private void setOutVariable(Context ctx, Map<String, Object> returnResponse) {
-        ctx.setVariable((String) ctx.getVariable(OUT_KEY), returnResponse);
+        String key = (String) ctx.getVariable(OUT_KEY);
+        if (key == null) {
+            key = DEFAULT_OUT_VAR;
+        }
+        ctx.setVariable(key, returnResponse);
     }
 
     public enum RequestMethodType {
@@ -104,7 +106,6 @@ public class HttpTask implements Task {
                     return true;
             return false;
         }
-
     }
 
     public enum RequestType {
@@ -119,7 +120,6 @@ public class HttpTask implements Task {
                     return true;
             return false;
         }
-
     }
 
     public enum ResponseType {
@@ -158,9 +158,6 @@ public class HttpTask implements Task {
         static final String CONTENT_KEY = "content";
 
         private HttpTaskConstant() {
-
         }
     }
-
-
 }

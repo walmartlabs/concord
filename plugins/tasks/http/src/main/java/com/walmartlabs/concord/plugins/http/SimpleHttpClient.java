@@ -21,9 +21,11 @@ package com.walmartlabs.concord.plugins.http;
  */
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.plugins.http.exception.UnauthorizedException;
 import com.walmartlabs.concord.plugins.http.request.HttpTaskRequest;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -58,14 +60,15 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import static com.walmartlabs.concord.plugins.http.HttpTaskUtils.getHttpEntity;
-import static com.walmartlabs.concord.plugins.http.HttpTaskUtils.isValidJSON;
 
 public class SimpleHttpClient {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleHttpClient.class);
-    private Configuration config;
-    private CloseableHttpClient client;
-    private HttpUriRequest request;
+
+    private final Configuration config;
+    private final CloseableHttpClient client;
+    private final HttpUriRequest request;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private SimpleHttpClient(Configuration config) throws Exception {
         this.config = config;
@@ -99,28 +102,42 @@ public class SimpleHttpClient {
             log.info("Response status code: {}", httpResponse.getStatusLine().getStatusCode());
 
             Map<String, Object> response = new HashMap<>();
-            String responseString = "";
+
+            Object content = "";
             boolean isSuccess = false;
             if (Response.Status.Family.SUCCESSFUL == Response.Status.Family.familyOf(httpResponse.getStatusLine().getStatusCode())) {
-                if (config.getResponseType() == ResponseType.FILE) {
-                    responseString = storeFile(httpResponse.getEntity());
-                } else {
-                    responseString = EntityUtils.toString(httpResponse.getEntity());
-                    // For response type JSON, the response must contain valid json string
-                    if (config.getResponseType() == ResponseType.JSON && !isValidJSON(responseString)) {
-                        throw new IllegalStateException("Invalid JSON response received -> " + responseString);
-                    }
-                }
+                content = processResponse(httpResponse, config);
                 isSuccess = true;
             } else {
                 response.put("errorString", EntityUtils.toString(httpResponse.getEntity()));
             }
 
             response.put("success", isSuccess);
-            response.put("content", responseString);
+            response.put("content", content);
             response.put("statusCode", httpResponse.getStatusLine().getStatusCode());
 
             return new ClientResponse(response);
+        }
+    }
+
+    private Object processResponse(HttpResponse r, Configuration cfg) throws IOException {
+        ResponseType t = cfg.getResponseType();
+        if (t == null) {
+            t = ResponseType.STRING;
+        }
+
+        HttpEntity e = r.getEntity();
+
+        switch (t) {
+            case FILE: {
+                return storeFile(e);
+            }
+            case JSON: {
+                return objectMapper.readValue(e.getContent(), Object.class);
+            }
+            default: {
+                return EntityUtils.toString(e);
+            }
         }
     }
 
