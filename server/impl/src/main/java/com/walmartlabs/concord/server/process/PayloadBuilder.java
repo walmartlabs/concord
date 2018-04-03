@@ -69,6 +69,7 @@ public final class PayloadBuilder {
         return f.apply(this);
     }
 
+    @SuppressWarnings("unchecked")
     public PayloadBuilder with(MultipartInput input) throws IOException {
         Map<String, Path> attachments = payload.getAttachments();
         attachments = new HashMap<>(attachments != null ? attachments : Collections.emptyMap());

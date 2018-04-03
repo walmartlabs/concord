@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.sdk.ClientException;
 import org.slf4j.Logger;
@@ -56,9 +57,15 @@ public class Worker implements Runnable {
         JobQueue q = client.getJobQueue();
 
         while (!Thread.currentThread().isInterrupted()) {
-            JobEntry job;
+            JobEntry job = null;
             try {
                 job = q.take();
+
+                if (job == null) {
+                    continue;
+                }
+
+                execute(job.getInstanceId(), job.getJobType(), job.getPayload());
             } catch (ClientException e) {
                 String instanceId = e.getInstanceId();
                 if (instanceId != null) {
@@ -67,14 +74,33 @@ public class Worker implements Runnable {
 
                 log.error("run -> transport error: (instanceId={}), {}", instanceId, e.getMessage(), e);
                 sleep(ERROR_DELAY);
-                continue;
+            } finally {
+                if (job != null) {
+                    cleanup(job);
+                }
             }
+        }
+    }
 
-            if (job == null) {
-                continue;
-            }
+    private void cleanup(JobEntry job) {
+        try {
+            Files.deleteIfExists(job.getPayload());
+        } catch (IOException e) {
+            log.warn("cleanup ['{}'] -> error while removing the payload {}: {}",
+                    job.getInstanceId(), job.getPayload(), e.getMessage());
+        }
+    }
 
-            execute(job.getInstanceId(), job.getJobType(), job.getPayload());
+    private void cleanup(JobInstance i) {
+        Path p = i.workDir();
+        if (p == null || Files.notExists(p)) {
+            return;
+        }
+
+        try {
+            IOUtils.deleteRecursively(p);
+        } catch (IOException e) {
+            log(i.instanceId(), "Unable to delete the working directory: " + e.getMessage());
         }
     }
 
@@ -133,6 +159,8 @@ public class Worker implements Runnable {
             handleSuccess(instanceId);
         } catch (CancellationException | CompletionException e) {
             handleError(instanceId, e);
+        } finally {
+            cleanup(i);
         }
 
         log.info("execute ['{}', '{}', '{}'] -> done", instanceId, type, payload);

@@ -23,6 +23,8 @@ package com.walmartlabs.concord.common;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.*;
@@ -35,8 +37,9 @@ import java.util.Set;
 
 public final class IOUtils {
 
-    public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
+    private static final Logger log = LoggerFactory.getLogger(IOUtils.class);
 
+    public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
     public static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
 
     static {
@@ -44,6 +47,7 @@ public final class IOUtils {
             if (!Files.exists(TMP_DIR)) {
                 Files.createDirectories(TMP_DIR);
             }
+            log.info("Using {} as TMP", TMP_DIR);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

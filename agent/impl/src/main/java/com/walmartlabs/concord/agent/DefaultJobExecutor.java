@@ -92,7 +92,7 @@ public class DefaultJobExecutor implements JobExecutor {
         }
 
         List<String> l = deps.stream()
-                .map(u -> u.toString())
+                .map(Object::toString)
                 .sorted()
                 .collect(Collectors.toList());
 
@@ -138,14 +138,14 @@ public class DefaultJobExecutor implements JobExecutor {
 
             Process proc = entry.getProcess();
             CompletableFuture<?> f = CompletableFuture.supplyAsync(() -> exec(instanceId, entry.getWorkDir(), proc, payloadDir), executor);
-            return createJobInstance(instanceId, proc, f);
+            return createJobInstance(instanceId, workDir, proc, f);
         } catch (Exception e) {
             log.warn("start ['{}', '{}'] -> process startup error: {}", instanceId, workDir, e.getMessage());
             logManager.log(instanceId, "Process startup error: %s", e);
 
             CompletableFuture<?> f = new CompletableFuture<>();
             f.completeExceptionally(e);
-            return createJobInstance(instanceId, null, f);
+            return createJobInstance(instanceId, workDir, null, f);
         }
     }
 
@@ -233,8 +233,18 @@ public class DefaultJobExecutor implements JobExecutor {
         return entry;
     }
 
-    private JobInstance createJobInstance(String instanceId, Process proc, CompletableFuture<?> f) {
+    private JobInstance createJobInstance(String instanceId, Path workDir, Process proc, CompletableFuture<?> f) {
         return new JobInstance() {
+
+            @Override
+            public String instanceId() {
+                return instanceId;
+            }
+
+            @Override
+            public Path workDir() {
+                return workDir;
+            }
 
             @Override
             public Path logFile() {
@@ -447,24 +457,28 @@ public class DefaultJobExecutor implements JobExecutor {
             return;
         }
 
-        JobQueue q = client.getJobQueue();
-
         // send attachments
 
-        Path tmp;
+        Path tmp = null;
         try {
             tmp = IOUtils.createTempFile("attachments", ".zip");
             try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
                 IOUtils.zip(zip, attachmentsDir);
             }
-        } catch (IOException e) {
-            throw new ExecutionException("Error while archiving the attachments: " + instanceId, e);
-        }
 
-        try {
+            JobQueue q = client.getJobQueue();
             q.uploadAttachments(instanceId, tmp);
-        } catch (ClientException e) {
-            throw new ExecutionException("Error while sending the attachments: " + instanceId, e);
+        } catch (IOException | ClientException e) {
+            throw new ExecutionException("Error while processing the attachments: " + instanceId, e);
+        } finally {
+            if (tmp != null) {
+                try {
+                    Files.delete(tmp);
+                } catch (IOException e) {
+                    log.warn("postProcess ['{}', '{}'] -> error while removing a temporary file: {}",
+                            instanceId, payloadDir, tmp, e);
+                }
+            }
         }
     }
 

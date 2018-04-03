@@ -38,6 +38,7 @@ import javax.inject.Named;
 public class ProcessPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
+    private final FinalizerProcessor finalizerProcessor;
 
     @Inject
     public ProcessPipeline(Injector injector) {
@@ -71,10 +72,16 @@ public class ProcessPipeline extends Pipeline {
                 EnqueueingProcessor.class);
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
+        this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);
     }
 
     @Override
     protected ExceptionProcessor getExceptionProcessor() {
         return exceptionProcessor;
+    }
+
+    @Override
+    protected FinalizerProcessor getFinalizerProcessor() {
+        return finalizerProcessor;
     }
 }

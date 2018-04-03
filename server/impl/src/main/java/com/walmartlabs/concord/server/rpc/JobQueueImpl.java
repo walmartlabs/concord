@@ -89,9 +89,25 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
                 }
 
                 responseObserver.onCompleted();
+            } finally {
+                cleanup(p);
             }
         } catch (IOException e) {
             responseObserver.onError(e);
+        }
+    }
+
+    private void cleanup(PayloadEntry entry) {
+        Path p = entry.getPayloadArchive();
+        if (p == null) {
+            return;
+        }
+
+        try {
+            Files.deleteIfExists(p);
+        } catch (IOException e) {
+            UUID instanceId = entry.getProcessEntry().getInstanceId();
+            logManager.warn(instanceId, "Unable to delete the temporary payload file: {}", p, e);
         }
     }
 

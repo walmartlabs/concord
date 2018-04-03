@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
@@ -63,18 +62,6 @@ public class StateImportingProcessor implements PayloadProcessor {
             stateManager.delete(tx, instanceId);
             stateManager.importPath(tx, instanceId, workspace, (path -> filter(instanceId, workspace, path)));
         });
-
-        Path dir = payload.getHeader(Payload.BASE_DIR, workspace);
-        try {
-            IOUtils.deleteRecursively(dir);
-        } catch (IOException e) {
-            log.warn("process ['{}'] -> error while removing a temporary directory: " + instanceId, e.getMessage());
-        }
-
-        payload = payload
-                .removeHeader(Payload.BASE_DIR)
-                .removeHeader(Payload.WORKSPACE_DIR)
-                .clearAttachments();
 
         return chain.process(payload);
     }

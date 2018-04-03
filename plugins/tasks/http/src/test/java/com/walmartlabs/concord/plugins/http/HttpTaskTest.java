@@ -90,7 +90,6 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         task.execute(mockContext);
         assertNotNull(response);
         assertNotNull(response.get("content"));
-        assertTrue(((String) response.get("content")).length() > 0);
     }
 
     @Test

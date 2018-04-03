@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.server.process.pipelines.processors;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,9 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import java.nio.file.Path;
-import java.util.concurrent.CompletableFuture;
+import com.walmartlabs.concord.server.process.Payload;
 
-public interface JobInstance {
+public interface FinalizerProcessor {
 
-    String instanceId();
-
-    Path workDir();
-
-    Path logFile();
-
-    void cancel();
-
-    CompletableFuture<?> future();
+    void process(Payload payload);
 }

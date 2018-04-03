@@ -29,6 +29,8 @@ import javax.inject.Named;
 @Named
 public class ResumePipeline extends Pipeline {
 
+    private final FinalizerProcessor finalizerProcessor;
+
     @Inject
     public ResumePipeline(Injector injector) {
         super(injector,
@@ -38,5 +40,12 @@ public class ResumePipeline extends Pipeline {
                 RequestDataStoringProcessor.class,
                 StateImportingProcessor.class,
                 EnqueueingProcessor.class);
+
+        this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);
+    }
+
+    @Override
+    protected FinalizerProcessor getFinalizerProcessor() {
+        return finalizerProcessor;
     }
 }

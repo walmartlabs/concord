@@ -30,6 +30,7 @@ import javax.inject.Named;
 public class ForkPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
+    private final FinalizerProcessor finalizerProcessor;
 
     @Inject
     public ForkPipeline(Injector injector) {
@@ -45,10 +46,16 @@ public class ForkPipeline extends Pipeline {
                 EnqueueingProcessor.class);
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);
+        this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);
     }
 
     @Override
     protected ExceptionProcessor getExceptionProcessor() {
         return exceptionProcessor;
+    }
+
+    @Override
+    protected FinalizerProcessor getFinalizerProcessor() {
+        return finalizerProcessor;
     }
 }

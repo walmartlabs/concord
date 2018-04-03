@@ -42,14 +42,23 @@ public abstract class Pipeline extends Chain {
             return super.process(payload);
         } catch (Exception e) {
             ExceptionProcessor p = getExceptionProcessor();
-            if(p != null) {
+            if (p != null) {
                 p.process(payload, e);
             }
             throw e;
+        } finally {
+            FinalizerProcessor p = getFinalizerProcessor();
+            if (p != null) {
+                p.process(payload);
+            }
         }
     }
 
     protected ExceptionProcessor getExceptionProcessor() {
+        return null;
+    }
+
+    protected FinalizerProcessor getFinalizerProcessor() {
         return null;
     }
 }

@@ -44,6 +44,7 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         // configuration from the user's request
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
@@ -58,6 +59,7 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path src = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
