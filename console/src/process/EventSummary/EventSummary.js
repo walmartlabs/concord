@@ -24,7 +24,6 @@ import { Header, Divider, Grid, Tab, Menu } from 'semantic-ui-react';
 import ConnectedConcordEventList from './ConcordEventList';
 import ConnectedEventPieChart from './EventPieChart';
 import ConnectedHostnameList from './HostnameList';
-import ConnectedAnsibleTaskList from './AnsibleTaskList';
 import StatusOverview from './StatusOverview';
 
 export class EventSummary extends Component {
@@ -61,8 +60,6 @@ export class EventSummary extends Component {
                                                     <ConnectedHostnameList />
                                                 </Grid.Column>
                                             </Grid>
-                                            <Divider horizontal />
-                                            <ConnectedAnsibleTaskList />
                                         </Tab.Pane>
                                     )
                                 },

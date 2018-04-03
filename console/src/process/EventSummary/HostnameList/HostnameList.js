@@ -18,7 +18,8 @@
  * =====
  */
 import * as React from 'react';
-import { Header, Menu, Input, Icon } from 'semantic-ui-react';
+import { Header, Menu, Input } from 'semantic-ui-react';
+import { HostnameListItem } from './HostnameListItem';
 
 export class HostnameList extends React.Component {
     constructor(props) {
@@ -54,13 +55,12 @@ export class HostnameList extends React.Component {
             const HostList = filteredHosts.map((host, index) => {
                 if (host !== 'undefined') {
                     return (
-                        <Menu.Item
-                            name={host}
-                            active={selectedHost === host}
+                        <HostnameListItem
+                            hostname={host}
                             key={index}
-                            onClick={() => setSelectedHostFn(host)}>
-                            {host} {selectedHost === host && <Icon name="selected radio" />}
-                        </Menu.Item>
+                            selectedHost={selectedHost}
+                            setSelectedHostFn={setSelectedHostFn}
+                        />
                     );
                 } else {
                     return null;

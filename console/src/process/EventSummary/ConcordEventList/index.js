@@ -50,30 +50,30 @@ export class ConnectedEventList extends React.Component {
                         <Table.Body>
                             {eventsByType.ELEMENT &&
                                 eventsByType.ELEMENT.map((value, index, arr) => {
-                                return (
-                                    <Table.Row key={index}>
-                                        <Table.Cell>
-                                            {index !== 0 &&
-                                            arr[index - 1].data.processDefinitionId ===
-                                                value.data.processDefinitionId ? null : (
-                                                <div>{value.data.processDefinitionId}</div>
-                                            )}
-                                        </Table.Cell>
-                                        <Table.Cell>{value.data.description}</Table.Cell>
-                                        <Table.Cell>
-                                            {index !== 0 &&
-                                            formatTimestamp(arr[index - 1].eventDate) ===
-                                                formatTimestamp(value.eventDate) ? (
-                                                <div>(same)</div>
-                                            ) : (
-                                                <div>{formatTimestamp(value.eventDate)}</div>
-                                            )}
-                                        </Table.Cell>
-                                        <Table.Cell>{value.data.line}</Table.Cell>
-                                        <Table.Cell>{value.data.column}</Table.Cell>
-                                    </Table.Row>
-                                );
-                            })}
+                                    return (
+                                        <Table.Row key={index}>
+                                            <Table.Cell>
+                                                {index !== 0 &&
+                                                arr[index - 1].data.processDefinitionId ===
+                                                    value.data.processDefinitionId ? null : (
+                                                    <div>{value.data.processDefinitionId}</div>
+                                                )}
+                                            </Table.Cell>
+                                            <Table.Cell>{value.data.description}</Table.Cell>
+                                            <Table.Cell>
+                                                {index !== 0 &&
+                                                formatTimestamp(arr[index - 1].eventDate) ===
+                                                    formatTimestamp(value.eventDate) ? (
+                                                    <div>(same)</div>
+                                                ) : (
+                                                    <div>{formatTimestamp(value.eventDate)}</div>
+                                                )}
+                                            </Table.Cell>
+                                            <Table.Cell>{value.data.line}</Table.Cell>
+                                            <Table.Cell>{value.data.column}</Table.Cell>
+                                        </Table.Row>
+                                    );
+                                })}
                         </Table.Body>
                     </Table>
                 </div>
