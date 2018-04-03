@@ -53,6 +53,8 @@ import java.nio.file.attribute.FileAttribute;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import static com.walmartlabs.concord.plugins.http.HttpTaskUtils.getHttpEntity;
@@ -96,10 +98,10 @@ public class SimpleHttpClient {
 
             log.info("Response status code: {}", httpResponse.getStatusLine().getStatusCode());
 
-            HttpTaskResponse response = new HttpTaskResponse();
-
+            Map<String, Object> response = new HashMap<>();
+            String responseString = "";
+            boolean isSuccess = false;
             if (Response.Status.Family.SUCCESSFUL == Response.Status.Family.familyOf(httpResponse.getStatusLine().getStatusCode())) {
-                String responseString;
                 if (config.getResponseType() == ResponseType.FILE) {
                     responseString = storeFile(httpResponse.getEntity());
                 } else {
@@ -109,13 +111,14 @@ public class SimpleHttpClient {
                         throw new IllegalStateException("Invalid JSON response received -> " + responseString);
                     }
                 }
-
-                response.setSuccess(true);
-                response.setContent(responseString);
+                isSuccess = true;
             } else {
-                response.setErrorString(EntityUtils.toString(httpResponse.getEntity()));
+                response.put("errorString", EntityUtils.toString(httpResponse.getEntity()));
             }
-            response.setStatusCode(httpResponse.getStatusLine().getStatusCode());
+
+            response.put("success", isSuccess);
+            response.put("content", responseString);
+            response.put("statusCode", httpResponse.getStatusLine().getStatusCode());
 
             return new ClientResponse(response);
         }
@@ -242,17 +245,17 @@ public class SimpleHttpClient {
     }
 
     /**
-     * ClientResponse which wraps the {@link HttpTaskResponse}. It is used to prevent the user to call the getResponse Method
+     * ClientResponse which wraps the response map. It is used to prevent the user to call the getResponse Method
      * without executing the request.
      */
     public class ClientResponse {
-        private HttpTaskResponse response;
+        private Map<String, Object> response;
 
-        private ClientResponse(HttpTaskResponse response) {
+        private ClientResponse(Map<String, Object> response) {
             this.response = response;
         }
 
-        public HttpTaskResponse getResponse() {
+        public Map<String, Object> getResponse() {
             return response;
         }
     }

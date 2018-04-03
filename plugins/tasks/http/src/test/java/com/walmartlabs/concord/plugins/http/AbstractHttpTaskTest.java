@@ -32,6 +32,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,9 +50,9 @@ public abstract class AbstractHttpTaskTest {
 
     protected HttpTask task;
     /**
-     * This will be use to hold the {@link HttpTaskResponse response} when {@link HttpTask} calls the {@link Context#setVariable(String, Object)}
+     * This will be use to hold the response when {@link HttpTask} calls the {@link Context#setVariable(String, Object)}
      */
-    protected HttpTaskResponse response;
+    protected Map<String, Object> response;
 
     @Before
     public void setup() {
@@ -80,7 +81,7 @@ public abstract class AbstractHttpTaskTest {
         when(ctx.getVariable("response")).thenReturn(responseType);
         when(ctx.getVariable("out")).thenReturn("rsp");
         doAnswer((Answer<Void>) invocation -> {
-            response = (HttpTaskResponse) invocation.getArguments()[1];
+            response = (Map<String, Object>) invocation.getArguments()[1];
             return null;
         }).when(ctx).setVariable(anyString(), any());
     }

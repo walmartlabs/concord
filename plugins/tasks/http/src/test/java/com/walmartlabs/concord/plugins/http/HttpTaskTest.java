@@ -46,8 +46,8 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/json");
         task.execute(mockContext);
         verify(getRequestedFor(urlEqualTo("/json")));
-        assertEquals(response.getStatusCode(), 200);
-        assertTrue(response.getErrorString().length() == 0);
+        assertEquals(response.get("statusCode"), 200);
+        assertNull(response.get("errorString"));
     }
 
     @Test
@@ -89,8 +89,8 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/json");
         task.execute(mockContext);
         assertNotNull(response);
-        assertNotNull(response.getContent());
-        assertTrue(response.getContent().length() > 0);
+        assertNotNull(response.get("content"));
+        assertTrue(((String) response.get("content")).length() > 0);
     }
 
     @Test
@@ -98,8 +98,8 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/unsuccessful");
         task.execute(mockContext);
         assertNotNull(response);
-        assertFalse(response.isSuccess());
-        assertTrue(response.getErrorString().length() > 0);
+        assertFalse((Boolean) response.get("success"));
+        assertTrue(((String) response.get("errorString")).length() > 0);
     }
 
     @Test
@@ -108,7 +108,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         when(mockContext.getVariable("body")).thenReturn("src/test/resources/__files/file.bin");
         task.execute(mockContext);
         assertNotNull(response);
-        assertTrue(response.isSuccess());
+        assertTrue((Boolean)response.get("success"));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -125,7 +125,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
         task.execute(mockContext);
         assertNotNull(response);
-        assertTrue(response.isSuccess());
+        assertTrue((Boolean) response.get("success"));
     }
 
     @Test
@@ -134,7 +134,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
         task.execute(mockContext);
         assertNotNull(response);
-        assertTrue(response.isSuccess());
+        assertTrue((Boolean)response.get("success"));
     }
 
     @Test
@@ -143,7 +143,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
         task.execute(mockContext);
         assertNotNull(response);
-        assertTrue(response.isSuccess());
+        assertTrue((Boolean) response.get("success"));
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -335,9 +335,9 @@ public class Configuration {
             } else if (ctx.getVariable(RESPONSE_KEY) == null) {
                 throw new IllegalArgumentException("('" + RESPONSE_KEY + "') argument is missing");
             } else if (REQUEST_POST_KEY.equals(ctx.getVariable(METHOD_KEY)) && ctx.getVariable(REQUEST_KEY) == null) {
-                throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + " method");
+                throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + "') method");
             } else if (REQUEST_POST_KEY.equals(ctx.getVariable(METHOD)) && ctx.getVariable(BODY_KEY) == null) {
-                throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + " method");
+                throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + "') method");
             }
         }
     }
