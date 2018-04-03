@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: show Ansible host events in a modal popup. 
+
 ### Changed
 
 - http: parse JSON responses;
