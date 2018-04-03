@@ -99,36 +99,43 @@ public class RunPlaybookTask2 implements Task {
 
         final Map<String, String> env = addExtraEnv(defaultEnv(), args);
 
-        PlaybookProcessBuilder b = pb.build(playbook, inventoryPath.toString())
-                .withAttachmentsDir(toString(attachmentsPath))
-                .withCfgFile(toString(cfgFile))
-                .withPrivateKey(toString(privateKeyPath))
-                .withVaultPasswordFile(toString(vaultPasswordPath))
-                .withUser(trim(getString(args, AnsibleConstants.USER_KEY)))
-                .withTags(trim(getListAsString(args, AnsibleConstants.TAGS_KEY)))
-                .withSkipTags(trim(getListAsString(args, AnsibleConstants.SKIP_TAGS_KEY)))
-                .withExtraVars(extraVars)
-                .withLimit(getLimit(args))
-                .withDebug(debug)
-                .withVerboseLevel(getVerboseLevel(args))
-                .withEnv(env);
+        GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretStore);
+        groupVarsProcessor.process(txId, args, workDir);
 
-        Process p = b.build();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            log.info("ANSIBLE: {}", line);
-        }
+        try {
+            PlaybookProcessBuilder b = pb.build(playbook, inventoryPath.toString())
+                    .withAttachmentsDir(toString(attachmentsPath))
+                    .withCfgFile(toString(cfgFile))
+                    .withPrivateKey(toString(privateKeyPath))
+                    .withVaultPasswordFile(toString(vaultPasswordPath))
+                    .withUser(trim(getString(args, AnsibleConstants.USER_KEY)))
+                    .withTags(trim(getListAsString(args, AnsibleConstants.TAGS_KEY)))
+                    .withSkipTags(trim(getListAsString(args, AnsibleConstants.SKIP_TAGS_KEY)))
+                    .withExtraVars(extraVars)
+                    .withLimit(getLimit(args))
+                    .withDebug(debug)
+                    .withVerboseLevel(getVerboseLevel(args))
+                    .withEnv(env);
 
-        int code = p.waitFor();
-        log.debug("execution -> done, code {}", code);
+            Process p = b.build();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                log.info("ANSIBLE: {}", line);
+            }
 
-        updateAnsibleStats(workDir, code);
+            int code = p.waitFor();
+            log.debug("execution -> done, code {}", code);
 
-        if (code != SUCCESS_EXIT_CODE) {
-            saveRetryFile(args, workDir);
-            log.warn("Playbook is finished with code {}", code);
-            throw new IllegalStateException("Process finished with with exit code " + code);
+            updateAnsibleStats(workDir, code);
+
+            if (code != SUCCESS_EXIT_CODE) {
+                saveRetryFile(args, workDir);
+                log.warn("Playbook is finished with code {}", code);
+                throw new IllegalStateException("Process finished with with exit code " + code);
+            }
+        } finally {
+            groupVarsProcessor.postProcess();
         }
     }
 
@@ -215,25 +222,26 @@ public class RunPlaybookTask2 implements Task {
         Map<String, Object> args = new HashMap<>();
 
         addIfPresent(ctx, args, AnsibleConstants.CONFIG_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.PLAYBOOK_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.EXTRA_VARS_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.EXTRA_ENV_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_FILE_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.SKIP_TAGS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.DOCKER_OPTS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.EXTRA_ENV_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.EXTRA_VARS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.FORCE_PULL_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.GROUP_VARS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.LIMIT_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.PLAYBOOK_KEY);
         addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.RETRY_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.LIMIT_KEY);
         addIfPresent(ctx, args, AnsibleConstants.SAVE_RETRY_FILE);
-        addIfPresent(ctx, args, AnsibleConstants.DOCKER_OPTS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.SKIP_TAGS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
 
         String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
@@ -563,7 +571,7 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    private void saveRetryFile(Map<String, Object> args, Path workDir) throws IOException {
+    private static void saveRetryFile(Map<String, Object> args, Path workDir) throws IOException {
         boolean saveRetryFiles = getBoolean(args, AnsibleConstants.SAVE_RETRY_FILE, false);
         if (!saveRetryFiles) {
             return;

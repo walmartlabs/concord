@@ -21,6 +21,8 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.io.Files;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.OrganizationResource;
 import com.walmartlabs.concord.server.api.process.*;
 import org.junit.Test;
 
@@ -255,5 +257,41 @@ public class AnsibleIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*_callbacks:myCallbackDir.*", ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testGroupVars() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        addPlainSecret(orgName, secretName, false, null, "greetings: \"Hi there!\"".getBytes());
+
+        // ---
+
+        URI dir = AnsibleIT.class.getResource("ansibleGroupVars").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.myOrgName", orgName);
+        input.put("arguments.mySecretName", secretName);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*\"msg\":.*Hi there!.*", ab);
     }
 }

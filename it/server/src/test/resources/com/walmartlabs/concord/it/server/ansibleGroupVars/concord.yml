@@ -1,0 +1,15 @@
+flows:
+  default:
+    - task: ansible
+      in:
+        playbook: playbook/hello.yml
+        groupVars:
+        - local:
+            orgName: ${myOrgName}
+            secretName: ${mySecretName}
+        inventory:
+          local:
+            hosts:
+            - "127.0.0.1"
+            vars:
+              ansible_connection: "local"

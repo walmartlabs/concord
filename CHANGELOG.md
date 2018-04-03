@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible: support for exporting secrets as `group_var` files;
 - concord-console: show Ansible host events in a modal popup. 
 
 ### Changed

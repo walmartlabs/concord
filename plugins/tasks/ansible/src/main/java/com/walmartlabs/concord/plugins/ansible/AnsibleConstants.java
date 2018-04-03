@@ -87,6 +87,8 @@ public final class AnsibleConstants {
 
     public static final String DOCKER_OPTS_KEY = "dockerOpts";
 
+    public static final String GROUP_VARS_KEY = "groupVars";
+
     private AnsibleConstants() {
     }
 }
