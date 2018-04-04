@@ -16,6 +16,8 @@
     <properties>
         <docker.host.addr>127.0.0.1</docker.host.addr>
         <it.server.port>8001</it.server.port>
+        <db.image>library/postgres</db.image>
+        <server.image>walmartlabs/concord-server</server.image>
     </properties>
 
     <dependencies>
@@ -127,10 +129,6 @@
                                             <time>30000</time>
                                         </wait>
                                         <cmd>server</cmd>
-                                        <log>
-                                            <enabled>true</enabled>
-                                        </log>
-
                                         <volumes>
                                             <bind>
                                                 <volume>${project.build.outputDirectory}/com/walmartlabs/concord/it/keywhiz/data:/keywhiz</volume>
@@ -139,7 +137,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>hub.docker.prod.walmart.com/library/postgres</name>
+                                    <name>${db.image}</name>
                                     <alias>db</alias>
                                     <run>
                                         <ports>
@@ -154,15 +152,12 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>walmartlabs/concord-server</name>
+                                    <name>${server.image}</name>
                                     <alias>server</alias>
                                     <run>
                                         <network>
                                             <mode>host</mode>
                                         </network>
-                                        <log>
-                                            <enabled>true</enabled>
-                                        </log>
                                         <env>
                                             <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
                                             <DB_DIALECT>POSTGRES</DB_DIALECT>
@@ -189,6 +184,14 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+
+        <profile>
+            <id>walmart</id>
+            <properties>
+                <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
+                <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
+            </properties>
         </profile>
     </profiles>
 </project>
