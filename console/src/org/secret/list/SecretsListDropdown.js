@@ -29,16 +29,26 @@ const LOCKED_SECRET_TYPE = 'PASSWORD';
 
 class SecretsListDropdown extends Component {
     componentDidMount() {
-        const { loadFn, org } = this.props;
+        const { loadFn, org, loadSecretStoreType } = this.props;
+        loadSecretStoreType();
         loadFn(org.name);
     }
 
     render() {
-        const { data, isLoading, loadFn, org, ...rest } = this.props;
+        const {
+            data,
+            isLoading,
+            loadFn,
+            loadSecretStoreType,
+            org,
+            secretStoreTypeList,
+            ...rest
+        } = this.props;
 
         let options = [];
         if (data) {
-            options = data.map(({ name, type, storageType }) => {
+            const newdata = filter(secretStoreTypeList, data);
+            options = newdata.map(({ name, type, storageType, storeType }) => {
                 const icon = storageType === LOCKED_SECRET_TYPE ? 'lock' : undefined;
                 return { text: `${name} (${type})`, value: name, icon: icon };
             });
@@ -48,14 +58,35 @@ class SecretsListDropdown extends Component {
     }
 }
 
+const filter = (secretStoreTypeList, data) => {
+    var activeSecretlist = [];
+    for (var i = 0; i < data.length; i++) {
+        if (exist(secretStoreTypeList, data[i].storeType)) {
+            activeSecretlist.push(data[i]);
+        }
+    }
+    return activeSecretlist;
+};
+
+const exist = (secretStoreTypeList, storeType) => {
+    for (var i = 0; i < secretStoreTypeList.length; i++) {
+        if (secretStoreTypeList[i].storeType === storeType) {
+            return true;
+        }
+    }
+    return false;
+};
+
 const mapStateToProps = ({ session, secretList }) => ({
     org: getCurrentOrg(session),
     data: selectors.getRows(secretList),
+    secretStoreTypeList: selectors.getSecretStoreTypeList(secretList),
     isLoading: selectors.getIsLoading(secretList)
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    loadFn: (orgName) => dispatch(actions.fetchSecretList(orgName))
+    loadFn: (orgName) => dispatch(actions.fetchSecretList(orgName)),
+    loadSecretStoreType: () => dispatch(actions.getSecretStoreTypeList())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(SecretsListDropdown);

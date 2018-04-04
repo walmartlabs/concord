@@ -28,12 +28,25 @@ import { actions, reducers, sagas, selectors } from './crud';
 import * as repoConstants from './RepositoryPopup/constants';
 import { getCurrentOrg } from '../session/reducers';
 
+const isSecretStoreTypeEnabled = (index, list) => {
+    if (list.length > 0) {
+        const secretStoreType = index['secretStoreType'];
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].storeType === secretStoreType) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+};
+
 /**
  * Converts the server's representation of a project object into the form's format.
  * @param data
  * @return {*}
  */
-const rawToForm = (data) => {
+const rawToForm = (data, list) => {
     if (!data.repositories) {
         return data;
     }
@@ -43,11 +56,11 @@ const rawToForm = (data) => {
         const src = data.repositories[k];
 
         const dst = { name: k, ...src };
+        dst.enable = isSecretStoreTypeEnabled(dst, list);
         dst.sourceType = repoConstants.BRANCH_SOURCE_TYPE;
         if (dst.commitId) {
             dst.sourceType = repoConstants.REV_SOURCE_TYPE;
         }
-
         repos.push(dst);
     }
 
@@ -77,6 +90,8 @@ const formToRaw = (data) => {
 
 class ProjectPage extends Component {
     componentDidMount() {
+        const { loadSecretStoreType } = this.props;
+        loadSecretStoreType();
         this.load();
     }
 
@@ -106,8 +121,7 @@ class ProjectPage extends Component {
     }
 
     render() {
-        const { data, createNew, error, loading } = this.props;
-
+        const { data, createNew, secretStoreTypeList, error, loading } = this.props;
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.load()} />;
         }
@@ -122,7 +136,7 @@ class ProjectPage extends Component {
                 <ProjectForm
                     createNew={createNew}
                     originalName={data.name}
-                    initialValues={rawToForm(data)}
+                    initialValues={rawToForm(data, secretStoreTypeList)}
                     onSubmit={(data) => this.handleSave(data)}
                 />
             </div>
@@ -136,7 +150,8 @@ const mapStateToProps = ({ project, session }, { params: { projectName } }) => (
     createNew: projectName === '_new',
     data: selectors.getData(project),
     error: selectors.getError(project),
-    loading: selectors.isLoading(project)
+    loading: selectors.isLoading(project),
+    secretStoreTypeList: selectors.getSecretStoreTypeData(project)
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -151,7 +166,9 @@ const mapDispatchToProps = (dispatch) => ({
         const o = formToRaw(data);
         o.orgName = orgName;
         dispatch(actions.saveData(o, [pushHistory('/project/list')]));
-    }
+    },
+
+    loadSecretStoreType: () => dispatch(actions.getSecretStoreType())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProjectPage);

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,6 +72,15 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
         try {
             SecretType type = assertType(input);
+            SecretStoreType storeType = assertStoreType(input);
+
+            // check if the given secret source type is enabled or not
+            boolean isStoreActive = secretManager.getActiveSecretStores().stream()
+                    .anyMatch(store -> store.getType() == storeType);
+
+            if (!isStoreActive) {
+                throw new ValidationErrorsException("Secret store of type " + storeType + " is not available!");
+            }
 
             String name = assertName(input);
             assertUnique(org.getId(), name);
@@ -82,13 +91,13 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
             switch (type) {
                 case KEY_PAIR: {
-                    return createKeyPair(org.getId(), name, storePwd, visibility, input);
+                    return createKeyPair(org.getId(), name, storePwd, visibility, input, storeType);
                 }
                 case USERNAME_PASSWORD: {
-                    return createUsernamePassword(org.getId(), name, storePwd, visibility, input);
+                    return createUsernamePassword(org.getId(), name, storePwd, visibility, input, storeType);
                 }
                 case DATA: {
-                    return createData(org.getId(), name, storePwd, visibility, input);
+                    return createData(org.getId(), name, storePwd, visibility, input, storeType);
                 }
                 default:
                     throw new ValidationErrorsException("Unsupported secret type: " + type);
@@ -151,39 +160,41 @@ public class SecretResourceImpl implements SecretResource, Resource {
         return new GenericOperationResultResponse(OperationResult.UPDATED);
     }
 
-    private PublicKeyResponse createKeyPair(UUID orgId, String name, String storePassword, SecretVisibility visibility, MultipartInput input) throws IOException {
+    private PublicKeyResponse createKeyPair(UUID orgId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, SecretStoreType storeType) throws IOException {
         DecryptedKeyPair k;
 
         InputStream publicKey = MultipartUtils.getStream(input, "public");
         if (publicKey != null) {
             InputStream privateKey = assertStream(input, "private");
             try {
-                k = secretManager.createKeyPair(orgId, name, storePassword, publicKey, privateKey, visibility);
+                k = secretManager.createKeyPair(orgId, name, storePassword, publicKey, privateKey, visibility, storeType);
             } catch (IllegalArgumentException e) {
                 throw new ValidationErrorsException(e.getMessage());
             }
         } else {
-            k = secretManager.createKeyPair(orgId, name, storePassword, visibility);
+            k = secretManager.createKeyPair(orgId, name, storePassword, visibility, storeType);
         }
 
         return new PublicKeyResponse(k.getId(), OperationResult.CREATED, storePassword, new String(k.getData()));
     }
 
     private SecretOperationResponse createUsernamePassword(UUID orgId, String name, String storePassword,
-                                                           SecretVisibility visibility, MultipartInput input) {
+                                                           SecretVisibility visibility, MultipartInput input,
+                                                           SecretStoreType storeType) {
 
         String username = assertString(input, "username");
         String password = assertString(input, "password");
 
-        DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, name, storePassword, username, password.toCharArray(), visibility);
+        DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, name, storePassword, username, password.toCharArray(), visibility, storeType);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
     private SecretOperationResponse createData(UUID orgId, String name, String storePassword,
-                                               SecretVisibility visibility, MultipartInput input) throws IOException {
+                                               SecretVisibility visibility, MultipartInput input,
+                                               SecretStoreType storeType) throws IOException {
 
         InputStream data = assertStream(input, "data");
-        DecryptedBinaryData e = secretManager.createBinaryData(orgId, name, storePassword, data, visibility);
+        DecryptedBinaryData e = secretManager.createBinaryData(orgId, name, storePassword, data, visibility, storeType);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
@@ -231,6 +242,19 @@ public class SecretResourceImpl implements SecretResource, Resource {
             return SecretType.valueOf(s.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ValidationErrorsException("Unsupported secret type: " + s);
+        }
+    }
+
+    private SecretStoreType assertStoreType(MultipartInput input) throws IOException {
+        String s = MultipartUtils.getString(input, "storeType");
+        if (s == null) {
+            return secretManager.getDefaultSecretStoreType();
+        }
+
+        try {
+            return SecretStoreType.valueOf(s.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ValidationErrorsException("Unsupported secret store type: " + s);
         }
     }
 

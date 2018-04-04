@@ -149,7 +149,7 @@ message TKvPutLongRequest {
 
 // SECRET STORE SERVICE
 
-service TSecretStoreService {
+service TSecretReaderService {
 
     rpc fetch(TFetchSecretRequest) returns (TFetchSecretResponse);
     rpc decrypt(TDecryptRequest) returns (TDecryptResponse);

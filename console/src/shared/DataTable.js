@@ -21,7 +21,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Table } from 'semantic-ui-react';
 
-const dataTable = ({ cols, rows, headerFn, cellFn, ...rest }) => (
+const dataTable = ({ cols, rows, headerFn, cellFn, list, ...rest }) => (
     <Table singleLine {...rest}>
         <Table.Header>
             <Table.Row>
@@ -36,13 +36,43 @@ const dataTable = ({ cols, rows, headerFn, cellFn, ...rest }) => (
             {rows.map((r, idx) => (
                 <Table.Row key={idx}>
                     {cols.map((c) => (
-                        <Table.Cell key={c.key}>{cellFn ? cellFn(r, c.key) : r[c.key]}</Table.Cell>
+                        <Table.Cell key={c.key} style={{ ...getTextColor(r, list, c.key) }}>
+                            {cellFn ? cellFn(r, c.key, isButtonEnable(r, list)) : r[c.key]}
+                        </Table.Cell>
                     ))}
                 </Table.Row>
             ))}
         </Table.Body>
     </Table>
 );
+
+const isButtonEnable = (index, list) => {
+    if (list && list.length > 0) {
+        const storeType = index['storeType'];
+        if (!exist(list, storeType)) {
+            return true;
+        }
+        return false;
+    }
+};
+
+const getTextColor = (index, list, key) => {
+    if (list && list.length > 0) {
+        const storeType = index['storeType'];
+        if (!exist(list, storeType)) {
+            return { color: 'red' };
+        }
+    }
+};
+
+const exist = (activeStoreList, store) => {
+    for (var i = 0; i < activeStoreList.length; i++) {
+        if (activeStoreList[i].storeType === store) {
+            return true;
+        }
+    }
+    return false;
+};
 
 const columnType = PropTypes.shape({
     key: PropTypes.any.isRequired,
@@ -55,7 +85,8 @@ dataTable.propTypes = {
     cols: PropTypes.arrayOf(columnType).isRequired,
     rows: PropTypes.arrayOf(PropTypes.object).isRequired,
     headerFn: PropTypes.any,
-    cellFn: PropTypes.any
+    cellFn: PropTypes.any,
+    list: PropTypes.any
 };
 
 export default dataTable;

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.it.server;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
 import com.walmartlabs.concord.server.api.org.secret.SecretOperationResponse;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
@@ -31,8 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class AbstractServerIT {
 
@@ -102,19 +101,8 @@ public abstract class AbstractServerIT {
         return serverClient.request(uri, input, entityType);
     }
 
-    private static final char[] RANDOM_CHARS = "abcdef0123456789".toCharArray();
-
     protected String randomString() {
-        StringBuilder b = new StringBuilder();
-        b.append(System.currentTimeMillis()).append("_");
-
-        Random rng = ThreadLocalRandom.current();
-        for (int i = 0; i < 6; i++) {
-            int n = rng.nextInt(RANDOM_CHARS.length);
-            b.append(RANDOM_CHARS[n]);
-        }
-
-        return b.toString();
+        return ITUtils.randomString();
     }
 
     protected static Path createTempDir() throws IOException {

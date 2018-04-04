@@ -24,30 +24,29 @@ import com.google.protobuf.ByteString;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.rpc.TSecretStoreServiceGrpc.TSecretStoreServiceBlockingStub;
+import com.walmartlabs.concord.rpc.TSecretReaderServiceGrpc.TSecretReaderServiceBlockingStub;
 import com.walmartlabs.concord.sdk.ClientException;
 import com.walmartlabs.concord.sdk.Secret;
-import com.walmartlabs.concord.sdk.SecretStoreService;
+import com.walmartlabs.concord.sdk.SecretReaderService;
 import io.grpc.ManagedChannel;
 
 import javax.xml.bind.DatatypeConverter;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-public class SecretStoreServiceImpl implements SecretStoreService {
+public class SecretReaderServiceImpl implements SecretReaderService {
 
     private static final long FETCH_TIMEOUT = 5000;
     private static final long UPDATE_TIMEOUT = 5000;
 
     private final ManagedChannel channel;
 
-    public SecretStoreServiceImpl(ManagedChannel channel) {
+    public SecretReaderServiceImpl(ManagedChannel channel) {
         this.channel = channel;
     }
 
     @Override
     public Secret fetch(String instanceId, String orgName, String secretName, String password) throws ClientException {
-        TSecretStoreServiceBlockingStub blockingStub = TSecretStoreServiceGrpc.newBlockingStub(channel)
+        TSecretReaderServiceBlockingStub blockingStub = TSecretReaderServiceGrpc.newBlockingStub(channel)
                 .withDeadlineAfter(FETCH_TIMEOUT, TimeUnit.MILLISECONDS);
 
         TFetchSecretRequest.Builder req = TFetchSecretRequest.newBuilder()
@@ -95,7 +94,7 @@ public class SecretStoreServiceImpl implements SecretStoreService {
     public String decryptString(String instanceId, String s) throws ClientException {
         byte[] input = DatatypeConverter.parseBase64Binary(s);
 
-        TSecretStoreServiceBlockingStub blockingStub = TSecretStoreServiceGrpc.newBlockingStub(channel)
+        TSecretReaderServiceBlockingStub blockingStub = TSecretReaderServiceGrpc.newBlockingStub(channel)
                 .withDeadlineAfter(UPDATE_TIMEOUT, TimeUnit.MILLISECONDS);
 
         TDecryptResponse resp = blockingStub.decrypt(TDecryptRequest.newBuilder()

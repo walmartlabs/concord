@@ -20,7 +20,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Button, Header, Popup, Icon } from 'semantic-ui-react';
+import { Button, Header, Popup, Icon, Message } from 'semantic-ui-react';
 
 import DataTable from '../../../shared/DataTable';
 import RefreshButton from '../../../shared/RefreshButton';
@@ -36,8 +36,9 @@ const columns = [
     { key: 'visibility', label: 'Access', collapsing: true },
     { key: 'name', label: 'Name' },
     { key: 'type', label: 'Type' },
-    { key: 'storeType', label: 'Store type' },
+    { key: 'encryptedByType', label: 'Encrypted by' },
     { key: 'owner', label: 'Owner' },
+    { key: 'storeType', label: 'Store type' },
     { key: 'actions', label: 'Actions', collapsing: true }
 ];
 
@@ -46,7 +47,7 @@ const ownerKey = 'owner';
 const visibilityKey = 'visibility';
 const actionsKey = 'actions';
 
-const cellFn = (orgName, deletePopupFn, getPublicKey) => (row, key) => {
+const cellFn = (orgName, deletePopupFn, getPublicKey) => (row, key, keyDisabled) => {
     if (key === nameKey) {
         return <span>{row[key]}</span>;
     }
@@ -71,10 +72,12 @@ const cellFn = (orgName, deletePopupFn, getPublicKey) => (row, key) => {
         return (
             <div style={{ textAlign: 'right' }}>
                 {row.type === 'KEY_PAIR' &&
-                    row.storeType === 'SERVER_KEY' && (
+                    row.encryptedByType === 'SERVER_KEY' && (
                         <Popup
                             trigger={
                                 <Button
+                                    primary
+                                    disabled={keyDisabled}
                                     color="blue"
                                     icon="key"
                                     onClick={() => getPublicKey(orgName, name)}
@@ -88,7 +91,9 @@ const cellFn = (orgName, deletePopupFn, getPublicKey) => (row, key) => {
                 <Popup
                     trigger={
                         <Button
+                            primary
                             icon="delete"
+                            disabled={keyDisabled}
                             color="red"
                             onClick={() => deletePopupFn(orgName, name)}
                         />
@@ -117,13 +122,21 @@ class SecretTable extends Component {
     }
 
     update() {
-        const { fetchData, org } = this.props;
+        const { fetchData, getSecretStoreTypeList, org } = this.props;
         fetchData(org.name);
+        getSecretStoreTypeList(org.name);
     }
 
     render() {
-        const { error, loading, data, org, deletePopupFn, getPublicKey } = this.props;
-
+        const {
+            error,
+            loading,
+            data,
+            secretStoreTypelist,
+            org,
+            deletePopupFn,
+            getPublicKey
+        } = this.props;
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.update()} />;
         }
@@ -133,10 +146,17 @@ class SecretTable extends Component {
                 <Header as="h3">
                     <RefreshButton loading={loading} onClick={() => this.update()} />Secrets
                 </Header>
+                <div style={{ display: 'none', ...hideshow(data, secretStoreTypelist) }}>
+                    <Message size="tiny" negative>
+                        One or more secrets are defined in disabled secret store (and not available
+                        at the moment). Please contact your administrator.
+                    </Message>
+                </div>
                 <DataTable
                     cols={columns}
                     rows={data}
                     cellFn={cellFn(org.name, deletePopupFn, getPublicKey)}
+                    list={secretStoreTypelist}
                 />
             </div>
         );
@@ -150,11 +170,32 @@ SecretTable.propTypes = {
     deletePopupFn: PropTypes.func
 };
 
+const exist = (storeType, secretStoreTypelist) => {
+    for (var i = 0; i < secretStoreTypelist.length; i++) {
+        if (secretStoreTypelist[i].storeType === storeType) {
+            return true;
+        }
+    }
+    return false;
+};
+
+const hideshow = (secretList, secretStoreTypelist) => {
+    if (secretStoreTypelist) {
+        for (var i = 0; i < secretList.length; i++) {
+            if (!exist(secretList[i].storeType, secretStoreTypelist)) {
+                return { display: 'block' };
+            }
+        }
+        return { display: 'none' };
+    }
+};
+
 const mapStateToProps = ({ session, secretList }) => ({
     org: getCurrentOrg(session),
     error: selectors.getError(secretList),
     loading: selectors.getIsLoading(secretList),
-    data: selectors.getRows(secretList)
+    data: selectors.getRows(secretList),
+    secretStoreTypelist: selectors.getSecretStoreTypeList(secretList)
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -171,6 +212,12 @@ const mapDispatchToProps = (dispatch) => ({
             type: actionTypes.USER_SECRET_PUBLICKEY_REQUEST,
             orgName,
             name
+        });
+    },
+
+    getSecretStoreTypeList: (orgName) => {
+        dispatch({
+            type: actionTypes.USER_SECRET_STORE_TYPE_REQUEST
         });
     }
 });

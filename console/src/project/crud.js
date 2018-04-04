@@ -20,13 +20,15 @@
 // @flow
 import DataItem from '../shared/DataItem';
 import * as api from './api';
+import * as secretapi from '../org/secret/list/api';
 
 const { actions, reducers, selectors, sagas } = DataItem(
     'project',
     { visibility: 'PUBLIC' },
     api.fetchProject,
     api.updateProject,
-    api.deleteProject
+    api.deleteProject,
+    secretapi.getSecretStoreTypeList
 );
 
 export { actions, reducers, selectors, sagas };

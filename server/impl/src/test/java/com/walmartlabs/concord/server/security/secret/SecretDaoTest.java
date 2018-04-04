@@ -20,9 +20,10 @@ package com.walmartlabs.concord.server.security.secret;
  * =====
  */
 
-import com.walmartlabs.concord.common.secret.SecretStoreType;
+import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -50,7 +51,8 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration());
-        UUID secretId = secretDao.insert(orgId, secretName, null, SecretType.KEY_PAIR, SecretStoreType.SERVER_KEY, null, new byte[]{0, 1, 2});
+        UUID secretId = secretDao.insert(orgId, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, SecretStoreType.CONCORD,null);
+        secretDao.updateData(secretId, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();
         RepositoryDao repositoryDao = new RepositoryDao(getConfiguration());

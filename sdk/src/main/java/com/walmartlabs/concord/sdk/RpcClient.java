@@ -24,7 +24,7 @@ public interface RpcClient {
 
     KvService getKvService();
 
-    SecretStoreService getSecretStoreService();
+    SecretReaderService getSecretReaderService();
 
     EventService getEventService();
 }

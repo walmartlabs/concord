@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,17 +24,16 @@ import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
-import com.walmartlabs.concord.common.secret.SecretStoreType;
+import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretOwner;
-import com.walmartlabs.concord.server.api.org.secret.SecretType;
-import com.walmartlabs.concord.server.api.org.secret.SecretVisibility;
+import com.walmartlabs.concord.server.api.org.secret.*;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
+import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
+import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -47,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -61,16 +61,20 @@ public class SecretManager {
     private final OrganizationManager orgManager;
     private final UserDao userDao;
 
+    private final SecretStoreProvider secretStoreProvider;
+
     @Inject
     public SecretManager(SecretDao secretDao,
                          SecretStoreConfiguration secretCfg,
                          OrganizationManager orgManager,
-                         UserDao userDao) {
+                         UserDao userDao,
+                         SecretStoreProvider secretStoreProvider) {
 
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
         this.orgManager = orgManager;
         this.userDao = userDao;
+        this.secretStoreProvider = secretStoreProvider;
     }
 
     public SecretEntry assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
@@ -125,44 +129,48 @@ public class SecretManager {
     }
 
     public DecryptedKeyPair createKeyPair(UUID orgId, String name, String storePassword,
-                                          SecretVisibility visibility) throws IOException {
+                                          SecretVisibility visibility, SecretStoreType secretStoreType) {
 
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = KeyPairUtils.create();
-        UUID id = store(name, orgId, k, storePassword, visibility);
+        UUID id = store(name, orgId, k, storePassword, visibility, secretStoreType);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
     public DecryptedKeyPair createKeyPair(UUID orgId, String name, String storePassword,
-                                          InputStream publicKey, InputStream privateKey, SecretVisibility visibility) throws IOException {
+                                          InputStream publicKey,
+                                          InputStream privateKey, SecretVisibility visibility,
+                                          SecretStoreType secretStoreType) throws IOException {
 
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = KeyPairUtils.create(publicKey, privateKey);
         validate(k);
 
-        UUID id = store(name, orgId, k, storePassword, visibility);
+        UUID id = store(name, orgId, k, storePassword, visibility, secretStoreType);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
     public DecryptedUsernamePassword createUsernamePassword(UUID orgId, String name, String storePassword,
-                                                            String username, char[] password, SecretVisibility visibility) {
+                                                            String username, char[] password, SecretVisibility visibility,
+                                                            SecretStoreType secretStoreType) {
 
         orgManager.assertAccess(orgId, true);
 
         UsernamePassword p = new UsernamePassword(username, password);
-        UUID id = store(name, orgId, p, storePassword, visibility);
+        UUID id = store(name, orgId, p, storePassword, visibility, secretStoreType);
         return new DecryptedUsernamePassword(id);
     }
 
     public DecryptedBinaryData createBinaryData(UUID orgId, String name, String storePassword,
-                                                InputStream data, SecretVisibility visibility) throws IOException {
+                                                InputStream data, SecretVisibility visibility,
+                                                SecretStoreType storeType) throws IOException {
 
         orgManager.assertAccess(orgId, true);
 
         BinaryDataSecret d = new BinaryDataSecret(ByteStreams.toByteArray(data));
-        UUID id = store(name, orgId, d, storePassword, visibility);
+        UUID id = store(name, orgId, d, storePassword, visibility, storeType);
         return new DecryptedBinaryData(id);
     }
 
@@ -179,6 +187,10 @@ public class SecretManager {
 
     public void delete(UUID orgId, String secretName) {
         SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
+        // Delete the content first
+        getSecretStore(e.getStoreType()).delete(e.getId());
+
+        // Now delete secret information from secret table
         secretDao.delete(e.getId());
     }
 
@@ -187,43 +199,42 @@ public class SecretManager {
     }
 
     public DecryptedSecret getSecret(UUID orgId, String name, SecretType expectedType, String password) {
-        assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
+        SecretEntry entry = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
 
-        SecretEntry e = secretDao.getByName(orgId, name);
-        if (e == null) {
+        // get
+        byte[] data = getSecretStore(entry.getStoreType()).get(entry.getId());
+        if (data == null) {
             return null;
         }
 
-        if (expectedType != null && e.getType() != expectedType) {
-            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected " + expectedType + ", got: " + e.getType());
+        if (expectedType != null && entry.getType() != expectedType) {
+            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected " + expectedType + ", got: " + entry.getType());
         }
 
-        SecretStoreType providedStoreType = getStoreType(password);
-        assertStoreType(name, providedStoreType, e.getStoreType());
-
-        byte[] data = secretDao.getData(e.getId());
+        SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
+        assertEncryptedByType(name, providedEncryptedByType, entry.getEncryptedByType());
 
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
-        Secret s = decrypt(e.getType(), data, pwd, salt);
-        return new DecryptedSecret(e.getId(), s);
+        Secret s = decrypt(entry.getType(), data, pwd, salt);
+        return new DecryptedSecret(entry.getId(), s);
     }
 
     public SecretDataEntry getRaw(UUID orgId, String name, String password) {
-        SecretEntry s = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
-        if (s == null) {
+        SecretEntry entry = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
+        if (entry == null) {
             return null;
         }
 
-        byte[] data = secretDao.getData(s.getId());
+        byte[] data = getSecretStore(entry.getStoreType()).get(entry.getId());
 
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
         try {
             byte[] ab = SecretUtils.decrypt(data, pwd, salt);
-            return new SecretDataEntry(s, ab);
+            return new SecretDataEntry(entry, ab);
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error decrypting a secret: " + name, e);
         }
@@ -244,7 +255,7 @@ public class SecretManager {
         secretDao.upsertAccessLevel(secretId, teamId, level);
     }
 
-    private UUID store(String name, UUID orgId, Secret s, String password, SecretVisibility visibility) {
+    private UUID store(String name, UUID orgId, Secret s, String password, SecretVisibility visibility, SecretStoreType storeType) {
         byte[] data;
 
         SecretType type;
@@ -261,8 +272,6 @@ public class SecretManager {
             throw new IllegalArgumentException("Unknown secret type: " + s.getClass());
         }
 
-        SecretStoreType storeType = getStoreType(password);
-
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
@@ -273,7 +282,23 @@ public class SecretManager {
             throw Throwables.propagate(e);
         }
 
-        return secretDao.insert(orgId, name, getOwnerId(), type, storeType, visibility, ab);
+        SecretEncryptedByType encryptedByType = getEncryptedBy(password);
+
+        UUID id = secretDao.insert(orgId, name, getOwnerId(), type, encryptedByType, storeType, visibility);
+
+        try {
+            getSecretStore(storeType).store(id, ab);
+        } catch (Exception e) {
+            /*
+             * We can't use the transaction here because store may update the record in the database independently,
+             * As our transaction has not yet finalized so we may end up having exception in that case
+             * */
+            secretDao.delete(id);
+
+            throw Throwables.propagate(e);
+        }
+
+        return id;
     }
 
     public byte[] encryptData(String projectName, byte[] data) {
@@ -294,7 +319,11 @@ public class SecretManager {
         }
     }
 
-    private static void assertStoreType(String name, SecretStoreType provided, SecretStoreType actual) {
+    public List<SecretStore> getActiveSecretStores() {
+        return secretStoreProvider.getActiveSecretStores();
+    }
+
+    private static void assertEncryptedByType(String name, SecretEncryptedByType provided, SecretEncryptedByType actual) {
         if (provided == actual) {
             return;
         }
@@ -305,7 +334,7 @@ public class SecretManager {
             case PASSWORD:
                 throw new SecurityException("The secret requires a password to decrypt: " + name);
             default:
-                throw new IllegalArgumentException("Unsupported secret store type: " + actual);
+                throw new IllegalArgumentException("Unsupported secret encrypted by type: " + actual);
         }
     }
 
@@ -356,16 +385,24 @@ public class SecretManager {
         }
     }
 
-    private static SecretStoreType getStoreType(String pwd) {
+    private static SecretEncryptedByType getEncryptedBy(String pwd) {
         if (pwd == null) {
-            return SecretStoreType.SERVER_KEY;
+            return SecretEncryptedByType.SERVER_KEY;
         }
-        return SecretStoreType.PASSWORD;
+        return SecretEncryptedByType.PASSWORD;
     }
 
     private static UUID getOwnerId() {
         UserPrincipal p = UserPrincipal.getCurrent();
         return p.getId();
+    }
+
+    private SecretStore getSecretStore(SecretStoreType type) {
+        return secretStoreProvider.getSecretStore(type);
+    }
+
+    public SecretStoreType getDefaultSecretStoreType() {
+        return secretStoreProvider.getDefaultStoreType();
     }
 
     public static class DecryptedSecret {

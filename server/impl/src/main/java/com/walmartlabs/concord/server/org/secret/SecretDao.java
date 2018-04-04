@@ -20,10 +20,11 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.walmartlabs.concord.common.secret.SecretStoreType;
+import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.api.org.secret.*;
 import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretOwner;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
@@ -82,23 +83,25 @@ public class SecretDao extends AbstractDao {
     }
 
     public UUID insert(UUID orgId, String name, UUID ownerId, SecretType type,
-                       SecretStoreType storeType, SecretVisibility visibility, byte[] data) {
+              SecretEncryptedByType encryptedBy, SecretStoreType storeType,
+                       SecretVisibility visibility) {
 
-        return txResult(tx -> insert(tx, orgId, name, ownerId, type, storeType, visibility, data));
+        return txResult(tx -> insert(tx, orgId, name, ownerId, type, encryptedBy, storeType, visibility));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, String name, UUID ownerId, SecretType type,
-                       SecretStoreType storeType, SecretVisibility visibility, byte[] data) {
+                       SecretEncryptedByType encryptedBy, SecretStoreType storeType,
+                       SecretVisibility visibility) {
 
         return tx.insertInto(SECRETS)
                 .columns(SECRETS.SECRET_NAME,
                         SECRETS.SECRET_TYPE,
                         SECRETS.ORG_ID,
                         SECRETS.OWNER_ID,
-                        SECRETS.SECRET_STORE_TYPE,
-                        SECRETS.VISIBILITY,
-                        SECRETS.SECRET_DATA)
-                .values(name, type.toString(), orgId, ownerId, storeType.toString(), visibility.toString(), data)
+                        SECRETS.ENCRYPTED_BY,
+                        SECRETS.STORE_TYPE,
+                        SECRETS.VISIBILITY)
+                .values(name, type.toString(), orgId, ownerId, encryptedBy.toString(), storeType.toString(), visibility.toString())
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
                 .getSecretId();
@@ -112,15 +115,6 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public SecretEntry getByName(UUID orgId, String name) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return selectEntry(tx)
-                    .where(SECRETS.ORG_ID.eq(orgId)
-                            .and(SECRETS.SECRET_NAME.eq(name)))
-                    .fetchOne(SecretDao::toEntry);
-        }
-    }
-
     public byte[] getData(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(SECRETS.SECRET_DATA)
@@ -130,9 +124,48 @@ public class SecretDao extends AbstractDao {
         }
     }
 
+    public SecretEntry getByName(UUID orgId, String name) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return selectEntry(tx)
+                    .where(SECRETS.ORG_ID.eq(orgId)
+                            .and(SECRETS.SECRET_NAME.eq(name)))
+                    .fetchOne(SecretDao::toEntry);
+        }
+    }
+
+    public void updateData(UUID id, byte[] data) {
+        tx(tx -> updateData(tx, id, data));
+    }
+
+    public void updateData(DSLContext tx, UUID id, byte[] data) {
+        int i = tx.update(SECRETS)
+                .set(SECRETS.SECRET_DATA, data)
+                .where(SECRETS.SECRET_ID.eq(id))
+                .execute();
+
+        if (i != 1) {
+            throw new DataAccessException("Invalid number of rows updated: " + i);
+        }
+    }
+
+    public void update(DSLContext tx, UUID id, UUID orgId, String name, SecretType type, SecretEncryptedByType encryptedByType, SecretVisibility visibility, byte[] data) {
+        int i = tx.update(SECRETS)
+                .set(SECRETS.ORG_ID, orgId)
+                .set(SECRETS.SECRET_NAME, name)
+                .set(SECRETS.SECRET_TYPE, type.toString())
+                .set(SECRETS.ENCRYPTED_BY, encryptedByType.toString())
+                .set(SECRETS.SECRET_DATA, data)
+                .where(SECRETS.SECRET_ID.eq(id))
+                .execute();
+
+        if (i != 1) {
+            throw new DataAccessException("Invalid number of rows updated: " + i);
+        }
+    }
+
     public List<SecretEntry> list(UUID orgId, Field<?> sortField, boolean asc) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record9<UUID, String, UUID, String, UUID, String, String, String, String>> query = selectEntry(tx);
+            SelectJoinStep<Record10<UUID, String, UUID, String, UUID, String, String, String, String, String>> query = selectEntry(tx);
 
             if (orgId != null) {
                 query.where(SECRETS.ORG_ID.eq(orgId));
@@ -182,7 +215,7 @@ public class SecretDao extends AbstractDao {
                 .execute();
     }
 
-    private static SelectJoinStep<Record9<UUID, String, UUID, String, UUID, String, String, String, String>> selectEntry(DSLContext tx) {
+    private static SelectJoinStep<Record10<UUID, String, UUID, String, UUID, String, String, String, String, String>> selectEntry(DSLContext tx) {
         Field<String> orgName = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
                 .where(ORGANIZATIONS.ORG_ID.eq(SECRETS.ORG_ID)).asField();
@@ -199,18 +232,20 @@ public class SecretDao extends AbstractDao {
                 SECRETS.OWNER_ID,
                 ownerUsernameField,
                 SECRETS.SECRET_TYPE,
-                SECRETS.SECRET_STORE_TYPE,
+                SECRETS.ENCRYPTED_BY,
+                SECRETS.STORE_TYPE,
                 SECRETS.VISIBILITY)
                 .from(SECRETS);
     }
 
-    private static SecretEntry toEntry(Record9<UUID, String, UUID, String, UUID, String, String, String, String> r) {
+    private static SecretEntry toEntry(Record10<UUID, String, UUID, String, UUID, String, String, String, String, String> r) {
         return new SecretEntry(r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(SECRETS.ORG_ID),
                 r.value4(),
                 SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
-                SecretStoreType.valueOf(r.get(SECRETS.SECRET_STORE_TYPE)),
+                SecretEncryptedByType.valueOf(r.get(SECRETS.ENCRYPTED_BY)),
+                SecretStoreType.valueOf(r.get(SECRETS.STORE_TYPE)),
                 SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
                 toOwner(r.get(SECRETS.OWNER_ID), r.value6()));
     }
@@ -227,15 +262,15 @@ public class SecretDao extends AbstractDao {
         private final byte[] data;
 
         public SecretDataEntry(SecretEntry s, byte[] data) { //NOSONAR
-            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getType(), s.getStoreType(),
-                    s.getVisibility(), s.getOwner(), data);
+            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getType(), s.getEncryptedByType(),
+                    s.getStoreType(), s.getVisibility(), s.getOwner(), data);
         }
 
         public SecretDataEntry(UUID id, String name, UUID orgId, String orgName , SecretType type,
-                               SecretStoreType storeType, SecretVisibility visibility,
+                               SecretEncryptedByType encryptedByType, SecretStoreType storeType, SecretVisibility visibility,
                                SecretOwner owner, byte[] data) { //NOSONAR
 
-            super(id, name, orgId, orgName, type, storeType, visibility, owner);
+            super(id, name, orgId, orgName, type, encryptedByType, storeType, visibility, owner);
             this.data = data;
         }
 

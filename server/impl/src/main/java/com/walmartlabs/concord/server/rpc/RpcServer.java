@@ -47,7 +47,7 @@ public class RpcServer implements Closeable {
                      JobQueueImpl jobQueue,
                      ProcessHeartbeatServiceImpl heartbeatService,
                      KvServiceImpl kvService,
-                     SecretStoreServiceImpl secretStoreService,
+                     SecretReaderServiceImpl secretReaderService,
                      EventServiceImpl eventService) throws ClientException {
 
         this.server = ServerBuilder
@@ -56,7 +56,7 @@ public class RpcServer implements Closeable {
                 .addService(jobQueue)
                 .addService(heartbeatService)
                 .addService(kvService)
-                .addService(secretStoreService)
+                .addService(secretReaderService)
                 .addService(eventService)
                 .addTransportFilter(new LoggingTransportFilter())
                 .build();

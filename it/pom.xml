@@ -20,6 +20,7 @@
         <module>runner</module>
         <module>server</module>
         <module>console</module>
+        <module>keywhiz</module>
     </modules>
 
     <properties>

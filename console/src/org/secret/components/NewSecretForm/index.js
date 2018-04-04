@@ -25,6 +25,7 @@ import { Dropdown as SUIDropdown, Form } from 'semantic-ui-react';
 import { secretTypes, storePwdTypes } from '../../create/constants';
 import { Dropdown, Field, FileInput } from '../../../../shared/forms';
 import * as v from '../../../../shared/validation';
+import SecretStoreTypeDropdown from '../../list/SecretStoreTypeDropdown';
 
 const SecretTypeDropdown = (props) => {
     const types = [
@@ -130,6 +131,8 @@ let NewSecretForm = ({
 
         {renderStorePwdField(storePwdTypeValue)}
 
+        <Dropdown name="storeType" label="Store type" widget={SecretStoreTypeDropdown} required />
+
         <Form.Button primary type="submit" disabled={pristine || submitting || invalid}>
             Submit
         </Form.Button>
@@ -145,11 +148,13 @@ const validate = ({
     password,
     data,
     storePwdType,
-    storePassword
+    storePassword,
+    storeType
 }) => {
     const errors = {};
 
     errors.name = v.secret.name(name);
+    errors.storeType = v.secret.storeType(storeType);
 
     switch (secretType) {
         case secretTypes.newKeyPair: {
@@ -195,7 +200,8 @@ NewSecretForm = reduxForm({
     initialValues: {
         visibility: 'PUBLIC',
         secretType: secretTypes.newKeyPair,
-        storePwdType: storePwdTypes.doNotUse
+        storePwdType: storePwdTypes.doNotUse,
+        storeType: 'CONCORD'
     },
     validate,
     asyncValidate,

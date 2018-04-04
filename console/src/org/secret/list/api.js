@@ -57,3 +57,15 @@ export const getPublicKey = (orgName: ConcordKey, name: ConcordKey): any => {
         return response.json();
     });
 };
+
+export const getSecretStoreTypeList = (): any => {
+    return fetch(`/api/v1/secret/stores`, {
+        method: 'GET',
+        credentials: 'same-origin'
+    }).then((response) => {
+        if (!response.ok) {
+            throw new Error('ERROR: ' + response.statusText + ' (' + response.status + ')');
+        }
+        return response.json();
+    });
+};

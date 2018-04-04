@@ -26,7 +26,7 @@ import {
     FieldArray,
     reduxForm
 } from 'redux-form';
-import { Button, Divider, Form, Popup, Table, Icon } from 'semantic-ui-react';
+import { Button, Divider, Form, Popup, Table, Message } from 'semantic-ui-react';
 import { Checkbox, Dropdown, Field } from '../shared/forms';
 import { actions as modal } from '../shared/Modal';
 import * as RepositoryPopup from './RepositoryPopup';
@@ -68,18 +68,27 @@ const renderRepositories = (
     return (
         <Form.Field>
             <Button basic icon="add" onClick={newFn} content="Add repository" />
+
+            <Divider horizontal />
+            <div style={{ display: 'none', ...hideshow(fields) }}>
+                <Message size="tiny" negative>
+                    One or more secrets are defined in disabled secret store (and not available at
+                    the moment). Please contact your administrator.
+                </Message>
+            </div>
+
             {fields.length > 0 && (
                 <Table>
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell collapsing>Name</Table.HeaderCell>
-                            <Table.HeaderCell textAlign="center" collapsing>
-                                Git URL<Icon name="fork" />
-                            </Table.HeaderCell>
+                            <Table.HeaderCell>Git URL</Table.HeaderCell>
                             <Table.HeaderCell collapsing>Source</Table.HeaderCell>
                             <Table.HeaderCell collapsing>Path</Table.HeaderCell>
-                            <Table.HeaderCell collapsing>Deploy Key</Table.HeaderCell>
-                            <Table.HeaderCell />
+                            <Table.HeaderCell collapsing>Secret</Table.HeaderCell>
+                            <Table.HeaderCell collapsing />
+                            <Table.HeaderCell collapsing />
+                            <Table.HeaderCell collapsing />
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -90,24 +99,17 @@ const renderRepositories = (
                                         {fields.get(idx).name}
                                     </a>
                                 </Table.Cell>
-                                <Table.Cell textAlign="center">
-                                    <Popup
-                                        trigger={
-                                            <a
-                                                href={GitUrlParse(fields.get(idx).url).toString(
-                                                    'https'
-                                                )}>
-                                                <Icon name="external" size="large" />
-                                            </a>
-                                        }
-                                        content={fields.get(idx).url}
-                                        inverted
-                                    />
+                                <Table.Cell>
+                                    <a href={GitUrlParse(fields.get(idx).url).toString('https')}>
+                                        {fields.get(idx).url}
+                                    </a>
                                 </Table.Cell>
                                 <Table.Cell>{renderSourceText(f, fields.get(idx))}</Table.Cell>
                                 <Table.Cell>{fields.get(idx).path}</Table.Cell>
-                                <Table.Cell>{fields.get(idx).secret}</Table.Cell>
-                                <Table.Cell textAlign="right">
+                                <Table.Cell style={{ ...getStripColor(fields.get(idx).enable) }}>
+                                    {fields.get(idx).secret}
+                                </Table.Cell>
+                                <Table.Cell>
                                     <Popup
                                         trigger={
                                             <Button
@@ -119,6 +121,8 @@ const renderRepositories = (
                                         content="Delete Repository"
                                         inverted
                                     />
+                                </Table.Cell>
+                                <Table.Cell>
                                     <Popup
                                         trigger={
                                             <Button
@@ -126,7 +130,10 @@ const renderRepositories = (
                                                 content="Run"
                                                 icon="chevron right"
                                                 labelPosition="right"
-                                                disabled={!pristine}
+                                                disabled={displayButton(
+                                                    pristine,
+                                                    fields.get(idx).enable
+                                                )}
                                                 onClick={startProcess(
                                                     fields.get(idx).name,
                                                     fields.get(idx).id
@@ -136,6 +143,8 @@ const renderRepositories = (
                                         content={`Start a new ${fields.get(idx).name} process`}
                                         inverted
                                     />
+                                </Table.Cell>
+                                <Table.Cell>
                                     <Popup
                                         trigger={
                                             <Button
@@ -159,6 +168,28 @@ const renderRepositories = (
             )}
         </Form.Field>
     );
+};
+
+const getStripColor = (flag) => {
+    if (flag !== undefined) {
+        if (flag) {
+            return { color: 'red' };
+        }
+    }
+};
+
+const hideshow = (fieldList) => {
+    for (var i = 0; i < fieldList.length; i++) {
+        if (fieldList.get(i).enable === true) {
+            return { display: 'block' };
+        }
+    }
+    return { display: 'none' };
+};
+
+const displayButton = (pristine, repositorySecretStoreEnable) => {
+    const key = !pristine || repositorySecretStoreEnable;
+    return key;
 };
 
 let projectForm = (props) => {

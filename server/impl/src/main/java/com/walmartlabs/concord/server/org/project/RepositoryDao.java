@@ -176,6 +176,7 @@ public class RepositoryDao extends AbstractDao {
                 r.get(REPOSITORIES.REPO_COMMIT_ID),
                 r.get(REPOSITORIES.REPO_PATH),
                 r.get(SECRETS.SECRET_NAME),
-                r.get(REPOSITORIES.HAS_WEBHOOK));
+                r.get(REPOSITORIES.HAS_WEBHOOK),
+                null);
     }
 }

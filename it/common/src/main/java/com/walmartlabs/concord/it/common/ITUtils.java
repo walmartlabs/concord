@@ -28,8 +28,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class ITUtils {
+
+    private static final char[] RANDOM_CHARS = "abcdef0123456789".toCharArray();
 
     public static byte[] archive(URI uri) throws IOException {
         return archive(uri, null);
@@ -44,6 +48,19 @@ public final class ITUtils {
             }
         }
         return out.toByteArray();
+    }
+
+    public static String randomString() {
+        StringBuilder b = new StringBuilder();
+        b.append(System.currentTimeMillis()).append("_");
+
+        Random rng = ThreadLocalRandom.current();
+        for (int i = 0; i < 6; i++) {
+            int n = rng.nextInt(RANDOM_CHARS.length);
+            b.append(RANDOM_CHARS[n]);
+        }
+
+        return b.toString();
     }
 
     private ITUtils() {

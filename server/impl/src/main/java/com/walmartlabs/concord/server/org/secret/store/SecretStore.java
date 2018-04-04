@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.common.secret;
+package com.walmartlabs.concord.server.org.secret.store;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,21 @@ package com.walmartlabs.concord.common.secret;
  * =====
  */
 
-public enum SecretStoreType {
+import com.walmartlabs.concord.server.api.org.secret.SecretStoreType;
 
-    SERVER_KEY,
-    PASSWORD
+import java.util.UUID;
+
+public interface SecretStore {
+
+    void store(UUID id, byte[] data);
+
+    void delete(UUID id);
+
+    byte[] get(UUID id);
+
+    String getDescription();
+
+    SecretStoreType getType();
+
+    String getConfigurationPrefix();
 }

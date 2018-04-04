@@ -92,5 +92,6 @@ export const secret = {
     username: requiredValidator,
     password: requiredValidator,
     data: requiredValidator,
-    storePassword: requiredValidator
+    storePassword: requiredValidator,
+    storeType: requiredValidator
 };

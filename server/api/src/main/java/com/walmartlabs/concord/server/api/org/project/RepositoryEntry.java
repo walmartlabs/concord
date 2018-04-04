@@ -58,12 +58,14 @@ public class RepositoryEntry implements Serializable {
 
     private final boolean hasWebHook;
 
+    private final String secretStoreType;
+
     public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, null, false);
+        this(null, null, name, url, null, null, null, null, false, null);
     }
 
     public RepositoryEntry(String name, RepositoryEntry e) {
-        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.secret, e.hasWebHook);
+        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.secret, e.hasWebHook, e.secretStoreType);
     }
 
     @JsonCreator
@@ -75,7 +77,8 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("commitId") String commitId,
                            @JsonProperty("path") String path,
                            @JsonProperty("secret") String secret,
-                           @JsonProperty("hasWebHook") boolean hasWebHook) {
+                           @JsonProperty("hasWebHook") boolean hasWebHook,
+                           @JsonProperty("secretStoreType") String secretStoreType ) {
 
         this.id = id;
         this.projectId = projectId;
@@ -86,6 +89,7 @@ public class RepositoryEntry implements Serializable {
         this.path = path;
         this.secret = secret;
         this.hasWebHook = hasWebHook;
+        this.secretStoreType = secretStoreType;
     }
 
     public UUID getId() {
@@ -124,6 +128,10 @@ public class RepositoryEntry implements Serializable {
         return hasWebHook;
     }
 
+    public String getSecretStoreType() {
+        return secretStoreType;
+    }
+
     @Override
     public String toString() {
         return "RepositoryEntry{" +
@@ -136,6 +144,7 @@ public class RepositoryEntry implements Serializable {
                 ", path='" + path + '\'' +
                 ", secret='" + secret + '\'' +
                 ", hasWebHook=" + hasWebHook +
+                ", secretStoreType=" + secretStoreType +
                 '}';
     }
 }

@@ -47,7 +47,7 @@ public class RunPlaybookTask2 implements Task {
     private static final String LOOKUP_PLUGINS_DIR = "_lookups";
 
     private final RpcConfiguration rpcCfg;
-    private final SecretStore secretStore;
+    private final SecretReader secretReader;
 
     @InjectVariable(Constants.Context.CONTEXT_KEY)
     Context context;
@@ -59,9 +59,9 @@ public class RunPlaybookTask2 implements Task {
     ApiConfiguration apiCfg;
 
     @Inject
-    public RunPlaybookTask2(RpcConfiguration rpcCfg, SecretStore secretStore) {
+    public RunPlaybookTask2(RpcConfiguration rpcCfg, SecretReader secretReader) {
         this.rpcCfg = rpcCfg;
-        this.secretStore = secretStore;
+        this.secretReader = secretReader;
     }
 
     private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilderFactory pb) throws Exception {
@@ -99,7 +99,7 @@ public class RunPlaybookTask2 implements Task {
 
         final Map<String, String> env = addExtraEnv(defaultEnv(), args);
 
-        GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretStore);
+        GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretReader);
         groupVarsProcessor.process(txId, args, workDir);
 
         try {
@@ -488,7 +488,7 @@ public class RunPlaybookTask2 implements Task {
             String password = (String) m.get("password");
             String orgName = (String) m.get("org");
 
-            Map<String, String> keyPair = secretStore.exportKeyAsFile(txId, workDir.toAbsolutePath().toString(), orgName, name, password);
+            Map<String, String> keyPair = secretReader.exportKeyAsFile(txId, workDir.toAbsolutePath().toString(), orgName, name, password);
             p = Paths.get(keyPair.get("private"));
         } else {
             p = getPath(args, AnsibleConstants.PRIVATE_KEY_FILE_KEY, workDir);

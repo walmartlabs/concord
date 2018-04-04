@@ -103,10 +103,10 @@ public class CrudIT extends AbstractServerIT {
 
         ProjectResource projectResource = proxy(ProjectResource.class);
         projectResource.createOrUpdate(new ProjectEntry(projectName1,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, false))));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, false, null))));
 
         projectResource.createOrUpdate(new ProjectEntry(projectName2,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, false))));
+                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, false, null))));
     }
 
     @Test(timeout = 30000)
@@ -237,7 +237,7 @@ public class CrudIT extends AbstractServerIT {
 
         projectResource.createOrUpdate(new ProjectEntry(projectName,
                 Collections.singletonMap(repositoryName,
-                        new RepositoryEntry(null, null, repositoryName, "http://localhost", null, null, null, null, false))));
+                        new RepositoryEntry(null, null, repositoryName, "http://localhost", null, null, null, null, false, null))));
 
         // --- create
         LandingEntry entry = new LandingEntry(null, null, null, null, projectName, repositoryName, name, description, icon);
@@ -345,7 +345,7 @@ public class CrudIT extends AbstractServerIT {
         com.walmartlabs.concord.server.api.org.project.ProjectResource projectResource = proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
         projectResource.createOrUpdate(orgName, new ProjectEntry(projectName,
                 Collections.singletonMap(repoName,
-                        new RepositoryEntry(null, null, repoName, "git@localhost:/test", null, null, null, secretName,false))));
+                        new RepositoryEntry(null, null, repoName, "git@localhost:/test", null, null, null, secretName, false, null))));
 
         // ---
 

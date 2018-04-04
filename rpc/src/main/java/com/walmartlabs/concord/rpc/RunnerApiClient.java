@@ -22,7 +22,7 @@ package com.walmartlabs.concord.rpc;
 
 import com.walmartlabs.concord.sdk.EventService;
 import com.walmartlabs.concord.sdk.KvService;
-import com.walmartlabs.concord.sdk.SecretStoreService;
+import com.walmartlabs.concord.sdk.SecretReaderService;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -33,7 +33,7 @@ public class RunnerApiClient {
     private final ManagedChannel channel;
     private final ProcessHeartbeatService heartbeatService;
     private final KvService kvService;
-    private final SecretStoreService secretStoreService;
+    private final SecretReaderService secretReaderService;
     private final EventService eventService;
 
     public RunnerApiClient(String host, int port) {
@@ -43,7 +43,7 @@ public class RunnerApiClient {
 
         this.heartbeatService = new ProcessHeartbeatServiceImpl(channel);
         this.kvService = new KvServiceImpl(channel);
-        this.secretStoreService = new SecretStoreServiceImpl(channel);
+        this.secretReaderService = new SecretReaderServiceImpl(channel);
         this.eventService = new EventServiceImpl(channel);
     }
 
@@ -59,8 +59,8 @@ public class RunnerApiClient {
         return kvService;
     }
 
-    public SecretStoreService getSecretStoreService() {
-        return secretStoreService;
+    public SecretReaderService getSecretReaderService() {
+        return secretReaderService;
     }
 
     public EventService getEventService() {

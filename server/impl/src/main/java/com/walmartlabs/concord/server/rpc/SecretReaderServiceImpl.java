@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.rpc;
 import com.google.common.base.Strings;
 import com.google.protobuf.ByteString;
 import com.walmartlabs.concord.rpc.*;
-import com.walmartlabs.concord.sdk.SecretStoreService;
+import com.walmartlabs.concord.sdk.SecretReaderService;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.org.OrganizationDao;
@@ -47,9 +47,9 @@ import java.util.UUID;
 
 @Named
 @Singleton
-public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStoreServiceImplBase {
+public class SecretReaderServiceImpl extends TSecretReaderServiceGrpc.TSecretReaderServiceImplBase {
 
-    private static final Logger log = LoggerFactory.getLogger(SecretStoreService.class);
+    private static final Logger log = LoggerFactory.getLogger(SecretReaderService.class);
 
     private final SecretManager secretManager;
     private final OrganizationDao orgDao;
@@ -58,10 +58,10 @@ public class SecretStoreServiceImpl extends TSecretStoreServiceGrpc.TSecretStore
     private final LogManager logManager;
 
     @Inject
-    public SecretStoreServiceImpl(SecretManager secretManager,
-                                  OrganizationDao orgDao, ProcessQueueDao queueDao,
-                                  ProcessSecurityContext securityContext,
-                                  LogManager logManager) {
+    public SecretReaderServiceImpl(SecretManager secretManager,
+                                   OrganizationDao orgDao, ProcessQueueDao queueDao,
+                                   ProcessSecurityContext securityContext,
+                                   LogManager logManager) {
 
         this.secretManager = secretManager;
         this.orgDao = orgDao;

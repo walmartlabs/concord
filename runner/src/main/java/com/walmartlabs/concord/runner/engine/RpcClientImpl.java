@@ -45,8 +45,8 @@ public class RpcClientImpl implements RpcClient {
     }
 
     @Override
-    public SecretStoreService getSecretStoreService() {
-        return client.getSecretStoreService();
+    public SecretReaderService getSecretReaderService() {
+        return client.getSecretReaderService();
     }
 
     @Override

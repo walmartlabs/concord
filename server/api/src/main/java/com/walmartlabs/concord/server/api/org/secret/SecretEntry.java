@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.common.secret.SecretStoreType;
+import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
@@ -48,7 +48,10 @@ public class SecretEntry implements Serializable {
     @NotNull
     private final SecretType type;
 
+    @NotNull
     private final SecretStoreType storeType;
+
+    private final SecretEncryptedByType encryptedByType;
 
     private final SecretVisibility visibility;
 
@@ -60,6 +63,7 @@ public class SecretEntry implements Serializable {
                        @JsonProperty("orgId") UUID orgId,
                        @JsonProperty("orgName") String orgName,
                        @JsonProperty("type") SecretType type,
+                       @JsonProperty("encryptedBy") SecretEncryptedByType encryptedByType,
                        @JsonProperty("storeType") SecretStoreType storeType,
                        @JsonProperty("visibility") SecretVisibility visibility,
                        @JsonProperty("owner") SecretOwner owner) {
@@ -69,6 +73,7 @@ public class SecretEntry implements Serializable {
         this.orgId = orgId;
         this.orgName = orgName;
         this.type = type;
+        this.encryptedByType = encryptedByType;
         this.storeType = storeType;
         this.visibility = visibility;
         this.owner = owner;
@@ -94,6 +99,11 @@ public class SecretEntry implements Serializable {
         return type;
     }
 
+
+    public SecretEncryptedByType getEncryptedByType() {
+        return encryptedByType;
+    }
+
     public SecretStoreType getStoreType() {
         return storeType;
     }
@@ -114,6 +124,7 @@ public class SecretEntry implements Serializable {
                 ", orgId=" + orgId +
                 ", orgName='" + orgName + '\'' +
                 ", type=" + type +
+                ", encryptedByType=" + encryptedByType +
                 ", storeType=" + storeType +
                 ", visibility=" + visibility +
                 ", owner=" + owner +

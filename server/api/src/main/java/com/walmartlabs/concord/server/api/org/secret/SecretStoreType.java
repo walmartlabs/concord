@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.sdk;
+package com.walmartlabs.concord.server.api.org.secret;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,15 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
-public interface SecretStoreService {
+public enum SecretStoreType {
 
-    Secret fetch(String instanceId, String orgName, String secretName, String password) throws ClientException;
+    /**
+     * Store secret data in Concord DB
+     */
+    CONCORD,
 
-    String decryptString(String instanceId, String s) throws ClientException;
+    /**
+     * Store secret data in Keywhiz
+     */
+    KEYWHIZ
 }

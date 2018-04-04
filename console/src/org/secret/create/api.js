@@ -41,11 +41,14 @@ export const create = ({
     secretType,
     storePwdType,
     storePassword,
+    storeType,
     ...rest
 }: any): any => {
     const data = new FormData();
 
     data.append('name', name);
+
+    data.append('storeType', storeType);
 
     data.append('visibility', visibility);
 

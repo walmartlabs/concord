@@ -37,15 +37,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Named("crypto")
-public class CryptoTask implements Task, SecretStore {
+public class CryptoTask implements Task, SecretReader {
 
     private static final Logger log = LoggerFactory.getLogger(CryptoTask.class);
 
-    private final SecretStoreService secretStoreService;
+    private final SecretReaderService secretReaderService;
 
     @Inject
     public CryptoTask(RpcClient rpcClient) {
-        this.secretStoreService = rpcClient.getSecretStoreService();
+        this.secretReaderService = rpcClient.getSecretReaderService();
     }
 
     @Override
@@ -176,11 +176,11 @@ public class CryptoTask implements Task, SecretStore {
 
     @Override
     public String decryptString(@InjectVariable("txId") String instanceId, String s) throws Exception {
-        return secretStoreService.decryptString(instanceId, s);
+        return secretReaderService.decryptString(instanceId, s);
     }
 
     private Secret get(String instanceId, String orgName, String name, String password) throws Exception {
-        Secret s = secretStoreService.fetch(instanceId, orgName, name, password);
+        Secret s = secretReaderService.fetch(instanceId, orgName, name, password);
         if (s == null) {
             throw new IllegalArgumentException("Secret not found: " + name);
         }

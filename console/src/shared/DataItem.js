@@ -32,7 +32,10 @@ const actionTypes = {
     DATA_ITEM_SAVE_RESPONSE: `${NAMESPACE}/save/response`,
 
     DATA_ITEM_DELETE_REQUEST: `${NAMESPACE}/delete/request`,
-    DATA_ITEM_DELETE_RESPONSE: `${NAMESPACE}/delete/response`
+    DATA_ITEM_DELETE_RESPONSE: `${NAMESPACE}/delete/response`,
+
+    DATA_ITEM_SECRET_STORE_TYPE_LIST_RESPONSE: `${NAMESPACE}/storetype/response`,
+    DATA_ITEM_SECRET_STORE_TYPE_LIST_REQUEST: `${NAMESPACE}/storetype/request`
 };
 
 /**
@@ -50,7 +53,8 @@ export default (
     initial: any,
     loadFn: Function,
     saveFn: Function,
-    deleteFn: Function
+    deleteFn: Function,
+    secretStoreTypeFn: Function
 ) => {
     // ACTIONS
 
@@ -63,7 +67,14 @@ export default (
         DATA_ITEM_SAVE_RESPONSE: `${actionTypes.DATA_ITEM_SAVE_RESPONSE}/${key}`,
 
         DATA_ITEM_DELETE_REQUEST: `${actionTypes.DATA_ITEM_DELETE_REQUEST}/${key}`,
-        DATA_ITEM_DELETE_RESPONSE: `${actionTypes.DATA_ITEM_DELETE_RESPONSE}/${key}`
+        DATA_ITEM_DELETE_RESPONSE: `${actionTypes.DATA_ITEM_DELETE_RESPONSE}/${key}`,
+
+        DATA_ITEM_SECRET_STORE_TYPE_LIST_REQUEST: `${
+            actionTypes.DATA_ITEM_SECRET_STORE_TYPE_LIST_REQUEST
+        }/${key}`,
+        DATA_ITEM_SECRET_STORE_TYPE_LIST_RESPONSE: `${
+            actionTypes.DATA_ITEM_SECRET_STORE_TYPE_LIST_RESPONSE
+        }/${key}`
     };
 
     const actions = {
@@ -91,6 +102,11 @@ export default (
             componentKey: key,
             args,
             onSuccess
+        }),
+
+        getSecretStoreType: (args: ?any = []) => ({
+            type: types.DATA_ITEM_SECRET_STORE_TYPE_LIST_REQUEST,
+            componentKey: key
         })
     };
 
@@ -110,11 +126,24 @@ export default (
         }
     };
 
+    const secretStoreType = (state = initial, { type, error, response, data }) => {
+        switch (type) {
+            case types.DATA_ITEM_SECRET_STORE_TYPE_LIST_RESPONSE:
+                if (error) {
+                    return state;
+                }
+                return response;
+            default:
+                return state;
+        }
+    };
+
     const error = (state = null, { type, error, message }) => {
         switch (type) {
             case types.DATA_ITEM_RESPONSE:
             case types.DATA_ITEM_SAVE_RESPONSE:
             case types.DATA_ITEM_DELETE_RESPONSE:
+            case types.DATA_ITEM_SECRET_STORE_TYPE_LIST_RESPONSE:
                 if (error) {
                     return message;
                 }
@@ -129,24 +158,27 @@ export default (
             case types.DATA_ITEM_REQUEST:
             case types.DATA_ITEM_SAVE_REQUEST:
             case types.DATA_ITEM_DELETE_REQUEST:
+            case types.DATA_ITEM_SECRET_STORE_TYPE_LIST_REQUEST:
                 return true;
             case types.DATA_ITEM_RESPONSE:
             case types.DATA_ITEM_SAVE_RESPONSE:
             case types.DATA_ITEM_DELETE_RESPONSE:
+            case types.DATA_ITEM_SECRET_STORE_TYPE_LIST_RESPONSE:
                 return false;
             default:
                 return state;
         }
     };
 
-    const reducers = combineReducers({ data, error, loading });
+    const reducers = combineReducers({ data, error, loading, secretStoreType });
 
     // SELECTORS
 
     const selectors = {
         getData: (state: any) => state.data,
         getError: (state: any) => state.error,
-        isLoading: (state: any) => state.loading
+        isLoading: (state: any) => state.loading,
+        getSecretStoreTypeData: (state: any) => state.secretStoreType
     };
 
     // SAGAS
@@ -161,6 +193,22 @@ export default (
         } catch (e) {
             yield put({
                 type: types.DATA_ITEM_RESPONSE,
+                error: true,
+                message: e.message || 'Error while loading data'
+            });
+        }
+    }
+
+    function* loadSecretStoreType({ args }: any): Generator<*, *, *> {
+        try {
+            const response = yield call(secretStoreTypeFn);
+            yield put({
+                type: types.DATA_ITEM_SECRET_STORE_TYPE_LIST_RESPONSE,
+                response
+            });
+        } catch (e) {
+            yield put({
+                type: types.DATA_ITEM_SECRET_STORE_TYPE_LIST_RESPONSE,
                 error: true,
                 message: e.message || 'Error while loading data'
             });
@@ -217,7 +265,8 @@ export default (
         yield all([
             fork(takeLatest, types.DATA_ITEM_REQUEST, loadData),
             fork(takeLatest, types.DATA_ITEM_SAVE_REQUEST, saveData),
-            fork(takeLatest, types.DATA_ITEM_DELETE_REQUEST, deleteData)
+            fork(takeLatest, types.DATA_ITEM_DELETE_REQUEST, deleteData),
+            fork(takeLatest, types.DATA_ITEM_SECRET_STORE_TYPE_LIST_REQUEST, loadSecretStoreType)
         ]);
     }
 

@@ -22,7 +22,7 @@ package com.walmartlabs.concord.sdk;
 
 import java.util.Map;
 
-public interface SecretStore {
+public interface SecretReader {
 
     String exportAsString(String instanceId,
                           String name,

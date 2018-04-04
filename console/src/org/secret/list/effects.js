@@ -36,7 +36,10 @@ export const actionTypes = {
     USER_SECRET_DELETE_RESPONSE: `${NAMESPACE}/delete/response`,
 
     USER_SECRET_PUBLICKEY_REQUEST: `${NAMESPACE}/publickey/request`,
-    USER_SECRET_PUBLICKEY_RESPONSE: `${NAMESPACE}/publickey/response`
+    USER_SECRET_PUBLICKEY_RESPONSE: `${NAMESPACE}/publickey/response`,
+
+    USER_SECRET_STORE_TYPE_REQUEST: `${NAMESPACE}/storetype/request`,
+    USER_SECRET_STORE_TYPE_RESPONSE: `${NAMESPACE}/storetype/response`
 };
 
 // Actions
@@ -52,6 +55,10 @@ export const actions = {
         orgName,
         name,
         onSuccess
+    }),
+
+    getSecretStoreTypeList: () => ({
+        type: actionTypes.USER_SECRET_STORE_TYPE_REQUEST
     })
 };
 
@@ -60,6 +67,20 @@ export const actions = {
 const rows = (state = [], { type, error, response }) => {
     switch (type) {
         case actionTypes.USER_SECRET_LIST_RESPONSE: {
+            if (error) {
+                return state;
+            }
+            return response;
+        }
+        default: {
+            return state;
+        }
+    }
+};
+
+const secretStoreTypelist = (state = [], { type, error, response }) => {
+    switch (type) {
+        case actionTypes.USER_SECRET_STORE_TYPE_RESPONSE: {
             if (error) {
                 return state;
             }
@@ -136,6 +157,17 @@ const publicKeyError = (state = null, action) => {
     }
 };
 
+const secretStoreTypelistError = (state = null, action) => {
+    switch (action.type) {
+        case actionTypes.USER_SECRET_STORE_TYPE_REQUEST:
+            return null;
+        case actionTypes.USER_SECRET_STORE_TYPE_RESPONSE:
+            return action.error || null;
+        default:
+            return state;
+    }
+};
+
 export const reducers = combineReducers({
     rows,
     loading,
@@ -143,7 +175,9 @@ export const reducers = combineReducers({
     inFlight,
     deleteError,
     publicKey,
-    publicKeyError
+    publicKeyError,
+    secretStoreTypelist,
+    secretStoreTypelistError
 });
 
 // Selectors
@@ -156,7 +190,9 @@ export const selectors = {
     isInFlight: (state: any, orgName: any, name: any) =>
         state.inFlight.includes(`${orgName}/${name}`),
     getPublicKeyError: (state: any) => state.publicKeyError,
-    getPublicKey: (state: any) => state.publicKey
+    getPublicKey: (state: any) => state.publicKey,
+    getSecretStoreTypeListError: (state: any) => state.secretStoreTypelistError,
+    getSecretStoreTypeList: (state: any) => state.secretStoreTypelist
 };
 
 // Sagas
@@ -219,10 +255,27 @@ function* getPublicKey(action: any): Generator<*, *, *> {
     }
 }
 
+function* getSecretStoreTypeList(action: any): Generator<*, *, *> {
+    try {
+        const response = yield call(api.getSecretStoreTypeList);
+        yield put({
+            type: actionTypes.USER_SECRET_STORE_TYPE_RESPONSE,
+            response
+        });
+    } catch (e) {
+        yield put({
+            type: actionTypes.USER_SECRET_STORE_TYPE_RESPONSE,
+            error: true,
+            message: e.message || 'Error while loading store type data'
+        });
+    }
+}
+
 export const sagas = function*(): Generator<*, *, *> {
     yield all([
         fork(takeLatest, actionTypes.USER_SECRET_LIST_REQUEST, fetchSecretList),
         fork(takeLatest, actionTypes.USER_SECRET_DELETE_REQUEST, deleteSecret),
-        fork(takeLatest, actionTypes.USER_SECRET_PUBLICKEY_REQUEST, getPublicKey)
+        fork(takeLatest, actionTypes.USER_SECRET_PUBLICKEY_REQUEST, getPublicKey),
+        fork(takeLatest, actionTypes.USER_SECRET_STORE_TYPE_REQUEST, getSecretStoreTypeList)
     ]);
 };
