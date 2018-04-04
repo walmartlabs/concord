@@ -42,6 +42,8 @@ public final class IOUtils {
     public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
     public static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
 
+    private static final int MAX_COPY_DEPTH = 100;
+
     static {
         try {
             if (!Files.exists(TMP_DIR)) {
@@ -177,17 +179,45 @@ public final class IOUtils {
     }
 
     public static void copy(Path src, Path dst, CopyOption... options) throws IOException {
+        _copy(1, src, dst, options);
+    }
+
+    private static void _copy(int depth, Path src, Path dst, CopyOption... options) throws IOException {
+        if (depth >= MAX_COPY_DEPTH) {
+            throw new IOException("Too deep: " + src);
+        }
+
         Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Path p = dst.resolve(src.relativize(file));
+                Path a = file;
+                Path b = dst.resolve(src.relativize(file));
 
-                Path pp = p.getParent();
-                if (!Files.exists(pp)) {
-                    Files.createDirectories(pp);
+                if (Files.isSymbolicLink(file)) {
+                    Path link = Files.readSymbolicLink(file);
+                    a = file.getParent().resolve(link).normalize();
+
+                    if (!a.startsWith(src)) {
+                        throw new IOException("External symlinks are not supported: " + file + " -> " + a);
+                    }
+
+                    if (Files.notExists(a)) {
+                        // missing target
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    if (Files.isDirectory(a)) {
+                        _copy(depth + 1, a, b);
+                        return FileVisitResult.CONTINUE;
+                    }
                 }
 
-                Files.copy(file, p, options);
+                Path parent = b.getParent();
+                if (!Files.exists(parent)) {
+                    Files.createDirectories(parent);
+                }
+
+                Files.copy(a, b, options);
                 return FileVisitResult.CONTINUE;
             }
         });

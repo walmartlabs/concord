@@ -22,10 +22,14 @@ package com.walmartlabs.concord.common;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class IOUtilsTest {
 
@@ -46,5 +50,53 @@ public class IOUtilsTest {
 
         IOUtils.copy(src, dst);
         assertTrue(Files.exists(dst.resolve("a/b/c.txt")));
+    }
+
+    @Test
+    public void testSymlinks() throws Exception {
+        Path src = Files.createTempDirectory("test");
+
+        Path aFile = src.resolve("a");
+        Files.write(aFile, "hello".getBytes(), StandardOpenOption.CREATE);
+
+        Path xDir = src.resolve("x");
+        Files.createDirectories(xDir);
+
+        Path bLink = xDir.resolve("b");
+        Files.createSymbolicLink(bLink, aFile);
+
+        // ---
+
+        Path dst = Files.createTempDirectory("test");
+
+        // ---
+
+        IOUtils.copy(src, dst);
+
+        // ---
+
+        Path tst = dst.resolve("x").resolve("b");
+        assertTrue(Files.isRegularFile(tst));
+    }
+
+    @Test
+    public void testExternalSymlinks() throws Exception {
+        Path src = Files.createTempDirectory("test");
+
+        Path link = src.resolve("a");
+        Path target = Paths.get("../../../etc/passwd");
+        Files.createSymbolicLink(link, target);
+
+        // ---
+
+        Path dst = Files.createTempDirectory("test");
+
+        // ---
+
+        try {
+            IOUtils.copy(src, dst);
+            fail("should fail");
+        } catch (IOException e) {
+        }
     }
 }
