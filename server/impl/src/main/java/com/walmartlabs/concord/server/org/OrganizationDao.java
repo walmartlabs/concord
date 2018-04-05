@@ -20,23 +20,30 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
-import static org.jooq.impl.DSL.selectDistinct;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class OrganizationDao extends AbstractDao {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     public OrganizationDao(Configuration cfg) {
@@ -50,10 +57,10 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME)
+            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.META.cast(String.class))
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_ID.eq(id))
-                    .fetchOne(OrganizationDao::toEntry);
+                    .fetchOne(this::toEntry);
         }
     }
 
@@ -68,40 +75,50 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry getByName(String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME)
+            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.META.cast(String.class))
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_NAME.eq(name))
-                    .fetchOne(OrganizationDao::toEntry);
+                    .fetchOne(this::toEntry);
         }
     }
 
-    public UUID insert(String name) {
-        return txResult(tx -> insert(tx, name));
+    public UUID insert(String name, Map<String, Object> meta) {
+        return txResult(tx -> insert(tx, name, meta));
     }
 
-    public UUID insert(DSLContext tx, String name) {
+    public UUID insert(DSLContext tx, String name, Map<String, Object> meta) {
         return tx.insertInto(ORGANIZATIONS)
-                .columns(ORGANIZATIONS.ORG_NAME)
-                .values(name)
+                .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.META)
+                .values(value(name), field("?::jsonb", serialize(meta)))
                 .returning()
                 .fetchOne()
                 .getOrgId();
     }
 
-    public void update(UUID id, String name) {
-        tx(tx -> update(tx, id, name));
+    public void update(UUID id, String name, Map<String, Object> meta) {
+        tx(tx -> update(tx, id, name, meta));
     }
 
-    public void update(DSLContext tx, UUID id, String name) {
-        tx.update(ORGANIZATIONS)
-                .set(ORGANIZATIONS.ORG_NAME, name)
-                .where(ORGANIZATIONS.ORG_ID.eq(id))
-                .execute();
+    public void update(DSLContext tx, UUID id, String name, Map<String, Object> meta) {
+        UpdateQuery<OrganizationsRecord> q = tx.updateQuery(ORGANIZATIONS);
+
+        if (name != null) {
+            q.addValue(ORGANIZATIONS.ORG_NAME, name);
+        }
+
+        if (meta != null) {
+            q.addValue(ORGANIZATIONS.META, field("?::jsonb", String.class, serialize(meta)));
+        }
+
+        q.addConditions(ORGANIZATIONS.ORG_ID.eq(id));
+        q.execute();
     }
 
     public List<OrganizationEntry> list(UUID userId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record2<UUID, String>> q = tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME)
+            SelectJoinStep<Record3<UUID, String, String>> q = tx.select(ORGANIZATIONS.ORG_ID,
+                    ORGANIZATIONS.ORG_NAME,
+                    ORGANIZATIONS.META.cast(String.class))
                     .from(ORGANIZATIONS);
 
             if (userId != null) {
@@ -117,11 +134,37 @@ public class OrganizationDao extends AbstractDao {
             }
 
             return q.orderBy(ORGANIZATIONS.ORG_NAME)
-                    .fetch(OrganizationDao::toEntry);
+                    .fetch(this::toEntry);
         }
     }
 
-    private static OrganizationEntry toEntry(Record2<UUID, String> r) {
-        return new OrganizationEntry(r.value1(), r.value2());
+    private String serialize(Map<String, Object> m) {
+        if (m == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.writeValueAsString(m);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> deserialize(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(s, Map.class);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    private OrganizationEntry toEntry(Record3<UUID, String, String> r) {
+        Map<String, Object> meta = deserialize(r.value3());
+        return new OrganizationEntry(r.value1(), r.value2(), meta);
     }
 }

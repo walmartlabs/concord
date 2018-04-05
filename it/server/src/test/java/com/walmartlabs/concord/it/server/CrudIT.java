@@ -375,24 +375,24 @@ public class CrudIT extends AbstractServerIT {
     public void testOrganization() throws Exception {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
-        String organizationName = "organization_" + randomString();
-        String updatedOrganizationName = "updateOrganization_" + randomString();
+        String orgName = "org_" + randomString();
+        String updatedOrgName = "updateOrg_" + randomString();
 
         // --- create
 
-        CreateOrganizationResponse createOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(organizationName));
+        CreateOrganizationResponse createOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(orgName));
         assertTrue(createOrganizationResponse.isOk());
         assertNotNull(createOrganizationResponse.getId());
 
         // --- update
 
-        CreateOrganizationResponse updateOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(createOrganizationResponse.getId(),updatedOrganizationName));
+        CreateOrganizationResponse updateOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(createOrganizationResponse.getId(),updatedOrgName, null));
         assertEquals(updateOrganizationResponse.getResult(),OperationResult.UPDATED);
         assertEquals(updateOrganizationResponse.getId(), createOrganizationResponse.getId());
 
         // --- get
 
-        OrganizationEntry organizationEntry = organizationResource.get(updatedOrganizationName);
+        OrganizationEntry organizationEntry = organizationResource.get(updatedOrgName);
         assertNotNull(organizationEntry);
         assertEquals(createOrganizationResponse.getId(), organizationEntry.getId());
 
@@ -400,8 +400,40 @@ public class CrudIT extends AbstractServerIT {
 
         List<OrganizationEntry> organizationEntryList = organizationResource.list(true);
         assertNotNull(organizationEntryList);
-        organizationEntry = findOrganization(organizationEntryList, updatedOrganizationName);
+        organizationEntry = findOrganization(organizationEntryList, updatedOrgName);
         assertNotNull(organizationEntry);
+    }
+    
+    @Test(timeout = 30000)
+    public void testOrgMeta() throws Exception {
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+
+        String orgName = "org_" + randomString();
+        Map<String, Object> meta = Collections.singletonMap("x", true);
+
+        CreateOrganizationResponse cor = organizationResource.createOrUpdate(new OrganizationEntry(orgName, meta));
+
+        // ---
+
+        OrganizationEntry e = organizationResource.get(orgName);
+        assertNotNull(e);
+
+        Map<String, Object> meta2 = e.getMeta();
+        assertNotNull(meta2);
+        assertEquals(meta.get("x"), meta2.get("x"));
+
+        // ---
+
+        meta = Collections.singletonMap("y", 123);
+        organizationResource.createOrUpdate(new OrganizationEntry(cor.getId(), null, meta));
+
+        e = organizationResource.get(orgName);
+        assertNotNull(e);
+
+        Map<String, Object> meta3 = e.getMeta();
+        assertNotNull(meta3);
+        assertEquals(1, meta3.size());
+        assertEquals(meta.get("y"), meta3.get("y"));
     }
 
     @Test(timeout = 30000)

@@ -47,12 +47,12 @@ public class OrganizationResourceImpl implements OrganizationResource, Resource 
     @Override
     public CreateOrganizationResponse createOrUpdate(OrganizationEntry entry) {
         UUID orgId = entry.getId();
-        if (orgId != null) {
-            orgDao.update(orgId, entry.getName());
-            return new CreateOrganizationResponse(orgId, OperationResult.UPDATED);
-        } else {
+        if (orgId == null) {
             orgId = orgManager.create(entry);
             return new CreateOrganizationResponse(orgId, OperationResult.CREATED);
+        } else {
+            orgManager.update(entry);
+            return new CreateOrganizationResponse(orgId, OperationResult.UPDATED);
         }
     }
 

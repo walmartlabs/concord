@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
@@ -37,15 +38,23 @@ public class OrganizationEntry implements Serializable {
     @ConcordKey
     private final String name;
 
+    private final Map<String, Object> meta;
+
     public OrganizationEntry(String name) {
-        this(null, name);
+        this(null, name, null);
+    }
+
+    public OrganizationEntry(String name, Map<String, Object> meta) {
+        this(null, name, meta);
     }
 
     @JsonCreator
     public OrganizationEntry(@JsonProperty("id") UUID id,
-                             @JsonProperty("name") String name) {
+                             @JsonProperty("name") String name,
+                             @JsonProperty("meta") Map<String, Object> meta) {
         this.id = id;
         this.name = name;
+        this.meta = meta;
     }
 
     public UUID getId() {
@@ -56,11 +65,16 @@ public class OrganizationEntry implements Serializable {
         return name;
     }
 
+    public Map<String, Object> getMeta() {
+        return meta;
+    }
+
     @Override
     public String toString() {
         return "OrganizationEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", meta=" + meta +
                 '}';
     }
 }

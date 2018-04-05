@@ -62,13 +62,10 @@ public class OrganizationManager {
     }
 
     public UUID create(OrganizationEntry entry) {
-        UserPrincipal p = UserPrincipal.getCurrent();
-        if (!p.isAdmin()) {
-            throw new AuthorizationException("Only admins are allowed to create new organizations");
-        }
+        UserPrincipal p = assertAdmin();
 
         UUID id = orgDao.txResult(tx -> {
-            UUID orgId = orgDao.insert(entry.getName());
+            UUID orgId = orgDao.insert(entry.getName(), entry.getMeta());
 
             // ...add the current user to the default new as an OWNER
             UUID teamId = teamDao.insert(tx, orgId, TeamManager.DEFAULT_TEAM_NAME, "Default team");
@@ -80,23 +77,23 @@ public class OrganizationManager {
         auditLog.add(AuditObject.ORGANIZATION, AuditAction.CREATE)
                 .field("id", id)
                 .field("name", entry.getName())
+                .field("meta", entry.getMeta())
                 .log();
 
         return id;
     }
 
     public void update(OrganizationEntry entry) {
-        UserPrincipal p = UserPrincipal.getCurrent();
-        if (!p.isAdmin()) {
-            throw new AuthorizationException("Only admins are allowed to update organizations");
-        }
+        assertAdmin();
 
         UUID orgId = entry.getId();
-        orgDao.update(orgId, entry.getName());
+        orgDao.update(orgId, entry.getName(), entry.getMeta());
 
         // TODO delta?
         auditLog.add(AuditObject.ORGANIZATION, AuditAction.UPDATE)
                 .field("id", orgId)
+                .field("name", entry.getName())
+                .field("meta", entry.getMeta())
                 .log();
     }
 
@@ -144,5 +141,13 @@ public class OrganizationManager {
         }
 
         return e;
+    }
+
+    private static UserPrincipal assertAdmin() {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (!p.isAdmin()) {
+            throw new AuthorizationException("Only admins are allowed to update organizations");
+        }
+        return p;
     }
 }

@@ -57,4 +57,12 @@
     <changeSet id="64200" author="ibodrov@gmail.com">
         <addUniqueConstraint tableName="POLICIES" columnNames="POLICY_NAME"/>
     </changeSet>
+
+    <changeSet id="64300" author="ibodrov@gmail.com">
+        <addColumn tableName="ORGANIZATIONS">
+            <column name="META" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
