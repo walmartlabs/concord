@@ -20,14 +20,12 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -107,7 +105,6 @@ public class ProjectManager {
                     githubWebhookService.register(projectId, v.getName(), v.getUrl());
                     repositoryManager.insert(tx, orgId, prevEntry.getOrgName(), projectId, prevEntry.getName(), v);
                 });
-                insertRepos(tx, projectId, repos);
             }
         });
     }
@@ -141,9 +138,5 @@ public class ProjectManager {
             }
             secretManager.assertAccess(orgId, null, secretName, ResourceAccessLevel.READER, false);
         }
-    }
-
-    private void insertRepos(DSLContext tx, UUID projectId, Map<String, RepositoryEntry> repos) {
-
     }
 }

@@ -14,4 +14,8 @@
     <changeSet id="64001" author="ybrigo@gmail.com">
         <dropNotNullConstraint tableName="SECRETS" columnName="SECRET_DATA"/>
     </changeSet>
+
+    <changeSet id="64200" author="ibodrov@gmail.com">
+        <addUniqueConstraint tableName="POLICIES" columnNames="POLICY_NAME"/>
+    </changeSet>
 </databaseChangeLog>

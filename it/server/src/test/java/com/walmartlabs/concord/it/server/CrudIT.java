@@ -31,6 +31,10 @@ import com.walmartlabs.concord.server.api.org.inventory.*;
 import com.walmartlabs.concord.server.api.org.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
 import com.walmartlabs.concord.server.api.org.landing.LandingPageResource;
+import com.walmartlabs.concord.server.api.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.api.org.policy.PolicyLinkEntry;
+import com.walmartlabs.concord.server.api.org.policy.PolicyOperationResponse;
+import com.walmartlabs.concord.server.api.org.policy.PolicyResource;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretResource;
@@ -400,8 +404,83 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(organizationEntry);
     }
 
+    @Test(timeout = 30000)
+    public void testPolicies() throws Exception {
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+
+        String orgName = "org_" + randomString();
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        com.walmartlabs.concord.server.api.org.project.ProjectResource projectResource = proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
+
+        String projectName = "project_" + randomString();
+        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+
+        // ---
+
+        PolicyResource policyResource = proxy(PolicyResource.class);
+
+        String policyName = "policy_" + randomString();
+        Map<String, Object> policyRules = Collections.singletonMap("x", 123);
+
+        PolicyOperationResponse por = policyResource.createOrUpdate(new PolicyEntry(policyName, policyRules));
+
+        String newPolicyName = "policy2_" + randomString();
+        policyResource.createOrUpdate(new PolicyEntry(por.getId(), newPolicyName, policyRules));
+
+        policyResource.createOrUpdate(new PolicyEntry(por.getId(), policyName, policyRules));
+
+        // ---
+
+        PolicyEntry pe = policyResource.get(policyName);
+        assertNotNull(pe);
+
+        // ---
+
+        policyResource.link(policyName, new PolicyLinkEntry(orgName, projectName));
+
+        List<PolicyEntry> l = policyResource.list(orgName, projectName);
+        assertEquals(1, l.size());
+        assertEquals(policyName, l.get(0).getName());
+
+        // ---
+
+        policyResource.link(policyName, new PolicyLinkEntry(orgName));
+
+        l = policyResource.list(orgName, null);
+        assertEquals(1, l.size());
+        assertEquals(policyName, l.get(0).getName());
+
+        // ---
+
+        policyResource.unlink(policyName, orgName, projectName);
+        l = policyResource.list(orgName, projectName);
+        assertEquals(1, l.size());
+        l = policyResource.list(orgName, null);
+        assertEquals(1, l.size());
+
+        // ---
+
+        policyResource.unlink(policyName, orgName, null);
+        l = policyResource.list(orgName, projectName);
+        assertEquals(0, l.size());
+        l = policyResource.list(orgName, null);
+        assertEquals(0, l.size());
+
+        // ---
+
+        policyResource.delete(policyName);
+        l = policyResource.list(null, null);
+        for (PolicyEntry e : l) {
+            if (policyName.equals(e.getName())) {
+                fail("Should've been removed: " + e.getName());
+            }
+        }
+    }
+
     private static OrganizationEntry findOrganization(List<OrganizationEntry> l, String name) {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
-
 }

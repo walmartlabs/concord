@@ -21,31 +21,60 @@ package com.walmartlabs.concord.server.api.org.policy;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.validation.Valid;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Api(value = "Policy", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
-@Path("/api/v1/org")
+@Path("/api/v2/policy")
 public interface PolicyResource {
 
     @GET
-    @ApiOperation("Get an org's policy")
-    @Path("/{orgName}/policy")
+    @ApiOperation("Get an existing policy")
+    @Path("/{policyName}")
     @Produces(MediaType.APPLICATION_JSON)
-    PolicyEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName);
+    PolicyEntry get(@ApiParam @PathParam("policyName") @ConcordKey String policyName);
+
+    @POST
+    @ApiOperation("Create or update a policy")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    PolicyOperationResponse createOrUpdate(@ApiParam @Valid PolicyEntry entry);
+
+
+    @DELETE
+    @ApiOperation("Delete an existing policy")
+    @Path("/{policyName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    GenericOperationResultResponse delete(@ApiParam @PathParam("policyName") @ConcordKey String policyName);
+
+    @PUT
+    @ApiOperation("Link an existing policy to an organization or a project")
+    @Path("/{policyName}/link")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    GenericOperationResultResponse link(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
+                                        @ApiParam @Valid PolicyLinkEntry entry);
+
+    @DELETE
+    @ApiOperation("Unlink an existing policy")
+    @Path("/{policyName}/link")
+    @Produces(MediaType.APPLICATION_JSON)
+    GenericOperationResultResponse unlink(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
+                                          @ApiParam @QueryParam("orgName") @ConcordKey String orgName,
+                                          @ApiParam @QueryParam("projectName") @ConcordKey String projectName);
 
     @GET
-    @ApiOperation("Get a project's policy")
-    @Path("/{orgName}/project/{projectName}/policy")
+    @ApiOperation("List policies, optionally filtering by organization and/or project links")
+    @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    PolicyEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                    @ApiParam @PathParam("projectName") @ConcordKey String projectName);
+    List<PolicyEntry> list(@ApiParam @QueryParam("orgName") @ConcordKey String orgName,
+                           @ApiParam @QueryParam("projectName") @ConcordKey String projectName);
 }

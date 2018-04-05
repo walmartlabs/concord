@@ -21,56 +21,39 @@ package com.walmartlabs.concord.server.api.org.policy;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.OperationResult;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.UUID;
 
-@JsonInclude(Include.NON_NULL)
-public class PolicyEntry implements Serializable {
+public class PolicyOperationResponse implements Serializable {
 
+    private final boolean ok = true;
     private final UUID id;
-
-    @ConcordKey
-    private final String name;
-
-    private final Map<String, Object> rules;
-
-    public PolicyEntry(String name, Map<String, Object> rules) {
-        this(null, name, rules);
-    }
+    private final OperationResult result;
 
     @JsonCreator
-    public PolicyEntry(@JsonProperty("id") UUID id,
-                       @JsonProperty("name") String name,
-                       @JsonProperty("rules") Map<String, Object> rules) {
+    public PolicyOperationResponse(@JsonProperty("id") UUID id,
+                                   @JsonProperty("result") OperationResult result) {
         this.id = id;
-        this.name = name;
-        this.rules = rules;
+        this.result = result;
     }
 
     public UUID getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Map<String, Object> getRules() {
-        return rules;
+    public OperationResult getResult() {
+        return result;
     }
 
     @Override
     public String toString() {
-        return "PolicyEntry{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", rules=" + rules +
+        return "PolicyOperationResponse{" +
+                "ok=" + ok +
+                ", id=" + id +
+                ", result=" + result +
                 '}';
     }
 }

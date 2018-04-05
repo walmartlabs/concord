@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.jooq.tables.records.PolicyLinksRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -36,6 +37,8 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.POLICIES;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICY_LINKS;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.value;
 
 @Named
 public class PolicyDao extends AbstractDao {
@@ -49,7 +52,27 @@ public class PolicyDao extends AbstractDao {
         this.objectMapper = new ObjectMapper();
     }
 
-    public PolicyEntry get(UUID orgId, UUID projectId) {
+    public UUID getId(String name) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(POLICIES.POLICY_ID)
+                    .from(POLICIES)
+                    .where(POLICIES.POLICY_NAME.eq(name))
+                    .fetchOne(POLICIES.POLICY_ID);
+        }
+    }
+
+    public PolicyEntry get(UUID policyId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(POLICIES.POLICY_ID,
+                    POLICIES.POLICY_NAME,
+                    POLICIES.RULES.cast(String.class))
+                    .from(POLICIES)
+                    .where(POLICIES.POLICY_ID.eq(policyId))
+                    .fetchOne(this::toEntry);
+        }
+    }
+
+    public PolicyEntry getLinked(UUID orgId, UUID projectId) {
         try (DSLContext tx = DSL.using(cfg)) {
 
             SelectOnConditionStep<Record5<UUID, String, String, UUID, UUID>> q =
@@ -74,7 +97,62 @@ public class PolicyDao extends AbstractDao {
 
             q.where(c);
 
-            return findPolicyEntry(q.fetch(this::toEntry));
+            return findPolicyEntry(q.fetch(this::toRule));
+        }
+    }
+
+    public UUID insert(String name, Map<String, Object> rules) {
+        return txResult(tx -> tx.insertInto(POLICIES)
+                .columns(POLICIES.POLICY_NAME, POLICIES.RULES)
+                .values(value(name), field("?::jsonb", serialize(rules)))
+                .returning(POLICIES.POLICY_ID)
+                .fetchOne()
+                .getPolicyId());
+    }
+
+    public void update(UUID policyId, String name, Map<String, Object> rules) {
+        tx(tx -> tx.update(POLICIES)
+                .set(POLICIES.POLICY_NAME, name)
+                .set(POLICIES.RULES, field("?::jsonb", String.class, serialize(rules)))
+                .where(POLICIES.POLICY_ID.eq(policyId))
+                .execute());
+    }
+
+    public void delete(UUID policyId) {
+        tx(tx -> tx.deleteFrom(POLICIES)
+                .where(POLICIES.POLICY_ID.eq(policyId))
+                .execute());
+    }
+
+    public void link(UUID policyId, UUID orgId, UUID projectId) {
+        tx(tx -> tx.insertInto(POLICY_LINKS)
+                .columns(POLICY_LINKS.POLICY_ID, POLICY_LINKS.ORG_ID, POLICY_LINKS.PROJECT_ID)
+                .values(policyId, orgId, projectId)
+                .execute());
+    }
+
+    public void unlink(UUID policyId, UUID orgId, UUID projectId) {
+        tx(tx -> {
+            DeleteConditionStep<PolicyLinksRecord> q = tx.deleteFrom(POLICY_LINKS)
+                    .where(POLICY_LINKS.POLICY_ID.eq(policyId));
+
+            if (projectId != null) {
+                q.and(POLICY_LINKS.PROJECT_ID.eq(projectId));
+            } else if (orgId != null) {
+                q.and(POLICY_LINKS.ORG_ID.eq(orgId));
+            }
+
+            q.execute();
+        });
+    }
+
+    public List<PolicyEntry> list() {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(POLICIES.POLICY_ID,
+                    POLICIES.POLICY_NAME,
+                    POLICIES.RULES.cast(String.class))
+                    .from(POLICIES)
+                    .fetch(this::toEntry);
         }
     }
 
@@ -98,7 +176,13 @@ public class PolicyDao extends AbstractDao {
         return new PolicyEntry(r.policyId, r.policyName, r.rules);
     }
 
-    private PolicyRule toEntry(Record5<UUID, String, String, UUID, UUID> r) {
+    private PolicyEntry toEntry(Record3<UUID, String, String> r) {
+        return new PolicyEntry(r.get(POLICIES.POLICY_ID),
+                r.get(POLICIES.POLICY_NAME),
+                deserialize(r.value3()));
+    }
+
+    private PolicyRule toRule(Record5<UUID, String, String, UUID, UUID> r) {
         return new PolicyRule(
                 r.get(POLICY_LINKS.ORG_ID),
                 r.get(POLICY_LINKS.PROJECT_ID),
@@ -107,14 +191,26 @@ public class PolicyDao extends AbstractDao {
                 deserialize(r.value3()));
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> deserialize(String ab) {
-        if (ab == null) {
+    private String serialize(Map<String, Object> m) {
+        if (m == null) {
             return null;
         }
 
         try {
-            return objectMapper.readValue(ab, Map.class);
+            return objectMapper.writeValueAsString(m);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> deserialize(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(s, Map.class);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

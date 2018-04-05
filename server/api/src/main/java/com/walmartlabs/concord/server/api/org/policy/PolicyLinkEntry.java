@@ -27,50 +27,45 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import java.io.Serializable;
-import java.util.Map;
-import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
-public class PolicyEntry implements Serializable {
-
-    private final UUID id;
+public class PolicyLinkEntry implements Serializable {
 
     @ConcordKey
-    private final String name;
+    private final String orgName;
 
-    private final Map<String, Object> rules;
+    @ConcordKey
+    private final String projectName;
 
-    public PolicyEntry(String name, Map<String, Object> rules) {
-        this(null, name, rules);
+    public PolicyLinkEntry() {
+        this(null, null);
+    }
+
+    public PolicyLinkEntry(String orgName) {
+        this(orgName, null);
     }
 
     @JsonCreator
-    public PolicyEntry(@JsonProperty("id") UUID id,
-                       @JsonProperty("name") String name,
-                       @JsonProperty("rules") Map<String, Object> rules) {
-        this.id = id;
-        this.name = name;
-        this.rules = rules;
+    public PolicyLinkEntry(@JsonProperty("orgName") String orgName,
+                           @JsonProperty("projectName") String projectName) {
+
+        this.orgName = orgName;
+        this.projectName = projectName;
     }
 
-    public UUID getId() {
-        return id;
+    public String getOrgName() {
+        return orgName;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Map<String, Object> getRules() {
-        return rules;
+    public String getProjectName() {
+        return projectName;
     }
 
     @Override
     public String toString() {
-        return "PolicyEntry{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", rules=" + rules +
+        return "PolicyLinkEntry{" +
+                "orgName='" + orgName + '\'' +
+                ", projectName='" + projectName + '\'' +
                 '}';
     }
 }
