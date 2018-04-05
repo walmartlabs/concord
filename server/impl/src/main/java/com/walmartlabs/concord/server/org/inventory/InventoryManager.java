@@ -24,8 +24,9 @@ import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryEntry;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryOwner;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryVisibility;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -40,11 +41,13 @@ public class InventoryManager {
 
     private final InventoryDao inventoryDao;
     private final UserDao userDao;
+    private final AuditLog auditLog;
 
     @Inject
-    public InventoryManager(InventoryDao inventoryDao, UserDao userDao) {
+    public InventoryManager(InventoryDao inventoryDao, UserDao userDao, AuditLog auditLog) {
         this.inventoryDao = inventoryDao;
         this.userDao = userDao;
+        this.auditLog = auditLog;
     }
 
     public InventoryEntry get(UUID inventoryId) {
@@ -57,7 +60,15 @@ public class InventoryManager {
         UserPrincipal p = UserPrincipal.getCurrent();
         UUID ownerId = p.getId();
 
-        return inventoryDao.insert(ownerId, entry.getName(), orgId, parentId, entry.getVisibility());
+        UUID id = inventoryDao.insert(ownerId, entry.getName(), orgId, parentId, entry.getVisibility());
+
+        auditLog.add(AuditObject.INVENTORY, AuditAction.CREATE)
+                .field("id", id)
+                .field("ordId", orgId)
+                .field("name", entry.getName())
+                .log();
+
+        return id;
     }
 
     public void update(UUID inventoryId, InventoryEntry entry) {
@@ -71,12 +82,23 @@ public class InventoryManager {
         }
 
         inventoryDao.update(inventoryId, entry.getName(), parentId, visibility);
+
+        // TODO diff?
+        auditLog.add(AuditObject.INVENTORY, AuditAction.UPDATE)
+                .field("id", inventoryId)
+                .log();
     }
 
     public void delete(UUID inventoryId) {
-        assertInventoryAccess(inventoryId, ResourceAccessLevel.WRITER, true);
+        InventoryEntry e = assertInventoryAccess(inventoryId, ResourceAccessLevel.WRITER, true);
 
         inventoryDao.delete(inventoryId);
+
+        auditLog.add(AuditObject.INVENTORY, AuditAction.DELETE)
+                .field("id", e.getId())
+                .field("orgId", e.getOrgId())
+                .field("name", e.getName())
+                .log();
     }
 
     public void updateAccessLevel(UUID inventoryId, UUID teamId, ResourceAccessLevel level) {

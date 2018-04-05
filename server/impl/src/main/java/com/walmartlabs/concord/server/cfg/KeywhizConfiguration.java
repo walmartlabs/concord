@@ -60,7 +60,7 @@ public class KeywhizConfiguration {
         this.soTimeout = getInteger(secretStorePropertyManager, KeywhizConstant.PROP_KEYWHIZ_SO_TIMEOUT, 5_000);
         this.connectionRequestTimeout = getInteger(secretStorePropertyManager, KeywhizConstant.PROP_KEYWHIZ_CONNECTION_REQUEST_TIMEOUT, 5_000);
 
-        log.info("Keywhiz support: {}", enabled);
+        log.info("init -> keywhiz support: {}", enabled);
     }
 
     public boolean isEnabled() {

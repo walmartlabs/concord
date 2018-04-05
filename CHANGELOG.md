@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: initial audit logging implementation;
 - keywhiz: initial support;
 - concord-server: support for symlinks on initial process state
 ingestion;

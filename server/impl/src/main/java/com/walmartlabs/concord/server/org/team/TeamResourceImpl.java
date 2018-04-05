@@ -23,14 +23,9 @@ package com.walmartlabs.concord.server.org.team;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.team.*;
-import com.walmartlabs.concord.server.api.user.UserEntry;
-import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -38,13 +33,9 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.naming.NamingException;
-import javax.ws.rs.WebApplicationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Named
 public class TeamResourceImpl implements TeamResource, Resource {
@@ -78,20 +69,10 @@ public class TeamResourceImpl implements TeamResource, Resource {
             teamId = teamDao.getId(org.getId(), entry.getName());
         }
         if (teamId != null) {
-            teamManager.assertAccess(org.getId(), teamId, null, TeamRole.MAINTAINER, true);
-            teamDao.update(teamId, entry.getName(), entry.getDescription());
+            teamManager.update(teamId, entry.getName(), entry.getDescription());
             return new CreateTeamResponse(OperationResult.UPDATED, teamId);
         } else {
-            teamManager.assertAccess(org.getId(), TeamRole.OWNER);
-            teamId = teamDao.txResult(tx -> {
-                UUID tId = teamDao.insert(tx, org.getId(), entry.getName(), entry.getDescription());
-
-                // add the current user as a team maintainer
-                UUID userId = UserPrincipal.getCurrent().getId();
-                teamDao.addUser(tx, tId, userId, TeamRole.MAINTAINER);
-
-                return tId;
-            });
+            teamId = teamManager.insert(org.getId(), entry.getName(), entry.getDescription());
             return new CreateTeamResponse(OperationResult.CREATED, teamId);
         }
     }
@@ -122,26 +103,7 @@ public class TeamResourceImpl implements TeamResource, Resource {
             throw new ValidationErrorsException("Empty user list");
         }
 
-        TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
-
-        teamDao.tx(tx -> {
-            for (TeamUserEntry u : users) {
-                UserType type = u.getUserType();
-                if (type == null) {
-                    type = UserPrincipal.getCurrent().getType();
-                }
-
-                UUID userId = getOrCreateUserId(u.getUsername(), type);
-
-                TeamRole role = u.getRole();
-                if (role == null) {
-                    role = TeamRole.MEMBER;
-                }
-
-                teamDao.addUser(tx, t.getId(), userId, role);
-            }
-        });
-
+        teamManager.addUsers(orgName, teamName, users);
         return new AddTeamUsersResponse();
     }
 
@@ -151,15 +113,7 @@ public class TeamResourceImpl implements TeamResource, Resource {
             throw new ValidationErrorsException("Empty user list");
         }
 
-        TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
-
-        Collection<UUID> userIds = usernames.stream()
-                .map(userManager::getId)
-                .flatMap(id -> id.map(Stream::of).orElseGet(Stream::empty))
-                .collect(Collectors.toSet());
-
-        teamDao.removeUsers(t.getId(), userIds);
-
+        teamManager.removeUsers(orgName, teamName, usernames);
         return new RemoveTeamUsersResponse();
     }
 
@@ -168,30 +122,5 @@ public class TeamResourceImpl implements TeamResource, Resource {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, orgMembersOnly);
         return teamManager.assertAccess(org.getId(), teamName, requiredRole, teamMembersOnly);
-    }
-
-    private void assertIsAdmin() {
-        if (!UserPrincipal.getCurrent().isAdmin()) {
-            throw new UnauthorizedException("The current user is not an administrator");
-        }
-    }
-
-    private UUID getOrCreateUserId(String username, UserType type) {
-        UserEntry user = userManager.getOrCreate(username, type);
-
-        if (user == null) {
-            try {
-                LdapInfo i = ldapManager.getInfo(username);
-                if (i == null) {
-                    throw new WebApplicationException("User not found: " + username);
-                }
-            } catch (NamingException e) {
-                throw new WebApplicationException("Error while retrieving LDAP data: " + e.getMessage(), e);
-            }
-
-            user = userManager.getOrCreate(username, type);
-        }
-
-        return user.getId();
     }
 }

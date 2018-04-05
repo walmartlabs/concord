@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security;
  */
 
 import com.google.common.base.Throwables;
+import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
@@ -68,13 +69,14 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     };
 
     private final ApiKeyDao apiKeyDao;
-
     private final SecretStoreConfiguration secretCfg;
+    private final AuditLog auditLog;
 
     @Inject
-    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao, SecretStoreConfiguration secretCfg) {
+    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao, SecretStoreConfiguration secretCfg, AuditLog auditLog) {
         this.apiKeyDao = apiKeyDao;
         this.secretCfg = secretCfg;
+        this.auditLog = auditLog;
     }
 
     @Override
@@ -104,6 +106,20 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         return new UsernamePasswordToken();
+    }
+
+    @Override
+    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+        boolean loggedId = executeLogin(request, response);
+
+        if (!loggedId) {
+            HttpServletResponse resp = WebUtils.toHttp(response);
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            forceBasicAuthIfNeeded(request, response);
+        }
+
+        return loggedId;
     }
 
     private AuthenticationToken createFromAuthHeader(String h, ServletRequest request) {
@@ -141,20 +157,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         } catch (GeneralSecurityException e) {
             throw Throwables.propagate(e);
         }
-    }
-
-    @Override
-    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
-        boolean loggedId = executeLogin(request, response);
-
-        if (!loggedId) {
-            HttpServletResponse resp = WebUtils.toHttp(response);
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
-            forceBasicAuthIfNeeded(request, response);
-        }
-
-        return loggedId;
     }
 
     private static void validateApiKey(String s) {

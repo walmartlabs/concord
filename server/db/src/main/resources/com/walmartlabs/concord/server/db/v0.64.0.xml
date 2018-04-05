@@ -15,6 +15,45 @@
         <dropNotNullConstraint tableName="SECRETS" columnName="SECRET_DATA"/>
     </changeSet>
 
+    <changeSet id="64100" author="ibodrov@gmail.com">
+        <createTable tableName="AUDIT_LOG">
+            <!-- for external consumers -->
+            <column name="ENTRY_ID" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ENTRY_DATE" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="USER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ENTRY_OBJECT" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENTRY_ACTION" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENTRY_DETAILS" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="64101" author="ibodrov@gmail.com">
+        <createView viewName="V_AUDIT_LOG">
+            select
+                ENTRY_ID,
+                ENTRY_DATE,
+                USER_ID,
+                (select USERNAME from USERS u where u.USER_ID = a.USER_ID) as USERNAME,
+                ENTRY_OBJECT,
+                ENTRY_ACTION,
+                ENTRY_DETAILS
+            from AUDIT_LOG a
+        </createView>
+    </changeSet>
+
     <changeSet id="64200" author="ibodrov@gmail.com">
         <addUniqueConstraint tableName="POLICIES" columnNames="POLICY_NAME"/>
     </changeSet>

@@ -245,7 +245,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
         }
     }
 
-    private SecretStoreType assertStoreType(MultipartInput input) throws IOException {
+    private SecretStoreType assertStoreType(MultipartInput input) {
         String s = MultipartUtils.getString(input, "storeType");
         if (s == null) {
             return secretManager.getDefaultSecretStoreType();

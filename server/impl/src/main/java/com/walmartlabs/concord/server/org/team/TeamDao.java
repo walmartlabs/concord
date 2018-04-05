@@ -70,6 +70,15 @@ public class TeamDao extends AbstractDao {
         }
     }
 
+    public UUID getOrgId(UUID teamId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(TEAMS.ORG_ID)
+                    .from(TEAMS)
+                    .where(TEAMS.TEAM_ID.eq(teamId))
+                    .fetchOne(TEAMS.ORG_ID);
+        }
+    }
+
     public UUID insert(UUID orgId, String name, String description) {
         return txResult(tx -> insert(tx, orgId, name, description));
     }

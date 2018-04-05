@@ -22,6 +22,9 @@ package com.walmartlabs.concord.server.org;
 
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.team.TeamRole;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -44,12 +47,18 @@ public class OrganizationManager {
     private final OrganizationDao orgDao;
     private final TeamDao teamDao;
     private final UserManager userManager;
+    private final AuditLog auditLog;
 
     @Inject
-    public OrganizationManager(OrganizationDao orgDao, TeamDao teamDao, UserManager userManager) {
+    public OrganizationManager(OrganizationDao orgDao,
+                               TeamDao teamDao,
+                               UserManager userManager,
+                               AuditLog auditLog) {
+
         this.orgDao = orgDao;
         this.teamDao = teamDao;
         this.userManager = userManager;
+        this.auditLog = auditLog;
     }
 
     public UUID create(OrganizationEntry entry) {
@@ -58,7 +67,7 @@ public class OrganizationManager {
             throw new AuthorizationException("Only admins are allowed to create new organizations");
         }
 
-        return orgDao.txResult(tx -> {
+        UUID id = orgDao.txResult(tx -> {
             UUID orgId = orgDao.insert(entry.getName());
 
             // ...add the current user to the default new as an OWNER
@@ -67,6 +76,13 @@ public class OrganizationManager {
 
             return orgId;
         });
+
+        auditLog.add(AuditObject.ORGANIZATION, AuditAction.CREATE)
+                .field("id", id)
+                .field("name", entry.getName())
+                .log();
+
+        return id;
     }
 
     public void update(OrganizationEntry entry) {
@@ -77,6 +93,11 @@ public class OrganizationManager {
 
         UUID orgId = entry.getId();
         orgDao.update(orgId, entry.getName());
+
+        // TODO delta?
+        auditLog.add(AuditObject.ORGANIZATION, AuditAction.UPDATE)
+                .field("id", orgId)
+                .log();
     }
 
     public OrganizationEntry assertExisting(UUID orgId, String orgName) {

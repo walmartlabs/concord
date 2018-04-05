@@ -29,6 +29,9 @@ import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.secret.*;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
@@ -46,6 +49,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -60,21 +64,23 @@ public class SecretManager {
     private final SecretStoreConfiguration secretCfg;
     private final OrganizationManager orgManager;
     private final UserDao userDao;
-
     private final SecretStoreProvider secretStoreProvider;
+    private final AuditLog auditLog;
 
     @Inject
     public SecretManager(SecretDao secretDao,
                          SecretStoreConfiguration secretCfg,
                          OrganizationManager orgManager,
                          UserDao userDao,
-                         SecretStoreProvider secretStoreProvider) {
+                         SecretStoreProvider secretStoreProvider,
+                         AuditLog auditLog) {
 
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
         this.orgManager = orgManager;
         this.userDao = userDao;
         this.secretStoreProvider = secretStoreProvider;
+        this.auditLog = auditLog;
     }
 
     public SecretEntry assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
@@ -187,38 +193,52 @@ public class SecretManager {
 
     public void delete(UUID orgId, String secretName) {
         SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
-        // Delete the content first
-        getSecretStore(e.getStoreType()).delete(e.getId());
 
-        // Now delete secret information from secret table
+        // delete the content first
+        getSecretStore(e.getStoreType()).delete(e.getId());
+        // now delete secret information from secret table
         secretDao.delete(e.getId());
+
+        auditLog.add(AuditObject.SECRET, AuditAction.DELETE)
+                .field("id", e.getId())
+                .field("orgId", e.getId())
+                .field("name", e.getName())
+                .log();
     }
 
     public String generatePassword() {
         return RandomStringUtils.random(SECRET_PASSWORD_LENGTH, SECRET_PASSWORD_CHARS);
     }
 
+    // TODO refactor using getRaw
     public DecryptedSecret getSecret(UUID orgId, String name, SecretType expectedType, String password) {
-        SecretEntry entry = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
+        SecretEntry e = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
 
-        // get
-        byte[] data = getSecretStore(entry.getStoreType()).get(entry.getId());
+        byte[] data = getSecretStore(e.getStoreType()).get(e.getId());
         if (data == null) {
-            return null;
+            throw new IllegalStateException("Can't find the secret's data in the store " + e.getStoreType() + " : " + e.getId());
         }
 
-        if (expectedType != null && entry.getType() != expectedType) {
-            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected " + expectedType + ", got: " + entry.getType());
+        if (expectedType != null && e.getType() != expectedType) {
+            throw new IllegalArgumentException("Invalid secret type: " + name + ", expected " + expectedType + ", got: " + e.getType());
         }
 
         SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
-        assertEncryptedByType(name, providedEncryptedByType, entry.getEncryptedByType());
+        assertEncryptedByType(name, providedEncryptedByType, e.getEncryptedByType());
 
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
-        Secret s = decrypt(entry.getType(), data, pwd, salt);
-        return new DecryptedSecret(entry.getId(), s);
+        Secret s = decrypt(e.getType(), data, pwd, salt);
+
+        auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
+                .field("id", e.getId())
+                .field("orgId", e.getOrgId())
+                .field("name", e.getName())
+                .field("type", e.getType())
+                .log();
+
+        return new DecryptedSecret(e.getId(), s);
     }
 
     public SecretDataEntry getRaw(UUID orgId, String name, String password) {
@@ -232,12 +252,22 @@ public class SecretManager {
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
+        byte[] ab;
         try {
-            byte[] ab = SecretUtils.decrypt(data, pwd, salt);
-            return new SecretDataEntry(entry, ab);
+            ab = SecretUtils.decrypt(data, pwd, salt);
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error decrypting a secret: " + name, e);
         }
+
+        // TODO add access context? e.g. access from a flow, repo, etc
+        auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
+                .field("id", entry.getId())
+                .field("orgId", entry.getOrgId())
+                .field("name", entry.getName())
+                .field("type", entry.getType())
+                .log();
+
+        return new SecretDataEntry(entry, ab);
     }
 
     public KeyPair getKeyPair(UUID orgId, String name, String password) {
@@ -285,18 +315,22 @@ public class SecretManager {
         SecretEncryptedByType encryptedByType = getEncryptedBy(password);
 
         UUID id = secretDao.insert(orgId, name, getOwnerId(), type, encryptedByType, storeType, visibility);
-
         try {
             getSecretStore(storeType).store(id, ab);
         } catch (Exception e) {
-            /*
-             * We can't use the transaction here because store may update the record in the database independently,
-             * As our transaction has not yet finalized so we may end up having exception in that case
-             * */
+            // we can't use the transaction here because the store may update the record in the database independently,
+            // as our transaction has not yet finalized so we may end up having exception in that case
             secretDao.delete(id);
-
             throw Throwables.propagate(e);
         }
+
+        auditLog.add(AuditObject.SECRET, AuditAction.CREATE)
+                .field("id", id)
+                .field("orgId", orgId)
+                .field("type", type)
+                .field("storeType", storeType)
+                .field("name", name)
+                .log();
 
         return id;
     }

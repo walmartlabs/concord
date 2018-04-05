@@ -23,6 +23,9 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -44,6 +47,7 @@ public class ProjectManager {
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
     private final GithubWebhookService githubWebhookService;
+    private final AuditLog auditLog;
 
     @Inject
     public ProjectManager(ProjectDao projectDao,
@@ -51,7 +55,8 @@ public class ProjectManager {
                           RepositoryManager repositoryManager,
                           ProjectAccessManager accessManager,
                           SecretManager secretManager,
-                          GithubWebhookService githubWebhookService) {
+                          GithubWebhookService githubWebhookService,
+                          AuditLog auditLog) {
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -59,6 +64,7 @@ public class ProjectManager {
         this.accessManager = accessManager;
         this.secretManager = secretManager;
         this.githubWebhookService = githubWebhookService;
+        this.auditLog = auditLog;
     }
 
     public ProjectEntry get(UUID projectId) {
@@ -72,7 +78,7 @@ public class ProjectManager {
         UserPrincipal p = UserPrincipal.getCurrent();
         UUID ownerId = p.getId();
 
-        return projectDao.txResult(tx -> {
+        UUID id = projectDao.txResult(tx -> {
             boolean acceptsRawPayload = entry.getAcceptsRawPayload() != null ? entry.getAcceptsRawPayload() : false;
             UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), ownerId, entry.getCfg(),
                     entry.getVisibility(), acceptsRawPayload);
@@ -86,6 +92,15 @@ public class ProjectManager {
 
             return pId;
         });
+
+        // TODO more details?
+        auditLog.add(AuditObject.PROJECT, AuditAction.CREATE)
+                .field("id", id)
+                .field("orgId", orgId)
+                .field("name", entry.getName())
+                .log();
+
+        return id;
     }
 
     public void update(UUID projectId, ProjectEntry entry) {
@@ -107,12 +122,23 @@ public class ProjectManager {
                 });
             }
         });
+
+        // TODO more details, delta?
+        auditLog.add(AuditObject.PROJECT, AuditAction.UPDATE)
+                .field("id", projectId)
+                .log();
     }
 
     public void delete(UUID projectId) {
-        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.OWNER, true);
+        ProjectEntry e = accessManager.assertProjectAccess(projectId, ResourceAccessLevel.OWNER, true);
 
         projectDao.delete(projectId);
+
+        auditLog.add(AuditObject.PROJECT, AuditAction.DELETE)
+                .field("id", projectId)
+                .field("orgId", e.getOrgId())
+                .field("name", e.getName())
+                .log();
     }
 
     public List<ProjectEntry> list(UUID orgId) {

@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.org.policy;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
@@ -27,6 +29,9 @@ import com.walmartlabs.concord.server.api.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.api.org.policy.PolicyLinkEntry;
 import com.walmartlabs.concord.server.api.org.policy.PolicyOperationResponse;
 import com.walmartlabs.concord.server.api.org.policy.PolicyResource;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -38,6 +43,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -49,16 +55,19 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
     private final OrganizationDao orgDao;
     private final ProjectDao projectDao;
     private final PolicyDao policyDao;
+    private final AuditLog auditLog;
 
     @Inject
     public PolicyResourceImpl(OrganizationManager orgManager,
-                              OrganizationDao orgDao, ProjectDao projectDao,
-                              PolicyDao policyDao) {
+                              OrganizationDao orgDao,
+                              ProjectDao projectDao,
+                              PolicyDao policyDao, AuditLog auditLog) {
 
         this.orgManager = orgManager;
         this.orgDao = orgDao;
         this.projectDao = projectDao;
         this.policyDao = policyDao;
+        this.auditLog = auditLog;
     }
 
     @Override
@@ -75,12 +84,24 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
     public PolicyOperationResponse createOrUpdate(PolicyEntry entry) {
         assertAdmin();
 
-        UUID id = policyDao.getId(entry.getName());
+        UUID id = entry.getId();
         if (id == null) {
             id = policyDao.insert(entry.getName(), entry.getRules());
+
+            auditLog.add(AuditObject.POLICY, AuditAction.CREATE)
+                    .field("id", id)
+                    .field("name", entry.getName())
+                    .log();
+
             return new PolicyOperationResponse(id, OperationResult.CREATED);
         } else {
             policyDao.update(id, entry.getName(), entry.getRules());
+
+            auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
+                    .field("id", id)
+                    .field("name", entry.getName())
+                    .log();
+
             return new PolicyOperationResponse(id, OperationResult.UPDATED);
         }
     }
@@ -96,6 +117,11 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
 
         policyDao.delete(id);
 
+        auditLog.add(AuditObject.POLICY, AuditAction.DELETE)
+                .field("id", id)
+                .field("name", policyName)
+                .log();
+
         return new GenericOperationResultResponse(OperationResult.DELETED);
     }
 
@@ -106,6 +132,13 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
         PolicyLink l = assertLink(policyName, entry.getOrgName(), entry.getProjectName());
         policyDao.link(l.policyId, l.orgId, l.projectId);
 
+        auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
+                .field("id", l.policyId)
+                .field("name", policyName)
+                .field("link", l)
+                .field("action", "link")
+                .log();
+
         return new GenericOperationResultResponse(OperationResult.UPDATED);
     }
 
@@ -115,6 +148,13 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
 
         PolicyLink l = assertLink(policyName, orgName, projectName);
         policyDao.unlink(l.policyId, l.orgId, l.projectId);
+
+        auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
+                .field("id", l.policyId)
+                .field("name", policyName)
+                .field("link", l)
+                .field("action", "unlink")
+                .log();
 
         return new GenericOperationResultResponse(OperationResult.DELETED);
     }
@@ -198,7 +238,8 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
         return new PolicyLink(policyId, orgId, projectId);
     }
 
-    private static class PolicyLink {
+    @JsonInclude(Include.NON_NULL)
+    private static class PolicyLink implements Serializable {
 
         private final UUID policyId;
         private final UUID orgId;
@@ -208,6 +249,16 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
             this.policyId = policyId;
             this.orgId = orgId;
             this.projectId = projectId;
+        }
+
+        // needed for audit_log data
+
+        public UUID getOrgId() {
+            return orgId;
+        }
+
+        public UUID getProjectId() {
+            return projectId;
         }
     }
 }

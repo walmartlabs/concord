@@ -76,18 +76,19 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
     public CreateInventoryResponse createOrUpdate(String orgName, InventoryEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
-        UUID inventoryId = entry.getId();
-        if (inventoryId == null) {
-            inventoryId = inventoryDao.getId(org.getId(), entry.getName());
+        UUID id = entry.getId();
+        if (id == null) {
+            id = inventoryDao.getId(org.getId(), entry.getName());
         }
 
-        if (inventoryId != null) {
-            inventoryManager.update(inventoryId, entry);
-            return new CreateInventoryResponse(OperationResult.UPDATED, inventoryId);
+        if (id != null) {
+            inventoryManager.update(id, entry);
+            return new CreateInventoryResponse(OperationResult.UPDATED, id);
         }
 
-        inventoryId = inventoryManager.insert(org.getId(), entry);
-        return new CreateInventoryResponse(OperationResult.CREATED, inventoryId);
+        id = inventoryManager.insert(org.getId(), entry);
+
+        return new CreateInventoryResponse(OperationResult.CREATED, id);
     }
 
     @Override
