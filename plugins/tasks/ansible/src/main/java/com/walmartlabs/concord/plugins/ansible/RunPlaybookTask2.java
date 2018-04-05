@@ -332,7 +332,7 @@ public class RunPlaybookTask2 implements Task {
             m = ConfigurationUtils.deepMerge(m, userCfg);
 
             // prepend plugin paths with default values
-            Map<String, Object> userDefaults = (Map<String, Object>) userCfg.get("defaults");
+            Map<String, Object> userDefaults = assertMap(userCfg, "defaults");
             if (userDefaults != null) {
                 Map<String, Object> mergedDefaults = (Map<String, Object>) m.get("defaults");
 
@@ -665,11 +665,21 @@ public class RunPlaybookTask2 implements Task {
 
     @SuppressWarnings("unchecked")
     private static <K, V> Map<K, V> getMap(Map<String, Object> args, String key) {
-        Map<K, V> result = (Map<K, V>) args.get(key);
-        if (result != null) {
-            return result;
+        return (Map<K, V>) args.get(key);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <K, V> Map<K, V> assertMap(Map<String, Object> args, String key) {
+        Object v = args.get(key);
+        if (v == null) {
+            return null;
         }
-        return null;
+
+        if (!(v instanceof Map)) {
+            throw new IllegalArgumentException("Expected an object '" + key + ", got: " + v);
+        }
+
+        return (Map<K, V>) v;
     }
 
     private static boolean getBoolean(Map<String, Object> args, String key, boolean defaultValue) {
