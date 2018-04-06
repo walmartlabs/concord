@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.ansible;
  * =====
  */
 
+@Deprecated
 public final class AnsibleConfigurationConstants {
 
     public static final String GROUP_KEY = "ansible";

@@ -41,11 +41,13 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
 @Named
+@Deprecated
 public class PrivateKeyProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyProcessor.class);
@@ -78,6 +80,8 @@ public class PrivateKeyProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
+        deprecationWarning(instanceId);
+
         String secret = findMatchingSecret(payload, keys);
         if (secret == null) {
             logManager.error(instanceId, "No matching secrets found");
@@ -98,13 +102,9 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path dst = workspace.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
-        if (Files.exists(dst)) {
-            logManager.error(instanceId, "File already exists: " + dst);
-            throw new ProcessException(instanceId, "File already exists: " + dst);
-        }
 
         try {
-            Files.write(dst, keyPair.getPrivateKey());
+            Files.write(dst, keyPair.getPrivateKey(), StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             logManager.error(instanceId, "Error while copying a private key: " + dst, e);
             throw new ProcessException(instanceId, "Error while copying a private key: " + dst, e);
@@ -127,6 +127,14 @@ public class PrivateKeyProcessor implements PayloadProcessor {
         }
 
         return orgId;
+    }
+
+    private void deprecationWarning(UUID instanceId) {
+        String msg = "** WARNING ****************************************************************************\n" +
+                " 'configuration.ansible.privateKeys' is deprecated.\n" +
+                " Please use 'privateKey' parameter of the Ansible task.\n" +
+                "***************************************************************************************\n";
+        logManager.log(instanceId, msg);
     }
 
     private static String findMatchingSecret(Payload payload, Collection<Map<String, Object>> items) {

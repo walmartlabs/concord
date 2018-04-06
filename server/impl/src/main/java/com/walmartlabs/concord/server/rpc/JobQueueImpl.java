@@ -131,13 +131,7 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
         String instanceId = request.getInstanceId();
         byte[] data = request.getData().toByteArray();
 
-        try {
-            logManager.log(UUID.fromString(instanceId), data);
-        } catch (IOException e) {
-            log.warn("appendLog ['{}'] -> error while writing to a log file: {}", instanceId, e.getMessage());
-            responseObserver.onError(e);
-            return;
-        }
+        logManager.log(UUID.fromString(instanceId), data);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();

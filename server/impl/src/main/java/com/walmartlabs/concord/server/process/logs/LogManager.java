@@ -61,19 +61,15 @@ public class LogManager {
         log_(instanceId, LogLevel.ERROR, log, args);
     }
 
-    public void log(UUID instanceId, String msg) throws IOException {
+    public void log(UUID instanceId, String msg) {
         log(instanceId, msg.getBytes());
     }
 
-    public void log(UUID instanceId, byte[] msg) throws IOException {
+    public void log(UUID instanceId, byte[] msg) {
         logsDao.append(instanceId, msg);
     }
 
     private void log_(UUID instanceId, LogLevel level, String msg, Object... args) {
-        try {
-            log(instanceId, LogUtils.formatMessage(level, msg, args));
-        } catch (IOException e) {
-            log.error("log ['{}', {}] -> error", instanceId, level, e);
-        }
+        log(instanceId, LogUtils.formatMessage(level, msg, args));
     }
 }

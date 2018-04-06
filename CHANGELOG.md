@@ -14,6 +14,8 @@ ingestion;
 
 ### Changed
 
+- ansible: deprecate `configuration.ansible`, `inventory` and
+`dynamicInventory` request parameters;
 - http: parse JSON responses;
 - http: use `${response}` as the default out variable.
 

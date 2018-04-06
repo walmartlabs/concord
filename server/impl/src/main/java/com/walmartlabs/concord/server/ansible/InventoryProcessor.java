@@ -21,11 +21,11 @@ package com.walmartlabs.concord.server.ansible;
  */
 
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
-import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 
@@ -41,6 +41,7 @@ import java.util.UUID;
  * This processor takes an inventory file from a request and stores it in a request's workspace
  * for {@link com.walmartlabs.concord.plugins.ansible.RunPlaybookTask2} to pick it up later.
  */
+@Deprecated
 public class InventoryProcessor implements PayloadProcessor {
 
     public static final AttachmentKey INVENTORY_FILE = AttachmentKey.register("inventory");
@@ -61,6 +62,8 @@ public class InventoryProcessor implements PayloadProcessor {
                 return chain.process(payload);
             }
         }
+
+        deprecationWarning(payload.getInstanceId());
 
         payload = payload.removeAttachment(INVENTORY_FILE)
                 .removeAttachment(DYNAMIC_INVENTORY_FILE);
@@ -86,5 +89,13 @@ public class InventoryProcessor implements PayloadProcessor {
         }
 
         return true;
+    }
+
+    private void deprecationWarning(UUID instanceId) {
+        String msg = "** WARNING ****************************************************************************\n" +
+                " 'inventory' and 'dynamicInventory' request parameters are deprecated.\n" +
+                " Please use 'inventoryFile' and 'dynamicInventoryFile' parameters of the Ansible task.\n" +
+                "***************************************************************************************\n";
+        logManager.log(instanceId, msg);
     }
 }
