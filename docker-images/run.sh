@@ -16,8 +16,10 @@ docker run -d \
 --name server \
 --link db \
 -v /opt/concord/conf/ldap.properties:/opt/concord/conf/ldap.properties:ro \
+-v /tmp:/tmp \
 -e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
+-e 'GC_LOG_DIR=/tmp/server/gc' \
 docker.prod.walmart.com/walmartlabs/concord-server:${VERSION}
 
 docker pull docker.prod.walmart.com/walmartlabs/concord-dind

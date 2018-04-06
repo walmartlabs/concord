@@ -21,6 +21,7 @@ docker run -d \
 -v ${LDAP_CFG}:/opt/concord/conf/ldap.properties:ro \
 -e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
 -e 'DB_URL=jdbc:postgresql://localhost:5432/postgres' \
+-e 'GC_LOG_DIR=/tmp/server/gc' \
 --network=host \
 walmartlabs/concord-server
 
