@@ -34,27 +34,28 @@ docker:
 
 flows:
   buildImages:
-    - dockerImage:
-        dockerfile: "docker-images/server/walmart/Dockerfile"
-        tags:
-          - "docker.prod.walmart.com/walmartlabs/concord-server:${concord_version}"
-        buildArgs:
-          concord_version: ${concord_version}
-        push: true
-    - dockerImage:
-        dockerfile: "docker-images/console/walmart/Dockerfile"
-        tags:
-          - "docker.prod.walmart.com/walmartlabs/concord-console:${concord_version}"
-        buildArgs:
-          concord_version: ${concord_version}
-        push: true
-    - dockerImage:
-        dockerfile: "docker-images/agent/walmart/Dockerfile"
-        tags:
-          - "docker.prod.walmart.com/walmartlabs/concord-agent:${concord_version}"
-        buildArgs:
-          concord_version: ${concord_version}
-        push: true
+    - parallel(failsafe):
+      - dockerImage:
+          dockerfile: "docker-images/server/walmart/Dockerfile"
+          tags:
+            - "docker.prod.walmart.com/walmartlabs/concord-server:${concord_version}"
+          buildArgs:
+            concord_version: ${concord_version}
+          push: true
+      - dockerImage:
+          dockerfile: "docker-images/console/walmart/Dockerfile"
+          tags:
+            - "docker.prod.walmart.com/walmartlabs/concord-console:${concord_version}"
+          buildArgs:
+            concord_version: ${concord_version}
+          push: true
+      - dockerImage:
+          dockerfile: "docker-images/agent/walmart/Dockerfile"
+          tags:
+            - "docker.prod.walmart.com/walmartlabs/concord-agent:${concord_version}"
+          buildArgs:
+            concord_version: ${concord_version}
+          push: true
 
   build:
     - node(docker-daemon):
