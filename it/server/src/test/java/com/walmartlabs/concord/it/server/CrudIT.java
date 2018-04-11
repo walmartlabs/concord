@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.CreateOrganizationResponse;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.OrganizationResource;
+import com.walmartlabs.concord.server.api.org.OrganizationVisibility;
 import com.walmartlabs.concord.server.api.org.inventory.*;
 import com.walmartlabs.concord.server.api.org.landing.CreateLandingResponse;
 import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
@@ -44,6 +45,12 @@ import com.walmartlabs.concord.server.api.org.team.TeamResource;
 import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
 import com.walmartlabs.concord.server.api.project.DeleteProjectResponse;
 import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
+import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
+import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
+import com.walmartlabs.concord.server.api.user.CreateUserRequest;
+import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -386,7 +393,7 @@ public class CrudIT extends AbstractServerIT {
 
         // --- update
 
-        CreateOrganizationResponse updateOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(createOrganizationResponse.getId(),updatedOrgName, null));
+        CreateOrganizationResponse updateOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(createOrganizationResponse.getId(),updatedOrgName, null, null));
         assertEquals(updateOrganizationResponse.getResult(),OperationResult.UPDATED);
         assertEquals(updateOrganizationResponse.getId(), createOrganizationResponse.getId());
 
@@ -403,7 +410,40 @@ public class CrudIT extends AbstractServerIT {
         organizationEntry = findOrganization(organizationEntryList, updatedOrgName);
         assertNotNull(organizationEntry);
     }
-    
+
+    @Test(timeout = 30000)
+    public void testOrgVisibility() throws Exception {
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+
+        String orgName = "org_" + randomString();
+
+        // create private org
+
+        CreateOrganizationResponse createOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(orgName, OrganizationVisibility.PRIVATE));
+        assertTrue(createOrganizationResponse.isOk());
+        assertNotNull(createOrganizationResponse.getId());
+
+        // --- private org available for admin
+
+        List<OrganizationEntry> orgs = organizationResource.list(false);
+        assertTrue(orgs.stream().anyMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
+
+        // add the user A
+
+        UserResource userResource = proxy(UserResource.class);
+
+        String userAName = "userA_" + randomString();
+        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
+
+        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+
+        setApiKey(apiKeyA.getKey());
+
+        orgs = organizationResource.list(true);
+        assertTrue(orgs.stream().noneMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
+    }
+
     @Test(timeout = 30000)
     public void testOrgMeta() throws Exception {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
@@ -425,7 +465,7 @@ public class CrudIT extends AbstractServerIT {
         // ---
 
         meta = Collections.singletonMap("y", 123);
-        organizationResource.createOrUpdate(new OrganizationEntry(cor.getId(), null, meta));
+        organizationResource.createOrUpdate(new OrganizationEntry(cor.getId(), null, null, meta));
 
         e = organizationResource.get(orgName);
         assertNotNull(e);

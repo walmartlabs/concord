@@ -65,7 +65,7 @@ public class OrganizationManager {
         UserPrincipal p = assertAdmin();
 
         UUID id = orgDao.txResult(tx -> {
-            UUID orgId = orgDao.insert(entry.getName(), entry.getMeta());
+            UUID orgId = orgDao.insert(entry.getName(), entry.getVisibility(), entry.getMeta());
 
             // ...add the current user to the default new as an OWNER
             UUID teamId = teamDao.insert(tx, orgId, TeamManager.DEFAULT_TEAM_NAME, "Default team");
@@ -87,7 +87,7 @@ public class OrganizationManager {
         assertAdmin();
 
         UUID orgId = entry.getId();
-        orgDao.update(orgId, entry.getName(), entry.getMeta());
+        orgDao.update(orgId, entry.getName(), entry.getVisibility(), entry.getMeta());
 
         // TODO delta?
         auditLog.add(AuditObject.ORGANIZATION, AuditAction.UPDATE)

@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.org.OrganizationVisibility;
+import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -36,6 +38,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
+import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static org.jooq.impl.DSL.*;
@@ -57,7 +60,7 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.META.cast(String.class))
+            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META.cast(String.class))
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_ID.eq(id))
                     .fetchOne(this::toEntry);
@@ -75,35 +78,43 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry getByName(String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.META.cast(String.class))
+            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META.cast(String.class))
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_NAME.eq(name))
                     .fetchOne(this::toEntry);
         }
     }
 
-    public UUID insert(String name, Map<String, Object> meta) {
-        return txResult(tx -> insert(tx, name, meta));
+    public UUID insert(String name, OrganizationVisibility visibility, Map<String, Object> meta) {
+        return txResult(tx -> insert(tx, name, visibility, meta));
     }
 
-    public UUID insert(DSLContext tx, String name, Map<String, Object> meta) {
+    public UUID insert(DSLContext tx, String name, OrganizationVisibility visibility, Map<String, Object> meta) {
+        if (visibility == null) {
+            visibility = OrganizationVisibility.PUBLIC;
+        }
+
         return tx.insertInto(ORGANIZATIONS)
-                .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.META)
-                .values(value(name), field("?::jsonb", serialize(meta)))
+                .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META)
+                .values(value(name), value(visibility.toString()), field("?::jsonb", serialize(meta)))
                 .returning()
                 .fetchOne()
                 .getOrgId();
     }
 
-    public void update(UUID id, String name, Map<String, Object> meta) {
-        tx(tx -> update(tx, id, name, meta));
+    public void update(UUID id, String name, OrganizationVisibility visibility, Map<String, Object> meta) {
+        tx(tx -> update(tx, id, name, visibility, meta));
     }
 
-    public void update(DSLContext tx, UUID id, String name, Map<String, Object> meta) {
+    public void update(DSLContext tx, UUID id, String name, OrganizationVisibility visibility, Map<String, Object> meta) {
         UpdateQuery<OrganizationsRecord> q = tx.updateQuery(ORGANIZATIONS);
 
         if (name != null) {
             q.addValue(ORGANIZATIONS.ORG_NAME, name);
+        }
+
+        if (visibility != null) {
+            q.addValue(ORGANIZATIONS.VISIBILITY, visibility.toString());
         }
 
         if (meta != null) {
@@ -116,8 +127,9 @@ public class OrganizationDao extends AbstractDao {
 
     public List<OrganizationEntry> list(UUID userId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record3<UUID, String, String>> q = tx.select(ORGANIZATIONS.ORG_ID,
+            SelectJoinStep<Record4<UUID, String, String, String>> q = tx.select(ORGANIZATIONS.ORG_ID,
                     ORGANIZATIONS.ORG_NAME,
+                    ORGANIZATIONS.VISIBILITY,
                     ORGANIZATIONS.META.cast(String.class))
                     .from(ORGANIZATIONS);
 
@@ -130,7 +142,7 @@ public class OrganizationDao extends AbstractDao {
                         .from(TEAMS)
                         .where(TEAMS.TEAM_ID.in(teamIds));
 
-                q.where(ORGANIZATIONS.ORG_ID.in(orgIds));
+                q.where(or(ORGANIZATIONS.VISIBILITY.eq(OrganizationVisibility.PUBLIC.toString()), ORGANIZATIONS.ORG_ID.in(orgIds)));
             }
 
             return q.orderBy(ORGANIZATIONS.ORG_NAME)
@@ -163,8 +175,8 @@ public class OrganizationDao extends AbstractDao {
         }
     }
 
-    private OrganizationEntry toEntry(Record3<UUID, String, String> r) {
-        Map<String, Object> meta = deserialize(r.value3());
-        return new OrganizationEntry(r.value1(), r.value2(), meta);
+    private OrganizationEntry toEntry(Record4<UUID, String, String, String> r) {
+        Map<String, Object> meta = deserialize(r.value4());
+        return new OrganizationEntry(r.value1(), r.value2(), OrganizationVisibility.valueOf(r.value3()), meta);
     }
 }

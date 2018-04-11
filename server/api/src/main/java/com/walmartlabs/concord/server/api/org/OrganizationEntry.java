@@ -38,22 +38,30 @@ public class OrganizationEntry implements Serializable {
     @ConcordKey
     private final String name;
 
+    private final OrganizationVisibility visibility;
+
     private final Map<String, Object> meta;
 
     public OrganizationEntry(String name) {
-        this(null, name, null);
+        this(null, name, null, null);
+    }
+
+    public OrganizationEntry(String name, OrganizationVisibility visibility) {
+        this(null, name, visibility, null);
     }
 
     public OrganizationEntry(String name, Map<String, Object> meta) {
-        this(null, name, meta);
+        this(null, name, null, meta);
     }
 
     @JsonCreator
     public OrganizationEntry(@JsonProperty("id") UUID id,
                              @JsonProperty("name") String name,
+                             @JsonProperty("visibility") OrganizationVisibility visibility,
                              @JsonProperty("meta") Map<String, Object> meta) {
         this.id = id;
         this.name = name;
+        this.visibility = visibility;
         this.meta = meta;
     }
 
@@ -65,6 +73,10 @@ public class OrganizationEntry implements Serializable {
         return name;
     }
 
+    public OrganizationVisibility getVisibility() {
+        return visibility;
+    }
+
     public Map<String, Object> getMeta() {
         return meta;
     }
@@ -74,6 +86,7 @@ public class OrganizationEntry implements Serializable {
         return "OrganizationEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", visibility=" + visibility +
                 ", meta=" + meta +
                 '}';
     }
