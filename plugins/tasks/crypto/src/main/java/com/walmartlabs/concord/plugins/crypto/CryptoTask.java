@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Named("crypto")
-public class CryptoTask implements Task, SecretReader {
+public class CryptoTask implements Task, SecretReader, SecretStore {
 
     private static final Logger log = LoggerFactory.getLogger(CryptoTask.class);
 
