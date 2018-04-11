@@ -5,3 +5,7 @@
       # the org name can be optional if the process was started from a project
       msg: "We got {{ lookup('concord_secret', 'Default', 'mySecret', 'myPassword') }}"
       verbosity: 0
+  - debug:
+      # the org name can be optional if the process was started from a project
+      msg: "We got {{ lookup('concord_public_key_secret', 'Default', 'mySecret') }}"
+      verbosity: 0

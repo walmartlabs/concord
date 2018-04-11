@@ -190,6 +190,9 @@ public class RunPlaybookTask2 implements Task {
         Path lookupDir = tmpDir.resolve(LOOKUP_PLUGINS_DIR);
         Files.createDirectories(lookupDir);
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", lookupDir.resolve("concord_inventory.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_public_key_secret.py", lookupDir.resolve("concord_public_key_secret.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_data_secret.py", lookupDir.resolve("concord_data_secret.py"));
+        // For backward compatibility
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_secret.py", lookupDir.resolve("concord_secret.py"));
     }
 

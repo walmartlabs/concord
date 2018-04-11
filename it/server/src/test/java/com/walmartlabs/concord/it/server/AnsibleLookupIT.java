@@ -83,4 +83,92 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertNoLog(".*Implicit org " + secretValue + ".*", ab);
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
+
+    @Test(timeout = 30000)
+    public void testSecretData() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        String secretName = "mySecret";
+        String secretValue = "value_" + randomString();
+        String secretPwd = "pwd_" + randomString();
+        addPlainSecret(orgName, secretName, false, secretPwd, secretValue.getBytes());
+
+        String projectName = "project_" + randomString();
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+
+        // ---
+
+        URI dir = AnsibleLookupIT.class.getResource("ansibleLookupSecretData").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        input.put("arguments.orgName", orgName);
+        input.put("arguments.secretPwd", secretPwd);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertNoLog(".*Explicit org " + secretValue + ".*", ab);
+        assertNoLog(".*Implicit org " + secretValue + ".*", ab);
+        assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
+    }
+
+    @Test(timeout = 30000)
+    public void testPublickey() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        String secretName = "mySecret_" + randomString();
+        generateKeyPair(orgName, secretName, false, null);
+
+        String projectName = "project_" + randomString();
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+
+        // ---
+
+        URI dir = AnsibleLookupIT.class.getResource("ansibleLookupPublicKey").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        input.put("arguments.orgName", orgName);
+        input.put("arguments.secretName", secretName);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertNoLog(".*Explicit org: ssh-rsa" + ".*", ab);
+        assertNoLog(".*Implicit org: ssh-rsa" + ".*", ab);
+        assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
+    }
+
+
 }

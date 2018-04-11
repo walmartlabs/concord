@@ -1,0 +1,9 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "Explicit org {{ lookup('concord_data_secret', orgName, 'mySecret', secretPwd) }}"
+      verbosity: 0
+  - debug:
+      msg: "Implicit org {{ lookup('concord_data_secret', 'mySecret', secretPwd) }}"
+      verbosity: 0

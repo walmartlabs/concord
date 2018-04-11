@@ -10,7 +10,8 @@
 - concord-server: support for symlinks on initial process state
 ingestion;
 - ansible: support for exporting secrets as `group_var` files;
-- concord-console: show Ansible host events in a modal popup. 
+- concord-console: show Ansible host events in a modal popup.
+- ansible: new lookup plugins 'concord_data_secret' and 'concord_public_key_secret' 
 
 ### Changed
 
