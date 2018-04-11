@@ -357,12 +357,13 @@ public class RunPlaybookTask2 implements Task {
             }
         }
 
-        // constant defaults:
+        // enforce some of the defaults
+        defaults = (Map<String, Object>) m.get("defaults");
 
         // enable the log filtering plugin
         defaults.put("stdout_callback", "concord_protectdata");
 
-        // policy engine strategy
+        // enforce the policy engine strategy
         defaults.put("strategy_plugins", STRATEGY_PLUGINS_DIR);
 
         return m;
