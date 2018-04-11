@@ -41,7 +41,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aopalliance.version>1.0</aopalliance.version>
-        <bpm.version>0.41.0</bpm.version>
+        <bpm.version>0.42.0</bpm.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
         <commons.compress.version>1.15</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
@@ -77,7 +77,7 @@
         <junit.version>4.12</junit.version>
         <launcher.version>0.128</launcher.version>
 
-        <!-- the newer versions (up to 3.5.3) has incorrect mappings for PG's blob/bytea -->
+        <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <liquibase.version>3.5.1</liquibase.version>
 
         <logback.version>1.2.3</logback.version>

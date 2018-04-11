@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-sdk: `Context#suspend` method for suspending processes with
+programmatically-defined callback events;
 - concord-server: metadata for organizations;
 - concord-server: initial audit logging implementation;
 - keywhiz: initial support;

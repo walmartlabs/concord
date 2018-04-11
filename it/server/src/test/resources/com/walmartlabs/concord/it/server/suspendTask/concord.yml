@@ -1,0 +1,4 @@
+flows:
+  default:
+  - task: suspendTest
+  - log: "Whoa!"
