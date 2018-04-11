@@ -65,7 +65,7 @@ public class AnsiblePolicyIT extends AbstractServerIT {
 
         PolicyResource policyResource = proxy(PolicyResource.class);
         policyResource.createOrUpdate(policy);
-        policyResource.link("sys-test", new PolicyLinkEntry(orgName, projectName));
+        policyResource.link(policyName, new PolicyLinkEntry(orgName, projectName));
 
         URI dir = AnsiblePolicyIT.class.getResource("ansiblePolicyTaskDeny").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
