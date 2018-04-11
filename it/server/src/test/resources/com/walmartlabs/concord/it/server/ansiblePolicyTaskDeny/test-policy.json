@@ -1,0 +1,15 @@
+{
+  "ansible": {
+    "deny": [
+      {
+        "action": "copy",
+        "params": [
+          {
+            "name": "src",
+            "values": [".*secret.*"]
+          }
+        ]
+      }
+    ]
+  }
+}

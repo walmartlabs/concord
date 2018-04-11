@@ -1,0 +1,11 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "{{ greetings }}"
+      verbosity: 0
+
+  - name: Copy a local file
+    copy:
+      src: super-secret-file.dat
+      dest: /tmp/my.ini

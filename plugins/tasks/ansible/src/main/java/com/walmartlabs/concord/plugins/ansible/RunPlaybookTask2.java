@@ -23,6 +23,7 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
 import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ public class RunPlaybookTask2 implements Task {
     private static final String PYTHON_LIB_DIR = "_python_lib";
     private static final String CALLBACK_PLUGINS_DIR = "_callbacks";
     private static final String LOOKUP_PLUGINS_DIR = "_lookups";
+    private static final String STRATEGY_PLUGINS_DIR = "_strategy";
 
     private final RpcConfiguration rpcCfg;
     private final SecretReader secretReader;
@@ -96,8 +98,9 @@ public class RunPlaybookTask2 implements Task {
 
         processCallback(workDir, tmpDir);
         processLookups(workDir, tmpDir);
+        processStrategy(tmpDir);
 
-        final Map<String, String> env = addExtraEnv(defaultEnv(), args);
+        final Map<String, String> env = addExtraEnv(defaultEnv(workDir), args);
 
         GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretReader);
         groupVarsProcessor.process(txId, args, workDir);
@@ -132,7 +135,7 @@ public class RunPlaybookTask2 implements Task {
             if (code != SUCCESS_EXIT_CODE) {
                 saveRetryFile(args, workDir);
                 log.warn("Playbook is finished with code {}", code);
-                throw new IllegalStateException("Process finished with with exit code " + code);
+                throw new IllegalStateException("Process finished with exit code " + code);
             }
         } finally {
             groupVarsProcessor.postProcess();
@@ -154,7 +157,7 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String,String> defaultEnv() {
+    private Map<String,String> defaultEnv(Path ws) {
         final Map<String, String> env = new HashMap<>();
         env.put("PYTHONPATH", PYTHON_LIB_DIR);
         env.put("CONCORD_HOST", rpcCfg.getServerHost());
@@ -162,6 +165,7 @@ public class RunPlaybookTask2 implements Task {
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
         env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
         env.put("CONCORD_SESSION_TOKEN", apiCfg.getSessionToken(context));
+        env.put("CONCORD_POLICY", ws.resolve(InternalConstants.Files.CONCORD).resolve(InternalConstants.Files.POLICY).toString());
 
         Map<String, Object> projectInfo = (Map<String, Object>) context.getVariable(Constants.Request.PROJECT_INFO_KEY);
         String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;
@@ -178,12 +182,21 @@ public class RunPlaybookTask2 implements Task {
 
         copyResourceToFile("/server_pb2.py", libDir.resolve("server_pb2.py"));
         copyResourceToFile("/server_pb2_grpc.py", libDir.resolve("server_pb2_grpc.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lib/task_policy.py", libDir.resolve("task_policy.py"));
 
         Path callbackDir = tmpDir.resolve(CALLBACK_PLUGINS_DIR);
         Files.createDirectories(callbackDir);
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_trace.py", callbackDir.resolve("concord_trace.py"));
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_protectdata.py", callbackDir.resolve("concord_protectdata.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_strategy_enforce.py", callbackDir.resolve("concord_strategy_enforce.py"));
+    }
+
+    private void processStrategy(Path tmpDir) throws IOException {
+        Path strategyDir = tmpDir.resolve(STRATEGY_PLUGINS_DIR);
+        Files.createDirectories(strategyDir);
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/strategy/concord_free.py", strategyDir.resolve("concord_free.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/strategy/concord_linear.py", strategyDir.resolve("concord_linear.py"));
     }
 
     private void processLookups(Path workDir, Path tmpDir) throws IOException {
@@ -344,6 +357,14 @@ public class RunPlaybookTask2 implements Task {
             }
         }
 
+        // constant defaults:
+
+        // enable the log filtering plugin
+        defaults.put("stdout_callback", "concord_protectdata");
+
+        // policy engine strategy
+        defaults.put("strategy_plugins", STRATEGY_PLUGINS_DIR);
+
         return m;
     }
 
@@ -366,9 +387,6 @@ public class RunPlaybookTask2 implements Task {
         // add plugins path
         m.put("callback_plugins", CALLBACK_PLUGINS_DIR);
         m.put("lookup_plugins", LOOKUP_PLUGINS_DIR);
-
-        // enable the log filtering plugin
-        m.put("stdout_callback", "concord_protectdata");
 
         return m;
     }
