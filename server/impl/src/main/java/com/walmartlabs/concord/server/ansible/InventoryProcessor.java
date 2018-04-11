@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.ansible;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,10 +92,10 @@ public class InventoryProcessor implements PayloadProcessor {
     }
 
     private void deprecationWarning(UUID instanceId) {
-        String msg = "** WARNING ****************************************************************************\n" +
+        String msg = ".. WARNING ............................................................................\n" +
                 " 'inventory' and 'dynamicInventory' request parameters are deprecated.\n" +
                 " Please use 'inventoryFile' and 'dynamicInventoryFile' parameters of the Ansible task.\n" +
-                "***************************************************************************************\n";
+                ".......................................................................................\n";
         logManager.log(instanceId, msg);
     }
 }

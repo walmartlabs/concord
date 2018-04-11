@@ -130,10 +130,10 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     }
 
     private void deprecationWarning(UUID instanceId) {
-        String msg = "** WARNING ****************************************************************************\n" +
+        String msg = ".. WARNING ............................................................................\n" +
                 " 'configuration.ansible.privateKeys' is deprecated.\n" +
                 " Please use 'privateKey' parameter of the Ansible task.\n" +
-                "***************************************************************************************\n";
+                ".......................................................................................\n";
         logManager.log(instanceId, msg);
     }
 
