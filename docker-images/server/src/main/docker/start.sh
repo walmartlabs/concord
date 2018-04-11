@@ -21,6 +21,7 @@ exec java \
 -XX:NumberOfGCLogFiles=10 \
 -XX:GCLogFileSize=10M \
 -server \
+-Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
 -Dlogback.configurationFile=com/walmartlabs/concord/server/logback.xml \
 -cp "${APP_DIR}/*" \

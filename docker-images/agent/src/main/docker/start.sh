@@ -18,6 +18,7 @@ export DOCKER_OLD_IMAGE_SWEEPER_ENABLED="true"
 exec java \
 -Xmx256m \
 -server \
+-Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
 -Dlogback.configurationFile=com/walmartlabs/concord/agent/logback.xml \
 -cp "${APP_DIR}/*" \
