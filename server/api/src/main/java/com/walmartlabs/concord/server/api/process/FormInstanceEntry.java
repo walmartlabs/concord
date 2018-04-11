@@ -39,17 +39,20 @@ public class FormInstanceEntry implements Serializable {
     private final String formInstanceId;
     private final String name;
     private final List<Field> fields;
+    private final boolean isCustomForm;
 
     @JsonCreator
     public FormInstanceEntry(@JsonProperty("processInstanceId") String processInstanceId,
                              @JsonProperty("formInstanceId") String formInstanceId,
                              @JsonProperty("name") String name,
-                             @JsonProperty("fields") List<Field> fields) {
+                             @JsonProperty("fields") List<Field> fields,
+                             @JsonProperty("isCustomForm") boolean isCustomForm) {
 
         this.processInstanceId = processInstanceId;
         this.formInstanceId = formInstanceId;
         this.name = name;
         this.fields = fields;
+        this.isCustomForm = isCustomForm;
     }
 
     public String getProcessInstanceId() {
@@ -66,6 +69,10 @@ public class FormInstanceEntry implements Serializable {
 
     public List<Field> getFields() {
         return fields;
+    }
+
+    public boolean isCustomForm() {
+        return isCustomForm;
     }
 
     @JsonInclude(Include.NON_NULL)

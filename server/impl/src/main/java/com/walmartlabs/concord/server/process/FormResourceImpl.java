@@ -49,6 +49,8 @@ import java.util.*;
 @Named
 public class FormResourceImpl implements FormResource, Resource {
 
+    public static final String FORMS_RESOURCES_PATH = "forms";
+
     private final ConcordFormService formService;
     private final FormValidatorLocale validatorLocale;
 
@@ -118,7 +120,9 @@ public class FormResourceImpl implements FormResource, Resource {
         String pbk = form.getProcessBusinessKey();
         String fiid = form.getFormInstanceId().toString();
         String name = fd.getName();
-        return new FormInstanceEntry(pbk, fiid, name, fields);
+        String resourcePath = FORMS_RESOURCES_PATH + "/" + name;
+        boolean isCustomForm = formService.exists(processInstanceId, resourcePath);
+        return new FormInstanceEntry(pbk, fiid, name, fields, isCustomForm);
     }
 
     private static FormInstanceEntry.Cardinality map(FormField.Cardinality c) {

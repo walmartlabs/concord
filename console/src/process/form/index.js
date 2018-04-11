@@ -287,26 +287,29 @@ class ProcessForm extends Component {
         if (loading) {
             return <Loader active size="massive" />;
         }
+        if (!data.customForm) {
+            return (
+                <div>
+                    <Header as="h2">{data.name}</Header>
+                    <Form onSubmit={(ev) => this.handleSubmit(ev)}>
+                        {data.fields && data.fields.map((f) => this.renderField(f))}
 
-        return (
-            <div>
-                <Header as="h2">{data.name}</Header>
-                <Form onSubmit={(ev) => this.handleSubmit(ev)}>
-                    {data.fields && data.fields.map((f) => this.renderField(f))}
-
-                    {completed ? (
-                        <Button
-                            icon="check"
-                            primary
-                            content="Return to the process page"
-                            onClick={(ev) => this.handleReturn(ev)}
-                        />
-                    ) : (
-                        <Button type="submit" primary disabled={submitting} content="Submit" />
-                    )}
-                </Form>
-            </div>
-        );
+                        {completed ? (
+                            <Button
+                                icon="check"
+                                primary
+                                content="Return to the process page"
+                                onClick={(ev) => this.handleReturn(ev)}
+                            />
+                        ) : (
+                            <Button type="submit" primary disabled={submitting} content="Submit" />
+                        )}
+                    </Form>
+                </div>
+            );
+        } else {
+            return <div />;
+        }
     }
 }
 

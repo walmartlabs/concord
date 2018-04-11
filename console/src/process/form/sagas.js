@@ -28,6 +28,15 @@ function* loadForm(action: any): Generator<*, *, *> {
     const { instanceId, formInstanceId } = action;
     try {
         const response = yield call(api.fetchForm, instanceId, formInstanceId);
+        const { customForm } = response;
+        if (customForm) {
+            let { uri } = yield call(api.startSession, instanceId, formInstanceId);
+            if (process.env.NODE_ENV !== 'production') {
+                uri = 'http://localhost:8080' + uri;
+            }
+            window.location.replace(uri);
+        }
+
         yield put({
             type: types.PROCESS_FORM_RESPONSE,
             instanceId,

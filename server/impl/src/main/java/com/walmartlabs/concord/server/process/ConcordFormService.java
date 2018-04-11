@@ -190,6 +190,10 @@ public class ConcordFormService {
         return lastResult;
     }
 
+    public boolean exists(UUID instanceId, String path) {
+        return stateManager.exists(instanceId, path);
+    }
+
     private static FormSubmitResult toResult(UUID processInstanceId, Form f, io.takari.bpm.form.FormSubmitResult r) {
         return new FormSubmitResult(processInstanceId, f.getFormDefinition().getName(), r.getErrors());
     }
