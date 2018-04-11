@@ -39,11 +39,31 @@ class CallbackModule(CallbackBase):
         print "Trace saved to: ", target_filename
 
     def playbook_on_stats(self, stats):
+        failures = stats.failures.keys()
+
+        unreachable = [e for e in stats.dark.keys()
+                       if e not in failures]
+
+        changed = [e for e in stats.changed.keys()
+                   if (e not in failures
+                       and e not in unreachable)]
+
+        ok = [e for e in stats.ok.keys()
+              if (e not in failures
+                  and e not in unreachable
+                  and e not in changed)]
+
+        skipped = [e for e in stats.skipped.keys()
+                   if (e not in failures
+                       and e not in unreachable
+                       and e not in changed
+                       and e not in ok)]
+
         data = {
-            'ok': stats.ok.keys(),
-            'failures': stats.failures.keys(),
-            'unreachable': stats.dark.keys(),
-            'changed': stats.changed.keys(),
-            'skipped': stats.skipped.keys()
+            'ok': ok,
+            'failures': failures,
+            'unreachable': unreachable,
+            'changed': changed,
+            'skipped': skipped
         }
         self.log(data)
