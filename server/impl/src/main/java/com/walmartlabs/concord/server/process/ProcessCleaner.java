@@ -51,11 +51,10 @@ public class ProcessCleaner {
     private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toMillis(1);
     private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
 
-    private static final String[] REMOVE_STATUSES = {
-            ProcessStatus.FINISHED.toString(),
-            ProcessStatus.FAILED.toString(),
-            ProcessStatus.CANCELLED.toString(),
-            ProcessStatus.SUSPENDED.toString()
+    private static final String[] EXCLUDE_STATUSES = {
+            ProcessStatus.STARTING.toString(),
+            ProcessStatus.RUNNING.toString(),
+            ProcessStatus.RESUMING.toString()
     };
 
     @Inject
@@ -99,7 +98,7 @@ public class ProcessCleaner {
             try {
                 Thread.sleep(ms);
             } catch (InterruptedException e) {
-                Thread.currentThread().isInterrupted();
+                Thread.currentThread().interrupt();
             }
         }
     }
@@ -119,7 +118,7 @@ public class ProcessCleaner {
                 SelectConditionStep<Record1<UUID>> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
                         .from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.LAST_UPDATED_AT.lessThan(cutoff)
-                                .and(PROCESS_QUEUE.CURRENT_STATUS.in(REMOVE_STATUSES)));
+                                .and(PROCESS_QUEUE.CURRENT_STATUS.notIn(EXCLUDE_STATUSES)));
 
                 int queueEntries = tx.deleteFrom(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
