@@ -543,7 +543,7 @@ public class DefaultJobExecutor implements JobExecutor {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> readPolicyRules(Path ws) throws IOException {
-        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD).resolve(InternalConstants.Files.POLICY);
+        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.POLICY_FILE_NAME);
         if (!Files.exists(policyFile)) {
             return Collections.emptyMap();
         }

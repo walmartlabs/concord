@@ -59,7 +59,7 @@ public class FilePolicyProcessor implements PayloadProcessor {
         UUID instanceId = payload.getInstanceId();
 
         Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD).resolve(InternalConstants.Files.POLICY);
+        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.POLICY_FILE_NAME);
         if (!Files.exists(policyFile)) {
             return chain.process(payload);
         }

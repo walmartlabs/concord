@@ -71,9 +71,9 @@ public class PolicyProcessor implements PayloadProcessor {
         Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
 
         try {
-            Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD));
+            Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
 
-            objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY).toFile(), policy.getRules());
+            objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
 
             return chain.process(payload);
         } catch (IOException e) {

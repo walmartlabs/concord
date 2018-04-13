@@ -186,6 +186,11 @@ public class Constants {
          * Directory which contains process' forms.
          */
         public static final String JOB_FORMS_DIR_NAME = "forms";
+
+        /**
+         * Concord system files.
+         */
+        public static final String CONCORD_SYSTEM_DIR_NAME = ".concord";
     }
 
     public static class Flows {

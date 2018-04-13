@@ -23,8 +23,6 @@ package com.walmartlabs.concord.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.matcher.Matcher;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import com.walmartlabs.concord.common.IOUtils;
@@ -36,8 +34,6 @@ import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
@@ -50,14 +46,12 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -204,7 +198,7 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> readPolicyRules(Path ws) throws ExecutionException {
-        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD).resolve(InternalConstants.Files.POLICY);
+        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.POLICY_FILE_NAME);
         if (!Files.exists(policyFile)) {
             return Collections.emptyMap();
         }

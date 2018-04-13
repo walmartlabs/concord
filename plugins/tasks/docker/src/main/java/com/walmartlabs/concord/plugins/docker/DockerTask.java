@@ -93,7 +93,7 @@ public class DockerTask implements Task {
     }
 
     private static Path createRunScript(Path workDir, String cmd) throws IOException {
-        Path tmpDir = workDir.resolve(".concord");
+        Path tmpDir = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME);
         if (!Files.exists(tmpDir)) {
             Files.createDirectories(tmpDir);
         }

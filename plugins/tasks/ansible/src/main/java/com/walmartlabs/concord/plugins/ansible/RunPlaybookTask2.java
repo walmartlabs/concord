@@ -70,7 +70,7 @@ public class RunPlaybookTask2 implements Task {
         boolean debug = getBoolean(args, AnsibleConstants.DEBUG_KEY, false);
 
         Path workDir = Paths.get(payloadPath);
-        Path tmpDir = Files.createTempDirectory(workDir, "ansible");
+        Path tmpDir = createTmpDir(workDir);
 
         String playbook = getString(args, AnsibleConstants.PLAYBOOK_KEY);
         if (playbook == null || playbook.trim().isEmpty()) {
@@ -165,7 +165,8 @@ public class RunPlaybookTask2 implements Task {
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
         env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
         env.put("CONCORD_SESSION_TOKEN", apiCfg.getSessionToken(context));
-        env.put("CONCORD_POLICY", ws.resolve(InternalConstants.Files.CONCORD).resolve(InternalConstants.Files.POLICY).toString());
+        env.put("CONCORD_POLICY", ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
+                .resolve(InternalConstants.Files.POLICY_FILE_NAME).toString());
 
         Map<String, Object> projectInfo = (Map<String, Object>) context.getVariable(Constants.Request.PROJECT_INFO_KEY);
         String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;
@@ -270,6 +271,12 @@ public class RunPlaybookTask2 implements Task {
         } else {
             run(args, payloadPath);
         }
+    }
+
+    private static Path createTmpDir(Path workDir) throws IOException {
+        Path p = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME);
+        Files.createDirectories(p);
+        return Files.createTempDirectory(p, "ansible");
     }
 
     private static String toString(Path p) {
