@@ -32,10 +32,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.Routines.processLogLastNBytes;
 import static com.walmartlabs.concord.server.jooq.Routines.processLogNextRange;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOGS;
 import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_LOGS_SIZE;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.value;
 
 @Named
@@ -89,8 +91,9 @@ public class ProcessLogsDao extends AbstractDao {
 
         } else if (end != null) {
             // ranges && [upper_bound - end, upper_bound)
-            String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && PROCESS_LOG_LAST_N_BYTES(?, ?)";
-            return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
+            String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && (select range from x)";
+            return tx.with("x").as(select(processLogLastNBytes(instanceId, end).as("range")))
+                    .select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
                     .from(PROCESS_LOGS)
                     .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId)
                             .and(rangeExpr, instanceId, end))
