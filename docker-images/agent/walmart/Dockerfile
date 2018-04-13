@@ -5,7 +5,8 @@ ENV DOCKER_HOST tcp://dind:2375
 
 USER root
 
-RUN yum -y install docker-client
+# moved to the base image
+# RUN yum -y install docker-client
 
 COPY docker-images/agent/target/deps/ /home/concord/.m2/repository
 RUN chown -R concord:concord /home/concord/.m2
@@ -17,5 +18,3 @@ RUN chown -R concord:concord /opt/concord
 
 USER concord
 CMD ["bash", "/opt/concord/agent/start.sh"]
-
-

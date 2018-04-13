@@ -14,4 +14,3 @@ COPY docker-images/console/src/main/docker/start.sh /opt/concord/console/
 COPY docker-images/console/src/main/docker/nginx /opt/concord/console/nginx
 
 CMD ["bash", "/opt/concord/console/start.sh"]
-
