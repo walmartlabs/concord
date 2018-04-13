@@ -104,7 +104,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
         Path dst = workspace.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
 
         try {
-            Files.write(dst, keyPair.getPrivateKey(), StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(dst, keyPair.getPrivateKey(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             logManager.error(instanceId, "Error while copying a private key: " + dst, e);
             throw new ProcessException(instanceId, "Error while copying a private key: " + dst, e);
