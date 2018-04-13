@@ -29,91 +29,91 @@ tools:
   sonarscanner: 3.0.3.778
 
 docker:
-  - name: "concord-looper-agent"
-    image: "docker.prod.walmart.com/walmartlabs/concord-looper-agent:latest"
+- name: "concord-looper-agent"
+  image: "docker.prod.walmart.com/walmartlabs/concord-looper-agent:latest"
 
 flows:
   buildImages:
-    - parallel(failsafe):
-      - dockerImage:
-          dockerfile: "docker-images/server/walmart/Dockerfile"
-          tags:
-            - "docker.prod.walmart.com/walmartlabs/concord-server:${concord_version}"
-          buildArgs:
-            concord_version: ${concord_version}
-          push: true
-      - dockerImage:
-          dockerfile: "docker-images/console/walmart/Dockerfile"
-          tags:
-            - "docker.prod.walmart.com/walmartlabs/concord-console:${concord_version}"
-          buildArgs:
-            concord_version: ${concord_version}
-          push: true
-      - dockerImage:
-          dockerfile: "docker-images/agent/walmart/Dockerfile"
-          tags:
-            - "docker.prod.walmart.com/walmartlabs/concord-agent:${concord_version}"
-          buildArgs:
-            concord_version: ${concord_version}
-          push: true
+  - dockerImage:
+      dockerfile: "docker-images/server/walmart/Dockerfile"
+      tags:
+        - "docker.prod.walmart.com/walmartlabs/concord-server:${concord_version}"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+  - dockerImage:
+      dockerfile: "docker-images/console/walmart/Dockerfile"
+      tags:
+        - "docker.prod.walmart.com/walmartlabs/concord-console:${concord_version}"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+  - dockerImage:
+      dockerfile: "docker-images/agent/walmart/Dockerfile"
+      tags:
+        - "docker.prod.walmart.com/walmartlabs/concord-agent:${concord_version}"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
 
   build:
-    - node(docker-daemon):
-      - dockerAgent(concord-looper-agent):
-        - call: cleanup
-        - call: fetchDeps
-        - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests
-        - call: runsonar
-        - hygieia.publishBuild()
-        - ws_snapshot: binaries
-      - ws_restore: binaries
-      - call: buildImages
+  - node(docker-daemon):
+    - dockerAgent(concord-looper-agent):
+      - call: cleanup
+      - call: fetchDeps
+      - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests
+      - call: runsonar
+      - hygieia.publishBuild()
+      - ws_snapshot: binaries
+        includes: docker-images/**
+    - ws_restore: binaries
+    - call: buildImages
 
   runsonar:
-    - sonar("Sonar"):
-      - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
+  - sonar("Sonar"):
+    - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
 
   # poor man's .m2 cache
   fetchDeps:
-    - mkdir -p target && mkdir -p ~/.m2/repository
-    - curl --silent --insecure ${CONCORD_BUILD_DEPS_URL} | tar xz -C ~/.m2/repository
+  - mkdir -p target && mkdir -p ~/.m2/repository
+  - curl --silent --insecure ${CONCORD_BUILD_DEPS_URL} | tar xz -C ~/.m2/repository
 
   cleanup:
-    - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
+  - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
 
   deployEnv:
-    - concord.start:
-        apiUrl: http://server.ci-driver.concord-dev.devtools.prod.walmart.com:8001/api/v1
-        apiKey: ${CONCORD_API_TOKEN}
-        org: "Default"
-        project: "concord"
-        repo: "default"
-        entryPoint: "fullAuto"
-        activeProfiles:
-        - "test"
-        sync: false
-        arguments:
-          auto:
-            nextVersion: ${concord_version}
-            secretPwd: ${CONCORD_SECRET_PWD}
+  - concord.start:
+      apiUrl: http://server.ci-driver.concord-dev.devtools.prod.walmart.com:8001/api/v1
+      apiKey: ${CONCORD_API_TOKEN}
+      org: "Default"
+      project: "concord"
+      repo: "default"
+      entryPoint: "fullAuto"
+      activeProfiles:
+      - "test"
+      sync: false
+      arguments:
+        auto:
+          nextVersion: ${concord_version}
+          secretPwd: ${CONCORD_SECRET_PWD}
 
   default:
-    - call: build(concord_version = latest-master-looper)
-#    - call: deployEnv(concord_version = latest-master-looper)
+  - call: build(concord_version = latest-master-looper)
+#  - call: deployEnv(concord_version = latest-master-looper)
 
   pr:
-    - call: build(concord_version = latest-pr-looper)
-#    - call: deployEnv(concord_version = latest-pr-looper)
+  - call: build(concord_version = latest-pr-looper)
+#  - call: deployEnv(concord_version = latest-pr-looper)
 
   release:
-    - node(docker-daemon):
-      - exposeVars(maven)
-      - dockerAgent(concord-looper-agent):
-        - call: cleanup
-        - call: fetchDeps
-        - mvn -U -B -s $MVN_SETTINGS release:prepare release:perform
-        - ws_snapshot: binaries
-      - ws_restore: binaries
-      - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
-      - call: buildImages(concord_version = ${RELEASE_VERSION})
+  - node(docker-daemon):
+    - exposeVars(maven)
+    - dockerAgent(concord-looper-agent):
+      - call: cleanup
+      - call: fetchDeps
+      - mvn -U -B -s $MVN_SETTINGS release:prepare release:perform
+      - ws_snapshot: binaries
+    - ws_restore: binaries
+    - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
+    - call: buildImages(concord_version = ${RELEASE_VERSION})
 #    - call: deploy(concord_version = latest-pr-looper)
