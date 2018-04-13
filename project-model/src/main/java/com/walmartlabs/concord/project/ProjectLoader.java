@@ -92,6 +92,10 @@ public class ProjectLoader {
 
         public ProjectDefinitionBuilder addProjectFile(Path path) throws IOException {
             YamlProject yml = parser.parseProject(path);
+            if (yml == null) {
+                throw new IOException("Project definition not found: " + path);
+            }
+
             this.projectDefinition = YamlProjectConverter.convert(yml);
             return this;
         }
@@ -132,6 +136,10 @@ public class ProjectLoader {
         }
 
         private void loadDefinitions(YamlDefinitionFile df) throws YamlConverterException {
+            if (df == null) {
+                return;
+            }
+
             Map<String, YamlDefinition> m = df.getDefinitions();
             if (m != null) {
                 for (Map.Entry<String, YamlDefinition> e : m.entrySet()) {
@@ -164,6 +172,10 @@ public class ProjectLoader {
         }
 
         private void loadProfiles(YamlProfileFile pf) throws YamlConverterException {
+            if (pf == null) {
+                return;
+            }
+
             Map<String, YamlProfile> m = pf.getProfiles();
 
             for (Map.Entry<String, YamlProfile> e : m.entrySet()) {

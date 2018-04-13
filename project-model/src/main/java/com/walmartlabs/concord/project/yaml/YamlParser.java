@@ -47,11 +47,19 @@ public class YamlParser {
     }
 
     public YamlProject parseProject(Path path) throws IOException {
-        return objectMapper.readValue(path.toFile(), YamlProject.class);
+        try {
+            return objectMapper.readValue(path.toFile(), YamlProject.class);
+        } catch (IOException e) {
+            throw new IOException("Error while loading a project file: " + path, e);
+        }
     }
 
     public YamlDefinitionFile parseDefinitionFile(Path path) throws IOException {
-        return objectMapper.readValue(path.toFile(), YamlDefinitionFile.class);
+        try {
+            return objectMapper.readValue(path.toFile(), YamlDefinitionFile.class);
+        } catch (IOException e) {
+            throw new IOException("Error while loading flow definitions: " + path, e);
+        }
     }
 
     public YamlDefinitionFile parseDefinitionFile(InputStream in) throws IOException {
@@ -59,6 +67,10 @@ public class YamlParser {
     }
 
     public YamlProfileFile parseProfileFile(Path path) throws IOException {
-        return objectMapper.readValue(path.toFile(), YamlProfileFile.class);
+        try {
+            return objectMapper.readValue(path.toFile(), YamlProfileFile.class);
+        } catch (IOException e) {
+            throw new IOException("Error while loading profiles: " + path, e);
+        }
     }
 }
