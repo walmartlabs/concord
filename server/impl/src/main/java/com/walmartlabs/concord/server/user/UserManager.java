@@ -74,7 +74,7 @@ public class UserManager {
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;
-        teamDao.addUser(teamId, id, TeamRole.MEMBER);
+        teamDao.upsertUser(teamId, id, TeamRole.MEMBER);
 
         return userDao.get(id);
     }

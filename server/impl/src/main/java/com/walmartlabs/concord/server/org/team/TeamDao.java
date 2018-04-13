@@ -173,14 +173,16 @@ public class TeamDao extends AbstractDao {
                                 TeamRole.valueOf(r.value4())));
     }
 
-    public void addUser(UUID teamId, UUID userId, TeamRole role) {
-        tx(tx -> addUser(tx, teamId, userId, role));
+    public void upsertUser(UUID teamId, UUID userId, TeamRole role) {
+        tx(tx -> upsertUser(tx, teamId, userId, role));
     }
 
-    public void addUser(DSLContext tx, UUID teamId, UUID userId, TeamRole role) {
+    public void upsertUser(DSLContext tx, UUID teamId, UUID userId, TeamRole role) {
         tx.insertInto(USER_TEAMS)
                 .columns(USER_TEAMS.TEAM_ID, USER_TEAMS.USER_ID, USER_TEAMS.TEAM_ROLE)
                 .values(teamId, userId, role.toString())
+                .onDuplicateKeyUpdate()
+                .set(USER_TEAMS.TEAM_ROLE, role.toString())
                 .execute();
     }
 

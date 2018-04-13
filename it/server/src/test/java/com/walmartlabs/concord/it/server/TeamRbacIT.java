@@ -508,4 +508,31 @@ public class TeamRbacIT extends AbstractServerIT {
 
         inventoryResource.get(orgName, inventoryName);
     }
+
+    @Test(timeout = 30000)
+    public void testTeamUsersUpsert() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String teamName = "team_" + randomString();
+
+        TeamResource teamResource = proxy(TeamResource.class);
+        teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+
+        // ---
+
+        String userName = "user_" + randomString();
+
+        UserResource userResource = proxy(UserResource.class);
+        userResource.createOrUpdate(new CreateUserRequest(userName, UserType.LOCAL));
+
+        // ---
+
+        teamResource.addUsers(orgName, teamName, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MAINTAINER)));
+    }
 }

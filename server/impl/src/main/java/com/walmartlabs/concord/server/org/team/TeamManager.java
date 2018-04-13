@@ -87,7 +87,7 @@ public class TeamManager {
 
             // add the current user as a team maintainer
             UUID userId = UserPrincipal.getCurrent().getId();
-            teamDao.addUser(tx, tId, userId, TeamRole.MAINTAINER);
+            teamDao.upsertUser(tx, tId, userId, TeamRole.MAINTAINER);
 
             return tId;
         });
@@ -130,7 +130,7 @@ public class TeamManager {
                     role = TeamRole.MEMBER;
                 }
 
-                teamDao.addUser(tx, t.getId(), userId, role);
+                teamDao.upsertUser(tx, t.getId(), userId, role);
             }
         });
 
