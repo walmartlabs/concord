@@ -22,13 +22,12 @@ package com.walmartlabs.concord.server.org.secret;
 
 import com.walmartlabs.concord.server.api.org.secret.SecretStoreEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretStoreResource;
-import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Named
 public class SecretStoreResourceImpl implements SecretStoreResource, Resource {
@@ -42,11 +41,8 @@ public class SecretStoreResourceImpl implements SecretStoreResource, Resource {
 
     @Override
     public List<SecretStoreEntry> listActiveStores() {
-        List<SecretStoreEntry> activeStores = new ArrayList<>();
-        for (SecretStore secretStore : secretManager.getActiveSecretStores()) {
-            activeStores.add(new SecretStoreEntry(secretStore.getType(), secretStore.getDescription()));
-        }
-
-        return activeStores;
+        return secretManager.getActiveSecretStores().stream()
+                .map(s -> new SecretStoreEntry(s.getType(), s.getDescription()))
+                .collect(Collectors.toList());
     }
 }

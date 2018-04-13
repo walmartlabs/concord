@@ -48,6 +48,8 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -327,7 +329,7 @@ public class SecretManager {
         return SecretUtils.decrypt(data, pwd, secretCfg.getProjectSecretsSalt());
     }
 
-    public List<SecretStore> getActiveSecretStores() {
+    public Collection<SecretStore> getActiveSecretStores() {
         return secretStoreProvider.getActiveSecretStores();
     }
 
@@ -344,12 +346,15 @@ public class SecretManager {
         }
 
         switch (actual) {
-            case SERVER_KEY:
+            case SERVER_KEY: {
                 throw new SecurityException("Not a password-protected secret: " + name);
-            case PASSWORD:
+            }
+            case PASSWORD: {
                 throw new SecurityException("The secret requires a password to decrypt: " + name);
-            default:
+            }
+            default: {
                 throw new IllegalArgumentException("Unsupported secret encrypted by type: " + actual);
+            }
         }
     }
 

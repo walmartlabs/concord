@@ -22,17 +22,74 @@ package com.walmartlabs.concord.server.org.secret.provider;
 
 import com.walmartlabs.concord.server.api.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
+import com.walmartlabs.concord.server.org.secret.store.SecretStorePropertyManager;
+import org.sonatype.siesta.ValidationErrorsException;
 
-import java.util.List;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.ArrayList;
+import java.util.Collection;
 
-/**
- * Interface to be implemented by {@link SecretStoreProviderImpl} to provide the secret store(s).
- */
-public interface SecretStoreProvider {
+@Named
+public class SecretStoreProvider {
 
-    SecretStore getSecretStore(SecretStoreType secretSourceType);
+    public static final String DEFAULT_STORE_KEY = "default.store";
 
-    List<SecretStore> getActiveSecretStores();
+    private final Collection<SecretStore> stores;
+    private final SecretStorePropertyManager propertyManager;
 
-    SecretStoreType getDefaultStoreType();
+    @Inject
+    public SecretStoreProvider(Collection<SecretStore> stores, SecretStorePropertyManager propertyManager) {
+        this.stores = stores;
+        this.propertyManager = propertyManager;
+    }
+
+    public SecretStore getSecretStore(SecretStoreType secretSourceType) {
+        for (SecretStore secretStore : stores) {
+            if (secretSourceType == secretStore.getType()) {
+                if (isEnabled(secretStore)) {
+                    return secretStore;
+                }
+
+                throw new IllegalArgumentException("Secret store of type " + secretStore.getType() + " is not enabled!");
+            }
+        }
+
+        throw new IllegalArgumentException("Secret store of type " + secretSourceType + " is not found!");
+    }
+
+    public Collection<SecretStore> getActiveSecretStores() {
+        Collection<SecretStore> activeStores = new ArrayList<>();
+
+        for (SecretStore secretStore : stores) {
+            if (isEnabled(secretStore)) {
+                activeStores.add(secretStore);
+            }
+        }
+
+        return activeStores;
+    }
+
+    public SecretStoreType getDefaultStoreType() {
+        String defaultStore = propertyManager.getProperty(DEFAULT_STORE_KEY);
+        if (defaultStore == null) {
+            Collection<SecretStore> activeSecretStores = getActiveSecretStores();
+            if (activeSecretStores.size() == 1) {
+                return activeSecretStores.iterator().next().getType();
+            }
+
+            throw new ValidationErrorsException(DEFAULT_STORE_KEY + " configuration property is missing");
+        }
+
+        try {
+            return SecretStoreType.valueOf(defaultStore.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ValidationErrorsException("Unsupported secret store type: " + defaultStore);
+        }
+    }
+
+    private boolean isEnabled(SecretStore secretStore) {
+        String isEnabledString = secretStore.getConfigurationPrefix() + ".enabled";
+        return Boolean.valueOf(propertyManager.getProperty(isEnabledString));
+    }
 }

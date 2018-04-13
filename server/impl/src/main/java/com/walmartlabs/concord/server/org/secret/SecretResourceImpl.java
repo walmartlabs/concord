@@ -74,14 +74,6 @@ public class SecretResourceImpl implements SecretResource, Resource {
             SecretType type = assertType(input);
             SecretStoreType storeType = assertStoreType(input);
 
-            // check if the given secret source type is enabled or not
-            boolean isStoreActive = secretManager.getActiveSecretStores().stream()
-                    .anyMatch(store -> store.getType() == storeType);
-
-            if (!isStoreActive) {
-                throw new ValidationErrorsException("Secret store of type " + storeType + " is not available!");
-            }
-
             String name = assertName(input);
             assertUnique(org.getId(), name);
 
@@ -158,6 +150,10 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
         secretManager.updateAccessLevel(secretId, entry.getTeamId(), entry.getLevel());
         return new GenericOperationResultResponse(OperationResult.UPDATED);
+    }
+
+    private void assertStore(SecretStoreType storeType) {
+
     }
 
     private PublicKeyResponse createKeyPair(UUID orgId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, SecretStoreType storeType) throws IOException {
@@ -251,11 +247,22 @@ public class SecretResourceImpl implements SecretResource, Resource {
             return secretManager.getDefaultSecretStoreType();
         }
 
+        SecretStoreType t;
         try {
-            return SecretStoreType.valueOf(s.toUpperCase());
+            t = SecretStoreType.valueOf(s.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ValidationErrorsException("Unsupported secret store type: " + s);
         }
+
+        // check if the given secret source type is enabled or not
+        boolean isStoreActive = secretManager.getActiveSecretStores().stream()
+                .anyMatch(store -> store.getType() == t);
+
+        if (!isStoreActive) {
+            throw new ValidationErrorsException("Secret store of type " + t + " is not available!");
+        }
+
+        return t;
     }
 
     private static String assertString(MultipartInput input, String key) {
