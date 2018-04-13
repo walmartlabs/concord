@@ -48,8 +48,6 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -181,7 +179,7 @@ public class SecretManager {
     }
 
     public DecryptedKeyPair getKeyPair(UUID orgId, String name) {
-        DecryptedSecret e = getSecret(orgId, name, SecretType.KEY_PAIR, null);
+        DecryptedSecret e = getSecret(orgId, name, null, SecretType.KEY_PAIR);
         if (e == null) {
             return null;
         }
@@ -211,25 +209,14 @@ public class SecretManager {
     }
 
     // TODO refactor using getRaw
-    public DecryptedSecret getSecret(UUID orgId, String name, SecretType expectedType, String password) {
-        SecretEntry e = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
-
-        byte[] data = getSecretStore(e.getStoreType()).get(e.getId());
-        if (data == null) {
-            throw new IllegalStateException("Can't find the secret's data in the store " + e.getStoreType() + " : " + e.getId());
-        }
+    public DecryptedSecret getSecret(UUID orgId, String name, String password, SecretType expectedType) {
+        SecretDataEntry e = getRaw(orgId, name, password);
 
         if (expectedType != null && e.getType() != expectedType) {
             throw new IllegalArgumentException("Invalid secret type: " + name + ", expected " + expectedType + ", got: " + e.getType());
         }
 
-        SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
-        assertEncryptedByType(name, providedEncryptedByType, e.getEncryptedByType());
-
-        byte[] pwd = getPwd(password);
-        byte[] salt = secretCfg.getSecretStoreSalt();
-
-        Secret s = decrypt(e.getType(), data, pwd, salt);
+        Secret s = deserialize(e.getType(), e.getData());
 
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
                 .field("id", e.getId())
@@ -247,17 +234,18 @@ public class SecretManager {
             return null;
         }
 
+        SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
+        assertEncryptedByType(name, providedEncryptedByType, entry.getEncryptedByType());
+
         byte[] data = getSecretStore(entry.getStoreType()).get(entry.getId());
+        if (data == null) {
+            throw new IllegalStateException("Can't find the secret's data in the store " + entry.getStoreType() + " : " + entry.getId());
+        }
 
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
-        byte[] ab;
-        try {
-            ab = SecretUtils.decrypt(data, pwd, salt);
-        } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error decrypting a secret: " + name, e);
-        }
+        byte[] ab = SecretUtils.decrypt(data, pwd, salt);
 
         // TODO add access context? e.g. access from a flow, repo, etc
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
@@ -271,7 +259,7 @@ public class SecretManager {
     }
 
     public KeyPair getKeyPair(UUID orgId, String name, String password) {
-        DecryptedSecret e = getSecret(orgId, name, SecretType.KEY_PAIR, password);
+        DecryptedSecret e = getSecret(orgId, name, password, SecretType.KEY_PAIR);
         if (e == null) {
             return null;
         }
@@ -305,13 +293,7 @@ public class SecretManager {
         byte[] pwd = getPwd(password);
         byte[] salt = secretCfg.getSecretStoreSalt();
 
-        byte[] ab;
-        try {
-            ab = SecretUtils.encrypt(data, pwd, salt);
-        } catch (GeneralSecurityException e) {
-            throw Throwables.propagate(e);
-        }
-
+        byte[] ab = SecretUtils.encrypt(data, pwd, salt);
         SecretEncryptedByType encryptedByType = getEncryptedBy(password);
 
         UUID id = secretDao.insert(orgId, name, getOwnerId(), type, encryptedByType, storeType, visibility);
@@ -337,24 +319,23 @@ public class SecretManager {
 
     public byte[] encryptData(String projectName, byte[] data) {
         byte[] pwd = projectName.getBytes();
-        try {
-            return SecretUtils.encrypt(data, pwd, secretCfg.getProjectSecretsSalt());
-        } catch (GeneralSecurityException e) {
-            throw Throwables.propagate(e);
-        }
+        return SecretUtils.encrypt(data, pwd, secretCfg.getProjectSecretsSalt());
     }
 
     public byte[] decryptData(String projectName, byte[] data) {
         byte[] pwd = projectName.getBytes();
-        try {
-            return SecretUtils.decrypt(data, pwd, secretCfg.getProjectSecretsSalt());
-        } catch (GeneralSecurityException e) {
-            throw Throwables.propagate(e);
-        }
+        return SecretUtils.decrypt(data, pwd, secretCfg.getProjectSecretsSalt());
     }
 
     public List<SecretStore> getActiveSecretStores() {
         return secretStoreProvider.getActiveSecretStores();
+    }
+
+    private byte[] getPwd(String pwd) {
+        if (pwd == null) {
+            return secretCfg.getServerPwd();
+        }
+        return pwd.getBytes(StandardCharsets.UTF_8);
     }
 
     private static void assertEncryptedByType(String name, SecretEncryptedByType provided, SecretEncryptedByType actual) {
@@ -372,7 +353,7 @@ public class SecretManager {
         }
     }
 
-    private static Secret decrypt(SecretType type, byte[] input, byte[] password, byte[] salt) {
+    private static Secret deserialize(SecretType type, byte[] data) {
         Function<byte[], ? extends Secret> deserializer;
         switch (type) {
             case KEY_PAIR:
@@ -387,15 +368,7 @@ public class SecretManager {
             default:
                 throw new IllegalArgumentException("Unknown secret type: " + type);
         }
-
-        return SecretUtils.decrypt(deserializer, input, password, salt);
-    }
-
-    private byte[] getPwd(String pwd) {
-        if (pwd == null) {
-            return secretCfg.getServerPwd();
-        }
-        return pwd.getBytes(StandardCharsets.UTF_8);
+        return deserializer.apply(data);
     }
 
     private static void validate(KeyPair k) {

@@ -20,15 +20,13 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
+import com.walmartlabs.concord.server.process.Payload;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.security.GeneralSecurityException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -75,11 +73,7 @@ public class ProcessInfoProcessor implements PayloadProcessor {
         byte[] salt = secretCfg.getSecretStoreSalt();
         byte[] pwd = secretCfg.getServerPwd();
 
-        try {
-            byte[] ab = SecretUtils.encrypt(instanceId.toString().getBytes(), pwd, salt);
-            return Base64.getEncoder().encodeToString(ab);
-        } catch (GeneralSecurityException e) {
-            throw Throwables.propagate(e);
-        }
+        byte[] ab = SecretUtils.encrypt(instanceId.toString().getBytes(), pwd, salt);
+        return Base64.getEncoder().encodeToString(ab);
     }
 }

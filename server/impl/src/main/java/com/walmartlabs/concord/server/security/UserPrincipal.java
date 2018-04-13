@@ -24,6 +24,7 @@ import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 
 import java.io.Serializable;
@@ -33,7 +34,8 @@ public class UserPrincipal implements Serializable {
 
     public static UserPrincipal getCurrent() {
         Subject subject = SecurityUtils.getSubject();
-        return (UserPrincipal) subject.getPrincipal();
+        PrincipalCollection principals = subject.getPrincipals();
+        return principals.oneByType(UserPrincipal.class);
     }
 
     private final String realm;

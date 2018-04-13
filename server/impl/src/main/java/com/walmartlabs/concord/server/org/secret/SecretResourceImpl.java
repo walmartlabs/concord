@@ -118,7 +118,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         String storePwd = assertString(input, "storePassword");
 
-        DecryptedSecret s = secretManager.getSecret(org.getId(), secretName, SecretType.DATA, storePwd);
+        DecryptedSecret s = secretManager.getSecret(org.getId(), secretName, storePwd, SecretType.DATA);
         BinaryDataSecret d = (BinaryDataSecret) s.getSecret();
         return Response.ok(d.getData()).build();
     }

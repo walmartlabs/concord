@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.audit;
  */
 
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -77,6 +78,18 @@ public class AuditLog {
                     userId = user.getId();
                 }
             }
+
+            Map<String, Object> actionSource = new HashMap<>();
+            SessionKeyPrincipal sessionKey = SessionKeyPrincipal.getCurrent();
+            if (sessionKey != null) {
+                // if the request was made from within a process
+                actionSource.put("type", ActionSource.PROCESS);
+                actionSource.put("instanceId", sessionKey.getProcessInstanceId());
+            } else {
+                // if the request was made using the API
+                actionSource.put("type", ActionSource.API_REQUEST);
+            }
+            details.put("actionSource", actionSource);
 
             auditDao.insert(userId, object, action, details);
         }

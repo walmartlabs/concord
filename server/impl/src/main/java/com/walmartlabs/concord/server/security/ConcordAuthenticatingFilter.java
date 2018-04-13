@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
@@ -40,7 +39,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
-import java.security.GeneralSecurityException;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -151,12 +149,8 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         byte[] salt = secretCfg.getSecretStoreSalt();
         byte[] pwd = secretCfg.getServerPwd();
 
-        try {
-            byte[] ab = SecretUtils.decrypt(Base64.getDecoder().decode(h), pwd, salt);
-            return UUID.fromString(new String(ab));
-        } catch (GeneralSecurityException e) {
-            throw Throwables.propagate(e);
-        }
+        byte[] ab = SecretUtils.decrypt(Base64.getDecoder().decode(h), pwd, salt);
+        return UUID.fromString(new String(ab));
     }
 
     private static void validateApiKey(String s) {

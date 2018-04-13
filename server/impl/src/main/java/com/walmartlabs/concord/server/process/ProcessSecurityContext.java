@@ -25,10 +25,13 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.SubjectContext;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
@@ -72,13 +75,33 @@ public class ProcessSecurityContext {
 
     public PrincipalCollection getPrincipals(UUID instanceId) {
         try {
-            return principalCache.get(instanceId,
-                    () -> stateManager.get(instanceId, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize).orElse(null));
+            return principalCache.get(instanceId, () -> doGetPrincipals(instanceId));
         } catch (ExecutionException e) {
             throw Throwables.propagate(e);
         }
     }
 
+    private PrincipalCollection doGetPrincipals(UUID instanceId) {
+        PrincipalCollection principals = stateManager.get(instanceId, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize)
+                .orElse(null);
+
+        if (principals == null) {
+            return null;
+        }
+
+        SessionKeyPrincipal p = principals.oneByType(SessionKeyPrincipal.class);
+        if (p == null) {
+            p = new SessionKeyPrincipal(instanceId);
+
+            SimplePrincipalCollection c = new SimplePrincipalCollection(principals);
+            c.add(p, SessionKeyRealm.REALM_NAME);
+            return c;
+        }
+
+        return principals;
+    }
+
+    // TODO won't be needed after switching from gRPC to REST
     public <T> T runAsInitiator(UUID instanceId, Callable<T> c) throws Exception {
         PrincipalCollection principals = getPrincipals(instanceId);
         if (principals == null) {

@@ -20,34 +20,30 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Secret;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.function.Function;
 
 public final class SecretUtils {
 
-    public static <T extends Secret> T decrypt(Function<byte[], T> deserializer, byte[] input, byte[] password, byte[] hash) throws SecurityException {
+    public static byte[] encrypt(byte[] input, byte[] password, byte[] salt) {
         try {
-            byte[] ab = decrypt(input, password, hash);
-            return deserializer.apply(ab);
+            Cipher c = init(password, salt, Cipher.ENCRYPT_MODE);
+            return c.doFinal(input);
         } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error decrypting", e);
+            throw new SecurityException("Error decrypting a secret", e);
         }
     }
 
-    public static byte[] encrypt(byte[] input, byte[] password, byte[] salt) throws GeneralSecurityException {
-        Cipher c = init(password, salt, Cipher.ENCRYPT_MODE);
-        return c.doFinal(input);
-    }
-
-    public static byte[] decrypt(byte[] input, byte[] password, byte[] salt) throws GeneralSecurityException {
-        Cipher c = init(password, salt, Cipher.DECRYPT_MODE);
-        return c.doFinal(input);
+    public static byte[] decrypt(byte[] input, byte[] password, byte[] salt) {
+        try {
+            Cipher c = init(password, salt, Cipher.DECRYPT_MODE);
+            return c.doFinal(input);
+        } catch (GeneralSecurityException e) {
+            throw new SecurityException("Error decrypting a secret", e);
+        }
     }
 
     public static byte[] hash(byte[] in, byte[] salt) throws NoSuchAlgorithmException {
