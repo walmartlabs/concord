@@ -46,6 +46,7 @@ public class ProcessEntry implements Serializable {
     private final String lastAgentId;
     private final String logFileName;
     private final Set<String> tags;
+    private final Set<UUID> childrenIds;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private final Date createdAt;
@@ -65,7 +66,8 @@ public class ProcessEntry implements Serializable {
                         @JsonProperty("lastUpdatedAt") Date lastUpdatedAt,
                         @JsonProperty("status") ProcessStatus status,
                         @JsonProperty("lastAgentId") String lastAgentId,
-                        @JsonProperty("tags") Set<String> tags) {
+                        @JsonProperty("tags") Set<String> tags,
+                        @JsonProperty("childrenIds") Set<UUID> childrenIds) {
 
         this.instanceId = instanceId;
         this.kind = kind;
@@ -84,6 +86,7 @@ public class ProcessEntry implements Serializable {
         this.logFileName = instanceId + ".log";
 
         this.tags = tags;
+        this.childrenIds = childrenIds;
     }
 
     public UUID getInstanceId() {
@@ -142,6 +145,10 @@ public class ProcessEntry implements Serializable {
         return tags;
     }
 
+    public Set<UUID> getChildrenIds() {
+        return childrenIds;
+    }
+
     @Override
     public String toString() {
         return "ProcessEntry{" +
@@ -152,13 +159,14 @@ public class ProcessEntry implements Serializable {
                 ", orgName='" + orgName + '\'' +
                 ", projectId=" + projectId +
                 ", projectName='" + projectName + '\'' +
-                ", createdAt=" + createdAt +
                 ", initiator='" + initiator + '\'' +
                 ", status=" + status +
                 ", lastAgentId='" + lastAgentId + '\'' +
-                ", lastUpdatedAt=" + lastUpdatedAt +
                 ", logFileName='" + logFileName + '\'' +
                 ", tags=" + tags +
+                ", childrenIds=" + childrenIds +
+                ", createdAt=" + createdAt +
+                ", lastUpdatedAt=" + lastUpdatedAt +
                 '}';
     }
 }

@@ -158,15 +158,10 @@ public class ProcessQueueDao extends AbstractDao {
 
     public ProcessEntry get(UUID instanceId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            VProcessQueueRecord r = tx.selectFrom(V_PROCESS_QUEUE)
+            return tx.selectFrom(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
-                    .fetchOne();
-
-            if (r == null) {
-                return null;
-            }
-
-            return toEntry(r);
+                    .orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
+                    .fetchOne(ProcessQueueDao::toEntry);
         }
     }
 
@@ -303,7 +298,15 @@ public class ProcessQueueDao extends AbstractDao {
                 r.getLastUpdatedAt(),
                 ProcessStatus.valueOf(r.getCurrentStatus()),
                 r.getLastAgentId(),
-                tags);
+                tags,
+                toSet(r.getChildrenIds()));
+    }
+
+    private static Set<UUID> toSet(UUID[] arr) {
+        if (arr == null) {
+            return null;
+        }
+        return new HashSet<>(Arrays.asList(arr));
     }
 
     private static String[] toArray(Set<String> s) {

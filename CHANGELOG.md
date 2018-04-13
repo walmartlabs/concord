@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: process endpoints now return `childrenIds` - array
+of child process IDs.
+
+
+
 ## [0.64.0] - 2018-04-11
 
 ### Added
