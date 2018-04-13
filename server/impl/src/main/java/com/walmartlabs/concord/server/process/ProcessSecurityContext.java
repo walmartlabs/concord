@@ -24,7 +24,10 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
+import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import org.apache.shiro.SecurityUtils;
@@ -54,11 +57,13 @@ public class ProcessSecurityContext {
     private final ProcessStateManager stateManager;
     private final Injector injector;
     private final Cache<UUID, PrincipalCollection> principalCache;
+    private final UserManager userManager;
 
     @Inject
-    public ProcessSecurityContext(ProcessStateManager stateManager, Injector injector) {
+    public ProcessSecurityContext(ProcessStateManager stateManager, Injector injector, UserManager userManager) {
         this.stateManager = stateManager;
         this.injector = injector;
+        this.userManager = userManager;
         this.principalCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(1, TimeUnit.MINUTES)
                 .build();
@@ -108,6 +113,21 @@ public class ProcessSecurityContext {
             throw new UnauthorizedException("Process' principal not found");
         }
 
+        return runAs(principals, c);
+    }
+
+    public <T> T runAs(String realmName, String userName, Callable<T> c) throws Exception {
+        UserEntry u = userManager.getByName(userName).orElse(null);
+        if (u == null) {
+            throw new UnauthorizedException("user '" + userName + "'not found");
+        }
+
+        UserPrincipal p = new UserPrincipal(realmName, u.getId(), u.getName(), null, u.isAdmin(), u.getType());
+
+        return runAs(new SimplePrincipalCollection(p, p.getRealm()), c);
+    }
+
+    private <T> T runAs(PrincipalCollection principals, Callable<T> c) throws Exception {
         SecurityManager securityManager = injector.getInstance(SecurityManager.class);
         ThreadContext.bind(securityManager);
 

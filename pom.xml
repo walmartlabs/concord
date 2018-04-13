@@ -47,6 +47,7 @@
         <commons.email.version>1.5</commons.email.version>
         <commons.lang.version>3.7</commons.lang.version>
         <commons.pool.version>2.4.3</commons.pool.version>
+        <cronutils.version>7.0.1</cronutils.version>
 
         <!-- necessary for resteasy -->
         <commons.io.version>2.5</commons.io.version>
@@ -505,6 +506,11 @@
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons.io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cronutils</groupId>
+                <artifactId>cron-utils</artifactId>
+                <version>${cronutils.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

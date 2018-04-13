@@ -2,7 +2,41 @@
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <property name="concordCronUserId" value="1f9ae527-e7ab-42c0-b0e5-0092f9285f22"/>
+
+    <changeSet id="65000" author="ybrigo@gmail.com">
+        <createTable tableName="TRIGGER_SCHEDULE">
+            <column name="TRIGGER_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FIRE_AT" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="TRIGGER_SCHEDULE"
+                                 baseColumnNames="TRIGGER_ID"
+                                 constraintName="FK_TRIGGER_SCHEDULE_TR_ID"
+                                 referencedTableName="TRIGGERS"
+                                 referencedColumnNames="TRIGGER_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="65010" author="ybrigo@gmail.com">
+        <insert tableName="USERS">
+            <column name="USER_ID" value="${concordCronUserId}"/>
+            <column name="USERNAME" value="cron"/>
+            <column name="USER_TYPE" value="LOCAL"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="65020" author="ybrigo@gmail.com">
+        <createIndex tableName="TRIGGER_SCHEDULE" indexName="IDX_TRIGGER_SCHED_FIRE_DATE">
+            <column name="FIRE_AT" descending="true"/>
+        </createIndex>
+    </changeSet>
 
     <changeSet id="65200" author="ibodrov@gmail.com">
         <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">

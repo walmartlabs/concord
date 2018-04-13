@@ -65,6 +65,10 @@ public class UserManager {
         return Optional.ofNullable(id);
     }
 
+    public Optional<UserEntry> getByName(String name) {
+        return Optional.of(userDao.getByName(name));
+    }
+
     public UserEntry create(String username, UserType type, boolean admin) {
         if (type == null) {
             type = UserPrincipal.getCurrent().getType();

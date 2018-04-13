@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.triggers;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
@@ -37,6 +38,7 @@ import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -48,7 +50,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
@@ -65,6 +69,7 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
     private final RepositoryManager repositoryManager;
     private final ProjectAccessManager projectAccessManager;
     private final OrganizationManager orgManager;
+    private final Map<String, TriggerProcessor> triggerProcessors;
 
     @Inject
     public TriggerResourceImpl(ProjectDao projectDao,
@@ -73,7 +78,8 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
                                RepositoryManager repositoryManager,
                                Configuration cfg,
                                ProjectAccessManager projectAccessManager,
-                               OrganizationManager orgManager) {
+                               OrganizationManager orgManager,
+                               Map<String, TriggerProcessor> triggerProcessors) {
 
         super(cfg);
         this.projectDao = projectDao;
@@ -82,6 +88,7 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
         this.repositoryManager = repositoryManager;
         this.projectAccessManager = projectAccessManager;
         this.orgManager = orgManager;
+        this.triggerProcessors = triggerProcessors;
     }
 
     @Override
@@ -130,9 +137,17 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
 
         tx(tx -> {
             triggersDao.delete(tx, r.getProjectId(), r.getId());
-            pd.getTriggers().forEach(t -> triggersDao.insert(tx,
-                    r.getProjectId(), r.getId(), t.getName(),
-                    t.getEntryPoint(), t.getArguments(), t.getParams()));
+
+            pd.getTriggers().forEach(t -> {
+                UUID triggerId = triggersDao.insert(tx,
+                        r.getProjectId(), r.getId(), t.getName(),
+                        t.getEntryPoint(), t.getArguments(), t.getParams());
+
+                TriggerProcessor processor = triggerProcessors.get(t.getName());
+                if (processor != null) {
+                    processor.process(tx, triggerId, t);
+                }
+            });
         });
 
         log.info("refresh ['{}'] -> done, triggers count: {}", r.getId(), pd.getTriggers().size());

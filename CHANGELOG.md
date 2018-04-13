@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: support for `cron` triggers;
 - concord-project-model: better handling of YAML parsing errors;
 - concord-server: process endpoints now return `childrenIds` - array
 of child process IDs.

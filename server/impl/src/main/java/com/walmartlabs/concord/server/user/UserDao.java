@@ -91,26 +91,45 @@ public class UserDao extends AbstractDao {
                 return null;
             }
 
-            // TODO join?
-            Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
-                    .from(ORGANIZATIONS)
-                    .where(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID)).asField();
-
-            SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
-                    .from(USER_TEAMS)
-                    .where(USER_TEAMS.USER_ID.eq(id));
-
-            List<OrganizationEntry> orgs = tx.selectDistinct(TEAMS.ORG_ID, orgNameField)
-                    .from(TEAMS)
-                    .where(TEAMS.TEAM_ID.in(teamIds))
-                    .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null));
-
-            return new UserEntry(r.get(USERS.USER_ID),
-                    r.get(USERS.USERNAME),
-                    new HashSet<>(orgs),
-                    r.get(USERS.IS_ADMIN),
-                    UserType.valueOf(r.get(USERS.USER_TYPE)));
+            return getUserInfo(tx, r);
         }
+    }
+
+    public UserEntry getByName(String userName) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            Record4<UUID, String, String, Boolean> r = tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN)
+                    .from(USERS)
+                    .where(USERS.USERNAME.eq(userName))
+                    .fetchOne();
+
+            if (r == null) {
+                return null;
+            }
+
+            return getUserInfo(tx, r);
+        }
+    }
+
+    private UserEntry getUserInfo(DSLContext tx, Record4<UUID, String, String, Boolean> r) {
+        // TODO join?
+        Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
+                .from(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID)).asField();
+
+        SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
+                .from(USER_TEAMS)
+                .where(USER_TEAMS.USER_ID.eq(r.get(USERS.USER_ID)));
+
+        List<OrganizationEntry> orgs = tx.selectDistinct(TEAMS.ORG_ID, orgNameField)
+                .from(TEAMS)
+                .where(TEAMS.TEAM_ID.in(teamIds))
+                .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null));
+
+        return new UserEntry(r.get(USERS.USER_ID),
+                r.get(USERS.USERNAME),
+                new HashSet<>(orgs),
+                r.get(USERS.IS_ADMIN),
+                UserType.valueOf(r.get(USERS.USER_TYPE)));
     }
 
     public UUID getId(String username) {
