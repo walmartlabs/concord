@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.api.process.FormInstanceEntry;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.FormResource;
 import com.walmartlabs.concord.server.api.process.FormSubmitResponse;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
 import io.takari.bpm.api.ExecutionException;
@@ -72,7 +71,6 @@ public class FormResourceImpl implements FormResource, Resource {
 
     @Override
     @Validate
-    @WithTimer
     @SuppressWarnings("unchecked")
     public FormInstanceEntry get(UUID processInstanceId, String formInstanceId) {
         Form form = formService.get(processInstanceId, formInstanceId);
@@ -146,7 +144,6 @@ public class FormResourceImpl implements FormResource, Resource {
 
     @Override
     @Validate
-    @WithTimer
     public FormSubmitResponse submit(UUID processInstanceId, String formInstanceId, Map<String, Object> data) {
         Form form = formService.get(processInstanceId, formInstanceId);
         try {
@@ -164,7 +161,6 @@ public class FormResourceImpl implements FormResource, Resource {
 
     @Override
     @Validate
-    @WithTimer
     public FormSubmitResponse submit(UUID processInstanceId, String formInstanceId, MultipartInput data) {
         return submit(processInstanceId, formInstanceId, MultipartUtils.toMap(data));
     }

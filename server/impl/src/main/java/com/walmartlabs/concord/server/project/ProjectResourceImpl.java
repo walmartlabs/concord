@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.project.*;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
@@ -144,7 +143,6 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
 
     @Override
     @Validate
-    @RequiresAuthentication
     public EncryptValueResponse encrypt(String projectName, EncryptValueRequest req) {
         String orgName = OrganizationManager.DEFAULT_ORG_NAME;
         return orgProjects.encrypt(orgName, projectName, req.getValue());

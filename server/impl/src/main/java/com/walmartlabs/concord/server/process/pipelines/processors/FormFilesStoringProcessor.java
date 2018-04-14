@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -50,7 +48,6 @@ public class FormFilesStoringProcessor implements PayloadProcessor {
     }
 
     @Override
-    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();

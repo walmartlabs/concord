@@ -26,7 +26,6 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessManager.PayloadEntry;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -112,7 +111,6 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     }
 
     @Override
-    @WithTimer
     public void updateStatus(TJobStatusUpdate request, StreamObserver<Empty> responseObserver) {
         String agentId = request.getAgentId();
         UUID instanceId = UUID.fromString(request.getInstanceId());
@@ -125,7 +123,6 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     }
 
     @Override
-    @WithTimer
     public void appendLog(TJobLogEntry request, StreamObserver<Empty> responseObserver) {
         // TODO validate the id
         String instanceId = request.getInstanceId();
@@ -138,7 +135,6 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
     }
 
     @Override
-    @WithTimer
     public void uploadAttachments(TAttachments request, StreamObserver<Empty> responseObserver) {
         UUID instanceId = UUID.fromString(request.getInstanceId());
         Path tmpIn = null;

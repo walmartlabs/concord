@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.ansible;
 
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -64,7 +63,6 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     }
 
     @Override
-    @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();

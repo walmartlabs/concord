@@ -23,9 +23,8 @@ package com.walmartlabs.concord.server.rpc;
 import com.google.protobuf.Empty;
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.org.project.KvDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,6 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
-    @WithTimer
     public void remove(TKvRemoveRequest request, StreamObserver<Empty> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
@@ -68,7 +66,6 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
-    @WithTimer
     public void putString(TKvPutStringRequest request, StreamObserver<Empty> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
@@ -88,7 +85,6 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
-    @WithTimer
     public void getString(TKvGetStringRequest request, StreamObserver<TKvGetStringResponse> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
@@ -113,7 +109,6 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
-    @WithTimer
     public void incLong(TKvIncRequest request, StreamObserver<TKvIncResponse> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
@@ -134,7 +129,6 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
-    @WithTimer
     public void getLong(TKvGetLongRequest request, StreamObserver<TKvGetLongResponse> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);
@@ -162,7 +156,6 @@ public class KvServiceImpl extends TKvServiceGrpc.TKvServiceImplBase {
     }
 
     @Override
-    @WithTimer
     public void putLong(TKvPutLongRequest request, StreamObserver<Empty> responseObserver) {
         String instanceId = request.getInstanceId();
         Optional<UUID> projectId = assertProjectId(instanceId);

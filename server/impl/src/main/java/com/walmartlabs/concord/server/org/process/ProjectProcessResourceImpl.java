@@ -41,7 +41,6 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.takari.bpm.api.ExecutionException;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +94,6 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
 
     @Override
     @Validate
-    @RequiresAuthentication
     public Response start(String orgName, String projectName, String repoName,
                           String entryPoint, String activeProfiles, UriInfo uriInfo) {
         try {

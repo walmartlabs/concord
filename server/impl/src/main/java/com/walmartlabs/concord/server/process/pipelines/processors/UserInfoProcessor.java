@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.user.UserType;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
@@ -55,7 +54,6 @@ public class UserInfoProcessor implements PayloadProcessor {
     }
 
     @Override
-    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         // collect and store the initiator's data
 

@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.FormUtils;
@@ -44,7 +43,6 @@ import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import io.takari.bpm.model.form.FormField.Cardinality;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,8 +107,6 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
     @Override
     @Validate
-    @RequiresAuthentication
-    @WithTimer
     public FormSessionResponse startSession(UUID processInstanceId, String formInstanceId) {
         // TODO locking
         Form form = assertForm(processInstanceId, formInstanceId);
@@ -150,7 +146,6 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
 
     @Override
     @Validate
-    @RequiresAuthentication
     public Response continueSession(UriInfo uriInfo, HttpHeaders headers,
                                     UUID processInstanceId, String formInstanceId,
                                     MultivaluedMap<String, String> data) {

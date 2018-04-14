@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
 
@@ -53,7 +52,6 @@ public class LdapManager {
         this.ctxFactory = ctxFactory;
     }
 
-    @WithTimer
     public LdapInfo getInfo(String username) throws NamingException {
         LdapContext ctx = null;
         try {
@@ -64,7 +62,6 @@ public class LdapManager {
         }
     }
 
-    @WithTimer
     public LdapInfo getInfo(LdapContext ctx, String username) throws NamingException {
         SearchControls searchCtls = new SearchControls();
         searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);

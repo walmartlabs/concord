@@ -22,20 +22,17 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.org.project.RepositoryException;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -72,7 +69,6 @@ public class RepositoryProcessor implements PayloadProcessor {
     }
 
     @Override
-    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
 

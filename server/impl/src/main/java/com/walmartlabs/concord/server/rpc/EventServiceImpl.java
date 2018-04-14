@@ -21,19 +21,16 @@ package com.walmartlabs.concord.server.rpc;
  */
 
 import com.google.protobuf.Empty;
-import com.google.protobuf.util.Timestamps;
 import com.walmartlabs.concord.rpc.TEventRequest;
 import com.walmartlabs.concord.rpc.TEventServiceGrpc;
 import com.walmartlabs.concord.rpc.TEventType;
 import com.walmartlabs.concord.server.api.process.ProcessEventRequest;
 import com.walmartlabs.concord.server.api.process.ProcessEventType;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.event.EventDao;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -51,7 +48,6 @@ public class EventServiceImpl extends TEventServiceGrpc.TEventServiceImplBase {
     }
 
     @Override
-    @WithTimer
     public void onEvent(TEventRequest request, StreamObserver<Empty> responseObserver) {
         UUID instanceId = UUID.fromString(request.getInstanceId());
         byte[] data = request.getData().toByteArray();

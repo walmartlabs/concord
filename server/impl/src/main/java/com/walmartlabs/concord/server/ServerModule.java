@@ -22,10 +22,8 @@ package com.walmartlabs.concord.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.servlet.ServletModule;
-import com.walmartlabs.concord.server.metrics.JolokiaRestrictor;
 import com.walmartlabs.concord.server.metrics.MetricsModule;
 import org.apache.shiro.guice.web.ShiroWebModule;
-import org.jolokia.http.AgentServlet;
 import org.sonatype.siesta.server.SiestaServlet;
 import org.sonatype.siesta.server.resteasy.ResteasyModule;
 import org.sonatype.siesta.server.validation.ValidationModule;
@@ -62,8 +60,6 @@ public class ServerModule extends AbstractModule {
                 filter("/service/*", "/api/*", "/logs/*", "/forms/*", "/swagger/*").through(CORSFilter.class);
                 filter("/service/*", "/api/*", "/logs/*", "/forms/*", "/swagger/*").through(NoCacheFilter.class);
                 ShiroWebModule.bindGuiceFilter(binder());
-
-                serve("/jolokia/*").with(new AgentServlet(new JolokiaRestrictor()));
             }
         };
     }

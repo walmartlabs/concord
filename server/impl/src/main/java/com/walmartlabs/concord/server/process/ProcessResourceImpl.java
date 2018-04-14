@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
@@ -40,7 +39,6 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -100,7 +98,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @RequiresAuthentication
     public StartProcessResponse start(InputStream in, UUID parentInstanceId,
                                       boolean sync, String[] out) {
 
@@ -120,7 +117,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @RequiresAuthentication
     public StartProcessResponse start(String entryPoint, UUID parentInstanceId,
                                       boolean sync, String[] out) {
 
@@ -131,7 +127,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
      * @deprecated prefer {@link #start(MultipartInput, UUID, boolean, String[])}
      */
     @Override
-    @RequiresAuthentication
     @Deprecated
     public StartProcessResponse start(String entryPoint, Map<String, Object> req, UUID parentInstanceId,
                                       boolean sync, String[] out) {
@@ -155,7 +150,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @RequiresAuthentication
     public StartProcessResponse start(MultipartInput input, UUID parentInstanceId,
                                       boolean sync, String[] out) {
 
@@ -181,7 +175,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
      * @deprecated prefer {@link #start(MultipartInput, UUID, boolean, String[])}
      */
     @Override
-    @RequiresAuthentication
     @Deprecated
     public StartProcessResponse start(String entryPoint, MultipartInput input, UUID parentInstanceId,
                                       boolean sync, String[] out) {
@@ -208,8 +201,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
      * @deprecated prefer {@link #start(MultipartInput, UUID, boolean, String[])}
      */
     @Override
-    @Validate
-    @RequiresAuthentication
     @Deprecated
     public StartProcessResponse start(String entryPoint, InputStream in, UUID parentInstanceId,
                                       boolean sync, String[] out) {
@@ -238,8 +229,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @Validate
-    @RequiresAuthentication
     public ResumeProcessResponse resume(UUID instanceId, String eventName, Map<String, Object> req) {
         Payload payload;
         try {
@@ -254,8 +243,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @Validate
-    @RequiresAuthentication
     public StartProcessResponse fork(UUID parentInstanceId, Map<String, Object> req, boolean sync, String[] out) {
         ProcessEntry parent = queueDao.get(parentInstanceId);
         if (parent == null) {
@@ -278,8 +265,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @Validate
-    @RequiresAuthentication
     public ProcessEntry waitForCompletion(UUID instanceId, long timeout) {
         log.info("waitForCompletion ['{}', {}] -> waiting...", instanceId, timeout);
 
@@ -310,22 +295,16 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @Validate
-    @RequiresAuthentication
     public void cancel(UUID instanceId) {
         processManager.kill(instanceId);
     }
 
     @Override
-    @Validate
-    @RequiresAuthentication
     public void kill(UUID instanceId) {
         cancel(instanceId);
     }
 
     @Override
-    @Validate
-    @RequiresAuthentication
     public ProcessEntry get(UUID instanceId) {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
@@ -337,8 +316,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
-    @WithTimer
-    @RequiresAuthentication
     public Response downloadAttachment(UUID instanceId, String attachmentName) {
         assertInstanceId(instanceId);
 
@@ -374,8 +351,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @WithTimer
-    @RequiresAuthentication
     public List<String> listAttachments(UUID instanceId) {
         assertInstanceId(instanceId);
 
@@ -387,8 +362,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @WithTimer
-    @RequiresAuthentication
     public List<ProcessEntry> list(UUID projectId, IsoDateParam beforeCreatedAt, Set<String> tags, int limit) {
         Set<UUID> orgIds = null;
         if (!isAdmin()) {
@@ -399,16 +372,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @WithTimer
     public List<ProcessEntry> list(UUID parentInstanceId, Set<String> tags) {
         assertInstanceId(parentInstanceId);
         return queueDao.list(parentInstanceId, tags);
     }
 
     @Override
-    @Validate
-    @WithTimer
-    @RequiresAuthentication
     public Response getLog(UUID instanceId, String range) {
         assertInstanceId(instanceId);
 
@@ -466,9 +435,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    @Validate
-    @WithTimer
-    @RequiresAuthentication
     public Response downloadState(UUID instanceId) {
         ProcessEntry p = queueDao.get(instanceId);
         if (p == null) {
@@ -492,7 +458,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
-    @WithTimer
     public Response downloadState(UUID instanceId, String fileName) {
         ProcessEntry p = queueDao.get(instanceId);
         if (p == null) {

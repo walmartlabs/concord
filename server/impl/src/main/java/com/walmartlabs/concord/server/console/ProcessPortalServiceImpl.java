@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.console;
 
 import com.walmartlabs.concord.server.api.org.process.ProjectProcessResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -59,7 +58,6 @@ public class ProcessPortalServiceImpl implements ProcessPortalService, Resource 
 
     @Override
     @Validate
-    @RequiresAuthentication
     public Response startProcess(String entryPoint, String activeProfiles, UriInfo uriInfo) {
         if (entryPoint == null || entryPoint.trim().isEmpty()) {
             return badRequest("Entry point is not specified");

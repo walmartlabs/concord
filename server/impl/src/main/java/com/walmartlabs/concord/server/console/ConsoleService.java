@@ -26,14 +26,12 @@ import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
-import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.subject.Subject;
 import org.sonatype.siesta.Resource;
 
@@ -72,7 +70,6 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/whoami")
     @Produces(MediaType.APPLICATION_JSON)
-    @RequiresAuthentication
     public UserResponse whoami() {
         Subject subject = SecurityUtils.getSubject();
         if (subject == null) {
@@ -117,7 +114,6 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/org/{orgName}/project/{projectName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
-    @RequiresAuthentication
     public boolean isProjectExists(@PathParam("orgName") @ConcordKey String orgName,
                                    @PathParam("projectName") String projectName) {
 
@@ -128,7 +124,6 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/org/{orgName}/secret/{secretName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
-    @RequiresAuthentication
     public boolean isSecretExists(@PathParam("orgName") String orgName,
                                   @PathParam("secretName") String secretName) {
         try {
@@ -143,7 +138,6 @@ public class ConsoleService implements Resource {
     @Path("/repository/test")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @RequiresAuthentication
     public boolean testRepository(RepositoryTestRequest req) {
         UUID orgId = req.getOrgId();
 

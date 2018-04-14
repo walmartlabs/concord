@@ -25,7 +25,6 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.FileRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -54,7 +53,6 @@ public class FilePolicyProcessor implements PayloadProcessor {
     }
 
     @Override
-    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
 

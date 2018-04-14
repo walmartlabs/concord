@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.org.policy.PolicyEntry;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -54,7 +53,6 @@ public class PolicyProcessor implements PayloadProcessor {
     }
 
     @Override
-    @WithTimer
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
 

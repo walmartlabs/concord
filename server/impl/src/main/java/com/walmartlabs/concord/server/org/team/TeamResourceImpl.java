@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.api.org.team.*;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.user.UserManager;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -78,20 +77,17 @@ public class TeamResourceImpl implements TeamResource, Resource {
     }
 
     @Override
-    @RequiresAuthentication
     public TeamEntry get(String orgName, String teamName) {
         return assertTeam(orgName, teamName, null, true, false);
     }
 
     @Override
-    @RequiresAuthentication
     public List<TeamEntry> list(String orgName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return teamDao.list(org.getId());
     }
 
     @Override
-    @RequiresAuthentication
     public List<TeamUserEntry> listUsers(String orgName, String teamName) {
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MEMBER, true, false);
         return teamDao.listUsers(t.getId());
