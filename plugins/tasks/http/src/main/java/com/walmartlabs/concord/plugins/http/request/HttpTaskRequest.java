@@ -63,7 +63,9 @@ public class HttpTaskRequest implements Request {
 
     @Override
     public Request withBasicAuth(String encodedToken) {
-        this.request.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encodedToken);
+        if (encodedToken != null) {
+            this.request.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encodedToken);
+        }
 
         return this;
     }
