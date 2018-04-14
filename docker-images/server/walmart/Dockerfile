@@ -13,10 +13,10 @@ EXPOSE 5555
 ADD docker-images/server/target/dist/server.tar.gz /opt/concord/server/
 COPY docker-images/server/src/main/docker/start.sh /opt/concord/server/
 
-RUN chown -R concord:concord /opt/concord
-
-COPY docker-images/server/src/main/docker/jmx /opt/concord/server/
+COPY docker-images/server/src/main/docker/jmx/* /opt/concord/server/jmx/
 RUN chmod 400 /opt/concord/server/jmx/*
+
+RUN chown -R concord:concord /opt/concord
 
 USER concord
 CMD ["bash", "/opt/concord/server/start.sh"]
