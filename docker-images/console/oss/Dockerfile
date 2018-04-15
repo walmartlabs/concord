@@ -15,5 +15,7 @@ ADD docker-images/console/target/dist/console.tar.gz /opt/concord/console/dist/
 COPY docker-images/console/src/main/docker/start.sh /opt/concord/console/
 COPY docker-images/console/src/main/docker/nginx /opt/concord/console/nginx
 
+RUN mkdir -p /opt/concord/console/logs
+
 CMD ["bash", "/opt/concord/console/start.sh"]
 
