@@ -20,6 +20,10 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
+import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationException;
@@ -38,11 +42,15 @@ import java.util.Arrays;
 @Named
 public class ApiKeyRealm extends AuthorizingRealm {
 
+    private static final String REALM_NAME = "apikey";
+
     private final UserManager userManager;
+    private final AuditLog auditLog;
 
     @Inject
-    public ApiKeyRealm(UserManager userManager) {
+    public ApiKeyRealm(UserManager userManager, AuditLog auditLog) {
         this.userManager = userManager;
+        this.auditLog = auditLog;
     }
 
     @Override
@@ -54,18 +62,24 @@ public class ApiKeyRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         ApiKey t = (ApiKey) token;
 
-        return userManager.get(t.getUserId())
-                .map(u -> {
-                    UserPrincipal p = new UserPrincipal("apikey", u.getId(), u.getName(), null, u.isAdmin(), u.getType());
-                    return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
-                })
-                .orElse(null);
+        UserEntry u = userManager.get(t.getUserId()).orElse(null);
+        if (u == null) {
+            return null;
+        }
+
+        auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
+                .userId(u.getId())
+                .field("realm", REALM_NAME)
+                .log();
+
+        UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), null, u.isAdmin(), u.getType());
+        return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
     }
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         UserPrincipal p = (UserPrincipal) principals.getPrimaryPrincipal();
-        if (!"apikey".equals(p.getRealm())) {
+        if (!REALM_NAME.equals(p.getRealm())) {
             return null;
         }
         return new SimpleAuthorizationInfo();

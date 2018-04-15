@@ -31,7 +31,15 @@ public class SessionKeyPrincipal implements Serializable {
 
     public static SessionKeyPrincipal getCurrent() {
         Subject subject = SecurityUtils.getSubject();
+        if (subject == null) {
+            return null;
+        }
+
         PrincipalCollection principals = subject.getPrincipals();
+        if (principals == null) {
+            return null;
+        }
+
         return principals.oneByType(SessionKeyPrincipal.class);
     }
 

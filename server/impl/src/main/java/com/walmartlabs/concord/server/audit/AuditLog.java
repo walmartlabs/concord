@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.audit;
 
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,6 +33,8 @@ import java.util.UUID;
 
 @Named
 public class AuditLog {
+
+    private static final Logger log = LoggerFactory.getLogger(AuditLog.class);
 
     private final AuditDao auditDao;
 
@@ -72,6 +76,15 @@ public class AuditLog {
         }
 
         public void log() {
+            try {
+                doLog();
+            } catch (Exception e) {
+                log.error("log -> error while inserting an audit log entry: {}", e.getMessage(), e);
+                throw e;
+            }
+        }
+
+        private void doLog() {
             if (userId == null) {
                 UserPrincipal user = UserPrincipal.getCurrent();
                 if (user != null) {

@@ -34,7 +34,15 @@ public class UserPrincipal implements Serializable {
 
     public static UserPrincipal getCurrent() {
         Subject subject = SecurityUtils.getSubject();
+        if (subject == null) {
+            return null;
+        }
+
         PrincipalCollection principals = subject.getPrincipals();
+        if (principals == null) {
+            return null;
+        }
+
         return principals.oneByType(UserPrincipal.class);
     }
 

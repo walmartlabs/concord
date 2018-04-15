@@ -22,6 +22,9 @@ package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -50,6 +53,7 @@ public class LdapRealm extends AbstractLdapRealm {
 
     private final UserManager userManager;
     private final LdapManager ldapManager;
+    private final AuditLog auditLog;
 
     private final String usernameSuffix;
 
@@ -57,10 +61,12 @@ public class LdapRealm extends AbstractLdapRealm {
     public LdapRealm(LdapConfiguration cfg,
                      UserManager userManager,
                      ConcordLdapContextFactory ctxFactory,
-                     LdapManager ldapManager) {
+                     LdapManager ldapManager,
+                     AuditLog auditLog) {
 
         this.userManager = userManager;
         this.ldapManager = ldapManager;
+        this.auditLog = auditLog;
 
         this.url = cfg.getUrl();
         this.searchBase = cfg.getSearchBase();
@@ -125,6 +131,10 @@ public class LdapRealm extends AbstractLdapRealm {
 
         UserEntry user = userManager.getOrCreate(username, UserType.LDAP);
         UserPrincipal p = new UserPrincipal(REALM_NAME, user, ldapInfo);
+
+        auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
+                .userId(user.getId())
+                .field("realm", REALM_NAME);
 
         return new SimpleAccount(Arrays.asList(p, t), t, getName());
     }
