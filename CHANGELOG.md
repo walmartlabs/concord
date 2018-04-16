@@ -1,5 +1,13 @@
 # Change log
 
+## [0.65.2] - 2018-04-15
+
+### Changed
+
+- docker: fix nginx logging configuration. 
+
+
+
 ## [0.65.1] - 2018-04-15
 
 ### Added
