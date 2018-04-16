@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: additional logging for authentication realms. 
+
+
+
 ## [0.65.2] - 2018-04-15
 
 ### Changed

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
@@ -32,6 +31,8 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.util.WebUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
@@ -43,6 +44,8 @@ import java.util.Base64;
 import java.util.UUID;
 
 public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(ConcordAuthenticatingFilter.class);
 
     private static final String AUTHORIZATION_HEADER = HttpHeaders.AUTHORIZATION;
     private static final String SESSION_TOKEN_HEADER = "X-Concord-SessionToken";
@@ -68,13 +71,11 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private final ApiKeyDao apiKeyDao;
     private final SecretStoreConfiguration secretCfg;
-    private final AuditLog auditLog;
 
     @Inject
-    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao, SecretStoreConfiguration secretCfg, AuditLog auditLog) {
+    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao, SecretStoreConfiguration secretCfg) {
         this.apiKeyDao = apiKeyDao;
         this.secretCfg = secretCfg;
-        this.auditLog = auditLog;
     }
 
     @Override
@@ -118,6 +119,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         return loggedId;
+    }
+
+    @Override
+    protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
+        log.warn("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
+        return super.onLoginFailure(token, e, request, response);
     }
 
     private AuthenticationToken createFromAuthHeader(String h, ServletRequest request) {

@@ -46,11 +46,10 @@ public class SessionKey implements AuthenticationToken {
         return getInstanceId();
     }
 
-
     @Override
     public String toString() {
         return "SessionKey{" +
-                ", instanceId=" + instanceId +
+                "instanceId=" + instanceId +
                 '}';
     }
 }

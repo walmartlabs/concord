@@ -74,6 +74,7 @@ public class TriggerScheduler {
                     TriggerSchedulerEntry e = schedulerDao.findNext();
 
                     if (e != null && e.getFireAt().after(startedAt)) {
+                        log.info("run -> starting {}...", e);
                         startProcess(e);
                     } else {
                         long now = System.currentTimeMillis();

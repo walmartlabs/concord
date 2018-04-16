@@ -34,6 +34,8 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,6 +44,8 @@ import java.util.UUID;
 
 @Named
 public class SessionKeyRealm extends AuthorizingRealm {
+
+    private static final Logger log = LoggerFactory.getLogger(SessionKeyRealm.class);
 
     public static final String REALM_NAME = "sessionkey";
 
@@ -71,7 +75,18 @@ public class SessionKeyRealm extends AuthorizingRealm {
         SessionKey t = (SessionKey) token;
 
         ProcessEntry process = processQueueDao.get(t.getInstanceId());
-        if (process == null || process.getInitiator() == null || isFinished(process)) {
+        if (process == null) {
+            log.warn("doGetAuthenticationInfo -> process not found: {}", t.getInstanceId());
+            return null;
+        }
+
+        if (process.getInitiator() == null) {
+            log.warn("doGetAuthenticationInfo -> initiator not found: {}", t.getInstanceId());
+            return null;
+        }
+
+        if (isFinished(process)) {
+            log.warn("doGetAuthenticationInfo -> process is finished: {}", t.getInstanceId());
             return null;
         }
 
@@ -85,6 +100,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
         SessionKeyPrincipal p = principals.oneByType(SessionKeyPrincipal.class);
         if (p != null) {
             if (!instanceId.equals(p.getProcessInstanceId())) {
+                log.warn("getPrincipals ['{}'] -> invalid instance ID, expected {}", instanceId, p.getProcessInstanceId());
                 throw new AuthenticationException("Session key mismatch, expected " + p.getProcessInstanceId() + ", got " + instanceId);
             }
         } else {

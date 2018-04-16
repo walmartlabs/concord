@@ -60,12 +60,7 @@ public class EventResourceImpl extends AbstractEventResource implements EventRes
 
         int count = process(eventId, eventName, event, event);
 
-        if (log.isDebugEnabled()) {
-            log.debug("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, count);
-        } else {
-            log.info("event ['{}', '{}'] -> done, {} processes started", eventId, eventName, count);
-        }
-
+        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, count);
         return Response.ok().build();
     }
 }

@@ -80,16 +80,12 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
         String eventId = String.valueOf(event.get("cmsId"));
         int count = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent);
 
-        if (log.isDebugEnabled()) {
-            log.debug("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
-        } else {
-            log.info("event ['{}'] -> done, {} processes started", eventId, count);
-        }
-
+        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
         return Response.ok().build();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Response event(InputStream in) {
         Map<String, Object> m;
         try {
@@ -152,12 +148,13 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getCis(Map<String, Object> event) {
         List<Map<String, Object>> cisItems = getCisItems(event);
-        if (cisItems == null || cisItems.isEmpty()) {
+        if (cisItems.isEmpty()) {
             return Collections.emptyMap();
         }
         return cisItems.get(0);
     }
 
+    @SuppressWarnings("unchecked")
     private static List<Map<String, Object>> getCisItems(Map<String, Object> event) {
         Object cisElement = event.get("cis");
         if (cisElement == null) {
@@ -165,16 +162,16 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
         }
 
         if (cisElement instanceof List) {
-            List<Map<String, Object>> cisItems = (List<Map<String, Object>>) cisElement;
-            return cisItems;
+            return (List<Map<String, Object>>) cisElement;
         }
 
         return Collections.emptyList();
     }
 
+    @SuppressWarnings("unchecked")
     private static Set<String> getIPs(Map<String, Object> event) {
         List<Map<String, Object>> cisItems = getCisItems(event);
-        if (cisItems == null || cisItems.isEmpty()) {
+        if (cisItems.isEmpty()) {
             return Collections.emptySet();
         }
 
