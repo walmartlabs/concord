@@ -6,6 +6,10 @@
 
 - concord-server: additional logging for authentication realms. 
 
+### Changed
+
+- concord-server: fixed `platform` filter for OneOps triggers.
+
 
 
 ## [0.65.2] - 2018-04-15

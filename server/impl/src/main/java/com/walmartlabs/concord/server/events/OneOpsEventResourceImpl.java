@@ -107,8 +107,6 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> buildConditions(Map<String, Object> event) {
-        String[] nsPath = getNsPath(event);
-
         Map<String, Object> cis = getCis(event);
         Map<String, Object> payload = (Map<String, Object>) event.get("payload");
 
@@ -122,10 +120,14 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
 
         result.put(IP_ADDRESSES, getIPs(event));
 
+        // example: /testing/twst/localtest/bom/sts/1
+        //          / org   /asm /env      /.../platform/...
+        String[] nsPath = getNsPath(event);
         addKey(ORG_KEY, nsPath, 0, result);
         addKey(ASM_KEY, nsPath, 1, result);
         addKey(ENV_KEY, nsPath, 2, result);
-        addKey(PLATFORM_KEY, nsPath, 3, result);
+        // ignore bom
+        addKey(PLATFORM_KEY, nsPath, 4, result);
 
         return result;
     }
@@ -135,13 +137,20 @@ public class OneOpsEventResourceImpl extends AbstractEventResource implements On
     }
 
     private static String[] getNsPath(Map<String, Object> event) {
-        String nsPath = (String) event.get("nsPath");
+        Map<String, Object> cis = getCis(event);
+        if (cis == null) {
+            return null;
+        }
+
+        String nsPath = (String) cis.get("nsPath");
         if (nsPath == null) {
             return new String[0];
         }
+
         if (nsPath.startsWith("/")) {
             nsPath = nsPath.substring(1);
         }
+
         return nsPath.split("/");
     }
 
