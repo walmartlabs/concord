@@ -72,7 +72,6 @@ public class TriggerScheduler {
             while (!Thread.interrupted()) {
                 try {
                     TriggerSchedulerEntry e = schedulerDao.findNext();
-                    log.info("findNext");
 
                     if (e != null && e.getFireAt().after(startedAt)) {
                         startProcess(e);
