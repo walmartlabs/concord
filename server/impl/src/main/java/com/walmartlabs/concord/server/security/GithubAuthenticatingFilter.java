@@ -75,22 +75,22 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
         String h = req.getHeader(SIGNATURE_HEADER);
         if (!StringUtils.hasText(h)) {
-            log.warn("Authorization header is missing. URI: '{}'", req.getRequestURI());
+            log.warn("createToken -> authorization header is missing. URI: '{}'", req.getRequestURI());
             return new UsernamePasswordToken();
         }
 
         String[] algDigest = h.split("=");
         if(algDigest.length != 2) {
-            log.warn("Authorization header invalid format. URI: '{}'", req.getRequestURI());
+            log.warn("createToken -> invalid format of the authorization header. URI: '{}'", req.getRequestURI());
             return new UsernamePasswordToken();
         }
 
         if(!"sha1".equals(algDigest[0])) {
-            log.warn("Authorization header invalid algorithm '{}'. URI: '{}'", algDigest[0], req.getRequestURI());
+            log.warn("createToken -> invalid algorithm of the authorization header '{}'. URI: '{}'", algDigest[0], req.getRequestURI());
             return new UsernamePasswordToken();
         }
 
-        final byte[] payload = req.getContentAsByteArray();
+        final byte[] payload = req.getPayload();
         SecretKeySpec signingKey = new SecretKeySpec(githubCfg.getSecret().getBytes(), HMAC_SHA1_ALGORITHM);
         try {
             Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
@@ -99,13 +99,13 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             String digestHex = String.valueOf(Hex.encode(digest));
 
             if(!algDigest[1].equals(digestHex)) {
-                log.error("Invalid auth digest. Expected: '{}', request: '{}'", digestHex, algDigest[1]);
+                log.error("createToken -> invalid auth digest. Expected: '{}', request: '{}'", digestHex, algDigest[1]);
                 return new UsernamePasswordToken();
             }
 
             return new GithubKey(h);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            log.error("Internal error", e);
+            log.error("createToken -> internal error", e);
             throw e;
         }
     }
@@ -126,7 +126,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
         private byte[] payload;
 
-        public CachingRequestWrapper(HttpServletRequest request) throws IOException {
+        private CachingRequestWrapper(HttpServletRequest request) {
             super(request);
         }
 
@@ -143,7 +143,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             return new ServletInputStream() {
 
                 @Override
-                public int read() throws IOException {
+                public int read() {
                     return byteArrayInputStream.read();
                 }
 
@@ -162,10 +162,6 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
                 }
             };
-        }
-
-        public byte[] getContentAsByteArray() throws IOException {
-            return getPayload();
         }
     }
 }
