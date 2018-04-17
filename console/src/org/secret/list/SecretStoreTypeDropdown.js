@@ -40,7 +40,9 @@ class SecretStoreTypeDropdown extends Component {
 
         const disabled = options.length <= 1;
 
-        return <Dropdown disabled={disabled} loading={isLoading} options={options} {...rest} search />;
+        return (
+            <Dropdown disabled={disabled} loading={isLoading} options={options} {...rest} search />
+        );
     }
 }
 

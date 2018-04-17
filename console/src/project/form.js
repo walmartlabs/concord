@@ -39,8 +39,6 @@ import * as v from '../shared/validation';
 import { actions } from './crud';
 import { getCurrentOrg } from '../session/reducers';
 
-import ConnectedProjectQueue from './ProjectQueue';
-
 const renderSourceText = (f, { commitId }) => (commitId ? 'Revision' : 'Branch/tag');
 
 const renderRepositories = (
@@ -295,11 +293,6 @@ let projectForm = (props) => {
 
             {!createNew && (
                 <div>
-                    <Divider horizontal section>
-                        Processes
-                    </Divider>
-                    <ConnectedProjectQueue />
-
                     {/* TODO: Add support for configuration objects
                     <Divider horizontal>Configuration</Divider>
                     <Message size="tiny" info>

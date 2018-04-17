@@ -8,6 +8,7 @@
 
 ### Changed
 
+- concord-console: load correct project processes;
 - concord-server: fixed `platform` filter for OneOps triggers.
 
 

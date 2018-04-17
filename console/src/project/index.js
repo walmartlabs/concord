@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,12 +21,14 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { reset as resetForm } from 'redux-form';
 import { push as pushHistory } from 'react-router-redux';
-import { Header, Loader } from 'semantic-ui-react';
+import { Divider, Header, Loader } from 'semantic-ui-react';
 import ErrorMessage from '../shared/ErrorMessage';
 import ProjectForm from './form';
 import { actions, reducers, sagas, selectors } from './crud';
 import * as repoConstants from './RepositoryPopup/constants';
 import { getCurrentOrg } from '../session/reducers';
+
+import ConnectedProjectQueue from './ProjectQueue';
 
 const isSecretStoreTypeEnabled = (index, list) => {
     if (list.length > 0) {
@@ -121,13 +123,19 @@ class ProjectPage extends Component {
     }
 
     render() {
-        const { data, createNew, secretStoreTypeList, error, loading } = this.props;
+        const { projectName, data, createNew, secretStoreTypeList, error, loading } = this.props;
         if (error) {
             return <ErrorMessage message={error} retryFn={() => this.load()} />;
         }
 
         if (loading) {
             return <Loader active />;
+        }
+
+        // HACK: avoid picking up a stale projectId value
+        let projectId = data.id;
+        if (projectId && projectName !== data.name) {
+            projectId = null;
         }
 
         return (
@@ -139,6 +147,16 @@ class ProjectPage extends Component {
                     initialValues={rawToForm(data, secretStoreTypeList)}
                     onSubmit={(data) => this.handleSave(data)}
                 />
+
+                {!createNew && (
+                    <div>
+                        <Divider horizontal section>
+                            Processes
+                        </Divider>
+
+                        <ConnectedProjectQueue projectId={projectId} />
+                    </div>
+                )}
             </div>
         );
     }

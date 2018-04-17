@@ -25,6 +25,19 @@ import * as types from '../../process/actions';
 
 export class ProjectQueue extends React.Component {
     componentDidMount() {
+        this.load();
+    }
+
+    componentDidUpdate(prevProps) {
+        const { projectId: prevId } = prevProps;
+        const { projectId: currentId } = this.props;
+
+        if (!prevId || prevId !== currentId) {
+            this.load();
+        }
+    }
+
+    load() {
         const { fetchProjectProcessesFn, projectId } = this.props;
         if (projectId) fetchProjectProcessesFn(projectId);
     }
@@ -42,9 +55,8 @@ export class ProjectQueue extends React.Component {
     }
 }
 
-const mapStateToProps = ({ project, process }) => ({
-    projectId: project.data.id,
-    processes: process.byProject
+const mapStateToProps = ({ project, process }, { projectId }) => ({
+    processes: projectId ? process.byProject : null
 });
 
 const mapDispatchToProps = (dispatch) => ({
