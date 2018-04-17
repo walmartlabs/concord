@@ -99,17 +99,14 @@ public class SessionKeyRealm extends AuthorizingRealm {
 
         SessionKeyPrincipal p = principals.oneByType(SessionKeyPrincipal.class);
         if (p != null) {
-            if (!instanceId.equals(p.getProcessInstanceId())) {
-                log.warn("getPrincipals ['{}'] -> invalid instance ID, expected {}", instanceId, p.getProcessInstanceId());
-                throw new AuthenticationException("Session key mismatch, expected " + p.getProcessInstanceId() + ", got " + instanceId);
-            }
-        } else {
-            SimplePrincipalCollection c = new SimplePrincipalCollection(principals);
-            c.add(new SessionKeyPrincipal(instanceId), REALM_NAME);
-            return c;
+            // should never happen, sessionkey principals shouldn't be stored in the process state
+            log.warn("getPrincipals ['{}'] -> unexpected principal: {}", instanceId, p.getProcessInstanceId());
+            throw new AuthenticationException("Unexpected session principal: " + p.getProcessInstanceId());
         }
 
-        return principals;
+        SimplePrincipalCollection c = new SimplePrincipalCollection(principals);
+        c.add(new SessionKeyPrincipal(instanceId), REALM_NAME);
+        return c;
     }
 
     @Override

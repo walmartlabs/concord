@@ -24,10 +24,9 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 
-import java.io.Serializable;
 import java.util.UUID;
 
-public class SessionKeyPrincipal implements Serializable {
+public class SessionKeyPrincipal {
 
     public static SessionKeyPrincipal getCurrent() {
         Subject subject = SecurityUtils.getSubject();

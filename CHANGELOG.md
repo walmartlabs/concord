@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-server: fixed session key conflicts when sub processes
+are used;
 - concord-console: load correct project processes;
 - concord-server: fixed `platform` filter for OneOps triggers.
 

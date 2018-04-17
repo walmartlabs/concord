@@ -27,9 +27,8 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
-import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
+import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.mgt.SecurityManager;
@@ -43,6 +42,7 @@ import org.apache.shiro.util.ThreadContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -71,10 +71,25 @@ public class ProcessSecurityContext {
 
     public void storeCurrentSubject(UUID instanceId) {
         Subject s = SecurityUtils.getSubject();
-        PrincipalCollection ps = s.getPrincipals();
+
+        PrincipalCollection src = s.getPrincipals();
+
+        // filter out transient principals
+        SimplePrincipalCollection dst = new SimplePrincipalCollection();
+        for (String realm : src.getRealmNames()) {
+            Collection ps = src.fromRealm(realm);
+            for (Object p : ps) {
+                if (p instanceof SessionKeyPrincipal) {
+                    continue;
+                }
+
+                dst.add(p, realm);
+            }
+        }
+
         stateManager.transaction(tx -> {
             stateManager.delete(tx, instanceId, PRINCIPAL_FILE_PATH);
-            stateManager.insert(tx, instanceId, PRINCIPAL_FILE_PATH, serialize(ps));
+            stateManager.insert(tx, instanceId, PRINCIPAL_FILE_PATH, serialize(dst));
         });
     }
 
@@ -87,23 +102,8 @@ public class ProcessSecurityContext {
     }
 
     private PrincipalCollection doGetPrincipals(UUID instanceId) {
-        PrincipalCollection principals = stateManager.get(instanceId, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize)
+        return stateManager.get(instanceId, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize)
                 .orElse(null);
-
-        if (principals == null) {
-            return null;
-        }
-
-        SessionKeyPrincipal p = principals.oneByType(SessionKeyPrincipal.class);
-        if (p == null) {
-            p = new SessionKeyPrincipal(instanceId);
-
-            SimplePrincipalCollection c = new SimplePrincipalCollection(principals);
-            c.add(p, SessionKeyRealm.REALM_NAME);
-            return c;
-        }
-
-        return principals;
     }
 
     // TODO won't be needed after switching from gRPC to REST
