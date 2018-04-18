@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.api.org.project;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,43 +71,43 @@ public interface ProjectResource {
     @Path("/{orgName}/project/{projectName}/cfg{path: (.*)?}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse updateConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                       @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                       @ApiParam @PathParam("path") String path,
-                                                       @ApiParam Object data);
+    GenericOperationResult updateConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                               @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                               @ApiParam @PathParam("path") String path,
+                                               @ApiParam Object data);
 
     @PUT
     @ApiOperation("Update a project's configuration parameter")
     @Path("/{orgName}/project/{projectName}/cfg/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse updateConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                       @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                       @ApiParam Object data);
+    GenericOperationResult updateConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                               @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                               @ApiParam Object data);
 
     @DELETE
     @ApiOperation("Delete a project's configuration parameter")
     @Path("/{orgName}/project/{projectName}/cfg{path: (.*)?}")
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse deleteConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                       @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                       @ApiParam @PathParam("path") String path);
+    GenericOperationResult deleteConfiguration(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                               @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                               @ApiParam @PathParam("path") String path);
 
     @DELETE
     @ApiOperation("Delete an existing project")
     @Path("/{orgName}/project/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                          @ApiParam @PathParam("projectName") @ConcordKey String projectName);
+    GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                  @ApiParam @PathParam("projectName") @ConcordKey String projectName);
 
     @POST
     @ApiOperation("Updates the access level for the specified project and team")
     @Path("/{orgName}/project/{projectName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                     @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                     @ApiParam @Valid ResourceAccessEntry entry);
+    GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                             @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                             @ApiParam @Valid ResourceAccessEntry entry);
 
     @POST
     @ApiOperation("Encrypts a string with the project's key")

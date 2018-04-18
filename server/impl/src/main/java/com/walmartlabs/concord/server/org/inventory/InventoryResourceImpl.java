@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
@@ -93,7 +93,7 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
 
     @Override
     @Validate
-    public GenericOperationResultResponse updateAccessLevel(String orgName, String inventoryName, ResourceAccessEntry entry) {
+    public GenericOperationResult updateAccessLevel(String orgName, String inventoryName, ResourceAccessEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         UUID inventoryId = inventoryDao.getId(org.getId(), inventoryName);
@@ -105,18 +105,18 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
 
         inventoryManager.updateAccessLevel(inventoryId, teamId, entry.getLevel());
 
-        return new GenericOperationResultResponse(OperationResult.UPDATED);
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     @Override
-    public GenericOperationResultResponse delete(String orgName, String inventoryName) {
+    public GenericOperationResult delete(String orgName, String inventoryName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         InventoryEntry i = assertInventory(org.getId(), inventoryName, ResourceAccessLevel.OWNER, false);
 
         inventoryManager.delete(i.getId());
 
-        return new GenericOperationResultResponse(OperationResult.DELETED);
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     private InventoryEntry assertInventory(UUID orgId, String inventoryName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {

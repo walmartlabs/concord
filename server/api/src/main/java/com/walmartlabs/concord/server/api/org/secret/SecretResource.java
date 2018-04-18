@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.api.org.secret;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -88,7 +88,7 @@ public interface SecretResource {
     @Path("/{orgName}/secret/{secretName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                     @ApiParam @PathParam("secretName") @ConcordKey String secretName,
-                                                     @ApiParam @Valid ResourceAccessEntry entry);
+    GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                             @ApiParam @PathParam("secretName") @ConcordKey String secretName,
+                                             @ApiParam @Valid ResourceAccessEntry entry);
 }

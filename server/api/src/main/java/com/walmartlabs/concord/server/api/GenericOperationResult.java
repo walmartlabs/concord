@@ -25,13 +25,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 
-public class GenericOperationResultResponse implements Serializable {
+public class GenericOperationResult implements Serializable {
 
     private final boolean ok = true;
     private final OperationResult result;
 
     @JsonCreator
-    public GenericOperationResultResponse(@JsonProperty("result") OperationResult result) {
+    public GenericOperationResult(@JsonProperty("result") OperationResult result) {
         this.result = result;
     }
 
@@ -41,7 +41,7 @@ public class GenericOperationResultResponse implements Serializable {
 
     @Override
     public String toString() {
-        return "GenericOperationResultResponse{" +
+        return "GenericOperationResult{" +
                 "ok=" + ok +
                 ", result=" + result +
                 '}';

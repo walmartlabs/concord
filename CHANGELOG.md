@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: method to delete an existing team.
+
+
+
 ## [0.65.3] - 2018-04-16
 
 ### Added

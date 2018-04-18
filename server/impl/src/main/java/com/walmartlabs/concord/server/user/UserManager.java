@@ -71,7 +71,7 @@ public class UserManager {
 
     public UserEntry create(String username, UserType type, boolean admin) {
         if (type == null) {
-            type = UserPrincipal.getCurrent().getType();
+            type = UserPrincipal.assertCurrent().getType();
         }
 
         UUID id = userDao.insert(username, type, admin);
@@ -84,7 +84,7 @@ public class UserManager {
     }
 
     public boolean isInOrganization(UUID orgId) {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
         return userDao.isInOrganization(userId, orgId);
     }

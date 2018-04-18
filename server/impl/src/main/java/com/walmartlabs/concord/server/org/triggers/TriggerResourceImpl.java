@@ -167,7 +167,7 @@ public class TriggerResourceImpl extends AbstractDao implements TriggerResource,
     }
 
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (!p.isAdmin()) {
             throw new UnauthorizedException("Not authorized");
         }

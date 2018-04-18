@@ -114,7 +114,7 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
     public List<LandingEntry> list(String orgName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
 
         if (p.isAdmin()) {
@@ -193,7 +193,7 @@ public class LandingPageResourceImpl extends AbstractDao implements LandingPageR
     }
 
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (!p.isAdmin()) {
             throw new UnauthorizedException("Not authorized");
         }

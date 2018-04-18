@@ -75,7 +75,7 @@ public class ProjectManager {
         Map<String, RepositoryEntry> repos = entry.getRepositories();
         assertSecrets(orgId, repos);
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         UUID ownerId = p.getId();
 
         UUID id = projectDao.txResult(tx -> {
@@ -142,7 +142,7 @@ public class ProjectManager {
     }
 
     public List<ProjectEntry> list(UUID orgId) {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
         if (p.isAdmin()) {
             // admins can see any project, so we shouldn't filter projects by user

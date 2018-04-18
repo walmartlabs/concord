@@ -86,7 +86,7 @@ public class TeamManager {
             UUID tId = teamDao.insert(tx, orgId, teamName, description);
 
             // add the current user as a team maintainer
-            UUID userId = UserPrincipal.getCurrent().getId();
+            UUID userId = UserPrincipal.assertCurrent().getId();
             teamDao.upsertUser(tx, tId, userId, TeamRole.MAINTAINER);
 
             return tId;
@@ -113,6 +113,18 @@ public class TeamManager {
                 .log();
     }
 
+    public void delete(String orgName, String teamName) {
+        TeamEntry t = assertTeam(orgName, teamName, TeamRole.OWNER, true, false);
+
+        teamDao.delete(t.getId());
+
+        auditLog.add(AuditObject.TEAM, AuditAction.DELETE)
+                .field("id", t.getId())
+                .field("orgId", t.getOrgId())
+                .field("name", t.getName())
+                .log();
+    }
+
     public void addUsers(String orgName, String teamName, Collection<TeamUserEntry> users) {
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
 
@@ -120,7 +132,7 @@ public class TeamManager {
             for (TeamUserEntry u : users) {
                 UserType type = u.getUserType();
                 if (type == null) {
-                    type = UserPrincipal.getCurrent().getType();
+                    type = UserPrincipal.assertCurrent().getType();
                 }
 
                 UUID userId = getOrCreateUserId(u.getUsername(), type);
@@ -183,7 +195,7 @@ public class TeamManager {
     }
 
     public void assertAccess(UUID orgId, TeamRole requiredRole) {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin()) {
             return;
         }
@@ -200,7 +212,7 @@ public class TeamManager {
     public TeamEntry assertAccess(UUID orgId, UUID teamId, String teamName, TeamRole requiredRole, boolean teamMembersOnly) {
         TeamEntry e = assertExisting(orgId, teamId, teamName);
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin()) {
             return e;
         }

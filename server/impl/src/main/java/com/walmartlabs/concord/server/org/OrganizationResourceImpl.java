@@ -66,7 +66,7 @@ public class OrganizationResourceImpl implements OrganizationResource, Resource 
         UUID userId = null;
 
         if (onlyCurrent) {
-            UserPrincipal p = UserPrincipal.getCurrent();
+            UserPrincipal p = UserPrincipal.assertCurrent();
             if (!p.isAdmin()) {
                 userId = p.getId();
             }

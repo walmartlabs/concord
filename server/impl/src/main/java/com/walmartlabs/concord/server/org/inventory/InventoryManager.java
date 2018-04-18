@@ -57,7 +57,7 @@ public class InventoryManager {
     public UUID insert(UUID orgId, InventoryEntry entry) {
         UUID parentId = assertParentInventoryAccess(orgId, entry.getParent(), ResourceAccessLevel.WRITER, true);
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         UUID ownerId = p.getId();
 
         UUID id = inventoryDao.insert(ownerId, entry.getName(), orgId, parentId, entry.getVisibility());
@@ -121,7 +121,7 @@ public class InventoryManager {
             throw new ValidationErrorsException("Inventory not found: " + inventoryId);
         }
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin()) {
             // an admin can access any project
             return e;

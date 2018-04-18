@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.events.EventResource;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
@@ -35,7 +35,6 @@ import org.sonatype.siesta.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.util.Date;
 import java.util.HashMap;
@@ -66,7 +65,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     }
 
     @Override
-    public GenericOperationResultResponse createOrUpdate(String orgName, String projectName, RepositoryEntry entry) {
+    public GenericOperationResult createOrUpdate(String orgName, String projectName, RepositoryEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
@@ -78,7 +77,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     }
 
     @Override
-    public GenericOperationResultResponse refreshRepository(String orgName, String projectName, String repositoryName) {
+    public GenericOperationResult refreshRepository(String orgName, String projectName, String repositoryName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
@@ -103,6 +102,6 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
 
         eventResource.event("concord", event);
 
-        return new GenericOperationResultResponse(OperationResult.UPDATED);
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 }

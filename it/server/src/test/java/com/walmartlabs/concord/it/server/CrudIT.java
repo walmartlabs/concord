@@ -22,7 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.CreateOrganizationResponse;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
@@ -147,7 +147,7 @@ public class CrudIT extends AbstractServerIT {
 
         // --- delete
 
-        GenericOperationResultResponse deleteInventoryResponse = inventoryResource.delete(orgName, updatedInventoryName);
+        GenericOperationResult deleteInventoryResponse = inventoryResource.delete(orgName, updatedInventoryName);
         assertTrue(deleteInventoryResponse.getResult() == OperationResult.DELETED);
     }
 

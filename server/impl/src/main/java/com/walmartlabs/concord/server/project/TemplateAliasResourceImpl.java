@@ -69,7 +69,7 @@ public class TemplateAliasResourceImpl extends AbstractDao implements TemplateAl
     }
 
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (!p.isAdmin()) {
             throw new UnauthorizedException("Only admins can do that");
         }

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.api.org.policy;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -53,23 +53,23 @@ public interface PolicyResource {
     @ApiOperation("Delete an existing policy")
     @Path("/{policyName}")
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse delete(@ApiParam @PathParam("policyName") @ConcordKey String policyName);
+    GenericOperationResult delete(@ApiParam @PathParam("policyName") @ConcordKey String policyName);
 
     @PUT
     @ApiOperation("Link an existing policy to an organization or a project")
     @Path("/{policyName}/link")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse link(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
-                                        @ApiParam @Valid PolicyLinkEntry entry);
+    GenericOperationResult link(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
+                                @ApiParam @Valid PolicyLinkEntry entry);
 
     @DELETE
     @ApiOperation("Unlink an existing policy")
     @Path("/{policyName}/link")
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse unlink(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
-                                          @ApiParam @QueryParam("orgName") @ConcordKey String orgName,
-                                          @ApiParam @QueryParam("projectName") @ConcordKey String projectName);
+    GenericOperationResult unlink(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
+                                  @ApiParam @QueryParam("orgName") @ConcordKey String orgName,
+                                  @ApiParam @QueryParam("projectName") @ConcordKey String projectName);
 
     @GET
     @ApiOperation("List policies, optionally filtering by organization and/or project links")

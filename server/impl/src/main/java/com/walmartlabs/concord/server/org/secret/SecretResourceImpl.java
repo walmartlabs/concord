@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.org.secret;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
@@ -140,7 +140,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
     @Override
     @Validate
-    public GenericOperationResultResponse updateAccessLevel(String orgName, String secretName, ResourceAccessEntry entry) {
+    public GenericOperationResult updateAccessLevel(String orgName, String secretName, ResourceAccessEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         UUID secretId = secretDao.getId(org.getId(), secretName);
@@ -149,7 +149,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
         }
 
         secretManager.updateAccessLevel(secretId, entry.getTeamId(), entry.getLevel());
-        return new GenericOperationResultResponse(OperationResult.UPDATED);
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     private void assertStore(SecretStoreType storeType) {

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.api.org.inventory;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,9 +71,9 @@ public interface InventoryResource {
     @Path("/{orgName}/inventory/{inventoryName}/access")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                     @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
-                                                     @ApiParam @Valid ResourceAccessEntry entry);
+    GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                             @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                             @ApiParam @Valid ResourceAccessEntry entry);
 
     /**
      * Creates a new inventory or updates an existing one.
@@ -86,6 +86,6 @@ public interface InventoryResource {
     @ApiOperation("Delete inventory")
     @Path("/{orgName}/inventory/{inventoryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse delete(@ApiParam @PathParam("orgName") String orgName,
-                                          @ApiParam @PathParam("inventoryName") String inventoryName);
+    GenericOperationResult delete(@ApiParam @PathParam("orgName") String orgName,
+                                  @ApiParam @PathParam("inventoryName") String inventoryName);
 }

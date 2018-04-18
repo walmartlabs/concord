@@ -41,7 +41,9 @@ import org.junit.runner.RunWith;
 
 import javax.ws.rs.ForbiddenException;
 import java.util.Collections;
+import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(ParallelRunner.class)
@@ -265,6 +267,39 @@ public class TeamRbacIT extends AbstractServerIT {
 
         teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
         teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userB, TeamRole.MEMBER)));
+    }
+
+    @Test(timeout = 30000)
+    public void testTeamDelete() throws Exception {
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+
+        String orgName = "orgA_" + randomString();
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        TeamResource teamResource = proxy(TeamResource.class);
+
+        String teamName = "teamA_" + randomString();
+        teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+
+        // ---
+
+        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry("admin", TeamRole.OWNER)));
+
+        // ---
+
+        List<TeamEntry> l = teamResource.list(orgName);
+        assertEquals(2, l.size());
+
+        // ---
+
+        teamResource.delete(orgName, teamName);
+
+        // ---
+
+        l = teamResource.list(orgName);
+        assertEquals(1, l.size());
     }
 
     @Test(timeout = 30000)

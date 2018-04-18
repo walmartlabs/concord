@@ -80,7 +80,7 @@ public class PayloadManager {
 
         String entryPoint = MultipartUtils.getString(input, "entryPoint");
 
-        UserPrincipal initiator = UserPrincipal.getCurrent();
+        UserPrincipal initiator = UserPrincipal.assertCurrent();
 
         String[] out = getOutExpressions(input);
 

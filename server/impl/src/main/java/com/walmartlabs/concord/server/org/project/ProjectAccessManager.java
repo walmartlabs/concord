@@ -61,7 +61,7 @@ public class ProjectAccessManager {
 
         orgManager.assertAccess(e.getOrgId(), false);
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin()) {
             // an admin can access any project
             return e;

@@ -128,7 +128,7 @@ public class OrganizationManager {
     public OrganizationEntry assertAccess(UUID orgId, String name, boolean orgMembersOnly) {
         OrganizationEntry e = assertExisting(orgId, name);
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin()) {
             // an admin can access any organization
             return e;
@@ -144,7 +144,7 @@ public class OrganizationManager {
     }
 
     private static UserPrincipal assertAdmin() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (!p.isAdmin()) {
             throw new AuthorizationException("Only admins are allowed to update organizations");
         }

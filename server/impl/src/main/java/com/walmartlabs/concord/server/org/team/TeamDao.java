@@ -104,6 +104,16 @@ public class TeamDao extends AbstractDao {
                 .execute();
     }
 
+    public void delete(UUID id) {
+        tx(tx -> delete(tx, id));
+    }
+
+    public void delete(DSLContext tx, UUID id) {
+        tx.deleteFrom(TEAMS)
+                .where(TEAMS.TEAM_ID.eq(id))
+                .execute();
+    }
+
     public TeamEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
             return get(tx, id);

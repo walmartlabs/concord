@@ -498,12 +498,12 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     private Set<UUID> getCurrentUserOrgIds() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         return userDao.getOrgIds(p.getId());
     }
 
     private static boolean isAdmin() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         return p.isAdmin();
     }
 

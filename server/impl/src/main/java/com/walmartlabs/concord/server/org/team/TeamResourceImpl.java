@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.team;
  * =====
  */
 
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.team.*;
@@ -79,6 +80,12 @@ public class TeamResourceImpl implements TeamResource, Resource {
     @Override
     public TeamEntry get(String orgName, String teamName) {
         return assertTeam(orgName, teamName, null, true, false);
+    }
+
+    @Override
+    public GenericOperationResult delete(String orgName, String teamName) {
+        teamManager.delete(orgName, teamName);
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     @Override

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.api.org.project;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -40,9 +40,9 @@ public interface RepositoryResource {
     @Path("/{orgName}/project/{projectName}/repository")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                  @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                  @ApiParam @Valid RepositoryEntry entry);
+    GenericOperationResult createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                          @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                          @ApiParam @Valid RepositoryEntry entry);
 
     /**
      * Refresh a repository.
@@ -55,7 +55,7 @@ public interface RepositoryResource {
     @ApiOperation("Refresh an existing repository")
     @Path("/{orgName}/project/{projectName}/repository/{repositoryName}/refresh")
     @Produces(MediaType.APPLICATION_JSON)
-    GenericOperationResultResponse refreshRepository(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                                     @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                     @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
+    GenericOperationResult refreshRepository(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                             @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                             @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
 }

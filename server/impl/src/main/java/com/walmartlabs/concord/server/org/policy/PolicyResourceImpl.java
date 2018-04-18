@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org.policy;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.policy.PolicyEntry;
@@ -107,7 +107,7 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
     }
 
     @Override
-    public GenericOperationResultResponse delete(String policyName) {
+    public GenericOperationResult delete(String policyName) {
         assertAdmin();
 
         UUID id = policyDao.getId(policyName);
@@ -122,11 +122,11 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
                 .field("name", policyName)
                 .log();
 
-        return new GenericOperationResultResponse(OperationResult.DELETED);
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     @Override
-    public GenericOperationResultResponse link(String policyName, PolicyLinkEntry entry) {
+    public GenericOperationResult link(String policyName, PolicyLinkEntry entry) {
         assertAdmin();
 
         PolicyLink l = assertLink(policyName, entry.getOrgName(), entry.getProjectName());
@@ -139,11 +139,11 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
                 .field("action", "link")
                 .log();
 
-        return new GenericOperationResultResponse(OperationResult.UPDATED);
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     @Override
-    public GenericOperationResultResponse unlink(String policyName, String orgName, String projectName) {
+    public GenericOperationResult unlink(String policyName, String orgName, String projectName) {
         assertAdmin();
 
         PolicyLink l = assertLink(policyName, orgName, projectName);
@@ -156,7 +156,7 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
                 .field("action", "unlink")
                 .log();
 
-        return new GenericOperationResultResponse(OperationResult.DELETED);
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     @Override
@@ -203,7 +203,7 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
     }
 
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (!p.isAdmin()) {
             throw new UnauthorizedException("Only admins can do that");
         }

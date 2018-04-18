@@ -24,6 +24,7 @@ import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 
@@ -44,6 +45,14 @@ public class UserPrincipal implements Serializable {
         }
 
         return principals.oneByType(UserPrincipal.class);
+    }
+
+    public static UserPrincipal assertCurrent() {
+        UserPrincipal p = getCurrent();
+        if (p == null) {
+            throw new AuthenticationException("Can't determine the current user");
+        }
+        return p;
     }
 
     private final String realm;

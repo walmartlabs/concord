@@ -105,7 +105,7 @@ public class SecretManager {
             throw new ValidationErrorsException("Secret ID or name is required");
         }
 
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin()) {
             // an admin can access any secret
             return e;
@@ -406,7 +406,7 @@ public class SecretManager {
     }
 
     private static UUID getOwnerId() {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         return p.getId();
     }
 

@@ -103,7 +103,7 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
         }
 
         if (type == null) {
-            type = UserPrincipal.getCurrent().getType();
+            type = UserPrincipal.assertCurrent().getType();
         }
 
         UserEntry entry = userManager.getOrCreate(username, type);
@@ -123,7 +123,7 @@ public class ApiKeyResourceImpl implements ApiKeyResource, Resource {
     }
 
     private void assertOwner(UUID userId) {
-        UserPrincipal p = UserPrincipal.getCurrent();
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin()) {
             // admin users can manage other user's keys
             return;

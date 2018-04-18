@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org.project;
 
 import com.google.common.base.Splitter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.server.api.GenericOperationResultResponse;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
@@ -143,7 +143,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
     @Override
     @Validate
     @SuppressWarnings("unchecked")
-    public GenericOperationResultResponse updateConfiguration(String orgName, String projectName, String path, Object data) {
+    public GenericOperationResult updateConfiguration(String orgName, String projectName, String path, Object data) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
@@ -171,18 +171,18 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
 
         Map<String, Object> newCfg = cfg;
         projectDao.updateCfg(projectId, newCfg);
-        return new GenericOperationResultResponse(OperationResult.UPDATED);
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     @Override
     @Validate
-    public GenericOperationResultResponse updateConfiguration(String orgName, String projectName, Object data) {
+    public GenericOperationResult updateConfiguration(String orgName, String projectName, Object data) {
         return updateConfiguration(orgName, projectName, "/", data);
     }
 
     @Override
     @Validate
-    public GenericOperationResultResponse deleteConfiguration(String orgName, String projectName, String path) {
+    public GenericOperationResult deleteConfiguration(String orgName, String projectName, String path) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
@@ -207,12 +207,12 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
 
         Map<String, Object> newCfg = cfg;
         projectDao.updateCfg(projectId, newCfg);
-        return new GenericOperationResultResponse(OperationResult.DELETED);
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     @Override
     @Validate
-    public GenericOperationResultResponse delete(String orgName, String projectName) {
+    public GenericOperationResult delete(String orgName, String projectName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
@@ -221,12 +221,12 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         }
 
         projectManager.delete(projectId);
-        return new GenericOperationResultResponse(OperationResult.DELETED);
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     @Override
     @Validate
-    public GenericOperationResultResponse updateAccessLevel(String orgName, String projectName, ResourceAccessEntry entry) {
+    public GenericOperationResult updateAccessLevel(String orgName, String projectName, ResourceAccessEntry entry) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
@@ -237,7 +237,7 @@ public class ProjectResourceImpl implements ProjectResource, Resource {
         UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
 
         accessManager.updateAccessLevel(projectId, teamId, entry.getLevel());
-        return new GenericOperationResultResponse(OperationResult.UPDATED);
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     @Override

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.api.org.team;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -62,6 +63,16 @@ public interface TeamResource {
     @Produces(MediaType.APPLICATION_JSON)
     TeamEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                   @ApiParam @PathParam("teamName") @ConcordKey String teamName);
+
+    /**
+     * Deletes an existing team.
+     */
+    @DELETE
+    @ApiOperation("Delete an existing team")
+    @Path("/{orgName}/team/{teamName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                  @ApiParam @PathParam("teamName") @ConcordKey String teamName);
 
     /**
      * Lists teams.
