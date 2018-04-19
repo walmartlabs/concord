@@ -43,7 +43,7 @@ public class ProcessEventEntry implements Serializable {
     public ProcessEventEntry(@JsonProperty("id") UUID id,
                              @JsonProperty("eventType") ProcessEventType eventType,
                              @JsonProperty("eventDate") Date eventDate,
-                             @JsonProperty("data") String data) {
+                             @JsonProperty("data") Object data) {
 
         this.id = id;
         this.eventType = eventType;
