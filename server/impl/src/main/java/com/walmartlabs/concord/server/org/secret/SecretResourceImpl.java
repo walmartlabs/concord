@@ -132,10 +132,10 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
     @Override
     @Validate
-    public DeleteSecretResponse delete(String orgName, String secretName) {
+    public GenericOperationResult delete(String orgName, String secretName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         secretManager.delete(org.getId(), secretName);
-        return new DeleteSecretResponse();
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     @Override

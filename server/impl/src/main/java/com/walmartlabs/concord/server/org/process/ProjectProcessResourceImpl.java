@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org.process;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.process;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.process.ProjectProcessResource;
 import com.walmartlabs.concord.server.api.process.FormListEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
@@ -30,6 +31,7 @@ import com.walmartlabs.concord.server.console.CustomFormService;
 import com.walmartlabs.concord.server.console.FormSessionResponse;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.org.OrganizationDao;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.ConcordFormService;
@@ -63,9 +65,12 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
 
     private static final Logger log = LoggerFactory.getLogger(ProjectProcessResourceImpl.class);
 
+    // TODO replace with pagination
+    private static final int DEFAULT_LIST_LIMIT = 100;
     private static final long STATUS_REFRESH_DELAY = 250;
 
     private final ProcessManager processManager;
+    private final OrganizationManager orgManager;
     private final OrganizationDao orgDao;
     private final ProcessQueueDao queueDao;
     private final ConcordFormService formService;
@@ -80,16 +85,38 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
                                       ProcessQueueDao queueDao,
                                       ConcordFormService formService,
                                       CustomFormService customFormService,
-                                      ProjectDao projectDao, RepositoryDao repositoryDao) {
+                                      OrganizationManager orgManager,
+                                      ProjectDao projectDao,
+                                      RepositoryDao repositoryDao) {
 
         this.processManager = processManager;
         this.orgDao = orgDao;
         this.queueDao = queueDao;
         this.formService = formService;
         this.customFormService = customFormService;
+        this.responseTemplates = new ResponseTemplates();
+        this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.responseTemplates = new ResponseTemplates();
+    }
+
+
+    @Override
+    public List<ProcessEntry> list(String orgName) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        return queueDao.list(Collections.singleton(org.getId()), false, null, null, null, DEFAULT_LIST_LIMIT);
+    }
+
+    @Override
+    public List<ProcessEntry> list(String orgName, String projectName) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+
+        UUID projectId = projectDao.getId(org.getId(), projectName);
+        if (projectId == null) {
+            throw new WebApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
+        }
+
+        return queueDao.list(null, false, projectId, null, null, DEFAULT_LIST_LIMIT);
     }
 
     @Override

@@ -34,8 +34,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class RepositoryTestRequest implements Serializable {
 
-    @NotNull
     private final UUID orgId;
+    private final String orgName;
 
     @NotNull
     private final String url;
@@ -47,12 +47,14 @@ public class RepositoryTestRequest implements Serializable {
 
     @JsonCreator
     public RepositoryTestRequest(@JsonProperty("orgId") UUID orgId,
+                                 @JsonProperty("orgName") String orgName,
                                  @JsonProperty("url") String url,
                                  @JsonProperty("branch") String branch,
                                  @JsonProperty("commitId") String commitId,
                                  @JsonProperty("path") String path,
                                  @JsonProperty("secret") String secret) {
         this.orgId = orgId;
+        this.orgName = orgName;
         this.url = url;
         this.branch = branch;
         this.commitId = commitId;
@@ -62,6 +64,10 @@ public class RepositoryTestRequest implements Serializable {
 
     public UUID getOrgId() {
         return orgId;
+    }
+
+    public String getOrgName() {
+        return orgName;
     }
 
     public String getUrl() {

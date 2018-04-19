@@ -36,7 +36,7 @@ import javax.ws.rs.core.MediaType;
 public interface RepositoryResource {
 
     @POST
-    @ApiOperation("Creates a new project or updates an existing one")
+    @ApiOperation("Creates a new repository or updates an existing one")
     @Path("/{orgName}/project/{projectName}/repository")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

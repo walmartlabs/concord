@@ -49,19 +49,25 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     private final RepositoryCacheDao repositoryCacheDao;
     private final EventResource eventResource;
     private final ProjectDao projectDao;
+    private final RepositoryManager repositoryManager;
+    private final RepositoryDao repositoryDao;
 
     @Inject
     public RepositoryResourceImpl(OrganizationManager orgManager,
                                   ProjectAccessManager accessManager,
                                   RepositoryCacheDao repositoryCacheDao,
                                   EventResource eventResource,
-                                  ProjectDao projectDao) {
+                                  ProjectDao projectDao,
+                                  RepositoryManager repositoryManager,
+                                  RepositoryDao repositoryDao) {
 
         this.orgManager = orgManager;
         this.accessManager = accessManager;
         this.repositoryCacheDao = repositoryCacheDao;
         this.eventResource = eventResource;
         this.projectDao = projectDao;
+        this.repositoryManager = repositoryManager;
+        this.repositoryDao = repositoryDao;
     }
 
     @Override
@@ -73,7 +79,8 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
             throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        return null;
+        repositoryManager.createOrUpdate(projectId, entry);
+        return new GenericOperationResult(entry.getId() == null ? OperationResult.CREATED : OperationResult.UPDATED);
     }
 
     @Override

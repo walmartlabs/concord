@@ -204,7 +204,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public List<ProcessEntry> list(Set<UUID> orgIds, UUID projectId, Timestamp beforeCreatedAt, Set<String> tags, int limit) {
+    public List<ProcessEntry> list(Set<UUID> orgIds, boolean includeWoProjects, UUID projectId, Timestamp beforeCreatedAt, Set<String> tags, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectWhereStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE);
 
@@ -213,8 +213,12 @@ public class ProcessQueueDao extends AbstractDao {
                         .from(PROJECTS)
                         .where(PROJECTS.ORG_ID.in(orgIds));
 
-                s.where(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds)
-                        .or(V_PROCESS_QUEUE.PROJECT_ID.isNull()));
+                if (includeWoProjects) {
+                    s.where(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds)
+                            .or(V_PROCESS_QUEUE.PROJECT_ID.isNull()));
+                } else {
+                    s.where(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds));
+                }
             }
 
             if (projectId != null) {

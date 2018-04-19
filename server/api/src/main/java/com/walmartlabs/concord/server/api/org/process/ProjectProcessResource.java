@@ -10,7 +10,9 @@ package com.walmartlabs.concord.server.api.org.process;
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,18 +22,19 @@ package com.walmartlabs.concord.server.api.org.process;
  * =====
  */
 
+import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.List;
 
 @Api(value = "Processes", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
@@ -56,4 +59,17 @@ public interface ProjectProcessResource {
                    @ApiParam @PathParam("entryPoint") String entryPoint,
                    @ApiParam @QueryParam("activeProfiles") String activeProfiles,
                    @Context UriInfo uriInfo);
+
+    @GET
+    @ApiOperation("List processes for the specified organization")
+    @Path("/{orgName}/process")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName);
+
+    @GET
+    @ApiOperation("List processes for the specified project")
+    @Path("/{orgName}/project/{projectName}/process")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                            @ApiParam @PathParam("projectName") @ConcordKey String projectName);
 }

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.console;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -53,16 +54,21 @@ public class ConsoleService implements Resource {
     private final UserManager userManager;
     private final SecretDao secretDao;
     private final OrganizationManager orgManager;
+    private final RepositoryDao repositoryDao;
+
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
                           RepositoryManager repositoryManager,
                           UserManager userManager,
-                          SecretDao secretDao, OrganizationManager orgManager) {
+                          SecretDao secretDao,
+                          OrganizationManager orgManager,
+                          RepositoryDao repositoryDao) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
         this.userManager = userManager;
+        this.repositoryDao = repositoryDao;
         this.secretDao = secretDao;
         this.orgManager = orgManager;
     }
@@ -124,11 +130,29 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/org/{orgName}/secret/{secretName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
-    public boolean isSecretExists(@PathParam("orgName") String orgName,
+    public boolean isSecretExists(@PathParam("orgName") @ConcordKey String orgName,
                                   @PathParam("secretName") String secretName) {
         try {
             OrganizationEntry org = orgManager.assertAccess(orgName, true);
             return secretDao.getId(org.getId(), secretName) != null;
+        } catch (UnauthorizedException e) {
+            return false;
+        }
+    }
+
+    @GET
+    @Path("/org/{orgName}/project/{projectName}/repo/{repoName}/exists")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean isRepositoryExists(@PathParam("orgName") @ConcordKey String orgName,
+                                      @PathParam("projectName") @ConcordKey String projectName,
+                                      @PathParam("repoName") String repoName) {
+        try {
+            OrganizationEntry org = orgManager.assertAccess(orgName, true);
+            UUID projectId = projectDao.getId(org.getId(), projectName);
+            if (projectId == null) {
+                throw new WebApplicationException("Project not found: " + projectName, Status.BAD_REQUEST);
+            }
+            return repositoryDao.getId(projectId, repoName) != null;
         } catch (UnauthorizedException e) {
             return false;
         }
@@ -139,10 +163,10 @@ public class ConsoleService implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public boolean testRepository(RepositoryTestRequest req) {
-        UUID orgId = req.getOrgId();
+        OrganizationEntry org = orgManager.assertAccess(req.getOrgId(), req.getOrgName(), false);
 
         try {
-            repositoryManager.testConnection(orgId, req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecret());
+            repositoryManager.testConnection(org.getId(), req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecret());
             return true;
         } catch (Exception e) {
             String msg;

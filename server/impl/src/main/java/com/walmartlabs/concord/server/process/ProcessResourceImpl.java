@@ -368,7 +368,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             // non-admin users can see only their org's processes or processes w/o projects
             orgIds = getCurrentUserOrgIds();
         }
-        return queueDao.list(orgIds, projectId, toTimestamp(beforeCreatedAt), tags, limit);
+        return queueDao.list(orgIds, true, projectId, toTimestamp(beforeCreatedAt), tags, limit);
     }
 
     @Override

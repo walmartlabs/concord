@@ -80,8 +80,8 @@ public interface SecretResource {
     @ApiOperation("Delete an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteSecretResponse delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                @ApiParam @PathParam("secretName") @ConcordKey String secretName);
+    GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                  @ApiParam @PathParam("secretName") @ConcordKey String secretName);
 
     @POST
     @ApiOperation("Updates the access level for the specified secret and team")

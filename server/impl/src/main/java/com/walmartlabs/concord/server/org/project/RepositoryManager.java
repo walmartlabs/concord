@@ -71,11 +71,14 @@ public class RepositoryManager {
             secretId = e.getId();
         }
 
-        UUID id = repositoryDao.getId(projectId, entry.getName());
+        UUID repoId = entry.getId();
+        if (repoId == null) {
+            repoId = repositoryDao.getId(projectId, entry.getName());
+        }
 
         Map<String, Object> ev;
 
-        if (id == null) {
+        if (repoId == null) {
             repositoryDao.insert(tx, projectId,
                     entry.getName(), entry.getUrl(),
                     trim(entry.getBranch()), trim(entry.getCommitId()),
@@ -83,7 +86,7 @@ public class RepositoryManager {
 
             ev = Events.Repository.repositoryUpdated(project.getOrgName(), project.getName(), entry.getName());
         } else {
-            repositoryDao.update(tx, projectId,
+            repositoryDao.update(tx, repoId,
                     entry.getName(), entry.getUrl(),
                     trim(entry.getBranch()), trim(entry.getCommitId()),
                     trim(entry.getPath()), secretId);

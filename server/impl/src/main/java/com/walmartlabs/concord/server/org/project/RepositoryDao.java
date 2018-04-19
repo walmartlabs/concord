@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import org.jooq.*;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -90,7 +91,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public void update(DSLContext tx, UUID repoId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
-        tx.update(REPOSITORIES)
+        int i = tx.update(REPOSITORIES)
                 .set(REPOSITORIES.REPO_NAME, repositoryName)
                 .set(REPOSITORIES.REPO_URL, url)
                 .set(REPOSITORIES.SECRET_ID, secretId)
@@ -99,6 +100,10 @@ public class RepositoryDao extends AbstractDao {
                 .set(REPOSITORIES.REPO_PATH, path)
                 .where(REPOSITORIES.REPO_ID.eq(repoId))
                 .execute();
+
+        if (i != 1) {
+            throw new DataAccessException("Invalid number of rows: " + i);
+        }
     }
 
     public void delete(DSLContext tx, UUID repoId) {

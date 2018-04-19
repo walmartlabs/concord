@@ -35,6 +35,10 @@ public class GenericOperationResult implements Serializable {
         this.result = result;
     }
 
+    public boolean isOk() {
+        return ok;
+    }
+
     public OperationResult getResult() {
         return result;
     }
