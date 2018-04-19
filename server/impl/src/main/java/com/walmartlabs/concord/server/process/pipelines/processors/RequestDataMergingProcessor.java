@@ -54,6 +54,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         // configuration from the user's request
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
@@ -93,6 +94,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         return m != null ? m : Collections.emptyMap();
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path src = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
@@ -122,6 +124,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         return m != null ? m : Collections.emptyMap();
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> getAttachedCfg(Payload payload) {
         Path p = payload.getAttachment(REQUEST_ATTACHMENT_KEY);
         if (p == null) {
