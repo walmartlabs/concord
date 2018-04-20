@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: method to cancel a process including its
+subprocesses;
 - concord-server: method to delete an existing team.
 
 

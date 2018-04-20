@@ -67,25 +67,24 @@ public class AgentManager {
     }
 
     public void killProcess(List<UUID> instanceIdList) {
+        List<ProcessEntry> l = queueDao.get(instanceIdList);
 
-        List<ProcessEntry> processEntryList = queueDao.get(instanceIdList);
-
-        List<UUID> processWithoutAgentList = processEntryList.stream()
+        List<UUID> withoutAgent = l.stream()
                 .filter(p -> p.getLastAgentId() == null)
                 .map(ProcessEntry::getInstanceId)
                 .collect(Collectors.toList());
 
-        if (!processWithoutAgentList.isEmpty()) {
-            processWithoutAgentList.forEach(p -> log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", p));
-            queueDao.updateBatch(processWithoutAgentList, ProcessStatus.CANCELLED, null);
+        if (!withoutAgent.isEmpty()) {
+            withoutAgent.forEach(p -> log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", p));
+            queueDao.update(withoutAgent, ProcessStatus.CANCELLED, null);
         }
 
-        List<AgentCommand> agentCommandList = processEntryList.stream()
+        List<AgentCommand> commands = l.stream()
                 .filter(p -> p.getLastAgentId() != null)
-                .map(p -> new AgentCommand(UUID.randomUUID(), p.getLastAgentId(), AgentCommand.Status.CREATED, new Date(), Commands.toMap(new CancelJobCommand(p.getInstanceId().toString()))))
+                .map(p -> new AgentCommand(UUID.randomUUID(), p.getLastAgentId(), AgentCommand.Status.CREATED,
+                        new Date(), Commands.toMap(new CancelJobCommand(p.getInstanceId().toString()))))
                 .collect(Collectors.toList());
 
-        commandQueue.addBatch(agentCommandList);
+        commandQueue.addBatch(commands);
     }
-
 }

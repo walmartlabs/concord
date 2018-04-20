@@ -146,16 +146,19 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean updateBatch(List<UUID> instanceIds, ProcessStatus status, List<ProcessStatus> expected) {
+    public boolean update(List<UUID> instanceIds, ProcessStatus status, List<ProcessStatus> expected) {
         return txResult(tx -> {
             UpdateConditionStep q = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                     .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
                     .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
 
-            if(expected != null){
-                List<String> expectedStatuses = expected.stream().map(s -> s.toString()).collect(Collectors.toList());
-                q.and(PROCESS_QUEUE.CURRENT_STATUS.in(expectedStatuses));
+            if (expected != null) {
+                List<String> l = expected.stream()
+                        .map(Enum::toString)
+                        .collect(Collectors.toList());
+
+                q.and(PROCESS_QUEUE.CURRENT_STATUS.in(l));
             }
 
             int i = q.execute();

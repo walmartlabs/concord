@@ -157,26 +157,19 @@ public class ProcessManager {
     }
 
     public void killCascade(UUID instanceId) {
-        List<ProcessEntry> processEntryList = null;
-        boolean allServerProcessesUpdated = false;
+        List<ProcessEntry> l = null;
 
-        while(!allServerProcessesUpdated){
-            processEntryList = queueDao.getCascade(instanceId);
-            List<UUID> processIdsWithServer = filterProcessIds(processEntryList, SERVER_PROCESS_STATUSES);
-            allServerProcessesUpdated = processIdsWithServer.isEmpty() || queueDao.updateBatch(processIdsWithServer, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
+        boolean updated = false;
+        while(!updated){
+            l = queueDao.getCascade(instanceId);
+            List<UUID> ids = filterProcessIds(l, SERVER_PROCESS_STATUSES);
+            updated = ids.isEmpty() || queueDao.update(ids, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
         }
 
-        List<UUID> processIdsWithAgents = filterProcessIds(processEntryList, AGENT_PROCESS_STATUSES);
-        if (!processIdsWithAgents.isEmpty()) {
-            agentManager.killProcess(processIdsWithAgents);
+        List<UUID> ids = filterProcessIds(l, AGENT_PROCESS_STATUSES);
+        if (!ids.isEmpty()) {
+            agentManager.killProcess(ids);
         }
-    }
-
-    public static List<UUID> filterProcessIds(List<ProcessEntry> processEntryList, List<ProcessStatus> expected) {
-        return processEntryList.stream()
-                .filter(r -> expected.contains(r.getStatus()))
-                .map(ProcessEntry::getInstanceId)
-                .collect(Collectors.toList());
     }
 
     public void updateStatus(UUID instanceId, String agentId, ProcessStatus status) {
@@ -295,6 +288,13 @@ public class ProcessManager {
             }
         });
         return o.orElse(Collections.emptyMap());
+    }
+
+    private static List<UUID> filterProcessIds(List<ProcessEntry> l, List<ProcessStatus> expected) {
+        return l.stream()
+                .filter(r -> expected.contains(r.getStatus()))
+                .map(ProcessEntry::getInstanceId)
+                .collect(Collectors.toList());
     }
 
     public static final class PayloadEntry {
