@@ -502,4 +502,27 @@ public class ProcessIT extends AbstractServerIT {
             }
         }
     }
+
+    @Test(timeout = 30000)
+    public void testKillCascade() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("killCascade").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+        ProcessResource processResource = proxy(ProcessResource.class);
+
+        waitForChild(processResource, spr.getInstanceId(), ProcessKind.DEFAULT, ProcessStatus.RUNNING);
+
+        processResource.killCascade(spr.getInstanceId());
+
+        waitForChild(processResource, spr.getInstanceId(), ProcessKind.DEFAULT, ProcessStatus.CANCELLED,ProcessStatus.FINISHED,ProcessStatus.FAILED);
+
+        List<ProcessEntry> processEntryList = processResource.list(spr.getInstanceId(), null);
+        for (ProcessEntry pe : processEntryList){
+            assertEquals(ProcessStatus.CANCELLED, pe.getStatus());
+        }
+
+
+    }
 }

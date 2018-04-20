@@ -220,19 +220,18 @@ public interface ProcessResource {
     @DELETE
     @ApiOperation("Forcefully stops a process")
     @Path("/{id}")
-    void cancel(@ApiParam @PathParam("id") UUID instanceId);
+    void kill(@ApiParam @PathParam("id") UUID instanceId);
+
 
     /**
-     * Forcefully stops a process.
+     * Forcefully stops a process and all its children.
      *
      * @param instanceId
-     * @deprecated use {@link #cancel(UUID)}
      */
     @DELETE
-    @ApiOperation("Forcefully stops a process")
-    @Path("/{id}")
-    @Deprecated
-    void kill(@ApiParam @PathParam("id") UUID instanceId);
+    @ApiOperation("Forcefully stops a process and its all children")
+    @Path("/{id}/cascade")
+    void killCascade(@ApiParam @PathParam("id") UUID instanceId);
 
     /**
      * Returns a process instance details.

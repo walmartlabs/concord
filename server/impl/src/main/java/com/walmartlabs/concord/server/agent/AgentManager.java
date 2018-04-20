@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.agent;
  */
 
 import com.walmartlabs.concord.rpc.CancelJobCommand;
+import com.walmartlabs.concord.rpc.Commands;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -30,7 +31,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named
 public class AgentManager {
@@ -61,4 +65,27 @@ public class AgentManager {
 
         commandQueue.add(agentId, new CancelJobCommand(instanceId.toString()));
     }
+
+    public void killProcess(List<UUID> instanceIdList) {
+
+        List<ProcessEntry> processEntryList = queueDao.get(instanceIdList);
+
+        List<UUID> processWithoutAgentList = processEntryList.stream()
+                .filter(p -> p.getLastAgentId() == null)
+                .map(ProcessEntry::getInstanceId)
+                .collect(Collectors.toList());
+
+        if (!processWithoutAgentList.isEmpty()) {
+            processWithoutAgentList.forEach(p -> log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", p));
+            queueDao.updateBatch(processWithoutAgentList, ProcessStatus.CANCELLED, null);
+        }
+
+        List<AgentCommand> agentCommandList = processEntryList.stream()
+                .filter(p -> p.getLastAgentId() != null)
+                .map(p -> new AgentCommand(UUID.randomUUID(), p.getLastAgentId(), AgentCommand.Status.CREATED, new Date(), Commands.toMap(new CancelJobCommand(p.getInstanceId().toString()))))
+                .collect(Collectors.toList());
+
+        commandQueue.addBatch(agentCommandList);
+    }
+
 }

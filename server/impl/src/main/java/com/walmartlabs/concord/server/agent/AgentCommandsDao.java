@@ -25,15 +25,18 @@ import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
 import com.walmartlabs.concord.server.jooq.tables.records.AgentCommandsRecord;
+import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 import static org.jooq.impl.DSL.currentTimestamp;
@@ -59,6 +62,22 @@ public class AgentCommandsDao extends AbstractDao {
                         value(Status.CREATED.toString()), currentTimestamp(),
                         value(convert(data)))
                 .execute());
+    }
+
+    public void insertBatch(List<AgentCommand> ace) {
+        tx(tx -> {
+            BatchBindStep q = tx.batch(tx.insertInto(AGENT_COMMANDS, AGENT_COMMANDS.COMMAND_ID, AGENT_COMMANDS.AGENT_ID,
+                    AGENT_COMMANDS.COMMAND_STATUS, AGENT_COMMANDS.CREATED_AT,
+                    AGENT_COMMANDS.COMMAND_DATA).values((UUID) null, (String) null, (String) null, (Timestamp) null, (byte[]) null));
+
+            for (AgentCommand ac : ace) {
+                q.bind(value(ac.getCommandId()), value(ac.getAgentId()),
+                        value(ac.getStatus().toString()), new Timestamp(System.currentTimeMillis()),
+                        value(convert(ac.getData())));
+            }
+
+            q.execute();
+        });
     }
 
     public Optional<AgentCommand> poll(String agentId) {

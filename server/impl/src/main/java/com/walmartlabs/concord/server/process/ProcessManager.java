@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,6 +50,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
@@ -72,6 +74,18 @@ public class ProcessManager {
 
     private final ObjectMapper objectMapper;
 
+    private static final List<ProcessStatus> SERVER_PROCESS_STATUSES = Arrays.asList(
+            ProcessStatus.ENQUEUED,
+            ProcessStatus.PREPARING,
+            ProcessStatus.SUSPENDED);
+    private static final List<ProcessStatus> TERMINATED_PROCESS_STATUSES = Arrays.asList(
+            ProcessStatus.CANCELLED,
+            ProcessStatus.FAILED,
+            ProcessStatus.FINISHED);
+    private static final List<ProcessStatus> AGENT_PROCESS_STATUSES = Arrays.asList(
+            ProcessStatus.STARTING,
+            ProcessStatus.RUNNING,
+            ProcessStatus.RESUMING); //ProcessStatus.STALLED
     @Inject
     public ProcessManager(ProcessQueueDao queueDao,
                           ProcessStateManager stateManager,
@@ -131,15 +145,38 @@ public class ProcessManager {
         }
 
         ProcessStatus s = entry.getStatus();
-        if (s == ProcessStatus.CANCELLED || s == ProcessStatus.FINISHED) {
+        if (TERMINATED_PROCESS_STATUSES.contains(s)) {
             return;
         }
 
-        if (cancel(instanceId, s, ProcessStatus.ENQUEUED, ProcessStatus.PREPARING, ProcessStatus.SUSPENDED)) {
+        if (cancel(instanceId, s, SERVER_PROCESS_STATUSES)) {
             return;
         }
 
         agentManager.killProcess(instanceId);
+    }
+
+    public void killCascade(UUID instanceId) {
+        List<ProcessEntry> processEntryList = null;
+        boolean allServerProcessesUpdated = false;
+
+        while(!allServerProcessesUpdated){
+            processEntryList = queueDao.getCascade(instanceId);
+            List<UUID> processIdsWithServer = filterProcessIds(processEntryList, SERVER_PROCESS_STATUSES);
+            allServerProcessesUpdated = processIdsWithServer.isEmpty() || queueDao.updateBatch(processIdsWithServer, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
+        }
+
+        List<UUID> processIdsWithAgents = filterProcessIds(processEntryList, AGENT_PROCESS_STATUSES);
+        if (!processIdsWithAgents.isEmpty()) {
+            agentManager.killProcess(processIdsWithAgents);
+        }
+    }
+
+    public static List<UUID> filterProcessIds(List<ProcessEntry> processEntryList, List<ProcessStatus> expected) {
+        return processEntryList.stream()
+                .filter(r -> expected.contains(r.getStatus()))
+                .map(ProcessEntry::getInstanceId)
+                .collect(Collectors.toList());
     }
 
     public void updateStatus(UUID instanceId, String agentId, ProcessStatus status) {
@@ -215,7 +252,7 @@ public class ProcessManager {
         }
     }
 
-    private boolean cancel(UUID instanceId, ProcessStatus current, ProcessStatus... expected) {
+    private boolean cancel(UUID instanceId, ProcessStatus current, List<ProcessStatus> expected) {
         boolean found = false;
         for (ProcessStatus s : expected) {
             if (current == s) {

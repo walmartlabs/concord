@@ -257,7 +257,7 @@ public class ServerClient {
                 throw new IllegalStateException("Child process not found: " + kind);
             }
 
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         }
     }
 
