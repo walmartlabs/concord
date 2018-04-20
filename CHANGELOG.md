@@ -4,6 +4,8 @@
 
 ### Added
 
+- smtp: add support for multiple values in `to`, `cc` and `bcc`
+parameters;
 - concord-server: method to cancel a process including its
 subprocesses;
 - concord-server: method to delete an existing team.

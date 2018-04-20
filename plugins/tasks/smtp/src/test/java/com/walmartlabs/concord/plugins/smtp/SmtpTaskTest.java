@@ -21,7 +21,9 @@ package com.walmartlabs.concord.plugins.smtp;
  */
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,6 +93,100 @@ public class SmtpTaskTest {
         assertEquals("Hello!\r\n", messages[0].getContent());
         assertEquals(1, messages[0].getAllRecipients().length);
         
+        mail.reset();
+    }
+
+    @Test
+    public void testMultipleTo() throws Exception {
+        SmtpServer server = mail.getSmtp();
+
+        Map<String, Object> smtpParams = new HashMap<>();
+        smtpParams.put("host", "localhost");
+        smtpParams.put("port", server.getPort());
+
+        Map<String, Object> mailParams = new HashMap<>();
+        mailParams.put("from", "my@mail.com");
+        mailParams.put("to", Arrays.asList("aaa@mail.com", "bbb@mail.com"));
+        mailParams.put("subject", "test");
+        mailParams.put("message", "Hello!");
+
+        SmtpTask t = new SmtpTask();
+        t.call(smtpParams, mailParams);
+
+        MimeMessage[] messages = mail.getReceivedMessages();
+        assertEquals(2, messages.length);
+        assertEquals("Hello!\r\n", messages[0].getContent());
+
+        mail.reset();
+    }
+
+    @Test
+    public void testMultipleToComma() throws Exception {
+        SmtpServer server = mail.getSmtp();
+
+        Map<String, Object> smtpParams = new HashMap<>();
+        smtpParams.put("host", "localhost");
+        smtpParams.put("port", server.getPort());
+
+        Map<String, Object> mailParams = new HashMap<>();
+        mailParams.put("from", "my@mail.com");
+        mailParams.put("to", "aaa@mail.com, bbb@mail.com");
+        mailParams.put("subject", "test");
+        mailParams.put("message", "Hello!");
+
+        SmtpTask t = new SmtpTask();
+        t.call(smtpParams, mailParams);
+
+        MimeMessage[] messages = mail.getReceivedMessages();
+        assertEquals(2, messages.length);
+        assertEquals("Hello!\r\n", messages[0].getContent());
+
+        mail.reset();
+    }
+
+    @Test
+    public void testNoSubject() throws Exception {
+        SmtpServer server = mail.getSmtp();
+
+        Map<String, Object> smtpParams = new HashMap<>();
+        smtpParams.put("host", "localhost");
+        smtpParams.put("port", server.getPort());
+
+        Map<String, Object> mailParams = new HashMap<>();
+        mailParams.put("from", "my@mail.com");
+        mailParams.put("to", "aaa@mail.com");
+        mailParams.put("message", "Hello!");
+
+        SmtpTask t = new SmtpTask();
+        t.call(smtpParams, mailParams);
+
+        MimeMessage[] messages = mail.getReceivedMessages();
+        assertEquals(1, messages.length);
+        assertEquals("Hello!\r\n", messages[0].getContent());
+
+        mail.reset();
+    }
+
+    @Test
+    public void testNoMessage() throws Exception {
+        SmtpServer server = mail.getSmtp();
+
+        Map<String, Object> smtpParams = new HashMap<>();
+        smtpParams.put("host", "localhost");
+        smtpParams.put("port", server.getPort());
+
+        Map<String, Object> mailParams = new HashMap<>();
+        mailParams.put("from", "my@mail.com");
+        mailParams.put("to", "aaa@mail.com");
+        mailParams.put("subject", "test");
+
+        try {
+            SmtpTask t = new SmtpTask();
+            t.call(smtpParams, mailParams);
+            fail("should fail");
+        } catch (IllegalArgumentException e) {
+        }
+
         mail.reset();
     }
 }
