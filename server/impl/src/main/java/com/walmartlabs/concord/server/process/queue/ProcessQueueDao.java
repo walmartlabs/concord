@@ -36,6 +36,7 @@ import javax.inject.Named;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
@@ -145,6 +146,23 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
+    public boolean updateBatch(List<UUID> instanceIds, ProcessStatus status, List<ProcessStatus> expected) {
+        return txResult(tx -> {
+            UpdateConditionStep q = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                    .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+
+            if(expected != null){
+                List<String> expectedStatuses = expected.stream().map(s -> s.toString()).collect(Collectors.toList());
+                q.and(PROCESS_QUEUE.CURRENT_STATUS.in(expectedStatuses));
+            }
+
+            int i = q.execute();
+            return i == instanceIds.size();
+        });
+    }
+
     public boolean touch(UUID instanceId) {
         return txResult(tx -> {
             int i = tx.update(PROCESS_QUEUE)
@@ -162,6 +180,44 @@ public class ProcessQueueDao extends AbstractDao {
                     .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
                     .fetchOne(ProcessQueueDao::toEntry);
+        }
+    }
+
+    public List<ProcessEntry> get(List<UUID> instanceId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            List<VProcessQueueRecord> r = tx.selectFrom(V_PROCESS_QUEUE)
+                    .where(V_PROCESS_QUEUE.INSTANCE_ID.in(instanceId))
+                    .fetch();
+
+
+            if (r == null) {
+                return null;
+            }
+
+            return toEntryList(r);
+        }
+    }
+
+    public List<ProcessEntry> getCascade(UUID parentInstanceId) {
+
+        try (DSLContext tx = DSL.using(cfg)) {
+
+            List<VProcessQueueRecord> res= tx.withRecursive("children").as(
+                    select()
+                            .from(V_PROCESS_QUEUE)
+                            .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                            .unionAll(
+                                    select()
+                                            .from(V_PROCESS_QUEUE)
+                                            .join(name("children"))
+                                            .on(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
+                                                    field(name("children", "INSTANCE_ID"), UUID.class))
+                                            )))
+                    .select()
+                    .from(name("children"))
+                    .fetchInto(VProcessQueueRecord.class);
+
+            return toEntryList(res);
         }
     }
 
@@ -311,6 +367,12 @@ public class ProcessQueueDao extends AbstractDao {
             return null;
         }
         return new HashSet<>(Arrays.asList(arr));
+    }
+
+    private static List<ProcessEntry> toEntryList(List<VProcessQueueRecord> records) {
+        return records.stream()
+                .map(ProcessQueueDao::toEntry)
+                .collect(Collectors.toList());
     }
 
     private static String[] toArray(Set<String> s) {

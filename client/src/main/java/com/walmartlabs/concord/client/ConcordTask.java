@@ -364,7 +364,7 @@ public class ConcordTask extends AbstractConcordTask {
     private void killOne(Context ctx, Map<String, Object> cfg, String instanceId) throws Exception {
         withClient(ctx, target -> {
             ProcessResource proxy = target.proxy(ProcessResource.class);
-            proxy.cancel(UUID.fromString(instanceId));
+            proxy.kill(UUID.fromString(instanceId));
             return null;
         });
 

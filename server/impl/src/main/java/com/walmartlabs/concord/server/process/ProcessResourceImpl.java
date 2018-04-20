@@ -295,13 +295,15 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    public void cancel(UUID instanceId) {
+    @Validate
+    public void kill(UUID instanceId) {
         processManager.kill(instanceId);
     }
 
     @Override
-    public void kill(UUID instanceId) {
-        cancel(instanceId);
+    @Validate
+    public void killCascade(UUID parentInstanceId) {
+        processManager.killCascade(parentInstanceId);
     }
 
     @Override

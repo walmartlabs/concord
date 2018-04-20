@@ -28,8 +28,9 @@ import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.Optional;
+import java.util.List;
 
 @Named
 public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
@@ -46,6 +47,10 @@ public class CommandQueueImpl extends TCommandQueueGrpc.TCommandQueueImplBase {
     public void add(String agentId, Command cmd) {
         UUID commandId = UUID.randomUUID();
         commandsDao.insert(commandId, agentId, Commands.toMap(cmd));
+    }
+
+    public void addBatch(List<AgentCommand> agentCommandList) {
+        commandsDao.insertBatch(agentCommandList);
     }
 
     @Override
