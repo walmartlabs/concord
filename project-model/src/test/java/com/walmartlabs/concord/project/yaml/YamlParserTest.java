@@ -22,6 +22,7 @@ package com.walmartlabs.concord.project.yaml;
 
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.yaml.converter.YamlTaskStepConverter;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
@@ -51,8 +52,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.isNull;
 
 public class YamlParserTest {
 
@@ -1493,6 +1494,53 @@ public class YamlParserTest {
 
         verify(testBean, times(1)).toString(eq("myFlowA"));
         verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test048() throws Exception {
+        deploy("048.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        JavaDelegate task = mock(JavaDelegate.class);
+        doThrow(new BpmnError("first error"))
+                .doNothing()
+                .when(task).execute(any());
+
+        taskRegistry.register("testErrorTask", task);
+
+        taskRegistry.register("__retryUtils", new YamlTaskStepConverter.RetryUtilsTask());
+
+        // ---
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+        ArgumentCaptor<ExecutionContext> ctxCaptor = ArgumentCaptor.forClass(ExecutionContext.class);
+        verify(task, times(2)).execute(ctxCaptor.capture());
+
+        List<ExecutionContext> retryCtx = ctxCaptor.getAllValues();
+        assertEquals("test", retryCtx.get(0).getVariable("msg"));
+        assertEquals("retry", retryCtx.get(1).getVariable("msg"));
+
+        Map<String, String> expectedVars0 = new HashMap<>();
+        expectedVars0.put("a", "a-value-original");
+        expectedVars0.put("b", "b-value-original");
+
+        Map<String, String> expectedVars1 = new HashMap<>();
+        expectedVars1.put("a", "a-value-original");
+        expectedVars1.put("b", "b-value-retry");
+
+        assertEquals(expectedVars0, retryCtx.get(0).getVariable("nested"));
+        assertEquals(expectedVars1, retryCtx.get(1).getVariable("nested"));
+
+        verify(testBean, times(1)).toString(eq("end"));
+
+        verifyNoMoreInteractions(testBean);
+        verifyNoMoreInteractions(task);
     }
 
     // FORMS (100 - 199)

@@ -1,0 +1,16 @@
+main:
+  - task: testErrorTask
+    in:
+      msg: "test"
+      nested:
+        a: "a-value-original"
+        b: "b-value-original"
+    retry:
+      in:                     # optional
+        msg: "retry"
+        nested:
+          b: "b-value-retry"
+      times: 3
+#      delay: "1 min"   # optional
+
+  - ${testBean.toString("end")}

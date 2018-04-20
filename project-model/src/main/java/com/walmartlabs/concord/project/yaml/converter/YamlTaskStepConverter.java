@@ -20,15 +20,26 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlTaskStep;
-import io.takari.bpm.model.ExpressionType;
-import io.takari.bpm.model.ServiceTask;
-import io.takari.bpm.model.VariableMapping;
+import com.walmartlabs.concord.sdk.Task;
+import io.takari.bpm.api.BpmnError;
+import io.takari.bpm.api.ExecutionContext;
+import io.takari.bpm.model.*;
+import io.takari.parc.Seq;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Set;
+import javax.inject.Named;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
+
+    private static final long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(5);
 
     @Override
     public Chunk convert(ConverterContext ctx, YamlTaskStep s) throws YamlConverterException {
@@ -43,9 +54,163 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         c.addOutput(id);
         c.addSourceMap(id, toSourceMap(s, "Task: " + s.getKey()));
 
+        Map<String, Object> opts = s.getOptions();
+        if (opts != null && opts.get("error") != null && opts.get("retry") != null) {
+            throw new YamlConverterException("Use error or retry");
+        }
+
         applyErrorBlock(ctx, c, id, s.getOptions());
+        applyRetryBlock(ctx, c, id, s);
 
         return c;
     }
 
+    @SuppressWarnings("unchecked")
+    private void applyRetryBlock(ConverterContext ctx, Chunk c, String attachedRef, YamlTaskStep s) throws YamlConverterException {
+        Map<String, Object> opts = s.getOptions();
+        if (opts == null) {
+            return;
+        }
+
+        Map<String, Object> retryParams = toMap((Seq<KV<String, Object>>) opts.get("retry"));
+        if (retryParams.isEmpty()) {
+            return;
+        }
+
+        // task boundary event
+        String originalTaskEvId = ctx.nextId();
+        c.addElement(new BoundaryEvent(originalTaskEvId, attachedRef, null));
+
+        // inc retry count
+        String incCounterId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), originalTaskEvId, incCounterId));
+        c.addElement(new ServiceTask(incCounterId, ExpressionType.SIMPLE, "${__retryUtils.inc(execution, '__retryCount')}", null, null, true));
+
+        // retry count GW
+        String retryCountGwId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), incCounterId, retryCountGwId));
+        c.addElement(new ExclusiveGateway(retryCountGwId));
+
+        // sleep
+        String retryDelayId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, retryDelayId, "${__retryCount <= " + retryParams.get("times") + "}"));
+        c.addElement(new ServiceTask(retryDelayId, ExpressionType.SIMPLE, "${__retryUtils.sleep(" + getRetryDelay(retryParams) + ")}", null, null, true));
+
+        // retry task
+        String retryTaskId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), retryDelayId, retryTaskId));
+        c.addElement(new ServiceTask(retryTaskId, ExpressionType.DELEGATE,
+                "${" + s.getKey() + "}",
+                getInVars(opts, retryParams), getVarMap(opts, "out"), true));
+        c.addOutput(retryTaskId);
+        c.addSourceMap(retryTaskId, toSourceMap(s, "Task: " + s.getKey() + " (retry)"));
+
+        String retryTaskEventId = ctx.nextId();
+        c.addElement(new BoundaryEvent(retryTaskEventId, retryTaskId, null));
+        c.addElement(new SequenceFlow(ctx.nextId(), retryTaskEventId, incCounterId));
+
+        // throw last error
+        String throwTaskId = ctx.nextId();
+        String expr = "${__retryUtils.throwLastError(execution)}";
+        c.addElement(new ServiceTask(throwTaskId, ExpressionType.DELEGATE, expr, null, null, true));
+        c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, throwTaskId));
+
+        String endId = ctx.nextId();
+        c.addElement(new EndEvent(endId));
+        c.addElement(new SequenceFlow(ctx.nextId(),throwTaskId, endId));
+
+        c.addSourceMaps(c.getSourceMap());
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<VariableMapping> getInVars(Map<String, Object> opts, Map<String, Object> retryParams) {
+        Map<String, Object> retryInVars = Optional.ofNullable((Map<String, Object>) retryParams.get("in")).orElse(Collections.emptyMap());
+        Map<String, Object> originalInVars = toMap((Seq<KV<String, Object>>) opts.get("in"));
+        return toVarMapping(ConfigurationUtils.deepMerge(originalInVars, retryInVars));
+    }
+
+    private static long getRetryDelay(Map<String, Object> params) throws YamlConverterException {
+        Object v = params.get("delay");
+        if (v == null) {
+            return DEFAULT_DELAY;
+        }
+
+        if (!(v instanceof Integer)) {
+            throw new YamlConverterException("Invalid 'delay' value. Expected an integer, got: " + v);
+        }
+
+        return TimeUnit.SECONDS.toMillis((int) v);
+    }
+
+    private static Set<VariableMapping> toVarMapping(Map<String, Object> params) {
+        Set<VariableMapping> result = new HashSet<>();
+        for (Map.Entry<String, Object> e : params.entrySet()) {
+            String target = e.getKey();
+
+            String sourceExpr = null;
+            Object sourceValue = null;
+
+            Object v = StepConverter.deepConvert(e.getValue());
+            if (StepConverter.isExpression(v)) {
+                sourceExpr = v.toString();
+            } else {
+                sourceValue = v;
+            }
+
+            result.add(new VariableMapping(null, sourceExpr, sourceValue, target, true));
+        }
+
+        return result;
+    }
+
+    private static Map<String, Object> toMap(Seq<KV<String, Object>> values) {
+        if (values == null) {
+            return Collections.emptyMap();
+        }
+
+        return values.stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, YamlTaskStepConverter::toValue));
+    }
+
+    private static Object toValue(KV<String, Object> kv) {
+        Object v = kv.getValue();
+        if (v == null && kv.getKey() != null) {
+            return false;
+        }
+        return StepConverter.deepConvert(v);
+    }
+
+    @Named("__retryUtils")
+    public static class RetryUtilsTask implements Task {
+
+        private static final Logger log = LoggerFactory.getLogger(RetryUtilsTask.class);
+
+        public void sleep(long t) {
+            try {
+                log.info("retry delay {} sec", t/1000);
+                Thread.sleep(t);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        public void throwLastError(ExecutionContext ctx) throws Throwable {
+            Object lastError = ctx.getVariable("lastError");
+            if (lastError instanceof BpmnError) {
+                BpmnError e = (BpmnError) lastError;
+                throw e.getCause();
+            }
+
+            throw new RuntimeException("retry count exceeded");
+        }
+
+        public void inc(ExecutionContext ctx, String name) {
+            int currentValue = 0;
+            if (ctx.getVariable(name) != null) {
+                currentValue = (int) ctx.getVariable(name);
+            }
+            currentValue++;
+            ctx.setVariable(name, currentValue);
+        }
+    }
 }

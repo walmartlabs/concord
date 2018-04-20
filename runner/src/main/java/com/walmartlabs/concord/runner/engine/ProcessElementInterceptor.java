@@ -66,7 +66,7 @@ public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
         Map<String, SourceMap> sourceMaps = ((SourceAwareProcessDefinition) pd).getSourceMaps();
 
         SourceMap source = sourceMaps.get(ev.getElementId());
-        if(source == null) {
+        if (source == null) {
             return;
         }
 

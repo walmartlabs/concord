@@ -151,15 +151,21 @@ public class Grammar {
             satisfyField("out").then(identifier)
                     .map(a -> new KV<>("out", a.value)));
 
-    // errorBlock := FIELD_NAME "error" steps
-    private static final Parser<Atom, KV<String, Object>> errorBlock = label("Error handling block",
-            satisfyField("error").then(steps)
-                    .map(v -> new KV<>("error", v)));
-
     // kv := FIELD_NAME value
     private static final Parser<Atom, KV<String, Object>> kv = label("Key-value pair",
             satisfyToken(JsonToken.FIELD_NAME).bind(a ->
                     value.map(v -> new KV<>(a.name, v))));
+
+    // errorRetryBlock := FIELD_NAME "retry" START_OBJECT (kv)+ END_OBJECT
+    private static final Parser<Atom, KV<String, Object>> retryBlock = label("Retry handling block",
+            satisfyField("retry").then(
+                    betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                            many1(kv))).map(v -> new KV<>("retry", v)));
+
+    // errorBlock := FIELD_NAME "error" steps
+    private static final Parser<Atom, KV<String, Object>> errorBlock = label("Error handling block",
+            satisfyField("error").then(steps)
+                    .map(v -> new KV<>("error", v)));
 
     // inVars := FIELD_NAME "in" START_OBJECT (kv)+ END_OBJECT
     private static final Parser<Atom, KV<String, Object>> inVars = label("IN variables",
@@ -179,7 +185,7 @@ public class Grammar {
 
     // taskOptions := (inVars | outVars | outField | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> taskOptions = label("Task options",
-            many(choice(inVars, outVars, errorBlock, outField)).map(Grammar::toMap));
+            many(choice(inVars, outVars, errorBlock, outField, retryBlock)).map(Grammar::toMap));
 
     // callOptions := (inVars | outVars | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> callOptions = label("Process call options",

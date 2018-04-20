@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -157,7 +157,7 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String,String> defaultEnv(Path ws) {
+    private Map<String, String> defaultEnv(Path ws) {
         final Map<String, String> env = new HashMap<>();
         env.put("PYTHONPATH", PYTHON_LIB_DIR);
         env.put("CONCORD_HOST", rpcCfg.getServerHost());
@@ -219,7 +219,7 @@ public class RunPlaybookTask2 implements Task {
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Using the docker image: {}", dockerImageName);
 
-        List<Map.Entry<String,String>> dockerOpts = DockerOptionsConverter.convert(getMap(args, AnsibleConstants.DOCKER_OPTS_KEY));
+        List<Map.Entry<String, String>> dockerOpts = DockerOptionsConverter.convert(getMap(args, AnsibleConstants.DOCKER_OPTS_KEY));
         log.info("Using the docker options: {}", dockerOpts);
 
         run(args, payloadPath, (playbookPath, inventoryPath) ->
@@ -727,7 +727,17 @@ public class RunPlaybookTask2 implements Task {
     }
 
     private static String getString(Map<String, Object> args, String key) {
-        return (String)args.get(key);
+        Object v = args.get(key);
+
+        if (v == null) {
+            return null;
+        }
+
+        if (!(v instanceof String)) {
+            throw new IllegalArgumentException("Expected a string value '" + key + "', got: " + v);
+        }
+
+        return (String) v;
     }
 
     @SuppressWarnings("unchecked")
@@ -738,11 +748,11 @@ public class RunPlaybookTask2 implements Task {
         }
 
         if (v instanceof String) {
-            return (String)v;
+            return (String) v;
         }
 
         if (v instanceof Collection) {
-            return String.join(", ", (Collection<String>)v);
+            return String.join(", ", (Collection<String>) v);
         }
 
         throw new IllegalArgumentException("unexpected '" + key + "' type: " + v);
