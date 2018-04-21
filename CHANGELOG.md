@@ -12,6 +12,10 @@ parameters;
 subprocesses;
 - concord-server: method to delete an existing team.
 
+### Changed
+
+- concord-server: skip invalid definitions on trigger activation.  
+
 
 
 ## [0.65.3] - 2018-04-16

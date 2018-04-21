@@ -365,6 +365,10 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     public List<ProcessEntry> list(UUID projectId, IsoDateParam beforeCreatedAt, Set<String> tags, int limit) {
+        if (limit <= 0) {
+            throw new WebApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
+        }
+
         Set<UUID> orgIds = null;
         if (!isAdmin()) {
             // non-admin users can see only their org's processes or processes w/o projects

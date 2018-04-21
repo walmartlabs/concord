@@ -23,9 +23,12 @@ package com.walmartlabs.concord.server.events;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.process.*;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.PayloadBuilder;
+import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
@@ -75,7 +78,12 @@ public abstract class AbstractEventResource {
     }
 
     private boolean filter(Map<String, Object> conditions, TriggerEntry t) {
-        return EventMatcher.matches(conditions, t.getConditions());
+        try {
+            return EventMatcher.matches(conditions, t.getConditions());
+        } catch (Exception e) {
+            log.warn("filter [{}, {}] -> error while matching events", conditions, t, e);
+            return false;
+        }
     }
 
     private UUID startProcess(UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) {
