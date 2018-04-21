@@ -49,7 +49,6 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.*;
@@ -1203,17 +1202,17 @@ public class YamlParserTest {
 
         // ---
         ArgumentCaptor<Map<String, Object>> c = ArgumentCaptor.forClass(Map.class);
-        ArgumentCaptor<List<Map.Entry<String, String>>> optionsCaptor = ArgumentCaptor.forClass(List.class);
-
-        verify(task, times(1)).call(eq("test-image"), anyBoolean(), anyBoolean(), eq("test-cmd"), c.capture(), eq("/tmp"), optionsCaptor.capture());
+        verify(task, times(1)).call(c.capture());
 
         Map<String, Object> m = c.getValue();
-        assertNotNull(m);
-        assertEquals(2, m.size());
-        assertEquals(123, m.get("x"));
-        assertEquals(txId, m.get("y"));
 
-        List<Map.Entry<String, String>> opts = optionsCaptor.getValue();
+        Map<String, Object> env = (Map<String, Object>) m.get("env");
+        assertNotNull(env);
+        assertEquals(2, env.size());
+        assertEquals(123, env.get("x"));
+        assertEquals(txId, env.get("y"));
+
+        List<Map.Entry<String, String>> opts = (List<Map.Entry<String, String>>) m.get("options");
         assertNotNull(opts);
         assertEquals(2, opts.size());
         assertEquals("--add-host", opts.get(0).getKey());
@@ -1869,9 +1868,7 @@ public class YamlParserTest {
 
     private static class DockerTask implements Task {
 
-        public void call(String dockerImage, boolean forcePull, boolean debug, String cmd,
-                         Map<String, Object> env, String payloadPath,
-                         List<Map.Entry<String, String>> options) throws Exception {
+        public void call(Map<String, Object> args) {
         }
     }
 

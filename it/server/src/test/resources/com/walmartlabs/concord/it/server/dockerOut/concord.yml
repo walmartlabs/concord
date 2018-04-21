@@ -1,0 +1,13 @@
+flows:
+  main:
+  - docker: ${image}
+    debug: true
+    forcePull: false
+    stdout: myStdout
+    cmd: echo "Hello, ${name}" && (>&2 echo "STDERR STILL WORKS")
+  - log: "!! ${myStdout.trim()} !!"
+
+variables:
+  entryPoint: main
+  arguments:
+    name: "world"

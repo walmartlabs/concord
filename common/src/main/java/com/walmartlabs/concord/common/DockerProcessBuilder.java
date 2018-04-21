@@ -59,6 +59,8 @@ public class DockerProcessBuilder {
     private boolean useHostUser = false;
     private boolean useHostNetwork = true;
 
+    private boolean redirectErrorStream = true;
+
     public DockerProcessBuilder(String image) {
         this.image = image;
 
@@ -87,7 +89,7 @@ public class DockerProcessBuilder {
         }
 
         return PrivilegedAction.perform("docker", () -> new ProcessBuilder(cmd)
-                .redirectErrorStream(true)
+                .redirectErrorStream(redirectErrorStream)
                 .start());
     }
 
@@ -248,6 +250,11 @@ public class DockerProcessBuilder {
 
     public DockerProcessBuilder options(List<Map.Entry<String, String>> options) {
         this.options.addAll(options);
+        return this;
+    }
+
+    public DockerProcessBuilder redirectErrorStream(boolean redirectErrorStream) {
+        this.redirectErrorStream = redirectErrorStream;
         return this;
     }
 

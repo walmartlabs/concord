@@ -20,13 +20,13 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlDockerStep;
 import io.takari.bpm.model.ExpressionType;
 import io.takari.bpm.model.ServiceTask;
 
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class YamlDockerStepConverter implements StepConverter<YamlDockerStep> {
 
@@ -36,13 +36,15 @@ public class YamlDockerStepConverter implements StepConverter<YamlDockerStep> {
 
         String id = ctx.nextId();
 
-        Object args = Arrays.asList(s.getImage(),
-                s.isForcePull(),
-                s.isDebug(),
-                s.getCmd(),
-                s.getEnv(),
-                "${" + InternalConstants.Context.WORK_DIR_KEY + "}",
-                s.getOptions());
+        Map<String, Object> args = new HashMap<>();
+        args.put("image", s.getImage());
+        args.put("forcePull", s.isForcePull());
+        args.put("debug", s.isDebug());
+        args.put("cmd", s.getCmd());
+        args.put("env", s.getEnv());
+        args.put("options", s.getOptions());
+        args.put("stdout", s.getStdout());
+
         ELCall call = createELCall("docker", args);
 
         c.addElement(new ServiceTask(id, ExpressionType.SIMPLE, call.getExpression(), call.getArgs(), null, true));

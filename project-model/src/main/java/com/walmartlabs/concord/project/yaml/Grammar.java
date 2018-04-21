@@ -308,7 +308,8 @@ public class Grammar {
                                     (boolean) options.getOrDefault("forcePull", true),
                                     (boolean) options.getOrDefault("debug", false),
                                     (Map<String, Object>) options.get("env"),
-                                    DockerOptionsConverter.convert(options)))));
+                                    DockerOptionsConverter.convert(options),
+                                    (String) options.get("stdout")))));
 
     // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
