@@ -31,7 +31,7 @@ docker run -d \
 --privileged \
 --name dind \
 -v /tmp:/tmp \
-docker.prod.walmart.com/walmartlabs/concord-dind:${VERSION}
+docker.prod.walmart.com/walmartlabs/concord-dind
 
 docker run -d \
 --name agent \
