@@ -1,0 +1,153 @@
+---
+- hosts: all
+  tasks:
+  - name: Install the necessary packages
+    become: true
+    yum:
+      name:
+      - docker
+      - python-docker-py
+      state: present
+
+  - name: Start the Docker daemon
+    become: true
+    systemd:
+      name: docker
+      state: started
+      enabled: true
+
+  - name: Get local images digests
+    delegate_to: localhost
+    shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
+    register: local_image_ids
+
+  - name: Get target images digests
+    become: true
+    shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
+    register: target_image_ids
+    ignore_errors: yes
+    
+  - name: Export local Docker images
+    delegate_to: localhost
+    shell: docker save -o /tmp/images.tar walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
+    when: local_image_ids.stdout != target_image_ids.stdout
+
+  - name: Copy Docker images to the VM
+    copy:
+      src: /tmp/images.tar
+      dest: /tmp/images.tar
+    when: local_image_ids.stdout != target_image_ids.stdout
+
+  - name: Remove the local images archive
+    delegate_to: localhost
+    file:
+      path: /tmp/images.tar
+      state: absent
+    when: local_image_ids.stdout != target_image_ids.stdout
+
+  - name: Import Docker images
+    become: true
+    shell: docker load -i /tmp/images.tar
+    when: local_image_ids.stdout != target_image_ids.stdout
+
+  - name: Remove the images archive
+    file:
+      path: /tmp/images.tar
+      state: absent
+
+  - name: Create the conf directory
+    become: true
+    file:
+      path: /opt/concord/conf
+      state: directory
+
+  - name: Copy the LDAP configuration file
+    become: true
+    copy:
+      src: ldap.properties
+      dest: /opt/concord/conf/ldap.properties
+
+  - name: Start the database
+    become: true
+    docker_container:
+      name: db
+      image: library/postgres:9.6
+      restart_policy: always
+      state: started
+      ports:
+      - 5432:5432
+
+  - name: Wait for the DB to start
+    wait_for:
+      port: 5432
+      delay: 3
+      timeout: 30
+
+  - name: Start the OpenLDAP server
+    become: true
+    docker_container:
+      name: oldap
+      image: osixia/openldap
+      restart_policy: always
+      state: started
+
+  - name: Start the Concord Server
+    become: true
+    docker_container:
+      name: server
+      image: walmartlabs/concord-server
+      restart: true
+      restart_policy: always
+      volumes:
+      - /opt/concord/conf:/opt/concord/conf:ro
+      links:
+      - db
+      - oldap
+      ports:
+      - 8001:8001
+      env:
+        DB_URL: jdbc:postgresql://db:5432/postgres
+        LDAP_CFG: /opt/concord/conf/ldap.properties
+
+  - name: Start the Concord Console
+    become: true
+    docker_container:
+      name: console
+      image: walmartlabs/concord-console
+      restart: true
+      restart_policy: always
+      links:
+      - server
+      ports:
+      - 8080:8080
+
+  - name: Start the Concord Agent
+    become: true
+    docker_container:
+      name: agent
+      image: walmartlabs/concord-agent
+      restart: true
+      restart_policy: always
+      links:
+      - server
+      env:
+        CONCORD_DOCKER_LOCAL_MODE: false
+
+  - name: Copy the LDAP user file
+    copy:
+      src: user.ldif
+      dest: /tmp/user.ldif
+
+  - name: Create the LDAP user
+    become: true
+    shell: cat /tmp/user.ldif | docker exec -i oldap ldapadd -x -D "cn=admin,dc=example,dc=org" -w admin
+    ignore_errors: yes
+
+  - name: Wait for the API
+    uri:
+      url: http://127.0.0.1:8001/api/v1/server/ping
+      status_code: 200
+    register: result
+    until: result.status == 200
+    retries: 20
+    delay: 3

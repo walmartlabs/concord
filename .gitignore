@@ -1,6 +1,7 @@
 *.iml
 *.ipr
 *.iws
+*.retry
 .*.swo
 .*.swp
 .arcconfig
@@ -11,6 +12,7 @@
 .pmdruleset.xml
 .project
 .settings
+.vagrant
 .vscode
 buildNumber.properties
 console/build

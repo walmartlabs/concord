@@ -1,0 +1,8 @@
+dn: cn=myuser,dc=example,dc=org
+cn: myuser
+objectClass: top
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+objectClass: mailAccount
+userPassword: {SSHA}FZxXb9WXU8yO5VgJYCU8Z+pbVzCJisNX
+mail: myuser@example.org
