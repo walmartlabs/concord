@@ -66,22 +66,23 @@ public class ConcordTask extends AbstractConcordTask {
     @Deprecated
     private static final String REPOSITORY_KEY = "repository";
 
-    private static final String PAYLOAD_KEY = "payload";
-    private static final String ORG_KEY = "org";
-    private static final String PROJECT_KEY = "project";
-    private static final String REPO_KEY = "repo";
-    private static final String SYNC_KEY = "sync";
-    private static final String ENTRY_POINT_KEY = "entryPoint";
+    private static final String ACTIVE_PROFILES_KEY = "activeProfiles";
     private static final String ARGUMENTS_KEY = "arguments";
-    private static final String OUT_VARS_KEY = "outVars";
-    private static final String JOBS_KEY = "jobs";
-    private static final String INSTANCES_KEY = "instances";
-    private static final String INSTANCE_ID_KEY = "instanceId";
-    private static final String TAGS_KEY = "tags";
-    private static final String START_AT_KEY = "startAt";
     private static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
     private static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
+    private static final String ENTRY_POINT_KEY = "entryPoint";
+    private static final String INSTANCE_ID_KEY = "instanceId";
+    private static final String INSTANCES_KEY = "instances";
     private static final String JOB_OUT_KEY = "jobOut";
+    private static final String JOBS_KEY = "jobs";
+    private static final String ORG_KEY = "org";
+    private static final String OUT_VARS_KEY = "outVars";
+    private static final String PAYLOAD_KEY = "payload";
+    private static final String PROJECT_KEY = "project";
+    private static final String REPO_KEY = "repo";
+    private static final String START_AT_KEY = "startAt";
+    private static final String SYNC_KEY = "sync";
+    private static final String TAGS_KEY = "tags";
 
     @InjectVariable("concord")
     Map<String, Object> defaults;
@@ -123,7 +124,7 @@ public class ConcordTask extends AbstractConcordTask {
     @SuppressWarnings("unchecked")
     public List<String> listSubprocesses(@InjectVariable("context") Context ctx, Map<String, Object> cfg) throws Exception {
         UUID instanceId = UUID.fromString(get(cfg, INSTANCE_ID_KEY));
-        Set<String> tags = getTags(cfg);
+        Set<String> tags = getSet(cfg, TAGS_KEY);
 
         return withClient(ctx, target -> {
             ProcessResource proxy = target.proxy(ProcessResource.class);
@@ -175,6 +176,32 @@ public class ConcordTask extends AbstractConcordTask {
         });
 
         return result;
+    }
+
+    public void kill(@InjectVariable("context") Context ctx, Map<String, Object> cfg) throws Exception {
+        List<String> ids = new ArrayList<>();
+
+        Object v = cfg.get(INSTANCE_ID_KEY);
+        if (v instanceof String || v instanceof UUID) {
+            ids.add(v.toString());
+        } else if (v instanceof String[] || v instanceof UUID[]) {
+            Object[] os = (Object[]) v;
+            for (Object o : os) {
+                ids.add(o.toString());
+            }
+        } else if (v instanceof Collection) {
+            for (Object o : (Collection) v) {
+                if (o instanceof String || o instanceof UUID) {
+                    ids.add(o.toString());
+                } else {
+                    throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' value should be a string or an UUID: " + o);
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' should be a single string, an UUID value or an array of strings or UUIDs: " + v);
+        }
+
+        killMany(ctx, cfg, ids);
     }
 
     private void start(Context ctx, String instanceId) throws Exception {
@@ -325,32 +352,6 @@ public class ConcordTask extends AbstractConcordTask {
         kill(ctx, cfg);
     }
 
-    public void kill(@InjectVariable("context") Context ctx, Map<String, Object> cfg) throws Exception {
-        List<String> ids = new ArrayList<>();
-
-        Object v = cfg.get(INSTANCE_ID_KEY);
-        if (v instanceof String || v instanceof UUID) {
-            ids.add(v.toString());
-        } else if (v instanceof String[] || v instanceof UUID[]) {
-            Object[] os = (Object[]) v;
-            for (Object o : os) {
-                ids.add(o.toString());
-            }
-        } else if (v instanceof Collection) {
-            for (Object o : (Collection) v) {
-                if (o instanceof String || o instanceof UUID) {
-                    ids.add(o.toString());
-                } else {
-                    throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' value should be a string or an UUID: " + o);
-                }
-            }
-        } else {
-            throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' should be a single string, an UUID value or an array of strings or UUIDs: " + v);
-        }
-
-        killMany(ctx, cfg, ids);
-    }
-
     private void killMany(Context ctx, Map<String, Object> cfg, List<String> instanceIds) throws Exception {
         if (instanceIds == null || instanceIds.isEmpty()) {
             throw new IllegalArgumentException("'" + INSTANCE_ID_KEY + "' should be a single value or an array of values: " + instanceIds);
@@ -377,7 +378,7 @@ public class ConcordTask extends AbstractConcordTask {
     private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
         Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, PAYLOAD_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
                 REPO_KEY, REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, START_AT_KEY, DISABLE_ON_CANCEL_KEY,
-                DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY);
+                DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY, ACTIVE_PROFILES_KEY);
 
         if (job != null) {
             m.putAll(job);
@@ -416,12 +417,17 @@ public class ConcordTask extends AbstractConcordTask {
     private static Map<String, Object> createRequest(Map<String, Object> cfg) {
         Map<String, Object> req = new HashMap<>();
 
+        Set<String> activeProfiles = getSet(cfg, ACTIVE_PROFILES_KEY);
+        if (activeProfiles != null) {
+            req.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
+        }
+
         String entryPoint = (String) cfg.get(ENTRY_POINT_KEY);
         if (entryPoint != null) {
             req.put(Constants.Request.ENTRY_POINT_KEY, entryPoint);
         }
 
-        Set<String> tags = getTags(cfg);
+        Set<String> tags = getSet(cfg, TAGS_KEY);
         if (tags != null) {
             req.put(Constants.Request.TAGS_KEY, tags);
         }
@@ -448,24 +454,27 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     @SuppressWarnings("unchecked")
-    private static Set<String> getTags(Map<String, Object> cfg) {
+    private static Set<String> getSet(Map<String, Object> cfg, String k) {
         if (cfg == null) {
             return null;
         }
 
-        Object v = cfg.get(TAGS_KEY);
+        Object v = cfg.get(k);
         if (v == null) {
             return null;
         }
 
         if (v instanceof String) {
-            return Collections.singleton((String) v);
+            return Arrays.stream(((String) v)
+                    .split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toSet());
         } else if (v instanceof String[]) {
             return new HashSet<>(Arrays.asList((String[]) v));
         } else if (v instanceof Collection) {
             return new HashSet<>((Collection) v);
         } else {
-            throw new IllegalArgumentException("'" + TAGS_KEY + "' must a single string value or an array of strings: " + v);
+            throw new IllegalArgumentException("'" + k + "' must a single string value or an array of strings: " + v);
         }
     }
 
@@ -490,7 +499,7 @@ public class ConcordTask extends AbstractConcordTask {
 
     private static int getInstances(Map<String, Object> cfg) {
         int i;
-        
+
         Object v = cfg.getOrDefault(INSTANCES_KEY, 1);
         if (v instanceof Integer) {
             i = (Integer) v;

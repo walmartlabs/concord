@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-client: support for `activeProfiles`;
 - docker: ability to save `stdout` as a variable;
 - concord-project-model: `retry` support for tasks;
 - smtp: add support for multiple values in `to`, `cc` and `bcc`
