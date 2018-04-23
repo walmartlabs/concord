@@ -66,7 +66,7 @@ public class GithubRealm extends AuthorizingRealm {
 
         return userManager.get(userId)
                 .map(u -> {
-                    UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), null, u.isAdmin(), u.getType());
+                    UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), u.isAdmin(), u.getType());
                     return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
                 })
                 .orElse(null);

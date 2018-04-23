@@ -22,19 +22,14 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapInfo;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
+import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.naming.NamingException;
 import java.io.Serializable;
 import java.util.Collections;
@@ -70,30 +65,25 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
     }
 
     private UserInfo getInfo() {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject == null || !subject.isAuthenticated()) {
-            return null;
-        }
-
-        UserPrincipal p = (UserPrincipal) subject.getPrincipal();
+        UserPrincipal p = UserPrincipal.getCurrent();
         if (p == null) {
             return null;
         }
 
-        LdapInfo ldapInfo = p.getLdapInfo();
-        if (ldapInfo == null && p.getType() == UserType.LDAP) {
+        LdapPrincipal l = LdapPrincipal.getCurrent();
+        if (l == null && p.getType() == UserType.LDAP) {
             try {
-                ldapInfo = ldapManager.getInfo(p.getUsername());
+                l = ldapManager.getPrincipal(p.getUsername());
             } catch (NamingException e) {
                 log.warn("getInfo -> error while retrieving LDAP information for '{}': {}", p.getUsername(), e.getMessage());
             }
         }
 
-        if (ldapInfo != null) {
-            return new UserInfo(p.getUsername(), ldapInfo.getDisplayName(), ldapInfo.getGroups(), ldapInfo.getAttributes());
-        } else {
+        if (l == null) {
             return new UserInfo(p.getUsername(), p.getUsername(), Collections.emptySet(), Collections.emptyMap());
         }
+
+        return new UserInfo(p.getUsername(), l.getDisplayName(), l.getGroups(), l.getAttributes());
     }
 
     @JsonInclude(Include.NON_NULL)

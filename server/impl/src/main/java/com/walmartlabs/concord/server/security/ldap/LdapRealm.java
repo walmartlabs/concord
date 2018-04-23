@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.ldap;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.*;
-import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.ldap.AbstractLdapRealm;
@@ -124,31 +123,26 @@ public class LdapRealm extends AbstractLdapRealm {
 
         username = normalizeUsername(username);
 
-        LdapInfo ldapInfo = ldapManager.getInfo(username);
-        if (ldapInfo == null) {
+        LdapPrincipal ldapPrincipal = ldapManager.getPrincipal(username);
+        if (ldapPrincipal == null) {
             throw new AuthenticationException("LDAP data not found: " + username);
         }
 
         UserEntry user = userManager.getOrCreate(username, UserType.LDAP);
-        UserPrincipal p = new UserPrincipal(REALM_NAME, user, ldapInfo);
+        UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, user);
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(user.getId())
                 .field("realm", REALM_NAME);
 
-        return new SimpleAccount(Arrays.asList(p, t), t, getName());
+        return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t, getName());
     }
 
     @Override
     protected AuthorizationInfo queryForAuthorizationInfo(PrincipalCollection principals, LdapContextFactory ldapContextFactory) {
-        UserPrincipal p = (UserPrincipal) principals.getPrimaryPrincipal();
-        if (!"ldap".equals(p.getRealm())) {
+        LdapPrincipal p = principals.oneByType(LdapPrincipal.class);
+        if (p == null) {
             return null;
-        }
-
-        LdapInfo i = p.getLdapInfo();
-        if (i == null) {
-            throw new AuthorizationException("LDAP data not found: " + p.getUsername());
         }
 
         return new SimpleAuthorizationInfo();
@@ -156,7 +150,7 @@ public class LdapRealm extends AbstractLdapRealm {
 
     private static String normalizeUsername(String s) {
         if (s == null) {
-            return s;
+            return null;
         }
 
         int i = s.indexOf("@");

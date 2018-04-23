@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapInfo;
+import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import io.takari.bpm.form.Form;
 import org.apache.shiro.authz.UnauthorizedException;
 
@@ -75,7 +75,10 @@ public class FormAccessManager {
                 .map(v -> (Map<String, Object>) v)
                 .map(v -> v.get(InternalConstants.Forms.RUN_AS_GROUP_KEY))
                 .orElse(null);
-        Set<String> userLdapGroups = Optional.ofNullable(p.getLdapInfo()).map(LdapInfo::getGroups).orElse(null);
+
+        LdapPrincipal ldapPrincipal = LdapPrincipal.getCurrent();
+        Set<String> userLdapGroups = Optional.ofNullable(ldapPrincipal).map(LdapPrincipal::getGroups).orElse(null);
+
         if (group != null && !matchesLdapGroup(group, userLdapGroups)) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + "[" + userLdapGroups + "]) doesn't have " +
                     "the necessary permissions to resume process. Expected LDAP group '" + group + "'");

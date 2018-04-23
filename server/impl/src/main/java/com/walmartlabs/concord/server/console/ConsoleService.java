@@ -29,7 +29,7 @@ import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapInfo;
+import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -77,13 +77,7 @@ public class ConsoleService implements Resource {
     @Path("/whoami")
     @Produces(MediaType.APPLICATION_JSON)
     public UserResponse whoami() {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject == null) {
-            throw new WebApplicationException("Can't determine current user: subject not found",
-                    Status.INTERNAL_SERVER_ERROR);
-        }
-
-        UserPrincipal p = (UserPrincipal) subject.getPrincipal();
+        UserPrincipal p = UserPrincipal.getCurrent();
         if (p == null) {
             throw new WebApplicationException("Can't determine current user: entry not found",
                     Status.INTERNAL_SERVER_ERROR);
@@ -91,9 +85,9 @@ public class ConsoleService implements Resource {
 
         String displayName = null;
 
-        LdapInfo ldapInfo = p.getLdapInfo();
-        if (ldapInfo != null) {
-            displayName = ldapInfo.getDisplayName();
+        LdapPrincipal l = LdapPrincipal.getCurrent();
+        if (l != null) {
+            displayName = l.getDisplayName();
         }
 
         if (displayName == null) {

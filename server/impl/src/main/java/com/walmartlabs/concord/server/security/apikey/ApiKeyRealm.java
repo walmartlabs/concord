@@ -72,7 +72,7 @@ public class ApiKeyRealm extends AuthorizingRealm {
                 .field("realm", REALM_NAME)
                 .log();
 
-        UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), null, u.isAdmin(), u.getType());
+        UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), u.isAdmin(), u.getType());
         return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
     }
 

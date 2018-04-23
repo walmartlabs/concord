@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.ldap;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,17 +52,17 @@ public class LdapManager {
         this.ctxFactory = ctxFactory;
     }
 
-    public LdapInfo getInfo(String username) throws NamingException {
+    public LdapPrincipal getPrincipal(String username) throws NamingException {
         LdapContext ctx = null;
         try {
             ctx = ctxFactory.getSystemLdapContext();
-            return getInfo(ctx, username);
+            return getPrincipal(ctx, username);
         } finally {
             LdapUtils.closeContext(ctx);
         }
     }
 
-    public LdapInfo getInfo(LdapContext ctx, String username) throws NamingException {
+    public LdapPrincipal getPrincipal(LdapContext ctx, String username) throws NamingException {
         SearchControls searchCtls = new SearchControls();
         searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         Object[] args = new Object[]{username};
@@ -72,7 +72,7 @@ public class LdapManager {
             return null;
         }
 
-        LdapInfoBuilder b = new LdapInfoBuilder(username);
+        LdapPrincipalBuilder b = new LdapPrincipalBuilder(username);
         while (answer.hasMoreElements()) {
             SearchResult sr = (SearchResult) answer.next();
 
@@ -88,7 +88,7 @@ public class LdapManager {
         return b.build();
     }
 
-    private void processAttribute(LdapInfoBuilder b, Attribute attr) throws NamingException {
+    private void processAttribute(LdapPrincipalBuilder b, Attribute attr) throws NamingException {
         String id = attr.getID();
         switch (id) {
             case MEMBER_OF_ATTR: {
@@ -109,23 +109,23 @@ public class LdapManager {
         }
     }
 
-    private static final class LdapInfoBuilder {
+    private static final class LdapPrincipalBuilder {
 
         private final String username;
         private String displayName;
         private Set<String> groups;
         private Map<String, String> attributes;
 
-        private LdapInfoBuilder(String username) {
+        private LdapPrincipalBuilder(String username) {
             this.username = username;
         }
 
-        public LdapInfoBuilder displayName(String displayName) {
+        public LdapPrincipalBuilder displayName(String displayName) {
             this.displayName = displayName;
             return this;
         }
 
-        public LdapInfoBuilder addGroups(Collection<String> names) {
+        public LdapPrincipalBuilder addGroups(Collection<String> names) {
             if (groups == null) {
                 groups = new HashSet<>();
             }
@@ -133,7 +133,7 @@ public class LdapManager {
             return this;
         }
 
-        public LdapInfoBuilder addAttribute(String k, String v) {
+        public LdapPrincipalBuilder addAttribute(String k, String v) {
             if (attributes == null) {
                 attributes = new HashMap<>();
             }
@@ -141,7 +141,7 @@ public class LdapManager {
             return this;
         }
 
-        public LdapInfo build() {
+        public LdapPrincipal build() {
             if (groups == null) {
                 groups = Collections.emptySet();
             }
@@ -149,7 +149,7 @@ public class LdapManager {
                 attributes = Collections.emptyMap();
             }
 
-            return new LdapInfo(username, displayName, groups, attributes);
+            return new LdapPrincipal(username, displayName, groups, attributes);
         }
     }
 }

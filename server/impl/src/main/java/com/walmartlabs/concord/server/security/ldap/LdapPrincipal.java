@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,24 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
+import com.walmartlabs.concord.server.security.PrincipalUtils;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-public final class LdapInfo implements Serializable {
+public class LdapPrincipal implements Serializable {
+
+    public static LdapPrincipal getCurrent() {
+        return PrincipalUtils.getCurrent(LdapPrincipal.class);
+    }
 
     private final String username;
     private final String displayName;
     private final Set<String> groups;
     private final Map<String, String> attributes;
 
-    public LdapInfo(String username, String displayName, Set<String> groups, Map<String, String> attributes) {
+    public LdapPrincipal(String username, String displayName, Set<String> groups, Map<String, String> attributes) {
         this.username = username;
         this.displayName = displayName;
         this.groups = groups;
@@ -52,5 +58,15 @@ public final class LdapInfo implements Serializable {
 
     public Map<String, String> getAttributes() {
         return attributes;
+    }
+
+    @Override
+    public String toString() {
+        return "LdapPrincipal{" +
+                "username='" + username + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", groups=" + groups +
+                ", attributes=" + attributes +
+                '}';
     }
 }
