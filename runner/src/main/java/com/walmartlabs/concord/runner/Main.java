@@ -121,6 +121,12 @@ public class Main {
         // prepare the process' arguments
         Map<String, Object> args = createArgs(instanceId, baseDir, req);
 
+        Object initiator = req.get(InternalConstants.Request.INITIATOR_KEY);
+        if (initiator != null) {
+            args.put(InternalConstants.Request.INITIATOR_KEY, initiator);
+            args.put(InternalConstants.Request.CURRENT_USER_KEY, initiator);
+        }
+
         // start the process
         log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
         Engine e = engineFactory.create(project, baseDir, activeProfiles);
@@ -134,6 +140,11 @@ public class Main {
         // read the request data
         Map<String, Object> cfg = readRequest(baseDir);
         Map<String, Object> args = createArgs(instanceId, baseDir, cfg);
+
+        Object currentUser = cfg.get(InternalConstants.Request.CURRENT_USER_KEY);
+        if (currentUser != null) {
+            args.put(InternalConstants.Request.CURRENT_USER_KEY, currentUser);
+        }
 
         log.debug("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
 
@@ -227,17 +238,6 @@ public class Main {
         String dir = workDir.toAbsolutePath().toString();
         m.put(InternalConstants.Context.LOCAL_PATH_KEY, dir);
         m.put(InternalConstants.Context.WORK_DIR_KEY, dir);
-
-        // initiator's info
-        Object initiator = cfg.get(InternalConstants.Request.INITIATOR_KEY);
-        if (initiator != null) {
-            m.put(InternalConstants.Request.INITIATOR_KEY, initiator);
-        }
-
-        Object currentUser = cfg.get(InternalConstants.Request.CURRENT_USER_KEY);
-        if (currentUser != null) {
-            m.put(InternalConstants.Request.CURRENT_USER_KEY, currentUser);
-        }
 
         Object outExpr = cfg.get(InternalConstants.Request.OUT_EXPRESSIONS_KEY);
         if (outExpr != null) {
