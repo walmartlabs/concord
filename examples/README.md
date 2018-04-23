@@ -47,6 +47,7 @@
 ## Advanced
 
 * [ansible_oneops](ansible_oneops) - how to get IP addresses from OneOps to use with Ansible;
+* [approval](approval) - using forms and `runAs` to implement an approval process;
 * [boo_ansible](boo_ansible) - using Boo and Ansible together;
 * [context_injection](context_injection) - how to use automatic variable injection with custom tasks written in Groovy;
 * [dynamic_forms](dynamic_forms) - using forms with fields added/removed dynamically;

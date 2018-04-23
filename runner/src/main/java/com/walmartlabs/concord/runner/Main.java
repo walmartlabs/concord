@@ -234,6 +234,11 @@ public class Main {
             m.put(InternalConstants.Request.INITIATOR_KEY, initiator);
         }
 
+        Object currentUser = cfg.get(InternalConstants.Request.CURRENT_USER_KEY);
+        if (currentUser != null) {
+            m.put(InternalConstants.Request.CURRENT_USER_KEY, currentUser);
+        }
+
         Object outExpr = cfg.get(InternalConstants.Request.OUT_EXPRESSIONS_KEY);
         if (outExpr != null) {
             m.put(InternalConstants.Context.OUT_EXPRESSIONS_KEY, outExpr);

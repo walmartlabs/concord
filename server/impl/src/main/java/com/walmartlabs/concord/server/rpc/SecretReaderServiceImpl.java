@@ -93,7 +93,7 @@ public class SecretReaderServiceImpl extends TSecretReaderServiceGrpc.TSecretRea
         UUID orgId = getOrgId(instanceId, orgName, secretName);
 
         try {
-            securityContext.runAsInitiator(instanceId, () -> {
+            securityContext.runAs(instanceId, () -> {
                 SecretDataEntry entry = secretManager.getRaw(orgId, secretName, secretPassword);
                 if (entry == null) {
                     responseObserver.onNext(TFetchSecretResponse.newBuilder()

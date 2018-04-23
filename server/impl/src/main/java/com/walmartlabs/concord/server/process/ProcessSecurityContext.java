@@ -52,7 +52,7 @@ import java.util.concurrent.TimeUnit;
 @Named
 public class ProcessSecurityContext {
 
-    private static final String PRINCIPAL_FILE_PATH = ".concord/initiator";
+    private static final String PRINCIPAL_FILE_PATH = ".concord/current_user";
 
     private final ProcessStateManager stateManager;
     private final Injector injector;
@@ -107,7 +107,7 @@ public class ProcessSecurityContext {
     }
 
     // TODO won't be needed after switching from gRPC to REST
-    public <T> T runAsInitiator(UUID instanceId, Callable<T> c) throws Exception {
+    public <T> T runAs(UUID instanceId, Callable<T> c) throws Exception {
         PrincipalCollection principals = getPrincipals(instanceId);
         if (principals == null) {
             throw new UnauthorizedException("Process' principal not found");

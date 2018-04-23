@@ -1,0 +1,14 @@
+flows:
+  default:
+    - log: "${initiator} == ${currentUser}"        # currentUser is the initiator
+    - form: myForm
+      runAs:
+        username: "admin"                        # optional
+  #      ldap:                                      # optional
+  #        group: "CN=Admin,DN=Concord"
+        keep: true                                 # continue the execution as the specified user
+    - log: "Now we are running as ${currentUser.username}. Initiator: ${initiator.username}"  # switched to admin
+
+forms:
+  myForm:
+  - firstName: { label: "First name", type: "string"}

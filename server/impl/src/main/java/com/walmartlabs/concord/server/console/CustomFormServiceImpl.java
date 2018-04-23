@@ -223,7 +223,7 @@ public class CustomFormServiceImpl implements CustomFormService, Resource {
                 FormData d = prepareData(form, m, Collections.singletonList(err));
                 writeData(formDir, d);
             }
-        } catch (IOException | ExecutionException e) {
+        } catch (Exception e) {
             throw new WebApplicationException("Error while submitting a form", e);
         }
 

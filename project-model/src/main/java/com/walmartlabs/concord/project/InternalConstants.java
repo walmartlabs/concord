@@ -129,4 +129,20 @@ public final class InternalConstants extends Constants {
         private Agent() {
         }
     }
+
+    public static final class Forms {
+
+        /**
+         * User qualifiers of forms.
+         */
+        public static final String RUN_AS_KEY = "runAs";
+
+        public static final String RUN_AS_USERNAME_KEY = "username";
+
+        public static final String RUN_AS_LDAP_KEY = "ldap";
+
+        public static final String RUN_AS_GROUP_KEY = "group";
+
+        public static final String RUN_AS_KEEP_KEY = "keep";
+    }
 }

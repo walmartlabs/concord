@@ -38,18 +38,20 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-@Named
-public class UserInfoProcessor implements PayloadProcessor {
+public abstract class UserInfoProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(UserInfoProcessor.class);
 
     private final LdapManager ldapManager;
 
-    @Inject
-    public UserInfoProcessor(LdapManager ldapManager) {
+    private final String key;
+
+    public UserInfoProcessor(String key, LdapManager ldapManager) {
+        this.key = key;
         this.ldapManager = ldapManager;
     }
 
@@ -58,8 +60,10 @@ public class UserInfoProcessor implements PayloadProcessor {
         // collect and store the initiator's data
 
         UserInfo info = getInfo();
-        payload = payload.mergeValues(Payload.REQUEST_DATA_MAP,
-                Collections.singletonMap(InternalConstants.Request.INITIATOR_KEY, info));
+        Map<String, UserInfo> m = new HashMap<>();
+        m.put(key, info);
+
+        payload = payload.mergeValues(Payload.REQUEST_DATA_MAP, m);
 
         log.info("process ['{}'] -> done", payload.getInstanceId());
         return chain.process(payload);

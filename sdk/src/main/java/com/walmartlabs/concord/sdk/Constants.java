@@ -92,6 +92,11 @@ public class Constants {
         public static final String INITIATOR_KEY = "initiator";
 
         /**
+         * Process current user's info.
+         */
+        public static final String CURRENT_USER_KEY = "currentUser";
+
+        /**
          * User request's metadata.
          */
         public static final String REQUEST_INFO_KEY = "requestInfo";
@@ -201,7 +206,7 @@ public class Constants {
         public static final String ON_FAILURE_FLOW = "onFailure";
 
         /**
-         * Cancel-handling flow.
+         * Cancel-handling flow.RUN_AS
          */
         public static final String ON_CANCEL_FLOW = "onCancel";
     }

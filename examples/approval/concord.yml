@@ -1,0 +1,16 @@
+flows:
+  default:
+  - log: "Starting as ${initiator}"
+  - form: approvalForm
+    runAs:
+      ldap:
+        group: "CN=Strati-SDE-Concord-sdeconcord,.*"
+  - if: ${approvalForm.approved}
+    then:
+    - log: "Approved =)"
+    else:
+    - log: "Rejected =("
+
+forms:
+  approvalForm:
+  - approved: { type: boolean }

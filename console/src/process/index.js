@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import { Button, Loader, Table, Divider, Container } from 'semantic-ui-react';
+import { Button, Container, Divider, Loader, Table } from 'semantic-ui-react';
 import { push as pushHistory } from 'react-router-redux';
 import ErrorMessage from '../shared/ErrorMessage';
 import RefreshButton from '../shared/RefreshButton';
@@ -37,6 +37,28 @@ import { ProcessDetailTable } from './ProcessDetailTable';
 import EventSummary from './EventSummary';
 
 const enableFormsStatuses = [constants.status.suspendedStatus];
+
+const renderRunAs = (v) => {
+    if (!v) {
+        return;
+    }
+
+    if (v.username) {
+        return (
+            <p>
+                <b>Expects user:</b> {v.username}
+            </p>
+        );
+    }
+
+    if (v.ldap && v.ldap.group) {
+        return (
+            <p>
+                <b>Expects group:</b> {v.ldap.group}
+            </p>
+        );
+    }
+};
 
 class ProcessStatusPage extends React.Component {
     componentDidMount() {
@@ -148,7 +170,7 @@ class ProcessStatusPage extends React.Component {
                                 </Table.Row>
                             </Table.Header>
                             <Table.Body>
-                                {data.forms.map(({ formInstanceId, name }) => (
+                                {data.forms.map(({ formInstanceId, name, runAs }) => (
                                     <Table.Row key={formInstanceId}>
                                         <Table.Cell>
                                             <Link
@@ -156,7 +178,10 @@ class ProcessStatusPage extends React.Component {
                                                 {name}
                                             </Link>
                                         </Table.Cell>
-                                        <Table.Cell>Form</Table.Cell>
+                                        <Table.Cell>
+                                            Form
+                                            {renderRunAs(runAs)}
+                                        </Table.Cell>
                                     </Table.Row>
                                 ))}
                             </Table.Body>

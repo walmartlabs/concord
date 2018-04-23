@@ -64,8 +64,8 @@ public class FormResourceImpl implements FormResource, Resource {
     public List<FormListEntry> list(UUID processInstanceId) {
         try {
             return formService.list(processInstanceId);
-        } catch (ExecutionException e) {
-            throw new WebApplicationException("Error retrieving a list of forms: " + processInstanceId, e);
+        } catch (Exception e) {
+            throw new WebApplicationException("Error while retrieving a list of forms: " + processInstanceId, e);
         }
     }
 

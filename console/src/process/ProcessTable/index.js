@@ -60,7 +60,7 @@ export class ProcessTable extends React.Component {
                                     <Table.Cell collapsing textAlign="center">
                                         <ProcessStatusIcon status={process.status} />
                                     </Table.Cell>
-                                    <Table.Cell>
+                                    <Table.Cell singleLine>
                                         <Link to={`/process/${process.instanceId}`}>
                                             {process.instanceId}
                                         </Link>

@@ -1,0 +1,13 @@
+flows:
+  default:
+    - log: "AAA: ${currentUser.username}"
+    - form: myForm
+      runAs:
+        username: "${sudoUser}"
+        keep: false
+    - log: "BBB: ${myForm.msg}"
+    - log: "CCC: ${currentUser.username}"
+
+forms:
+  myForm:
+  - msg: { type: "string" }

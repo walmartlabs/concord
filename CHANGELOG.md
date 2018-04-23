@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: `runAs` form option.
+
+
+
 ## [0.66.0] - 2018-04-22
 
 ### Added

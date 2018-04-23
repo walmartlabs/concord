@@ -34,6 +34,7 @@ public class ResumePipeline extends Pipeline {
     @Inject
     public ResumePipeline(Injector injector) {
         super(injector,
+                ChangeUserProcessor.class,
                 ResumeStateStoringProcessor.class,
                 FormFilesStoringProcessor.class,
                 ResumeDataMergingProcessor.class,

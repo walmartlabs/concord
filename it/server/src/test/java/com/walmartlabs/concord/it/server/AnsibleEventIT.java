@@ -78,6 +78,6 @@ public class AnsibleEventIT extends AbstractServerIT {
             return msg.equals("Hi there!");
         }).count();
 
-        assertEquals(1, cnt);
+            assertEquals(1, cnt);
     }
 }

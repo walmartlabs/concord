@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,9 +51,11 @@ import static com.walmartlabs.concord.server.process.state.ProcessStateManager.p
 public class ConcordFormService {
 
     public static final String FORMS_RESOURCES_PATH = "forms";
+    public static final String INTERNAL_RUN_AS_KEY = "_runAs";
 
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
+    private final FormAccessManager formAccessManager;
     private final FormValidator validator;
     private final Chain resumePipeline;
 
@@ -61,10 +63,12 @@ public class ConcordFormService {
     public ConcordFormService(
             PayloadManager payloadManager,
             ProcessStateManager stateManager,
+            FormAccessManager formAccessManager,
             ResumePipeline resumePipeline) {
 
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
+        this.formAccessManager = formAccessManager;
         this.resumePipeline = resumePipeline;
 
         this.validator = createFormValidator();
@@ -82,13 +86,7 @@ public class ConcordFormService {
     }
 
     public Form get(UUID processInstanceId, String formInstanceId) {
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                InternalConstants.Files.JOB_STATE_DIR_NAME,
-                InternalConstants.Files.JOB_FORMS_DIR_NAME,
-                formInstanceId);
-
-        Optional<Form> o = stateManager.get(processInstanceId, resource, ConcordFormService::deserialize);
-        return o.orElse(null);
+        return formAccessManager.assertFormAccess(processInstanceId, formInstanceId);
     }
 
     private static Optional<Form> deserialize(InputStream data) {
@@ -99,7 +97,8 @@ public class ConcordFormService {
         }
     }
 
-    public List<FormListEntry> list(UUID processInstanceId) throws ExecutionException {
+    @SuppressWarnings("unchecked")
+    public List<FormListEntry> list(UUID processInstanceId) {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 InternalConstants.Files.JOB_STATE_DIR_NAME,
                 InternalConstants.Files.JOB_FORMS_DIR_NAME);
@@ -110,13 +109,16 @@ public class ConcordFormService {
 
             String s = FORMS_RESOURCES_PATH + "/" + f.getFormDefinition().getName();
             boolean branding = stateManager.exists(processInstanceId, s);
-            boolean yield = getBoolean(f.getOptions(), "yield", false);
 
-            return new FormListEntry(f.getFormInstanceId().toString(), name, branding, yield);
+            Map<String, Object> opts = f.getOptions();
+            boolean yield = getBoolean(opts, "yield", false);
+            Map<String, Object> runAs = getMap(opts, InternalConstants.Forms.RUN_AS_KEY, null);
+
+            return new FormListEntry(f.getFormInstanceId().toString(), name, branding, yield, runAs);
         }).collect(Collectors.toList());
     }
 
-    public String nextFormId(UUID processInstanceId) throws ExecutionException {
+    public String nextFormId(UUID processInstanceId) {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 InternalConstants.Files.JOB_STATE_DIR_NAME,
                 InternalConstants.Files.JOB_FORMS_DIR_NAME);
@@ -154,6 +156,13 @@ public class ConcordFormService {
             Map<String, Object> m = new HashMap<>();
             m.put(InternalConstants.Request.ARGUMENTS_KEY, args);
             m.put(InternalConstants.Files.FORM_FILES, data.remove(InternalConstants.Files.FORM_FILES));
+
+            Map<String, Object> opts = f.getOptions();
+            Object runAs = opts != null ? opts.get(InternalConstants.Forms.RUN_AS_KEY) : null;
+            if (runAs != null) {
+                m.put(INTERNAL_RUN_AS_KEY, runAs);
+            }
+
             resume(UUID.fromString(f.getProcessBusinessKey()), f.getEventName(), m);
         };
 
@@ -170,7 +179,7 @@ public class ConcordFormService {
         List<FormListEntry> forms;
         try {
             forms = list(processInstanceId);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             throw new ProcessException(processInstanceId, "Process execution error", e);
         }
 
@@ -239,21 +248,38 @@ public class ConcordFormService {
         resumePipeline.process(payload);
     }
 
-    private static boolean getBoolean(Map<String, Object> options, String key, boolean defaultValue) {
-        if (options == null) {
+    private static boolean getBoolean(Map<String, Object> m, String key, boolean defaultValue) {
+        if (m == null) {
             return defaultValue;
         }
 
-        Object v = options.get(key);
+        Object v = m.get(key);
         if (v == null) {
             return defaultValue;
         }
 
         if (!(v instanceof Boolean)) {
-            throw new IllegalArgumentException("Expected a boolean value: " + key);
+            throw new IllegalArgumentException("Expected a boolean value '" + key + "', got: " + v);
         }
 
         return (Boolean) v;
+    }
+
+    private static Map<String, Object> getMap(Map<String, Object> m, String key, Map<String, Object> defaultValue) {
+        if (m == null) {
+            return defaultValue;
+        }
+
+        Object v = m.get(key);
+        if (v == null) {
+            return defaultValue;
+        }
+
+        if (!(v instanceof Map)) {
+            throw new IllegalArgumentException("Expected a map value '" + key + "', got: " + v);
+        }
+
+        return (Map<String, Object>) v;
     }
 
     public static final class FormSubmitResult implements Serializable {
@@ -305,5 +331,4 @@ public class ConcordFormService {
             return null;
         }
     }
-
 }

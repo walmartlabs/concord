@@ -190,7 +190,7 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
         List<FormListEntry> forms;
         try {
             forms = formService.list(instanceId);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             return processError(instanceId, "Error while retrieving the list of process forms");
         }
 
