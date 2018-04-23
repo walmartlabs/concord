@@ -1,9 +1,11 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:teamrosters-task:0.38.0"
+  - "mvn://com.walmartlabs.concord.plugins:teamrosters-task:0.41.0"
 
 flows:
   default:
+  # getting user's teams
+  - log: "Teams: ${teamRosters.getUserDetails(initiator.username).team_allocations}"
   # getting all attributes
   - log: "All attributes: ${teamRosters.getUserDetails(initiator.username)}"
   # getting a specific attribute

@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.63.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.66.0"
   - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:0.38.0"
   arguments:
     # default values for the form

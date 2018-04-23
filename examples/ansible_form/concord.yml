@@ -1,7 +1,7 @@
 configuration:
   # to use `ansible` task
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.63.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.66.0"
 
   arguments:
     # default values
