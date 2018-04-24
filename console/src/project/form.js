@@ -105,7 +105,7 @@ const renderRepositories = (
                                 <Table.Cell>{renderSourceText(f, fields.get(idx))}</Table.Cell>
                                 <Table.Cell>{fields.get(idx).path}</Table.Cell>
                                 <Table.Cell style={{ ...getStripColor(fields.get(idx).enable) }}>
-                                    {fields.get(idx).secret}
+                                    {fields.get(idx).secretName}
                                 </Table.Cell>
                                 <Table.Cell>
                                     <Popup

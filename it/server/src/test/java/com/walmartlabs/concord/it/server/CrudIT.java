@@ -371,7 +371,7 @@ public class CrudIT extends AbstractServerIT {
 
         RepositoryEntry repo = repos.get(repoName);
         assertNotNull(repo);
-        assertNull(repo.getSecret());
+        assertNull(repo.getSecretName());
     }
 
     private static ProjectEntry findProject(List<ProjectEntry> l, String name) {

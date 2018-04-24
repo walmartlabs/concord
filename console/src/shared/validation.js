@@ -82,7 +82,7 @@ export const repository = {
             return invalidCommitIdError();
         }
     },
-    secret: concordKeyValidator
+    secretName: concordKeyValidator
 };
 
 export const secret = {

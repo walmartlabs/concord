@@ -73,7 +73,7 @@ let repositoryForm = (props) => {
 
                     <Dropdown
                         widget={SecretListDropdown}
-                        name="secret"
+                        name="secretName"
                         label="Credentials"
                         required
                     />
@@ -118,7 +118,7 @@ let repositoryForm = (props) => {
     );
 };
 
-const validate = ({ name, url, sourceType, branch, commitId, secret }) => {
+const validate = ({ name, url, sourceType, branch, commitId, secretName }) => {
     const errors = {};
 
     errors.name = v.repository.name(name);
@@ -130,7 +130,7 @@ const validate = ({ name, url, sourceType, branch, commitId, secret }) => {
         errors.commitId = v.repository.commitId(commitId);
     }
 
-    errors.secret = v.repository.secret(secret);
+    errors.secretName = v.repository.secretName(secretName);
 
     return errors;
 };

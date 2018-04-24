@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.api.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.api.org.project;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,7 +55,8 @@ public class RepositoryEntry implements Serializable {
     private final String path;
 
     @ConcordKey
-    private final String secret;
+    @JsonAlias("secret")
+    private final String secretName;
 
     private final boolean hasWebHook;
 
@@ -65,7 +67,7 @@ public class RepositoryEntry implements Serializable {
     }
 
     public RepositoryEntry(String name, RepositoryEntry e) {
-        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.secret, e.hasWebHook, e.secretStoreType);
+        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.secretName, e.hasWebHook, e.secretStoreType);
     }
 
     @JsonCreator
@@ -76,9 +78,9 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("branch") String branch,
                            @JsonProperty("commitId") String commitId,
                            @JsonProperty("path") String path,
-                           @JsonProperty("secret") String secret,
+                           @JsonProperty("secretName") String secretName,
                            @JsonProperty("hasWebHook") boolean hasWebHook,
-                           @JsonProperty("secretStoreType") String secretStoreType ) {
+                           @JsonProperty("secretStoreType") String secretStoreType) {
 
         this.id = id;
         this.projectId = projectId;
@@ -87,7 +89,7 @@ public class RepositoryEntry implements Serializable {
         this.branch = branch;
         this.commitId = commitId;
         this.path = path;
-        this.secret = secret;
+        this.secretName = secretName;
         this.hasWebHook = hasWebHook;
         this.secretStoreType = secretStoreType;
     }
@@ -120,8 +122,8 @@ public class RepositoryEntry implements Serializable {
         return path;
     }
 
-    public String getSecret() {
-        return secret;
+    public String getSecretName() {
+        return secretName;
     }
 
     public boolean isHasWebHook() {
@@ -142,7 +144,7 @@ public class RepositoryEntry implements Serializable {
                 ", branch='" + branch + '\'' +
                 ", commitId='" + commitId + '\'' +
                 ", path='" + path + '\'' +
-                ", secret='" + secret + '\'' +
+                ", secretName='" + secretName + '\'' +
                 ", hasWebHook=" + hasWebHook +
                 ", secretStoreType=" + secretStoreType +
                 '}';

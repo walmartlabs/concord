@@ -66,8 +66,8 @@ public class RepositoryManager {
         ProjectEntry project = projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
 
         UUID secretId = null;
-        if (entry.getSecret() != null) {
-            SecretEntry e = secretManager.assertAccess(project.getOrgId(), null, entry.getSecret(), ResourceAccessLevel.READER, false);
+        if (entry.getSecretName() != null) {
+            SecretEntry e = secretManager.assertAccess(project.getOrgId(), null, entry.getSecretName(), ResourceAccessLevel.READER, false);
             secretId = e.getId();
         }
 
@@ -99,8 +99,8 @@ public class RepositoryManager {
 
     public void insert(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry entry) {
         UUID secretId = null;
-        if (entry.getSecret() != null) {
-            secretId = secretDao.getId(orgId, entry.getSecret());
+        if (entry.getSecretName() != null) {
+            secretId = secretDao.getId(orgId, entry.getSecretName());
         }
 
         repositoryDao.insert(tx, projectId,

@@ -158,7 +158,7 @@ public class ProjectManager {
         }
 
         for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
-            String secretName = r.getValue().getSecret();
+            String secretName = r.getValue().getSecretName();
             if (secretName == null) {
                 continue;
             }

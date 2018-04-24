@@ -66,6 +66,6 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         RepositoryEntry r = repositoryDao.get(projectId, repoId);
         assertNotNull(r);
-        assertNull(r.getSecret());
+        assertNull(r.getSecretName());
     }
 }

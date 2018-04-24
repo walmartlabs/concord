@@ -67,7 +67,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
 
     @Override
     public void fetch(UUID orgId, RepositoryEntry repository, Path dest) {
-        Secret secret = getSecret(orgId, repository.getSecret());
+        Secret secret = getSecret(orgId, repository.getSecretName());
         String branch = Optional.ofNullable(repository.getBranch()).orElse(DEFAULT_BRANCH);
         fetch(repository.getUrl(), branch, repository.getCommitId(), secret, dest);
     }

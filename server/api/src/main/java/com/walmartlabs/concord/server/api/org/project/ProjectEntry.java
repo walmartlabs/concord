@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -54,6 +55,7 @@ public class ProjectEntry implements Serializable {
     @ConcordKey
     private final String orgName;
 
+    @Valid
     private final Map<String, RepositoryEntry> repositories;
 
     private final Map<String, Object> cfg;
