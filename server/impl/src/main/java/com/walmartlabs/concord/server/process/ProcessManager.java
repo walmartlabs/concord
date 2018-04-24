@@ -46,12 +46,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.List;
-import java.util.Arrays;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
@@ -85,7 +80,8 @@ public class ProcessManager {
     private static final List<ProcessStatus> AGENT_PROCESS_STATUSES = Arrays.asList(
             ProcessStatus.STARTING,
             ProcessStatus.RUNNING,
-            ProcessStatus.RESUMING); //ProcessStatus.STALLED
+            ProcessStatus.RESUMING);
+
     @Inject
     public ProcessManager(ProcessQueueDao queueDao,
                           ProcessStateManager stateManager,
@@ -160,7 +156,7 @@ public class ProcessManager {
         List<ProcessEntry> l = null;
 
         boolean updated = false;
-        while(!updated){
+        while (!updated) {
             l = queueDao.getCascade(instanceId);
             List<UUID> ids = filterProcessIds(l, SERVER_PROCESS_STATUSES);
             updated = ids.isEmpty() || queueDao.update(ids, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);

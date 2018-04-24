@@ -30,6 +30,5 @@ public enum ProcessStatus {
     RESUMING,
     FINISHED,
     FAILED,
-    CANCELLED,
-    STALLED
+    CANCELLED
 }
