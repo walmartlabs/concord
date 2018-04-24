@@ -68,7 +68,7 @@ public class EventServiceImpl implements EventService {
                 .setDate(Timestamp.newBuilder().setSeconds(time.getEpochSecond())
                         .setNanos(time.getNano()).build())
                 .setData(ByteString.copyFrom(jsonData))
-            .build());
+                .build());
     }
 
     private TEventType convert(EventType type) {

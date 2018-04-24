@@ -39,10 +39,20 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
         return new ConcordExecutionContext(expressionManager, source);
     }
 
+    @Override
+    public ConcordExecutionContext create(Variables source, String processDefinitionId, String elementId) {
+        return new ConcordExecutionContext(expressionManager, source, processDefinitionId, elementId);
+    }
+
     public static class ConcordExecutionContext extends ExecutionContextImpl implements Context {
 
         public ConcordExecutionContext(ExpressionManager expressionManager, Variables source) {
             super(expressionManager, source);
+        }
+
+        public ConcordExecutionContext(ExpressionManager expressionManager, Variables source,
+                                       String processDefinitionId, String elementId) {
+            super(expressionManager, source, processDefinitionId, elementId);
         }
     }
 }

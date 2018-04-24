@@ -23,23 +23,17 @@ package com.walmartlabs.concord.server.process.event;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.process.ProcessEventEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEventType;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Record4;
-import org.jooq.SelectConditionStep;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
-import static org.jooq.impl.DSL.currentTimestamp;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.value;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class EventDao extends AbstractDao {
@@ -53,7 +47,8 @@ public class EventDao extends AbstractDao {
         try (DSLContext tx = DSL.using(cfg)) {
 
             SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx
-                    .select(PROCESS_EVENTS.EVENT_ID, PROCESS_EVENTS.EVENT_TYPE,
+                    .select(PROCESS_EVENTS.EVENT_ID,
+                            PROCESS_EVENTS.EVENT_TYPE,
                             PROCESS_EVENTS.EVENT_DATE,
                             PROCESS_EVENTS.EVENT_DATA.cast(String.class))
                     .from(PROCESS_EVENTS)

@@ -22,6 +22,10 @@ class CallbackModule(CallbackBase):
         instanceId = os.environ['CONCORD_INSTANCE_ID']
         sessionToken = os.environ['CONCORD_SESSION_TOKEN']
 
+        self.eventCorrelationId = None
+        if "CONCORD_EVENT_CORRELATION_ID" in os.environ:
+            self.eventCorrelationId = os.environ['CONCORD_EVENT_CORRELATION_ID']
+
         self.targetUrl = baseUrl + '/api/v1/process/' + instanceId + '/event'
 
         s = requests.Session()
@@ -32,7 +36,7 @@ class CallbackModule(CallbackBase):
     def handle_event(self, event):
         r = self.session.post(self.targetUrl, data=json.dumps({
             'eventType': 'ANSIBLE',
-            'data': event
+            'data': dict(event, **{'parentCorrelationId': self.eventCorrelationId})
         }))
         r.raise_for_status()
 

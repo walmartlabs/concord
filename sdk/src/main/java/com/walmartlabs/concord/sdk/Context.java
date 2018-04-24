@@ -93,4 +93,8 @@ public interface Context {
      * @param eventName name of the event which can be used to resume the process. Should be unique for the process.
      */
     void suspend(String eventName);
+
+    String getProcessDefinitionId();
+
+    String getElementId();
 }

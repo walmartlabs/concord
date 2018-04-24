@@ -110,13 +110,13 @@ public class EngineFactory {
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
         cfg.setCopyAllCallActivityOutVariables(true);
 
-        Engine result = new EngineBuilder()
+        Engine engine = new EngineBuilder()
                 .withContextFactory(contextFactory)
                 .withLockManager(new NoopLockManager())
                 .withExpressionManager(expressionManager)
                 .withDefinitionProvider(adapter.processes())
                 .withTaskRegistry(taskRegistry)
-                .withJavaDelegateHandler(new JavaDelegateHandlerImpl())
+                .withJavaDelegateHandler(new JavaDelegateHandlerImpl(new TaskEventInterceptor(rpcClient, adapter.processes())))
                 .withEventStorage(eventStorage)
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
@@ -125,9 +125,8 @@ public class EngineFactory {
                 .withResourceResolver(new ResourceResolverImpl(baseDir))
                 .build();
 
-        result.addInterceptor(new ProcessElementInterceptor(rpcClient, adapter.processes()));
-
-        return result;
+        engine.addInterceptor(new ProcessElementInterceptor(rpcClient, adapter.processes()));
+        return engine;
     }
 
     private static class ProjectDefinitionAdapter {
@@ -181,15 +180,25 @@ public class EngineFactory {
 
     private static final class JavaDelegateHandlerImpl implements JavaDelegateHandler {
 
+        private final TaskEventInterceptor interceptor;
+
+        private JavaDelegateHandlerImpl(TaskEventInterceptor interceptor) {
+            this.interceptor = interceptor;
+        }
+
         @Override
         public void execute(Object task, ExecutionContext ctx) throws Exception {
             // check JavaDelegate first because tasks can implement both JavaDelegate and Task
             if (task instanceof JavaDelegate) {
                 JavaDelegate d = (JavaDelegate) task;
+                interceptor.preTask((Context) ctx);
                 d.execute(ctx);
+                interceptor.postTask((Context) ctx);
             } else if (task instanceof Task) {
                 Task t = (Task) task;
+                interceptor.preTask((Context) ctx);
                 t.execute((Context) ctx);
+                interceptor.postTask((Context) ctx);
             } else {
                 throw new ExecutionException("Unsupported task type: " + task + ": tasks must implement either " +
                         Task.class.getName() + " or " + JavaDelegate.class.getName() + " interfaces");

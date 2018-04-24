@@ -23,10 +23,22 @@ import { selectors } from '../../reducers';
 import { Icon, Table, Divider } from 'semantic-ui-react';
 import { formatTimestamp } from '../../util';
 
+const phaseToStr = (v) => {
+    switch (v) {
+        case 'pre':
+            return '(start)';
+        case 'post':
+            return '(end)';
+        default:
+            return '';
+    }
+};
+
 export class ConnectedEventList extends React.Component {
     render() {
         const { events, eventsByType } = this.props;
 
+        console.log("!!!", events);
         if (events.length > 0) {
             return (
                 <div>
@@ -59,7 +71,7 @@ export class ConnectedEventList extends React.Component {
                                                     <div>{value.data.processDefinitionId}</div>
                                                 )}
                                             </Table.Cell>
-                                            <Table.Cell>{value.data.description}</Table.Cell>
+                                            <Table.Cell>{value.data.description} {phaseToStr(value.data.phase)}</Table.Cell>
                                             <Table.Cell>
                                                 {index !== 0 &&
                                                 formatTimestamp(arr[index - 1].eventDate) ===

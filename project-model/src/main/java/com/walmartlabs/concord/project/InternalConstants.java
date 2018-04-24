@@ -55,6 +55,8 @@ public final class InternalConstants extends Constants {
          */
         @Deprecated
         public static final String EXECUTION_CONTEXT_KEY = "execution";
+
+        public static final String EVENT_CORRELATION_KEY = "__eventCorrelationId";
     }
 
     public static final class Request extends Constants.Request {

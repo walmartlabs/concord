@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-runner: record task `in` parameters in process events;
+- concord-runner, ansible: `correlationId` for task events;
 - concord-server: `runAs` form option.
 
 
