@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="67000" author="matthew.kunkel@walmartlabs.com">
+        <addColumn tableName="PROCESS_LOGS">
+            <column name="LOG_SEQ" type="bigserial"
+                    remarks="Add sequences to enable forwarding">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="67100" author="matthew.kunkel@walmartlabs.com">
+        <addColumn tableName="PROCESS_EVENTS">
+            <column name="EVENT_SEQ" type="bigserial"
+                    remarks="Add sequences to enable forwarding">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="67200" author="ibodrov@gmail.com">
+        <addColumn tableName="AUDIT_LOG">
+            <column name="ENTRY_SEQ" type="bigserial"
+                    remarks="Add sequences to enable forwarding">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <createView viewName="V_AUDIT_LOG" replaceIfExists="true">
+            select
+                ENTRY_SEQ,
+                ENTRY_DATE,
+                USER_ID,
+                (select USERNAME from USERS u where u.USER_ID = a.USER_ID) as USERNAME,
+                ENTRY_OBJECT,
+                ENTRY_ACTION,
+                ENTRY_DETAILS
+            from AUDIT_LOG a
+        </createView>
+
+        <dropColumn tableName="AUDIT_LOG">
+            <column name="ENTRY_ID"/>
+        </dropColumn>
+
+        <addPrimaryKey tableName="AUDIT_LOG" columnNames="ENTRY_SEQ"/>
+    </changeSet>
+</databaseChangeLog>
