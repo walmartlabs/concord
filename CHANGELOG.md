@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: new LDAP configuration property `usernameProperty`.
+Defaults to `sAMAccountName`.
+
+
 ## [0.67.0] - 2018-04-29
 
 ### Added

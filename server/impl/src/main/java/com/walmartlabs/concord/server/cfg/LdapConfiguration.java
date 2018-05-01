@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.cfg;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,68 +39,38 @@ import java.util.Set;
 @Singleton
 public class LdapConfiguration implements Serializable {
 
-    private static final Logger log = LoggerFactory.getLogger(LdapConfiguration.class);
     public static final String LDAP_CFG_KEY = "LDAP_CFG";
+    private static final Logger log = LoggerFactory.getLogger(LdapConfiguration.class);
 
-    private final String url;
-    private final String searchBase;
-    private final String principalSuffix;
-    private final String principalSearchFilter;
-    private final String systemUsername;
-    private final String systemPassword;
-    private final Set<String> exposeAttributes;
+    private String url;
+    private String searchBase;
+    private String principalSearchFilter;
+    private String usernameProperty;
+    private String systemUsername;
+    private String systemPassword;
+    private Set<String> exposeAttributes;
 
     public LdapConfiguration() throws IOException {
-        Properties props = new Properties();
 
         String path = System.getenv(LDAP_CFG_KEY);
         if (path != null) {
+            Properties props = new Properties();
+
             try (InputStream in = Files.newInputStream(Paths.get(path))) {
                 props.load(in);
             }
             log.info("init -> using external LDAP configuration: {}", path);
+
+            this.url = props.getProperty("url");
+            this.searchBase = props.getProperty("searchBase");
+            this.principalSearchFilter = props.getProperty("principalSearchFilter");
+            this.usernameProperty = props.getProperty("usernameProperty", "sAMAccountName");
+            this.systemUsername = props.getProperty("systemUsername");
+            this.systemPassword = props.getProperty("systemPassword");
+            this.exposeAttributes = split(props, "exposeAttributes");
         } else {
-            try (InputStream in = LdapConfiguration.class.getResourceAsStream("default_ldap.properties")) {
-                props.load(in);
-            }
-            log.info("init -> using default LDAP configuration");
+            log.warn("init -> no LDAP configuration");
         }
-
-        this.url = props.getProperty("url");
-        this.searchBase = props.getProperty("searchBase");
-        this.principalSuffix = props.getProperty("principalSuffix");
-        this.principalSearchFilter = props.getProperty("principalSearchFilter");
-        this.systemUsername = props.getProperty("systemUsername");
-        this.systemPassword = props.getProperty("systemPassword");
-        this.exposeAttributes = split(props, "exposeAttributes");
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public String getSearchBase() {
-        return searchBase;
-    }
-
-    public String getPrincipalSuffix() {
-        return principalSuffix;
-    }
-
-    public String getPrincipalSearchFilter() {
-        return principalSearchFilter;
-    }
-
-    public String getSystemUsername() {
-        return systemUsername;
-    }
-
-    public String getSystemPassword() {
-        return systemPassword;
-    }
-
-    public Set<String> getExposeAttributes() {
-        return exposeAttributes;
     }
 
     private static Set<String> split(Properties props, String key) {
@@ -119,5 +89,33 @@ public class LdapConfiguration implements Serializable {
         Collections.addAll(result, s.split(","));
 
         return Collections.unmodifiableSet(result);
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public String getSearchBase() {
+        return searchBase;
+    }
+
+    public String getPrincipalSearchFilter() {
+        return principalSearchFilter;
+    }
+
+    public String getUsernameProperty() {
+        return usernameProperty;
+    }
+
+    public String getSystemUsername() {
+        return systemUsername;
+    }
+
+    public String getSystemPassword() {
+        return systemPassword;
+    }
+
+    public Set<String> getExposeAttributes() {
+        return exposeAttributes;
     }
 }

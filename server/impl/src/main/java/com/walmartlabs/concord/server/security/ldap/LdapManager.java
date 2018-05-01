@@ -72,9 +72,11 @@ public class LdapManager {
             return null;
         }
 
-        LdapPrincipalBuilder b = new LdapPrincipalBuilder(username);
+        LdapPrincipalBuilder b = new LdapPrincipalBuilder();
         while (answer.hasMoreElements()) {
             SearchResult sr = (SearchResult) answer.next();
+
+            b.nameInNamespace(sr.getNameInNamespace());
 
             Attributes attrs = sr.getAttributes();
             if (attrs != null) {
@@ -90,6 +92,11 @@ public class LdapManager {
 
     private void processAttribute(LdapPrincipalBuilder b, Attribute attr) throws NamingException {
         String id = attr.getID();
+        if (id.equals(cfg.getUsernameProperty())) {
+            b.username(attr.get().toString());
+            return;
+        }
+
         switch (id) {
             case MEMBER_OF_ATTR: {
                 Collection<String> names = LdapUtils.getAllAttributeValues(attr);
@@ -111,13 +118,20 @@ public class LdapManager {
 
     private static final class LdapPrincipalBuilder {
 
-        private final String username;
+        private String username;
+        private String nameInNamespace;
         private String displayName;
         private Set<String> groups;
         private Map<String, String> attributes;
 
-        private LdapPrincipalBuilder(String username) {
+        public LdapPrincipalBuilder username(String username) {
             this.username = username;
+            return this;
+        }
+
+        public LdapPrincipalBuilder nameInNamespace(String nameInNamespace) {
+            this.nameInNamespace = nameInNamespace;
+            return this;
         }
 
         public LdapPrincipalBuilder displayName(String displayName) {
@@ -149,7 +163,7 @@ public class LdapManager {
                 attributes = Collections.emptyMap();
             }
 
-            return new LdapPrincipal(username, displayName, groups, attributes);
+            return new LdapPrincipal(username, nameInNamespace, displayName, groups, attributes);
         }
     }
 }

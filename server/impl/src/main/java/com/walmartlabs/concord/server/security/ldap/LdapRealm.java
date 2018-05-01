@@ -47,14 +47,13 @@ import java.util.Arrays;
 @Named
 public class LdapRealm extends AbstractLdapRealm {
 
-    private static final Logger log = LoggerFactory.getLogger(LdapRealm.class);
     public static final String REALM_NAME = "ldap";
+    
+    private static final Logger log = LoggerFactory.getLogger(LdapRealm.class);
 
     private final UserManager userManager;
     private final LdapManager ldapManager;
     private final AuditLog auditLog;
-
-    private final String usernameSuffix;
 
     @Inject
     public LdapRealm(LdapConfiguration cfg,
@@ -69,7 +68,6 @@ public class LdapRealm extends AbstractLdapRealm {
 
         this.url = cfg.getUrl();
         this.searchBase = cfg.getSearchBase();
-        this.usernameSuffix = cfg.getPrincipalSuffix();
         this.systemUsername = cfg.getSystemUsername();
         this.systemPassword = cfg.getSystemPassword();
 
@@ -93,6 +91,10 @@ public class LdapRealm extends AbstractLdapRealm {
     @Override
     @SuppressWarnings("deprecation")
     protected AuthenticationInfo queryForAuthenticationInfo(AuthenticationToken token, LdapContextFactory ldapContextFactory) throws NamingException {
+        if (this.url == null) {
+            return null;
+        }
+
         UsernamePasswordToken t = (UsernamePasswordToken) token;
 
         String username = t.getUsername();
@@ -101,14 +103,14 @@ public class LdapRealm extends AbstractLdapRealm {
             return null;
         }
 
-        if (username.contains("\\")) {
-            throw new AuthenticationException("User's domain should be specified as username@domain");
+        username = username.trim();
+
+        LdapPrincipal ldapPrincipal = ldapManager.getPrincipal(username);
+        if (ldapPrincipal == null) {
+            throw new AuthenticationException("LDAP data not found: " + username);
         }
 
-        String principalName = username;
-        if (!principalName.contains("@")) {
-            principalName = principalName + usernameSuffix;
-        }
+        String principalName = ldapPrincipal.getNameInNamespace();
 
         LdapContext ctx = null;
         try {
@@ -121,14 +123,7 @@ public class LdapRealm extends AbstractLdapRealm {
             LdapUtils.closeContext(ctx);
         }
 
-        username = normalizeUsername(username);
-
-        LdapPrincipal ldapPrincipal = ldapManager.getPrincipal(username);
-        if (ldapPrincipal == null) {
-            throw new AuthenticationException("LDAP data not found: " + username);
-        }
-
-        UserEntry user = userManager.getOrCreate(username, UserType.LDAP);
+        UserEntry user = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, user);
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
@@ -146,18 +141,5 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         return new SimpleAuthorizationInfo();
-    }
-
-    private static String normalizeUsername(String s) {
-        if (s == null) {
-            return null;
-        }
-
-        int i = s.indexOf("@");
-        if (i < 0) {
-            return s;
-        }
-
-        return s.substring(0, i);
     }
 }
