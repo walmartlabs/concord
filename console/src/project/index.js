@@ -34,7 +34,7 @@ const isSecretStoreTypeEnabled = (index, list) => {
     if (list.length > 0) {
         const secretStoreType = index['secretStoreType'];
         for (var i = 0; i < list.length; i++) {
-            if (list[i].storeType === secretStoreType) {
+            if (list[i].storeType === secretStoreType || secretStoreType === undefined) {
                 return false;
             }
         }
