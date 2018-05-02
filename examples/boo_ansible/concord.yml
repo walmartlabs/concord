@@ -17,9 +17,6 @@ flows:
     in:
       # mandatory parameters
       booTemplateLocation: "example.yml"
-      oneopsApiHost: "http://cms.prod-1312.core.oneops.prod.walmart.com:8080"
-      # the rest of the parameters are used by the template
-      oneopsBaseUrl: "https://oneops.prod.walmart.com"
       apiKey: ${credentialsForm.apiKey}
       org: ${credentialsForm.org}
       asm: ${credentialsForm.asm}

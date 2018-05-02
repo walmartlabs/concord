@@ -35,7 +35,7 @@ environment:
   autorepair: false
   autoreplace: false
   clouds:
-    dev-cdc1:
+    dev-cdc6:
       priority: '1'
       dpmt_order: '1'
       pct_scale: '100'
