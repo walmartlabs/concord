@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:boo-task:0.38.0"
+  - "mvn://com.walmartlabs.concord.plugins:boo-task:0.41.0"
 
 flows:
   default:
@@ -10,8 +10,6 @@ flows:
   - task: boo
     in:
       booTemplateLocation: "example.yml"
-      oneopsBaseUrl: "https://oneops.prod.walmart.com"
-      oneopsApiHost: "http://cms.prod-1312.core.oneops.prod.walmart.com:8080"
       apiKey: ${credentialsForm.apiKey}
       org: ${credentialsForm.org}
       asm: ${credentialsForm.asm}
