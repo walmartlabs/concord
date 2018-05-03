@@ -58,10 +58,7 @@ public class StateImportingProcessor implements PayloadProcessor {
         UUID instanceId = payload.getInstanceId();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
-        stateManager.transaction(tx -> {
-            stateManager.delete(tx, instanceId);
-            stateManager.importPath(tx, instanceId, workspace, (path -> filter(instanceId, workspace, path)));
-        });
+        stateManager.replacePath(instanceId, workspace, (path -> filter(instanceId, workspace, path)));
 
         return chain.process(payload);
     }

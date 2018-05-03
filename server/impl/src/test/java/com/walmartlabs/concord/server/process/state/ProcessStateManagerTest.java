@@ -49,10 +49,8 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         writeTempFile(baseDir.resolve("file-2"), "456".getBytes());
 
         // ---
-        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration());
-        stateManager.transaction(tx -> {
-            stateManager.importPath(tx, instanceId, null, baseDir);
-        });
+        ProcessStateManager stateManager = new ProcessStateManagerImpl(getConfiguration());
+        stateManager.importPath(instanceId, null, baseDir);
 
         Path tmpDir = Files.createTempDirectory("testExport");
 
@@ -65,9 +63,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         writeTempFile(baseDir.resolve("file-1"), "123-up".getBytes());
 
-        stateManager.transaction(tx -> {
-            stateManager.importPath(tx, instanceId, null, baseDir);
-        });
+        stateManager.importPath(instanceId, null, baseDir);
 
         result = stateManager.export(instanceId, copyTo(tmpDir));
         assertTrue(result);
@@ -95,10 +91,8 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
             }
         }
 
-        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration());
-        stateManager.transaction(tx -> {
-            stateManager.importPath(tx, UUID.randomUUID(), "/", baseDir);
-        });
+        ProcessStateManager stateManager = new ProcessStateManagerImpl(getConfiguration());
+        stateManager.importPath(UUID.randomUUID(), "/", baseDir);
     }
 
     private static void assertFileContent(String expected, Path f) throws IOException {

@@ -87,10 +87,7 @@ public class ProcessSecurityContext {
             }
         }
 
-        stateManager.transaction(tx -> {
-            stateManager.delete(tx, instanceId, PRINCIPAL_FILE_PATH);
-            stateManager.insert(tx, instanceId, PRINCIPAL_FILE_PATH, serialize(dst));
-        });
+        stateManager.replace(instanceId, PRINCIPAL_FILE_PATH, serialize(dst));
     }
 
     public PrincipalCollection getPrincipals(UUID instanceId) {

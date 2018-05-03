@@ -150,10 +150,8 @@ public class JobQueueImpl extends TJobQueueGrpc.TJobQueueImplBase {
             IOUtils.unzip(tmpIn, tmpDir);
 
             Path finalTmpDir = tmpDir;
-            stateManager.transaction(tx -> {
-                stateManager.delete(tx, instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
-                stateManager.importPath(tx, instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, finalTmpDir);
-            });
+            stateManager.delete(instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
+            stateManager.importPath(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, finalTmpDir);
         } catch (IOException e) {
             responseObserver.onError(e);
             return;
