@@ -225,6 +225,9 @@ public class SimpleHttpClient {
             case GET:
                 request = buildGetRequest(config);
                 break;
+            case PUT:
+                request = buildPutRequest(config);
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported method type: " + config.getMethodType());
         }
@@ -262,6 +265,22 @@ public class SimpleHttpClient {
     }
 
     /**
+     * Method to build the put request using the given configuration
+     *
+     * @param cfg {@link Configuration}
+     * @return HttpUriRequest
+     * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, HttpTask.RequestType)} method
+     */
+    private HttpUriRequest buildPutRequest(Configuration cfg) throws Exception {
+        return HttpTaskRequest.put(cfg.getUrl())
+                .withBasicAuth(cfg.getEncodedAuthToken())
+                .withRequestType(cfg.getRequestType())
+                .withResponseType(ResponseType.ANY)
+                .withBody(getHttpEntity(cfg.getBody(), cfg.getRequestType()))
+                .get();
+    }
+
+    /**
      * ClientResponse which wraps the response map. It is used to prevent the user to call the getResponse Method
      * without executing the request.
      */
@@ -276,5 +295,4 @@ public class SimpleHttpClient {
             return response;
         }
     }
-
 }

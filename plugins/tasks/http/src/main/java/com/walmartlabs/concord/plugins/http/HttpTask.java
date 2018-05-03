@@ -97,7 +97,8 @@ public class HttpTask implements Task {
 
     public enum RequestMethodType {
         GET,
-        POST;
+        POST,
+        PUT;
 
         public static boolean isMember(String aName) {
             RequestMethodType[] requestMethodTypes = RequestMethodType.values();
@@ -148,6 +149,7 @@ public class HttpTask implements Task {
         static final String BODY_KEY = "body";
         static final String RESPONSE_KEY = "response";
         static final String REQUEST_POST_KEY = "POST";
+        static final String REQUEST_PUT_KEY = "PUT";
         static final String URL_KEY = "url";
         static final String OUT_KEY = "out";
         static final String TOKEN_KEY = "token";

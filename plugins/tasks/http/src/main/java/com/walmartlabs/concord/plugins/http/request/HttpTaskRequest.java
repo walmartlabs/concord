@@ -27,6 +27,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.HttpPut;
 
 import javax.ws.rs.core.MediaType;
 
@@ -94,6 +95,8 @@ public class HttpTaskRequest implements Request {
     public Request withBody(HttpEntity body) {
         if (this.request instanceof HttpPost) {
             ((HttpPost) this.request).setEntity(body);
+        }else if (this.request instanceof HttpPut) {
+            ((HttpPut) this.request).setEntity(body);
         }
 
         return this;
@@ -102,6 +105,16 @@ public class HttpTaskRequest implements Request {
     @Override
     public HttpUriRequest get() {
         return this.request;
+    }
+
+    /**
+     * Method to create {@link HttpPut} request
+     *
+     * @param url Endpoint
+     * @return HttpTaskRequest
+     */
+    public static HttpTaskRequest put(String url) {
+        return new HttpTaskRequest(new HttpPut(url));
     }
 
     /**

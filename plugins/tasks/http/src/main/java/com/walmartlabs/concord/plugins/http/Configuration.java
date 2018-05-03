@@ -273,6 +273,8 @@ public class Configuration {
                 throw new IllegalArgumentException("Working directory is mandatory for ResponseType FILE");
             } else if (this.methodType == RequestMethodType.POST && (this.body == null)) {
                 throw new IllegalArgumentException("Body is missing for Post method");
+            } else if (this.methodType == RequestMethodType.PUT && (this.body == null)) {
+                throw new IllegalArgumentException("Body is missing for Put method");
             }
 
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, body);
@@ -340,6 +342,10 @@ public class Configuration {
                 throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + "') method");
             } else if (REQUEST_POST_KEY.equals(ctx.getVariable(METHOD)) && ctx.getVariable(BODY_KEY) == null) {
                 throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + "') method");
+            } else if (REQUEST_PUT_KEY.equals(ctx.getVariable(METHOD_KEY)) && ctx.getVariable(REQUEST_KEY) == null) {
+                throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + REQUEST_PUT_KEY + "') method");
+            } else if (REQUEST_PUT_KEY.equals(ctx.getVariable(METHOD)) && ctx.getVariable(BODY_KEY) == null) {
+                throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + REQUEST_PUT_KEY + "') method");
             }
         }
     }

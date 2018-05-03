@@ -4,6 +4,7 @@
 
 ### Added
 
+- http: support for `PUT` requests;
 - concord-server: new LDAP configuration property `usernameProperty`.
 Defaults to `sAMAccountName`.
 
