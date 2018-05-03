@@ -348,6 +348,8 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         return Response.ok((StreamingOutput) out -> {
             try (InputStream in = Files.newInputStream(tmp)) {
                 IOUtils.copy(in, out);
+            } finally {
+                Files.delete(tmp);
             }
         }).build();
     }

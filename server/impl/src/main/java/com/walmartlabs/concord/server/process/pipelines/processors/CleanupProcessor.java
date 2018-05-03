@@ -29,6 +29,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 @Named
 public class CleanupProcessor implements FinalizerProcessor {
@@ -42,15 +43,19 @@ public class CleanupProcessor implements FinalizerProcessor {
 
     @Override
     public void process(Payload payload) {
-        Path p = payload.getHeader(Payload.BASE_DIR);
-        if (p == null || Files.notExists(p)) {
+        delete(payload.getInstanceId(), payload.getHeader(Payload.WORKSPACE_DIR));
+        delete(payload.getInstanceId(), payload.getHeader(Payload.BASE_DIR));
+    }
+
+    private void delete(UUID instanceId, Path p) {
+        if (p == null || !Files.exists(p)) {
             return;
         }
 
         try {
             IOUtils.deleteRecursively(p);
         } catch (IOException e) {
-            logManager.warn(payload.getInstanceId(), "Unable to delete the working directory: {}", p, e);
+            logManager.warn(instanceId, "Unable to delete the working directory: {}", p, e);
         }
     }
 }
