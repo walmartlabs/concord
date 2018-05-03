@@ -179,10 +179,10 @@ public final class IOUtils {
     }
 
     public static void copy(Path src, Path dst, CopyOption... options) throws IOException {
-        _copy(1, src, dst, options);
+        _copy(1, src, src, dst, options);
     }
 
-    private static void _copy(int depth, Path src, Path dst, CopyOption... options) throws IOException {
+    private static void _copy(int depth, Path root, Path src, Path dst, CopyOption... options) throws IOException {
         if (depth >= MAX_COPY_DEPTH) {
             throw new IOException("Too deep: " + src);
         }
@@ -197,7 +197,7 @@ public final class IOUtils {
                     Path link = Files.readSymbolicLink(file);
                     a = file.getParent().resolve(link).normalize();
 
-                    if (!a.startsWith(src)) {
+                    if (!a.startsWith(root)) {
                         throw new IOException("External symlinks are not supported: " + file + " -> " + a);
                     }
 
@@ -207,7 +207,7 @@ public final class IOUtils {
                     }
 
                     if (Files.isDirectory(a)) {
-                        _copy(depth + 1, a, b);
+                        _copy(depth + 1, root, a, b);
                         return FileVisitResult.CONTINUE;
                     }
                 }

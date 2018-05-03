@@ -9,6 +9,7 @@
 Defaults to `sAMAccountName`.
 
 
+
 ## [0.67.0] - 2018-04-29
 
 ### Added
