@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.65.3"
+VERSION="latest"
 
 if [ -z $LDAP_CFG ]; then
     LDAP_CFG="/opt/concord/conf/ldap.properties"
