@@ -24,17 +24,14 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.rpc.AgentApiClient;
-import com.walmartlabs.concord.rpc.JobStatus;
-import com.walmartlabs.concord.rpc.JobType;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -43,36 +40,30 @@ public class ExecutionManager {
     private static final Logger log = LoggerFactory.getLogger(ExecutionManager.class);
     private static final long JOB_ENTRY_TTL = 8 * 60 * 60 * 1000; // 8 hours
 
-    private final Map<JobType, JobExecutor> jobExecutors;
+    private final JobExecutor jobExecutor;
     private final LogManager logManager;
     private final Configuration cfg;
 
-    private final Cache<String, JobStatus> statuses = CacheBuilder.newBuilder()
+    private final Cache<UUID, ProcessStatus> statuses = CacheBuilder.newBuilder()
             .expireAfterAccess(JOB_ENTRY_TTL, TimeUnit.MILLISECONDS)
             .build();
 
-    private final Cache<String, JobInstance> instances = CacheBuilder.newBuilder()
+    private final Cache<UUID, JobInstance> instances = CacheBuilder.newBuilder()
             .expireAfterAccess(JOB_ENTRY_TTL, TimeUnit.MILLISECONDS)
             .build();
 
     private final Object mutex = new Object();
 
-    public ExecutionManager(AgentApiClient client, Configuration cfg) {
+    public ExecutionManager(Configuration cfg) throws IOException {
 
         this.logManager = new LogManager(cfg);
         this.cfg = cfg;
-        this.jobExecutors = new HashMap<>();
 
         DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
-        jobExecutors.put(JobType.RUNNER, new DefaultJobExecutor(cfg, logManager, dependencyManager, client));
+        this.jobExecutor = new DefaultJobExecutor(cfg, logManager, dependencyManager, new ProcessApiClient(cfg));
     }
 
-    public JobInstance start(String instanceId, JobType type, String entryPoint, Path payload) throws ExecutionException {
-        JobExecutor exec = jobExecutors.get(type);
-        if (exec == null) {
-            throw new IllegalArgumentException("Unknown job type: " + type);
-        }
-
+    public JobInstance start(UUID instanceId, String entryPoint, Path payload) throws ExecutionException {
         // remove the previous log file
         // e.g. left after the execution was suspended
         logManager.delete(instanceId);
@@ -83,14 +74,14 @@ public class ExecutionManager {
         Path tmpDir = extract(payload);
 
         synchronized (mutex) {
-            statuses.put(instanceId, JobStatus.RUNNING);
+            statuses.put(instanceId, ProcessStatus.RUNNING);
         }
 
         JobInstance i;
         try {
-            i = exec.start(instanceId, tmpDir, entryPoint);
+            i = jobExecutor.start(instanceId, tmpDir, entryPoint);
         } catch (Exception e) {
-            log.warn("start ['{}', {}, '{}'] -> failed", instanceId, type, entryPoint, e);
+            log.warn("start ['{}', {}] -> failed", instanceId, entryPoint, e);
             handleError(instanceId);
             throw e;
         }
@@ -102,7 +93,7 @@ public class ExecutionManager {
         CompletableFuture<?> f = i.future();
         f.thenRun(() -> {
             synchronized (mutex) {
-                statuses.put(instanceId, JobStatus.COMPLETED);
+                statuses.put(instanceId, ProcessStatus.FINISHED);
             }
         }).exceptionally(e -> {
             handleError(instanceId);
@@ -112,20 +103,20 @@ public class ExecutionManager {
         return i;
     }
 
-    private void handleError(String instanceId) {
+    private void handleError(UUID instanceId) {
         synchronized (mutex) {
-            JobStatus s = statuses.getIfPresent(instanceId);
-            if (s != JobStatus.CANCELLED) {
-                statuses.put(instanceId, JobStatus.FAILED);
+            ProcessStatus s = statuses.getIfPresent(instanceId);
+            if (s != ProcessStatus.CANCELLED) {
+                statuses.put(instanceId, ProcessStatus.FAILED);
             }
         }
     }
 
-    public void cancel(String id) {
+    public void cancel(UUID id) {
         synchronized (mutex) {
-            JobStatus s = statuses.getIfPresent(id);
-            if (s != null && s == JobStatus.RUNNING) {
-                statuses.put(id, JobStatus.CANCELLED);
+            ProcessStatus s = statuses.getIfPresent(id);
+            if (s != null && s == ProcessStatus.RUNNING) {
+                statuses.put(id, ProcessStatus.CANCELLED);
             }
         }
 
@@ -137,8 +128,8 @@ public class ExecutionManager {
         i.cancel();
     }
 
-    public JobStatus getStatus(String id) {
-        JobStatus s;
+    public ProcessStatus getStatus(UUID id) {
+        ProcessStatus s;
         synchronized (mutex) {
             s = statuses.getIfPresent(id);
         }
@@ -151,7 +142,7 @@ public class ExecutionManager {
     }
 
     public boolean isRunning(String id) {
-        JobStatus s;
+        ProcessStatus s;
         synchronized (mutex) {
             s = statuses.getIfPresent(id);
         }
@@ -160,7 +151,7 @@ public class ExecutionManager {
              return false;
         }
 
-        return s == JobStatus.RUNNING;
+        return s == ProcessStatus.RUNNING;
     }
 
     public void cleanup() {

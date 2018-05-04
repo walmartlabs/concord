@@ -21,25 +21,20 @@ package com.walmartlabs.concord.rpc;
  */
 
 import java.nio.file.Path;
+import java.util.UUID;
 
 public class JobEntry {
 
-    private final String instanceId;
-    private final JobType jobType;
+    private final UUID instanceId;
     private final Path payload;
 
-    public JobEntry(String instanceId, JobType jobType, Path payload) {
+    public JobEntry(UUID instanceId, Path payload) {
         this.instanceId = instanceId;
-        this.jobType = jobType;
         this.payload = payload;
     }
 
-    public String getInstanceId() {
+    public UUID getInstanceId() {
         return instanceId;
-    }
-
-    public JobType getJobType() {
-        return jobType;
     }
 
     public Path getPayload() {
@@ -50,7 +45,6 @@ public class JobEntry {
     public String toString() {
         return "JobEntry{" +
                 "instanceId='" + instanceId + '\'' +
-                ", jobType=" + jobType +
                 ", payload=" + payload +
                 '}';
     }

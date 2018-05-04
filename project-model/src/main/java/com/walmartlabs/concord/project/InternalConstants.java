@@ -147,4 +147,9 @@ public final class InternalConstants extends Constants {
 
         public static final String RUN_AS_KEEP_KEY = "keep";
     }
+
+    public static final class Headers {
+
+        public static final String PROCESS_INSTANCE_ID = "X-Concord-InstanceId";
+    }
 }

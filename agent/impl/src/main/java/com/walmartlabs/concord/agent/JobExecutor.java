@@ -21,8 +21,9 @@ package com.walmartlabs.concord.agent;
  */
 
 import java.nio.file.Path;
+import java.util.UUID;
 
 public interface JobExecutor {
 
-    JobInstance start(String instanceId, Path workDir, String entryPoint) throws ExecutionException;
+    JobInstance start(UUID instanceId, Path workDir, String entryPoint) throws ExecutionException;
 }

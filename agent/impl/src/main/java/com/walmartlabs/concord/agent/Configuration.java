@@ -56,6 +56,18 @@ public class Configuration {
 
     public static final String RUNNER_SECURITY_MANAGER_ENABLED_KEY = "RUNNER_SECURITY_MANAGER_ENABLED";
 
+    public static final String API_KEY = "API_KEY";
+    public static final String CONNECT_TIMEOUT_KEY = "API_CONNECT_TIMEOUT_KEY";
+    public static final String READ_TIMEOUT_KEY = "API_READ_TIMEOUT_KEY";
+    public static final String RETRY_COUNT_KEY = "API_RETRY_COUNT_KEY";
+    public static final String RETRY_INTERVAL_KEY = "API_RETRY_INTERVAL_KEY";
+    public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL_KEY";
+
+    /**
+     * As defined in server/db/src/main/resources/com/walmartlabs/concord/server/db/v0.69.0.xml
+     */
+    private static final String DEFAULT_AGENT_API_KEY = "O+JMYwBsU797EKtlRQYu+Q";
+
     private final String agentId;
     private final String serverHost;
     private final int serverRpcPort;
@@ -73,6 +85,13 @@ public class Configuration {
     private final boolean dockerOldImageSweeperEnabled;
     private final long dockerOldImageSweeperPeriod;
     private final boolean runnerSecurityManagerEnabled;
+
+    private final String apiKey;
+    private final int readTimeout;
+    private final int connectTimeout;
+    private final int retryCount;
+    private final long retryInterval;
+    private final long pollInterval;
 
     public Configuration() {
         this.agentId = UUID.randomUUID().toString();
@@ -112,6 +131,13 @@ public class Configuration {
             this.dockerOldImageSweeperPeriod = Long.parseLong(getEnv(DOCKER_OLD_IMAGE_SWEEPER_PERIOD_KEY, "3600000")); // 1 hour
 
             this.runnerSecurityManagerEnabled = Boolean.parseBoolean(getEnv(RUNNER_SECURITY_MANAGER_ENABLED_KEY, "false"));
+
+            this.apiKey = getEnv(API_KEY, DEFAULT_AGENT_API_KEY);
+            this.connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
+            this.readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
+            this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "5"));
+            this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "30000"));
+            this.pollInterval = Long.parseLong(getEnv(POLL_INTERVAL_KEY, "1000"));
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -183,6 +209,30 @@ public class Configuration {
 
     public boolean isRunnerSecurityManagerEnabled() {
         return runnerSecurityManagerEnabled;
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
+    }
+
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public long getRetryInterval() {
+        return retryInterval;
+    }
+
+    public long getPollInterval() {
+        return pollInterval;
     }
 
     private static String getEnv(String key, String defaultValue) {

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.MultipartUtils;
@@ -59,6 +60,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -386,6 +388,11 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    public void updateStatus(UUID instanceId, String agentId, ProcessStatus status) {
+        processManager.updateStatus(instanceId, agentId, status);
+    }
+
+    @Override
     public Response getLog(UUID instanceId, String range) {
         assertInstanceId(instanceId);
 
@@ -443,6 +450,21 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
+    public void appendLog(UUID instanceId, InputStream data) {
+        ProcessEntry p = queueDao.get(instanceId);
+        if (p == null) {
+            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+
+        try {
+            logsDao.append(instanceId, ByteStreams.toByteArray(data));
+        } catch (IOException e) {
+            log.error("appendLog ['{}'] -> error", instanceId, e);
+            throw new WebApplicationException("append log error: " + e.getMessage());
+        }
+    }
+
+    @Override
     public Response downloadState(UUID instanceId) {
         ProcessEntry p = queueDao.get(instanceId);
         if (p == null) {
@@ -489,6 +511,48 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
         return Response.ok(out)
                 .build();
+    }
+
+    @Override
+    public void uploadAttachments(UUID instanceId, InputStream data) {
+        ProcessEntry p = queueDao.get(instanceId);
+        if (p == null) {
+            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+
+        Path tmpIn = null;
+        Path tmpDir = null;
+        try {
+            tmpIn = IOUtils.createTempFile("attachments", ".zip");
+            Files.copy(data, tmpIn, StandardCopyOption.REPLACE_EXISTING);
+
+            tmpDir = IOUtils.createTempDir("attachments");
+            IOUtils.unzip(tmpIn, tmpDir);
+
+            Path finalTmpDir = tmpDir;
+            stateManager.delete(instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
+            stateManager.importPath(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, finalTmpDir);
+        } catch (IOException e) {
+            log.error("uploadAttachments ['{}'] -> error", instanceId, e);
+            throw new WebApplicationException("upload error: " + e.getMessage());
+        } finally {
+            if (tmpDir != null) {
+                try {
+                    IOUtils.deleteRecursively(tmpDir);
+                } catch (IOException e) {
+                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
+                }
+            }
+            if (tmpIn != null) {
+                try {
+                    Files.delete(tmpIn);
+                } catch (IOException e) {
+                    log.warn("uploadAttachments -> cleanup error: {}", e.getMessage());
+                }
+            }
+        }
+
+        log.info("uploadAttachments ['{}'] -> done", instanceId);
     }
 
     private StartProcessResponse toResponse(ProcessResult r) {

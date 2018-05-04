@@ -424,7 +424,7 @@ public class ProcessIT extends AbstractServerIT {
         waitForCompletion(processResource, parentSpr.getInstanceId());
 
         ProcessEntry processEntry = processResource.get(parentSpr.getInstanceId());
-        assertEquals(processEntry.getChildrenIds().size(), 3);
+        assertEquals(3, processEntry.getChildrenIds().size());
     }
 
     @Test(timeout = 60000)

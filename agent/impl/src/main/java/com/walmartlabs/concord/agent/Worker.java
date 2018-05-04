@@ -21,8 +21,9 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.rpc.*;
-import com.walmartlabs.concord.sdk.ClientException;
+import com.walmartlabs.concord.rpc.JobEntry;
+import com.walmartlabs.concord.server.ApiException;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -40,39 +42,35 @@ import java.util.function.Supplier;
 public class Worker implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(Worker.class);
+
     private static final long ERROR_DELAY = 5000;
 
-    private final AgentApiClient client;
+    private final ProcessApiClient processApiClient;
+    private final JobQueueClient jobQueue;
     private final ExecutionManager executionManager;
     private final long logSteamMaxDelay;
 
-    public Worker(AgentApiClient client, ExecutionManager executionManager, long logSteamMaxDelay) {
-        this.client = client;
+    public Worker(ProcessApiClient processApiClient, JobQueueClient jobQueue, ExecutionManager executionManager, long logSteamMaxDelay) {
+        this.processApiClient = processApiClient;
+        this.jobQueue = jobQueue;
         this.executionManager = executionManager;
         this.logSteamMaxDelay = logSteamMaxDelay;
     }
 
     @Override
     public void run() {
-        JobQueue q = client.getJobQueue();
-
         while (!Thread.currentThread().isInterrupted()) {
             JobEntry job = null;
             try {
-                job = q.take();
+                job = jobQueue.take();
 
                 if (job == null) {
                     continue;
                 }
 
-                execute(job.getInstanceId(), job.getJobType(), job.getPayload());
-            } catch (ClientException e) {
-                String instanceId = e.getInstanceId();
-                if (instanceId != null) {
-                    log(instanceId, "Error while transferring the payload: " + e.getMessage());
-                }
-
-                log.error("run -> transport error: (instanceId={}), {}", instanceId, e.getMessage(), e);
+                execute(job.getInstanceId(), job.getPayload());
+            } catch (Exception e) {
+                log.error("run -> job process error: {}", e.getMessage(), e);
                 sleep(ERROR_DELAY);
             } finally {
                 if (job != null) {
@@ -104,34 +102,33 @@ public class Worker implements Runnable {
         }
     }
 
-    private void log(String instanceId, String s) {
+    private void log(UUID instanceId, String s) {
         try {
-            client.getJobQueue().appendLog(instanceId, s.getBytes());
-        } catch (ClientException e) {
+            processApiClient.appendLog(instanceId, s.getBytes());
+        } catch (ApiException e) {
             log.warn("log ['{}'] -> unable to append a log entry ({}): {}", instanceId, e.getMessage(), s);
         }
     }
 
-    private void execute(String instanceId, JobType type, Path payload) {
-        log.info("execute ['{}', '{}', '{}'] -> starting", instanceId, type, payload);
+    private void execute(UUID instanceId, Path payload) {
+        log.info("execute ['{}', '{}'] -> starting", instanceId, payload);
 
         JobInstance i;
         try {
-            i = executionManager.start(instanceId, type, "n/a", payload);
+            i = executionManager.start(instanceId,"n/a", payload);
         } catch (ExecutionException e) {
-            log.error("execute ['{}', '{}', '{}'] -> start error", instanceId, type, payload, e);
+            log.error("execute ['{}', '{}'] -> start error", instanceId, payload, e);
             return;
         }
 
-        JobQueue q = client.getJobQueue();
-        Supplier<Boolean> isRunning = () -> executionManager.getStatus(instanceId) == JobStatus.RUNNING;
+        Supplier<Boolean> isRunning = () -> executionManager.getStatus(instanceId) == ProcessStatus.RUNNING;
 
         // check the status to avoid races
         if (isRunning.get()) {
             try {
-                q.update(instanceId, JobStatus.RUNNING);
-            } catch (ClientException e) {
-                log.error("execute ['{}', '{}', '{}'] -> status update error", instanceId, type, payload, e);
+                processApiClient.updateStatus(instanceId, ProcessStatus.RUNNING);
+            } catch (ApiException e) {
+                log.error("execute ['{}', '{}'] -> status update error", instanceId, payload, e);
             }
         }
 
@@ -140,8 +137,8 @@ public class Worker implements Runnable {
             System.arraycopy(chunk.ab, 0, ab, 0, chunk.len);
 
             try {
-                q.appendLog(instanceId, ab);
-            } catch (ClientException e) {
+                processApiClient.appendLog(instanceId, ab);
+            } catch (ApiException e) {
                 handleError(instanceId, e);
             }
         };
@@ -163,35 +160,31 @@ public class Worker implements Runnable {
             cleanup(i);
         }
 
-        log.info("execute ['{}', '{}', '{}'] -> done", instanceId, type, payload);
+        log.info("execute ['{}', '{}'] -> done", instanceId, payload);
     }
 
-    private void handleSuccess(String instanceId) {
-        JobQueue q = client.getJobQueue();
+    private void handleSuccess(UUID instanceId) {
         try {
-            q.update(instanceId, JobStatus.COMPLETED);
-        } catch (ClientException e) {
-            // TODO retries?
+            processApiClient.updateStatus(instanceId, ProcessStatus.FINISHED);
+        } catch (ApiException e) {
             log.warn("handleSuccess ['{}'] -> error while updating status of a job: {}", instanceId, e.getMessage());
         }
         log.info("handleSuccess ['{}'] -> done", instanceId);
     }
 
-    private void handleError(String instanceId, Throwable error) {
-        JobStatus status = JobStatus.FAILED;
+    private void handleError(UUID instanceId, Throwable error) {
+        ProcessStatus status = ProcessStatus.FAILED;
 
         if (error instanceof CancellationException) {
             log.info("handleError ['{}'] -> job cancelled", instanceId);
-            status = JobStatus.CANCELLED;
+            status = ProcessStatus.CANCELLED;
         } else {
             log.error("handleError ['{}'] -> job failed", instanceId, error);
         }
 
-        JobQueue q = client.getJobQueue();
         try {
-            q.update(instanceId, status);
-        } catch (ClientException e) {
-            // TODO retries?
+            processApiClient.updateStatus(instanceId, status);
+        } catch (ApiException e) {
             log.warn("handleError ['{}'] -> error while updating status of a job: {}", instanceId, e.getMessage());
         }
 

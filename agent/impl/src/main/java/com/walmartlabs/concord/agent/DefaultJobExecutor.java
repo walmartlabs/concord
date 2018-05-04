@@ -35,10 +35,8 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.rpc.AgentApiClient;
-import com.walmartlabs.concord.rpc.JobQueue;
-import com.walmartlabs.concord.sdk.ClientException;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.ApiException;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,25 +65,25 @@ public class DefaultJobExecutor implements JobExecutor {
     private final DefaultDependencies defaultDependencies;
     private final LogManager logManager;
     private final DependencyManager dependencyManager;
-    private final AgentApiClient client;
     private final ObjectMapper objectMapper;
     private final ProcessPool pool;
     private final ExecutorService executor;
+    private final ProcessApiClient processApiClient;
 
     public DefaultJobExecutor(Configuration cfg, LogManager logManager,
-                              DependencyManager dependencyManager, AgentApiClient client) {
+                              DependencyManager dependencyManager, ProcessApiClient processApiClient) {
 
         this.cfg = cfg;
         this.defaultDependencies = new DefaultDependencies();
         this.logManager = logManager;
         this.dependencyManager = dependencyManager;
-        this.client = client;
         this.objectMapper = new ObjectMapper();
         this.pool = new ProcessPool(cfg.getMaxPreforkAge());
         this.executor = Executors.newCachedThreadPool();
+        this.processApiClient = processApiClient;
     }
 
-    private void logDependencies(String instanceId, Collection<?> deps) {
+    private void logDependencies(UUID instanceId, Collection<?> deps) {
         if (deps == null || deps.isEmpty()) {
             logManager.log(instanceId, "No external dependencies.");
             return;
@@ -105,7 +103,7 @@ public class DefaultJobExecutor implements JobExecutor {
     }
 
     @Override
-    public JobInstance start(String instanceId, Path workDir, String entryPoint) {
+    public JobInstance start(UUID instanceId, Path workDir, String entryPoint) {
         try {
             boolean debugMode = debugMode(workDir);
 
@@ -149,7 +147,7 @@ public class DefaultJobExecutor implements JobExecutor {
         }
     }
 
-    private void checkDependencies(String instanceId, Path workDir, Collection<DependencyEntity> resolvedDepEntities) throws IOException {
+    private void checkDependencies(UUID instanceId, Path workDir, Collection<DependencyEntity> resolvedDepEntities) throws IOException {
         Map<String, Object> policyRules = readPolicyRules(workDir);
         if (policyRules.isEmpty()) {
             return;
@@ -170,7 +168,7 @@ public class DefaultJobExecutor implements JobExecutor {
         }
     }
 
-    private Integer exec(String instanceId, Path workDir, Process proc, Path payloadDir) {
+    private Integer exec(UUID instanceId, Path workDir, Process proc, Path payloadDir) {
         try {
             try {
                 logManager.log(instanceId, proc.getInputStream());
@@ -213,7 +211,7 @@ public class DefaultJobExecutor implements JobExecutor {
         }
     }
 
-    private ProcessEntry fork(String instanceId, Path workDir, String[] cmd) throws ExecutionException {
+    private ProcessEntry fork(UUID instanceId, Path workDir, String[] cmd) throws ExecutionException {
         HashCode hc = hash(cmd);
 
         ProcessEntry entry = pool.take(hc, () -> {
@@ -233,11 +231,11 @@ public class DefaultJobExecutor implements JobExecutor {
         return entry;
     }
 
-    private JobInstance createJobInstance(String instanceId, Path workDir, Process proc, CompletableFuture<?> f) {
+    private JobInstance createJobInstance(UUID instanceId, Path workDir, Process proc, CompletableFuture<?> f) {
         return new JobInstance() {
 
             @Override
-            public String instanceId() {
+            public UUID instanceId() {
                 return instanceId;
             }
 
@@ -270,7 +268,7 @@ public class DefaultJobExecutor implements JobExecutor {
         };
     }
 
-    private ProcessEntry startOneTime(String instanceId, Path workDir, String[] cmd) throws IOException {
+    private ProcessEntry startOneTime(UUID instanceId, Path workDir, String[] cmd) throws IOException {
         Path procDir = IOUtils.createTempDir("onetime");
 
         Path payloadDir = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
@@ -310,7 +308,7 @@ public class DefaultJobExecutor implements JobExecutor {
         return new ProcessEntry(p, workDir);
     }
 
-    private void handleError(String id, Path workDir, Process proc, String error) {
+    private void handleError(UUID id, Path workDir, Process proc, String error) {
         log.warn("handleError ['{}', '{}'] -> execution error: {}", id, workDir, error);
         logManager.log(id, "Error: " + error);
 
@@ -451,7 +449,7 @@ public class DefaultJobExecutor implements JobExecutor {
         return result;
     }
 
-    private void postProcess(String instanceId, Path payloadDir) throws ExecutionException {
+    private void postProcess(UUID instanceId, Path payloadDir) throws ExecutionException {
         Path attachmentsDir = payloadDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
         if (!Files.exists(attachmentsDir)) {
             return;
@@ -466,9 +464,8 @@ public class DefaultJobExecutor implements JobExecutor {
                 IOUtils.zip(zip, attachmentsDir);
             }
 
-            JobQueue q = client.getJobQueue();
-            q.uploadAttachments(instanceId, tmp);
-        } catch (IOException | ClientException e) {
+            processApiClient.uploadAttachments(instanceId, tmp);
+        } catch (IOException | ApiException e) {
             throw new ExecutionException("Error while processing the attachments: " + instanceId, e);
         } finally {
             if (tmp != null) {
@@ -506,9 +503,9 @@ public class DefaultJobExecutor implements JobExecutor {
         return !Files.exists(workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME));
     }
 
-    private static void writeInstanceId(String instanceId, Path dst) throws IOException {
+    private static void writeInstanceId(UUID instanceId, Path dst) throws IOException {
         Path idPath = dst.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
-        Files.write(idPath, instanceId.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.SYNC);
+        Files.write(idPath, instanceId.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.SYNC);
     }
 
     private static HashCode hash(String[] as) {

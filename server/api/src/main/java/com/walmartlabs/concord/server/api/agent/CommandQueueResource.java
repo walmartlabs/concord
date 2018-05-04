@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.rpc;
+package com.walmartlabs.concord.server.api.agent;
 
 /*-
  * *****
@@ -20,9 +20,18 @@ package com.walmartlabs.concord.rpc;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.ClientException;
+import io.swagger.annotations.*;
 
-public interface CommandQueue {
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 
-    void stream(CommandHandler handler) throws ClientException;
+@Api(value = "CommandQueue", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Path("/api/v1/command/queue")
+public interface CommandQueueResource {
+
+    @GET
+    @ApiOperation(value = "Take command from queue")
+    @Path("/take/{agentId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    CommandEntry take(@PathParam("agentId") String agentId);
 }

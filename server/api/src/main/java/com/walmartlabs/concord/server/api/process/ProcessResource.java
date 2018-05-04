@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.api.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,8 +48,8 @@ public interface ProcessResource {
      * @param in
      * @param parentInstanceId
      * @param sync
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      */
     @POST
     @ApiOperation("Start a new process instance using the supplied payload archive")
@@ -67,8 +67,8 @@ public interface ProcessResource {
      * @param entryPoint
      * @param parentInstanceId
      * @param sync
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      */
     @POST
     @ApiOperation("Start a new process using the specified entry point")
@@ -87,8 +87,8 @@ public interface ProcessResource {
      * @param req
      * @param parentInstanceId
      * @param sync
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      */
     @POST
     @ApiOperation("Start a new process using the specified entry point and provided configuration")
@@ -126,8 +126,8 @@ public interface ProcessResource {
      * @param input
      * @param parentInstanceId
      * @param sync
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      */
     @POST
     @ApiOperation("Start a new process using the specified entry point and multipart request data")
@@ -148,8 +148,8 @@ public interface ProcessResource {
      * @param in
      * @param parentInstanceId
      * @param sync
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      * @return
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
      */
     @POST
     @ApiOperation("Start a new process using the specified entry point and payload archive")
@@ -303,7 +303,21 @@ public interface ProcessResource {
                             @ApiParam @QueryParam("tags") Set<String> tags);
 
     /**
-     * Retrieves a process log.
+     * Updates a process' status
+     *
+     * @param instanceId
+     * @param status
+     */
+    @POST
+    @ApiOperation("Update process status")
+    @Path("{id}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    void updateStatus(@ApiParam @PathParam("id") UUID instanceId,
+                      @ApiParam(required = true) @QueryParam("agentId") String agentId,
+                      @ApiParam(required = true) ProcessStatus status);
+
+    /**
+     * Retrieves a process' log.
      *
      * @param instanceId
      * @param range
@@ -316,8 +330,20 @@ public interface ProcessResource {
     Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                     @HeaderParam("range") String range);
 
+
     /**
-     * Downloads a process state snapshot.
+     * Appends a process' log.
+     *
+     * @param instanceId
+     * @param data
+     */
+    @POST
+    @Path("{id}/log")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    void appendLog(@PathParam("id") UUID instanceId, InputStream data);
+
+    /**
+     * Downloads the state snapshot of a process.
      */
     @GET
     @ApiOperation("Download a process state snapshot")
@@ -331,4 +357,15 @@ public interface ProcessResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response downloadState(@ApiParam @PathParam("id") UUID instanceId,
                            @ApiParam @PathParam("name") @NotNull @Size(min = 1) String fileName);
+
+    /**
+     * Upload process attachments.
+     *
+     * @param instanceId
+     * @param data
+     */
+    @POST
+    @Path("{id}/attachment")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    void uploadAttachments(@PathParam("id") UUID instanceId, InputStream data);
 }

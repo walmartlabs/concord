@@ -22,7 +22,6 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
-import com.walmartlabs.concord.rpc.AgentApiClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +31,6 @@ import java.util.concurrent.Executors;
 public class ServerConnector {
 
     private static final Logger log = LoggerFactory.getLogger(ServerConnector.class);
-
-    private AgentApiClient client;
 
     private Thread[] workers;
     private Thread executionCleanup;
@@ -48,22 +45,21 @@ public class ServerConnector {
         int port = cfg.getServerRpcPort();
         int workersCount = cfg.getWorkersCount();
 
-        client = new AgentApiClient(agentId, host, port);
         log.info("start -> connecting to {}:{}", host, port);
 
-        ExecutionManager executionManager = new ExecutionManager(client, cfg);
+        ExecutionManager executionManager = new ExecutionManager(cfg);
 
         executionCleanup = new Thread(new ExecutionStatusCleanup(executionManager),
                 "execution-status-cleanup");
         executionCleanup.start();
 
-        commandHandler = new Thread(new CommandHandler(client, executionManager, Executors.newCachedThreadPool()),
+        commandHandler = new Thread(new CommandHandler(new CommandQueueClient(cfg), executionManager, Executors.newCachedThreadPool()),
                 "command-handler");
         commandHandler.start();
 
         workers = new Thread[workersCount];
         for (int i = 0; i < workersCount; i++) {
-            Worker w = new Worker(client, executionManager, cfg.getLogMaxDelay());
+            Worker w = new Worker(new ProcessApiClient(cfg), new JobQueueClient(cfg), executionManager, cfg.getLogMaxDelay());
             Thread t = new Thread(w, "worker-" + i);
             workers[i] = t;
         }
@@ -107,11 +103,6 @@ public class ServerConnector {
                 w.interrupt();
             }
             workers = null;
-        }
-
-        if (client != null) {
-            client.stop();
-            client = null;
         }
 
         if (executionCleanup != null) {

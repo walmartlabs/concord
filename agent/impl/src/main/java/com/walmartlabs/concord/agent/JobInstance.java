@@ -21,11 +21,12 @@ package com.walmartlabs.concord.agent;
  */
 
 import java.nio.file.Path;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface JobInstance {
 
-    String instanceId();
+    UUID instanceId();
 
     Path workDir();
 

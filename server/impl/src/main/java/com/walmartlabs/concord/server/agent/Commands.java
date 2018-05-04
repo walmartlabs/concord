@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.rpc;
+package com.walmartlabs.concord.server.agent;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,22 @@ package com.walmartlabs.concord.rpc;
  * =====
  */
 
-public interface Command {
+import com.walmartlabs.concord.server.api.CommandType;
 
-    CommandType getType();
+import java.util.HashMap;
+import java.util.Map;
+
+public final class Commands {
+
+    public static final String TYPE_KEY = "type";
+
+    public static final String INSTANCE_ID_KEY = "instanceId";
+
+    public static Map<String, Object> cancel(String instanceId) {
+        Map<String, Object> m = new HashMap<>();
+        m.put(TYPE_KEY, CommandType.CANCEL_JOB);
+        m.put(INSTANCE_ID_KEY, instanceId);
+        return m;
+    }
+
 }

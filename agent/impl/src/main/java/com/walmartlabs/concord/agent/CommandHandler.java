@@ -22,21 +22,24 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.rpc.*;
 import com.walmartlabs.concord.sdk.ClientException;
+import com.walmartlabs.concord.server.api.CommandType;
+import com.walmartlabs.concord.server.api.agent.CommandEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 public class CommandHandler implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
-    private static final long RETRY_DELAY = 5000;
+    private static final long ERROR_DELAY = 5000;
 
-    private final AgentApiClient client;
+    private final CommandQueueClient client;
     private final ExecutionManager executionManager;
     private final ExecutorService executor;
 
-    public CommandHandler(AgentApiClient client, ExecutionManager executionManager, ExecutorService executor) {
+    public CommandHandler(CommandQueueClient client, ExecutionManager executionManager, ExecutorService executor) {
         this.client = client;
         this.executionManager = executionManager;
         this.executor = executor;
@@ -44,35 +47,26 @@ public class CommandHandler implements Runnable {
 
     @Override
     public void run() {
-        CommandQueue ch = client.getCommandQueue();
-
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                ch.stream(new com.walmartlabs.concord.rpc.CommandHandler() {
-                    @Override
-                    public void onCommand(Command cmd) {
-                        executor.submit(() -> execute(cmd));
-                    }
+                CommandEntry cmd = client.take();
+                if (cmd == null) {
+                    continue;
+                }
 
-                    @Override
-                    public void onError(Throwable t) {
-                        log.warn("run -> error while streaming commands from the server: {}", t.getMessage());
-                    }
-                });
-            } catch (ClientException e) {
-                log.warn("run -> transport error: {}", e.getMessage());
+                executor.submit(() -> execute(cmd));
+            } catch (Exception e) {
+                log.error("run -> command process error: {}", e.getMessage(), e);
+                sleep(ERROR_DELAY);
             }
-
-            sleep(RETRY_DELAY);
         }
     }
 
-    private void execute(Command cmd) {
+    private void execute(CommandEntry cmd) {
         log.info("execute -> got a command: {}", cmd);
 
-        if (cmd instanceof CancelJobCommand) {
-            CancelJobCommand c = (CancelJobCommand) cmd;
-            executionManager.cancel(c.getInstanceId());
+        if (cmd.getType() == CommandType.CANCEL_JOB) {
+            executionManager.cancel(UUID.fromString((String)cmd.getPayload().get("instanceId")));
         } else {
             log.warn("execute -> unsupported command type: " + cmd.getClass());
         }

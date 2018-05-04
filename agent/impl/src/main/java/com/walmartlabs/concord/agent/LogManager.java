@@ -28,6 +28,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 
@@ -41,7 +42,7 @@ public class LogManager {
         this.cfg = cfg;
     }
 
-    public void delete(String id) {
+    public void delete(UUID id) {
         Path f = logFile(id);
         if (Files.exists(f)) {
             try {
@@ -52,7 +53,7 @@ public class LogManager {
         }
     }
 
-    public void log(String id, String log, Object... args) {
+    public void log(UUID id, String log, Object... args) {
         if (args != null && args.length > 0) {
             int last = args.length - 1;
             Object o = args[last];
@@ -74,19 +75,19 @@ public class LogManager {
         }
     }
 
-    public void info(String id, String log, Object... args) {
+    public void info(UUID id, String log, Object... args) {
         log(id, LogUtils.formatMessage(LogLevel.INFO, log, args));
     }
 
-    public void warn(String id, String log, Object... args) {
+    public void warn(UUID id, String log, Object... args) {
         log(id, LogUtils.formatMessage(LogLevel.WARN, log, args));
     }
 
-    public void error(String id, String log, Object... args) {
+    public void error(UUID id, String log, Object... args) {
         log(id, LogUtils.formatMessage(LogLevel.ERROR, log, args));
     }
 
-    public void log(String id, InputStream src) throws IOException {
+    public void log(UUID id, InputStream src) throws IOException {
         Path f = logFile(id);
         try (OutputStream dst = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
              BufferedReader reader = new BufferedReader(new InputStreamReader(src))) {
@@ -100,7 +101,7 @@ public class LogManager {
         }
     }
 
-    public void touch(String id) {
+    public void touch(UUID id) {
         Path f = logFile(id);
         if (!Files.exists(f)) {
             try {
@@ -112,11 +113,11 @@ public class LogManager {
         }
     }
 
-    public Path open(String id) {
+    public Path open(UUID id) {
         return logFile(id);
     }
 
-    private void log(String id, String message) {
+    private void log(UUID id, String message) {
         Path f = logFile(id);
         try (OutputStream out = Files.newOutputStream(f, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
             out.write(message.getBytes());
@@ -126,7 +127,7 @@ public class LogManager {
         }
     }
 
-    private Path logFile(String id) {
+    private Path logFile(UUID id) {
         Path baseDir = cfg.getLogDir();
         return baseDir.resolve(id + ".log");
     }

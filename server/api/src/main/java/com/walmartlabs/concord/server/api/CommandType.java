@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.rpc;
+package com.walmartlabs.concord.server.api;
 
 /*-
  * *****
@@ -20,9 +20,7 @@ package com.walmartlabs.concord.rpc;
  * =====
  */
 
-public enum JobType {
+public enum CommandType {
 
-    JAR,
-    RUNNER,
-    JUNIT_GROOVY
+    CANCEL_JOB
 }
