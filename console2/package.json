@@ -81,5 +81,5 @@
         "build-storybook": "build-storybook",
         "deploy-storybook": "storybook-to-ghpages"
     },
-    "proxy": "https://concord.dev.walmart.com"
+    "proxy": "http://localhost:8001"
 }
