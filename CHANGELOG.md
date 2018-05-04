@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: a button to download raw process log. 
+
 ### Changed
 
 - concord-console: new UI layout.

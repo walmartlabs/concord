@@ -17,7 +17,6 @@ interface StateProps {
     loading: boolean;
     data: string[];
     error: RequestError;
-    length: number;
     completed: boolean;
 }
 
@@ -39,7 +38,6 @@ const mapStateToProps = ({ processes: { log } }: StateType): StateProps => ({
     loading: log.getLog.running,
     error: log.getLog.error,
     data: log.data,
-    length: log.length,
     completed: log.completed
 });
 
