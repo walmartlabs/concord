@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: new UI layout.
+
+
+
 ## [0.68.0] - 2018-05-04
 
 ### Added
