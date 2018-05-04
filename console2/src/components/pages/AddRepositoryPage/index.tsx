@@ -2,8 +2,9 @@ import * as React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
 import { Breadcrumb, Container, Header, Segment } from 'semantic-ui-react';
-import { ConcordKey } from '../../../api/common';
 
+import { ConcordKey } from '../../../api/common';
+import { BreadcrumbSegment } from '../../molecules';
 import { EditRepositoryActivity } from '../../organisms';
 
 interface RouteProps {
@@ -17,17 +18,15 @@ class AddRepositoryPage extends React.PureComponent<RouteComponentProps<RoutePro
 
         return (
             <>
-                <Segment basic={true}>
-                    <Breadcrumb size="big">
-                        <Breadcrumb.Section>
-                            <Link to={`/org/${orgName}/project/${projectName}/repository`}>
-                                {projectName}
-                            </Link>
-                        </Breadcrumb.Section>
-                        <Breadcrumb.Divider />
-                        <Breadcrumb.Section active={true}>Add Repository</Breadcrumb.Section>
-                    </Breadcrumb>
-                </Segment>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section>
+                        <Link to={`/org/${orgName}/project/${projectName}/repository`}>
+                            {projectName}
+                        </Link>
+                    </Breadcrumb.Section>
+                    <Breadcrumb.Divider />
+                    <Breadcrumb.Section active={true}>Add Repository</Breadcrumb.Section>
+                </BreadcrumbSegment>
 
                 <Segment basic={true}>
                     <Container text={true}>

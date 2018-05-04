@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Breadcrumb, Icon, Menu, Segment } from 'semantic-ui-react';
+import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
+import { BreadcrumbSegment } from '../../molecules';
 import { ProcessLogActivity, ProcessStatusActivity } from '../../organisms';
 import { NotFoundPage } from '../index';
 
@@ -32,15 +33,13 @@ class ProcessPage extends React.PureComponent<RouteComponentProps<Props>> {
 
         return (
             <>
-                <Segment basic={true}>
-                    <Breadcrumb size="big">
-                        <Breadcrumb.Section>
-                            <Link to={`/process`}>Processes</Link>
-                        </Breadcrumb.Section>
-                        <Breadcrumb.Divider />
-                        <Breadcrumb.Section active={true}>{instanceId}</Breadcrumb.Section>
-                    </Breadcrumb>
-                </Segment>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section>
+                        <Link to={`/process`}>Processes</Link>
+                    </Breadcrumb.Section>
+                    <Breadcrumb.Divider />
+                    <Breadcrumb.Section active={true}>{instanceId}</Breadcrumb.Section>
+                </BreadcrumbSegment>
 
                 <Menu tabular={true}>
                     <Menu.Item active={activeTab === 'status'}>

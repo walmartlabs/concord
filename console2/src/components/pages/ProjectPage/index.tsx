@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Breadcrumb, Icon, Menu, Segment } from 'semantic-ui-react';
+import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
+import { BreadcrumbSegment } from '../../molecules';
 import { ProcessList, RedirectButton, RepositoryList } from '../../organisms';
 import { NotFoundPage } from '../index';
 
@@ -34,15 +35,13 @@ class ProjectPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
 
         return (
             <>
-                <Segment basic={true}>
-                    <Breadcrumb size="big">
-                        <Breadcrumb.Section>
-                            <Link to={`/org/${orgName}`}>{orgName}</Link>
-                        </Breadcrumb.Section>
-                        <Breadcrumb.Divider />
-                        <Breadcrumb.Section active={true}>{projectName}</Breadcrumb.Section>
-                    </Breadcrumb>
-                </Segment>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section>
+                        <Link to={`/org/${orgName}`}>{orgName}</Link>
+                    </Breadcrumb.Section>
+                    <Breadcrumb.Divider />
+                    <Breadcrumb.Section active={true}>{projectName}</Breadcrumb.Section>
+                </BreadcrumbSegment>
 
                 <Route path={`${url}/^(repository)`}>
                     <Menu tabular={true}>

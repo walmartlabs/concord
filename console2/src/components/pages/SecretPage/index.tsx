@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Breadcrumb, Icon, Menu, Segment } from 'semantic-ui-react';
+import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
+import { BreadcrumbSegment } from '../../molecules';
 import { SecretInfo } from '../../organisms';
 import { NotFoundPage } from '../index';
 
@@ -33,15 +34,13 @@ class SecretPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
 
         return (
             <>
-                <Segment basic={true}>
-                    <Breadcrumb size="big">
-                        <Breadcrumb.Section>
-                            <Link to={`/org/${orgName}/secret`}>{orgName}</Link>
-                        </Breadcrumb.Section>
-                        <Breadcrumb.Divider />
-                        <Breadcrumb.Section active={true}>{secretName}</Breadcrumb.Section>
-                    </Breadcrumb>
-                </Segment>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section>
+                        <Link to={`/org/${orgName}/secret`}>{orgName}</Link>
+                    </Breadcrumb.Section>
+                    <Breadcrumb.Divider />
+                    <Breadcrumb.Section active={true}>{secretName}</Breadcrumb.Section>
+                </BreadcrumbSegment>
 
                 <Route path={`${url}/^(repository)`}>
                     <Menu tabular={true}>

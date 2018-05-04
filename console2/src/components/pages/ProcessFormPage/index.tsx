@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Breadcrumb, Segment } from 'semantic-ui-react';
+import { Breadcrumb } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
+import { BreadcrumbSegment } from '../../molecules';
 import { ProcessFormActivity } from '../../organisms';
 
 interface Props {
@@ -18,19 +19,17 @@ class ProcessFormPage extends React.PureComponent<RouteComponentProps<Props>> {
 
         return (
             <>
-                <Segment basic={true}>
-                    <Breadcrumb size="big">
-                        <Breadcrumb.Section>
-                            <Link to={`/process`}>Processes</Link>
-                        </Breadcrumb.Section>
-                        <Breadcrumb.Divider />
-                        <Breadcrumb.Section>
-                            <Link to={`/process/${processInstanceId}`}>{processInstanceId}</Link>
-                        </Breadcrumb.Section>
-                        <Breadcrumb.Divider />
-                        <Breadcrumb.Section active={true}>Form</Breadcrumb.Section>
-                    </Breadcrumb>
-                </Segment>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section>
+                        <Link to={`/process`}>Processes</Link>
+                    </Breadcrumb.Section>
+                    <Breadcrumb.Divider />
+                    <Breadcrumb.Section>
+                        <Link to={`/process/${processInstanceId}`}>{processInstanceId}</Link>
+                    </Breadcrumb.Section>
+                    <Breadcrumb.Divider />
+                    <Breadcrumb.Section active={true}>Form</Breadcrumb.Section>
+                </BreadcrumbSegment>
 
                 <ProcessFormActivity
                     processInstanceId={processInstanceId}

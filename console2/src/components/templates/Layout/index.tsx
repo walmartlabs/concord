@@ -4,6 +4,8 @@ import { Grid } from 'semantic-ui-react';
 
 import { TopBar } from '../../organisms';
 
+import './styles.css';
+
 type Props = RouteComponentProps<{}>;
 
 class Layout extends React.PureComponent<Props> {
@@ -18,7 +20,9 @@ class Layout extends React.PureComponent<Props> {
                         <TopBar />
                     </Grid.Column>
                 )}
-                <Grid.Column width={11}>{this.props.children}</Grid.Column>
+                <Grid.Column width={11} className="contentColumn">
+                    {this.props.children}
+                </Grid.Column>
             </Grid>
         );
     }

@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Breadcrumb, Icon, Menu, Segment } from 'semantic-ui-react';
+import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
+import { BreadcrumbSegment } from '../../molecules';
 import { ProcessList, ProjectList, RedirectButton, SecretList } from '../../organisms';
 import { NotFoundPage } from '../index';
 
@@ -33,15 +34,13 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
 
         return (
             <>
-                <Segment basic={true}>
-                    <Breadcrumb size="big">
-                        <Breadcrumb.Section>
-                            <Link to="/org">Organizations</Link>
-                        </Breadcrumb.Section>
-                        <Breadcrumb.Divider />
-                        <Breadcrumb.Section active={true}>{orgName}</Breadcrumb.Section>
-                    </Breadcrumb>
-                </Segment>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section>
+                        <Link to="/org">Organizations</Link>
+                    </Breadcrumb.Section>
+                    <Breadcrumb.Divider />
+                    <Breadcrumb.Section active={true}>{orgName}</Breadcrumb.Section>
+                </BreadcrumbSegment>
 
                 <Menu tabular={true}>
                     <Menu.Item active={activeTab === 'project'}>

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Breadcrumb, Container, Header, Segment } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
+import { BreadcrumbSegment } from '../../molecules';
 import { NewSecretActivity } from '../../organisms';
 
 interface RouteProps {
@@ -16,15 +17,13 @@ class NewSecretPage extends React.PureComponent<RouteComponentProps<RouteProps>>
 
         return (
             <>
-                <Segment basic={true}>
-                    <Breadcrumb size="big">
-                        <Breadcrumb.Section>
-                            <Link to={`/org/${orgName}/secret`}>{orgName}</Link>
-                        </Breadcrumb.Section>
-                        <Breadcrumb.Divider />
-                        <Breadcrumb.Section active={true}>New Secret</Breadcrumb.Section>
-                    </Breadcrumb>
-                </Segment>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section>
+                        <Link to={`/org/${orgName}/secret`}>{orgName}</Link>
+                    </Breadcrumb.Section>
+                    <Breadcrumb.Divider />
+                    <Breadcrumb.Section active={true}>New Secret</Breadcrumb.Section>
+                </BreadcrumbSegment>
 
                 <Segment basic={true}>
                     <Container text={true}>

@@ -2,6 +2,7 @@ export { default as AnsibleHostList } from './AnsibleHostList';
 export { default as AnsibleStatChart } from './AnsibleStatChart';
 export { default as AnsibleStats } from './AnsibleStats';
 export { default as AnsibleTaskList } from './AnsibleTaskList';
+export { default as BreadcrumbSegment } from './BreadcrumbSegment';
 export { default as DonutChart } from './DonutChart';
 export { default as GlobalNavMenu, GlobalNavTab } from './GlobalNavMenu';
 export { default as RepositoryForm, RepositoryFormValues } from './RepositoryForm';
