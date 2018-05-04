@@ -28,7 +28,7 @@
         <module>plugins</module>
         <module>server</module>
         <module>agent</module>
-        <module>console</module>
+        <module>console2</module>
         <module>docker-images</module>
         <module>it</module>
     </modules>

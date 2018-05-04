@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,7 +50,6 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     private final EventResource eventResource;
     private final ProjectDao projectDao;
     private final RepositoryManager repositoryManager;
-    private final RepositoryDao repositoryDao;
 
     @Inject
     public RepositoryResourceImpl(OrganizationManager orgManager,
@@ -58,8 +57,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
                                   RepositoryCacheDao repositoryCacheDao,
                                   EventResource eventResource,
                                   ProjectDao projectDao,
-                                  RepositoryManager repositoryManager,
-                                  RepositoryDao repositoryDao) {
+                                  RepositoryManager repositoryManager) {
 
         this.orgManager = orgManager;
         this.accessManager = accessManager;
@@ -67,7 +65,6 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
         this.eventResource = eventResource;
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
-        this.repositoryDao = repositoryDao;
     }
 
     @Override
@@ -81,6 +78,20 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
 
         repositoryManager.createOrUpdate(projectId, entry);
         return new GenericOperationResult(entry.getId() == null ? OperationResult.CREATED : OperationResult.UPDATED);
+    }
+
+    @Override
+    public GenericOperationResult delete(String orgName, String projectName, String repositoryName) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+
+        UUID projectId = projectDao.getId(org.getId(), projectName);
+        if (projectId == null) {
+            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+        }
+
+        repositoryManager.delete(projectId, repositoryName);
+
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     @Override

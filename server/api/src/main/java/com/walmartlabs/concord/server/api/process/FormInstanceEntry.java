@@ -39,20 +39,23 @@ public class FormInstanceEntry implements Serializable {
     private final String formInstanceId;
     private final String name;
     private final List<Field> fields;
-    private final boolean isCustomForm;
+    private final boolean custom;
+    private final boolean yield;
 
     @JsonCreator
     public FormInstanceEntry(@JsonProperty("processInstanceId") String processInstanceId,
                              @JsonProperty("formInstanceId") String formInstanceId,
                              @JsonProperty("name") String name,
                              @JsonProperty("fields") List<Field> fields,
-                             @JsonProperty("isCustomForm") boolean isCustomForm) {
+                             @JsonProperty("custom") boolean custom,
+                             @JsonProperty("yield") boolean yield) {
 
         this.processInstanceId = processInstanceId;
         this.formInstanceId = formInstanceId;
         this.name = name;
         this.fields = fields;
-        this.isCustomForm = isCustomForm;
+        this.custom = custom;
+        this.yield = yield;
     }
 
     public String getProcessInstanceId() {
@@ -71,8 +74,24 @@ public class FormInstanceEntry implements Serializable {
         return fields;
     }
 
-    public boolean isCustomForm() {
-        return isCustomForm;
+    public boolean isCustom() {
+        return custom;
+    }
+
+    public boolean isYield() {
+        return yield;
+    }
+
+    @Override
+    public String toString() {
+        return "FormInstanceEntry{" +
+                "processInstanceId='" + processInstanceId + '\'' +
+                ", formInstanceId='" + formInstanceId + '\'' +
+                ", name='" + name + '\'' +
+                ", fields=" + fields +
+                ", custom=" + custom +
+                ", yield=" + yield +
+                '}';
     }
 
     @JsonInclude(Include.NON_NULL)
@@ -128,6 +147,19 @@ public class FormInstanceEntry implements Serializable {
 
         public Map<String, Object> getOptions() {
             return options;
+        }
+
+        @Override
+        public String toString() {
+            return "Field{" +
+                    "name='" + name + '\'' +
+                    ", label='" + label + '\'' +
+                    ", type='" + type + '\'' +
+                    ", cardinality=" + cardinality +
+                    ", value=" + value +
+                    ", allowedValue=" + allowedValue +
+                    ", options=" + options +
+                    '}';
         }
     }
 

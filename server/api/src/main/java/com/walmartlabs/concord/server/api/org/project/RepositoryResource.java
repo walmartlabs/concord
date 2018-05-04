@@ -44,6 +44,14 @@ public interface RepositoryResource {
                                           @ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                           @ApiParam @Valid RepositoryEntry entry);
 
+    @DELETE
+    @ApiOperation("Delete an existing repository")
+    @Path("/{orgName}/project/{projectName}/repository/{repositoryName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                  @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                  @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
+
     /**
      * Refresh a repository.
      *

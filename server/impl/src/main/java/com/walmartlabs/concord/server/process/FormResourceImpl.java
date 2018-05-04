@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.api.process.FormResource;
 import com.walmartlabs.concord.server.api.process.FormSubmitResponse;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
-import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
@@ -88,9 +87,11 @@ public class FormResourceImpl implements FormResource, Resource {
         }
 
         Map<String, Object> extra = null;
+        boolean yield = false;
         Map<String, Object> opts = form.getOptions();
         if (opts != null) {
             extra = (Map<String, Object>) opts.get("values");
+            yield = (boolean) opts.getOrDefault("yield", false);
         }
 
         if (extra != null) {
@@ -120,7 +121,8 @@ public class FormResourceImpl implements FormResource, Resource {
         String name = fd.getName();
         String resourcePath = FORMS_RESOURCES_PATH + "/" + name;
         boolean isCustomForm = formService.exists(processInstanceId, resourcePath);
-        return new FormInstanceEntry(pbk, fiid, name, fields, isCustomForm);
+
+        return new FormInstanceEntry(pbk, fiid, name, fields, isCustomForm, yield);
     }
 
     private static FormInstanceEntry.Cardinality map(FormField.Cardinality c) {

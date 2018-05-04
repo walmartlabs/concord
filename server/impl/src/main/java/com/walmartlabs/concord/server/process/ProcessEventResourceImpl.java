@@ -66,10 +66,10 @@ public class ProcessEventResourceImpl implements ProcessEventResource, Resource 
     }
 
     @Override
-    public List<ProcessEventEntry> list(UUID processInstanceId, IsoDateParam afterTimestamp, int limit) {
+    public List<ProcessEventEntry> list(UUID processInstanceId, IsoDateParam geTimestamp, int limit) {
         Timestamp ts = null;
-        if (afterTimestamp != null) {
-            ts = Timestamp.from(afterTimestamp.getValue().toInstant());
+        if (geTimestamp != null) {
+            ts = Timestamp.from(geTimestamp.getValue().toInstant());
         }
         return eventDao.list(processInstanceId, ts, limit);
     }

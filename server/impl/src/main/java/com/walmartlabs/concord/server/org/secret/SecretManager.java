@@ -48,10 +48,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.util.Collection;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -238,7 +235,7 @@ public class SecretManager {
         }
 
         SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
-        assertEncryptedByType(name, providedEncryptedByType, entry.getEncryptedByType());
+        assertEncryptedByType(name, providedEncryptedByType, entry.getEncryptedBy());
 
         byte[] data = getSecretStore(entry.getStoreType()).get(entry.getId());
         if (data == null) {

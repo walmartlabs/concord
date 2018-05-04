@@ -265,6 +265,7 @@ public class ConcordFormService {
         return (Boolean) v;
     }
 
+    @SuppressWarnings("unchecked")
     private static Map<String, Object> getMap(Map<String, Object> m, String key, Map<String, Object> defaultValue) {
         if (m == null) {
             return defaultValue;

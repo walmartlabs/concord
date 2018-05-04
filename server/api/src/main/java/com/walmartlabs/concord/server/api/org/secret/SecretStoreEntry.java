@@ -30,6 +30,7 @@ import java.io.Serializable;
 
 @JsonInclude(Include.NON_NULL)
 public class SecretStoreEntry implements Serializable{
+
     @NotNull
     private final SecretStoreType storeType;
     @NotNull

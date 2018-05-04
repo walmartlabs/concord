@@ -59,6 +59,6 @@ public interface ProcessEventResource {
     @Path("/{processInstanceId}/event")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                                 @ApiParam @QueryParam("after") IsoDateParam afterTimestamp,
+                                 @ApiParam @QueryParam("after") IsoDateParam geTimestamp,
                                  @ApiParam @QueryParam("limit") @DefaultValue("-1") int limit);
 }

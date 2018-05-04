@@ -43,7 +43,7 @@ public class EventDao extends AbstractDao {
         super(cfg);
     }
 
-    public List<ProcessEventEntry> list(UUID instanceId, Timestamp afterTimestamp, int limit) {
+    public List<ProcessEventEntry> list(UUID instanceId, Timestamp geTimestamp, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
 
             SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx
@@ -54,8 +54,8 @@ public class EventDao extends AbstractDao {
                     .from(PROCESS_EVENTS)
                     .where(PROCESS_EVENTS.INSTANCE_ID.eq(instanceId));
 
-            if (afterTimestamp != null) {
-                q.and(PROCESS_EVENTS.EVENT_DATE.greaterThan(afterTimestamp));
+            if (geTimestamp != null) {
+                q.and(PROCESS_EVENTS.EVENT_DATE.ge(geTimestamp));
             }
 
             if (limit > 0) {

@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-console</artifactId>
+            <artifactId>concord-console2</artifactId>
             <version>${project.version}</version>
             <type>tar.gz</type>
             <classifier>dist</classifier>
@@ -43,7 +43,7 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord</groupId>
-                                    <artifactId>concord-console</artifactId>
+                                    <artifactId>concord-console2</artifactId>
                                     <version>${project.version}</version>
                                     <type>tar.gz</type>
                                     <classifier>dist</classifier>

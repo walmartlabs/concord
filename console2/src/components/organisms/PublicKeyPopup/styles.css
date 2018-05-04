@@ -1,0 +1,6 @@
+.publicKeyData {
+  width: 100%;
+  min-width: 500px !important;
+  font-family: monospace;
+  margin-top: 5px;
+}

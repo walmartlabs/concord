@@ -107,11 +107,6 @@ public class ElementEventProcessor {
         private final Map<String, Object> params;
 
         public ProcessElementEvent(
-                String processDefinitionId, String elementId, int line, int column, String description) {
-            this(processDefinitionId, elementId, line, column, description, null);
-        }
-
-        public ProcessElementEvent(
                 String processDefinitionId, String elementId, int line, int column, String description,
                 Map<String, Object> params) {
             this.processDefinitionId = processDefinitionId;

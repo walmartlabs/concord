@@ -51,7 +51,7 @@ public class SecretEntry implements Serializable {
     @NotNull
     private final SecretStoreType storeType;
 
-    private final SecretEncryptedByType encryptedByType;
+    private final SecretEncryptedByType encryptedBy;
 
     private final SecretVisibility visibility;
 
@@ -63,7 +63,7 @@ public class SecretEntry implements Serializable {
                        @JsonProperty("orgId") UUID orgId,
                        @JsonProperty("orgName") String orgName,
                        @JsonProperty("type") SecretType type,
-                       @JsonProperty("encryptedBy") SecretEncryptedByType encryptedByType,
+                       @JsonProperty("encryptedBy") SecretEncryptedByType encryptedBy,
                        @JsonProperty("storeType") SecretStoreType storeType,
                        @JsonProperty("visibility") SecretVisibility visibility,
                        @JsonProperty("owner") SecretOwner owner) {
@@ -73,7 +73,7 @@ public class SecretEntry implements Serializable {
         this.orgId = orgId;
         this.orgName = orgName;
         this.type = type;
-        this.encryptedByType = encryptedByType;
+        this.encryptedBy = encryptedBy;
         this.storeType = storeType;
         this.visibility = visibility;
         this.owner = owner;
@@ -100,8 +100,8 @@ public class SecretEntry implements Serializable {
     }
 
 
-    public SecretEncryptedByType getEncryptedByType() {
-        return encryptedByType;
+    public SecretEncryptedByType getEncryptedBy() {
+        return encryptedBy;
     }
 
     public SecretStoreType getStoreType() {
@@ -124,7 +124,7 @@ public class SecretEntry implements Serializable {
                 ", orgId=" + orgId +
                 ", orgName='" + orgName + '\'' +
                 ", type=" + type +
-                ", encryptedByType=" + encryptedByType +
+                ", encryptedBy=" + encryptedBy +
                 ", storeType=" + storeType +
                 ", visibility=" + visibility +
                 ", owner=" + owner +

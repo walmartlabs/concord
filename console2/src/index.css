@@ -1,0 +1,36 @@
+html {
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
+body {
+  min-height: 100% !important;
+}
+
+#root {
+  height: 100% !important;
+  min-height: 100% !important;
+  margin-top: 5px;
+}
+
+.maxHeight {
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
+/* Absolute center for modal popups */
+@media only screen and (max-width: 767px) {
+  .ui.modal {
+    position: absolute;
+    top: 50%;
+  }
+}
+@media only screen and (min-width: 768px) {
+  .ui.modal {
+    position: absolute;
+    top: 50%;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+  }
+}

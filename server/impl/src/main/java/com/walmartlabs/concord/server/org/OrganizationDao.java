@@ -142,7 +142,7 @@ public class OrganizationDao extends AbstractDao {
                         .from(TEAMS)
                         .where(TEAMS.TEAM_ID.in(teamIds));
 
-                q.where(or(ORGANIZATIONS.VISIBILITY.eq(OrganizationVisibility.PUBLIC.toString()), ORGANIZATIONS.ORG_ID.in(orgIds)));
+                q.where(ORGANIZATIONS.ORG_ID.in(orgIds));
             }
 
             return q.orderBy(ORGANIZATIONS.ORG_NAME)

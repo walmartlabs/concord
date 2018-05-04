@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import org.jooq.DSLContext;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -95,6 +96,21 @@ public class RepositoryManager {
         }
 
         eventResource.event(Events.CONCORD_EVENT, ev);
+
+        // TODO audit log
+    }
+
+    public void delete(UUID projectId, String repoName) {
+        projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
+
+        UUID repoId = repositoryDao.getId(projectId, repoName);
+        if (repoId == null) {
+            throw new ValidationErrorsException("Repository not found: " + repoName);
+        }
+
+        repositoryDao.delete(repoId);
+
+        // TODO audit log
     }
 
     public void insert(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry entry) {

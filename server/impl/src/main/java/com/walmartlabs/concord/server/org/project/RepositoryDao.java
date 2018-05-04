@@ -106,6 +106,10 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
+    public void delete(UUID repoId) {
+        tx(tx -> delete(tx, repoId));
+    }
+
     public void delete(DSLContext tx, UUID repoId) {
         tx.deleteFrom(REPOSITORIES)
                 .where(REPOSITORIES.REPO_ID.eq(repoId))

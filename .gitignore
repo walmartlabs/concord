@@ -17,8 +17,7 @@
 buildNumber.properties
 console/build
 console/storybook-static
-dependency-reduced-pom.xml
-dependency-reduced-pom.xml
+console2/build
 flow-typed/
 jmeter.log
 nb-configuration.xml
@@ -30,4 +29,5 @@ pom.xml.next
 pom.xml.versionsBackup
 release.properties
 target/
+yarn.lock
 yarn.lock

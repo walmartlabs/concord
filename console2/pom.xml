@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.walmartlabs.concord</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.68.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>concord-console2</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <skipNodeInstall>false</skipNodeInstall>
+        <skipNpmInstall>false</skipNpmInstall>
+        <skipNpmBuild>false</skipNpmBuild>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*.js</include>
+                        <include>**/*.jsx</include>
+                        <include>**/*.ts</include>
+                        <include>**/*.tsx</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install node and npm</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipNodeInstall}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipNpmInstall}</skip>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <REACT_APP_CONCORD_VERSION>${project.version}</REACT_APP_CONCORD_VERSION>
+                            </environmentVariables>
+                            <skip>${skipNpmBuild}</skip>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <installDirectory>target</installDirectory>
+                    <nodeDownloadRoot>https://nodejs.org/dist/</nodeDownloadRoot>
+                    <nodeVersion>v${node.version}</nodeVersion>
+                    <workingDirectory>${basedir}</workingDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <tarLongFileMode>posix</tarLongFileMode>
+                    <descriptors>
+                        <descriptor>${basedir}/assembly/dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>walmart</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>npm install</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>install --registry=https://npme.walmart.com</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <nodeDownloadRoot>http://nexus.prod.walmart.com/nexus/content/repositories/nodejs/</nodeDownloadRoot>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
