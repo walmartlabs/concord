@@ -17,6 +17,10 @@ envs:
 
       CONCORD_API_TOKEN: ENC[T1dy4zsvOVkdoDbFyimDBAAa64/OPXdb04rMfaIHfyY=]
       CONCORD_SECRET_PWD: ENC[kEzaZJe5TNNs02USeRjxvQ==]
+      
+      SERVER_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-server"
+      CONSOLE_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-console"
+      AGENT_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-agent"
 
 triggers:
   - manual:
@@ -37,21 +41,47 @@ flows:
   - dockerImage:
       dockerfile: "docker-images/server/walmart/Dockerfile"
       tags:
-        - "docker.prod.walmart.com/walmartlabs/concord-server:${concord_version}"
+      - "${SERVER_IMAGE_TAG}:${concord_version}"
+      - "${SERVER_IMAGE_TAG}:latest"
       buildArgs:
         concord_version: ${concord_version}
       push: true
   - dockerImage:
       dockerfile: "docker-images/console/walmart/Dockerfile"
       tags:
-        - "docker.prod.walmart.com/walmartlabs/concord-console:${concord_version}"
+      - "${CONSOLE_IMAGE_TAG}:${concord_version}"
+      - "${CONSOLE_IMAGE_TAG}:latest"
       buildArgs:
         concord_version: ${concord_version}
       push: true
   - dockerImage:
       dockerfile: "docker-images/agent/walmart/Dockerfile"
       tags:
-        - "docker.prod.walmart.com/walmartlabs/concord-agent:${concord_version}"
+      - "${AGENT_IMAGE_TAG}:${concord_version}"
+      - "${AGENT_IMAGE_TAG}:latest"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+
+  buildImagesNoLatest:
+  - dockerImage:
+      dockerfile: "docker-images/server/walmart/Dockerfile"
+      tags:
+        - "${SERVER_IMAGE_TAG}:${concord_version}"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+  - dockerImage:
+      dockerfile: "docker-images/console/walmart/Dockerfile"
+      tags:
+        - "${CONSOLE_IMAGE_TAG}:${concord_version}"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+  - dockerImage:
+      dockerfile: "docker-images/agent/walmart/Dockerfile"
+      tags:
+        - "${AGENT_IMAGE_TAG}:${concord_version}"
       buildArgs:
         concord_version: ${concord_version}
       push: true
@@ -67,7 +97,7 @@ flows:
       - ws_snapshot: binaries
         includes: docker-images/**
     - ws_restore: binaries
-    - call: buildImages
+    - call: buildImagesNoLatest
 
   runsonar:
   - sonar("Sonar"):
@@ -103,7 +133,6 @@ flows:
 
   pr:
   - call: build(concord_version = latest-pr-looper)
-#  - call: deployEnv(concord_version = latest-pr-looper)
 
   release:
   - node(docker-daemon):
@@ -116,4 +145,3 @@ flows:
     - ws_restore: binaries
     - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
     - call: buildImages(concord_version = ${RELEASE_VERSION})
-#    - call: deploy(concord_version = latest-pr-looper)
