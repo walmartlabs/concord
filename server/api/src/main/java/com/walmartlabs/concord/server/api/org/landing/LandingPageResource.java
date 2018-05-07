@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
-@Api(value = "Landing page", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Landing page", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public interface LandingPageResource {
 

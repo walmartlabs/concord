@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@Api(value = "Process", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Process", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
 public interface ProcessResource {
 

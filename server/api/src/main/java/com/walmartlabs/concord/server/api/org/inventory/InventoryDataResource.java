@@ -28,7 +28,7 @@ import io.swagger.annotations.Authorization;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-@Api(value = "Inventory", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Inventory", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public interface InventoryDataResource {
 

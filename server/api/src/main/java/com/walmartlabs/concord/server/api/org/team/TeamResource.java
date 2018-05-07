@@ -33,7 +33,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.Collection;
 import java.util.List;
 
-@Api(value = "Teams", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Teams", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public interface TeamResource {
 

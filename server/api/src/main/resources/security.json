@@ -5,6 +5,12 @@
     "name": "Authorization",
     "in": "header"
   },
+  "session_key": {
+    "description": "Process session key",
+    "type": "apiKey",
+    "name": "X-Concord-SessionToken",
+    "in": "header"
+  },
   "ldap": {
     "description": "AD/LDAP username/password",
     "type": "basic",

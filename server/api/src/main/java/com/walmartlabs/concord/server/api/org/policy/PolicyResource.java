@@ -32,7 +32,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api(value = "Policy", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Policy", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/policy")
 public interface PolicyResource {
 

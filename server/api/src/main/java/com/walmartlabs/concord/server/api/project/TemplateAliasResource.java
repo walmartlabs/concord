@@ -31,7 +31,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api(value = "TemplateAlias", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "TemplateAlias", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/template/alias")
 public interface TemplateAliasResource {
 

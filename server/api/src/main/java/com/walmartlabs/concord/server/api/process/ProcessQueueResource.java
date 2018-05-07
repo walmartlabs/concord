@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 
-@Api(value = "ProcessQueue", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "ProcessQueue", authorizations = {@Authorization("api_key")})
 @Path("/api/v1/process/queue")
 public interface ProcessQueueResource {
 

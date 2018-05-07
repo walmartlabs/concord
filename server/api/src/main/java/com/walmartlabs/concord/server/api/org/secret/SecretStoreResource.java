@@ -30,7 +30,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api(value = "Secret stores", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Secret stores", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/secret/store")
 public interface SecretStoreResource {
 

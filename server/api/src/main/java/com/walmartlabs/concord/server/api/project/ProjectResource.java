@@ -40,7 +40,7 @@ import java.util.UUID;
 /**
  * @deprecated prefer {@link com.walmartlabs.concord.server.api.org.project.ProjectResource}
  */
-@Api(value = "Project", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Project", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/project")
 @Deprecated
 public interface ProjectResource {

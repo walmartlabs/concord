@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-@Api(value = "Event", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Event", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
 public interface ProcessEventResource {
 

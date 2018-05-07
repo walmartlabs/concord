@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Api(value = "Triggers", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "Triggers", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public interface TriggerResource {
 

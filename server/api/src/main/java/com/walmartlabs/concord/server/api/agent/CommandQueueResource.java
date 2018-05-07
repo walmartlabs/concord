@@ -25,7 +25,7 @@ import io.swagger.annotations.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-@Api(value = "CommandQueue", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
+@Api(value = "CommandQueue", authorizations = {@Authorization("api_key")})
 @Path("/api/v1/command/queue")
 public interface CommandQueueResource {
 
