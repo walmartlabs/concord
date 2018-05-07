@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: an "in progress" page when the process is started
+using "browser" endpoints;
 - concord-console: a button to download raw process log. 
 
 ### Changed

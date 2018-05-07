@@ -35,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
+import java.util.UUID;
 
 @Api(value = "Processes", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
@@ -72,4 +73,12 @@ public interface ProjectProcessResource {
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                             @ApiParam @PathParam("projectName") @ConcordKey String projectName);
+
+    @POST
+    @ApiOperation("Proceed to next step for the process")
+    @Path("{processInstanceId}/next")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
+    Response proceed(@PathParam("processInstanceId") UUID processInstanceId);
+
 }

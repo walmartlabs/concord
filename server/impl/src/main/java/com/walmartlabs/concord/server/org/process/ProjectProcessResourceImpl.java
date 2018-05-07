@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.process;
  * =====
  */
 
+import com.google.common.base.Strings;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
@@ -41,7 +42,6 @@ import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import io.takari.bpm.api.ExecutionException;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
@@ -57,6 +57,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static javax.ws.rs.core.Response.Status;
 
@@ -67,7 +68,6 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
 
     // TODO replace with pagination
     private static final int DEFAULT_LIST_LIMIT = 100;
-    private static final long STATUS_REFRESH_DELAY = 250;
 
     private final ProcessManager processManager;
     private final OrganizationManager orgManager;
@@ -162,54 +162,97 @@ public class ProjectProcessResourceImpl implements ProjectProcessResource, Resou
                     .configuration(req)
                     .build();
 
-            processManager.start(payload, false);
+            Thread processStartThread = new Thread(() -> processManager.start(payload, false));
+            processStartThread.start();
+
+            waitTillProcessIsInitialized(instanceId);
         } catch (Exception e) {
             return processError(instanceId, e.getMessage());
         }
 
-        while (true) {
-            ProcessEntry psr = getProcess(instanceId);
-            ProcessStatus status = psr.getStatus();
+        return proceed(instanceId);
+    }
 
-            if (status == ProcessStatus.SUSPENDED) {
-                break;
-            } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
-                return processError(instanceId, "Process failed");
-            } else if (status == ProcessStatus.FINISHED) {
-                return processFinished(instanceId);
+    @Override
+    public Response proceed(UUID processInstanceId)
+    {
+        ProcessEntry entry = queueDao.get(processInstanceId);
+
+        ProcessStatus processStatus = entry.getStatus();
+
+        if (processStatus == ProcessStatus.FAILED || processStatus == ProcessStatus.CANCELLED) {
+            return processError(processInstanceId, "Process failed");
+
+        } else if (processStatus == ProcessStatus.FINISHED) {
+            return processFinished(processInstanceId);
+
+        }else if (processStatus != ProcessStatus.SUSPENDED) {
+            Map<String, Object> args = prepareArgumentsForInProgressTemplate(entry);
+            return responseTemplates.inProgressWait(Response.ok(), args).build();
+
+        }else {
+            // processStatus == ProcessStatus.SUSPENDED
+
+            String nextFormId = formService.nextFormId(processInstanceId);
+            if (nextFormId == null) {
+                return processError(processInstanceId, "Invalid process state: no forms found");
             }
+            else {
+                List<FormListEntry> forms;
+                try {
+                    forms = formService.list(processInstanceId);
+                } catch (Exception e) {
+                    return processError(processInstanceId, "Error while retrieving the list of process forms");
+                }
 
-            try {
-                // TODO exp back off?
-                Thread.sleep(STATUS_REFRESH_DELAY);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                if (forms == null || forms.isEmpty()) {
+                    return processError(processInstanceId, "Invalid process state: no forms found");
+                }
+
+                FormListEntry formListEntries = null;
+                if (Strings.isNullOrEmpty(nextFormId)) {
+                    formListEntries = forms.get(0);
+                } else {
+                    formListEntries = forms.stream().filter(p -> nextFormId.equals(p.getFormInstanceId())).findFirst().orElse(null);
+                    if (formListEntries == null) {
+                        return processError(processInstanceId, "Invalid form instance id: not found");
+                    }
+                }
+
+                if (!formListEntries.isCustom()) {
+                    String dst = "/#/process/" + processInstanceId + "/form/" + formListEntries.getFormInstanceId() + "?fullScreen=true&wizard=true";
+                    return Response.status(Status.MOVED_PERMANENTLY)
+                            .header(HttpHeaders.LOCATION, dst)
+                            .build();
+                }
+
+                FormSessionResponse fsr = customFormService.startSession(processInstanceId, formListEntries.getFormInstanceId());
+                return Response.status(Status.MOVED_PERMANENTLY)
+                        .header(HttpHeaders.LOCATION, fsr.getUri())
+                        .build();
             }
         }
+    }
 
-        List<FormListEntry> forms;
-        try {
-            forms = formService.list(instanceId);
-        } catch (Exception e) {
-            return processError(instanceId, "Error while retrieving the list of process forms");
+    private void waitTillProcessIsInitialized(UUID instanceId) throws InterruptedException{
+        ProcessEntry entry = queueDao.get(instanceId);
+        while(entry == null){
+            TimeUnit.MILLISECONDS.sleep(100);
+            entry = queueDao.get(instanceId);
         }
+    }
 
-        if (forms == null || forms.isEmpty()) {
-            return processError(instanceId, "Invalid process state: no forms found");
-        }
-
-        FormListEntry f = forms.get(0);
-        if (!f.isCustom()) {
-            String dst = "/#/process/" + instanceId + "/form/" + f.getFormInstanceId() + "?fullScreen=true&wizard=true";
-            return Response.status(Status.MOVED_PERMANENTLY)
-                    .header(HttpHeaders.LOCATION, dst)
-                    .build();
-        }
-
-        FormSessionResponse fsr = customFormService.startSession(instanceId, f.getFormInstanceId());
-        return Response.status(Status.MOVED_PERMANENTLY)
-                .header(HttpHeaders.LOCATION, fsr.getUri())
-                .build();
+    private static Map<String, Object> prepareArgumentsForInProgressTemplate(ProcessEntry entry){
+        Map<String, Object> args = new HashMap<>();
+        args.put("orgName", entry.getOrgName());
+        args.put("projectName", entry.getProjectName());
+        args.put("instanceId", entry.getInstanceId().toString());
+        args.put("parentInstanceId", entry.getParentInstanceId());
+        args.put("initiator", entry.getInitiator());
+        args.put("createdAt", entry.getCreatedAt());
+        args.put("lastUpdatedAt", entry.getLastUpdatedAt());
+        args.put("status", entry.getStatus().toString());
+        return args;
     }
 
     private static Map<String, Object> parseArguments(UriInfo uriInfo) {

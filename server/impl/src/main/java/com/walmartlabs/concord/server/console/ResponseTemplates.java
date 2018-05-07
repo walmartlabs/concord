@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.console;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,12 +35,14 @@ public class ResponseTemplates {
     private final Mustache processFinished;
     private final Mustache badRequest;
     private final Mustache processError;
+    private final Mustache inProgressWait;
 
     public ResponseTemplates() {
         MustacheFactory mf = new DefaultMustacheFactory();
         processFinished = mf.compile("com/walmartlabs/concord/server/console/processFinished.html");
         badRequest = mf.compile("com/walmartlabs/concord/server/console/badRequest.html");
         processError = mf.compile("com/walmartlabs/concord/server/console/processError.html");
+        inProgressWait = mf.compile("com/walmartlabs/concord/server/console/inProgress.html");
     }
 
     private ResponseBuilder html(Mustache m, ResponseBuilder r, Map<String, Object> args) {
@@ -62,5 +64,9 @@ public class ResponseTemplates {
 
     public ResponseBuilder processError(ResponseBuilder r, Map<String, Object> args) {
         return html(processError, r, args);
+    }
+
+    public ResponseBuilder inProgressWait(ResponseBuilder r, Map<String, Object> args) {
+        return html(inProgressWait, r, args);
     }
 }

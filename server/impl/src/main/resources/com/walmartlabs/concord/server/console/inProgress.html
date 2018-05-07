@@ -1,0 +1,113 @@
+{{> header}}
+
+<div id="messageFinishedCtrl" class="ui icon green message hidden">
+    <p>Process is successfully executed. You can view details <a href="/#/process/{{instanceId}}" style="text-decoration: underline;">here</a></p>
+</div>
+<div id="messageErrorCtrl" class="ui icon red message hidden">
+    <p>Process is terminated with error(s). You can view details <a href="/#/process/{{instanceId}}" style="text-decoration: underline;">here</a></p>
+</div>
+
+
+<div id="loadingCtrl" class="ui segment loading">
+    <div class="ui relaxed divided list">
+        {{#orgName}}
+        <div class="item">
+            <div class="content">
+                <div class="header">Organization</div>
+                <div class="description">{{orgName}} </div>
+            </div>
+        </div>
+        {{/orgName}}
+        {{#projectName}}
+        <div class="item">
+            <div class="content">
+                <div class="header">Project</div>
+                <div class="description">{{projectName}}</div>
+            </div>
+        </div>
+        {{/projectName}}
+        {{#instanceId}}
+        <div class="item">
+            <div class="content">
+                <div class="header">Process</div>
+                <div class="description">{{instanceId}}</div>
+            </div>
+        </div>
+        {{/instanceId}}
+        {{#initiator}}
+        <div class="item">
+            <div class="content">
+                <div class="header">Initiator</div>
+                <div class="description">{{initiator}}</div>
+            </div>
+        </div>
+        {{/initiator}}
+        <div class="item">
+            <div class="content">
+                <div class="header">Status</div>
+                <div id="message" class="description">{{status}}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<form id="nextForm" action="/api/v1/org/{{instanceId}}/next" method="POST"></form>
+<script>
+
+var checkStatusUrl = "/api/v1/process/{{instanceId}}";
+var proceedToNextStepUrl = "/api/v1/org/{{instanceId}}/next";
+
+var terminatingStatuses = ["FINISHED", "CANCELLED", "FAILED"];
+var nextFormStatuses = ["SUSPENDED"];
+var successStatuses= ["FINISHED"];
+
+var retryDelayTime = 2000;
+
+function checkStatus(){
+    $.ajax({
+        url: checkStatusUrl
+    })
+    .then(function(response){
+        handleResponse(response);
+    });
+}
+
+function handleResponse(responseJson){
+    console.log(responseJson.status);
+
+    $("#message").text(responseJson.status);
+
+    if(terminatingStatuses.includes(responseJson.status)){
+
+        hideInProgress(responseJson.status);
+        return;
+
+    }else if(nextFormStatuses.includes(responseJson.status)){
+
+        $('#nextForm').attr('action', proceedToNextStepUrl);
+        $("#nextForm").submit();
+
+    }else{
+
+        setTimeout(checkStatus, retryDelayTime);
+    }
+}
+
+function hideInProgress(status){
+    $("#loadingCtrl").removeClass("loading");
+
+    if (successStatuses.includes(status)){
+        $("#messageFinishedCtrl").show();
+    }else{
+        $("#messageErrorCtrl").show();
+    }
+}
+
+$(document).ready(function() {
+    checkStatus();
+});
+
+</script>
+
+{{> footer}}
