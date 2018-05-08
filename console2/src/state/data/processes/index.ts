@@ -111,7 +111,7 @@ const startProcessReducers = combineReducers<StartProcessState>({
         [actionTypes.START_PROCESS_RESPONSE]
     ),
     error: makeErrorReducer(
-        [actionTypes.START_PROCESS_REQUEST],
+        [actionTypes.RESET_PROCESS, actionTypes.START_PROCESS_REQUEST],
         [actionTypes.START_PROCESS_RESPONSE]
     ),
     response: makeResponseReducer(actionTypes.START_PROCESS_RESPONSE, actionTypes.RESET_PROCESS)
@@ -152,6 +152,7 @@ function* onStartProcess({ orgName, projectName, repoName }: StartProcessRequest
         yield handleErrors(actionTypes.START_PROCESS_RESPONSE, e);
     }
 }
+
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProjectList),

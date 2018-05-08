@@ -90,7 +90,12 @@ class SingleOperationPopup extends React.Component<Props, State> {
         }
 
         if (error) {
-            return <Button onClick={() => this.handleConfirm()}>Retry</Button>;
+            return (
+                <>
+                    <Button onClick={() => this.handleClose()}>Close</Button>
+                    <Button onClick={() => this.handleConfirm()}>Retry</Button>
+                </>
+            );
         }
 
         return (

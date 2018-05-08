@@ -29,28 +29,45 @@ interface RequestErrorData {
 
 export type RequestError = RequestErrorData | null;
 
-export const makeError = async (resp: Response): Promise<RequestError> => {
-    const message = `ERROR: ${resp.statusText} (${resp.status})`;
+export const parseSiestaError = async (resp: Response) => {
+    const json = await resp.json();
+    return {
+        message: `ERROR: ${resp.statusText} (${resp.status})`,
+        details: json[0].message,
+        status: resp.status
+    };
+};
 
+export const parseJsonError = async (resp: Response) => {
+    const json = await resp.json();
+    return {
+        message: json.message,
+        details: json.details,
+        status: resp.status
+    };
+};
+
+export const parseTextError = async (resp: Response) => {
+    const text = await resp.text();
+    return {
+        message: `ERROR: ${resp.statusText} (${resp.status})`,
+        details: text,
+        status: resp.status
+    };
+};
+
+export const makeError = async (resp: Response): Promise<RequestError> => {
     const contentType = resp.headers.get('Content-Type') || '';
-    if (contentType.indexOf('json') >= 0) {
-        const json = await resp.json();
-        return {
-            message,
-            details: json[0].message,
-            status: resp.status
-        };
+    if (contentType.indexOf('siesta') >= 0) {
+        return parseSiestaError(resp);
+    } else if (contentType.indexOf('json') >= 0) {
+        return parseJsonError(resp);
     } else if (contentType.indexOf('text/plain') >= 0) {
-        const text = await resp.text();
-        return {
-            message,
-            details: text,
-            status: resp.status
-        };
+        return parseTextError(resp);
     }
 
     return {
-        message,
+        message: `ERROR: ${resp.statusText} (${resp.status})`,
         status: resp.status
     };
 };
