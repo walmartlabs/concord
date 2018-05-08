@@ -37,6 +37,7 @@ public class ForkPipeline extends Pipeline {
         super(injector,
                 InitialQueueEntryProcessor.class,
                 ForkCleanupProcessor.class,
+                DefaultVariablesProcessor.class,
                 ForkDataMergingProcessor.class,
                 TagsExtractingProcessor.class,
                 OutVariablesSettingProcessor.class,
