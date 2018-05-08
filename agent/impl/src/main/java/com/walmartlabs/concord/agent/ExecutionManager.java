@@ -25,6 +25,7 @@ import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.client.ProcessApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,13 +55,13 @@ public class ExecutionManager {
 
     private final Object mutex = new Object();
 
-    public ExecutionManager(Configuration cfg) throws IOException {
+    public ExecutionManager(Configuration cfg, ProcessApi processApi) {
 
         this.logManager = new LogManager(cfg);
         this.cfg = cfg;
 
         DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
-        this.jobExecutor = new DefaultJobExecutor(cfg, logManager, dependencyManager, new ProcessApiClient(cfg));
+        this.jobExecutor = new DefaultJobExecutor(cfg, logManager, dependencyManager, new ProcessApiClient(cfg, processApi));
     }
 
     public JobInstance start(UUID instanceId, String entryPoint, Path payload) throws ExecutionException {

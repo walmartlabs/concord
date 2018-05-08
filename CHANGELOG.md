@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-agent: "maintenance mode" to suspend job acquisition;
 - resource-tasks: new methods to read/write JSON;
 - concord-server: an "in progress" page when the process is started
 using "browser" endpoints;

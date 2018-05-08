@@ -62,6 +62,7 @@ public class Configuration {
     public static final String RETRY_COUNT_KEY = "API_RETRY_COUNT_KEY";
     public static final String RETRY_INTERVAL_KEY = "API_RETRY_INTERVAL_KEY";
     public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL_KEY";
+    public static final String MAINTENANCE_MODE_KEY = "MAINTENANCE_MODE_FILE";
 
     /**
      * As defined in server/db/src/main/resources/com/walmartlabs/concord/server/db/v0.69.0.xml
@@ -92,6 +93,7 @@ public class Configuration {
     private final int retryCount;
     private final long retryInterval;
     private final long pollInterval;
+    private final Path maintenanceModeFile;
 
     public Configuration() {
         this.agentId = UUID.randomUUID().toString();
@@ -138,6 +140,8 @@ public class Configuration {
             this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "5"));
             this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "30000"));
             this.pollInterval = Long.parseLong(getEnv(POLL_INTERVAL_KEY, "1000"));
+
+            this.maintenanceModeFile = getDir(MAINTENANCE_MODE_KEY, "maintenance-mode").resolve("info");
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -233,6 +237,10 @@ public class Configuration {
 
     public long getPollInterval() {
         return pollInterval;
+    }
+
+    public Path getMaintenanceModeFile() {
+        return maintenanceModeFile;
     }
 
     private static String getEnv(String key, String defaultValue) {

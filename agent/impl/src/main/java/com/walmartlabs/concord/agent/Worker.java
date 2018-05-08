@@ -21,12 +21,17 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.rpc.JobEntry;
 import com.walmartlabs.concord.server.ApiException;
+import com.walmartlabs.concord.server.ApiResponse;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.client.ClientUtils;
+import com.walmartlabs.concord.server.client.ProcessQueueApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -45,30 +50,36 @@ public class Worker implements Runnable {
 
     private static final long ERROR_DELAY = 5000;
 
+    private final ProcessQueueApi queueClient;
     private final ProcessApiClient processApiClient;
-    private final JobQueueClient jobQueue;
     private final ExecutionManager executionManager;
     private final long logSteamMaxDelay;
+    private final long pollInterval;
 
-    public Worker(ProcessApiClient processApiClient, JobQueueClient jobQueue, ExecutionManager executionManager, long logSteamMaxDelay) {
+    private volatile boolean maintenanceMode = false;
+
+    public Worker(ProcessQueueApi queueClient, ProcessApiClient processApiClient,
+                  ExecutionManager executionManager,
+                  long logSteamMaxDelay, long pollInterval) {
+        this.queueClient = queueClient;
         this.processApiClient = processApiClient;
-        this.jobQueue = jobQueue;
         this.executionManager = executionManager;
         this.logSteamMaxDelay = logSteamMaxDelay;
+        this.pollInterval = pollInterval;
     }
 
     @Override
     public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted() && !maintenanceMode) {
             JobEntry job = null;
             try {
-                job = jobQueue.take();
+                job = take();
 
-                if (job == null) {
-                    continue;
+                if (job != null) {
+                    execute(job.getInstanceId(), job.getPayload());
+                } else {
+                    sleep(pollInterval);
                 }
-
-                execute(job.getInstanceId(), job.getPayload());
             } catch (Exception e) {
                 log.error("run -> job process error: {}", e.getMessage(), e);
                 sleep(ERROR_DELAY);
@@ -78,6 +89,19 @@ public class Worker implements Runnable {
                 }
             }
         }
+    }
+
+    public void setMaintenanceMode() {
+        maintenanceMode = true;
+    }
+
+    private JobEntry take() throws ApiException {
+        ApiResponse<File> resp = queueClient.takeWithHttpInfo();
+        if (resp.getData() == null) {
+            return null;
+        }
+        String instanceId = ClientUtils.getHeader(InternalConstants.Headers.PROCESS_INSTANCE_ID, resp);
+        return new JobEntry(UUID.fromString(instanceId), resp.getData().toPath());
     }
 
     private void cleanup(JobEntry job) {

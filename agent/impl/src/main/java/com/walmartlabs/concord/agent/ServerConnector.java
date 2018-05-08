@@ -22,49 +22,66 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
+import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.server.ApiClient;
+import com.walmartlabs.concord.server.client.CommandQueueApi;
+import com.walmartlabs.concord.server.client.ProcessApi;
+import com.walmartlabs.concord.server.client.ProcessQueueApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
-public class ServerConnector {
+public class ServerConnector implements MaintenanceModeListener {
 
     private static final Logger log = LoggerFactory.getLogger(ServerConnector.class);
 
-    private Thread[] workers;
+    private Worker[] workers;
+    private Thread[] workerThreads;
     private Thread executionCleanup;
-    private Thread commandHandler;
+    private CommandHandler commandHandler;
+    private Thread commandHandlerThread;
 
     private Thread orphanSweeper;
     private Thread oldImageSweeper;
 
+    private Thread maintenanceModeNotifier;
+
     public void start(Configuration cfg) throws IOException {
-        String agentId = cfg.getAgentId();
         String host = cfg.getServerHost();
         int port = cfg.getServerRpcPort();
         int workersCount = cfg.getWorkersCount();
 
         log.info("start -> connecting to {}:{}", host, port);
 
-        ExecutionManager executionManager = new ExecutionManager(cfg);
+        ExecutionManager executionManager = new ExecutionManager(cfg, new ProcessApi(createClient(cfg)));
+
+        maintenanceModeNotifier = new Thread(new MaintenanceModeNotifier(cfg.getMaintenanceModeFile(), this),
+                "maintenance-mode-notifier");
+        maintenanceModeNotifier.start();
 
         executionCleanup = new Thread(new ExecutionStatusCleanup(executionManager),
                 "execution-status-cleanup");
         executionCleanup.start();
 
-        commandHandler = new Thread(new CommandHandler(new CommandQueueClient(cfg), executionManager, Executors.newCachedThreadPool()),
-                "command-handler");
-        commandHandler.start();
+        commandHandler = new CommandHandler(cfg.getAgentId(), new CommandQueueApi(createClient(cfg)), executionManager, Executors.newCachedThreadPool(), cfg.getPollInterval());
+        commandHandlerThread = new Thread(commandHandler, "command-handler");
+        commandHandlerThread.start();
 
-        workers = new Thread[workersCount];
+        workers = new Worker[workersCount];
+        workerThreads = new Thread[workersCount];
         for (int i = 0; i < workersCount; i++) {
-            Worker w = new Worker(new ProcessApiClient(cfg), new JobQueueClient(cfg), executionManager, cfg.getLogMaxDelay());
+            Worker w = new Worker(new ProcessQueueApi(createClient(cfg)),
+                    new ProcessApiClient(cfg, new ProcessApi(createClient(cfg))),
+                    executionManager, cfg.getLogMaxDelay(), cfg.getPollInterval());
+            workers[i] = w;
             Thread t = new Thread(w, "worker-" + i);
-            workers[i] = t;
+            workerThreads[i] = t;
         }
 
-        for (Thread w : workers) {
+        for (Thread w : workerThreads) {
             w.start();
         }
 
@@ -93,15 +110,17 @@ public class ServerConnector {
             orphanSweeper = null;
         }
 
-        if (commandHandler != null) {
-            commandHandler.interrupt();
+        if (commandHandlerThread != null) {
+            commandHandlerThread.interrupt();
             commandHandler = null;
+            commandHandlerThread = null;
         }
 
-        if (workers != null) {
-            for (Thread w : workers) {
+        if (workerThreads != null) {
+            for (Thread w : workerThreads) {
                 w.interrupt();
             }
+            workerThreads = null;
             workers = null;
         }
 
@@ -109,5 +128,31 @@ public class ServerConnector {
             executionCleanup.interrupt();
             executionCleanup = null;
         }
+
+        if (maintenanceModeNotifier != null) {
+            maintenanceModeNotifier.interrupt();
+            maintenanceModeNotifier = null;
+        }
+    }
+
+    @Override
+    public void onMaintenanceMode() {
+        if (workers != null) {
+            Stream.of(workers).forEach(Worker::setMaintenanceMode);
+        }
+
+        if (commandHandler != null) {
+            commandHandler.setMaintenanceMode();
+        }
+    }
+
+    private static ApiClient createClient(Configuration cfg) throws IOException {
+        ApiClient client = new ApiClient();
+        client.setTempFolderPath(IOUtils.createTempDir("agent-client").toString());
+        client.setBasePath(cfg.getServerApiBaseUrl());
+        client.setApiKey(cfg.getApiKey());
+        client.setReadTimeout(cfg.getReadTimeout());
+        client.setConnectTimeout(cfg.getConnectTimeout());
+        return client;
     }
 }

@@ -20,27 +20,40 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.squareup.okhttp.Call;
+import com.walmartlabs.concord.server.ApiClient;
 import com.walmartlabs.concord.server.ApiException;
+import com.walmartlabs.concord.server.Pair;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.client.ClientUtils;
 import com.walmartlabs.concord.server.client.ProcessApi;
 
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-public class ProcessApiClient extends AbstractClient {
+public class ProcessApiClient {
 
     private final String agentId;
     private final ProcessApi processApi;
 
-    public ProcessApiClient(Configuration cfg) throws IOException {
-        super(cfg);
+    private final int retryCount;
+    private final long retryInterval;
+
+    public ProcessApiClient(Configuration cfg, ProcessApi processApi) {
         this.agentId = cfg.getAgentId();
-        this.processApi = new ProcessApi(getClient());
+        this.processApi = processApi;
+
+        this.retryCount = cfg.getRetryCount();
+        this.retryInterval = cfg.getRetryInterval();
     }
 
     public void updateStatus(UUID instanceId, ProcessStatus status) throws ApiException {
-        withRetry(() -> {
+        ClientUtils.withRetry(retryCount, retryInterval, () -> {
             processApi.updateStatus(instanceId, agentId, status.name());
             return null;
         });
@@ -49,11 +62,30 @@ public class ProcessApiClient extends AbstractClient {
     public void appendLog(UUID instanceId, byte[] data) throws ApiException {
         String path = "/api/v1/process/" + instanceId + "/log";
 
-        postData(path, data);
+        ClientUtils.withRetry(retryCount, retryInterval, () -> {
+            postData(path, data);
+            return null;
+        });
     }
 
     public void uploadAttachments(UUID instanceId, Path data) throws ApiException {
         String path = "/api/v1/process/" + instanceId + "/attachment";
-        postData(path, data.toFile());
+
+        ClientUtils.withRetry(retryCount, retryInterval, () -> {
+            postData(path, data.toFile());
+            return null;
+        });
+    }
+
+    private void postData(String path, Object data) throws ApiException {
+        Map<String, String> headerParams = new HashMap<>();
+        headerParams.put("Content-Type", MediaType.APPLICATION_OCTET_STREAM);
+
+        String[] authNames = new String[] { "api_key" };
+
+        ApiClient client = processApi.getApiClient();
+        Call c = processApi.getApiClient().buildCall(path, "POST", new ArrayList<>(), new ArrayList<>(),
+                data, headerParams, new HashMap<>(), authNames, null);
+        client.execute(c);
     }
 }

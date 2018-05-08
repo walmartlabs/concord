@@ -20,10 +20,10 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.walmartlabs.concord.rpc.*;
-import com.walmartlabs.concord.sdk.ClientException;
+import com.walmartlabs.concord.server.ApiException;
 import com.walmartlabs.concord.server.api.CommandType;
 import com.walmartlabs.concord.server.api.agent.CommandEntry;
+import com.walmartlabs.concord.server.client.CommandQueueApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,31 +35,52 @@ public class CommandHandler implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
     private static final long ERROR_DELAY = 5000;
 
-    private final CommandQueueClient client;
+    private final String agentId;
+    private final CommandQueueApi queueClient;
     private final ExecutionManager executionManager;
     private final ExecutorService executor;
 
-    public CommandHandler(CommandQueueClient client, ExecutionManager executionManager, ExecutorService executor) {
-        this.client = client;
+    private final long pollInterval;
+
+    private volatile boolean maintenanceMode = false;
+
+    public CommandHandler(String agentId, CommandQueueApi queueClient,
+                          ExecutionManager executionManager, ExecutorService executor,
+                          long pollInterval) {
+        this.agentId = agentId;
+        this.queueClient = queueClient;
         this.executionManager = executionManager;
         this.executor = executor;
+        this.pollInterval = pollInterval;
     }
 
     @Override
     public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted() && !maintenanceMode) {
             try {
-                CommandEntry cmd = client.take();
-                if (cmd == null) {
-                    continue;
+                CommandEntry cmd = take();
+                if (cmd != null) {
+                    executor.submit(() -> execute(cmd));
+                } else {
+                    sleep(pollInterval);
                 }
-
-                executor.submit(() -> execute(cmd));
             } catch (Exception e) {
                 log.error("run -> command process error: {}", e.getMessage(), e);
                 sleep(ERROR_DELAY);
             }
         }
+    }
+
+    public void setMaintenanceMode() {
+        this.maintenanceMode = true;
+    }
+
+    private CommandEntry take() throws ApiException {
+        com.walmartlabs.concord.server.client.CommandEntry cmd = queueClient.take(agentId);
+        if (cmd != null) {
+            return new CommandEntry(CommandType.valueOf(cmd.getType().getValue()), cmd.getPayload());
+        }
+        return null;
     }
 
     private void execute(CommandEntry cmd) {
