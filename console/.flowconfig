@@ -1,9 +1,0 @@
-[ignore]
-.*/target/.*
-.*/scripts/.*
-
-[include]
-
-[libs]
-
-[options]
