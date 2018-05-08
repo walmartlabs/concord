@@ -9,11 +9,12 @@ interface Props {
     data: ProcessEntry;
     onOpenWizard?: () => void;
     showStateDownload?: boolean;
+    additionalActions?: React.ReactNode;
 }
 
 class ProcessStatusTable extends React.PureComponent<Props> {
     render() {
-        const { data, onOpenWizard, showStateDownload } = this.props;
+        const { data, onOpenWizard, showStateDownload, additionalActions } = this.props;
 
         return (
             <Table textAlign="center" color={getStatusSemanticColor(data.status)}>
@@ -51,7 +52,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                         <Table.Cell>
                             <Button.Group>
                                 {onOpenWizard && (
-                                    <Button onClick={() => onOpenWizard()}>Wizard</Button>
+                                    <Button onClick={() => onOpenWizard()} content="Wizard" />
                                 )}
                                 {showStateDownload && (
                                     <Button
@@ -62,6 +63,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                         download={`Concord_${data.status}_${data.instanceId}.zip`}
                                     />
                                 )}
+                                {additionalActions}
                             </Button.Group>
                         </Table.Cell>
                     </Table.Row>

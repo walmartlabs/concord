@@ -18,6 +18,7 @@
  * =====
  */
 
+export { default as CancelProcessPopup } from './CancelProcessPopup';
 export { default as DeleteRepositoryPopup } from './DeleteRepositoryPopup';
 export { default as DeleteSecretPopup } from './DeleteSecretPopup';
 export { default as EditRepositoryActivity } from './EditRepositoryActivity';
@@ -36,7 +37,6 @@ export { default as PublicKeyPopup } from './PublicKeyPopup';
 export { default as RedirectButton } from './RedirectButton';
 export { default as RefreshRepositoryPopup } from './RefreshRepositoryPopup';
 export { default as RepositoryList } from './RepositoryList';
-export { default as RepositoryActionDropdown } from './RepositoryActionDropdown';
 export { default as SecretDropdown } from './SecretDropdown';
 export { default as SecretInfo } from './SecretInfo';
 export { default as SecretList } from './SecretList';

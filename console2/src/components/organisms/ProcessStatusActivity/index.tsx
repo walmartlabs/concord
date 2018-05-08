@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { push as pushHistory } from 'react-router-redux';
-import { Divider, Header, Icon } from 'semantic-ui-react';
+import { Button, Divider, Header, Icon } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { hasState, ProcessEntry } from '../../../api/process';
+import { canBeCancelled, hasState, ProcessEntry } from '../../../api/process';
 import {
     AnsibleEvent,
     AnsibleStatus,
@@ -20,6 +20,7 @@ import {
     ProcessElementList,
     ProcessStatusTable
 } from '../../molecules';
+import { CancelProcessPopup } from '../index';
 
 interface OwnState {
     selectedStatus?: AnsibleStatus;
@@ -69,6 +70,27 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
         }
     }
 
+    createAdditionalAction() {
+        const { process } = this.props;
+
+        if (!process) {
+            return;
+        }
+
+        if (!canBeCancelled(process.status)) {
+            return;
+        }
+
+        return (
+            <CancelProcessPopup
+                instanceId={process.instanceId}
+                trigger={(onClick) => (
+                    <Button negative={true} icon="delete" content="Cancel" onClick={onClick} />
+                )}
+            />
+        );
+    }
+
     render() {
         const {
             loading,
@@ -101,6 +123,7 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
                             data={process}
                             onOpenWizard={forms.length > 0 ? startWizard : undefined}
                             showStateDownload={hasState(process.status)}
+                            additionalActions={this.createAdditionalAction()}
                         />
                     </>
                 )}

@@ -6,7 +6,12 @@ import { Button, Menu, Table, Loader } from 'semantic-ui-react';
 import { RequestError } from '../../../api/common';
 import { ProcessEntry } from '../../../api/process';
 import { actions, Processes, State } from '../../../state/data/processes';
-import { LocalTimestamp, ProcessStatusIcon, RequestErrorMessage } from '../../molecules';
+import {
+    LocalTimestamp,
+    ProcessActionDropdown,
+    ProcessStatusIcon,
+    RequestErrorMessage
+} from '../../molecules';
 
 interface StateProps {
     processes: ProcessEntry[];
@@ -48,6 +53,9 @@ const renderTableRow = (row: ProcessEntry, addProjectColumn: boolean) => {
             </Table.Cell>
             <Table.Cell>
                 <LocalTimestamp value={row.lastUpdatedAt} />
+            </Table.Cell>
+            <Table.Cell>
+                <ProcessActionDropdown instanceId={row.instanceId} status={row.status} />
             </Table.Cell>
         </Table.Row>
     );
@@ -91,12 +99,11 @@ class ProcessList extends React.PureComponent<StateProps & DispatchProps & Exter
                     <Table.Row>
                         <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
                         <Table.HeaderCell>Instance ID</Table.HeaderCell>
-
                         {addProjectColumn && <Table.HeaderCell>Project</Table.HeaderCell>}
-
                         <Table.HeaderCell collapsing={true}>Initiator</Table.HeaderCell>
                         <Table.HeaderCell>Created</Table.HeaderCell>
                         <Table.HeaderCell>Updated</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true} />
                     </Table.Row>
                 </Table.Header>
 

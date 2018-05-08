@@ -17,16 +17,18 @@
  * limitations under the License.
  * =====
  */
-import { combineReducers, Reducer } from 'redux';
+import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
 
-import { ConcordKey } from '../../../api/common';
+import { ConcordId, ConcordKey } from '../../../api/common';
 import { list as apiOrgList } from '../../../api/org/process';
-import { start as apiStart } from '../../../api/process';
+import { start as apiStart, kill as apiKill } from '../../../api/process';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
 import { reducers as pollReducers, sagas as pollSagas } from './poll';
 import {
+    CancelProcessRequest,
+    CancelProcessState,
     ListProjectProcessesRequest,
     ProcessDataResponse,
     Processes,
@@ -45,6 +47,9 @@ const actionTypes = {
 
     START_PROCESS_REQUEST: `${NAMESPACE}/start/request`,
     START_PROCESS_RESPONSE: `${NAMESPACE}/start/response`,
+
+    CANCEL_PROCESS_REQUEST: `${NAMESPACE}/cancel/request`,
+    CANCEL_PROCESS_RESPONSE: `${NAMESPACE}/cancel/response`,
 
     RESET_PROCESS: `${NAMESPACE}/reset`
 };
@@ -68,6 +73,11 @@ export const actions = {
         orgName,
         projectName,
         repoName
+    }),
+
+    cancel: (instanceId: ConcordId): CancelProcessRequest => ({
+        type: actionTypes.CANCEL_PROCESS_REQUEST,
+        instanceId
     }),
 
     reset: () => ({
@@ -117,6 +127,25 @@ const startProcessReducers = combineReducers<StartProcessState>({
     response: makeResponseReducer(actionTypes.START_PROCESS_RESPONSE, actionTypes.RESET_PROCESS)
 });
 
+const cancelProcessReducers = combineReducers<CancelProcessState>({
+    running: makeLoadingReducer(
+        [actionTypes.CANCEL_PROCESS_REQUEST],
+        [actionTypes.CANCEL_PROCESS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.CANCEL_PROCESS_REQUEST],
+        [actionTypes.CANCEL_PROCESS_RESPONSE]
+    ),
+    response: (state = false, { type, error }: Action & { error?: {} }) => {
+        switch (type) {
+            case actionTypes.CANCEL_PROCESS_RESPONSE:
+                return !error;
+            default:
+                return state;
+        }
+    }
+});
+
 export const reducers = combineReducers<State>({
     // TODO use RequestState<?>
     processById,
@@ -124,6 +153,7 @@ export const reducers = combineReducers<State>({
     error: errorMsg,
 
     startProcess: startProcessReducers,
+    cancelProcess: cancelProcessReducers,
 
     log: logReducers,
     poll: pollReducers
@@ -153,10 +183,22 @@ function* onStartProcess({ orgName, projectName, repoName }: StartProcessRequest
     }
 }
 
+function* onCancelProcess({ instanceId }: CancelProcessRequest) {
+    try {
+        yield call(apiKill, instanceId);
+        yield put({
+            type: actionTypes.CANCEL_PROCESS_RESPONSE
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.CANCEL_PROCESS_RESPONSE, e);
+    }
+}
+
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProjectList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
+        takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),
         fork(logSagas),
         fork(pollSagas)
     ]);

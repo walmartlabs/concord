@@ -19,7 +19,7 @@
  */
 
 import { SemanticCOLORS } from 'semantic-ui-react';
-import { ConcordId, ConcordKey, fetchJson } from '../common';
+import { ConcordId, ConcordKey, fetchJson, managedFetch } from '../common';
 import { StartProcessResponse } from '../org/process';
 
 export { getLog, LogChunk, LogRange } from './log';
@@ -67,6 +67,9 @@ export const isFinal = (s: ProcessStatus) =>
 
 export const hasState = (s: ProcessStatus) => s !== ProcessStatus.PREPARING;
 
+export const canBeCancelled = (s: ProcessStatus) =>
+    s === ProcessStatus.ENQUEUED || s === ProcessStatus.RUNNING || s === ProcessStatus.SUSPENDED;
+
 export interface ProcessEntry {
     instanceId: ConcordId;
     parentInstanceId?: ConcordId;
@@ -99,3 +102,6 @@ export const start = (
 
 export const get = (instanceId: ConcordId): Promise<ProcessEntry> =>
     fetchJson(`/api/v1/process/${instanceId}`);
+
+export const kill = (instanceId: ConcordId): Promise<{}> =>
+    managedFetch(`/api/v1/process/${instanceId}`, { method: 'DELETE' });

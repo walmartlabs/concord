@@ -9,8 +9,7 @@ import { ProjectEntry } from '../../../api/org/project';
 import { RepositoryEntry } from '../../../api/org/project/repository';
 import { actions, selectors, State } from '../../../state/data/projects';
 import { comparators } from '../../../utils';
-import { RequestErrorMessage } from '../../molecules';
-import { RepositoryActionDropdown } from '../../organisms';
+import { RequestErrorMessage, RepositoryActionDropdown } from '../../molecules';
 
 interface StateProps {
     repositories: RepositoryEntry[];

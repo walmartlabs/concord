@@ -9,11 +9,13 @@ export { default as RepositoryForm, RepositoryFormValues } from './RepositoryFor
 export { default as LocalTimestamp } from './LocalTimestamp';
 export { default as NewProjectForm, NewProjectFormValues } from './NewProjectForm';
 export { default as NewSecretForm, NewSecretFormValues } from './NewSecretForm';
+export { default as ProcessActionDropdown } from './ProcessActionDropdown';
 export { default as ProcessActionList } from './ProcessActionList';
 export { default as ProcessElementList } from './ProcessElementList';
 export { default as ProcessForm } from './ProcessForm';
 export { default as ProcessLogViewer } from './ProcessLogViewer';
 export { default as ProcessStatusIcon } from './ProcessStatusIcon';
 export { default as ProcessStatusTable } from './ProcessStatusTable';
+export { default as RepositoryActionDropdown } from './RepositoryActionDropdown';
 export { default as RequestErrorMessage } from './RequestErrorMessage';
 export { default as SingleOperationPopup } from './SingleOperationPopup';
