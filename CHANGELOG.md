@@ -4,6 +4,7 @@
 
 ### Added
 
+- resource-tasks: new methods to read/write JSON;
 - concord-server: an "in progress" page when the process is started
 using "browser" endpoints;
 - concord-console: a button to download raw process log. 
@@ -21,7 +22,7 @@ using "browser" endpoints;
 - http: support for `PUT` requests;
 - concord-server: new LDAP configuration property `usernameProperty`.
 Defaults to `sAMAccountName`.
-
+STRDTORC-507
 
 
 ## [0.67.0] - 2018-04-29

@@ -1,0 +1,6 @@
+flows:
+  default:
+   - expr: ${resource.writeAsString('Hello Concord!')}
+     out: path
+
+   - log: "${resource.asString(path)}"
