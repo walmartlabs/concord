@@ -542,7 +542,6 @@
                         <root>src/test/java</root>
                     </roots>
                     <extraExtensions>
-                        <ts>java</ts>
                         <tsx>java</tsx>
                     </extraExtensions>
                 </configuration>
