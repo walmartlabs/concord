@@ -17,6 +17,17 @@
  * limitations under the License.
  * =====
  */
+.topBar {
+    background-color: #1B1C1D;
+    box-shadow: 0 2px 0 0 #CCCCCC;
+}
+
+.topBarColumn {
+    padding: 0px !important;
+    padding-top: 15px !important;;
+    padding-bottom: 5px !important;;
+}
+
 .contentColumn {
-    padding-top: 0 !important;
+    padding-top: 3px !important;
 }

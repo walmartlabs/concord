@@ -34,9 +34,9 @@ class GlobalNavMenu extends React.PureComponent<Props> {
         const { activeTab, userDisplayName, logOut } = this.props;
 
         return (
-            <Menu fluid={true} tabular={true} size="small">
+            <Menu fluid={true} inverted={true} size="small" secondary={true}>
                 <Menu.Item>
-                    <Image src="/images/concord.svg" size="small" />
+                    <Image src="/images/logo.svg" size="small" />
                 </Menu.Item>
                 <Menu.Item active={activeTab === 'process'}>
                     <Link to="/process">Processes</Link>
