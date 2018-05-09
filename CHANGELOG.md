@@ -1,6 +1,15 @@
 # Change log
 
-## [Unreleased]
+## [0.68.1] - 2018-05-09
+
+### Changed
+
+- concord-server: fixed the repository connection test method not
+getting secrets from the UI.
+
+
+
+## [0.68.0] - 2018-05-04
 
 ### Added
 
