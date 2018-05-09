@@ -20,6 +20,10 @@
 // @flow
 
 export const testRepository = (data: any): Promise<any> => {
+    if (data.secretName) {
+        data['secret'] = data.secretName;
+    }
+
     console.debug("API: testRepository ['%o'] -> starting...", data);
 
     const opts = {
