@@ -537,10 +537,14 @@
                     <processStartTag>*****</processStartTag>
                     <sectionDelimiter>-----</sectionDelimiter>
                     <processEndTag>=====</processEndTag>
-                    <includes>
-                        <include>main/java/**/*.java</include>
-                        <include>test/java/**/*.java</include>
-                    </includes>
+                    <roots>
+                        <root>src/main/java</root>
+                        <root>src/test/java</root>
+                    </roots>
+                    <extraExtensions>
+                        <ts>java</ts>
+                        <tsx>java</tsx>
+                    </extraExtensions>
                 </configuration>
             </plugin>
         </plugins>

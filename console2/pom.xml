@@ -24,12 +24,9 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
-                    <includes>
-                        <include>**/*.js</include>
-                        <include>**/*.jsx</include>
-                        <include>**/*.ts</include>
-                        <include>**/*.tsx</include>
-                    </includes>
+                    <roots>
+                        <root>src</root>
+                    </roots>
                 </configuration>
             </plugin>
             <plugin>
