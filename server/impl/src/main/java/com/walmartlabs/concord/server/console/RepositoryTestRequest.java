@@ -43,7 +43,7 @@ public class RepositoryTestRequest implements Serializable {
     private final String branch;
     private final String commitId;
     private final String path;
-    private final String secret;
+    private final String secretName;
 
     @JsonCreator
     public RepositoryTestRequest(@JsonProperty("orgId") UUID orgId,
@@ -52,14 +52,14 @@ public class RepositoryTestRequest implements Serializable {
                                  @JsonProperty("branch") String branch,
                                  @JsonProperty("commitId") String commitId,
                                  @JsonProperty("path") String path,
-                                 @JsonProperty("secret") String secret) {
+                                 @JsonProperty("secretName") String secretName) {
         this.orgId = orgId;
         this.orgName = orgName;
         this.url = url;
         this.branch = branch;
         this.commitId = commitId;
         this.path = path;
-        this.secret = secret;
+        this.secretName = secretName;
     }
 
     public UUID getOrgId() {
@@ -86,7 +86,7 @@ public class RepositoryTestRequest implements Serializable {
         return path;
     }
 
-    public String getSecret() {
-        return secret;
+    public String getSecretName() {
+        return secretName;
     }
 }

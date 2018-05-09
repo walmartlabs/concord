@@ -160,7 +160,7 @@ public class ConsoleService implements Resource {
         OrganizationEntry org = orgManager.assertAccess(req.getOrgId(), req.getOrgName(), false);
 
         try {
-            repositoryManager.testConnection(org.getId(), req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecret());
+            repositoryManager.testConnection(org.getId(), req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), req.getSecretName());
             return true;
         } catch (Exception e) {
             String msg;
