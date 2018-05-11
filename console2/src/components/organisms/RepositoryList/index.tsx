@@ -49,9 +49,9 @@ type Props = StateProps & DispatchProps & ExternalProps;
 
 const getSource = (r: RepositoryEntry) => {
     if (r.commitId) {
-        return 'Commit ID';
+        return r.commitId;
     }
-    return 'Branch/tag';
+    return r.branch;
 };
 
 const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: RepositoryEntry) => {
