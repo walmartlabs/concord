@@ -17,18 +17,31 @@
         <runner.path>
             ${project.basedir}/../../runner/target/concord-runner-${project.version}-jar-with-dependencies.jar
         </runner.path>
+        <deps.dir>${project.build.directory}/deps</deps.dir>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>concord-common-it</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-sdk</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -61,8 +74,33 @@
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
                         <IT_RUNNER_PATH>${runner.path}</IT_RUNNER_PATH>
+                        <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
                     </environmentVariables>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+                                    <artifactId>ansible-tasks</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${deps.dir}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -20,8 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.RpcClient;
-import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.api.interceptors.ExecutionInterceptorAdapter;
 import io.takari.bpm.api.interceptors.InterceptorElementEvent;
@@ -32,8 +30,8 @@ public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
 
     private final ElementEventProcessor eventProcessor;
 
-    public ProcessElementInterceptor(RpcClient rpc, ProcessDefinitionProvider processDefinitionProvider) {
-        this.eventProcessor = new ElementEventProcessor(rpc, processDefinitionProvider);
+    public ProcessElementInterceptor(ElementEventProcessor eventProcessor) {
+        this.eventProcessor = eventProcessor;
     }
 
     @Override

@@ -44,7 +44,6 @@ public class ElementEventProcessor {
     private static final Logger log = LoggerFactory.getLogger(ElementEventProcessor.class);
 
     private final RpcClient rpc;
-
     private final ProcessDefinitionProvider processDefinitionProvider;
 
     public ElementEventProcessor(RpcClient rpc, ProcessDefinitionProvider processDefinitionProvider) {
@@ -58,6 +57,7 @@ public class ElementEventProcessor {
 
     public void process(String instanceId, String definitionId, String elementId,
                         EventParamsBuilder builder, Predicate<AbstractElement> filter) throws ExecutionException {
+
         ProcessDefinition pd = processDefinitionProvider.getById(definitionId);
         if(pd == null) {
             throw new RuntimeException("can't find process definition '" + definitionId + "'");
@@ -88,7 +88,7 @@ public class ElementEventProcessor {
             rpc.getEventService().onEvent(instanceId, new Date(), EventType.PROCESS_ELEMENT, e);
 
         } catch (Exception e) {
-            log.warn("process ['{}'] -> transfer error", instanceId, e);
+            log.warn("process ['{}'] -> transfer error: {}", instanceId, e.getMessage());
         }
     }
 

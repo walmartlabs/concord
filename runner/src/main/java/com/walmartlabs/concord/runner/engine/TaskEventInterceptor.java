@@ -24,8 +24,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.RpcClient;
-import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.model.AbstractElement;
@@ -41,8 +39,8 @@ public class TaskEventInterceptor {
 
     private final ElementEventProcessor eventProcessor;
 
-    public TaskEventInterceptor(RpcClient rpc, ProcessDefinitionProvider processDefinitionProvider) {
-        this.eventProcessor = new ElementEventProcessor(rpc, processDefinitionProvider);
+    public TaskEventInterceptor(ElementEventProcessor eventProcessor) {
+        this.eventProcessor = eventProcessor;
     }
 
     public void preTask(Context ctx) throws ExecutionException {

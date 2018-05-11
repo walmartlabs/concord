@@ -21,28 +21,51 @@ package com.walmartlabs.concord.it.runner;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 
 public abstract class AbstractRunnerIT {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractRunnerIT.class);
 
     private static final String JAVA_CMD = System.getProperty("java.home") + "/bin/java";
 
     protected static Process exec(String instanceId, Path workDir) throws IOException {
+        return exec(instanceId, workDir, false);
+    }
+
+    protected static Process exec(String instanceId, Path workDir, boolean waitForDebugger) throws IOException {
         // TODO constants
         Path idPath = workDir.resolve("_instanceId");
         Files.write(idPath, instanceId.getBytes());
 
-        String[] cmd = {JAVA_CMD, "-DinstanceId=" + instanceId, "-jar", getRunnerPath()};
-        return new ProcessBuilder()
-                .command(cmd)
+        List<String> cmd = new ArrayList<>();
+        cmd.add(JAVA_CMD);
+        if (waitForDebugger) {
+            cmd.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005");
+        }
+        cmd.add("-cp");
+        cmd.add("lib/*:" + getRunnerPath());
+        cmd.add("com.walmartlabs.concord.runner.Main");
+
+        log.info("Starting: " + String.join(" ", cmd));
+
+        ProcessBuilder b = new ProcessBuilder()
+                .command(cmd.toArray(new String[0]))
                 .redirectErrorStream(true)
-                .directory(workDir.toFile())
-                .start();
+                .directory(workDir.toFile());
+
+        return b.start();
     }
 
     protected static byte[] readLog(Process proc) throws IOException {

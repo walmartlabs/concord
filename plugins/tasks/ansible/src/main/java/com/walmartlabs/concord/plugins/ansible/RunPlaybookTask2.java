@@ -170,7 +170,10 @@ public class RunPlaybookTask2 implements Task {
         env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
         env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
-        env.put("CONCORD_SESSION_TOKEN", apiCfg.getSessionToken(context));
+
+        String t = apiCfg.getSessionToken(context);
+        env.put("CONCORD_SESSION_TOKEN", t != null ? t : "none");
+
         env.put("CONCORD_POLICY", ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
                 .resolve(InternalConstants.Files.POLICY_FILE_NAME).toString());
 

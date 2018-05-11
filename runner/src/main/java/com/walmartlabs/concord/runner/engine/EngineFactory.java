@@ -110,13 +110,15 @@ public class EngineFactory {
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
         cfg.setCopyAllCallActivityOutVariables(true);
 
+        ElementEventProcessor eventProcessor = new ElementEventProcessor(rpcClient, adapter.processes());
+
         Engine engine = new EngineBuilder()
                 .withContextFactory(contextFactory)
                 .withLockManager(new NoopLockManager())
                 .withExpressionManager(expressionManager)
                 .withDefinitionProvider(adapter.processes())
                 .withTaskRegistry(taskRegistry)
-                .withJavaDelegateHandler(new JavaDelegateHandlerImpl(new TaskEventInterceptor(rpcClient, adapter.processes())))
+                .withJavaDelegateHandler(new JavaDelegateHandlerImpl(new TaskEventInterceptor(eventProcessor)))
                 .withEventStorage(eventStorage)
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
@@ -125,7 +127,7 @@ public class EngineFactory {
                 .withResourceResolver(new ResourceResolverImpl(baseDir))
                 .build();
 
-        engine.addInterceptor(new ProcessElementInterceptor(rpcClient, adapter.processes()));
+        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor));
         return engine;
     }
 

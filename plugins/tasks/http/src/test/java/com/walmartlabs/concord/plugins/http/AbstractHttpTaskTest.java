@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 
 public abstract class AbstractHttpTaskTest {
     @Rule
-    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options().port(8089).notifier(new ConsoleNotifier(true)));
+    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options().notifier(new ConsoleNotifier(true)));
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder(new File(System.getProperty("user.dir") + "/src/test/resources/__files"));

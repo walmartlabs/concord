@@ -36,14 +36,14 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testForAsStringMethod() throws Exception {
-        String response = task.asString("http://localhost:8089/json");
+        String response = task.asString("http://localhost:" + rule.port() + "/json");
         verify(getRequestedFor(urlEqualTo("/json")));
         assertNotNull(response);
     }
 
     @Test
     public void testExecuteGetRequestForJson() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/json");
+        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:" + rule.port() + "/json");
         task.execute(mockContext);
         verify(getRequestedFor(urlEqualTo("/json")));
         assertEquals(response.get("statusCode"), 200);
@@ -52,14 +52,14 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testExecuteGetRequestForString() throws Exception {
-        initCxtForRequest(mockContext, "GET", "string", "string", "http://localhost:8089/string");
+        initCxtForRequest(mockContext, "GET", "string", "string", "http://localhost:" + rule.port() + "/string");
         task.execute(mockContext);
         verify(getRequestedFor(urlEqualTo("/string")));
     }
 
     @Test
     public void testExecutePostRequestForJson() throws Exception {
-        initCxtForRequest(mockContext, "POST", "json", "json", "http://localhost:8089/post");
+        initCxtForRequest(mockContext, "POST", "json", "json", "http://localhost:" + rule.port() + "/post");
         when(mockContext.getVariable("body")).thenReturn("{ \"request\": \"PostTest\" }");
         task.execute(mockContext);
         verify(postRequestedFor(urlEqualTo("/post"))
@@ -68,7 +68,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testExecutePostRequestForComplexObject() throws Exception {
-        initCxtForRequest(mockContext, "POST", "json", "json", "http://localhost:8089/post");
+        initCxtForRequest(mockContext, "POST", "json", "json", "http://localhost:" + rule.port() + "/post");
         HashMap<String, Object> complexObject = new HashMap<>();
         HashMap<String, Object> nestedObject = new HashMap<>();
         nestedObject.put("nestedVar", 123);
@@ -86,7 +86,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testGetRequestForResponseContent() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/json");
+        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:" + rule.port() + "/json");
         task.execute(mockContext);
         assertNotNull(response);
         assertNotNull(response.get("content"));
@@ -94,7 +94,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testUnsuccessfulResponse() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/unsuccessful");
+        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:" + rule.port() + "/unsuccessful");
         task.execute(mockContext);
         assertNotNull(response);
         assertFalse((Boolean) response.get("success"));
@@ -103,7 +103,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testFilePostRequest() throws Exception {
-        initCxtForRequest(mockContext, "POST", "file", "json", "http://localhost:8089/file");
+        initCxtForRequest(mockContext, "POST", "file", "json", "http://localhost:" + rule.port() + "/file");
         when(mockContext.getVariable("body")).thenReturn("src/test/resources/__files/file.bin");
         task.execute(mockContext);
         assertNotNull(response);
@@ -113,14 +113,14 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     @Test(expected = IllegalArgumentException.class)
     public void testForMissingWorkDirForFileGetRequest() throws Exception {
         // Working directory is mandatory for response type file
-        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:8089/stringFile");
+        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:" + rule.port() + "/stringFile");
         task.execute(mockContext);
 
     }
 
     @Test
     public void testFileGetRequestWithWorkDir() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:8089/stringFile");
+        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:" + rule.port() + "/stringFile");
         when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
         task.execute(mockContext);
         assertNotNull(response);
@@ -129,7 +129,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testFileGetWithResponseTypeString() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "string", "http://localhost:8089/stringFile");
+        initCxtForRequest(mockContext, "GET", "json", "string", "http://localhost:" + rule.port() + "/stringFile");
         when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
         task.execute(mockContext);
         assertNotNull(response);
@@ -138,7 +138,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test
     public void testFileGetWithResponseTypeJSON() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:8089/JSONFile");
+        initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:" + rule.port() + "/JSONFile");
         when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
         task.execute(mockContext);
         assertNotNull(response);
@@ -147,40 +147,40 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testPostJsonRequestForIncompatibleBody() throws Exception {
-        initCxtForRequest(mockContext, "POST", "json", "string", "http://localhost:8089/post");
+        initCxtForRequest(mockContext, "POST", "json", "string", "http://localhost:" + rule.port() + "/post");
         when(mockContext.getVariable("body")).thenReturn("src/test/resources/__files/file.bin");
         task.execute(mockContext);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testPostStringRequestForIncompatibleComplexBody() throws Exception {
-        initCxtForRequest(mockContext, "POST", "string", "string", "http://localhost:8089/post");
+        initCxtForRequest(mockContext, "POST", "string", "string", "http://localhost:" + rule.port() + "/post");
         when(mockContext.getVariable("body")).thenReturn(new HashMap<>());
         task.execute(mockContext);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testPostFileRequestForIncompatibleComplexBody() throws Exception {
-        initCxtForRequest(mockContext, "POST", "file", "string", "http://localhost:8089/post");
+        initCxtForRequest(mockContext, "POST", "file", "string", "http://localhost:" + rule.port() + "/post");
         when(mockContext.getVariable("body")).thenReturn(new HashMap<>());
         task.execute(mockContext);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidRequestMethodType() throws Exception {
-        initCxtForRequest(mockContext, "GET1", "json", "file", "http://localhost:8089/file");
+        initCxtForRequest(mockContext, "GET1", "json", "file", "http://localhost:" + rule.port() + "/file");
         task.execute(mockContext);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidRequestType() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json1", "file", "http://localhost:8089/file");
+        initCxtForRequest(mockContext, "GET", "json1", "file", "http://localhost:" + rule.port() + "/file");
         task.execute(mockContext);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidResponseType() throws Exception {
-        initCxtForRequest(mockContext, "GET", "json", "file1", "http://localhost:8089/file");
+        initCxtForRequest(mockContext, "GET", "json", "file1", "http://localhost:" + rule.port() + "/file");
         task.execute(mockContext);
     }
 

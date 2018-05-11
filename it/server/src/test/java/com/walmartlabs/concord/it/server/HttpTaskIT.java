@@ -49,12 +49,11 @@ public class HttpTaskIT extends AbstractServerIT {
     public static final String mockHttpAuthUser = "cn=test";
     public static final String mockHttpAuthPassword = "password";
     public static final String mockHttpBaseUrl = "http://localhost:";
-    public static final Integer mockHttpPort = 8089;
     public static final String mockHttpPathToken = "/token";
     public static final String mockHttpPathPassword = "/password";
 
     @Rule
-    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options().port(mockHttpPort).notifier(new ConsoleNotifier(true)));
+    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options().notifier(new ConsoleNotifier(true)));
 
     @Before
     public void setup() {
@@ -112,7 +111,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + mockHttpPort + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessResource processResource = proxy(ProcessResource.class);
@@ -133,7 +132,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl + mockHttpPort + mockHttpPathToken);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
         ProcessResource processResource = proxy(ProcessResource.class);
@@ -155,7 +154,7 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("arguments.user", mockHttpAuthUser);
         input.put("arguments.password", mockHttpAuthPassword);
-        input.put("arguments.url", mockHttpBaseUrl + mockHttpPort + mockHttpPathPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
         ProcessResource processResource = proxy(ProcessResource.class);
@@ -176,7 +175,7 @@ public class HttpTaskIT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.authToken", mockHttpAuthToken);
-        input.put("arguments.url", mockHttpBaseUrl + mockHttpPort + mockHttpPathToken);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
         ProcessResource processResource = proxy(ProcessResource.class);
