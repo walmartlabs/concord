@@ -1,0 +1,5 @@
+flows:
+  default:
+  - log: "Executing Inventory Query for Principal Permission Integration Test"
+  - log: "${inventory.query(inventoryName, queryName, null)}"
+

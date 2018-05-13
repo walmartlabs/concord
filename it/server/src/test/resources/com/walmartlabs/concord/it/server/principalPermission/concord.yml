@@ -1,0 +1,13 @@
+flows:
+  default:
+
+  - task: concord
+    in:
+      action: start
+      payload: payload
+      sync: true
+      arguments:
+        inventoryName: ${inventoryName}
+        queryName: ${queryName}
+
+  - log: "Done! "
