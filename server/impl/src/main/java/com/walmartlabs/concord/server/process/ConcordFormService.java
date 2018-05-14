@@ -155,7 +155,9 @@ public class ConcordFormService {
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
             m.put(InternalConstants.Request.ARGUMENTS_KEY, args);
-            m.put(InternalConstants.Files.FORM_FILES, data.remove(InternalConstants.Files.FORM_FILES));
+            if (data != null) {
+                m.put(InternalConstants.Files.FORM_FILES, data.remove(InternalConstants.Files.FORM_FILES));
+            }
 
             Map<String, Object> opts = f.getOptions();
             Object runAs = opts != null ? opts.get(InternalConstants.Forms.RUN_AS_KEY) : null;
