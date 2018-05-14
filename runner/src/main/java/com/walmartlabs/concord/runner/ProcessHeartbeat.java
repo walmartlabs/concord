@@ -20,13 +20,18 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runner.engine.RpcClientImpl;
+import com.walmartlabs.concord.server.ApiClient;
+import com.walmartlabs.concord.server.client.ProcessHeartbeatApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.IOException;
+import java.util.UUID;
 
 @Named
 @Singleton
@@ -36,15 +41,15 @@ public class ProcessHeartbeat {
 
     private static final long HEARTBEAT_INTERVAL = 10000;
 
-    private final RpcClientImpl client;
+    private final ProcessHeartbeatApi client;
     private Thread worker;
 
     @Inject
-    public ProcessHeartbeat(RpcClientImpl client) {
-        this.client = client;
+    public ProcessHeartbeat(Configuration cfg) throws IOException {
+        this.client = new ProcessHeartbeatApi(createClient(cfg));
     }
 
-    public synchronized void start(String instanceId) {
+    public synchronized void start(UUID instanceId) {
         if (worker != null) {
             throw new IllegalArgumentException("Heartbeat worker is already running");
         }
@@ -54,7 +59,7 @@ public class ProcessHeartbeat {
 
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    client.getHeartbeatService().ping(instanceId);
+                    client.ping(instanceId);
                 } catch (Exception e) {
                     log.warn("run -> heartbeat error: {}", e.getMessage());
                 }
@@ -70,5 +75,15 @@ public class ProcessHeartbeat {
         }, "process-heartbeat");
 
         worker.start();
+    }
+
+    private static ApiClient createClient(Configuration cfg) throws IOException {
+        ApiClient client = new ApiClient();
+        client.setTempFolderPath(IOUtils.createTempDir("runner-client").toString());
+        client.setBasePath(cfg.getServerApiBaseUrl());
+        client.setApiKey(cfg.getApiKey());
+        client.setReadTimeout(cfg.getReadTimeout());
+        client.setConnectTimeout(cfg.getConnectTimeout());
+        return client;
     }
 }

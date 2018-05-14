@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 public class RunnerApiClient {
 
     private final ManagedChannel channel;
-    private final ProcessHeartbeatService heartbeatService;
     private final KvService kvService;
     private final SecretReaderService secretReaderService;
     private final EventService eventService;
@@ -41,7 +40,6 @@ public class RunnerApiClient {
                 .usePlaintext(true)
                 .build();
 
-        this.heartbeatService = new ProcessHeartbeatServiceImpl(channel);
         this.kvService = new KvServiceImpl(channel);
         this.secretReaderService = new SecretReaderServiceImpl(channel);
         this.eventService = new EventServiceImpl(channel);
@@ -65,9 +63,5 @@ public class RunnerApiClient {
 
     public EventService getEventService() {
         return eventService;
-    }
-
-    public ProcessHeartbeatService getHeartbeatService() {
-        return heartbeatService;
     }
 }

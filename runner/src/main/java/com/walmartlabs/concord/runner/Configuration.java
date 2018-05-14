@@ -20,39 +20,55 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Named;
+
+@Named
 public class Configuration {
 
-    public static final String SERVER_HOST_KEY = "rpc.server.host";
-    public static final String SERVER_PORT_KEY = "rpc.server.port";
-    public static final String INSTANCE_ID_KEY = "instanceId";
-    public static final String USER_DIR_KEY = "user.dir";
+    private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
-    private final String serverHost;
-    private final int serverPort;
-    private final String instanceId;
-    private final String userDir;
+    public static final String SERVER_API_BASE_URL_KEY = "api.baseUrl";
+
+    public static final String API_KEY = "api.key";
+    public static final String CONNECT_TIMEOUT_KEY = "api.connect.timeout";
+    public static final String READ_TIMEOUT_KEY = "api.read.timeout";
+
+    /**
+     * As defined in server/db/src/main/resources/com/walmartlabs/concord/server/db/v0.70.0.xml
+     */
+    private static final String DEFAULT_AGENT_API_KEY = "Gz0q/DeGlH8Zs7QJMj1v8g";
+
+    private final String serverApiBaseUrl;
+    private final String apiKey;
+    private final int readTimeout;
+    private final int connectTimeout;
 
     public Configuration() {
-        this.serverHost = getEnv(SERVER_HOST_KEY, "localhost");
-        this.serverPort = Integer.parseInt(getEnv(SERVER_PORT_KEY, "8101"));
-        this.instanceId = getEnv(INSTANCE_ID_KEY);
-        this.userDir = getEnv(USER_DIR_KEY);
+        this.serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://localhost:8001");
+        log.info("Using the API address: {}", serverApiBaseUrl);
+
+        this.apiKey = getEnv(API_KEY, DEFAULT_AGENT_API_KEY);
+        this.connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
+        this.readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
     }
 
-    public String getServerHost() {
-        return serverHost;
+    public int getReadTimeout() {
+        return readTimeout;
     }
 
-    public int getServerPort() {
-        return serverPort;
+    public int getConnectTimeout() {
+        return connectTimeout;
     }
 
-    public String getInstanceId() {
-        return instanceId;
+    public String getServerApiBaseUrl() {
+        return serverApiBaseUrl;
     }
 
-    public String getUserDir() {
-        return userDir;
+    public String getApiKey() {
+        return apiKey;
     }
 
     private static String getEnv(String key) {

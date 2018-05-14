@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.rpc.ProcessHeartbeatService;
 import com.walmartlabs.concord.rpc.RunnerApiClient;
 import com.walmartlabs.concord.sdk.*;
 
@@ -52,9 +51,5 @@ public class RpcClientImpl implements RpcClient {
     @Override
     public EventService getEventService() {
         return client.getEventService();
-    }
-
-    public ProcessHeartbeatService getHeartbeatService() {
-        return client.getHeartbeatService();
     }
 }

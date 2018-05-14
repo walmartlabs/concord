@@ -43,14 +43,12 @@ public class RpcServer implements Closeable {
 
     @Inject
     public RpcServer(RpcServerConfiguration cfg,
-                     ProcessHeartbeatServiceImpl heartbeatService,
                      KvServiceImpl kvService,
                      SecretReaderServiceImpl secretReaderService,
                      EventServiceImpl eventService) throws ClientException {
 
         this.server = ServerBuilder
                 .forPort(cfg.getPort())
-                .addService(heartbeatService)
                 .addService(kvService)
                 .addService(secretReaderService)
                 .addService(eventService)

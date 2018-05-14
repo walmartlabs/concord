@@ -85,7 +85,7 @@ public class Main {
         }
         String instanceId = new String(Files.readAllBytes(idPath));
 
-        heartbeat.start(instanceId);
+        heartbeat.start(UUID.fromString(instanceId));
 
         Map<String, Object> policy = readPolicyRules(baseDir);
         if (policy.isEmpty()) {

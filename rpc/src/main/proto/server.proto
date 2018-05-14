@@ -11,16 +11,6 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 
-// PROCESS HEARTBEAT SERVICE
-
-message TProcessHeartbeatRequest {
-    string instanceId = 1;
-}
-
-service TProcessHeartbeatService {
-    rpc heartbeat(TProcessHeartbeatRequest) returns (google.protobuf.Empty);
-}
-
 // KEY-VALUE STORE SERVICE
 
 service TKvService {
