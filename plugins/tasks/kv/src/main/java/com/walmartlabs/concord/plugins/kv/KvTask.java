@@ -20,38 +20,61 @@ package com.walmartlabs.concord.plugins.kv;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.KvService;
-import com.walmartlabs.concord.sdk.RpcClient;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.sdk.*;
+import com.walmartlabs.concord.server.ApiClient;
+import com.walmartlabs.concord.server.client.ClientUtils;
+import com.walmartlabs.concord.server.client.ConcordApiClient;
+import com.walmartlabs.concord.server.client.ProcessKvStoreApi;
+import com.walmartlabs.concord.server.client.ProcessKvStoreApi;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 
 @Named("kv")
 public class KvTask implements Task {
 
-    private final KvService kvService;
+    private static final int RETRY_COUNT = 3;
+    private static final long RETRY_INTERVAL = 5000;
+
+    @InjectVariable(Constants.Context.CONTEXT_KEY)
+    Context context;
 
     @Inject
-    public KvTask(RpcClient rpcClient) {
-        this.kvService = rpcClient.getKvService();
-    }
+    ApiConfiguration cfg;
 
     public void remove(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        kvService.remove(instanceId, key);
+        ProcessKvStoreApi api = new ProcessKvStoreApi(createClient(cfg, context));
+
+        ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
+            api.removeKey(instanceId, key);
+            return null;
+        });
     }
 
     public void putString(@InjectVariable("txId") String instanceId, String key, String value) throws Exception {
-        kvService.putString(instanceId, key, value);
+        ProcessKvStoreApi api = new ProcessKvStoreApi(createClient(cfg, context));
+
+        ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
+            api.putString(instanceId, key, value);
+            return null;
+        });
     }
 
     public String getString(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        return kvService.getString(instanceId, key);
+        ProcessKvStoreApi api = new ProcessKvStoreApi(createClient(cfg, context));
+
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getString(instanceId, key));
     }
 
     public void putLong(@InjectVariable("txId") String instanceId, String key, Long value) throws Exception {
-        kvService.putLong(instanceId, key, value);
+        ProcessKvStoreApi api = new ProcessKvStoreApi(createClient(cfg, context));
+
+        ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
+            api.putLong(instanceId, key, value);
+            return null;
+        });
     }
 
     public long inc(@InjectVariable("txId") String instanceId, String key) throws Exception {
@@ -59,10 +82,22 @@ public class KvTask implements Task {
     }
 
     public long incLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        return kvService.incLong(instanceId, key);
+        ProcessKvStoreApi api = new ProcessKvStoreApi(createClient(cfg, context));
+
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.incLong(instanceId, key));
     }
 
     public Long getLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        return kvService.getLong(instanceId, key);
+        ProcessKvStoreApi api = new ProcessKvStoreApi(createClient(cfg, context));
+
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getLong(instanceId, key));
+    }
+
+    private ApiClient createClient(ApiConfiguration cfg, Context ctx) throws IOException {
+        ConcordApiClient client = new ConcordApiClient();
+        client.setTempFolderPath(IOUtils.createTempDir("kv-task-client").toString());
+        client.setBasePath(cfg.getBaseUrl());
+        client.setSessionToken(cfg.getSessionToken(ctx));
+        return client;
     }
 }

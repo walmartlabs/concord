@@ -39,11 +39,6 @@ public class RpcClientImpl implements RpcClient {
     }
 
     @Override
-    public KvService getKvService() {
-        return client.getKvService();
-    }
-
-    @Override
     public SecretReaderService getSecretReaderService() {
         return client.getSecretReaderService();
     }

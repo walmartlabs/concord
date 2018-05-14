@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
@@ -38,13 +37,16 @@ import java.util.UUID;
  * Support for external Ansible inventories.
  * <p>
  * This processor takes an inventory file from a request and stores it in a request's workspace
- * for {@link com.walmartlabs.concord.plugins.ansible.RunPlaybookTask2} to pick it up later.
+ * for {@code com.walmartlabs.concord.plugins.ansible.RunPlaybookTask2} to pick it up later.
  */
 @Deprecated
 public class InventoryProcessor implements PayloadProcessor {
 
     public static final AttachmentKey INVENTORY_FILE = AttachmentKey.register("inventory");
     public static final AttachmentKey DYNAMIC_INVENTORY_FILE = AttachmentKey.register("dynamicInventory");
+
+    private static final String INVENTORY_FILE_NAME = "_inventory";
+    private static final String DYNAMIC_INVENTORY_FILE_NAME = "_dynamicInventory";
 
     private final LogManager logManager;
 
@@ -55,8 +57,8 @@ public class InventoryProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        if (!copy(payload, INVENTORY_FILE, AnsibleConstants.INVENTORY_FILE_NAME)) {
-            if (!copy(payload, DYNAMIC_INVENTORY_FILE, AnsibleConstants.DYNAMIC_INVENTORY_FILE_NAME)) {
+        if (!copy(payload, INVENTORY_FILE, INVENTORY_FILE_NAME)) {
+            if (!copy(payload, DYNAMIC_INVENTORY_FILE, DYNAMIC_INVENTORY_FILE_NAME)) {
                 return chain.process(payload);
             }
         }

@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.ansible;
  */
 
 import com.walmartlabs.concord.common.secret.KeyPair;
-import com.walmartlabs.concord.plugins.ansible.AnsibleConstants;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -50,6 +49,8 @@ import java.util.UUID;
 public class PrivateKeyProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyProcessor.class);
+
+    private static final String PRIVATE_KEY_FILE_NAME = "_privateKey";
 
     private final LogManager logManager;
     private final SecretManager secretManager;
@@ -99,7 +100,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path dst = workspace.resolve(AnsibleConstants.PRIVATE_KEY_FILE_NAME);
+        Path dst = workspace.resolve(PRIVATE_KEY_FILE_NAME);
 
         try {
             Files.write(dst, keyPair.getPrivateKey(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);

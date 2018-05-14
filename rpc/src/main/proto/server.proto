@@ -11,65 +11,6 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 
-// KEY-VALUE STORE SERVICE
-
-service TKvService {
-
-    rpc remove(TKvRemoveRequest) returns (google.protobuf.Empty);
-
-    rpc putString(TKvPutStringRequest) returns (google.protobuf.Empty);
-    rpc getString(TKvGetStringRequest) returns (TKvGetStringResponse);
-
-    rpc incLong(TKvIncRequest) returns (TKvIncResponse);
-    rpc putLong(TKvPutLongRequest) returns (google.protobuf.Empty);
-    rpc getLong(TKvGetLongRequest) returns (TKvGetLongResponse);
-}
-
-message TKvRemoveRequest {
-    string instanceId = 1;
-    string key = 2;
-}
-
-message TKvPutStringRequest {
-    string instanceId = 1;
-    string key = 2;
-    string value = 3;
-}
-
-message TKvGetStringRequest {
-    string instanceId = 1;
-    string key = 2;
-}
-
-message TKvGetStringResponse {
-    string value = 1;
-}
-
-message TKvIncRequest {
-    string instanceId = 1;
-    string key = 2;
-}
-
-message TKvIncResponse {
-    uint64 result = 1;
-}
-
-message TKvGetLongRequest {
-    string instanceId = 1;
-    string key = 2;
-}
-
-message TKvGetLongResponse {
-    int64 value = 1;
-    bool hasValue = 2;
-}
-
-message TKvPutLongRequest {
-    string instanceId = 1;
-    string key = 2;
-    int64 value = 3;
-}
-
 // SECRET STORE SERVICE
 
 service TSecretReaderService {

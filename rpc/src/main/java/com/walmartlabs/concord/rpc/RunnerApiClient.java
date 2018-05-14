@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 public class RunnerApiClient {
 
     private final ManagedChannel channel;
-    private final KvService kvService;
     private final SecretReaderService secretReaderService;
     private final EventService eventService;
 
@@ -40,7 +39,6 @@ public class RunnerApiClient {
                 .usePlaintext(true)
                 .build();
 
-        this.kvService = new KvServiceImpl(channel);
         this.secretReaderService = new SecretReaderServiceImpl(channel);
         this.eventService = new EventServiceImpl(channel);
     }
@@ -51,10 +49,6 @@ public class RunnerApiClient {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    public KvService getKvService() {
-        return kvService;
     }
 
     public SecretReaderService getSecretReaderService() {
