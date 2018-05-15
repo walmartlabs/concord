@@ -21,10 +21,7 @@ package com.walmartlabs.concord.server.api.process;
  */
 
 import com.walmartlabs.concord.server.api.IsoDateParam;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.annotations.*;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.validation.constraints.NotNull;
@@ -32,6 +29,7 @@ import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -368,4 +366,41 @@ public interface ProcessResource {
     @Path("{id}/attachment")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     void uploadAttachments(@PathParam("id") UUID instanceId, InputStream data);
+
+    /**
+     * Decrypt string.
+     *
+     * @param instanceId
+     * @param data
+     * @return
+     */
+    @POST
+    @Path("{id}/decrypt")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    Response decrypt(@PathParam("id") UUID instanceId, InputStream data);
+
+    /**
+     * Get secret.
+     *
+     * @param instanceId
+     * @param orgName
+     * @param secretName
+     * @param password
+     * @return
+     */
+    @POST
+    @ApiOperation(value = "Get secret", response = File.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK",
+                    response = File.class,
+                    responseHeaders = @ResponseHeader(name = "X-Concord-SecretType", description = "Secret type", response = String.class))})
+    @Path("{id}/secret")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    Response fetchSecret(@PathParam("id") UUID instanceId,
+                         @FormParam("org") String orgName,
+                         @FormParam("name") String secretName,
+                         @FormParam("password") String password);
+
 }

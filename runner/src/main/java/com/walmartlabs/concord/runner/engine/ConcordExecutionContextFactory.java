@@ -21,10 +21,14 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.sdk.Context;
-import io.takari.bpm.context.ExecutionContextFactory;
+import io.takari.bpm.api.ExecutionContext;
+import io.takari.bpm.api.ExecutionContextFactory;
+import io.takari.bpm.api.Variables;
+import io.takari.bpm.context.DefaultExecutionContextFactory;
 import io.takari.bpm.context.ExecutionContextImpl;
 import io.takari.bpm.el.ExpressionManager;
-import io.takari.bpm.state.Variables;
+
+import java.util.Map;
 
 public class ConcordExecutionContextFactory implements ExecutionContextFactory<ConcordExecutionContextFactory.ConcordExecutionContext> {
 
@@ -36,23 +40,37 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
     @Override
     public ConcordExecutionContext create(Variables source) {
-        return new ConcordExecutionContext(expressionManager, source);
+        return new ConcordExecutionContext(this, expressionManager, source);
     }
 
     @Override
     public ConcordExecutionContext create(Variables source, String processDefinitionId, String elementId) {
-        return new ConcordExecutionContext(expressionManager, source, processDefinitionId, elementId);
+        return new ConcordExecutionContext(this, expressionManager, source, processDefinitionId, elementId);
+    }
+
+    @Override
+    public ExecutionContext withOverrides(ExecutionContext delegate, Map<Object, Object> overrides) {
+        return new MapBackedExecutionContext(delegate, overrides);
     }
 
     public static class ConcordExecutionContext extends ExecutionContextImpl implements Context {
 
-        public ConcordExecutionContext(ExpressionManager expressionManager, Variables source) {
-            super(expressionManager, source);
+        public ConcordExecutionContext(ExecutionContextFactory<? extends ExecutionContext> ctxFactory,
+                                       ExpressionManager expressionManager, Variables source) {
+            super(ctxFactory, expressionManager, source);
         }
 
-        public ConcordExecutionContext(ExpressionManager expressionManager, Variables source,
+        public ConcordExecutionContext(ExecutionContextFactory<? extends ExecutionContext> ctxFactory,
+                                       ExpressionManager expressionManager, Variables source,
                                        String processDefinitionId, String elementId) {
-            super(expressionManager, source, processDefinitionId, elementId);
+            super(ctxFactory, expressionManager, source, processDefinitionId, elementId);
+        }
+    }
+
+    public static class MapBackedExecutionContext extends DefaultExecutionContextFactory.MapBackedExecutionContext implements Context {
+
+        public MapBackedExecutionContext(ExecutionContext delegate, Map<Object, Object> overrides) {
+            super(delegate, overrides);
         }
     }
 }

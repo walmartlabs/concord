@@ -20,8 +20,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.RpcConfiguration;
-import com.walmartlabs.concord.sdk.SecretReader;
+import com.walmartlabs.concord.sdk.SecretService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -30,7 +29,7 @@ import javax.inject.Named;
 public class AnsibleTask extends RunPlaybookTask2 {
 
     @Inject
-    public AnsibleTask(RpcConfiguration rpcCfg, SecretReader secretReader) {
-        super(rpcCfg, secretReader);
+    public AnsibleTask(SecretService secretService) {
+        super(secretService);
     }
 }

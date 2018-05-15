@@ -4,7 +4,7 @@ package com.walmartlabs.concord.sdk;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,10 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
-import java.io.Serializable;
+import com.walmartlabs.concord.server.ApiClient;
 
-@Deprecated
-public interface Secret extends Serializable {
+
+public interface ApiClientFactory {
+
+    ApiClient create(Context ctx);
 }

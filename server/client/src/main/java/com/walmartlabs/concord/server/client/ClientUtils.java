@@ -20,11 +20,18 @@ package com.walmartlabs.concord.server.client;
  * =====
  */
 
+import com.squareup.okhttp.Call;
+import com.walmartlabs.concord.server.ApiClient;
 import com.walmartlabs.concord.server.ApiException;
 import com.walmartlabs.concord.server.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 public final class ClientUtils {
@@ -50,6 +57,22 @@ public final class ClientUtils {
 
     public static String getHeader(String name, ApiResponse<?> resp) {
         return resp.getHeaders().get(name).get(0);
+    }
+
+    public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data) throws ApiException {
+        return postData(client, path, data, null);
+    }
+
+    public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data, Type returnType) throws ApiException {
+        Map<String, String> headerParams = new HashMap<>();
+        headerParams.put("Content-Type", "application/octet-stream");
+
+        Set<String> auths = client.getAuthentications().keySet();
+        String[] authNames = auths.toArray(new String[auths.size()]);
+
+        Call c = client.buildCall(path, "POST", new ArrayList<>(), new ArrayList<>(),
+                data, headerParams, new HashMap<>(), authNames, null);
+        return client.execute(c, returnType);
     }
 
     private static void sleep(long t) {

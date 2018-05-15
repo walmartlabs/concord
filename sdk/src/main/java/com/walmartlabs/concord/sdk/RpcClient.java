@@ -20,6 +20,7 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
+@Deprecated
 public interface RpcClient {
 
     SecretReaderService getSecretReaderService();

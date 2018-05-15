@@ -22,50 +22,57 @@ package com.walmartlabs.concord.sdk;
 
 import java.util.Map;
 
-@Deprecated
-public interface SecretReader {
+public interface SecretService {
 
-    String exportAsString(String instanceId,
+    String exportAsString(Context ctx,
+                          String instanceId,
                           String name,
                           String password) throws Exception;
 
-    String exportAsString(String instanceId,
+    String exportAsString(Context ctx,
+                          String instanceId,
                           String orgName,
                           String name,
                           String password) throws Exception;
 
-    Map<String, String> exportKeyAsFile(String instanceId,
+    Map<String, String> exportKeyAsFile(Context ctx,
+                                        String instanceId,
                                         String workDir,
                                         String name,
                                         String password) throws Exception;
 
-    Map<String, String> exportKeyAsFile(String instanceId,
+    Map<String, String> exportKeyAsFile(Context ctx,
+                                        String instanceId,
                                         String workDir,
                                         String orgName,
                                         String name,
                                         String password) throws Exception;
 
-    Map<String, String> exportCredentials(String instanceId,
+    Map<String, String> exportCredentials(Context ctx,
+                                          String instanceId,
                                           String workDir,
                                           String name,
                                           String password) throws Exception;
 
-    Map<String, String> exportCredentials(String instanceId,
+    Map<String, String> exportCredentials(Context ctx,
+                                          String instanceId,
                                           String workDir,
                                           String orgName,
                                           String name,
                                           String password) throws Exception;
 
-    String exportAsFile(String instanceId,
+    String exportAsFile(Context ctx,
+                        String instanceId,
                         String workDir,
                         String name,
                         String password) throws Exception;
 
-    String exportAsFile(String instanceId,
+    String exportAsFile(Context ctx,
+                        String instanceId,
                         String workDir,
                         String orgName,
                         String name,
                         String password) throws Exception;
 
-    String decryptString(String instanceId, String s) throws Exception;
+    String decryptString(Context ctx, String instanceId, String s) throws Exception;
 }

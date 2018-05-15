@@ -151,5 +151,7 @@ public final class InternalConstants extends Constants {
     public static final class Headers {
 
         public static final String PROCESS_INSTANCE_ID = "X-Concord-InstanceId";
+
+        public static final String SECRET_TYPE = "X-Concord-SecretType";
     }
 }

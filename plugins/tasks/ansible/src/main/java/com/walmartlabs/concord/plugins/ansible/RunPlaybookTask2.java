@@ -50,8 +50,7 @@ public class RunPlaybookTask2 implements Task {
     private static final String LOOKUP_PLUGINS_DIR = "_lookups";
     private static final String STRATEGY_PLUGINS_DIR = "_strategy";
 
-    private final RpcConfiguration rpcCfg;
-    private final SecretReader secretReader;
+    private final SecretService secretService;
 
     @InjectVariable(Constants.Context.CONTEXT_KEY)
     Context context;
@@ -63,9 +62,8 @@ public class RunPlaybookTask2 implements Task {
     ApiConfiguration apiCfg;
 
     @Inject
-    public RunPlaybookTask2(RpcConfiguration rpcCfg, SecretReader secretReader) {
-        this.rpcCfg = rpcCfg;
-        this.secretReader = secretReader;
+    public RunPlaybookTask2(SecretService secretService) {
+        this.secretService = secretService;
     }
 
     private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilderFactory pb) throws Exception {
@@ -108,7 +106,7 @@ public class RunPlaybookTask2 implements Task {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
         }
 
-        GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretReader);
+        GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretService, context);
         groupVarsProcessor.process(txId, args, workDir);
 
         try {
@@ -166,8 +164,6 @@ public class RunPlaybookTask2 implements Task {
     private Map<String, String> defaultEnv(Path ws) {
         final Map<String, String> env = new HashMap<>();
         env.put("PYTHONPATH", PYTHON_LIB_DIR);
-        env.put("CONCORD_HOST", rpcCfg.getServerHost());
-        env.put("CONCORD_PORT", String.valueOf(rpcCfg.getServerPort()));
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
         env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
 
@@ -526,7 +522,7 @@ public class RunPlaybookTask2 implements Task {
             String password = (String) m.get("password");
             String orgName = (String) m.get("org");
 
-            Map<String, String> keyPair = secretReader.exportKeyAsFile(txId, workDir.toAbsolutePath().toString(), orgName, name, password);
+            Map<String, String> keyPair = secretService.exportKeyAsFile(context, txId, workDir.toAbsolutePath().toString(), orgName, name, password);
             p = Paths.get(keyPair.get("private"));
         } else {
             p = getPath(args, AnsibleConstants.PRIVATE_KEY_FILE_KEY, workDir);

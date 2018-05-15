@@ -20,35 +20,43 @@ package com.walmartlabs.concord.plugins.crypto;
  * =====
  */
 
+import com.google.gson.reflect.TypeToken;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.concord.server.ApiResponse;
+import com.walmartlabs.concord.server.api.org.secret.SecretType;
+import com.walmartlabs.concord.server.client.ClientUtils;
+import com.walmartlabs.concord.server.client.ProcessApi;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.xml.bind.DatatypeConverter;
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Named("crypto")
-public class CryptoTask implements Task, SecretReader, SecretStore {
+public class CryptoTask implements Task {
 
-    private static final Logger log = LoggerFactory.getLogger(CryptoTask.class);
+   private final SecretService secretService;
 
-    private final SecretReaderService secretReaderService;
+    @InjectVariable(Constants.Context.CONTEXT_KEY)
+    Context context;
 
     @Inject
-    public CryptoTask(RpcClient rpcClient) {
-        this.secretReaderService = rpcClient.getSecretReaderService();
+    public CryptoTask(SecretService secretService) {
+        this.secretService = secretService;
     }
 
-    @Override
     public String exportAsString(@InjectVariable("txId") String instanceId,
                                  String name,
                                  String password) throws Exception {
@@ -56,23 +64,13 @@ public class CryptoTask implements Task, SecretReader, SecretStore {
         return exportAsString(instanceId, null, name, password);
     }
 
-    @Override
     public String exportAsString(@InjectVariable("txId") String instanceId,
                                  String orgName,
                                  String name,
                                  String password) throws Exception {
-
-        Secret s = get(instanceId, orgName, name, password);
-
-        if (!(s instanceof BinaryDataSecret)) {
-            throw new IllegalArgumentException("The secret '" + name + "'can't be exported as a string");
-        }
-
-        BinaryDataSecret bds = (BinaryDataSecret) s;
-        return new String(bds.getData());
+        return secretService.exportAsString(context, instanceId, orgName, name, password);
     }
 
-    @Override
     public Map<String, String> exportKeyAsFile(@InjectVariable("txId") String instanceId,
                                                @InjectVariable("workDir") String workDir,
                                                String name,
@@ -81,39 +79,14 @@ public class CryptoTask implements Task, SecretReader, SecretStore {
         return exportKeyAsFile(instanceId, workDir, null, name, password);
     }
 
-    @Override
     public Map<String, String> exportKeyAsFile(@InjectVariable("txId") String instanceId,
                                                @InjectVariable("workDir") String workDir,
                                                String orgName,
                                                String name,
                                                String password) throws Exception {
-
-        log.info("Exporting a key pair: {}", name);
-
-        Secret s = get(instanceId, orgName, name, password);
-        if (!(s instanceof KeyPair)) {
-            throw new IllegalArgumentException("Expected a key pair");
-        }
-
-        KeyPair kp = (KeyPair) s;
-
-        Path baseDir = Paths.get(workDir);
-        Path tmpDir = assertTempDir(baseDir);
-
-        Path privateKey = Files.createTempFile(tmpDir, "private", ".key");
-        Files.write(privateKey, kp.getPrivateKey());
-
-        Path publicKey = Files.createTempFile(tmpDir, "public", ".key");
-        Files.write(publicKey, kp.getPublicKey());
-
-        Map<String, String> m = new HashMap<>();
-        m.put("private", baseDir.relativize(privateKey).toString());
-        m.put("public", baseDir.relativize(publicKey).toString());
-
-        return m;
+        return secretService.exportKeyAsFile(context, instanceId, workDir, orgName, name, password);
     }
 
-    @Override
     public Map<String, String> exportCredentials(@InjectVariable("txId") String instanceId,
                                                  @InjectVariable("workDir") String workDir,
                                                  String name,
@@ -122,27 +95,14 @@ public class CryptoTask implements Task, SecretReader, SecretStore {
         return exportCredentials(instanceId, workDir, null, name, password);
     }
 
-    @Override
     public Map<String, String> exportCredentials(@InjectVariable("txId") String instanceId,
                                                  @InjectVariable("workDir") String workDir,
                                                  String orgName,
                                                  String name,
                                                  String password) throws Exception {
-
-        Secret s = get(instanceId, orgName, name, password);
-        if (!(s instanceof UsernamePassword)) {
-            throw new IllegalArgumentException("Expected a credentials secret");
-        }
-
-        UsernamePassword up = (UsernamePassword) s;
-
-        Map<String, String> m = new HashMap<>();
-        m.put("username", up.getUsername());
-        m.put("password", new String(up.getPassword()));
-        return m;
+        return secretService.exportCredentials(context, instanceId, workDir, orgName, name, password);
     }
 
-    @Override
     public String exportAsFile(@InjectVariable("txId") String instanceId,
                                @InjectVariable("workDir") String workDir,
                                String name,
@@ -151,47 +111,17 @@ public class CryptoTask implements Task, SecretReader, SecretStore {
         return exportAsFile(instanceId, workDir, null, name, password);
     }
 
-    @Override
     public String exportAsFile(@InjectVariable("txId") String instanceId,
                                @InjectVariable("workDir") String workDir,
                                String orgName,
                                String name,
                                String password) throws Exception {
-
-        Secret s = get(instanceId, orgName, name, password);
-        if (!(s instanceof BinaryDataSecret)) {
-            throw new IllegalArgumentException("Expected a single value secret");
-        }
-
-        BinaryDataSecret bds = (BinaryDataSecret) s;
-
-        Path baseDir = Paths.get(workDir);
-        Path tmpDir = assertTempDir(baseDir);
-
-        Path p = Files.createTempFile(tmpDir, "file", ".bin");
-        Files.write(p, bds.getData());
-
-        return baseDir.relativize(p).toString();
+        return secretService.exportAsFile(context, instanceId, workDir, orgName, name, password);
     }
 
-    @Override
     public String decryptString(@InjectVariable("txId") String instanceId, String s) throws Exception {
-        return secretReaderService.decryptString(instanceId, s);
+        return secretService.decryptString(context, instanceId, s);
     }
 
-    private Secret get(String instanceId, String orgName, String name, String password) throws Exception {
-        Secret s = secretReaderService.fetch(instanceId, orgName, name, password);
-        if (s == null) {
-            throw new IllegalArgumentException("Secret not found: " + name);
-        }
-        return s;
-    }
 
-    private static Path assertTempDir(Path baseDir) throws IOException {
-        Path p = baseDir.resolve(".tmp");
-        if (!Files.exists(p)) {
-            Files.createDirectories(p);
-        }
-        return p;
-    }
 }

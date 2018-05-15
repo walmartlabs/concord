@@ -20,7 +20,8 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.SecretReader;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.SecretService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +37,15 @@ public class GroupVarsProcessor {
 
     private final Logger log = LoggerFactory.getLogger(GroupVarsProcessor.class);
 
-    private final SecretReader secretReader;
+    private final SecretService secretService;
+
+    private final Context context;
+
     private final Collection<Path> exportedFiles = new HashSet<>();
 
-    public GroupVarsProcessor(SecretReader secretReader) {
-        this.secretReader = secretReader;
+    public GroupVarsProcessor(SecretService secretService, Context context) {
+        this.secretService = secretService;
+        this.context = context;
     }
 
     @SuppressWarnings("unchecked")
@@ -71,7 +76,7 @@ public class GroupVarsProcessor {
     }
 
     private void export(String instanceId, Path workDir, Ref r, Path groupVarsBase) throws Exception {
-        String tmp = secretReader.exportAsFile(instanceId, workDir.toString(), r.orgName, r.secretName, r.password);
+        String tmp = secretService.exportAsFile(context, instanceId, workDir.toString(), r.orgName, r.secretName, r.password);
 
         Path src = Paths.get(tmp);
         Path dst = groupVarsBase.resolve(r.groupName + "." + r.type);

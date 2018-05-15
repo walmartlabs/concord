@@ -39,7 +39,7 @@ public class RpcClientImpl implements RpcClient {
     }
 
     @Override
-    public SecretReaderService getSecretReaderService() {
+     public SecretReaderService getSecretReaderService() {
         return client.getSecretReaderService();
     }
 

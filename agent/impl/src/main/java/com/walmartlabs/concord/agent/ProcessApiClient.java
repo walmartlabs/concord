@@ -20,20 +20,12 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.squareup.okhttp.Call;
-import com.walmartlabs.concord.server.ApiClient;
 import com.walmartlabs.concord.server.ApiException;
-import com.walmartlabs.concord.server.Pair;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.client.ClientUtils;
 import com.walmartlabs.concord.server.client.ProcessApi;
 
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class ProcessApiClient {
@@ -63,7 +55,7 @@ public class ProcessApiClient {
         String path = "/api/v1/process/" + instanceId + "/log";
 
         ClientUtils.withRetry(retryCount, retryInterval, () -> {
-            postData(path, data);
+            ClientUtils.postData(processApi.getApiClient(), path, data);
             return null;
         });
     }
@@ -72,20 +64,8 @@ public class ProcessApiClient {
         String path = "/api/v1/process/" + instanceId + "/attachment";
 
         ClientUtils.withRetry(retryCount, retryInterval, () -> {
-            postData(path, data.toFile());
+            ClientUtils.postData(processApi.getApiClient(), path, data.toFile());
             return null;
         });
-    }
-
-    private void postData(String path, Object data) throws ApiException {
-        Map<String, String> headerParams = new HashMap<>();
-        headerParams.put("Content-Type", MediaType.APPLICATION_OCTET_STREAM);
-
-        String[] authNames = new String[] { "api_key" };
-
-        ApiClient client = processApi.getApiClient();
-        Call c = processApi.getApiClient().buildCall(path, "POST", new ArrayList<>(), new ArrayList<>(),
-                data, headerParams, new HashMap<>(), authNames, null);
-        client.execute(c);
     }
 }

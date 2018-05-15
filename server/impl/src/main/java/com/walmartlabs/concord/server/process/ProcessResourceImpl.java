@@ -27,8 +27,11 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.process.*;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
+import com.walmartlabs.concord.server.org.secret.SecretDao;
+import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
@@ -52,6 +55,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -80,6 +84,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final ProcessStateManager stateManager;
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
+    private final SecretManager secretManager;
+    private final ProcessSecurityContext securityContext;
+    private final OrganizationDao orgDao;
 
     @Inject
     public ProcessResourceImpl(ProcessManager processManager,
@@ -88,7 +95,10 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                PayloadManager payloadManager,
                                ProcessStateManager stateManager,
                                UserDao userDao,
-                               ProjectAccessManager projectAccessManager) {
+                               ProjectAccessManager projectAccessManager,
+                               SecretManager secretManager,
+                               ProcessSecurityContext securityContext,
+                               OrganizationDao orgDao) {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
@@ -97,6 +107,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.stateManager = stateManager;
         this.userDao = userDao;
         this.projectAccessManager = projectAccessManager;
+        this.secretManager = secretManager;
+        this.securityContext = securityContext;
+        this.orgDao = orgDao;
     }
 
     @Override
@@ -451,10 +464,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     public void appendLog(UUID instanceId, InputStream data) {
-        ProcessEntry p = queueDao.get(instanceId);
-        if (p == null) {
-            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
-        }
+        assertProcess(instanceId);
 
         try {
             logsDao.append(instanceId, ByteStreams.toByteArray(data));
@@ -466,10 +476,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     public Response downloadState(UUID instanceId) {
-        ProcessEntry p = queueDao.get(instanceId);
-        if (p == null) {
-            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
-        }
+        ProcessEntry p = assertProcess(instanceId);
 
         if (p.getProjectId() != null) {
             projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.READER, false);
@@ -489,10 +496,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     @Validate
     public Response downloadState(UUID instanceId, String fileName) {
-        ProcessEntry p = queueDao.get(instanceId);
-        if (p == null) {
-            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
-        }
+        ProcessEntry p = assertProcess(instanceId);
 
         if (p.getProjectId() != null) {
             projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.READER, false);
@@ -515,10 +519,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     public void uploadAttachments(UUID instanceId, InputStream data) {
-        ProcessEntry p = queueDao.get(instanceId);
-        if (p == null) {
-            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
-        }
+        assertProcess(instanceId);
 
         Path tmpIn = null;
         Path tmpDir = null;
@@ -553,6 +554,92 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         }
 
         log.info("uploadAttachments ['{}'] -> done", instanceId);
+    }
+
+    @Override
+    public Response decrypt(UUID instanceId, InputStream data) {
+        ProcessEntry p = assertProcess(instanceId);
+
+        byte[] bytes;
+
+        try {
+           bytes = ByteStreams.toByteArray(data);
+        } catch (IOException e) {
+            log.error("decrypt ['{}'] -> error data load", instanceId, e);
+            throw new WebApplicationException("decrypt error: " + e.getMessage());
+        }
+
+        byte[] result;
+        try {
+            result = secretManager.decryptData(p.getProjectName(), bytes);
+        } catch (Exception e) {
+            log.error("decrypt ['{}'] -> error", instanceId, e);
+            throw new WebApplicationException("decrypt error: " + e.getMessage());
+        }
+
+        return Response.ok((StreamingOutput) output -> output.write(result))
+                .build();
+    }
+
+    @Override
+    public Response fetchSecret(UUID instanceId, String orgName, String secretName, String password) {
+        if (secretName == null) {
+            throw new WebApplicationException("Secret name is required");
+        }
+
+        UUID orgId = getOrgId(instanceId, orgName);
+
+        try {
+            SecretDao.SecretDataEntry entry;
+            try {
+                entry = secretManager.getRaw(orgId, secretName, password);
+            } catch (ValidationErrorsException e) {
+                log.warn("fetchSecret -> error: {}", e.getMessage());
+                return null;
+            }
+
+            if (entry == null) {
+                return null;
+            }
+
+            return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
+                    MediaType.APPLICATION_OCTET_STREAM)
+                    .header(InternalConstants.Headers.SECRET_TYPE, entry.getType().name())
+                    .build();
+        } catch (Exception e) {
+            log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
+            throw new WebApplicationException("Error while fetching a secret: " + e.getMessage());
+        }
+    }
+
+    private UUID getOrgId(UUID instanceId, String orgName) {
+        UUID id = null;
+
+        if (orgName != null) {
+            id = orgDao.getId(orgName);
+            if (id == null) {
+                throw new WebApplicationException("Organization '" + orgName + "' not found");
+            }
+        }
+
+        if (id == null) {
+            id = queueDao.getOrgId(instanceId);
+        }
+
+        if (id == null) {
+            return OrganizationManager.DEFAULT_ORG_ID;
+        }
+
+        return id;
+    }
+
+
+    private ProcessEntry assertProcess(UUID instanceId) {
+        ProcessEntry p = queueDao.get(instanceId);
+        if (p == null) {
+            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+        return p;
     }
 
     private StartProcessResponse toResponse(ProcessResult r) {

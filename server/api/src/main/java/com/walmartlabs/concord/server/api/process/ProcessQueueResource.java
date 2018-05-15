@@ -34,11 +34,11 @@ import java.io.File;
 public interface ProcessQueueResource {
 
     @POST
-    @ApiOperation(value = "Take process from queue", response = File.class)
+    @ApiOperation(value = "Take a payload from the queue", response = File.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK",
                     response = File.class,
-                    responseHeaders = @ResponseHeader(name = "X-Concord-InstanceId", description = "Process instance id", response = String.class))})
+                    responseHeaders = @ResponseHeader(name = "X-Concord-InstanceId", description = "Process instance ID", response = String.class))})
     @Path("/take")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response take();
