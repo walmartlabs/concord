@@ -65,7 +65,11 @@ export const makeErrorReducer = <T>(
     return state;
 };
 
-export const makeResponseReducer = <R, A extends R & Action>(
+interface HasError {
+    error?: RequestError;
+}
+
+export const makeResponseReducer = <R, A extends R & Action & HasError>(
     responseType: {},
     resetType: {}
 ): Reducer<R | null> => (state = null, action: A) => {
@@ -73,6 +77,9 @@ export const makeResponseReducer = <R, A extends R & Action>(
         case responseType:
             return action;
         case resetType:
+            if (action.error) {
+                return state;
+            }
             return null;
         default:
             return state;

@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { ConcordId, ConcordKey, fetchJson } from '../../common';
+import { ConcordId, ConcordKey, fetchJson, OperationResult } from '../../common';
 import { RepositoryEntry } from './repository';
 
 export enum ProjectVisibility {
@@ -40,6 +40,8 @@ export interface ProjectEntry {
     visibility: ProjectVisibility;
 
     repositories?: Repositories;
+
+    acceptsRawPayload: boolean;
 }
 
 export interface NewProjectEntry {
@@ -56,14 +58,61 @@ export const get = (orgName: ConcordKey, projectName: ConcordKey): Promise<Proje
 export const list = (orgName: ConcordKey): Promise<ProjectEntry[]> =>
     fetchJson<ProjectEntry[]>(`/api/v1/org/${orgName}/project`);
 
+export interface ProjectOperationResult {
+    ok: boolean;
+    id: ConcordId;
+    result: OperationResult;
+}
+
 // TODO response type
-export const createOrUpdate = (orgName: ConcordKey, entry: NewProjectEntry) => {
+export const createOrUpdate = (
+    orgName: ConcordKey,
+    entry: NewProjectEntry
+): Promise<ProjectOperationResult> => {
     const opts = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(entry)
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/project`, opts);
+};
+
+export const rename = (
+    orgName: ConcordKey,
+    projectId: ConcordId,
+    projectName: ConcordKey
+): Promise<ProjectOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: projectId,
+            name: projectName
+        })
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/project`, opts);
+};
+
+export const setAcceptsRawPayload = (
+    orgName: ConcordKey,
+    projectId: ConcordId,
+    acceptsRawPayload: boolean
+): Promise<ProjectOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: projectId,
+            acceptsRawPayload
+        })
     };
 
     return fetchJson(`/api/v1/org/${orgName}/project`, opts);

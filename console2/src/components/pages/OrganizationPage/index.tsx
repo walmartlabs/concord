@@ -51,6 +51,7 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
 
         const activeTab = pathToTab(this.props.location.pathname);
 
+        // TODO move into OrganizationActivity
         return (
             <>
                 <BreadcrumbSegment>

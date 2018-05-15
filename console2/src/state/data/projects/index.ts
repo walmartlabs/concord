@@ -1,4 +1,3 @@
-import { push as pushHistory } from 'react-router-redux';
 /*-
  * *****
  * Concord
@@ -18,14 +17,17 @@ import { push as pushHistory } from 'react-router-redux';
  * limitations under the License.
  * =====
  */
+import { push as pushHistory } from 'react-router-redux';
 import { Action, combineReducers, Reducer } from 'redux';
-import { all, call, put, takeLatest } from 'redux-saga/effects';
+import { all, call, put, takeLatest, throttle } from 'redux-saga/effects';
 
-import { ConcordKey } from '../../../api/common';
+import { ConcordId, ConcordKey } from '../../../api/common';
 import {
     createOrUpdate as apiCreateOrUpdate,
     get as apiGet,
     list as apiList,
+    rename as apiRename,
+    setAcceptsRawPayload as apiSetAcceptsRawPayload,
     NewProjectEntry
 } from '../../../api/org/project';
 import {
@@ -53,6 +55,10 @@ import {
     Projects,
     RefreshRepositoryRequest,
     RefreshRepositoryState,
+    RenameProjectRequest,
+    RenameProjectState,
+    SetAcceptsRawPayloadRequest,
+    SetAcceptsRawPayloadState,
     State,
     UpdateRepositoryRequest,
     UpdateRepositoryState
@@ -68,6 +74,12 @@ const actionTypes = {
     PROJECT_DATA_RESPONSE: `${NAMESPACE}/data/response`,
 
     CREATE_PROJECT_REQUEST: `${NAMESPACE}/create/request`,
+
+    RENAME_PROJECT_REQUEST: `${NAMESPACE}/rename/request`,
+    RENAME_PROJECT_RESPONSE: `${NAMESPACE}/rename/response`,
+
+    SET_ACCEPTS_RAW_PAYLOAD_REQUEST: `${NAMESPACE}/acceptsRawPayload/request`,
+    SET_ACCEPTS_RAW_PAYLOAD_RESPONSE: `${NAMESPACE}/acceptsRawPayload/response`,
 
     ADD_REPOSITORY_REQUEST: `${NAMESPACE}/repo/add/request`,
     ADD_REPOSITORY_RESPONSE: `${NAMESPACE}/repo/add/response`,
@@ -100,6 +112,28 @@ export const actions = {
         type: actionTypes.CREATE_PROJECT_REQUEST,
         orgName,
         entry
+    }),
+
+    renameProject: (
+        orgName: ConcordKey,
+        projectId: ConcordId,
+        projectName: ConcordKey
+    ): RenameProjectRequest => ({
+        type: actionTypes.RENAME_PROJECT_REQUEST,
+        orgName,
+        projectId,
+        projectName
+    }),
+
+    setAcceptsRawPayload: (
+        orgName: ConcordKey,
+        projectId: ConcordId,
+        acceptsRawPayload: boolean
+    ): SetAcceptsRawPayloadRequest => ({
+        type: actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST,
+        orgName,
+        projectId,
+        acceptsRawPayload
     }),
 
     addRepository: (
@@ -189,6 +223,36 @@ const errorMsg = makeErrorReducer(
     [actionTypes.PROJECT_DATA_RESPONSE]
 );
 
+const renameReducers = combineReducers<RenameProjectState>({
+    running: makeLoadingReducer(
+        [actionTypes.RENAME_PROJECT_REQUEST],
+        [actionTypes.RENAME_PROJECT_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.RENAME_PROJECT_REQUEST],
+        [actionTypes.RENAME_PROJECT_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.RENAME_PROJECT_RESPONSE,
+        actionTypes.RENAME_PROJECT_RESPONSE
+    )
+});
+
+const acceptsRawPayloadReducers = combineReducers<SetAcceptsRawPayloadState>({
+    running: makeLoadingReducer(
+        [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST],
+        [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST],
+        [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE,
+        actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE
+    )
+});
+
 const createRepositoryReducers = combineReducers<CreateRepositoryState>({
     running: makeLoadingReducer(
         [actionTypes.ADD_REPOSITORY_REQUEST],
@@ -251,6 +315,9 @@ export const reducers = combineReducers<State>({
     loading,
     error: errorMsg,
 
+    rename: renameReducers,
+    acceptRawPayload: acceptsRawPayloadReducers,
+
     createRepository: createRepositoryReducers,
     updateRepository: updateRepositoryReducers,
     deleteRepository: deleteRepositoryReducers,
@@ -307,6 +374,34 @@ function* onCreate({ orgName, entry }: CreateProjectRequest) {
     }
 }
 
+function* onRename({ orgName, projectId, projectName }: RenameProjectRequest) {
+    try {
+        yield call(apiRename, orgName, projectId, projectName);
+        yield put({
+            type: actionTypes.RENAME_PROJECT_RESPONSE
+        });
+
+        yield put(pushHistory(`/org/${orgName}/project/${projectName}`));
+    } catch (e) {
+        yield handleErrors(actionTypes.RENAME_PROJECT_RESPONSE, e);
+    }
+}
+
+function* onSetAcceptsRawPayload({
+    orgName,
+    projectId,
+    acceptsRawPayload
+}: SetAcceptsRawPayloadRequest) {
+    try {
+        yield call(apiSetAcceptsRawPayload, orgName, projectId, acceptsRawPayload);
+        yield put({
+            type: actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE, e);
+    }
+}
+
 function* onAddRepository({ orgName, projectName, entry }: AddRepositoryRequest) {
     try {
         const response = yield call(apiRepoCreateOrUpdate, orgName, projectName, entry);
@@ -352,6 +447,8 @@ export const sagas = function*() {
         takeLatest(actionTypes.GET_PROJECT_REQUEST, onGet),
         takeLatest(actionTypes.LIST_PROJECTS_REQUEST, onList),
         takeLatest(actionTypes.CREATE_PROJECT_REQUEST, onCreate),
+        takeLatest(actionTypes.RENAME_PROJECT_REQUEST, onRename),
+        throttle(2000, actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST, onSetAcceptsRawPayload),
         takeLatest(actionTypes.ADD_REPOSITORY_REQUEST, onAddRepository),
         takeLatest(actionTypes.UPDATE_REPOSITORY_REQUEST, onUpdateRepository),
         takeLatest(actionTypes.DELETE_REPOSITORY_REQUEST, onDeleteRepository),

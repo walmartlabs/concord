@@ -37,9 +37,9 @@ class Layout extends React.PureComponent<Props> {
                 {!fullScreen && (
                     <Grid.Column width={16} className="topBar">
                         <Grid centered={true}>
-                        <Grid.Column width={11} className="topBarColumn">
-                            <TopBar />
-                        </Grid.Column>
+                            <Grid.Column width={11} className="topBarColumn">
+                                <TopBar />
+                            </Grid.Column>
                         </Grid>
                     </Grid.Column>
                 )}

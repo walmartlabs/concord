@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,33 +19,18 @@
  */
 import * as gitUrlParse from 'git-url-parse';
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Icon, Loader, Table } from 'semantic-ui-react';
+import { Icon, Table } from 'semantic-ui-react';
 
-import { ConcordKey, RequestError } from '../../../api/common';
-import { ProjectEntry } from '../../../api/org/project';
+import { ConcordKey } from '../../../api/common';
 import { RepositoryEntry } from '../../../api/org/project/repository';
-import { actions, selectors, State } from '../../../state/data/projects';
-import { comparators } from '../../../utils';
-import { RequestErrorMessage, RepositoryActionDropdown } from '../../molecules';
+import { RepositoryActionDropdown } from '../../molecules';
 
-interface StateProps {
-    repositories: RepositoryEntry[];
-    loading: boolean;
-    error: RequestError;
+interface Props {
+    orgName: ConcordKey;
+    projectName: ConcordKey;
+    data: RepositoryEntry[];
 }
-
-interface ExternalProps {
-    orgName: string;
-    projectName: string;
-}
-
-interface DispatchProps {
-    load: () => void;
-}
-
-type Props = StateProps & DispatchProps & ExternalProps;
 
 const getSource = (r: RepositoryEntry) => {
     if (r.commitId) {
@@ -82,31 +67,10 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
 };
 
 class RepositoryList extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.props.load();
-    }
-
-    componentDidUpdate(prevProps: Props) {
-        const { orgName: newOrgName, projectName: newProjectName } = this.props;
-        const { orgName: oldOrgName, projectName: oldProjectName } = prevProps;
-
-        if (oldOrgName !== newOrgName || oldProjectName !== newProjectName) {
-            this.props.load();
-        }
-    }
-
     render() {
-        const { error, loading, repositories, orgName, projectName } = this.props;
+        const { data, orgName, projectName } = this.props;
 
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        if (loading) {
-            return <Loader active={true} />;
-        }
-
-        if (repositories.length === 0) {
+        if (data.length === 0) {
             return <h3>No repositories found.</h3>;
         }
 
@@ -122,38 +86,10 @@ class RepositoryList extends React.PureComponent<Props> {
                         <Table.HeaderCell collapsing={true} />
                     </Table.Row>
                 </Table.Header>
-                <Table.Body>
-                    {repositories.map((r) => renderTableRow(orgName, projectName, r))}
-                </Table.Body>
+                <Table.Body>{data.map((r) => renderTableRow(orgName, projectName, r))}</Table.Body>
             </Table>
         );
     }
 }
 
-const toRepositoryList = (p?: ProjectEntry) => {
-    if (!p || !p.repositories) {
-        return [];
-    }
-
-    return Object.keys(p.repositories)
-        .map((k) => p.repositories![k])
-        .sort(comparators.byName);
-};
-
-const mapStateToProps = (
-    { projects }: { projects: State },
-    { orgName, projectName }: ExternalProps
-): StateProps => ({
-    repositories: toRepositoryList(selectors.projectByName(projects, orgName, projectName)),
-    loading: projects.loading,
-    error: projects.error
-});
-
-const mapDispatchToProps = (
-    dispatch: Dispatch<{}>,
-    { orgName, projectName }: ExternalProps
-): DispatchProps => ({
-    load: () => dispatch(actions.getProject(orgName, projectName))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(RepositoryList);
+export default RepositoryList;

@@ -36,20 +36,3 @@ body {
   height: 100% !important;
   min-height: 100% !important;
 }
-
-/* Absolute center for modal popups */
-@media only screen and (max-width: 767px) {
-  .ui.modal {
-    position: absolute;
-    top: 50%;
-  }
-}
-@media only screen and (min-width: 768px) {
-  .ui.modal {
-    position: absolute;
-    top: 50%;
-    margin: 0 auto;
-    left: 0;
-    right: 0;
-  }
-}

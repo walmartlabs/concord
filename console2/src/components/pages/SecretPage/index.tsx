@@ -32,13 +32,11 @@ interface RouteProps {
     secretName: ConcordKey;
 }
 
-type TabLink = 'info' | 'access' | null;
+type TabLink = 'info' | null;
 
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/info')) {
         return 'info';
-    } else if (s.endsWith('/access')) {
-        return 'access';
     }
 
     return null;
@@ -67,10 +65,6 @@ class SecretPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
                             <Icon name="file" />
                             <Link to={`/org/${orgName}/secret/${secretName}/info`}>Info</Link>
                         </Menu.Item>
-                        <Menu.Item active={activeTab === 'access'}>
-                            <Icon name="lock" />
-                            <Link to={`/org/${orgName}/secret/${secretName}/access`}>Access</Link>
-                        </Menu.Item>
                     </Menu>
                 </Route>
 
@@ -81,9 +75,6 @@ class SecretPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
 
                     <Route path={`${url}/info`} exact={true}>
                         <SecretInfo orgName={orgName} secretName={secretName} />
-                    </Route>
-                    <Route path={`${url}/access`} exact={true}>
-                        <h1>Access</h1>
                     </Route>
 
                     <Route component={NotFoundPage} />

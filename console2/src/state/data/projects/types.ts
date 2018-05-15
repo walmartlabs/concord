@@ -19,8 +19,8 @@
  */
 import { Action } from 'redux';
 
-import { ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
-import { NewProjectEntry, ProjectEntry } from '../../../api/org/project';
+import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
+import { NewProjectEntry, ProjectEntry, ProjectOperationResult } from '../../../api/org/project';
 import { EditRepositoryEntry } from '../../../api/org/project/repository';
 import { RequestState } from '../common';
 
@@ -41,6 +41,18 @@ export interface ProjectDataResponse extends Action {
 export interface CreateProjectRequest extends Action {
     orgName: ConcordKey;
     entry: NewProjectEntry;
+}
+
+export interface RenameProjectRequest extends Action {
+    orgName: ConcordKey;
+    projectId: ConcordId;
+    projectName: ConcordKey;
+}
+
+export interface SetAcceptsRawPayloadRequest extends Action {
+    orgName: ConcordKey;
+    projectId: ConcordKey;
+    acceptsRawPayload: boolean;
 }
 
 export interface AddRepositoryRequest extends Action {
@@ -71,6 +83,8 @@ export interface Projects {
     [id: string]: ProjectEntry;
 }
 
+export type RenameProjectState = RequestState<ProjectOperationResult>;
+export type SetAcceptsRawPayloadState = RequestState<ProjectOperationResult>;
 export type CreateRepositoryState = RequestState<GenericOperationResult>;
 export type UpdateRepositoryState = RequestState<GenericOperationResult>;
 export type DeleteRepositoryState = RequestState<GenericOperationResult>;
@@ -82,6 +96,9 @@ export interface State {
     // TODO move into a RequestState field
     loading: boolean;
     error: RequestError;
+
+    rename: RenameProjectState;
+    acceptRawPayload: SetAcceptsRawPayloadState;
 
     createRepository: CreateRepositoryState;
     updateRepository: UpdateRepositoryState;
