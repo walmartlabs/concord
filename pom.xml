@@ -20,7 +20,6 @@
         <module>sdk</module>
         <module>common</module>
         <module>policy-engine</module>
-        <module>client</module>
         <module>dependency-manager</module>
         <module>project-model</module>
         <module>rpc</module>

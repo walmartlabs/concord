@@ -4,9 +4,9 @@
 
 ### Changed
 
+- concord-client: renamed to `concord-tasks`;
 - concord-rpc: the KV store, heartbeat and secret gRPC services
 replaced with the REST API based services.
-
  
 
 ## [0.69.0] - 2018-05-09

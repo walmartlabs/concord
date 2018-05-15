@@ -213,12 +213,6 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord</groupId>
-                                    <artifactId>concord-client</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-
-                                <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>ansible-tasks</artifactId>
                                     <version>${project.version}</version>
@@ -228,6 +222,11 @@
                                     <artifactId>ansible-template</artifactId>
                                     <version>${project.version}</version>
                                     <destFileName>ansible-template.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+                                    <artifactId>concord-tasks</artifactId>
+                                    <version>${project.version}</version>
                                 </artifactItem>
 
                                 <!-- TODO this should be automated -->
