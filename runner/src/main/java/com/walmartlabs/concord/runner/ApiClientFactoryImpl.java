@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.sdk.ApiClientFactory;
+import com.walmartlabs.concord.server.client.ApiClientFactory;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.server.ApiClient;

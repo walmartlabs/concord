@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.sdk;
+package com.walmartlabs.concord.server.client;
 
 /*-
  * *****
@@ -20,8 +20,8 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.server.ApiClient;
-
 
 public interface ApiClientFactory {
 

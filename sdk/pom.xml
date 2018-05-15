@@ -15,12 +15,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server-client</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <scope>provided</scope>
