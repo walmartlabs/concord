@@ -29,7 +29,7 @@ import { ProcessFormActivity } from '../../organisms';
 interface Props {
     processInstanceId: ConcordId;
     formInstanceId: string;
-    mode?: 'step' | 'wizard';
+    mode: string;
 }
 
 class ProcessFormPage extends React.PureComponent<RouteComponentProps<Props>> {

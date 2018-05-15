@@ -56,6 +56,12 @@ class App extends React.Component {
 
                         <Route path="/login" component={LoginPage} />
 
+                        <ProtectedRoute
+                            path="/process/:instanceId/wizard"
+                            exact={true}
+                            component={ProcessWizardPage}
+                        />
+
                         <Layout>
                             <Switch>
                                 <ProtectedRoute path="/org">
@@ -115,11 +121,6 @@ class App extends React.Component {
                                         <Route
                                             path="/process/:processInstanceId/form/:formInstanceId/:mode"
                                             component={ProcessFormPage}
-                                        />
-
-                                        <Route
-                                            path="/process/:instanceId/wizard"
-                                            component={ProcessWizardPage}
                                         />
 
                                         <Route

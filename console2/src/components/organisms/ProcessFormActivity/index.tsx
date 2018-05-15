@@ -132,11 +132,10 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>, { wizard }: ExternalProps): 
         dispatch(actions.getProcessForm(processInstanceId, formInstanceId));
     },
 
-    onSubmit: (processInstanceId, formInstanceId, data, yieldFlow) => {
+    onSubmit: (processInstanceId, formInstanceId, data, yieldFlow) =>
         dispatch(
             actions.submitProcessForm(processInstanceId, formInstanceId, wizard, yieldFlow, data)
-        );
-    },
+        ),
 
     onReturn: (processInstanceId) => dispatch(pushHistory(`/process/${processInstanceId}`))
 });

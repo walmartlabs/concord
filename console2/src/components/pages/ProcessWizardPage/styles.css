@@ -17,27 +17,15 @@
  * limitations under the License.
  * =====
  */
-import * as React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+.flexbox-container {
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
 
-import { ConcordId } from '../../../api/common';
-import { ProcessWizard } from '../../organisms';
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  align-items: center;
 
-import './styles.css';
-
-interface Props {
-    instanceId: ConcordId;
+  height: 100%;
 }
-
-class ProcessWizardPage extends React.PureComponent<RouteComponentProps<Props>> {
-    render() {
-        const { instanceId } = this.props.match.params;
-        return (
-            <div className="flexbox-container">
-                <ProcessWizard processInstanceId={instanceId} />
-            </div>
-        );
-    }
-}
-
-export default withRouter(ProcessWizardPage);

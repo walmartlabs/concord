@@ -1,3 +1,4 @@
+import { push as pushHistory, replace as replaceHistory } from 'react-router-redux';
 /*-
  * *****
  * Concord
@@ -20,11 +21,10 @@
 import { combineReducers } from 'redux';
 import { delay } from 'redux-saga';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
-import { push as pushHistory, replace as replaceHistory } from 'react-router-redux';
 
 import { ConcordId } from '../../../api/common';
-import { get as apiGet, submit as apiSubmit, list as apiList } from '../../../api/process/form';
 import { get as apiGetProcess, isFinal } from '../../../api/process';
+import { get as apiGet, list as apiList, submit as apiSubmit } from '../../../api/process/form';
 import { startSession as apiStartSession } from '../../../api/service/custom_form';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import {
@@ -180,7 +180,7 @@ function* onSubmitProcessForm({
             } else {
                 const path = {
                     pathname: `/process/${processInstanceId}/wizard`,
-                    query: { fullScreen: true }
+                    search: `fullScreen=true`
                 };
                 yield put(pushHistory(path));
             }
@@ -228,8 +228,8 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
         } else {
             // regular form
             const path = {
-                pathname: `/process/${processInstanceId}/form/${formInstanceId}/wizard?fullScreen=true`,
-                query: { fullScreen: true, yieldFlow }
+                pathname: `/process/${processInstanceId}/form/${formInstanceId}/wizard`,
+                search: `fullScreen=true&yieldFlow=${yieldFlow}`
             };
             yield put(replaceHistory(path));
         }
