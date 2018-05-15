@@ -351,13 +351,9 @@ public class DefaultJobExecutor implements JobExecutor {
         // classpath
         l.add("-cp");
 
-        // payload's own libraries are stored in `./lib/` directory in the working directory
-        String libs = InternalConstants.Files.LIBRARIES_DIR_NAME + "/*";
-
         // the runner's runtime is stored somewhere in the agent's libraries
         String runner = cfg.getRunnerPath().toAbsolutePath().toString();
-
-        l.add(joinClassPath(libs, runner));
+        l.add(runner);
 
         // main class
         l.add("com.walmartlabs.concord.runner.Main");

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -337,15 +337,31 @@ public class Main {
         return e;
     }
 
-    private static List<URL> parseDeps(String plainDeps) {
+    private static List<URL> parseDeps(String plainDeps) throws IOException {
         List<URL> result = new ArrayList<>();
-        for(String d : plainDeps.split(":")) {
+        for (String d : plainDeps.split(":")) {
             try {
                 result.add(new URL("file://" + d));
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
             }
         }
+
+        // payload's own libraries are stored in `./lib/` directory in the working directory
+        Path baseDir = Paths.get(System.getProperty("user.dir"));
+        Path lib = baseDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME);
+        if (Files.exists(lib)) {
+            Files.list(lib).forEach(f -> {
+                if (f.toString().endsWith(".jar")) {
+                    try {
+                        result.add(f.toUri().toURL());
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        }
+
         return result;
     }
 
