@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- concord-rpc: the KV store, heartbeat and secret gRPC services
+replaced with the REST API based services.
+
+ 
+
+## [0.69.0] - 2018-05-09
+
 ### Added
 
 - concord-agent: "maintenance mode" to suspend job acquisition;
