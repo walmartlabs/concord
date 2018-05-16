@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 
 @Named
@@ -51,9 +52,9 @@ public class ProcessQueueResourceImpl implements ProcessQueueResource, Resource 
     }
 
     @Override
-    public Response take() {
+    public Response take(Map<String, Object> capabilities) {
         try {
-            ProcessManager.PayloadEntry p = processManager.nextPayload();
+            ProcessManager.PayloadEntry p = processManager.nextPayload(capabilities);
             if (p == null) {
                 return null;
             }

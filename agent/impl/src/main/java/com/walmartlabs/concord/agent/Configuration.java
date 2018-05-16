@@ -20,16 +20,20 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -64,6 +68,8 @@ public class Configuration {
     public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL_KEY";
     public static final String MAINTENANCE_MODE_KEY = "MAINTENANCE_MODE_FILE";
 
+    public static final String CAPABILITIES_FILE_KEY = "CAPABILITIES_FILE";
+
     /**
      * As defined in server/db/src/main/resources/com/walmartlabs/concord/server/db/v0.69.0.xml
      */
@@ -95,6 +101,9 @@ public class Configuration {
     private final long pollInterval;
     private final Path maintenanceModeFile;
 
+    private final Map<String, Object> capabilities;
+
+    @SuppressWarnings("unchecked")
     public Configuration() {
         this.agentId = UUID.randomUUID().toString();
 
@@ -142,8 +151,16 @@ public class Configuration {
             this.pollInterval = Long.parseLong(getEnv(POLL_INTERVAL_KEY, "1000"));
 
             this.maintenanceModeFile = getDir(MAINTENANCE_MODE_KEY, "maintenance-mode").resolve("info");
+
+            String capabilitiesFile = getEnv(CAPABILITIES_FILE_KEY, null);
+            if (capabilitiesFile != null) {
+                this.capabilities = new ObjectMapper().readValue(new File(capabilitiesFile), Map.class);
+                log.info("Using the capabilities: {}", this.capabilities);
+            } else {
+                this.capabilities = null;
+            }
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -241,6 +258,10 @@ public class Configuration {
 
     public Path getMaintenanceModeFile() {
         return maintenanceModeFile;
+    }
+
+    public Map<String, Object> getCapabilities() {
+        return capabilities;
     }
 
     private static String getEnv(String key, String defaultValue) {

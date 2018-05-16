@@ -105,8 +105,8 @@ public class ProcessManager {
         this.objectMapper = new ObjectMapper();
     }
 
-    public PayloadEntry nextPayload() throws IOException {
-        ProcessEntry p = queueDao.poll();
+    public PayloadEntry nextPayload(Map<String, Object> capabilities) throws IOException {
+        ProcessEntry p = queueDao.poll(capabilities);
         if (p == null) {
             return null;
         }

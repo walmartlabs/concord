@@ -20,4 +20,11 @@
         </insert>
     </changeSet>
 
+    <changeSet id="70100" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="REQUIREMENTS" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

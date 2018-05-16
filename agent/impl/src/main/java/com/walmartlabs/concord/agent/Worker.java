@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -55,17 +56,20 @@ public class Worker implements Runnable {
     private final ExecutionManager executionManager;
     private final long logSteamMaxDelay;
     private final long pollInterval;
+    private final Map<String, Object> capabilities;
 
     private volatile boolean maintenanceMode = false;
 
     public Worker(ProcessQueueApi queueClient, ProcessApiClient processApiClient,
                   ExecutionManager executionManager,
-                  long logSteamMaxDelay, long pollInterval) {
+                  long logSteamMaxDelay, long pollInterval,
+                  Map<String, Object> capabilities) {
         this.queueClient = queueClient;
         this.processApiClient = processApiClient;
         this.executionManager = executionManager;
         this.logSteamMaxDelay = logSteamMaxDelay;
         this.pollInterval = pollInterval;
+        this.capabilities = capabilities;
     }
 
     @Override
@@ -96,7 +100,7 @@ public class Worker implements Runnable {
     }
 
     private JobEntry take() throws ApiException {
-        ApiResponse<File> resp = queueClient.takeWithHttpInfo();
+        ApiResponse<File> resp = queueClient.takeWithHttpInfo(capabilities);
         if (resp.getData() == null) {
             return null;
         }

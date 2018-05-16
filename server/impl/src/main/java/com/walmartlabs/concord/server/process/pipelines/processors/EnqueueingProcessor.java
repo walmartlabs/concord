@@ -64,7 +64,9 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
         Instant startAt = getStartAt(payload);
 
-        queueDao.update(instanceId, ProcessStatus.ENQUEUED, tags, startAt);
+        Map<String, Object> requirements = payload.getHeader(Payload.REQUIREMENTS);
+
+        queueDao.update(instanceId, ProcessStatus.ENQUEUED, tags, startAt, requirements);
         return chain.process(payload);
     }
 

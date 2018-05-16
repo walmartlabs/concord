@@ -75,7 +75,8 @@ public class ServerConnector implements MaintenanceModeListener {
         for (int i = 0; i < workersCount; i++) {
             Worker w = new Worker(new ProcessQueueApi(createClient(cfg)),
                     new ProcessApiClient(cfg, new ProcessApi(createClient(cfg))),
-                    executionManager, cfg.getLogMaxDelay(), cfg.getPollInterval());
+                    executionManager, cfg.getLogMaxDelay(), cfg.getPollInterval(),
+                    cfg.getCapabilities());
             workers[i] = w;
             Thread t = new Thread(w, "worker-" + i);
             workerThreads[i] = t;

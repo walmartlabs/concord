@@ -145,6 +145,11 @@ public class Constants {
          * Schedules a process on the specified date and time.
          */
         public static final String START_AT_KEY = "startAt";
+
+        /**
+         * Requirements.
+         */
+        public static final String REQUIREMENTS = "requirements";
     }
 
     /**

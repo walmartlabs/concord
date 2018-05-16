@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.keys;
  */
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 public class HeaderKey<T> extends Key<T> {
@@ -40,6 +41,11 @@ public class HeaderKey<T> extends Key<T> {
     @SuppressWarnings("unchecked")
     public static <T> HeaderKey<Set<T>> registerSet(String name) {
         return (HeaderKey<Set<T>>) index.register(name, Set.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <K, V> HeaderKey<Map<K, V>> registerMap(String name) {
+        return (HeaderKey<Map<K, V>>) index.register(name, Map.class);
     }
 
     private HeaderKey(String key, Class<T> type) {

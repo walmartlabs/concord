@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
@@ -33,6 +34,7 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
@@ -46,7 +48,7 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class ProcessQueueDao extends AbstractDao {
 
-    private static final int DEFAULT_LIST_LIMIT = 30;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     protected ProcessQueueDao(Configuration cfg) {
@@ -100,18 +102,18 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void update(UUID instanceId, ProcessStatus status) {
-        update(instanceId, status, (Set<String>) null, null);
+        update(instanceId, status, (Set<String>) null, null, null);
     }
 
-    public void update(UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt) {
-        tx(tx -> update(tx, instanceId, status, tags, startAt));
+    public void update(UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt, Map<String, Object> requirements) {
+        tx(tx -> update(tx, instanceId, status, tags, startAt, requirements));
     }
 
     public void update(DSLContext tx, UUID instanceId, ProcessStatus status) {
-        update(tx, instanceId, status, null, null);
+        update(tx, instanceId, status, null, null, null);
     }
 
-    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt) {
+    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt, Map<String, Object> requirements) {
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
@@ -122,6 +124,10 @@ public class ProcessQueueDao extends AbstractDao {
 
         if (startAt != null) {
             q.set(PROCESS_QUEUE.START_AT, Timestamp.from(startAt));
+        }
+
+        if (requirements != null) {
+            q.set(PROCESS_QUEUE.REQUIREMENTS, field("?::jsonb", String.class, serialize(requirements)));
         }
 
         int i = q
@@ -238,14 +244,23 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public ProcessEntry poll() {
+    public ProcessEntry poll(Map<String, Object> capabilities) {
         return txResult(tx -> {
-            UUID id = tx.select(PROCESS_QUEUE.INSTANCE_ID)
-                    .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
-                            .and(or(PROCESS_QUEUE.START_AT.isNull(),
-                                    PROCESS_QUEUE.START_AT.le(currentTimestamp()))))
-                    .orderBy(PROCESS_QUEUE.CREATED_AT)
+            SelectWhereStep<Record1<UUID>> s = tx.select(PROCESS_QUEUE.INSTANCE_ID)
+                    .from(PROCESS_QUEUE);
+
+            s.where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
+                    .and(or(PROCESS_QUEUE.START_AT.isNull(),
+                            PROCESS_QUEUE.START_AT.le(currentTimestamp()))));
+
+            if (capabilities != null && !capabilities.isEmpty()) {
+                Field<Object> agentReqField = field("{0}->'agent'", Object.class, PROCESS_QUEUE.REQUIREMENTS);
+                Field<Object> capabilitiesField = field("?::jsonb", Object.class, value(serialize(capabilities)));
+                s.where(PROCESS_QUEUE.REQUIREMENTS.isNull()
+                        .or(field("{0} <@ {1}", Boolean.class, agentReqField, capabilitiesField)));
+            }
+
+            UUID id = s.orderBy(PROCESS_QUEUE.CREATED_AT)
                     .limit(1)
                     .forUpdate()
                     .skipLocked()
@@ -384,5 +399,13 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         return s.toArray(new String[s.size()]);
+    }
+
+    private String serialize(Object details) {
+        try {
+            return objectMapper.writeValueAsString(details);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

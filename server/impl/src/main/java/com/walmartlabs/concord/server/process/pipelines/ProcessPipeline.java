@@ -55,6 +55,7 @@ public class ProcessPipeline extends Pipeline {
                 RequestDataMergingProcessor.class,
                 EntryPointProcessor.class,
                 TagsExtractingProcessor.class,
+                RequirementsProcessor.class,
                 PrivateKeyProcessor.class,
                 TemplateFilesProcessor.class,
                 TemplateScriptProcessor.class,

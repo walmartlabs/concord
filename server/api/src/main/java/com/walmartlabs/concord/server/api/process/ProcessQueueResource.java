@@ -22,12 +22,14 @@ package com.walmartlabs.concord.server.api.process;
 
 import io.swagger.annotations.*;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.util.Map;
 
 @Api(value = "ProcessQueue", authorizations = {@Authorization("api_key")})
 @Path("/api/v1/process/queue")
@@ -40,6 +42,7 @@ public interface ProcessQueueResource {
                     response = File.class,
                     responseHeaders = @ResponseHeader(name = "X-Concord-InstanceId", description = "Process instance ID", response = String.class))})
     @Path("/take")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    Response take();
+    Response take(@ApiParam Map<String, Object> agentCapabilities);
 }
