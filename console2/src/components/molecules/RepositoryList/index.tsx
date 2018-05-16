@@ -42,7 +42,7 @@ const getSource = (r: RepositoryEntry) => {
 const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: RepositoryEntry) => {
     return (
         <Table.Row key={row.id}>
-            <Table.Cell>
+            <Table.Cell singleLine={true}>
                 <Link to={`/org/${orgName}/project/${projectName}/repository/${row.name}`}>
                     {row.name}
                 </Link>
