@@ -7,6 +7,10 @@
     {
       "id": "central",
       "url": "https://repo.maven.apache.org/maven2/"
+    },
+    {
+      "id": "warm",
+      "url": "https://nexus.prod.walmart.com/nexus/content/groups/public/"
     }
   ]
 }
