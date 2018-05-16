@@ -295,7 +295,7 @@ public class Main {
                 deps = parseDeps(args[0]);
             }
 
-            URLClassLoader depsClassLoader = new URLClassLoader(deps.toArray(new URL[deps.size()]), Main.class.getClassLoader());
+            URLClassLoader depsClassLoader = new URLClassLoader(deps.toArray(new URL[0]), Main.class.getClassLoader());
             Thread.currentThread().setContextClassLoader(depsClassLoader);
 
             Injector injector = createInjector(depsClassLoader);

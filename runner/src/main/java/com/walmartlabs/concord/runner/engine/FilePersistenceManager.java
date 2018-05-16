@@ -27,9 +27,7 @@ import io.takari.bpm.state.ProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -70,7 +68,7 @@ public class FilePersistenceManager implements PersistenceManager {
             return null;
         }
 
-        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(p))) {
+        try (ObjectInputStream in = new ThreadLocalClassLoaderObjectInputStream(Files.newInputStream(p))) {
             return (ProcessInstance) in.readObject();
         } catch (ClassNotFoundException | IOException e) {
             throw new RuntimeException(e);
@@ -91,5 +89,26 @@ public class FilePersistenceManager implements PersistenceManager {
         }
 
         log.debug("remove ['{}'] -> done, {}", id, p);
+    }
+
+    private static class ThreadLocalClassLoaderObjectInputStream extends ObjectInputStream {
+
+        private final ClassLoader classLoader;
+
+        public ThreadLocalClassLoaderObjectInputStream(InputStream inputStream) throws IOException {
+            super(inputStream);
+            this.classLoader = Thread.currentThread().getContextClassLoader();
+        }
+
+        @Override
+        protected Class<?> resolveClass(final ObjectStreamClass objectStreamClass)
+                throws IOException, ClassNotFoundException {
+
+            try {
+                return Class.forName(objectStreamClass.getName(), false, classLoader);
+            } catch (final ClassNotFoundException e) {
+                return super.resolveClass(objectStreamClass);
+            }
+        }
     }
 }
