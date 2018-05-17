@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-runner, concord-server: improved error handling when
+working with secrets;
 - concord-client: renamed to `concord-tasks`;
 - concord-rpc: the KV store, heartbeat and secret gRPC services
 replaced with the REST API based services.
