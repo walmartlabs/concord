@@ -39,7 +39,8 @@ docker:
 flows:
   buildImages:
   - dockerImage:
-      dockerfile: "docker-images/server/walmart/Dockerfile"
+      baseDir: "docker-images/server"
+      dockerfile: "walmart/Dockerfile"
       tags:
       - "${SERVER_IMAGE_TAG}:${concord_version}"
       - "${SERVER_IMAGE_TAG}:latest"
@@ -47,7 +48,8 @@ flows:
         concord_version: ${concord_version}
       push: true
   - dockerImage:
-      dockerfile: "docker-images/console/walmart/Dockerfile"
+      baseDir: "docker-images/console"
+      dockerfile: "walmart/Dockerfile"
       tags:
       - "${CONSOLE_IMAGE_TAG}:${concord_version}"
       - "${CONSOLE_IMAGE_TAG}:latest"
@@ -55,7 +57,8 @@ flows:
         concord_version: ${concord_version}
       push: true
   - dockerImage:
-      dockerfile: "docker-images/agent/walmart/Dockerfile"
+      baseDir: "docker-images/agent"
+      dockerfile: "walmart/Dockerfile"
       tags:
       - "${AGENT_IMAGE_TAG}:${concord_version}"
       - "${AGENT_IMAGE_TAG}:latest"
@@ -65,21 +68,24 @@ flows:
 
   buildImagesNoLatest:
   - dockerImage:
-      dockerfile: "docker-images/server/walmart/Dockerfile"
+      baseDir: "docker-images/server"
+      dockerfile: "walmart/Dockerfile"
       tags:
         - "${SERVER_IMAGE_TAG}:${concord_version}"
       buildArgs:
         concord_version: ${concord_version}
       push: true
   - dockerImage:
-      dockerfile: "docker-images/console/walmart/Dockerfile"
+      baseDir: "docker-images/console"
+      dockerfile: "walmart/Dockerfile"
       tags:
         - "${CONSOLE_IMAGE_TAG}:${concord_version}"
       buildArgs:
         concord_version: ${concord_version}
       push: true
   - dockerImage:
-      dockerfile: "docker-images/agent/walmart/Dockerfile"
+      baseDir: "docker-images/agent"
+      dockerfile: "walmart/Dockerfile"
       tags:
         - "${AGENT_IMAGE_TAG}:${concord_version}"
       buildArgs:

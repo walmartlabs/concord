@@ -14,7 +14,7 @@
 
     <properties>
         <docker.tagbase>walmartlabs/concord-agent</docker.tagbase>
-        <docker.file>docker-images/agent/oss/Dockerfile</docker.file>
+        <docker.file>oss/Dockerfile</docker.file>
     </properties>
 
     <!-- default dependencies, will be copied into the agent's local .m2 -->
@@ -103,7 +103,7 @@
             <id>walmart</id>
             <properties>
                 <docker.tagbase>docker.prod.walmart.com/walmartlabs/concord-agent</docker.tagbase>
-                <docker.file>docker-images/agent/walmart/Dockerfile</docker.file>
+                <docker.file>walmart/Dockerfile</docker.file>
             </properties>
         </profile>
     </profiles>

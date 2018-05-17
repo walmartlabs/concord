@@ -9,11 +9,11 @@ EXPOSE 8080
 
 RUN yum -y install nginx && yum clean all
 
-ADD docker-images/console/node_modules/swagger-ui-dist /opt/concord/console/dist/swag
-ADD docker-images/console/target/dist/console.tar.gz /opt/concord/console/dist/
+ADD node_modules/swagger-ui-dist /opt/concord/console/dist/swag
+ADD target/dist/console.tar.gz /opt/concord/console/dist/
 
-COPY docker-images/console/src/main/docker/start.sh /opt/concord/console/
-COPY docker-images/console/src/main/docker/nginx /opt/concord/console/nginx
+COPY src/main/docker/start.sh /opt/concord/console/
+COPY src/main/docker/nginx /opt/concord/console/nginx
 
 RUN mkdir -p /opt/concord/console/logs
 

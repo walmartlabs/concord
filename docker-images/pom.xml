@@ -42,7 +42,7 @@
                             <configuration>
                                 <skip>${docker.skip}</skip>
                                 <executable>docker</executable>
-                                <workingDirectory>${project.basedir}/../../</workingDirectory>
+                                <workingDirectory>${project.basedir}</workingDirectory>
                                 <arguments>
                                     <argument>build</argument>
 

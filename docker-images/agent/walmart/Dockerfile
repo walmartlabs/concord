@@ -8,12 +8,12 @@ USER root
 # moved to the base image
 # RUN yum -y install docker-client
 
-COPY docker-images/agent/target/deps/ /home/concord/.m2/repository
+COPY target/deps/ /home/concord/.m2/repository
 RUN chown -R concord:concord /home/concord/.m2
 
-ADD docker-images/agent/target/dist/agent.tar.gz /opt/concord/agent/
-COPY docker-images/agent/target/dist/runner.jar /opt/concord/agent/runner/runner.jar
-COPY docker-images/agent/src/main/docker/start.sh /opt/concord/agent/
+ADD target/dist/agent.tar.gz /opt/concord/agent/
+COPY target/dist/runner.jar /opt/concord/agent/runner/runner.jar
+COPY src/main/docker/start.sh /opt/concord/agent/
 RUN chown -R concord:concord /opt/concord
 
 USER concord

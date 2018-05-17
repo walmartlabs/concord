@@ -14,7 +14,7 @@
 
     <properties>
         <docker.tagbase>walmartlabs/concord-ansible</docker.tagbase>
-        <docker.file>docker-images/ansible/oss/Dockerfile</docker.file>
+        <docker.file>oss/Dockerfile</docker.file>
     </properties>
 
     <build>

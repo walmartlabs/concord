@@ -8,10 +8,10 @@ EXPOSE 5555
 # moved to the base image
 # RUN yum -y install git && yum clean all
 
-ADD docker-images/server/target/dist/server.tar.gz /opt/concord/server/
-COPY docker-images/server/src/main/docker/start.sh /opt/concord/server/
+ADD target/dist/server.tar.gz /opt/concord/server/
+COPY src/main/docker/start.sh /opt/concord/server/
 
-COPY docker-images/server/src/main/docker/jmx/* /opt/concord/server/jmx/
+COPY src/main/docker/jmx/* /opt/concord/server/jmx/
 RUN chmod 400 /opt/concord/server/jmx/*
 
 RUN chown -R concord:concord /opt/concord
