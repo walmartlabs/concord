@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
+import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
@@ -584,24 +585,27 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     @Override
     public Response fetchSecret(UUID instanceId, String orgName, String secretName, String password) {
         if (secretName == null) {
-            throw new WebApplicationException("Secret name is required");
+            throw new SecretException("Secret name is required");
         }
 
         UUID orgId = getOrgId(instanceId, orgName);
 
+        SecretDao.SecretDataEntry entry;
         try {
-            SecretDao.SecretDataEntry entry;
-            try {
-                entry = secretManager.getRaw(orgId, secretName, password);
-            } catch (ValidationErrorsException e) {
-                log.warn("fetchSecret -> error: {}", e.getMessage());
-                return null;
-            }
+            entry = secretManager.getRaw(orgId, secretName, password);
+        } catch (SecurityException e) {
+            log.warn("fetchSecret -> error: {}", e.getMessage());
+            throw new SecretException("Error while fetching a secret: " + e.getMessage());
+        } catch (ValidationErrorsException e) {
+            log.warn("fetchSecret -> error: {}", e.getMessage());
+            return null;
+        }
 
-            if (entry == null) {
-                return null;
-            }
+        if (entry == null) {
+            return null;
+        }
 
+        try {
             return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
                     MediaType.APPLICATION_OCTET_STREAM)
                     .header(InternalConstants.Headers.SECRET_TYPE, entry.getType().name())

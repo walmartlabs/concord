@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.GeneralSecurityException;
@@ -33,7 +34,7 @@ public final class SecretUtils {
             Cipher c = init(password, salt, Cipher.ENCRYPT_MODE);
             return c.doFinal(input);
         } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error decrypting a secret", e);
+            throw new SecurityException("Error encrypting a secret: " + e);
         }
     }
 
@@ -41,8 +42,10 @@ public final class SecretUtils {
         try {
             Cipher c = init(password, salt, Cipher.DECRYPT_MODE);
             return c.doFinal(input);
+        } catch (BadPaddingException e) {
+            throw new SecurityException("Error decrypting a secret: " + e.getMessage() + ". Probably wrong password.");
         } catch (GeneralSecurityException e) {
-            throw new SecurityException("Error decrypting a secret", e);
+            throw new SecurityException("Error decrypting a secret: " + e.getMessage());
         }
     }
 

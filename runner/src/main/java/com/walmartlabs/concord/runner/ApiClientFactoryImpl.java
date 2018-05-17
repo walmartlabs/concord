@@ -35,8 +35,12 @@ import java.nio.file.Path;
 @Named
 public class ApiClientFactoryImpl implements ApiClientFactory {
 
+    private final ApiConfiguration cfg;
+
     @Inject
-    ApiConfiguration cfg;
+    public ApiClientFactoryImpl(ApiConfiguration cfg) {
+        this.cfg = cfg;
+    }
 
     @Override
     public ApiClient create(Context ctx) {

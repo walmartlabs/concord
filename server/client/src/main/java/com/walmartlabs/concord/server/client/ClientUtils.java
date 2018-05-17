@@ -44,11 +44,20 @@ public final class ClientUtils {
         while (!Thread.currentThread().isInterrupted() && tryCount < retryCount + 1) {
             try {
                 return c.call();
-            } catch (Exception e) {
-                log.error("call error, retry after {} sec", retryInterval / 1000, e);
+            } catch (ApiException e) {
                 exception = e;
-                sleep(retryInterval);
+
+                log.error("call error: '{}'", getErrorMessage(e));
+
+                if (e.getCode() >= 400 && e.getCode() < 500) {
+                    break;
+                }
+            } catch (Exception e) {
+                exception = e;
+                log.error("call error", e);
             }
+            log.info("retry after {} sec", retryInterval / 1000);
+            sleep(retryInterval);
             tryCount++;
         }
 
@@ -81,6 +90,14 @@ public final class ClientUtils {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private static String getErrorMessage(ApiException e) {
+        String error = e.getMessage();
+        if (e.getResponseBody() != null && !e.getResponseBody().isEmpty()) {
+            error += ": " + e.getResponseBody();
+        }
+        return error;
     }
 
     private ClientUtils() {
