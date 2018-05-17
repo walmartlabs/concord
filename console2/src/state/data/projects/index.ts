@@ -27,6 +27,7 @@ import {
     get as apiGet,
     list as apiList,
     rename as apiRename,
+    deleteProject as apiDeleteProject,
     setAcceptsRawPayload as apiSetAcceptsRawPayload,
     NewProjectEntry
 } from '../../../api/org/project';
@@ -47,6 +48,8 @@ import {
     AddRepositoryRequest,
     CreateProjectRequest,
     CreateRepositoryState,
+    DeleteProjectRequest,
+    DeleteProjectState,
     DeleteRepositoryRequest,
     DeleteRepositoryState,
     GetProjectRequest,
@@ -80,6 +83,9 @@ const actionTypes = {
 
     SET_ACCEPTS_RAW_PAYLOAD_REQUEST: `${NAMESPACE}/acceptsRawPayload/request`,
     SET_ACCEPTS_RAW_PAYLOAD_RESPONSE: `${NAMESPACE}/acceptsRawPayload/response`,
+
+    DELETE_PROJECT_REQUEST: `${NAMESPACE}/delete/request`,
+    DELETE_PROJECT_RESPONSE: `${NAMESPACE}/delete/response`,
 
     ADD_REPOSITORY_REQUEST: `${NAMESPACE}/repo/add/request`,
     ADD_REPOSITORY_RESPONSE: `${NAMESPACE}/repo/add/response`,
@@ -134,6 +140,12 @@ export const actions = {
         orgName,
         projectId,
         acceptsRawPayload
+    }),
+
+    deleteProject: (orgName: ConcordKey, projectName: ConcordKey): DeleteProjectRequest => ({
+        type: actionTypes.DELETE_PROJECT_REQUEST,
+        orgName,
+        projectName
     }),
 
     addRepository: (
@@ -249,7 +261,22 @@ const acceptsRawPayloadReducers = combineReducers<SetAcceptsRawPayloadState>({
     ),
     response: makeResponseReducer(
         actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE,
-        actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE
+        actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST
+    )
+});
+
+const deleteProjectReducers = combineReducers<DeleteProjectState>({
+    running: makeLoadingReducer(
+        [actionTypes.DELETE_PROJECT_REQUEST],
+        [actionTypes.DELETE_PROJECT_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.DELETE_PROJECT_REQUEST],
+        [actionTypes.DELETE_PROJECT_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.DELETE_PROJECT_RESPONSE,
+        actionTypes.DELETE_PROJECT_REQUEST
     )
 });
 
@@ -317,6 +344,7 @@ export const reducers = combineReducers<State>({
 
     rename: renameReducers,
     acceptRawPayload: acceptsRawPayloadReducers,
+    deleteProject: deleteProjectReducers,
 
     createRepository: createRepositoryReducers,
     updateRepository: updateRepositoryReducers,
@@ -402,6 +430,19 @@ function* onSetAcceptsRawPayload({
     }
 }
 
+function* onDelete({ orgName, projectName }: DeleteProjectRequest) {
+    try {
+        yield call(apiDeleteProject, orgName, projectName);
+        yield put({
+            type: actionTypes.DELETE_PROJECT_RESPONSE
+        });
+
+        yield put(pushHistory(`/org/${orgName}/project/`));
+    } catch (e) {
+        yield handleErrors(actionTypes.DELETE_PROJECT_RESPONSE, e);
+    }
+}
+
 function* onAddRepository({ orgName, projectName, entry }: AddRepositoryRequest) {
     try {
         const response = yield call(apiRepoCreateOrUpdate, orgName, projectName, entry);
@@ -448,6 +489,7 @@ export const sagas = function*() {
         takeLatest(actionTypes.LIST_PROJECTS_REQUEST, onList),
         takeLatest(actionTypes.CREATE_PROJECT_REQUEST, onCreate),
         takeLatest(actionTypes.RENAME_PROJECT_REQUEST, onRename),
+        takeLatest(actionTypes.DELETE_PROJECT_REQUEST, onDelete),
         throttle(2000, actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST, onSetAcceptsRawPayload),
         takeLatest(actionTypes.ADD_REPOSITORY_REQUEST, onAddRepository),
         takeLatest(actionTypes.UPDATE_REPOSITORY_REQUEST, onUpdateRepository),

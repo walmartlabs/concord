@@ -17,7 +17,13 @@
  * limitations under the License.
  * =====
  */
-import { ConcordId, ConcordKey, fetchJson, OperationResult } from '../../common';
+import {
+    ConcordId,
+    ConcordKey,
+    fetchJson,
+    GenericOperationResult,
+    OperationResult
+} from '../../common';
 import { RepositoryEntry } from './repository';
 
 export enum ProjectVisibility {
@@ -117,3 +123,9 @@ export const setAcceptsRawPayload = (
 
     return fetchJson(`/api/v1/org/${orgName}/project`, opts);
 };
+
+export const deleteProject = (
+    orgName: ConcordKey,
+    projectName: ConcordKey
+): Promise<GenericOperationResult> =>
+    fetchJson(`/api/v1/org/${orgName}/project/${projectName}`, { method: 'DELETE' });

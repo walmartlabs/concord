@@ -34,6 +34,7 @@ export { default as ProcessForm } from './ProcessForm';
 export { default as ProcessLogViewer } from './ProcessLogViewer';
 export { default as ProcessStatusIcon } from './ProcessStatusIcon';
 export { default as ProcessStatusTable } from './ProcessStatusTable';
+export { default as ProjectDeleteButton } from './ProjectDeleteButton';
 export { default as ProjectRenameForm } from './ProjectRenameForm';
 export { default as RepositoryActionDropdown } from './RepositoryActionDropdown';
 export { default as RepositoryForm, RepositoryFormValues } from './RepositoryForm';

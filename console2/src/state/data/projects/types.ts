@@ -55,6 +55,11 @@ export interface SetAcceptsRawPayloadRequest extends Action {
     acceptsRawPayload: boolean;
 }
 
+export interface DeleteProjectRequest extends Action {
+    orgName: ConcordKey;
+    projectName: ConcordKey;
+}
+
 export interface AddRepositoryRequest extends Action {
     orgName: ConcordKey;
     projectName: ConcordKey;
@@ -85,6 +90,7 @@ export interface Projects {
 
 export type RenameProjectState = RequestState<ProjectOperationResult>;
 export type SetAcceptsRawPayloadState = RequestState<ProjectOperationResult>;
+export type DeleteProjectState = RequestState<GenericOperationResult>;
 export type CreateRepositoryState = RequestState<GenericOperationResult>;
 export type UpdateRepositoryState = RequestState<GenericOperationResult>;
 export type DeleteRepositoryState = RequestState<GenericOperationResult>;
@@ -99,6 +105,7 @@ export interface State {
 
     rename: RenameProjectState;
     acceptRawPayload: SetAcceptsRawPayloadState;
+    deleteProject: DeleteProjectState;
 
     createRepository: CreateRepositoryState;
     updateRepository: UpdateRepositoryState;

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { Redirect, Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
+import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { ProjectEntry } from '../../../api/org/project';
@@ -12,6 +12,7 @@ import { RepositoryList, RequestErrorMessage } from '../../molecules';
 import { NotFoundPage } from '../../pages';
 import {
     ProcessList,
+    ProjectDeleteActivity,
     ProjectRawPayloadActivity,
     ProjectRenameActivity,
     RedirectButton
@@ -88,15 +89,6 @@ class ProjectActivity extends React.PureComponent<Props> {
     static renderSettings(p: ProjectEntry) {
         return (
             <>
-                <Segment color="red">
-                    <Header as="h4">Project name</Header>
-                    <ProjectRenameActivity
-                        orgName={p.orgName}
-                        projectId={p.id}
-                        projectName={p.name}
-                    />
-                </Segment>
-
                 <Segment>
                     <Header as="h4">Allow payload archives</Header>
                     <ProjectRawPayloadActivity
@@ -104,6 +96,20 @@ class ProjectActivity extends React.PureComponent<Props> {
                         projectId={p.id}
                         acceptsRawPayload={p.acceptsRawPayload}
                     />
+                </Segment>
+
+                <Divider horizontal={true} content="Danger Zone" />
+
+                <Segment color="red">
+                    <Header as="h4">Project name</Header>
+                    <ProjectRenameActivity
+                        orgName={p.orgName}
+                        projectId={p.id}
+                        projectName={p.name}
+                    />
+
+                    <Header as="h4">Delete project</Header>
+                    <ProjectDeleteActivity orgName={p.orgName} projectName={p.name} />
                 </Segment>
             </>
         );
