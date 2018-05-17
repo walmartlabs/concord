@@ -24,10 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryQueryEntry;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.QueryPart;
-import org.jooq.Record;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -65,12 +62,14 @@ public class InventoryQueryExecDao extends AbstractDao {
         String sql = q.getText();
 
         // TODO a better way to add the inventory filter
-        String sqlLow = sql.toLowerCase();
+        String sqlLow = sql.toLowerCase()
+                .replace("\n", " ")
+                .replace("\r", " ");
         if (sqlLow.contains(" from inventory_data")) {
             if (sqlLow.contains(" where ")) {
-                sql += " and inventory_data.inventory_id = cast(? AS uuid)";
+                sql += " and inventory_id = cast(? AS uuid)";
             } else {
-                sql += " where inventory_data.inventory_id = cast(? AS uuid)";
+                sql += " where inventory_id = cast(? AS uuid)";
             }
         }
 

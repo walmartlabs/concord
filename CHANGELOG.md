@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed incorrect filtering of inventory data.
+
+
+
 ## [0.70.0] - 2018-05-17
 
 ### Added
