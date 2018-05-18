@@ -47,7 +47,7 @@ export default class extends React.Component<Props> {
 
                     return (
                         <Form.Field error={invalid} required={required}>
-                            <label>{label}</label>
+                            {label && <label>{label}</label>}
                             <Input {...rest} {...field} />
                             {invalid &&
                                 error && (

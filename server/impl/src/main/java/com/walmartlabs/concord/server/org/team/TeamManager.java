@@ -29,12 +29,14 @@ import com.walmartlabs.concord.server.api.user.UserType;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
@@ -42,6 +44,8 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.ws.rs.WebApplicationException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,6 +64,7 @@ public class TeamManager {
     public static final String DEFAULT_TEAM_NAME = "default";
 
     private final TeamDao teamDao;
+    private final OrganizationDao orgDao;
     private final OrganizationManager orgManager;
     private final UserManager userManager;
     private final LdapManager ldapManager;
@@ -67,12 +72,14 @@ public class TeamManager {
 
     @Inject
     public TeamManager(TeamDao teamDao,
+                       OrganizationDao orgDao,
                        OrganizationManager orgManager,
                        UserManager userManager,
                        LdapManager ldapManager,
                        AuditLog auditLog) {
 
         this.teamDao = teamDao;
+        this.orgDao = orgDao;
         this.orgManager = orgManager;
         this.userManager = userManager;
         this.ldapManager = ldapManager;
@@ -114,7 +121,7 @@ public class TeamManager {
     }
 
     public void delete(String orgName, String teamName) {
-        TeamEntry t = assertTeam(orgName, teamName, TeamRole.OWNER, true, false);
+        TeamEntry t = assertTeam(orgName, teamName, TeamRole.OWNER, true, true);
 
         teamDao.delete(t.getId());
 
@@ -125,25 +132,36 @@ public class TeamManager {
                 .log();
     }
 
-    public void addUsers(String orgName, String teamName, Collection<TeamUserEntry> users) {
+    public void addUsers(String orgName, String teamName, boolean replace, Collection<TeamUserEntry> users) {
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
 
+        Map<String, UUID> userIds = new HashMap<>();
+        for (TeamUserEntry u : users) {
+            UserType type = u.getUserType();
+            if (type == null) {
+                type = UserPrincipal.assertCurrent().getType();
+            }
+
+            UUID id = getOrCreateUserId(u.getUsername(), type);
+            userIds.put(u.getUsername(), id);
+        }
+
         teamDao.tx(tx -> {
+            if (replace) {
+                teamDao.removeUsers(tx, t.getId());
+            }
+
             for (TeamUserEntry u : users) {
-                UserType type = u.getUserType();
-                if (type == null) {
-                    type = UserPrincipal.assertCurrent().getType();
-                }
-
-                UUID userId = getOrCreateUserId(u.getUsername(), type);
-
                 TeamRole role = u.getRole();
                 if (role == null) {
                     role = TeamRole.MEMBER;
                 }
 
-                teamDao.upsertUser(tx, t.getId(), userId, role);
+                UUID id = userIds.get(u.getUsername());
+                teamDao.upsertUser(tx, t.getId(), id, role);
             }
+
+            validateUsers(tx, t.getOrgId());
         });
 
         auditLog.add(AuditObject.TEAM, AuditAction.UPDATE)
@@ -153,6 +171,12 @@ public class TeamManager {
                 .field("action", "addUsers")
                 .field("users", users)
                 .log();
+    }
+
+    private void validateUsers(DSLContext tx, UUID orgId) {
+        if(!orgDao.hasRole(tx, orgId, TeamRole.OWNER)) {
+            throw new ValidationErrorsException("Organization must have at least one OWNER");
+        }
     }
 
     public void removeUsers(String orgName, String teamName, Collection<String> usernames) {
@@ -201,7 +225,7 @@ public class TeamManager {
         }
 
         if (!teamDao.isInAnyTeam(orgId, p.getId(), TeamRole.atLeast(requiredRole))) {
-            throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't belong to any team in the organization");
+            throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have the required role: " + requiredRole);
         }
     }
 
@@ -219,7 +243,7 @@ public class TeamManager {
 
         if (requiredRole != null && teamMembersOnly) {
             if (!teamDao.hasUser(e.getId(), p.getId(), TeamRole.atLeast(requiredRole))) {
-                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't belong to the team: " + e.getName());
+                throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have the required role: " + requiredRole);
             }
         }
 
@@ -237,6 +261,7 @@ public class TeamManager {
         UserEntry user = userManager.getOrCreate(username, type);
 
         if (user == null) {
+            // TODO check the type
             try {
                 // TODO this should be abstracted away
                 LdapPrincipal p = ldapManager.getPrincipal(username);

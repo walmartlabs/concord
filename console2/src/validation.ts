@@ -39,6 +39,8 @@ export const secretAlreadyExistsError = (n: string) => `Secret already exists: $
 
 export const repositoryAlreadyExistsError = (n: string) => `Repository already exists: ${n}`;
 
+export const teamAlreadyExistsError = (n: string) => `Team already exists: ${n}`;
+
 const concordKeyValidator = (v?: string) => {
     if (!v) {
         return requiredError();
@@ -113,4 +115,14 @@ export const secret = {
     valueString: requiredValidator,
     valueFile: requiredValidator,
     storePassword: requiredValidator
+};
+
+export const team = {
+    name: concordKeyValidator,
+    description: (v?: string) => {
+        if (v && v.length > 2048) {
+            return tooLongError(2048);
+        }
+        return;
+    }
 };

@@ -27,22 +27,28 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
+import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.naming.NamingException;
+import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.util.List;
 import java.util.UUID;
 
 @Named
@@ -55,7 +61,8 @@ public class ConsoleService implements Resource {
     private final SecretDao secretDao;
     private final OrganizationManager orgManager;
     private final RepositoryDao repositoryDao;
-
+    private final TeamDao teamDao;
+    private final LdapManager ldapManager;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -63,7 +70,9 @@ public class ConsoleService implements Resource {
                           UserManager userManager,
                           SecretDao secretDao,
                           OrganizationManager orgManager,
-                          RepositoryDao repositoryDao) {
+                          RepositoryDao repositoryDao,
+                          TeamDao teamDao,
+                          LdapManager ldapManager) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -71,6 +80,8 @@ public class ConsoleService implements Resource {
         this.repositoryDao = repositoryDao;
         this.secretDao = secretDao;
         this.orgManager = orgManager;
+        this.teamDao = teamDao;
+        this.ldapManager = ldapManager;
     }
 
     @GET
@@ -152,6 +163,19 @@ public class ConsoleService implements Resource {
         }
     }
 
+    @GET
+    @Path("/org/{orgName}/team/{teamName}/exists")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean isTeamExists(@PathParam("orgName") @ConcordKey String orgName,
+                                @PathParam("teamName") @ConcordKey String teamName) {
+        try {
+            OrganizationEntry org = orgManager.assertAccess(orgName, true);
+            return teamDao.getId(org.getId(), teamName) != null;
+        } catch (UnauthorizedException e) {
+            return false;
+        }
+    }
+
     @POST
     @Path("/repository/test")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -181,6 +205,18 @@ public class ConsoleService implements Resource {
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
                     .entity(msg)
                     .build());
+        }
+    }
+
+    @GET
+    @Path("/search/users")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public List<UserSearchResult> searchUsers(@QueryParam("filter") @Size(min=5, max=128) String filter) {
+        try {
+            return ldapManager.search(filter);
+        } catch (NamingException e) {
+            throw new WebApplicationException("LDAP search error: " + e.getMessage(), e);
         }
     }
 }

@@ -33,12 +33,6 @@ module.exports = {
         extensions: ['.tsx', '.ts', '.js']
     },
     plugins: [
-        new CopyWebpackPlugin([
-          {
-            from: 'node_modules/monaco-editor/min/vs',
-            to: 'vs',
-          }
-        ]),
         new CheckerPlugin()
     ]   
 };

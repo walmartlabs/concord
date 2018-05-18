@@ -148,7 +148,7 @@ const cancelProcessReducers = combineReducers<CancelProcessState>({
 
 export const reducers = combineReducers<State>({
     // TODO use RequestState<?>
-    processById,
+    processById, // TODO makeEntityByIdReducer
     loading,
     error: errorMsg,
 

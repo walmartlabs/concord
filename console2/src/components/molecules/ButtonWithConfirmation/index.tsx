@@ -18,19 +18,19 @@
  * =====
  */
 import * as React from 'react';
-import { Button, Confirm } from 'semantic-ui-react';
+import { Button, Confirm, ButtonProps } from 'semantic-ui-react';
 
 interface State {
     showConfirm: boolean;
 }
 
-interface Props {
-    submitting: boolean;
+interface Props extends ButtonProps {
+    confirmationHeader: string;
+    confirmationContent: string;
     onConfirm: () => void;
 }
 
-// TODO can be refactored as a generic "button-with-confirmation" component
-class ProjectDeleteForm extends React.Component<Props, State> {
+class ButtonWithConfirmation extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = { showConfirm: false };
@@ -46,26 +46,21 @@ class ProjectDeleteForm extends React.Component<Props, State> {
     }
 
     handleConfirm() {
+        this.setState({ showConfirm: false });
         this.props.onConfirm();
     }
 
     render() {
-        const { submitting } = this.props;
+        const { confirmationHeader, confirmationContent, onConfirm, ...rest } = this.props;
 
         return (
             <>
-                <Button
-                    primary={true}
-                    negative={true}
-                    content="Delete"
-                    loading={submitting}
-                    onClick={(ev) => this.handleShowConfirm(ev)}
-                />
+                <Button {...rest} onClick={(ev) => this.handleShowConfirm(ev)} />
 
                 <Confirm
                     open={this.state.showConfirm}
-                    header="Delete the project?"
-                    content="Are you sure you want to delete the project?"
+                    header={confirmationHeader}
+                    content={confirmationContent}
                     onConfirm={() => this.handleConfirm()}
                     onCancel={() => this.handleCancel()}
                 />
@@ -74,4 +69,4 @@ class ProjectDeleteForm extends React.Component<Props, State> {
     }
 }
 
-export default ProjectDeleteForm;
+export default ButtonWithConfirmation;

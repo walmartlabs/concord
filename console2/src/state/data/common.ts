@@ -21,7 +21,7 @@ import { push as pushHistory } from 'react-router-redux';
 import { Action, Reducer } from 'redux';
 import { put } from 'redux-saga/effects';
 
-import { GenericOperationResult, OperationResult, RequestError } from '../../api/common';
+import { ConcordId, GenericOperationResult, OperationResult, RequestError } from '../../api/common';
 
 export const nullReducer = <T>(): Reducer<T | null> => (state = null, action) => {
     return state;
@@ -81,6 +81,38 @@ export const makeResponseReducer = <R, A extends R & Action & HasError>(
                 return state;
             }
             return null;
+        default:
+            return state;
+    }
+};
+
+interface HasId {
+    id: ConcordId;
+}
+
+interface HasResponse<T extends HasId> {
+    error?: RequestError;
+    items?: T[];
+}
+
+export interface CollectionById<T extends HasId> {
+    [id: string]: T;
+}
+
+export const makeEntityByIdReducer = <T extends HasId>(
+    responseType: string
+): Reducer<CollectionById<T>> => (state = {}, action: HasResponse<T> & Action) => {
+    switch (action.type) {
+        case responseType:
+            if (action.error || !action.items) {
+                return {};
+            }
+
+            const result = {};
+            action.items.forEach((o) => {
+                result[o.id] = o;
+            });
+            return result;
         default:
             return state;
     }

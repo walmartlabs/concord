@@ -78,13 +78,13 @@ public class TeamRbacIT extends AbstractServerIT {
         userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName, UserType.LOCAL));
 
-        teamResource.addUsers(orgAName, teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgAName, teamAName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
 
         String userBName = "userB_" + randomString();
         userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyB = apiKeyResource.create(new CreateApiKeyRequest(userBName, UserType.LOCAL));
 
-        teamResource.addUsers(orgBName, teamBName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgBName, teamBName, false, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
 
         // ---
 
@@ -145,7 +145,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
 
-        teamResource.addUsers(orgName, teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MAINTAINER)));
+        teamResource.addUsers(orgName, teamAName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MAINTAINER)));
 
         // ---
 
@@ -167,7 +167,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
 
-        teamResource.addUsers(orgName, teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.OWNER)));
+        teamResource.addUsers(orgName, teamAName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.OWNER)));
 
         // ---
 
@@ -197,7 +197,7 @@ public class TeamRbacIT extends AbstractServerIT {
         userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
         CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
 
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MAINTAINER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MAINTAINER)));
 
         String userBName = "userB_" + randomString();
         userResource.createOrUpdate(new CreateUserRequest(userBName, UserType.LOCAL));
@@ -208,7 +208,7 @@ public class TeamRbacIT extends AbstractServerIT {
         setApiKey(apiKeyB.getKey());
 
         try {
-            teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
+            teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
             fail("should fail");
         } catch (ForbiddenException e) {
         }
@@ -216,7 +216,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         setApiKey(apiKeyA.getKey());
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
     }
 
     @Test(timeout = 30000)
@@ -244,7 +244,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         TeamResource teamResource = proxy(TeamResource.class);
-        teamResource.addUsers(orgName, TeamManager.DEFAULT_TEAM_NAME, Collections.singleton(new TeamUserEntry(userA, TeamRole.OWNER)));
+        teamResource.addUsers(orgName, TeamManager.DEFAULT_TEAM_NAME, false, Collections.singleton(new TeamUserEntry(userA, TeamRole.OWNER)));
 
         // ---
 
@@ -266,7 +266,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userB, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userB, TeamRole.MEMBER)));
     }
 
     @Test(timeout = 30000)
@@ -285,7 +285,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry("admin", TeamRole.OWNER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry("admin", TeamRole.OWNER)));
 
         // ---
 
@@ -345,7 +345,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         resetApiKey();
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
 
         // ---
 
@@ -391,7 +391,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         resetApiKey();
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
 
         // ---
 
@@ -441,7 +441,7 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         resetApiKey();
-        teamResource.addUsers(orgAName, teamAName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgAName, teamAName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
 
         // ---
 
@@ -513,7 +513,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
 
         // ---
 
@@ -535,7 +535,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         resetApiKey();
 
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
 
         // ---
 
@@ -567,7 +567,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        teamResource.addUsers(orgName, teamName, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MEMBER)));
-        teamResource.addUsers(orgName, teamName, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MAINTAINER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MAINTAINER)));
     }
 }

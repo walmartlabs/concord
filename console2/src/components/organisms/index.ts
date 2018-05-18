@@ -17,14 +17,15 @@
  * limitations under the License.
  * =====
  */
-
 export { default as CancelProcessPopup } from './CancelProcessPopup';
 export { default as DeleteRepositoryPopup } from './DeleteRepositoryPopup';
 export { default as DeleteSecretPopup } from './DeleteSecretPopup';
 export { default as EditRepositoryActivity } from './EditRepositoryActivity';
+export { default as FindUserField } from './FindUserField';
 export { default as Login } from './Login';
 export { default as NewProjectActivity } from './NewProjectActivity';
 export { default as NewSecretActivity } from './NewSecretActivity';
+export { default as NewTeamActivity } from './NewTeamActivity';
 export { default as OrganizationList } from './OrganizationList';
 export { default as ProcessFormActivity } from './ProcessFormActivity';
 export { default as ProcessList } from './ProcessList';
@@ -45,4 +46,9 @@ export { default as SecretInfo } from './SecretInfo';
 export { default as SecretList } from './SecretList';
 export { default as SecretStoreDropdown } from './SecretStoreDropdown';
 export { default as StartRepositoryPopup } from './StartRepositoryPopup';
+export { default as TeamActivity } from './TeamActivity';
+export { default as TeamDeleteActivity } from './TeamDeleteActivity';
+export { default as TeamList } from './TeamList';
+export { default as TeamMemberListActivity } from './TeamMemberListActivity';
+export { default as TeamRenameActivity } from './TeamRenameActivity';
 export { default as TopBar } from './TopBar';

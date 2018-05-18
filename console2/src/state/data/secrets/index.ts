@@ -149,7 +149,7 @@ const deleteSecretReducers = combineReducers<DeleteSecretState>({
 });
 
 export const reducers = combineReducers<State>({
-    secretById,
+    secretById, // TODO use makeEntityByIdReducer
 
     listSecrets: listSecretsReducer,
     createSecret: createSecretReducer,

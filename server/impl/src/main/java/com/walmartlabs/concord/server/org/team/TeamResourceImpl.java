@@ -43,21 +43,15 @@ public class TeamResourceImpl implements TeamResource, Resource {
     private final TeamDao teamDao;
     private final TeamManager teamManager;
     private final OrganizationManager orgManager;
-    private final UserManager userManager;
-    private final LdapManager ldapManager;
 
     @Inject
     public TeamResourceImpl(TeamDao teamDao,
                             TeamManager teamManager,
-                            OrganizationManager orgManager,
-                            UserManager userManager,
-                            LdapManager ldapManager) {
+                            OrganizationManager orgManager) {
 
         this.teamDao = teamDao;
         this.teamManager = teamManager;
         this.orgManager = orgManager;
-        this.userManager = userManager;
-        this.ldapManager = ldapManager;
     }
 
     @Override
@@ -101,12 +95,12 @@ public class TeamResourceImpl implements TeamResource, Resource {
     }
 
     @Override
-    public AddTeamUsersResponse addUsers(String orgName, String teamName, Collection<TeamUserEntry> users) {
+    public AddTeamUsersResponse addUsers(String orgName, String teamName, boolean replace, Collection<TeamUserEntry> users) {
         if (users == null || users.isEmpty()) {
             throw new ValidationErrorsException("Empty user list");
         }
 
-        teamManager.addUsers(orgName, teamName, users);
+        teamManager.addUsers(orgName, teamName, replace, users);
         return new AddTeamUsersResponse();
     }
 

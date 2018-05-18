@@ -26,6 +26,8 @@ import { reducers as processesReducers, State as ProcessesState } from '../state
 import { reducers as projectsReducer, State as ProjectsState } from '../state/data/projects';
 import { reducers as secretsReducer, State as SecretsState } from '../state/data/secrets';
 import { reducers as formsReducers, State as FormsState } from '../state/data/forms';
+import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
+import { reducers as searchReducers, State as SearchState } from '../state/data/search';
 import { reducers as sessionReducers, State as SessionState } from '../state/session';
 
 export interface State {
@@ -35,7 +37,9 @@ export interface State {
     projects: ProjectsState;
     secrets: SecretsState;
     processes: ProcessesState;
+    teams: TeamsState;
     forms: FormsState;
+    search: SearchState;
     router: RouterState;
 }
 
@@ -47,6 +51,8 @@ const reducers: Reducer<State> = combineReducers({
     projects: projectsReducer,
     secrets: secretsReducer,
     processes: processesReducers,
+    teams: teamReducers,
+    search: searchReducers,
     forms: formsReducers
 });
 

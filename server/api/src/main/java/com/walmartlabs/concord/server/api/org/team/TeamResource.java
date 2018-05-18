@@ -112,6 +112,7 @@ public interface TeamResource {
     @Produces(MediaType.APPLICATION_JSON)
     AddTeamUsersResponse addUsers(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                   @ApiParam @PathParam("teamName") @ConcordKey String teamName,
+                                  @ApiParam @QueryParam("replace") @DefaultValue("false") boolean replace,
                                   @ApiParam Collection<TeamUserEntry> users);
 
     /**

@@ -2,8 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: added optional `replace` query parameter to the
+team users update operation.
+- concord-console: team management UI.
+
 ### Changed
 
+- concord-server: fixed team management RBAC;
 - concord-console: fixed dropdown not re-rendering after update;
 - concord-server: fixed incorrect filtering of inventory data.
 

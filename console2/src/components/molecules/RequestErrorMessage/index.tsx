@@ -33,12 +33,11 @@ export default class extends React.PureComponent<Props> {
             return <p>No error</p>;
         }
 
-        const message = error.message ? error.message : `Server response: ${error.status}`;
         const details = error.details && error.details.length > 0 ? error.details : undefined;
 
         return (
             <Message negative={true}>
-                <Message.Header>{message}</Message.Header>
+                {error.message && <Message.Header>{error.message}</Message.Header>}
                 {details && <p>{details}</p>}
             </Message>
         );

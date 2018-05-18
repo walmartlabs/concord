@@ -182,7 +182,7 @@ public class RunAsIT extends AbstractServerIT {
         TeamResource teamResource = proxy(TeamResource.class);
         CreateTeamResponse ctr = teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
 
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userName, TeamRole.MEMBER)));
 
         return ctr.getId();
     }

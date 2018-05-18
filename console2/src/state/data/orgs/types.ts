@@ -36,7 +36,7 @@ export interface Organizations {
 }
 
 export interface State {
-    orgsById: Organizations;
+    orgById: Organizations;
     loading: boolean;
     error: RequestError;
 }

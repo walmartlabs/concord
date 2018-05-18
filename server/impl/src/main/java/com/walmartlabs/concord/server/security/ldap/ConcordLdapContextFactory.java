@@ -52,6 +52,7 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
         f.setUrl(cfg.getUrl());
         f.setSystemUsername(cfg.getSystemUsername());
         f.setSystemPassword(cfg.getSystemPassword());
+        f.setPoolingEnabled(true);
 
         this.delegate = f;
     }

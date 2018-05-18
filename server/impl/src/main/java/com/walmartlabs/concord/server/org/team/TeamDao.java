@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.team;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.api.org.team.TeamEntry;
 import com.walmartlabs.concord.server.api.org.team.TeamRole;
 import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
 import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.UserTeamsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -97,9 +98,13 @@ public class TeamDao extends AbstractDao {
     }
 
     public void update(DSLContext tx, UUID id, String name, String description) {
-        tx.update(TEAMS)
-                .set(TEAMS.TEAM_NAME, name)
-                .set(TEAMS.DESCRIPTION, description)
+        UpdateSetFirstStep<TeamsRecord> q = tx.update(TEAMS);
+
+        if (description != null) {
+            q.set(TEAMS.DESCRIPTION, description);
+        }
+
+        q.set(TEAMS.TEAM_NAME, name)
                 .where(TEAMS.TEAM_ID.eq(id))
                 .execute();
     }
@@ -191,8 +196,14 @@ public class TeamDao extends AbstractDao {
         tx.insertInto(USER_TEAMS)
                 .columns(USER_TEAMS.TEAM_ID, USER_TEAMS.USER_ID, USER_TEAMS.TEAM_ROLE)
                 .values(teamId, userId, role.toString())
-                .onDuplicateKeyUpdate()
-                .set(USER_TEAMS.TEAM_ROLE, role.toString())
+                .onConflict(USER_TEAMS.TEAM_ID, USER_TEAMS.USER_ID)
+                .doUpdate().set(USER_TEAMS.TEAM_ROLE, role.toString())
+                .execute();
+    }
+
+    public void removeUsers(DSLContext tx, UUID teamId) {
+        tx.deleteFrom(USER_TEAMS)
+                .where(USER_TEAMS.TEAM_ID.eq(teamId))
                 .execute();
     }
 

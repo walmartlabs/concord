@@ -453,7 +453,7 @@ public class ProcessIT extends AbstractServerIT {
         TeamResource teamResource = proxy(TeamResource.class);
         CreateTeamResponse ctr = teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
 
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
 
         // switch to the user A and create a new private project
 

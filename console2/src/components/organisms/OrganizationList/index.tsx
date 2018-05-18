@@ -34,7 +34,7 @@ interface OwnState {
 }
 
 interface StateProps {
-    orgs: OrganizationEntry[];
+    data: OrganizationEntry[];
     loading: boolean;
     error: RequestError;
 }
@@ -45,7 +45,7 @@ interface DispatchProps {
 
 type Props = StateProps & DispatchProps;
 
-class OrganizationList extends React.PureComponent<Props, OwnState> {
+class OrganizationList extends React.Component<Props, OwnState> {
     constructor(props: Props) {
         super(props);
         this.state = { onlyCurrent: true };
@@ -67,7 +67,7 @@ class OrganizationList extends React.PureComponent<Props, OwnState> {
     }
 
     render() {
-        const { loading, orgs, error } = this.props;
+        const { loading, data, error } = this.props;
 
         if (error) {
             return <RequestErrorMessage error={error} />;
@@ -89,7 +89,7 @@ class OrganizationList extends React.PureComponent<Props, OwnState> {
                 {loading && <Loader active={true} />}
 
                 <List divided={true} relaxed={true} size="large">
-                    {orgs.map((org: OrganizationEntry, index: number) => (
+                    {data.map((org: OrganizationEntry, index: number) => (
                         <List.Item key={index}>
                             <Icon
                                 name={
@@ -124,7 +124,7 @@ const makeOrgList = (data: Organizations): OrganizationEntry[] => {
 };
 
 const mapStateToProps = ({ orgs }: { orgs: State }): StateProps => ({
-    orgs: makeOrgList(orgs.orgsById),
+    data: makeOrgList(orgs.orgById),
     loading: orgs.loading,
     error: orgs.error
 });

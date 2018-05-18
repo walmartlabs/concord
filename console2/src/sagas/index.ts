@@ -25,6 +25,8 @@ import { sagas as Processes } from '../state/data/processes';
 import { sagas as Forms } from '../state/data/forms';
 import { sagas as Projects } from '../state/data/projects';
 import { sagas as Secrets } from '../state/data/secrets';
+import { sagas as Teams } from '../state/data/teams';
+import { sagas as Search } from '../state/data/search';
 import { sagas as Session } from '../state/session';
 
 export default function* root() {
@@ -34,6 +36,8 @@ export default function* root() {
         fork(Organizations),
         fork(Projects),
         fork(Secrets),
+        fork(Teams),
+        fork(Search),
         fork(Processes),
         fork(Forms)
     ]);

@@ -39,7 +39,7 @@ export const actions = {
     })
 };
 
-const orgsById: Reducer<Organizations> = (
+const orgById: Reducer<Organizations> = (
     state = {},
     { type, error, items }: ListOrganizationsResponse
 ) => {
@@ -70,7 +70,7 @@ const listError = makeErrorReducer(
 );
 
 export const reducers = combineReducers<State>({
-    orgsById,
+    orgById, // TODO use makeEntityByIdReducer
     loading,
     error: listError
 });

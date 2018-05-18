@@ -31,8 +31,14 @@ export type RequestError = RequestErrorData | null;
 
 export const parseSiestaError = async (resp: Response) => {
     const json = await resp.json();
+
+    let message;
+    if (resp.status < 400 && resp.status >= 500) {
+        message = `ERROR: ${resp.statusText} (${resp.status})`;
+    }
+
     return {
-        message: `ERROR: ${resp.statusText} (${resp.status})`,
+        message,
         details: json[0].message,
         status: resp.status
     };
@@ -40,8 +46,14 @@ export const parseSiestaError = async (resp: Response) => {
 
 export const parseJsonError = async (resp: Response) => {
     const json = await resp.json();
+
+    let message;
+    if (resp.status < 400 && resp.status >= 500) {
+        message = json.message;
+    }
+
     return {
-        message: json.message,
+        message,
         details: json.details,
         status: resp.status
     };
@@ -49,8 +61,14 @@ export const parseJsonError = async (resp: Response) => {
 
 export const parseTextError = async (resp: Response) => {
     const text = await resp.text();
+
+    let message;
+    if (resp.status < 400 && resp.status >= 500) {
+        message = `ERROR: ${resp.statusText} (${resp.status})`;
+    }
+
     return {
-        message: `ERROR: ${resp.statusText} (${resp.status})`,
+        message,
         details: text,
         status: resp.status
     };
@@ -99,7 +117,7 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
     return response;
 };
 
-export const queryParams = (params: object) => {
+export const queryParams = (params: object): string => {
     const esc = encodeURIComponent;
     return Object.keys(params)
         .filter((k) => !!params[k])

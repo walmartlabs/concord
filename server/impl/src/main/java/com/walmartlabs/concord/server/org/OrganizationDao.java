@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.OrganizationVisibility;
-import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
+import com.walmartlabs.concord.server.api.org.team.TeamRole;
 import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
-import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static org.jooq.impl.DSL.*;
@@ -148,6 +147,15 @@ public class OrganizationDao extends AbstractDao {
             return q.orderBy(ORGANIZATIONS.ORG_NAME)
                     .fetch(this::toEntry);
         }
+    }
+
+    public boolean hasRole(DSLContext tx, UUID orgId, TeamRole role) {
+        SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID).from(TEAMS).where(TEAMS.ORG_ID.eq(orgId));
+
+        return tx.fetchExists(select(USER_TEAMS.USER_ID)
+                .from(USER_TEAMS)
+                .where(USER_TEAMS.TEAM_ROLE.eq(role.toString())
+                        .and(USER_TEAMS.TEAM_ID.in(teamIds))));
     }
 
     private String serialize(Map<String, Object> m) {

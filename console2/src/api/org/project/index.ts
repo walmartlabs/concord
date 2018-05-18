@@ -86,6 +86,7 @@ export const createOrUpdate = (
     return fetchJson(`/api/v1/org/${orgName}/project`, opts);
 };
 
+// TODO should we just use createOrUpdate instead?
 export const rename = (
     orgName: ConcordKey,
     projectId: ConcordId,
@@ -105,6 +106,7 @@ export const rename = (
     return fetchJson(`/api/v1/org/${orgName}/project`, opts);
 };
 
+// TODO should we just use createOrUpdate instead?
 export const setAcceptsRawPayload = (
     orgName: ConcordKey,
     projectId: ConcordId,

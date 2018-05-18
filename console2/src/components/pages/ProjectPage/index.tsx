@@ -22,13 +22,14 @@ import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
 import { Breadcrumb } from 'semantic-ui-react';
 
+import { ConcordId } from '../../../api/common';
 import { BreadcrumbSegment } from '../../molecules';
 import { ProjectActivity } from '../../organisms';
 import { TabLink } from '../../organisms/ProjectActivity';
 
 interface RouteProps {
-    orgName: string;
-    projectName: string;
+    orgName: ConcordId;
+    projectName: ConcordId;
 }
 
 const pathToTab = (s: string): TabLink => {

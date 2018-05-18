@@ -24,6 +24,11 @@ interface HasName {
 }
 
 export const comparators = {
+    byProperty: <T, P>(getter: (i: T) => P) => (a: T, b: T): number => {
+        const x = getter(a);
+        const y = getter(b);
+        return x > y ? 1 : x < y ? -1 : 0;
+    },
     byName: (a: HasName, b: HasName) => (a.name > b.name ? 1 : a.name < b.name ? -1 : 0)
 };
 

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,12 @@
  */
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
+
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
+import { isProjectExists } from '../../../api/service/console';
 import { actions, State } from '../../../state/data/projects';
-import { ProjectRenameForm, RequestErrorMessage } from '../../molecules';
+import { projectAlreadyExistsError } from '../../../validation';
+import { EntityRenameForm, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -47,13 +50,15 @@ class ProjectRenameActivity extends React.PureComponent<Props> {
         return (
             <>
                 {error && <RequestErrorMessage error={error} />}
-                <ProjectRenameForm
-                    orgName={orgName}
+                <EntityRenameForm
+                    originalName={projectName}
                     submitting={renaming}
-                    initial={{
-                        name: projectName
-                    }}
                     onSubmit={(values) => rename(orgName, projectId, values.name)}
+                    inputPlaceholder="Project name"
+                    confirmationHeader="Rename the project?"
+                    confirmationContent="Are you sure you want to rename the project?"
+                    isExists={(name) => isProjectExists(orgName, name)}
+                    alreadyExistsTemplate={projectAlreadyExistsError}
                 />
             </>
         );

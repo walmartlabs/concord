@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
+import com.walmartlabs.concord.server.console.UserSearchResult;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
 
@@ -40,8 +41,8 @@ import java.util.*;
 @Singleton
 public class LdapManager {
 
-    private static final String MEMBER_OF_ATTR = "memberOf";
-    private static final String DISPLAY_NAME_ATTR = "displayName";
+    private static final String MEMBER_OF_ATTR = "memberOf"; // TODO move to cfg
+    private static final String DISPLAY_NAME_ATTR = "displayName"; // TODO move to cfg
 
     private final LdapConfiguration cfg;
     private final LdapContextFactory ctxFactory;
@@ -50,6 +51,50 @@ public class LdapManager {
     public LdapManager(LdapConfiguration cfg, ConcordLdapContextFactory ctxFactory) {
         this.cfg = cfg;
         this.ctxFactory = ctxFactory;
+    }
+
+    public List<UserSearchResult> search(String filter) throws NamingException {
+        LdapContext ctx = null;
+        try {
+            ctx = ctxFactory.getSystemLdapContext();
+
+            SearchControls searchCtls = new SearchControls();
+            searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+            searchCtls.setReturningAttributes(new String[] { cfg.getUsernameProperty(), DISPLAY_NAME_ATTR });
+            searchCtls.setCountLimit(10);
+            Object[] args = new Object[]{filter};
+
+            NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getUserSearchFilter(), args, searchCtls);
+            if (!answer.hasMoreElements()) {
+                return Collections.emptyList();
+            }
+
+            List<UserSearchResult> l = new ArrayList<>();
+            while (answer.hasMoreElements()) {
+                SearchResult sr = (SearchResult) answer.next();
+                Attributes attrs = sr.getAttributes();
+                if (attrs != null) {
+                    String username = null;
+                    String displayName = null;
+
+                    NamingEnumeration ae = attrs.getAll();
+                    while (ae.hasMore()) {
+                        Attribute attr = (Attribute) ae.next();
+                        String id = attr.getID();
+                        if (cfg.getUsernameProperty().equals(id)) {
+                            username = attr.get().toString();
+                        } else if (DISPLAY_NAME_ATTR.equals(id)) {
+                            displayName = attr.get().toString();
+                        }
+                    }
+
+                    l.add(new UserSearchResult(username, displayName));
+                }
+            }
+            return l;
+        } finally {
+            LdapUtils.closeContext(ctx);
+        }
     }
 
     public LdapPrincipal getPrincipal(String username) throws NamingException {

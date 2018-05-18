@@ -76,7 +76,7 @@ public class ProcessRbacIT extends AbstractServerIT {
         TeamResource teamResource = proxy(TeamResource.class);
         CreateTeamResponse ctr = teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
 
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
 
         // switch to the user A and create a new private project
 
@@ -127,7 +127,7 @@ public class ProcessRbacIT extends AbstractServerIT {
 
         resetApiKey();
 
-        teamResource.addUsers(orgName, teamName, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
+        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
 
         // switch to the user B and start a process using the project
 

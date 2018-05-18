@@ -45,6 +45,7 @@ public class LdapConfiguration implements Serializable {
     private String url;
     private String searchBase;
     private String principalSearchFilter;
+    private String userSearchFilter;
     private String usernameProperty;
     private String systemUsername;
     private String systemPassword;
@@ -64,6 +65,7 @@ public class LdapConfiguration implements Serializable {
             this.url = props.getProperty("url");
             this.searchBase = props.getProperty("searchBase");
             this.principalSearchFilter = props.getProperty("principalSearchFilter");
+            this.userSearchFilter = props.getProperty("userSearchFilter");
             this.usernameProperty = props.getProperty("usernameProperty", "sAMAccountName");
             this.systemUsername = props.getProperty("systemUsername");
             this.systemPassword = props.getProperty("systemPassword");
@@ -101,6 +103,10 @@ public class LdapConfiguration implements Serializable {
 
     public String getPrincipalSearchFilter() {
         return principalSearchFilter;
+    }
+
+    public String getUserSearchFilter() {
+        return userSearchFilter;
     }
 
     public String getUsernameProperty() {

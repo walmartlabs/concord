@@ -338,7 +338,7 @@ const refreshRepositoryReducers = combineReducers<RefreshRepositoryState>({
 });
 
 export const reducers = combineReducers<State>({
-    projectById,
+    projectById, // TODO use makeEntityByIdReducer
     loading,
     error: errorMsg,
 

@@ -32,7 +32,7 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class TeamUserEntry implements Serializable {
 
-    private final UUID id;
+    private final UUID userId;
     private final String username;
     private final UserType userType;
     private final TeamRole role;
@@ -41,23 +41,20 @@ public class TeamUserEntry implements Serializable {
         this(null, username, null, role);
     }
 
-    public TeamUserEntry(String username, UserType userType, TeamRole role) {
-        this(null, username, userType, role);
-    }
-
     @JsonCreator
-    public TeamUserEntry(@JsonProperty("id") UUID id,
+    public TeamUserEntry(@JsonProperty("userId") UUID userId,
                          @JsonProperty("username") String username,
                          @JsonProperty("userType") UserType userType,
                          @JsonProperty("role") TeamRole role) {
-        this.id = id;
+
+        this.userId = userId;
         this.username = username;
         this.userType = userType;
         this.role = role;
     }
 
-    public UUID getId() {
-        return id;
+    public UUID getUserId() {
+        return userId;
     }
 
     public String getUsername() {
@@ -75,7 +72,7 @@ public class TeamUserEntry implements Serializable {
     @Override
     public String toString() {
         return "TeamUserEntry{" +
-                "id=" + id +
+                "userId=" + userId +
                 ", username='" + username + '\'' +
                 ", userType=" + userType +
                 ", role=" + role +

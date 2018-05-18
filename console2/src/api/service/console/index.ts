@@ -17,9 +17,9 @@
  * limitations under the License.
  * =====
  */
-import * as _ from 'lodash';
+import { throttle } from 'lodash';
 
-import { ConcordId, ConcordKey, fetchJson, managedFetch } from '../../common';
+import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
 
 export interface UserResponse {
     username: string;
@@ -43,21 +43,23 @@ export const logout = async () => {
     return true;
 };
 
-export const isProjectExists = _.throttle(async (orgName: ConcordKey, name: string): Promise<
+// TODO throttle in sagas?
+export const isProjectExists = throttle(async (orgName: ConcordKey, name: string): Promise<
     boolean
 > => {
     const json = await fetchJson(`/api/service/console/org/${orgName}/project/${name}/exists`);
     return json as boolean;
 }, 1000);
 
-export const isSecretExists = _.throttle(async (orgName: ConcordKey, name: string): Promise<
+// TODO throttle in sagas?
+export const isSecretExists = throttle(async (orgName: ConcordKey, name: string): Promise<
     boolean
 > => {
     const json = await fetchJson(`/api/service/console/org/${orgName}/secret/${name}/exists`);
     return json as boolean;
 }, 1000);
 
-export const isRepositoryExists = _.throttle(
+export const isRepositoryExists = throttle(
     async (orgName: ConcordKey, projectName: ConcordKey, name: string): Promise<boolean> => {
         const json = await fetchJson(
             `/api/service/console/org/${orgName}/project/${projectName}/repo/${name}/exists`
@@ -66,6 +68,14 @@ export const isRepositoryExists = _.throttle(
     },
     1000
 );
+
+// TODO throttle in sagas?
+export const isTeamExists = throttle(async (orgName: ConcordKey, name: string): Promise<
+    boolean
+> => {
+    const json = await fetchJson(`/api/service/console/org/${orgName}/team/${name}/exists`);
+    return json as boolean;
+}, 1000);
 
 export interface RepositoryTestRequest {
     orgId?: ConcordId;
@@ -91,3 +101,11 @@ export const testRepository = async (req: RepositoryTestRequest): Promise<void> 
         throw `Unknown error`;
     }
 };
+
+export interface UserSearchResult {
+    username: string;
+    displayName: string;
+}
+
+export const findUsers = (filter: string): Promise<UserSearchResult[]> =>
+    fetchJson(`/api/service/console/search/users?${queryParams({ filter })}`);

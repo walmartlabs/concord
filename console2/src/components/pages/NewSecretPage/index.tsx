@@ -55,4 +55,5 @@ class NewSecretPage extends React.PureComponent<RouteComponentProps<RouteProps>>
     }
 }
 
+// TODO use OrgActivityPage
 export default withRouter(NewSecretPage);

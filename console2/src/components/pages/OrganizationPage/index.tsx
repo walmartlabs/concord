@@ -23,14 +23,14 @@ import { Link } from 'react-router-dom';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';
-import { ProcessList, ProjectList, RedirectButton, SecretList } from '../../organisms';
+import { ProcessList, ProjectList, RedirectButton, SecretList, TeamList } from '../../organisms';
 import { NotFoundPage } from '../index';
 
 interface RouteProps {
     orgName: string;
 }
 
-type TabLink = 'process' | 'project' | 'secret' | null;
+type TabLink = 'process' | 'project' | 'secret' | 'team' | null;
 
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/process')) {
@@ -39,6 +39,8 @@ const pathToTab = (s: string): TabLink => {
         return 'project';
     } else if (s.endsWith('/secret')) {
         return 'secret';
+    } else if (s.endsWith('/team')) {
+        return 'team';
     }
 
     return null;
@@ -75,6 +77,10 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
                         <Icon name="lock" />
                         <Link to={`${url}/secret`}>Secrets</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'team'}>
+                        <Icon name="users" />
+                        <Link to={`${url}/team`}>Teams</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
@@ -87,6 +93,9 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
                     </Route>
                     <Route path={`${url}/secret`} exact={true}>
                         {this.renderSecrets()}
+                    </Route>
+                    <Route path={`${url}/team`} exact={true}>
+                        {this.renderTeams()}
                     </Route>
 
                     <Route component={NotFoundPage} />
@@ -133,6 +142,27 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
                 </Menu>
 
                 <SecretList orgName={orgName} />
+            </>
+        );
+    }
+
+    renderTeams() {
+        const { orgName } = this.props.match.params;
+        return (
+            <>
+                <Menu secondary={true}>
+                    <Menu.Item position={'right'}>
+                        <RedirectButton
+                            icon="plus"
+                            positive={true}
+                            labelPosition="left"
+                            content="New team"
+                            location={`/org/${orgName}/team/_new`}
+                        />
+                    </Menu.Item>
+                </Menu>
+
+                <TeamList orgName={orgName} />
             </>
         );
     }
