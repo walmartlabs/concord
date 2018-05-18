@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.api.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,8 @@ import io.swagger.annotations.Authorization;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
+import java.util.Map;
 
 @Api(value = "Inventory", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
@@ -47,6 +49,20 @@ public interface InventoryDataResource {
     Object get(@ApiParam @PathParam("orgName") String orgName,
                @ApiParam @PathParam("inventoryName") String inventoryName,
                @ApiParam @PathParam("itemPath") String itemPath);
+
+    /**
+     * Returns all inventory data for inventory.
+     *
+     * @param orgName organization's name
+     * @param inventoryName inventory's name
+     * @return
+     */
+    @GET
+    @ApiOperation("List inventory data")
+    @Path("/{orgName}/inventory/{inventoryName}/data")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<Map<String, Object>> list(@ApiParam @PathParam("orgName") String orgName,
+                                   @ApiParam @PathParam("inventoryName") String inventoryName);
 
     /**
      * Modifies inventory data

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,8 +30,7 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.Inventories.INVENTORIES;
 import static com.walmartlabs.concord.server.jooq.tables.InventoryData.INVENTORY_DATA;
@@ -62,6 +61,22 @@ public class InventoryDataDao extends AbstractDao {
         tx(tx -> delete(tx, inventoryId, itemPath));
     }
 
+    public List<Map<String,Object>> list(UUID inventoryId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(INVENTORY_DATA.ITEM_PATH, INVENTORY_DATA.ITEM_DATA.cast(String.class))
+                    .from(INVENTORY_DATA)
+                    .where(INVENTORY_DATA.INVENTORY_ID.eq(inventoryId))
+                    .fetch(this::toListItem);
+        }
+    }
+
+    private Map<String, Object> toListItem(Record2<String, String> r) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("path", r.value1());
+        result.put("data", deserialize(r.value2()));
+        return result;
+    }
+
     private List<InventoryDataItem> get(DSLContext tx, UUID inventoryId, String path) {
         Table<Record> nodes = table("nodes");
         Inventories i1 = INVENTORIES.as("i1");
@@ -90,9 +105,9 @@ public class InventoryDataDao extends AbstractDao {
         tx.insertInto(INVENTORY_DATA)
                 .columns(INVENTORY_DATA.INVENTORY_ID, INVENTORY_DATA.ITEM_PATH, INVENTORY_DATA.ITEM_DATA)
                 .values(value(inventoryId), value(itemPath), field("?::jsonb", serialize(data)))
-            .onDuplicateKeyUpdate()
-            .set(INVENTORY_DATA.ITEM_DATA, field("?::jsonb", String.class, serialize(data)))
-            .execute();
+                .onDuplicateKeyUpdate()
+                .set(INVENTORY_DATA.ITEM_DATA, field("?::jsonb", String.class, serialize(data)))
+                .execute();
     }
 
     private void delete(DSLContext tx, UUID inventoryId, String itemPath) {
