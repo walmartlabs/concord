@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-console: fixed dropdown not re-rendering after update;
 - concord-server: fixed incorrect filtering of inventory data.
 
 

@@ -18,6 +18,7 @@
  * =====
  */
 import { Field, getIn } from 'formik';
+import { FieldProps } from 'formik/dist/Field';
 import * as React from 'react';
 import { Form, FormInputProps, Input, Label } from 'semantic-ui-react';
 
@@ -28,7 +29,7 @@ export default class extends React.Component<FormInputProps> {
         return (
             <Field
                 name={fieldName}
-                render={({ field, form }) => {
+                render={({ field, form }: FieldProps) => {
                     const touched = getIn(form.touched, fieldName);
                     const error = getIn(form.errors, fieldName);
                     const invalid = !!(touched && error);
