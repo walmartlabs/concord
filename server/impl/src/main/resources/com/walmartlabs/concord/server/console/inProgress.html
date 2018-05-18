@@ -8,24 +8,8 @@
 </div>
 
 
-<div id="loadingCtrl" class="ui segment loading">
+<div id="loadingCtrl" class="ui segment">
     <div class="ui relaxed divided list">
-        {{#orgName}}
-        <div class="item">
-            <div class="content">
-                <div class="header">Organization</div>
-                <div class="description">{{orgName}} </div>
-            </div>
-        </div>
-        {{/orgName}}
-        {{#projectName}}
-        <div class="item">
-            <div class="content">
-                <div class="header">Project</div>
-                <div class="description">{{projectName}}</div>
-            </div>
-        </div>
-        {{/projectName}}
         {{#instanceId}}
         <div class="item">
             <div class="content">
@@ -42,13 +26,9 @@
             </div>
         </div>
         {{/initiator}}
-        <div class="item">
-            <div class="content">
-                <div class="header">Status</div>
-                <div id="message" class="description">{{status}}</div>
-            </div>
-        </div>
     </div>
+
+    <h4><i class="spinner loading icon"></i>{{status}}</h4>
 </div>
 
 

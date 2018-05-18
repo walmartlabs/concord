@@ -11,6 +11,8 @@ team users update operation.
 
 ### Changed
 
+- concord-server: reduced the amount of information on the "wait
+page" in the process API endpoint for browsers;
 - concord-server: fixed team management RBAC;
 - concord-console: fixed dropdowns not re-rendering after update;
 - concord-server: fixed incorrect filtering of inventory data.
