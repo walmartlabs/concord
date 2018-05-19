@@ -60,10 +60,13 @@ public class Worker implements Runnable {
 
     private volatile boolean maintenanceMode = false;
 
-    public Worker(ProcessQueueApi queueClient, ProcessApiClient processApiClient,
+    public Worker(ProcessQueueApi queueClient,
+                  ProcessApiClient processApiClient,
                   ExecutionManager executionManager,
-                  long logSteamMaxDelay, long pollInterval,
+                  long logSteamMaxDelay,
+                  long pollInterval,
                   Map<String, Object> capabilities) {
+
         this.queueClient = queueClient;
         this.processApiClient = processApiClient;
         this.executionManager = executionManager;

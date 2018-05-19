@@ -300,7 +300,7 @@ public class DefaultJobExecutor implements JobExecutor {
         // pass through the docker mode
         String dockerMode = System.getenv(CONCORD_DOCKER_LOCAL_MODE_KEY);
         if (dockerMode != null) {
-            log.info("Using Docker mode: {}", dockerMode);
+            log.debug("start -> using Docker mode: {}", dockerMode);
             env.put(CONCORD_DOCKER_LOCAL_MODE_KEY, dockerMode);
         }
 
@@ -365,7 +365,7 @@ public class DefaultJobExecutor implements JobExecutor {
         String deps = String.join(":", dependencyFiles);
         l.add(joinClassPath(deps));
 
-        return l.toArray(new String[l.size()]);
+        return l.toArray(new String[0]);
     }
 
     @SuppressWarnings("unchecked")

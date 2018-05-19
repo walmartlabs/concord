@@ -55,7 +55,7 @@ public class OrphanSweeper implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 Map<String, String> containers = findContainers();
-                log.info("run -> found {} container(s)...", containers.size());
+                log.debug("run -> found {} container(s)...", containers.size());
 
                 for (Map.Entry<String, String> c : containers.entrySet()) {
                     String txId = c.getKey();

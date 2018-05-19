@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.api.process.ProcessQueueResource;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -29,9 +30,7 @@ import org.sonatype.siesta.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -45,28 +44,36 @@ public class ProcessQueueResourceImpl implements ProcessQueueResource, Resource 
     private static final Logger log = LoggerFactory.getLogger(ProcessQueueResourceImpl.class);
 
     private final ProcessManager processManager;
+    private final LogManager logManager;
 
     @Inject
-    public ProcessQueueResourceImpl(ProcessManager processManager) {
+    public ProcessQueueResourceImpl(ProcessManager processManager, LogManager logManager) {
         this.processManager = processManager;
+        this.logManager = logManager;
     }
 
     @Override
-    public Response take(Map<String, Object> capabilities) {
+    public Response take(Map<String, Object> capabilities, HttpHeaders headers) {
         try {
             ProcessManager.PayloadEntry p = processManager.nextPayload(capabilities);
             if (p == null) {
                 return null;
             }
 
-            return Response.ok(
-                    (StreamingOutput) output -> {
-                        try {
-                            Files.copy(p.getPayloadArchive(), output);
-                        } finally {
-                            Files.deleteIfExists(p.getPayloadArchive());
-                        }
-                    }, MediaType.APPLICATION_OCTET_STREAM)
+            StreamingOutput entity = out -> {
+                try {
+                    Files.copy(p.getPayloadArchive(), out);
+                } finally {
+                    Files.deleteIfExists(p.getPayloadArchive());
+                }
+            };
+
+            String userAgent = headers.getHeaderString(HttpHeaders.USER_AGENT);
+            if (userAgent != null) {
+                logManager.log(p.getProcessEntry().getInstanceId(), "Acquired by: " + userAgent);
+            }
+
+            return Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM)
                     .header(InternalConstants.Headers.PROCESS_INSTANCE_ID, p.getProcessEntry().getInstanceId().toString())
                     .build();
         } catch (IOException e) {

@@ -72,6 +72,7 @@ public class ServerConnector implements MaintenanceModeListener {
 
         workers = new Worker[workersCount];
         workerThreads = new Thread[workersCount];
+
         for (int i = 0; i < workersCount; i++) {
             Worker w = new Worker(new ProcessQueueApi(createClient(cfg)),
                     new ProcessApiClient(cfg, new ProcessApi(createClient(cfg))),
@@ -154,6 +155,7 @@ public class ServerConnector implements MaintenanceModeListener {
         client.setApiKey(cfg.getApiKey());
         client.setReadTimeout(cfg.getReadTimeout());
         client.setConnectTimeout(cfg.getConnectTimeout());
+        client.setUserAgent("Concord-Agent: id=" + cfg.getAgentId());
         return client;
     }
 }

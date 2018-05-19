@@ -123,12 +123,12 @@ public class ProcessPool {
             }
         }
 
-        log.info("maintenance -> removed {} queues", queuesToRemove.size());
+        log.debug("maintenance -> removed {} queues", queuesToRemove.size());
 
         for (Process p : processesToKill) {
             Utils.kill(p);
         }
-        log.info("maintenance -> killed {} processes", processesToKill.size());
+        log.debug("maintenance -> killed {} processes", processesToKill.size());
     }
 
     public interface ProcessLauncher {
