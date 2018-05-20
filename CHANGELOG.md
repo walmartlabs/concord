@@ -11,6 +11,7 @@ team users update operation.
 
 ### Changed
 
+- concord-server-client: renamed to `concord-client`;
 - concord-server: reduced the amount of information on the "wait
 page" in the process API endpoint for browsers;
 - concord-server: fixed team management RBAC;
