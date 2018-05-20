@@ -17,7 +17,6 @@
  * limitations under the License.
  * =====
  */
-import * as gitUrlParse from 'git-url-parse';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Icon, Table } from 'semantic-ui-react';
@@ -39,6 +38,39 @@ const getSource = (r: RepositoryEntry) => {
     return r.branch;
 };
 
+const gitUrlParse = (s: string): string | undefined => {
+    if (s.startsWith("git")) {
+        // git@gecgithub01.walmart.com:devtools/concord.git
+        const regex = /git@(.*):(.*)\.git/;
+        const match = regex.exec(s);
+        if (!match || match.length !== 3) {
+            return;
+        }
+        return `https://${match[1]}/${match[2]}`;
+    } else if (s.startsWith("http")) {
+        // https://gecgithub01.walmart.com/devtools/concord.git
+        const regex = /http[s]?:\/\/(.*).git/;
+        const match = regex.exec(s);
+        if (!match || match.length !== 2) {
+            return;
+        }
+        return `https://${match[1]}`;
+    }
+
+    return;
+};
+
+const renderGitLink = (s: string) => {
+    const url = gitUrlParse(s);
+    if (!url) {
+        return s;
+    }
+
+    return <a href={url} target="_blank">
+        {s} <Icon name="external" />
+    </a>;
+};
+
 const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: RepositoryEntry) => {
     return (
         <Table.Row key={row.id}>
@@ -47,11 +79,7 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
                     {row.name}
                 </Link>
             </Table.Cell>
-            <Table.Cell>
-                <a href={gitUrlParse(row.url).toString('https')} target="_blank">
-                    {row.url} <Icon name="external" />
-                </a>
-            </Table.Cell>
+            <Table.Cell>{renderGitLink(row.url)}</Table.Cell>
             <Table.Cell>{getSource(row)}</Table.Cell>
             <Table.Cell>{row.path}</Table.Cell>
             <Table.Cell>{row.secretName}</Table.Cell>
