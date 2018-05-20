@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.client;
+package com.walmartlabs.concord.client;
 
 /*-
  * *****
@@ -21,9 +21,9 @@ package com.walmartlabs.concord.server.client;
  */
 
 import com.squareup.okhttp.Call;
-import com.walmartlabs.concord.server.ApiClient;
-import com.walmartlabs.concord.server.ApiException;
-import com.walmartlabs.concord.server.ApiResponse;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

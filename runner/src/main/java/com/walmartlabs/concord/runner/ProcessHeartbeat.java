@@ -22,8 +22,8 @@ package com.walmartlabs.concord.runner;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runner.engine.RpcClientImpl;
-import com.walmartlabs.concord.server.ApiClient;
-import com.walmartlabs.concord.server.client.ProcessHeartbeatApi;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.ProcessHeartbeatApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

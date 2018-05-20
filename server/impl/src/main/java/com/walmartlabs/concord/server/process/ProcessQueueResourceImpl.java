@@ -70,7 +70,7 @@ public class ProcessQueueResourceImpl implements ProcessQueueResource, Resource 
 
             String userAgent = headers.getHeaderString(HttpHeaders.USER_AGENT);
             if (userAgent != null) {
-                logManager.log(p.getProcessEntry().getInstanceId(), "Acquired by: " + userAgent);
+                logManager.info(p.getProcessEntry().getInstanceId(), "Acquired by: " + userAgent);
             }
 
             return Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM)

@@ -23,11 +23,11 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.rpc.JobEntry;
-import com.walmartlabs.concord.server.ApiException;
-import com.walmartlabs.concord.server.ApiResponse;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.client.ClientUtils;
-import com.walmartlabs.concord.server.client.ProcessQueueApi;
+import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client.ProcessQueueApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

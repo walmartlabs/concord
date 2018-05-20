@@ -23,10 +23,10 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.ApiClient;
-import com.walmartlabs.concord.server.client.CommandQueueApi;
-import com.walmartlabs.concord.server.client.ProcessApi;
-import com.walmartlabs.concord.server.client.ProcessQueueApi;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.CommandQueueApi;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessQueueApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

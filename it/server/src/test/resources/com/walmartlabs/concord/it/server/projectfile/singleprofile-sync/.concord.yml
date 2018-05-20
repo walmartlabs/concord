@@ -18,7 +18,7 @@ forms:
   myForm2:
     - lastName: { label: "Last Name", type: "string" }
     - age: { label: "Age", type: "int?", min: 21, max: 120 }
-    - color: { label: "Favorite color", type: "string", value: "red" }
+    - color: { label: "Favorite color", type: "string", value: "redColor" }
 
 variables:
   arguments:

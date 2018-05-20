@@ -135,7 +135,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Boo Zoo.*", ab);
         assertLog(".*100022.*", ab);
         assertLog(".*120123.*", ab);
-        assertLog(".*red.*", ab);
+        assertLog(".*redColor.*", ab);
 
         assertTrue(pir.getStatus() == ProcessStatus.FINISHED);
     }

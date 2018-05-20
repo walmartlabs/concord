@@ -25,13 +25,13 @@ import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.client.ApiClientFactory;
+import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.SecretService;
-import com.walmartlabs.concord.server.ApiResponse;
+import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
-import com.walmartlabs.concord.server.client.ClientUtils;
-import com.walmartlabs.concord.server.client.ProcessApi;
+import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client.ProcessApi;
 
 import javax.inject.Inject;
 import javax.inject.Named;

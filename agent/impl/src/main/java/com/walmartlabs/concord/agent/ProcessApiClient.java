@@ -20,10 +20,10 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.walmartlabs.concord.server.ApiException;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.client.ClientUtils;
-import com.walmartlabs.concord.server.client.ProcessApi;
+import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client.ProcessApi;
 
 import java.nio.file.Path;
 import java.util.UUID;

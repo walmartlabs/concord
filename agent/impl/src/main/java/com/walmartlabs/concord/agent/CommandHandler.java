@@ -20,10 +20,10 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.walmartlabs.concord.server.ApiException;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.server.api.CommandType;
 import com.walmartlabs.concord.server.api.agent.CommandEntry;
-import com.walmartlabs.concord.server.client.CommandQueueApi;
+import com.walmartlabs.concord.client.CommandQueueApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +76,7 @@ public class CommandHandler implements Runnable {
     }
 
     private CommandEntry take() throws ApiException {
-        com.walmartlabs.concord.server.client.CommandEntry cmd = queueClient.take(agentId);
+        com.walmartlabs.concord.client.CommandEntry cmd = queueClient.take(agentId);
         if (cmd != null) {
             return new CommandEntry(CommandType.valueOf(cmd.getType().getValue()), cmd.getPayload());
         }

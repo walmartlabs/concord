@@ -4,16 +4,21 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.walmartlabs.concord.server</groupId>
+        <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
         <version>0.70.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>concord-server-client</artifactId>
+    <artifactId>concord-client</artifactId>
     <packaging>takari-jar</packaging>
 
     <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-server-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
@@ -99,11 +104,11 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/../api/target/classes/com/walmartlabs/concord/server/api/swagger/swagger.json</inputSpec>
+                            <inputSpec>${project.basedir}/../server/api/target/classes/com/walmartlabs/concord/server/api/swagger/swagger.json</inputSpec>
                             <language>java</language>
                             <library>okhttp-gson</library>
-                            <apiPackage>com.walmartlabs.concord.server.client</apiPackage>
-                            <modelPackage>com.walmartlabs.concord.server.client</modelPackage>
+                            <apiPackage>com.walmartlabs.concord.client</apiPackage>
+                            <modelPackage>com.walmartlabs.concord.client</modelPackage>
                             <configOptions>
                                 <sourceFolder>src/gen/java/main</sourceFolder>
                             </configOptions>

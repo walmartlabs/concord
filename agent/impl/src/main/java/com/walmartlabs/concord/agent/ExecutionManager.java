@@ -25,7 +25,7 @@ import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

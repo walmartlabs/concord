@@ -20,29 +20,11 @@ package com.walmartlabs.concord.plugins.crypto;
  * =====
  */
 
-import com.google.gson.reflect.TypeToken;
-import com.walmartlabs.concord.common.secret.BinaryDataSecret;
-import com.walmartlabs.concord.common.secret.KeyPair;
-import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.*;
-import com.walmartlabs.concord.server.ApiResponse;
-import com.walmartlabs.concord.server.api.org.secret.SecretType;
-import com.walmartlabs.concord.server.client.ClientUtils;
-import com.walmartlabs.concord.server.client.ProcessApi;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.xml.bind.DatatypeConverter;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Named("crypto")
 public class CryptoTask implements Task {

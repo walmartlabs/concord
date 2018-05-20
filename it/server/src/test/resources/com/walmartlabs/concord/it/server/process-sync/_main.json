@@ -8,7 +8,7 @@
     "myForm2": {
       "lastName": "Zoo",
       "age": 22,
-      "color": "red"
+      "color": "redColor"
     }
   }
 }

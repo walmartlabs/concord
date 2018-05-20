@@ -24,6 +24,7 @@
         <module>project-model</module>
         <module>rpc</module>
         <module>server</module>
+        <module>client</module>
         <module>runner</module>
         <module>plugins</module>
         <module>agent</module>

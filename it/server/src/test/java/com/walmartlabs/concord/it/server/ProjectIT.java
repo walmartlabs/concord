@@ -249,7 +249,7 @@ public class ProjectIT extends AbstractServerIT {
                         "myForm2", ImmutableMap.of(
                                 "lastName", "Zoo",
                                 "age", 1200,
-                                "color", "red")
+                                "color", "redColor")
                 ));
 
         // ---
@@ -261,7 +261,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*Boo Zoo.*", ab);
         assertLog(".*101200.*", ab);
         assertLog(".*120123.*", ab);
-        assertLog(".*red.*", ab);
+        assertLog(".*redColor.*", ab);
 
         assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
     }
