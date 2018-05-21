@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,14 +29,14 @@ import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
-import java.util.UUID;
 
 @Named
 public class ProcessQueueResourceImpl implements ProcessQueueResource, Resource {
@@ -53,7 +53,7 @@ public class ProcessQueueResourceImpl implements ProcessQueueResource, Resource 
     }
 
     @Override
-    public Response take(Map<String, Object> capabilities, HttpHeaders headers) {
+    public Response take(Map<String, Object> capabilities, HttpServletRequest request, HttpHeaders headers) {
         try {
             ProcessManager.PayloadEntry p = processManager.nextPayload(capabilities);
             if (p == null) {
@@ -69,9 +69,12 @@ public class ProcessQueueResourceImpl implements ProcessQueueResource, Resource 
             };
 
             String userAgent = headers.getHeaderString(HttpHeaders.USER_AGENT);
-            if (userAgent != null) {
-                logManager.info(p.getProcessEntry().getInstanceId(), "Acquired by: " + userAgent);
+            if (userAgent == null) {
+                userAgent = "unknown";
             }
+
+            String remote = request.getRemoteAddr() + ":" + request.getRemotePort();
+            logManager.info(p.getProcessEntry().getInstanceId(), "Acquired by: " + userAgent + " (" + remote + ")");
 
             return Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM)
                     .header(InternalConstants.Headers.PROCESS_INSTANCE_ID, p.getProcessEntry().getInstanceId().toString())

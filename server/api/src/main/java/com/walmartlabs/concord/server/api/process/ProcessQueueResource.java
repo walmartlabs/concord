@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.api.process;
 
 import io.swagger.annotations.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -47,5 +48,6 @@ public interface ProcessQueueResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response take(@ApiParam Map<String, Object> agentCapabilities,
+                  @Context HttpServletRequest request,
                   @Context HttpHeaders headers);
 }
