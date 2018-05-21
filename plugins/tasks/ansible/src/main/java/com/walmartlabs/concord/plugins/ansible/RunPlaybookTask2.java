@@ -23,6 +23,7 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
 import com.walmartlabs.concord.sdk.*;
@@ -125,7 +126,7 @@ public class RunPlaybookTask2 implements Task {
                     .withEnv(env);
 
             Process p = b.build();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
                 log.info("ANSIBLE: {}", line);

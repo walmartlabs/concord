@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.docker;
  */
 
 import com.walmartlabs.concord.common.DockerProcessBuilder;
+import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
@@ -155,7 +156,7 @@ public class DockerTask implements Task {
     }
 
     private static void streamToLog(InputStream in) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(in));
         String line;
         while ((line = reader.readLine()) != null) {
             log.info("DOCKER: {}", line);

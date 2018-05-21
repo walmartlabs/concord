@@ -13,6 +13,8 @@ class CallbackModule(CallbackBase):
     CALLBACK_NAME = 'concord_events'
     CALLBACK_NEEDS_WHITELIST = False
 
+    MAX_STRING_LEN = 1024
+
     def __init__(self):
         super(CallbackModule, self).__init__()
 
@@ -52,7 +54,7 @@ class CallbackModule(CallbackBase):
         if 'exception' in abridged_result:
             del abridged_result['exception']
 
-        return abridged_result
+        return self._trunc_long_strings(abridged_result)
 
     def _strip_internal_keys(self, dirty):
         clean = dirty.copy()
@@ -62,6 +64,19 @@ class CallbackModule(CallbackBase):
             elif isinstance(dirty[k], dict):
                 clean[k] = self._strip_internal_keys(dirty[k])
         return clean
+
+    def _trunc_long_strings(self, obj):
+        if isinstance(obj, basestring):
+            overlimit = len(obj) - self.MAX_STRING_LEN
+            return (obj[:self.MAX_STRING_LEN] + '...[skipped ' + str(overlimit) +  ' bytes]') if overlimit > 0 else obj
+        elif isinstance(obj, list):
+            return [self._trunc_long_strings(o) for o in obj]
+        elif isinstance(obj, tuple):
+            return tuple(self._trunc_long_strings(o) for o in obj)
+        elif isinstance(obj, dict):
+            return dict((k, self._trunc_long_strings(v)) for (k,v) in obj.items())
+        else:
+            return obj
 
     ### Ansible callbacks ###
 

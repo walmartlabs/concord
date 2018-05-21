@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible: limit the saved stdout/stderr size;
 - concord-server: log the agent's IP address when a process starts;
 - concord-server: a method to list all inventory items;
 - concord-server: added optional `replace` query parameter to the
