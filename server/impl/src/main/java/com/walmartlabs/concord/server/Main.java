@@ -30,6 +30,7 @@ import org.eclipse.jetty.rewrite.handler.RewriteRegexRule;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import static com.walmartlabs.concord.server.SisuUtils.createSisuInjector;
 
@@ -39,6 +40,8 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         long t1 = System.currentTimeMillis();
+
+        SLF4JBridgeHandler.install();
 
         int port = Integer.parseInt(Utils.getEnv("CONCORD_SERVER_PORT", "8001"));
 
