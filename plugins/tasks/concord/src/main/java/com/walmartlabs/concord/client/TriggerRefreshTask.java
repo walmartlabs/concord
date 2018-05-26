@@ -9,9 +9,9 @@ package com.walmartlabs.concord.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,10 +22,8 @@ package com.walmartlabs.concord.client;
 
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerResource;
 
 import javax.inject.Named;
-import javax.ws.rs.core.Response;
 import java.util.Map;
 
 @Named("triggersRefresh")
@@ -42,11 +40,10 @@ public class TriggerRefreshTask extends AbstractConcordTask implements Task {
         String projectName = get(cfg, PROJECT_KEY);
         String repositoryName = get(cfg, REPOSITORY_KEY);
 
-        Response resp = withClient(ctx, target -> {
-            TriggerResource proxy = target.proxy(TriggerResource.class);
-            return proxy.refresh(orgName, projectName, repositoryName);
+        withClient(ctx, client -> {
+            TriggersApi api = new TriggersApi(client);
+            api.refresh(orgName, projectName, repositoryName);
+            return null;
         });
-
-        assertResponse(resp);
     }
 }

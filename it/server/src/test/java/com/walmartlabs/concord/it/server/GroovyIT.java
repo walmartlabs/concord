@@ -42,7 +42,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class GroovyIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         String username = "user_" + randomString();
 

@@ -42,7 +42,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class FilePermissionsIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         Path src = Paths.get(FilePermissionsIT.class.getResource("filePerm").toURI());
 

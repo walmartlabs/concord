@@ -79,8 +79,15 @@ public class ServerConnector implements MaintenanceModeListener {
                     executionManager, cfg.getLogMaxDelay(), cfg.getPollInterval(),
                     cfg.getCapabilities());
             workers[i] = w;
+
             Thread t = new Thread(w, "worker-" + i);
             workerThreads[i] = t;
+
+            // offset the worker start up slightly to smooth out the polling intervals
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+            }
         }
 
         for (Thread w : workerThreads) {

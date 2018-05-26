@@ -34,7 +34,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class CryptoIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testPlain() throws Exception {
         String orgName = "Default";
 
@@ -51,7 +51,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoPlain", secretName, storePassword, ".*value=" + secretValue + ".*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testUsernamePassword() throws Exception {
         String orgName = "Default";
 
@@ -69,7 +69,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoPwd", secretName, storePassword, ".*" + secretUsername + " " + secretPassword + ".*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testExportAsFile() throws Exception {
         String orgName = "Default";
 
@@ -86,7 +86,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoFile", secretName, storePassword, ".*We got " + secretValue + ".*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testExportAsFileWithOrg() throws Exception {
         String orgName = "org@" + randomString();
 

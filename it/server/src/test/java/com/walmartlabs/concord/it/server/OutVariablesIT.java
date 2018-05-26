@@ -35,7 +35,7 @@ import static org.junit.Assert.*;
 
 public class OutVariablesIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("out").toURI());
         String[] out = {"x", "y.some.boolean", "z"};
@@ -51,7 +51,7 @@ public class OutVariablesIT extends AbstractServerIT {
         assertFalse(data.containsKey("z"));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testPredefined() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("out").toURI());
 

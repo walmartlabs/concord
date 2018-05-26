@@ -23,10 +23,6 @@ package com.walmartlabs.concord.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectResource;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,10 +68,13 @@ public class ProjectTask extends AbstractConcordTask {
         String orgName = getOrgName(ctx, cfg);
         Map<String, RepositoryEntry> repositories = toRepositories(cfg);
 
-        ProjectEntry entry = new ProjectEntry(get(cfg, NAME_KEY), repositories);
-        withClient(ctx, target -> {
-            ProjectResource proxy = target.proxy(ProjectResource.class);
-            ProjectOperationResponse resp = proxy.createOrUpdate(orgName, entry);
+        ProjectEntry entry = new ProjectEntry();
+        entry.setName(get(cfg, NAME_KEY));
+        entry.setRepositories(repositories);
+
+        withClient(ctx, client -> {
+            ProjectsApi api = new ProjectsApi(client);
+            ProjectOperationResponse resp = api.createOrUpdate(orgName, entry);
             log.info("The project was created (or updated): {}", resp);
             return null;
         });

@@ -43,7 +43,8 @@ public class ProjectEntry implements Serializable {
     private final UUID id;
 
     @ConcordKey
-    private final String name;
+    // TODO it should be final, but swagger makes it readOnly and provides no way to set the value
+    private String name;
 
     @Size(max = 1024)
     private final String description;
@@ -106,6 +107,10 @@ public class ProjectEntry implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {

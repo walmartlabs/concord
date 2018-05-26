@@ -64,7 +64,7 @@ import static org.junit.Assert.*;
 @RunWith(ParallelRunner.class)
 public class CrudIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testProject() {
         ProjectResource projectResource = proxy(ProjectResource.class);
 
@@ -105,7 +105,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(deleteProjectResponse.isOk());
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testNonUniqueRepositoryNames() throws Exception {
         String projectName1 = "project1_" + randomString();
         String projectName2 = "project2_" + randomString();
@@ -120,7 +120,7 @@ public class CrudIT extends AbstractServerIT {
                 Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, false, null))));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testInventory() throws Exception {
         InventoryResource inventoryResource = proxy(InventoryResource.class);
 
@@ -151,7 +151,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(deleteInventoryResponse.getResult() == OperationResult.DELETED);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testInventoryData() throws Exception {
         InventoryDataResource resource = proxy(InventoryDataResource.class);
 
@@ -184,7 +184,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(didr.isOk());
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     @SuppressWarnings("unchecked")
     public void testInventoryQuery() throws Exception {
         InventoryQueryResource resource = proxy(InventoryQueryResource.class);
@@ -235,7 +235,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(dqr.isOk());
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testLanding() throws Exception {
         ProjectResource projectResource = proxy(ProjectResource.class);
         LandingPageResource resource = proxy(LandingPageResource.class);
@@ -270,7 +270,7 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(listResult);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testDashes() {
         String orgName = randomString() + "-test~";
 
@@ -305,7 +305,7 @@ public class CrudIT extends AbstractServerIT {
         SecretResource secretResource = proxy(SecretResource.class);
         secretResource.delete(orgName, secretName);
     }
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testTeam() throws Exception
     {
         String teamName = "team_" + randomString();
@@ -336,7 +336,7 @@ public class CrudIT extends AbstractServerIT {
 
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSecrets() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -378,7 +378,7 @@ public class CrudIT extends AbstractServerIT {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOrganization() throws Exception {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -411,7 +411,7 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(organizationEntry);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOrgVisibility() throws Exception {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -444,7 +444,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(orgs.stream().noneMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOrgMeta() throws Exception {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -476,7 +476,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals(meta.get("y"), meta3.get("y"));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testPolicies() throws Exception {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 

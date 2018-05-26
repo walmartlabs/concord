@@ -20,10 +20,7 @@ package com.walmartlabs.concord.server.api.org.project;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
@@ -32,6 +29,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RepositoryEntry implements Serializable {
 
     private final UUID id;

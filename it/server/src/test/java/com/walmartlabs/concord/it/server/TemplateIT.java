@@ -50,7 +50,7 @@ public class TemplateIT extends AbstractServerIT {
     private static final String META_JS = "({ entryPoint: \"main\", arguments: { greeting: \"Hello, \" + _input.name }})";
     private static final String PROCESS_YAML = "main:\n- expr: ${log.info(\"test\", greeting)}";
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         String templateAlias = "template_" + randomString();
         Path templatePath = createTemplate();

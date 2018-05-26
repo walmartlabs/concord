@@ -22,6 +22,6 @@ form (myForm1):
 form (myForm2):
   - lastName: { label: "Last Name", type: "string" }
   - age: { label: "Age", type: "int?", min: 21, max: 120 }
-  - color: { label: "Favorite color", type: "string", value: "red" }
+  - color: { label: "Favorite color", type: "string", value: "r3d" }
   - rememberMe: { label: "Remember me", type: "boolean" }
   - file: { label: "file", type: "file" }

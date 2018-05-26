@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AnsibleRetryIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSaveRetry() throws Exception {
         URI uri = ProcessIT.class.getResource("ansibleSaveRetry").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);

@@ -48,7 +48,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AnsiblePolicyIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testTaskDeny() throws Exception {
         // ---
         String orgName = OrganizationManager.DEFAULT_ORG_NAME;

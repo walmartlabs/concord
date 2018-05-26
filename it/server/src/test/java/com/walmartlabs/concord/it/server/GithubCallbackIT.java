@@ -38,7 +38,7 @@ public class GithubCallbackIT extends AbstractServerIT {
 
     private static final String concordTriggersRepoName = "triggers";
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         setGithubKey(AUTH);
 

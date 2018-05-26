@@ -52,42 +52,42 @@ import static org.junit.Assert.*;
 @RunWith(ParallelRunner.class)
 public class ProjectFileIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSingleProfile() throws Exception {
         simpleTest("projectfile/singleprofile", ".*Hello, world.*", ".*54321.*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSingleProfileUsingConfiguration() throws Exception {
         simpleTest("projectfile/singleprofilecfg", ".*Hello, world.*", ".*54321.*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testExternalProfile() throws Exception {
         simpleTest("projectfile/externalprofile", ".*Hello, world.*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testAltName() throws Exception {
         simpleTest("projectfile/altname", ".*Hello, world.*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOverrideFlow() throws Exception {
         simpleTest("projectfile/overrideflow", ".*Hello, world.*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testExpressionsInVariables() throws Exception {
         simpleTest("projectfile/expr");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testExternalScript() throws Exception {
         simpleTest("projectfile/externalscript", ".*hello!.*", ".*bye!.*");
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testDependencies() throws Exception {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
         Path tmpDir = createTempDir();
@@ -137,7 +137,7 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testArchiveOverride() throws Exception {
         String orgName = "Default";
 
@@ -172,7 +172,7 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*54321.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testArchiveOverrideSync() throws Exception {
         String orgName = "Default";
 
@@ -206,7 +206,7 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*Boo Zoo.*", ab);
         assertLog(".*1000022.*", ab);
         assertLog(".*100323.*", ab);
-        assertLog(".*red.*", ab);
+        assertLog(".*r3d.*", ab);
 
         assertTrue(pir.getStatus() == ProcessStatus.FINISHED);
     }

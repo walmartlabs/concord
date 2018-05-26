@@ -35,7 +35,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class ProjectTaskIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testCreate() throws Exception {
         String orgName = "Default";
 

@@ -34,7 +34,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class ClasspathIsolationIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testBrokenDeps() throws Exception {
         byte[] payload = archive(ClasspathIsolationIT.class.getResource("brokenDeps").toURI());
 

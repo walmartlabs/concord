@@ -275,6 +275,12 @@ public final class IOUtils {
         return true;
     }
 
+    public static byte[] toByteArray(InputStream src) throws IOException {
+        ByteArrayOutputStream dst = new ByteArrayOutputStream();
+        copy(src, dst);
+        return dst.toByteArray();
+    }
+
     private static String getEnv(String key, String defaultValue) {
         String s = System.getenv(key);
         if (s == null) {

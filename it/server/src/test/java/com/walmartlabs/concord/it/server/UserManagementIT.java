@@ -38,7 +38,7 @@ import static org.junit.Assert.fail;
 
 public class UserManagementIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         UserResource userResource = proxy(UserResource.class);
 
@@ -58,7 +58,7 @@ public class UserManagementIT extends AbstractServerIT {
         userResource.delete(cur.getId());
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testAdmins() throws Exception {
         UserResource userResource = proxy(UserResource.class);
 

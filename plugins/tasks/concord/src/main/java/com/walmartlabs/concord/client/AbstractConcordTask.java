@@ -20,110 +20,126 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.squareup.okhttp.*;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
 import javax.inject.Inject;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.*;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.client.Keys.SESSION_TOKEN_KEY;
 
 public abstract class AbstractConcordTask implements Task {
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Inject
     ApiConfiguration apiCfg;
 
-    private ResteasyClient createClient() {
-        return new ResteasyClientBuilder()
-                .establishConnectionTimeout(30, TimeUnit.SECONDS)
-                .socketTimeout(30, TimeUnit.SECONDS)
-                .build();
-    }
-
-    protected <T> T withClient(Context ctx, CheckedFunction<ResteasyWebTarget, T> f) throws Exception {
-        return withClient(ctx, null, f);
-    }
-
-    private <T> T withClient(Context ctx, String uri, CheckedFunction<ResteasyWebTarget, T> f) throws Exception {
-        ResteasyClient client = createClient();
-        client.register((ClientRequestFilter) requestContext -> {
-            MultivaluedMap<String, Object> headers = requestContext.getHeaders();
-            headers.putSingle("X-Concord-SessionToken", apiCfg.getSessionToken(ctx));
-            headers.add("Accept", MediaType.WILDCARD);
-        });
-
-        String targetUri = apiCfg.getBaseUrl();
-        if (uri != null) {
-            targetUri += "/" + uri;
-        }
-
-        ResteasyWebTarget target = client.target(targetUri);
-        try {
-            return f.apply(target);
-        } finally {
-            client.close();
-        }
+    protected <T> T withClient(Context ctx, CheckedFunction<ApiClient, T> f) throws Exception {
+        ConcordApiClient c = new ConcordApiClient();
+        c.setBasePath(apiCfg.getBaseUrl());
+        c.setSessionToken(apiCfg.getSessionToken(ctx));
+        c.setConnectTimeout(30000);
+        c.addDefaultHeader("Accept", "*/*");
+        c.setTempFolderPath(IOUtils.createTempDir("concord-tasks").toString());
+        return f.apply(c);
     }
 
     protected <T> T request(Context ctx, String uri, Map<String, Object> input, Class<T> entityType) throws Exception {
-        return withClient(ctx, uri, target -> {
-            MultipartFormDataOutput mdo = createMDO(input);
-            GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
-            };
+        return withClient(ctx, client -> {
+            RequestBody body = createMultipart(input);
 
-            Response resp = target.request().post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
-            if (resp.getStatus() < 200 || resp.getStatus() >= 400) {
-                if (isJson(resp)) {
-                    Object details = resp.readEntity(Object.class);
-                    throw new WebApplicationException(details.toString(), resp);
-                }
-            }
+            Request req = new Request.Builder()
+                    .url(client.getBasePath() + uri)
+                    .header("X-Concord-SessionToken", apiCfg.getSessionToken(ctx)) // TODO constants
+                    .header("Accept", "*/*")
+                    .post(body)
+                    .build();
 
-            T e = resp.readEntity(entityType);
-            return e;
+            OkHttpClient ok = client.getHttpClient();
+            Response resp = ok.newCall(req).execute();
+            assertResponse(resp);
+
+            return objectMapper.readValue(resp.body().byteStream(), entityType);
         });
     }
 
-    protected static void assertResponse(Response resp) {
-        int response = resp.getStatus();
-        if (response < 200 || response >= 300) {
-            if(isJson(resp)) {
-                Object details = resp.readEntity(Object.class);
-                throw new WebApplicationException(details.toString(), resp);
+    protected void assertResponse(Response resp) throws IOException {
+        int code = resp.code();
+        if (code < 200 || code >= 400) {
+            if (isJson(resp)) {
+                Object details = objectMapper.readValue(resp.body().byteStream(), Object.class);
+                String msg = extractMessage(details);
+                throw new IOException(msg);
             } else {
-                throw new WebApplicationException(resp);
+                throw new IOException("Request error: " + code);
             }
         }
     }
 
-    private MultipartFormDataOutput createMDO(Map<String, Object> input) {
-        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-        input.forEach((k, v) -> {
-            if (v instanceof InputStream || v instanceof byte[]) {
-                mdo.addFormData(k, v, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+    // TODO move to ClientUtils?
+    @SuppressWarnings("unchecked")
+    private static String extractMessage(Object details) {
+        if (details == null) {
+            return null;
+        }
+
+        if (details instanceof List) {
+            List<Object> l = (List<Object>) details;
+            if (!l.isEmpty()) {
+                Object o = l.get(0);
+                if (o instanceof Map) {
+                    Map<String, Object> m = (Map<String, Object>) o;
+                    Object msg = m.get("message");
+                    if (msg != null) {
+                        return msg.toString();
+                    }
+                }
+            }
+        }
+
+        return details.toString();
+    }
+
+    private static final com.squareup.okhttp.MediaType MEDIA_TYPE_APPLICATION_OCTET_STREAM = com.squareup.okhttp.MediaType.parse("application/octet-stream");
+    private static final com.squareup.okhttp.MediaType MEDIA_TYPE_APPLICATION_JSON = com.squareup.okhttp.MediaType.parse("application/json");
+    private static final com.squareup.okhttp.MediaType MEDIA_TYPE_TEXT_PLAIN = com.squareup.okhttp.MediaType.parse("text/plain");
+
+    private RequestBody createMultipart(Map<String, Object> input) throws IOException {
+        MultipartBuilder b = new MultipartBuilder()
+                .type(MultipartBuilder.FORM);
+
+        for (Map.Entry<String, Object> e : input.entrySet()) {
+            String k = e.getKey();
+            Object v = e.getValue();
+
+            if (v instanceof InputStream) {
+                byte[] ab = IOUtils.toByteArray((InputStream) v);
+                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_APPLICATION_OCTET_STREAM, ab));
+            } else if (v instanceof byte[]) {
+                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_APPLICATION_OCTET_STREAM, (byte[]) v));
             } else if (v instanceof String) {
-                mdo.addFormData(k, v, MediaType.TEXT_PLAIN_TYPE);
+                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_TEXT_PLAIN, (String) v));
             } else if (v instanceof Map) {
-                mdo.addFormData(k, v, MediaType.APPLICATION_JSON_TYPE);
+                String s = objectMapper.writeValueAsString(v);
+                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_APPLICATION_JSON, s));
             } else if (v instanceof Boolean) {
-                mdo.addFormData(k, v.toString(), MediaType.TEXT_PLAIN_TYPE);
+                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_TEXT_PLAIN, v.toString()));
             } else {
                 throw new IllegalArgumentException("Unknown input type: " + v);
             }
-        });
-        return mdo;
+        }
+
+        return b.build();
     }
 
     protected Map<String, Object> createCfg(Context ctx) {
@@ -158,7 +174,7 @@ public abstract class AbstractConcordTask implements Task {
     }
 
     private static boolean isJson(Response resp) {
-        String contentType = resp.getHeaderString(HttpHeaders.CONTENT_TYPE);
+        String contentType = resp.header("Content-Type");
         if (contentType == null) {
             return false;
         }

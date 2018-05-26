@@ -35,7 +35,7 @@ import static org.junit.Assert.*;
 
 public class FormIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         String firstName = "john_" + randomString();
         String lastName = "smith_" + randomString();
@@ -97,13 +97,13 @@ public class FormIT extends AbstractServerIT {
         ab = getLog(psr.getLogFileName());
         assertLog(".*" + firstName + " " + lastName + ".*", ab);
         assertLog(".*100323.*", ab);
-        assertLog(".*red.*", ab);
+        assertLog(".*r3d.*", ab);
         assertLog(".*FILE_PATH _form_files/myForm2/file.*", ab);
         assertLog(".*FILE file-content.*", ab);
         assertLog(".*AAA true.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSubmitMultipart() throws Exception {
         String firstName = "john_" + randomString();
         String lastName = "smith_" + randomString();
@@ -165,12 +165,12 @@ public class FormIT extends AbstractServerIT {
         ab = getLog(psr.getLogFileName());
         assertLog(".*" + firstName + " " + lastName + ".*", ab);
         assertLog(".*100323.*", ab);
-        assertLog(".*red.*", ab);
+        assertLog(".*r3d.*", ab);
         assertLog(".*FILE file-content.*", ab);
         assertLog(".*AAA true.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testValues() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formValues").toURI());
 
@@ -203,7 +203,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testAdditionalValuesSubmit() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formValuesSubmit").toURI());
 

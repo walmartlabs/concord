@@ -238,7 +238,7 @@ public class ServerClient {
 
         int retries = 10;
         while (true) {
-            List<ProcessEntry> l = processResource.list(parentInstanceId, null);
+            List<ProcessEntry> l = processResource.listSubprocesses(parentInstanceId, null);
             for (ProcessEntry e : l) {
                 if (e.getKind() == kind) {
                     if (e.getStatus() == status) {

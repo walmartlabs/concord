@@ -35,7 +35,7 @@ import static org.junit.Assert.fail;
 
 public class ApiKeyIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOwner() throws Exception {
         String userAName = "userA_" + randomString();
         String userBName = "userB_" + randomString();

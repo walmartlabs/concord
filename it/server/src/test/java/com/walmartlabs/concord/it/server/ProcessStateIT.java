@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ProcessStateIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSingleFile() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("stateSingleFile").toURI());
 

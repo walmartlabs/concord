@@ -49,7 +49,7 @@ import static org.junit.Assert.fail;
 @RunWith(ParallelRunner.class)
 public class TeamRbacIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOrgs() {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -108,7 +108,7 @@ public class TeamRbacIT extends AbstractServerIT {
         projectResource.createOrUpdate(orgBName, new ProjectEntry(projectBName));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testTeamCreators() {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -174,7 +174,7 @@ public class TeamRbacIT extends AbstractServerIT {
         teamResource.createOrUpdate(orgName, new TeamEntry(teamBName));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testTeamMaintainers() {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -219,7 +219,7 @@ public class TeamRbacIT extends AbstractServerIT {
         teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userBName, TeamRole.MEMBER)));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testNewTeamOwner() {
         String userA = "userA_" + randomString();
 
@@ -269,7 +269,7 @@ public class TeamRbacIT extends AbstractServerIT {
         teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userB, TeamRole.MEMBER)));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testTeamDelete() throws Exception {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -302,7 +302,7 @@ public class TeamRbacIT extends AbstractServerIT {
         assertEquals(1, l.size());
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOrgProjects() {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -400,7 +400,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 null, null, null, null, null, null, true));
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOrgPublicSecrets() {
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
 
@@ -471,7 +471,7 @@ public class TeamRbacIT extends AbstractServerIT {
         secretResource.delete(orgAName, secretAName);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testInventory() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -544,7 +544,7 @@ public class TeamRbacIT extends AbstractServerIT {
         inventoryResource.get(orgName, inventoryName);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testTeamUsersUpsert() throws Exception {
         String orgName = "org_" + randomString();
 

@@ -72,7 +72,7 @@ public class PrincipalPermissionIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
         assertEquals(ProcessStatus.FINISHED, pir.getStatus());
 
-        List<ProcessEntry> processEntryList = processResource.list(spr.getInstanceId(), null);
+        List<ProcessEntry> processEntryList = processResource.listSubprocesses(spr.getInstanceId(), null);
         for (ProcessEntry pe : processEntryList) {
             assertEquals(ProcessStatus.FINISHED, pe.getStatus());
         }

@@ -70,7 +70,7 @@ public class HttpTaskIT extends AbstractServerIT {
         rule.shutdownServer();
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testGetAsString() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetAsString").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -85,7 +85,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Success response.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testGet() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGet").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -101,7 +101,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testGetWithAuthUsingPassword() throws Exception {
 
         URI dir = HttpTaskIT.class.getResource("httpGetWithAuthUsingPassword").toURI();
@@ -124,7 +124,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testGetWithAuthUsingToken() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithAuthUsingToken").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -145,7 +145,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testPost() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPost").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -167,7 +167,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testPostWithAuthUsingToken() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPostWithAuthUsingToken").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -188,7 +188,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testGetWithInvalidUrl() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithInvalidUrl").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);

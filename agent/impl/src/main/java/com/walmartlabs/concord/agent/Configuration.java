@@ -148,7 +148,7 @@ public class Configuration {
             this.readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
             this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "5"));
             this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "30000"));
-            this.pollInterval = Long.parseLong(getEnv(POLL_INTERVAL_KEY, "1000"));
+            this.pollInterval = Long.parseLong(getEnv(POLL_INTERVAL_KEY, "2000"));
 
             this.maintenanceModeFile = getDir(MAINTENANCE_MODE_KEY, "maintenance-mode").resolve("info");
 

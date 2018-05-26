@@ -36,7 +36,7 @@ import static org.junit.Assert.assertFalse;
 
 public class AnsibleEventIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     @SuppressWarnings("unchecked")
     public void testEvent() throws Exception {
         URI uri = ProcessIT.class.getResource("ansibleEvent").toURI();

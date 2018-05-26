@@ -54,7 +54,7 @@ import static org.junit.Assert.*;
 @RunWith(ParallelRunner.class)
 public class ProcessIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testUploadAndRun() throws Exception {
         // prepare the payload
 
@@ -82,7 +82,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Hello, local files!.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testDefaultEntryPoint() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("defaultEntryPoint").toURI());
 
@@ -107,7 +107,7 @@ public class ProcessIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testUploadAndRunSync() throws Exception {
         // prepare the payload
 
@@ -161,7 +161,7 @@ public class ProcessIT extends AbstractServerIT {
         waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.CANCELLED, ProcessStatus.FAILED, ProcessStatus.FINISHED);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testInterpolation() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("interpolation").toURI());
 
@@ -182,7 +182,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Hello, world.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testErrorHandling() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("errorHandling").toURI());
 
@@ -198,7 +198,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*We got:.*java.lang.RuntimeException.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testStartupProblem() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("startupProblem").toURI());
 
@@ -212,7 +212,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*gaaarbage.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testMultipart() throws Exception {
         String zVal = "z" + randomString();
         String myFileVal = "myFile" + randomString();
@@ -242,7 +242,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*myfile=" + myFileVal + ".*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testWorkDir() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("workDir").toURI());
 
@@ -273,7 +273,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLogAtLeast(".*Bye!", 2, ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSwitch() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("switchCase").toURI());
 
@@ -292,7 +292,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Bye!.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testTaskOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
@@ -309,7 +309,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*I said: Hello!.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testDelegateOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
@@ -326,7 +326,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*I said: Hello!.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testTags() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
 
@@ -348,10 +348,10 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        List<ProcessEntry> l = processResource.list(parentSpr.getInstanceId(), Collections.singleton("abc"));
+        List<ProcessEntry> l = processResource.listSubprocesses(parentSpr.getInstanceId(), Collections.singleton("abc"));
         assertTrue(l.isEmpty());
 
-        l = processResource.list(parentSpr.getInstanceId(), Collections.singleton("test"));
+        l = processResource.listSubprocesses(parentSpr.getInstanceId(), Collections.singleton("test"));
         assertEquals(1, l.size());
 
         ProcessEntry e = l.get(0);
@@ -369,7 +369,7 @@ public class ProcessIT extends AbstractServerIT {
         assertEquals(childSpr.getInstanceId(), e.getInstanceId());
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testProjectId() throws Exception {
         String projectName = "project_" + randomString();
 
@@ -503,7 +503,7 @@ public class ProcessIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testKillCascade() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("killCascade").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -518,11 +518,9 @@ public class ProcessIT extends AbstractServerIT {
 
         waitForChild(processResource, spr.getInstanceId(), ProcessKind.DEFAULT, ProcessStatus.CANCELLED,ProcessStatus.FINISHED,ProcessStatus.FAILED);
 
-        List<ProcessEntry> processEntryList = processResource.list(spr.getInstanceId(), null);
+        List<ProcessEntry> processEntryList = processResource.listSubprocesses(spr.getInstanceId(), null);
         for (ProcessEntry pe : processEntryList){
             assertEquals(ProcessStatus.CANCELLED, pe.getStatus());
         }
-
-
     }
 }

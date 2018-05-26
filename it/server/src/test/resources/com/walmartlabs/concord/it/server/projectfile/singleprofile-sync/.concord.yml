@@ -18,7 +18,7 @@ forms:
   myForm2:
     - lastName: { label: "Last Name", type: "string" }
     - age: { label: "Age", type: "int?", min: 21, max: 120 }
-    - color: { label: "Favorite color", type: "string", value: "redColor" }
+    - color: { label: "Favorite color", type: "string", value: "red maybe?" }
 
 variables:
   arguments:
@@ -29,4 +29,4 @@ variables:
 profiles:
   test:
     variables:
-      arguments: {myForm1: {x: 100123, firstName: "Boo"}, myForm2: {lastName: "Zoo", age: 22, color: "red"}}
+      arguments: {myForm1: {x: 100123, firstName: "Boo"}, myForm2: {lastName: "Zoo", age: 22, color: "r3d"}}

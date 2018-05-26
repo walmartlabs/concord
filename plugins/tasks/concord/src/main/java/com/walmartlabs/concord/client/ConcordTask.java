@@ -25,17 +25,13 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -126,9 +122,12 @@ public class ConcordTask extends AbstractConcordTask {
         UUID instanceId = UUID.fromString(get(cfg, INSTANCE_ID_KEY));
         Set<String> tags = getSet(cfg, TAGS_KEY);
 
-        return withClient(ctx, target -> {
-            ProcessResource proxy = target.proxy(ProcessResource.class);
-            List<ProcessEntry> result = proxy.list(instanceId, tags);
+        return withClient(ctx, client -> {
+            ProcessApi api = new ProcessApi(client);
+
+            List<String> tl = tags != null ? new ArrayList<>(tags) : null;
+            List<ProcessEntry> result = api.listSubprocesses(instanceId, tl);
+
             return result.stream()
                     .map(ProcessEntry::getInstanceId)
                     .map(UUID::toString)
@@ -149,13 +148,14 @@ public class ConcordTask extends AbstractConcordTask {
             long t1 = System.currentTimeMillis();
             while (true) {
                 try {
-                    ProcessStatus s = withClient(ctx, target -> {
-                        ProcessResource proxy = target.proxy(ProcessResource.class);
-                        ProcessEntry e = proxy.get(id);
-                        return e.getStatus();
+                    ProcessEntry e = withClient(ctx, client -> {
+                        ProcessApi api = new ProcessApi(client);
+                        return api.get(id);
                     });
+                    
+                    ProcessEntry.StatusEnum s = e.getStatus();
 
-                    if (s == ProcessStatus.FAILED || s == ProcessStatus.FINISHED || s == ProcessStatus.CANCELLED) {
+                    if (s == ProcessEntry.StatusEnum.FAILED || s == ProcessEntry.StatusEnum.FINISHED || s == ProcessEntry.StatusEnum.CANCELLED) {
                         result.put(id.toString(), s.name());
                         break;
                     } else {
@@ -232,7 +232,7 @@ public class ConcordTask extends AbstractConcordTask {
         log.info("Starting a child process (project={}, repository={}, archive={}, sync={}, req={})",
                 project, repo, archive, sync, req);
 
-        String targetUri = ProcessResource.class.getAnnotation(javax.ws.rs.Path.class).value();
+        String targetUri = "/api/v1/process";
 
         Map<String, Object> input = new HashMap<>();
 
@@ -273,14 +273,21 @@ public class ConcordTask extends AbstractConcordTask {
         if (sync) {
             waitForCompletion(ctx, jobs);
 
-            Object out = withClient(ctx, target -> {
-                ProcessResource processResource = target.proxy(ProcessResource.class);
-                Response r = processResource.downloadAttachment(UUID.fromString(childId), "out.json");
-                if (r.getStatus() == 200) {
-                    String s = r.readEntity(String.class);
-                    return om.readValue(s, Map.class);
+            Object out = withClient(ctx, client -> {
+                ProcessApi api = new ProcessApi(client);
+
+                File f = null;
+                try {
+                    f = api.downloadAttachment(UUID.fromString(childId), "out.json");
+                    return om.readValue(f, Map.class);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                } finally {
+                    if (f != null && f.exists()) {
+                        f.delete();
+                    }
                 }
-                return null;
             });
 
             ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
@@ -339,9 +346,9 @@ public class ConcordTask extends AbstractConcordTask {
 
         log.info("Forking the current instance (sync={}, req={})...", sync, req);
 
-        return withClient(ctx, target -> {
-            ProcessResource proxy = target.proxy(ProcessResource.class);
-            StartProcessResponse resp = proxy.fork(instanceId, req, sync, null);
+        return withClient(ctx, client -> {
+            ProcessApi api = new ProcessApi(client);
+            StartProcessResponse resp = api.fork(instanceId, req, sync, null);
             log.info("Forked a child process: {}", resp.getInstanceId());
             return resp.getInstanceId();
         });
@@ -363,9 +370,9 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private void killOne(Context ctx, Map<String, Object> cfg, String instanceId) throws Exception {
-        withClient(ctx, target -> {
-            ProcessResource proxy = target.proxy(ProcessResource.class);
-            proxy.kill(UUID.fromString(instanceId));
+        withClient(ctx, client -> {
+            ProcessApi api = new ProcessApi(client);
+            api.kill(UUID.fromString(instanceId));
             return null;
         });
 

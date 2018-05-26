@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AnsibleLookupIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSecrets() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
@@ -84,7 +84,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSecretData() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationResource organizationResource = proxy(OrganizationResource.class);
@@ -128,7 +128,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testPublickey() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationResource organizationResource = proxy(OrganizationResource.class);

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.client;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.server.api.org.inventory.InventoryQueryResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,9 +127,9 @@ public class InventoryTask extends AbstractConcordTask {
     }
 
     private List<Object> execQuery(Context ctx, String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
-        return withClient(ctx, target -> {
-            InventoryQueryResource proxy = target.proxy(InventoryQueryResource.class);
-            return proxy.exec(orgName, inventoryName, queryName, params);
+        return withClient(ctx, client -> {
+            InventoryApi api = new InventoryApi(client);
+            return api.exec(orgName, inventoryName, queryName, params);
         });
     }
 

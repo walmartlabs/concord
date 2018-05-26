@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class DockerAnsibleIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerAnsible").toURI(),
                 ITConstants.DEPENDENCIES_DIR);

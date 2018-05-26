@@ -39,7 +39,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class ProjectInfoIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 

@@ -30,7 +30,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.*;
 
 public class FailureHandlingIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testFailure() throws Exception {
         ProcessResource processResource = proxy(ProcessResource.class);
 
@@ -58,7 +58,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*hello!.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testFailureHandlingError() throws Exception {
         ProcessResource processResource = proxy(ProcessResource.class);
         byte[] payload = archive(ProcessIT.class.getResource("failureHandlingError").toURI());
@@ -71,7 +71,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         ProcessEntry child = waitForChild(processResource, spr.getInstanceId(), ProcessKind.FAILURE_HANDLER, ProcessStatus.FAILED);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testCancel() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelHandling").toURI());
 
@@ -94,7 +94,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*abc!.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testCancelSuspended() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelSuspendHandling").toURI());
 

@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ClasspathRepoIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         String url = "classpath://com/walmartlabs/concord/server/selfcheck/concord.yml";
         String projectName = "project_" + randomString();

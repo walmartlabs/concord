@@ -25,10 +25,6 @@ import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretResource;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.validation.Valid;
@@ -40,7 +36,6 @@ import java.util.UUID;
 /**
  * @deprecated prefer {@link com.walmartlabs.concord.server.api.org.project.ProjectResource}
  */
-@Api(value = "Project", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/project")
 @Deprecated
 public interface ProjectResource {
@@ -52,10 +47,9 @@ public interface ProjectResource {
      * @return
      */
     @POST
-    @ApiOperation("Create or update a project")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    CreateProjectResponse createOrUpdate(@ApiParam @Valid ProjectEntry request);
+    CreateProjectResponse createOrUpdate(@Valid ProjectEntry request);
 
     /**
      * Add a new repository to a project.
@@ -66,11 +60,10 @@ public interface ProjectResource {
      */
     @POST
     @Path("/{projectName}/repository")
-    @ApiOperation("Create a new repository")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    CreateRepositoryResponse createRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                              @ApiParam @Valid RepositoryEntry request);
+    CreateRepositoryResponse createRepository(@PathParam("projectName") @ConcordKey String projectName,
+                                              @Valid RepositoryEntry request);
 
     /**
      * Returns an existing project.
@@ -79,10 +72,9 @@ public interface ProjectResource {
      * @return
      */
     @GET
-    @ApiOperation("Get an existing project")
     @Path("/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
-    ProjectEntry get(@ApiParam @PathParam("projectName") @ConcordKey String projectName);
+    ProjectEntry get(@PathParam("projectName") @ConcordKey String projectName);
 
     /**
      * Returns an existing repository.
@@ -92,11 +84,10 @@ public interface ProjectResource {
      * @return
      */
     @GET
-    @ApiOperation("Get an existing repository")
     @Path("/{projectName}/repository/{repositoryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    RepositoryEntry getRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                  @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
+    RepositoryEntry getRepository(@PathParam("projectName") @ConcordKey String projectName,
+                                  @PathParam("repositoryName") @ConcordKey String repositoryName);
 
     /**
      * List projects.
@@ -106,11 +97,10 @@ public interface ProjectResource {
      * @return
      */
     @GET
-    @ApiOperation("List projects")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProjectEntry> list(@ApiParam @QueryParam("orgId") UUID orgId,
-                            @ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy,
-                            @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc);
+    List<ProjectEntry> list(@QueryParam("orgId") UUID orgId,
+                            @QueryParam("sortBy") @DefaultValue("name") String sortBy,
+                            @QueryParam("asc") @DefaultValue("true") boolean asc);
 
     /**
      * List repositories.
@@ -121,12 +111,11 @@ public interface ProjectResource {
      * @return
      */
     @GET
-    @ApiOperation("List repositories")
     @Path("/{projectName}/repository")
     @Produces(MediaType.APPLICATION_JSON)
-    List<RepositoryEntry> listRepositories(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                           @ApiParam @QueryParam("sortBy") @DefaultValue("name") String sortBy,
-                                           @ApiParam @QueryParam("asc") @DefaultValue("true") boolean asc);
+    List<RepositoryEntry> listRepositories(@PathParam("projectName") @ConcordKey String projectName,
+                                           @QueryParam("sortBy") @DefaultValue("name") String sortBy,
+                                           @QueryParam("asc") @DefaultValue("true") boolean asc);
 
     /**
      * Updates an existing repository.
@@ -136,13 +125,12 @@ public interface ProjectResource {
      * @return
      */
     @PUT
-    @ApiOperation("Update an existing repository")
     @Path("/{projectName}/repository/{repositoryName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    UpdateRepositoryResponse updateRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                              @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName,
-                                              @ApiParam @Valid RepositoryEntry request);
+    UpdateRepositoryResponse updateRepository(@PathParam("projectName") @ConcordKey String projectName,
+                                              @PathParam("repositoryName") @ConcordKey String repositoryName,
+                                              @Valid RepositoryEntry request);
 
     /**
      * Returns a project configuration entry for the specified path.
@@ -152,36 +140,32 @@ public interface ProjectResource {
      * @return
      */
     @GET
-    @ApiOperation("Get project configuration")
     @Path("/{projectName}/cfg{path: (.*)?}")
     @Produces(MediaType.APPLICATION_JSON)
-    Object getConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                            @ApiParam @PathParam("path") String path);
+    Object getConfiguration(@PathParam("projectName") @ConcordKey String projectName,
+                            @PathParam("path") String path);
 
 
     @PUT
-    @ApiOperation("Update project's configuration parameter")
     @Path("/{projectName}/cfg{path: (.*)?}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    UpdateProjectConfigurationResponse updateConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                           @ApiParam @PathParam("path") String path,
-                                                           @ApiParam Object data);
+    UpdateProjectConfigurationResponse updateConfiguration(@PathParam("projectName") @ConcordKey String projectName,
+                                                           @PathParam("path") String path,
+                                                           Object data);
 
     @PUT
-    @ApiOperation("Update project's configuration parameter")
     @Path("/{projectName}/cfg/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    UpdateProjectConfigurationResponse updateConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                           @ApiParam Object data);
+    UpdateProjectConfigurationResponse updateConfiguration(@PathParam("projectName") @ConcordKey String projectName,
+                                                           Object data);
 
     @DELETE
-    @ApiOperation("Delete project's configuration parameter")
     @Path("/{projectName}/cfg{path: (.*)?}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteProjectConfigurationResponse deleteConfiguration(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                           @ApiParam @PathParam("path") String path);
+    DeleteProjectConfigurationResponse deleteConfiguration(@PathParam("projectName") @ConcordKey String projectName,
+                                                           @PathParam("path") String path);
 
     /**
      * Removes a project and all it's resources.
@@ -190,10 +174,9 @@ public interface ProjectResource {
      * @return
      */
     @DELETE
-    @ApiOperation("Delete an existing project")
     @Path("/{projectName}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteProjectResponse delete(@ApiParam @PathParam("projectName") @ConcordKey String projectName);
+    DeleteProjectResponse delete(@PathParam("projectName") @ConcordKey String projectName);
 
     /**
      * Removes a repository.
@@ -203,11 +186,10 @@ public interface ProjectResource {
      * @return
      */
     @DELETE
-    @ApiOperation("Delete an existing repository")
     @Path("/{projectName}/repository/{repositoryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    DeleteRepositoryResponse deleteRepository(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                              @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName);
+    DeleteRepositoryResponse deleteRepository(@PathParam("projectName") @ConcordKey String projectName,
+                                              @PathParam("repositoryName") @ConcordKey String repositoryName);
 
     /**
      * Encrypts a string with the project's key.
@@ -215,11 +197,10 @@ public interface ProjectResource {
      * @deprecated use {@link SecretResource#create(String, MultipartInput)}
      */
     @POST
-    @ApiOperation("Encrypts a string with the project's key")
     @Path("/{projectName}/encrypt")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Deprecated
-    EncryptValueResponse encrypt(@ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                 @ApiParam EncryptValueRequest req);
+    EncryptValueResponse encrypt(@PathParam("projectName") @ConcordKey String projectName,
+                                 EncryptValueRequest req);
 }

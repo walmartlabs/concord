@@ -35,7 +35,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class DockerIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("docker").toURI());
 
@@ -52,7 +52,7 @@ public class DockerIT extends AbstractServerIT {
         assertLog(".*DOCKER: Hello, world.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testOut() throws Exception {
         byte[] payload = archive(DockerIT.class.getResource("dockerOut").toURI());
 

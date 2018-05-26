@@ -59,7 +59,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(ParallelRunner.class)
 public class ProjectIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void test() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -92,7 +92,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*" + greeting + ".*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testEntryPointFromYml() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -122,7 +122,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testWithCommitId() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -220,7 +220,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testSync() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -266,7 +266,7 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testInitImport() throws Exception {
         Path tmpDir = createTempDir();
 

@@ -7,5 +7,5 @@ flows:
       repositories:
       - name: ${repoName}
         url: ${repoUrl}
-        secret: ${repoSecret}
+        secretName: ${repoSecret}
   - log: "Done!"

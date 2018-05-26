@@ -396,7 +396,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     }
 
     @Override
-    public List<ProcessEntry> list(UUID parentInstanceId, Set<String> tags) {
+    public List<ProcessEntry> listSubprocesses(UUID parentInstanceId, Set<String> tags) {
         assertInstanceId(parentInstanceId);
         return queueDao.list(parentInstanceId, tags);
     }

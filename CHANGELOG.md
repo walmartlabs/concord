@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-tasks: now uses `concord-client` instead of Resteasy.
+
+
+
 ## [0.71.0] - 2018-05-21
 
 ### Added

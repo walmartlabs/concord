@@ -44,7 +44,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class DependenciesIT extends AbstractServerIT {
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testUploadAndRun() throws Exception {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
 

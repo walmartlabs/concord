@@ -251,7 +251,7 @@ public interface ProcessResource {
      * @return
      */
     @GET
-    @ApiOperation("Download a process' attachment")
+    @ApiOperation(value = "Download a process' attachment", response = File.class)
     @Path("/{id}/attachment/{name:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response downloadAttachment(@ApiParam @PathParam("id") UUID instanceId,
@@ -294,11 +294,11 @@ public interface ProcessResource {
      * @return
      */
     @GET
-    @ApiOperation("List subprocesses of a parent process")
+    @ApiOperation(value = "List subprocesses of a parent process", response = ProcessEntry.class, responseContainer = "List")
     @Path("/{id}/subprocess")
     @Produces(MediaType.APPLICATION_JSON)
-    List<ProcessEntry> list(@ApiParam @PathParam("id") UUID parentInstanceId,
-                            @ApiParam @QueryParam("tags") Set<String> tags);
+    List<ProcessEntry> listSubprocesses(@ApiParam @PathParam("id") UUID parentInstanceId,
+                                        @ApiParam @QueryParam("tags") Set<String> tags);
 
     /**
      * Updates a process' status
