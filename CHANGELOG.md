@@ -5,6 +5,7 @@
 ### Changed
 
 - concord-server: improve `decryptString` error messages;
+- concord-runner: fix export of secrets w/o password;
 - concord-tasks: now uses `concord-client` instead of Resteasy.
 
 
