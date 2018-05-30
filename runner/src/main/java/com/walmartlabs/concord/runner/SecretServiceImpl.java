@@ -146,12 +146,20 @@ public class SecretServiceImpl implements SecretService {
     }
 
     private <T> T get(Context ctx, String instanceId, String orgName, String name, String password, SecretType type) throws Exception {
+        // workaround for EL "null to empty string" conversion
+        final String pwd;
+        if ("".equals(password)) {
+            pwd = null;
+        } else {
+            pwd = password;
+        }
+
         ProcessApi api = new ProcessApi(clientFactory.create(ctx));
 
         ApiResponse<File> r = null;
         try {
             r = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL,
-                    () -> api.fetchSecretWithHttpInfo(UUID.fromString(instanceId), orgName, name, password));
+                    () -> api.fetchSecretWithHttpInfo(UUID.fromString(instanceId), orgName, name, pwd));
 
             if (r.getData() == null) {
                 throw new IllegalArgumentException("Secret not found: " + name);

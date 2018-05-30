@@ -1,0 +1,3 @@
+flows:
+  default:
+  - log: "We got ${crypto.exportAsString(secretOrgName, secretName, null)}"

@@ -120,6 +120,38 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*We got " + secretValue + ".*", ab);
     }
 
+    @Test(timeout = 60000)
+    public void testWithoutPassword() throws Exception {
+        String orgName = "org@" + randomString();
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String secretName = "secret@" + randomString();
+        String secretValue = "value@" + randomString();
+
+        addPlainSecret(orgName, secretName, false, null, secretValue.getBytes());
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("cryptoWithoutPassword").toURI());
+
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "archive", payload,
+                "arguments.secretName", secretName,
+                "arguments.secretOrgName", orgName));
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*We got " + secretValue + ".*", ab);
+    }
+
     private void test(String project, String secretName, String storePassword, String log) throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource(project).toURI());
 
