@@ -573,6 +573,9 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         byte[] result;
         try {
             result = secretManager.decryptData(p.getProjectName(), bytes);
+        } catch (SecurityException e) {
+            log.error("decrypt ['{}'] -> error", instanceId, e);
+            throw new SecretException("Decrypt error: " + e.getMessage());
         } catch (Exception e) {
             log.error("decrypt ['{}'] -> error", instanceId, e);
             throw new WebApplicationException("decrypt error: " + e.getMessage());

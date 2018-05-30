@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-server: improve `decryptString` error messages;
 - concord-tasks: now uses `concord-client` instead of Resteasy.
 
 
