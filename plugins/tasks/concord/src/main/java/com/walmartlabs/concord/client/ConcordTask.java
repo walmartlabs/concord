@@ -281,7 +281,7 @@ public class ConcordTask extends AbstractConcordTask {
                     f = api.downloadAttachment(UUID.fromString(childId), "out.json");
                     return om.readValue(f, Map.class);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("Error while reading the out variables", e);
                     return null;
                 } finally {
                     if (f != null && f.exists()) {
