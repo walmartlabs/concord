@@ -142,7 +142,7 @@ public class ExecutionManager {
         return s;
     }
 
-    public boolean isRunning(String id) {
+    public boolean isRunning(UUID id) {
         ProcessStatus s;
         synchronized (mutex) {
             s = statuses.getIfPresent(id);

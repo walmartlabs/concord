@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class OrphanSweeper implements Runnable {
@@ -54,11 +55,11 @@ public class OrphanSweeper implements Runnable {
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                Map<String, String> containers = findContainers();
+                Map<UUID, String> containers = findContainers();
                 log.debug("run -> found {} container(s)...", containers.size());
 
-                for (Map.Entry<String, String> c : containers.entrySet()) {
-                    String txId = c.getKey();
+                for (Map.Entry<UUID, String> c : containers.entrySet()) {
+                    UUID txId = c.getKey();
                     if (executionManager.isRunning(txId)) {
                         continue;
                     }
@@ -86,8 +87,8 @@ public class OrphanSweeper implements Runnable {
         }
     }
 
-    private static Map<String, String> findContainers() throws IOException, InterruptedException {
-        Map<String, String> ids = new HashMap<>();
+    private static Map<UUID, String> findContainers() throws IOException, InterruptedException {
+        Map<UUID, String> ids = new HashMap<>();
         Utils.exec(PS_CMD, line -> {
             int idx = line.indexOf(" ");
             if (idx < 0 || idx + 1 >= line.length()) {
@@ -95,7 +96,7 @@ public class OrphanSweeper implements Runnable {
                 return;
             }
 
-            String k = line.substring(0, idx);
+            UUID k = UUID.fromString(line.substring(0, idx));
             String v = line.substring(idx + 1, line.length());
 
             ids.put(k, v);

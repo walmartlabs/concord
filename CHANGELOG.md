@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: fixed orphaned docker sweeper bug which caused live
+containers to be terminated. 
+
+
+
 ## [0.71.2] - 2018-05-30
 
 ### Changed
