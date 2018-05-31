@@ -1,0 +1,17 @@
+configuration:
+  dependencies:
+  - mvn://com.walmartlabs.concord.plugins:jira-task:0.43.0
+
+  arguments:
+    jiraConfig:
+      jiraUrl: "https://jira.example.com"
+      jiraUid: "jiraUser"
+      jiraPwd: "${crypto.decryptString('encryptedJiraPassword')}"
+      jiraProjectKey: "MYPROJECT"
+      jiraSummary: "My Summary"
+      jiraDescription: "My Description"
+      jiraRequestorUid: "${initiator.username}"
+
+flows:
+  default:
+  - ${jira.create(context, jiraConfig)}

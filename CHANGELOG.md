@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- guava downgraded from 21.0 to 20.0 to avoid classpath issues with
+some of the plugins (e.g. jira).
+
+ 
+
 ## [0.71.1] - 2018-05-29
 
 ### Changed

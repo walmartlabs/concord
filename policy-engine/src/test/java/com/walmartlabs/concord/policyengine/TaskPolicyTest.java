@@ -20,10 +20,9 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.assertFalse;
@@ -86,7 +85,7 @@ public class TaskPolicyTest {
         TaskRule.Param p1 = new TaskRule.Param(1, null, Collections.singletonList("value-1"));
         TaskRule.Param p2 = new TaskRule.Param(0, null, Collections.singletonList("value-2"));
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", ImmutableList.of(p1, p2));
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Arrays.asList(p1, p2));
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -107,7 +106,7 @@ public class TaskPolicyTest {
         TaskPolicy policy = new TaskPolicy(rules);
 
         // ---
-        assertDeny(policy, "taskName-12", "foo", "xxx", ImmutableMap.of("k", "v"));
+        assertDeny(policy, "taskName-12", "foo", "xxx", Collections.singletonMap("k", "v"));
     }
 
     @Test
@@ -121,7 +120,7 @@ public class TaskPolicyTest {
         TaskPolicy policy = new TaskPolicy(rules);
 
         // ---
-        assertDeny(policy, "taskName-12", "foo", "xxx", ImmutableMap.of("k", ImmutableMap.of("kk", "v")));
+        assertDeny(policy, "taskName-12", "foo", "xxx", Collections.singletonMap("k", Collections.singletonMap("kk", "v")));
     }
 
     private static void assertDeny(TaskPolicy policy, String taskName, String methodName, Object...params) {

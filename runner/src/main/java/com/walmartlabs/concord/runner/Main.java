@@ -375,7 +375,7 @@ public class Main {
         Module tasks = new AbstractModule() {
             @Override
             protected void configure() {
-                bindListener(new SubClassesOf(Task.class), new TaskClassesListener());
+                bindListener(new SubClassesOf(Task.class), new TaskClassesListener(false));
             }
         };
 
@@ -412,14 +412,28 @@ public class Main {
     }
 
     private static class TaskClassesListener implements TypeListener {
+
+        private final boolean debug;
+
+        private TaskClassesListener(boolean debug) {
+            this.debug = debug;
+        }
+
         @SuppressWarnings("unchecked")
         public <T> void hear(TypeLiteral<T> typeLiteral, TypeEncounter<T> typeEncounter) {
             Class<?> clazz = typeLiteral.getRawType();
+
             Named n = clazz.getAnnotation(Named.class);
-            if (n != null) {
-                TaskClassHolder h = TaskClassHolder.getInstance();
-                h.register(n.value(), (Class<? extends Task>) clazz);
+            if (n == null) {
+                return;
             }
+
+            if (debug) {
+                log.info("Registering {} as {}...", clazz, n);
+            }
+
+            TaskClassHolder h = TaskClassHolder.getInstance();
+            h.register(n.value(), (Class<? extends Task>) clazz);
         }
     }
 }

@@ -60,7 +60,7 @@
         <grpc.version>1.11.0</grpc.version>
         <gson.fire.version>1.8.0</gson.fire.version>
         <gson.version>2.8.0</gson.version>
-        <guava.version>22.0</guava.version>
+        <guava.version>20.0</guava.version>
         <guice.version>4.1.0</guice.version>
         <hikaricp.version>2.7.4</hikaricp.version>
         <http.request.version>6.0</http.request.version>
