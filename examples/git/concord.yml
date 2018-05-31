@@ -1,0 +1,17 @@
+configuration:
+  dependencies:
+  - mvn://com.walmartlabs.concord.plugins:git-task:0.44.0
+
+flows:
+  default:
+  # cloning a repository
+  - task: git
+    in:
+      action: clone
+      url: git@github.com:myorg/myrepo.git
+      privateKey:
+        org: myOrg # optional
+        secretName: mySecret
+        password: myPwd # optional
+      workingDir: myRepo
+  # the repo will be cloned into `myRepo` directory

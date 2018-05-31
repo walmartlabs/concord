@@ -5,6 +5,7 @@
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
 * [boo](boo) - using OneOps Boo;
 * [forms](forms) - using basic forms;
+* [git](git) - how to clone a GIT repository;
 * [hello_world](hello_world) - a simple example demonstrating how to pass a variable to a process;
 * [hello_world2](hello_world2) - how to send external parameters;
 * [http](http) - a simple example demonstrating how to call restful endpoints
