@@ -148,6 +148,7 @@ flows:
       - call: fetchDeps
       - mvn -U -B -s $MVN_SETTINGS release:prepare release:perform
       - ws_snapshot: binaries
+        includes: docker-images/**
     - ws_restore: binaries
     - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
     - call: buildImages(concord_version = ${RELEASE_VERSION})

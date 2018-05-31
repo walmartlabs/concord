@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [0.71.3] - 2018-05-31
 
 ### Changed
 
