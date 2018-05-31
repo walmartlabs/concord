@@ -176,4 +176,7 @@ const mapDispatchToProps = (
     }
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(EditRepositoryActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(EditRepositoryActivity);

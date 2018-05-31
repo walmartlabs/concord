@@ -87,4 +87,7 @@ const mapDispatchToProps = (
     onDone: () => dispatch(pushHistory(`/org/${orgName}/secret`))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(DeleteSecretPopup);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(DeleteSecretPopup);

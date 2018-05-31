@@ -156,4 +156,7 @@ const mapDispatchToProps = (
     load: () => dispatch(actions.getSecret(orgName, secretName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(SecretInfo);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(SecretInfo);

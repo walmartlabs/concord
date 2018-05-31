@@ -62,4 +62,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     start: (processInstanceId: ConcordId) => dispatch(actions.startWizard(processInstanceId))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProcessWizard);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProcessWizard);

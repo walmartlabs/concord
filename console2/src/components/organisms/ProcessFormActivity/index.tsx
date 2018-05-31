@@ -140,4 +140,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>, { wizard }: ExternalProps): 
     onReturn: (processInstanceId) => dispatch(pushHistory(`/process/${processInstanceId}`))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProcessFormActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProcessFormActivity);

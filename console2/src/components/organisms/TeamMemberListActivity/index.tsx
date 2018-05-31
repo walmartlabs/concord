@@ -154,4 +154,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     update: (orgName, teamName, users) => dispatch(actions.replaceUsers(orgName, teamName, users))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(TeamMemberListActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(TeamMemberListActivity);

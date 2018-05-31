@@ -115,4 +115,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): LoginDispatchProps => ({
     onSubmit: ({ username, password }: LoginData) => dispatch(actions.doLogin(username, password))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Login);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Login);

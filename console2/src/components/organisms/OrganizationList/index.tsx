@@ -133,4 +133,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     load: (onlyCurrent: boolean) => dispatch(actions.listOrgs(onlyCurrent))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(OrganizationList);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(OrganizationList);

@@ -52,7 +52,7 @@ class SecretDropdown extends React.PureComponent<ExternalProps & StateProps & Di
     render() {
         const { orgName, load, ...rest } = this.props;
 
-        return <FormikDropdown selection={true} {...rest} />;
+        return <FormikDropdown selection={true} search={true} {...rest} />;
     }
 }
 
@@ -79,4 +79,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps):
     load: () => dispatch(actions.listSecrets(orgName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(SecretDropdown);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(SecretDropdown);

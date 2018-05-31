@@ -76,4 +76,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     deleteTeam: (orgName, teamName) => dispatch(actions.deleteTeam(orgName, teamName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(TeamDeleteActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(TeamDeleteActivity);

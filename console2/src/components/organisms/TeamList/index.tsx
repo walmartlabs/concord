@@ -119,4 +119,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     load: (orgName: ConcordKey) => dispatch(actions.listTeams(orgName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(TeamList);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(TeamList);

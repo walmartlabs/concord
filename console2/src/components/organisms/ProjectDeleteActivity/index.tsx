@@ -69,4 +69,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     deleteProject: (orgName, projectName) => dispatch(actions.deleteProject(orgName, projectName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectDeleteActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProjectDeleteActivity);

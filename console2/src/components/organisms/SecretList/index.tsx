@@ -126,4 +126,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps):
     load: () => dispatch(actions.listSecrets(orgName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(SecretList);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(SecretList);

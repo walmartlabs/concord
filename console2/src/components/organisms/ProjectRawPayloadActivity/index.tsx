@@ -78,4 +78,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
         dispatch(actions.setAcceptsRawPayload(orgName, projectId, acceptsRawPayload))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectRenameActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProjectRenameActivity);

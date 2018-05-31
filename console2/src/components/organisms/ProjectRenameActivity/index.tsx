@@ -75,4 +75,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
         dispatch(actions.renameProject(orgName, projectId, projectName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectRenameActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProjectRenameActivity);

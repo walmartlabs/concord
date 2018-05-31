@@ -43,7 +43,7 @@ public final class SecretUtils {
             Cipher c = init(password, salt, Cipher.DECRYPT_MODE);
             return c.doFinal(input);
         } catch (BadPaddingException e) {
-            throw new SecurityException("Error decrypting a secret: " + e.getMessage() + ". Probably wrong password.");
+            throw new SecurityException("Error decrypting a secret: " + e.getMessage() + ". Invalid input data and/or a password.");
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error decrypting a secret: " + e.getMessage());
         }

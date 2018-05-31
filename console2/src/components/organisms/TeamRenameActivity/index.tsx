@@ -80,4 +80,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     rename: (orgName, teamId, teamName) => dispatch(actions.renameTeam(orgName, teamId, teamName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(TeamRenameActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(TeamRenameActivity);

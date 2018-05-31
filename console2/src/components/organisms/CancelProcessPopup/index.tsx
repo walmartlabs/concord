@@ -77,4 +77,7 @@ const mapDispatchToProps = (
     onConfirm: () => dispatch(actions.cancel(instanceId))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(CancelProcessPopup);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(CancelProcessPopup);

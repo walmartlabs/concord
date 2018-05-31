@@ -72,4 +72,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps):
     submit: (values: NewProjectFormValues) => dispatch(actions.createProject(orgName, values))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(NewProjectActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(NewProjectActivity);

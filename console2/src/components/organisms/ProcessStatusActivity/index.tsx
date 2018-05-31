@@ -211,4 +211,7 @@ export const mapDispatchToProps = (
     startWizard: () => dispatch(pushHistory(`/process/${instanceId}/wizard?fullScreen=true`))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProcessStatusActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProcessStatusActivity);

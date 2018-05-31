@@ -70,4 +70,7 @@ const mapDispatchToProps = (
     refresh: () => dispatch(actions.forceRefresh())
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProcessLogViewer);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProcessLogViewer);

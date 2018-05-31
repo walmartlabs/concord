@@ -156,4 +156,7 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps):
     }
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(NewSecretActivity);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(NewSecretActivity);
