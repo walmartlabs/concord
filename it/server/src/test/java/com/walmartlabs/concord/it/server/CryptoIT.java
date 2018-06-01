@@ -23,14 +23,22 @@ package com.walmartlabs.concord.it.server;
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.OrganizationResource;
+import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
+import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.api.org.project.ProjectResource;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.server.api.process.StartProcessResponse;
 import org.junit.Test;
+
+import javax.xml.bind.DatatypeConverter;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class CryptoIT extends AbstractServerIT {
 
@@ -150,6 +158,90 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*We got " + secretValue + ".*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testDecryptString() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+
+        // ---
+
+        String value = "value_" + randomString();
+
+        EncryptValueResponse evr = projectResource.encrypt(orgName, projectName, value);
+        assertTrue(evr.isOk());
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("decryptString").toURI());
+
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "org", orgName,
+                "project", projectName,
+                "archive", payload,
+                "arguments.encryptedValue", DatatypeConverter.printBase64Binary(evr.getData())));
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*We got " + value + ".*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testDecryptInvalidString() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("decryptString").toURI());
+
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "org", orgName,
+                "project", projectName,
+                "archive", payload,
+                "arguments.encryptedValue", DatatypeConverter.printBase64Binary(new byte[] { 0, 1, 2 })));
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FAILED, pir.getStatus());
+
+        // ---
+
+        spr = start(ImmutableMap.of(
+                "org", orgName,
+                "project", projectName,
+                "archive", payload,
+                "arguments.encryptedValue", "W+YrVH9Q0YKDZ5j8UytRAQ==")); // junk
+
+        // ---
+
+        pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FAILED, pir.getStatus());
     }
 
     private void test(String project, String secretName, String storePassword, String log) throws Exception {
