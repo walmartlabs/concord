@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
+import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.runner.engine.RpcClientImpl;
 import com.walmartlabs.concord.ApiClient;
@@ -78,7 +79,7 @@ public class ProcessHeartbeat {
     }
 
     private static ApiClient createClient(Configuration cfg) throws IOException {
-        ApiClient client = new ApiClient();
+        ApiClient client = new ConcordApiClient();
         client.setTempFolderPath(IOUtils.createTempDir("runner-client").toString());
         client.setBasePath(cfg.getServerApiBaseUrl());
         client.setApiKey(cfg.getApiKey());

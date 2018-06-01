@@ -129,16 +129,15 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         return super.onLoginFailure(token, e, request, response);
     }
 
-    private AuthenticationToken createFromAuthHeader(String h, ServletRequest request) {
+    private AuthenticationToken createFromAuthHeader(String h, ServletRequest req) {
         if (h.startsWith(BASIC_AUTH_PREFIX)) {
             // create sessions if users are using username/password auth
-            request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
+            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
             return parseBasicAuth(h);
         } else {
             validateApiKey(h);
 
-            // disable session creation for api token users
-            request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, isAgent(req));
 
             UUID userId = apiKeyDao.findUserId(h);
             if (userId == null) {
@@ -202,5 +201,11 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         String password = s.substring(idx + 1, s.length());
 
         return new UsernamePasswordToken(username, password);
+    }
+
+    // TODO find a way to clear IT client's cookies and remove this method
+    private static boolean isAgent(ServletRequest req) {
+        String s = WebUtils.toHttp(req).getHeader(HttpHeaders.USER_AGENT);
+        return s != null && s.contains("Concord-Agent");
     }
 }

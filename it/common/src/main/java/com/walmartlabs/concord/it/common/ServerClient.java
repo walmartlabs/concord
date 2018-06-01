@@ -52,10 +52,9 @@ public class ServerClient {
     /**
      * As defined in db/src/main/resources/com/walmartlabs/concord/server/db/v0.0.1.xml
      */
-    protected static final String DEFAULT_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
+    private static final String DEFAULT_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
 
     private String apiKey = DEFAULT_API_KEY;
-
     private String githubKey;
 
     private final String baseUrl;
@@ -77,10 +76,10 @@ public class ServerClient {
     }
 
     public void resetApiKey() {
-        this.apiKey = DEFAULT_API_KEY;
+        setApiKey(DEFAULT_API_KEY);
     }
 
-    public void setApiKey(String apiKey) {
+    public synchronized void setApiKey(String apiKey) {
         this.apiKey = apiKey;
     }
 
@@ -304,8 +303,8 @@ public class ServerClient {
 
     private static Client createClient(Supplier<String> auth, Supplier<String> github) {
         return ClientBuilder.newClient()
-                .register((ClientRequestFilter) requestContext -> {
-                    MultivaluedMap<String, Object> headers = requestContext.getHeaders();
+                .register((ClientRequestFilter) req -> {
+                    MultivaluedMap<String, Object> headers = req.getHeaders();
 
                     headers.putSingle("X-Concord-Trace-Enabled", "true");
 

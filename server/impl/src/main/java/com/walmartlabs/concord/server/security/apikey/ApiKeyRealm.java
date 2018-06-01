@@ -67,11 +67,10 @@ public class ApiKeyRealm extends AuthorizingRealm {
             return null;
         }
 
-        // TODO enable when we get session cookie support in concord-client
-        // auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
-        //        .userId(u.getId())
-        //        .field("realm", REALM_NAME)
-        //        .log();
+        auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
+                .userId(u.getId())
+                .field("realm", REALM_NAME)
+                .log();
 
         UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), u.isAdmin(), u.getType());
         return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());

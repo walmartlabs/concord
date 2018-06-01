@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-client, concord-agent, concord-runner: enable session
+cookies;
 - concord-task: fail the parent process if the subprocess has failed.
 Added new parameter `ignoreFailures: true` to revert the previous
 behavior.

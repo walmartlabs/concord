@@ -22,6 +22,7 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
+import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.CommandQueueApi;
@@ -56,7 +57,10 @@ public class ServerConnector implements MaintenanceModeListener {
 
         log.info("start -> connecting to {}:{}", host, port);
 
-        ExecutionManager executionManager = new ExecutionManager(cfg, new ProcessApi(createClient(cfg)));
+        ApiClient apiClient = createClient(cfg);
+        ProcessApi processApi = new ProcessApi(apiClient);
+
+        ExecutionManager executionManager = new ExecutionManager(cfg, processApi);
 
         maintenanceModeNotifier = new Thread(new MaintenanceModeNotifier(cfg.getMaintenanceModeFile(), this),
                 "maintenance-mode-notifier");
@@ -66,27 +70,27 @@ public class ServerConnector implements MaintenanceModeListener {
                 "execution-status-cleanup");
         executionCleanup.start();
 
-        commandHandler = new CommandHandler(cfg.getAgentId(), new CommandQueueApi(createClient(cfg)), executionManager, Executors.newCachedThreadPool(), cfg.getPollInterval());
+        commandHandler = new CommandHandler(cfg.getAgentId(), new CommandQueueApi(apiClient), executionManager, Executors.newCachedThreadPool(), cfg.getPollInterval());
         commandHandlerThread = new Thread(commandHandler, "command-handler");
         commandHandlerThread.start();
 
         workers = new Worker[workersCount];
         workerThreads = new Thread[workersCount];
 
-        for (int i = 0; i < workersCount; i++) {
-            Worker w = new Worker(new ProcessQueueApi(createClient(cfg)),
-                    new ProcessApiClient(cfg, new ProcessApi(createClient(cfg))),
-                    executionManager, cfg.getLogMaxDelay(), cfg.getPollInterval(),
-                    cfg.getCapabilities());
-            workers[i] = w;
+        ProcessQueueApi queueApi = new ProcessQueueApi(apiClient);
+        ProcessApiClient processApiClient = new ProcessApiClient(cfg, processApi);
 
-            Thread t = new Thread(w, "worker-" + i);
-            workerThreads[i] = t;
+        for (int i = 0; i < workersCount; i++) {
+            workers[i] = new Worker(queueApi, processApiClient, executionManager,
+                    cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities());
+
+            workerThreads[i] = new Thread(workers[i], "worker-" + i);
 
             // offset the worker start up slightly to smooth out the polling intervals
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
+                // ignore
             }
         }
 
@@ -156,7 +160,7 @@ public class ServerConnector implements MaintenanceModeListener {
     }
 
     private static ApiClient createClient(Configuration cfg) throws IOException {
-        ApiClient client = new ApiClient();
+        ApiClient client = new ConcordApiClient();
         client.setTempFolderPath(IOUtils.createTempDir("agent-client").toString());
         client.setBasePath(cfg.getServerApiBaseUrl());
         client.setApiKey(cfg.getApiKey());
