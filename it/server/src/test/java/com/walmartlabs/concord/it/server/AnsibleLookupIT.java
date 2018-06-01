@@ -129,6 +129,46 @@ public class AnsibleLookupIT extends AbstractServerIT {
     }
 
     @Test(timeout = 60000)
+    public void testSecretDataNoPassword() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        String secretName = "mySecret";
+        String secretValue = "value_" + randomString();
+        addPlainSecret(orgName, secretName, false,null, secretValue.getBytes());
+
+        String projectName = "project_" + randomString();
+        ProjectResource projectResource = proxy(ProjectResource.class);
+        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+
+        // ---
+
+        URI dir = AnsibleLookupIT.class.getResource("ansibleLookupSecretDataNoPassword").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        input.put("arguments.orgName", orgName);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertNoLog(".*Explicit org " + secretValue + ".*", ab);
+        assertNoLog(".*Implicit org " + secretValue + ".*", ab);
+    }
+
+    @Test(timeout = 60000)
     public void testPublickey() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationResource organizationResource = proxy(OrganizationResource.class);

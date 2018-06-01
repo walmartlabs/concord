@@ -4,6 +4,8 @@
 
 ### Added
 
+- ansible: ability to use password-less secrets in the secret
+lookup plugin;
 - concord-client, concord-agent, concord-runner: enable session
 cookies;
 - concord-task: fail the parent process if the subprocess has failed.
@@ -31,6 +33,7 @@ some of the plugins (e.g. jira).
  
 
 ## [0.71.1] - 2018-05-29
+>>>>>>> origin/master
 
 ### Changed
 

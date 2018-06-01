@@ -31,8 +31,14 @@ class LookupModule(LookupBase):
 
         headers = {'X-Concord-SessionToken': concordSessionToken}
         url = concordBaseUrl + '/api/v1/org/' + orgName + '/secret/' + secretName + '/data'
+        multipartInputDict = {}
+        if storePassword is not None:
+            multipartInputDict = {'storePassword' : storePassword}
+        else:
+            # this to make sure that multipart header of post request is correctly set
+            multipartInputDict = {'':''}
 
-        r = requests.post(url, headers=headers, files=dict(storePassword=storePassword))
+        r = requests.post(url, headers=headers, files=multipartInputDict)
 
         if r.status_code != requests.codes.ok:
             raise AnsibleError('Invalid server response: ' + str(r.status_code))

@@ -108,7 +108,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     @Override
     public Response getData(String orgName, String secretName, MultipartInput input) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        String storePwd = assertString(input, "storePassword");
+        String storePwd = MultipartUtils.getString(input, "storePassword");
 
         DecryptedSecret s = secretManager.getSecret(org.getId(), secretName, storePwd, SecretType.DATA);
         BinaryDataSecret d = (BinaryDataSecret) s.getSecret();
@@ -150,10 +150,6 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
         secretManager.updateAccessLevel(secretId, entry.getTeamId(), entry.getLevel());
         return new GenericOperationResult(OperationResult.UPDATED);
-    }
-
-    private void assertStore(SecretStoreType storeType) {
-
     }
 
     private PublicKeyResponse createKeyPair(UUID orgId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, SecretStoreType storeType) throws IOException {
