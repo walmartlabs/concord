@@ -81,7 +81,7 @@ public abstract class AbstractEventResource {
         try {
             return EventMatcher.matches(conditions, t.getConditions());
         } catch (Exception e) {
-            log.warn("filter [{}, {}] -> error while matching events", conditions, t, e);
+            log.warn("filter [{}, {}] -> error while matching events: {}", conditions, t, e.getMessage());
             return false;
         }
     }
