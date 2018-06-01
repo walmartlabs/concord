@@ -9,9 +9,9 @@ package com.walmartlabs.concord.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
@@ -79,6 +80,14 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String START_AT_KEY = "startAt";
     private static final String SYNC_KEY = "sync";
     private static final String TAGS_KEY = "tags";
+    private static final String IGNORE_FAILURES_KEY = "ignoreFailures";
+
+    private static final Set<String> FAILED_STATUSES;
+    static {
+        FAILED_STATUSES = new HashSet<>();
+        FAILED_STATUSES.add(ProcessEntry.StatusEnum.FAILED.toString());
+        FAILED_STATUSES.add(ProcessEntry.StatusEnum.CANCELLED.toString());
+    }
 
     @InjectVariable("concord")
     Map<String, Object> defaults;
@@ -135,12 +144,12 @@ public class ConcordTask extends AbstractConcordTask {
         });
     }
 
-    public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids) throws Exception {
+    public Map<String, String> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids) throws Exception {
         return waitForCompletion(ctx, ids, -1);
     }
 
-    public Map<String, Object> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout) throws Exception {
-        Map<String, Object> result = new HashMap<>();
+    public Map<String, String> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout) throws Exception {
+        Map<String, String> result = new HashMap<>();
 
         ids.parallelStream().map(UUID::fromString).forEach(id -> {
             log.info("Waiting for {}...", id);
@@ -148,11 +157,11 @@ public class ConcordTask extends AbstractConcordTask {
             long t1 = System.currentTimeMillis();
             while (true) {
                 try {
-                    ProcessEntry e = withClient(ctx, client -> {
+                    ProcessEntry e = ClientUtils.withRetry(3, 1000, () -> withClient(ctx, client -> {
                         ProcessApi api = new ProcessApi(client);
                         return api.get(id);
-                    });
-                    
+                    }));
+
                     ProcessEntry.StatusEnum s = e.getStatus();
 
                     if (s == ProcessEntry.StatusEnum.FAILED || s == ProcessEntry.StatusEnum.FINISHED || s == ProcessEntry.StatusEnum.CANCELLED) {
@@ -271,27 +280,54 @@ public class ConcordTask extends AbstractConcordTask {
         ctx.setVariable(JOBS_KEY, jobs);
 
         if (sync) {
-            waitForCompletion(ctx, jobs);
+            Map<String, String> result = waitForCompletion(ctx, jobs);
+            handleResults(cfg, result);
 
-            Object out = withClient(ctx, client -> {
-                ProcessApi api = new ProcessApi(client);
-
-                File f = null;
-                try {
-                    f = api.downloadAttachment(UUID.fromString(childId), "out.json");
-                    return om.readValue(f, Map.class);
-                } catch (Exception e) {
-                    log.error("Error while reading the out variables", e);
-                    return null;
-                } finally {
-                    if (f != null && f.exists()) {
-                        f.delete();
-                    }
-                }
-            });
-
+            Object out = null;
+            if (cfg.containsKey(OUT_VARS_KEY)) {
+                out = getOutVars(ctx, childId);
+            }
             ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
         }
+    }
+
+    private void handleResults(Map<String, Object> cfg, Map<String, String> m) {
+        boolean ignoreFailures = (boolean) cfg.getOrDefault(IGNORE_FAILURES_KEY, false);
+        for (Map.Entry<String, String> e : m.entrySet()) {
+            String id = e.getKey();
+            String status = e.getValue();
+            if (FAILED_STATUSES.contains(status)) {
+                if (ignoreFailures) {
+                    log.warn("Child process {} {}, ignoring...", id, status);
+                    continue;
+                }
+
+                throw new IllegalStateException("Child process " + id + " " + status);
+            }
+        }
+    }
+
+    private Object getOutVars(Context ctx, String childId) throws Exception {
+        return withClient(ctx, client -> {
+            ProcessApi api = new ProcessApi(client);
+
+            File f = null;
+            try {
+                f = api.downloadAttachment(UUID.fromString(childId), "out.json");
+                ObjectMapper om = new ObjectMapper();
+                return om.readValue(f, Map.class);
+            } catch (ApiException e) {
+                if (e.getCode() == 404) {
+                    return null;
+                }
+                log.error("Error while reading the out variables", e);
+                throw e;
+            } finally {
+                if (f != null && f.exists()) {
+                    f.delete();
+                }
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -385,7 +421,7 @@ public class ConcordTask extends AbstractConcordTask {
     private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
         Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, PAYLOAD_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
                 REPO_KEY, REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, START_AT_KEY, DISABLE_ON_CANCEL_KEY,
-                DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY, ACTIVE_PROFILES_KEY);
+                DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY, ACTIVE_PROFILES_KEY, IGNORE_FAILURES_KEY);
 
         if (job != null) {
             m.putAll(job);

@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-task: fail the parent process if the subprocess has failed.
+Added new parameter `ignoreFailures: true` to revert the previous
+behavior.
+
+
+
 ## [0.71.3] - 2018-05-31
 
 ### Changed

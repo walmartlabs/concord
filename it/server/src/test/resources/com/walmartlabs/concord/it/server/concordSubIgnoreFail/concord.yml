@@ -1,0 +1,9 @@
+flows:
+  default:
+    - task: concord
+      in:
+        action: start
+        payload: myPayload
+        sync: true
+        ignoreFailures: true
+    - log: "Done!"

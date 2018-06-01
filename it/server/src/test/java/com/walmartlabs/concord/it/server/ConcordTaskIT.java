@@ -173,4 +173,59 @@ public class ConcordTaskIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Done! Hello!.*", ab);
     }
+
+    @Test(timeout = 60000)
+    public void testOutVarsNotFound() throws Exception {
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordOutVars").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Done!.*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testSubprocessFail() throws Exception {
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordSubFail").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Fail!.*", ab);
+        assertNoLog(".*Done!.*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testSubprocessIgnoreFail() throws Exception {
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordSubIgnoreFail").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Done!.*", ab);
+    }
 }

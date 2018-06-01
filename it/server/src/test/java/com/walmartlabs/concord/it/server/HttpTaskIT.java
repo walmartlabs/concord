@@ -53,7 +53,9 @@ public class HttpTaskIT extends AbstractServerIT {
     public static final String mockHttpPathPassword = "/password";
 
     @Rule
-    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options().notifier(new ConsoleNotifier(true)));
+    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
+            .notifier(new ConsoleNotifier(true))
+            .dynamicPort());
 
     @Before
     public void setup() {

@@ -1,0 +1,12 @@
+flows:
+  default:
+    - try:
+      - task: concord
+        in:
+          action: start
+          payload: myPayload
+          sync: true
+      error:
+      - log: "Fail!"
+      - return
+    - log: "Done!"
