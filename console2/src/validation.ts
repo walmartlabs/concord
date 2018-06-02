@@ -103,7 +103,8 @@ export const repository = {
         }
         return;
     },
-    secret: concordKeyValidator
+    secret: concordKeyValidator,
+    secretId: requiredValidator
 };
 
 export const secret = {

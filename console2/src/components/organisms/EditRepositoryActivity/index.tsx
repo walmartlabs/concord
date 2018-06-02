@@ -126,7 +126,7 @@ const toFormValues = (
         branch: r.branch,
         commitId: r.commitId,
         path: r.path,
-        secretName: r.secretName
+        secretId: r.secretId
     };
 };
 
@@ -165,7 +165,7 @@ const mapDispatchToProps = (
             branch,
             commitId,
             path: values.path,
-            secretName: values.secretName!
+            secretId: values.secretId!
         };
 
         if (repoName) {

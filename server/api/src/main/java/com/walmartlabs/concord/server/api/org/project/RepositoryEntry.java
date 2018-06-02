@@ -52,6 +52,8 @@ public class RepositoryEntry implements Serializable {
     @Size(max = 2048)
     private final String path;
 
+    private final UUID secretId;
+
     @ConcordKey
     @JsonAlias("secret")
     private final String secretName;
@@ -61,11 +63,11 @@ public class RepositoryEntry implements Serializable {
     private final String secretStoreType;
 
     public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, null, false, null);
+        this(null, null, name, url, null, null, null, null, null, false, null);
     }
 
     public RepositoryEntry(String name, RepositoryEntry e) {
-        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.secretName, e.hasWebHook, e.secretStoreType);
+        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.getSecretId(), e.secretName, e.hasWebHook, e.secretStoreType);
     }
 
     @JsonCreator
@@ -76,6 +78,7 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("branch") String branch,
                            @JsonProperty("commitId") String commitId,
                            @JsonProperty("path") String path,
+                           @JsonProperty("secretId") UUID secretId,
                            @JsonProperty("secretName") String secretName,
                            @JsonProperty("hasWebHook") boolean hasWebHook,
                            @JsonProperty("secretStoreType") String secretStoreType) {
@@ -87,6 +90,7 @@ public class RepositoryEntry implements Serializable {
         this.branch = branch;
         this.commitId = commitId;
         this.path = path;
+        this.secretId = secretId;
         this.secretName = secretName;
         this.hasWebHook = hasWebHook;
         this.secretStoreType = secretStoreType;
@@ -120,6 +124,10 @@ public class RepositoryEntry implements Serializable {
         return path;
     }
 
+    public UUID getSecretId() {
+        return secretId;
+    }
+
     public String getSecretName() {
         return secretName;
     }
@@ -142,6 +150,7 @@ public class RepositoryEntry implements Serializable {
                 ", branch='" + branch + '\'' +
                 ", commitId='" + commitId + '\'' +
                 ", path='" + path + '\'' +
+                ", secretId=" + secretId +
                 ", secretName='" + secretName + '\'' +
                 ", hasWebHook=" + hasWebHook +
                 ", secretStoreType=" + secretStoreType +

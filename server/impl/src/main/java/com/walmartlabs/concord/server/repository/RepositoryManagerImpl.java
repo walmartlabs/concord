@@ -71,7 +71,7 @@ public class RepositoryManagerImpl implements RepositoryManager {
         try {
             tmpDir = IOUtils.createTempDir("repository");
 
-            RepositoryEntry repo = new RepositoryEntry(null, null, null, uri, branch, commitId, path, secretName, false, null);
+            RepositoryEntry repo = new RepositoryEntry(null, null, null, uri, branch, commitId, path, null, secretName, false, null);
             getProvider(uri).fetch(orgId, repo, tmpDir);
 
             repoPath(tmpDir, path);

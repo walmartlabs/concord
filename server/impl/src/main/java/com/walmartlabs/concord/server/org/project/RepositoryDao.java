@@ -144,7 +144,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> list(DSLContext tx, UUID projectId, Field<?> sortField, boolean asc) {
-        SelectConditionStep<Record9<UUID, UUID, String, String, String, String, String, Boolean, String>> query = selectRepositoryEntry(tx)
+        SelectConditionStep<Record10<UUID, UUID, String, String, String, String, String, Boolean, UUID, String>> query = selectRepositoryEntry(tx)
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId));
 
         if (sortField != null) {
@@ -162,7 +162,7 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    private static SelectJoinStep<Record9<UUID, UUID, String, String, String, String, String, Boolean, String>> selectRepositoryEntry(DSLContext tx) {
+    private static SelectJoinStep<Record10<UUID, UUID, String, String, String, String, String, Boolean, UUID, String>> selectRepositoryEntry(DSLContext tx) {
         return tx.select(REPOSITORIES.REPO_ID,
                 REPOSITORIES.PROJECT_ID,
                 REPOSITORIES.REPO_NAME,
@@ -171,12 +171,13 @@ public class RepositoryDao extends AbstractDao {
                 REPOSITORIES.REPO_COMMIT_ID,
                 REPOSITORIES.REPO_PATH,
                 REPOSITORIES.HAS_WEBHOOK,
+                SECRETS.SECRET_ID,
                 SECRETS.SECRET_NAME)
                 .from(REPOSITORIES)
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
     }
 
-    private static RepositoryEntry toEntry(Record9<UUID, UUID, String, String, String, String, String, Boolean, String> r) {
+    private static RepositoryEntry toEntry(Record10<UUID, UUID, String, String, String, String, String, Boolean, UUID, String> r) {
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
                 r.get(REPOSITORIES.PROJECT_ID),
                 r.get(REPOSITORIES.REPO_NAME),
@@ -184,6 +185,7 @@ public class RepositoryDao extends AbstractDao {
                 r.get(REPOSITORIES.REPO_BRANCH),
                 r.get(REPOSITORIES.REPO_COMMIT_ID),
                 r.get(REPOSITORIES.REPO_PATH),
+                r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(REPOSITORIES.HAS_WEBHOOK),
                 null);

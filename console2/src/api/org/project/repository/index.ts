@@ -27,6 +27,7 @@ export interface RepositoryEntry {
     commitId?: string;
     path?: string;
     secretStoreType?: string;
+    secretId: string;
     secretName: string;
 }
 
@@ -37,7 +38,7 @@ export interface EditRepositoryEntry {
     branch?: string;
     commitId?: string;
     path?: string;
-    secretName: string;
+    secretId: string;
 }
 
 export const createOrUpdate = (

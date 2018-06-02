@@ -41,7 +41,7 @@ interface FormValues {
     branch?: string;
     commitId?: string;
     path?: string;
-    secretName?: string;
+    secretId?: string;
 }
 
 export type RepositoryFormValues = FormValues;
@@ -163,7 +163,7 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
 
                     <SecretDropdown
                         orgName={orgName}
-                        name="secretName"
+                        name="secretId"
                         label="Credentials"
                         required={true}
                         fluid={true}
@@ -247,7 +247,7 @@ const validator = async (values: FormValues, props: Props) => {
         throw { path: e };
     }
 
-    e = validation.secret(values.secretName);
+    e = validation.secretId(values.secretId);
     if (e) {
         throw { secret: e };
     }
