@@ -1,0 +1,4 @@
+flows:
+  default:
+  # calls a flow in `flows/external.yml`
+  - call: myFlow

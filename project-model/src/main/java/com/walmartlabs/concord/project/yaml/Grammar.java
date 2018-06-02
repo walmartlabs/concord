@@ -129,7 +129,7 @@ public class Grammar {
             satisfyToken(JsonToken.VALUE_STRING));
 
     // formName := VALUE_STRING ^form \((.*)\)$
-    private static final Pattern FORM_NAME_PATTERN = Pattern.compile("^form \\((.*)\\)$");
+    private static final Pattern FORM_NAME_PATTERN = Pattern.compile("^form\\s?\\((.*)\\)$");
     private static final Parser<Atom, String> formName = label("Form name",
             satisfy((Atom a) -> {
                 if (a.token != JsonToken.FIELD_NAME) {

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -231,5 +231,45 @@ public class FormIT extends AbstractServerIT {
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*we got 123 hello 234.*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testExternalFormFile() throws Exception {
+        String fieldValue = "value_" + randomString();
+
+        byte[] payload = archive(FormIT.class.getResource("formExternal").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+
+        // ---
+
+        FormResource formResource = proxy(FormResource.class);
+
+        List<FormListEntry> forms = formResource.list(spr.getInstanceId());
+        assertEquals(1, forms.size());
+
+        // ---
+
+        FormListEntry f0 = forms.get(0);
+        assertFalse(f0.isCustom());
+
+        String formId = f0.getFormInstanceId();
+
+        Map<String, Object> data = Collections.singletonMap("myField", fieldValue);
+        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);
+        assertTrue(fsr.isOk());
+
+        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*We got " + fieldValue + ".*", ab);
     }
 }

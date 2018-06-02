@@ -1,0 +1,4 @@
+flows:
+  default:
+  - call: myFlow
+  - log: "We got ${myForm.myField}"

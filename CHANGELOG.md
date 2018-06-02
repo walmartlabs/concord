@@ -12,6 +12,11 @@ cookies;
 Added new parameter `ignoreFailures: true` to revert the previous
 behavior.
 
+### Changed
+
+- concord-project-model: external form definitions must work with and
+without a whitespace in the definition.
+
 
 
 ## [0.71.3] - 2018-05-31
@@ -33,7 +38,6 @@ some of the plugins (e.g. jira).
  
 
 ## [0.71.1] - 2018-05-29
->>>>>>> origin/master
 
 ### Changed
 

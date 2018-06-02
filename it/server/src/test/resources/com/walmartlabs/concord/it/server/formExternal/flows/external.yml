@@ -1,0 +1,5 @@
+myFlow:
+- form: myForm
+
+form(myForm):
+- myField: {type: "string"}

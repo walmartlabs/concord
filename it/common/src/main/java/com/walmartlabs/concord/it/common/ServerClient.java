@@ -211,14 +211,12 @@ public class ServerClient {
         while (true) {
             try {
                 pir = processResource.get(instanceId);
-                if (status == pir.getStatus()) {
+                if (pir.getStatus() == ProcessStatus.FAILED || pir.getStatus() == ProcessStatus.CANCELLED) {
                     return pir;
                 }
 
-                for (ProcessStatus s : more) {
-                    if (pir.getStatus() == s) {
-                        return pir;
-                    }
+                if (isSame(pir.getStatus(), status, more)) {
+                    return pir;
                 }
             } catch (NotFoundException e) {
                 System.out.println(String.format("waitForCompletion ['%s'] -> not found, retrying... (%s)", instanceId, retries));
@@ -299,6 +297,22 @@ public class ServerClient {
 
             Thread.sleep(500);
         }
+    }
+
+    private static boolean isSame(ProcessStatus status, ProcessStatus first, ProcessStatus... more) {
+        if (status == first) {
+            return true;
+        }
+
+        if (more != null) {
+            for (ProcessStatus s : more) {
+                if (status == s) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static Client createClient(Supplier<String> auth, Supplier<String> github) {

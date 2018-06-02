@@ -4,6 +4,7 @@
 
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
 * [boo](boo) - using OneOps Boo;
+* [flows_dir](flows_dir) - how to use flows and forms from external YAML files;
 * [forms](forms) - using basic forms;
 * [git](git) - how to clone a GIT repository;
 * [hello_world](hello_world) - a simple example demonstrating how to pass a variable to a process;
