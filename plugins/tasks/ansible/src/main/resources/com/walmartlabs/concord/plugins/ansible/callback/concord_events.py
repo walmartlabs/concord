@@ -90,14 +90,15 @@ class CallbackModule(CallbackBase):
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'task': result._task.get_name(),
-            'result': self.cleanup_results(result._result)
+            'result': self.cleanup_results(result._result),
+            'ignore_errors': result._task_fields['ignore_errors']
         }
 
         self.handle_event(data)
 
     def v2_runner_on_ok(self, result, **kwargs):
         data = {
-            'status': "OK",
+            'status': 'OK',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'task': result._task.get_name(),
@@ -108,7 +109,7 @@ class CallbackModule(CallbackBase):
 
     def v2_runner_on_unreachable(self, result):
         data = {
-            'status': "UNREACHABLE",
+            'status': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'task': result._task.get_name(),
@@ -119,7 +120,7 @@ class CallbackModule(CallbackBase):
 
     def v2_runner_on_async_failed(self, result, **kwargs):
         data = {
-            'status': "UNREACHABLE",
+            'status': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'task': result._task.get_name(),

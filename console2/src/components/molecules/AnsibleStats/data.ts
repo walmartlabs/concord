@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,15 +27,23 @@ export const makeHostList = (
 
 const hostsByStatus = (
     evs: Array<ProcessEventEntry<AnsibleEvent>>,
-    status: AnsibleStatus
-): string[] => evs.filter(({ data }) => data.status === status).map(({ data }) => data.host!);
+    status: AnsibleStatus,
+    additionalFilter?: (data: AnsibleEvent) => boolean
+): string[] =>
+    evs
+        .filter(
+            ({ data }) =>
+                data.status === status && (additionalFilter ? additionalFilter(data) : true)
+        )
+        .map(({ data }) => data.host!);
 
 export const makeStats = (
     events: Array<ProcessEventEntry<AnsibleEvent>>
 ): AnsibleStatChartEntry[] => {
     const evs = events.filter(({ data }) => !!data.host && !!data.status);
 
-    const failed = new Set(hostsByStatus(evs, AnsibleStatus.FAILED));
+    // skip events with ignore_errors=true, they should be marked as "OK" (if there was no other failures)
+    const failed = new Set(hostsByStatus(evs, AnsibleStatus.FAILED, (data) => !data.ignore_errors));
 
     const unreachable = new Set(
         hostsByStatus(evs, AnsibleStatus.UNREACHABLE).filter((h) => !failed.has(h))
@@ -78,7 +86,9 @@ const compareByHost = (
 export const getFailures = (
     events: Array<ProcessEventEntry<AnsibleEvent>>
 ): Array<ProcessEventEntry<AnsibleEvent>> =>
-    events.filter(({ data }) => data.status === AnsibleStatus.FAILED).sort(compareByHost);
+    events
+        .filter(({ data }) => data.status === AnsibleStatus.FAILED && !data.ignore_errors)
+        .sort(compareByHost);
 
 export const countUniqueHosts = (hosts: AnsibleHostListEntry[]): number =>
     new Set(hosts.map((h) => h.host)).size;

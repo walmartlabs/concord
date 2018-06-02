@@ -80,4 +80,43 @@ public class AnsibleEventIT extends AbstractServerIT {
 
             assertEquals(1, cnt);
     }
+    @Test(timeout = 60000)
+    @SuppressWarnings("unchecked")
+    public void testIgnoredFailures() throws Exception {
+        URI uri = ProcessIT.class.getResource("ansibleIgnoredFailures").toURI();
+        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessResource processResource = proxy(ProcessResource.class);
+        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+
+        // ---
+
+        ProcessEventResource processEventResource = proxy(ProcessEventResource.class);
+        List<ProcessEventEntry> l = processEventResource.list(pir.getInstanceId(), null, -1);
+        assertFalse(l.isEmpty());
+
+        long cnt = l.stream().filter(e -> {
+            if (!(e.getData() instanceof Map)) {
+                return false;
+            }
+
+            Map<String, Object> m = (Map<String, Object>) e.getData();
+
+            Object ignoreErrors = m.get("ignore_errors");
+            if (ignoreErrors == null) {
+                return false;
+            }
+
+            return Boolean.TRUE.equals(ignoreErrors);
+        }).count();
+
+        assertEquals(1, cnt);
+    }
 }

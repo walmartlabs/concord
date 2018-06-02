@@ -91,6 +91,7 @@ export interface AnsibleEvent {
     status?: AnsibleStatus;
     task?: string;
     result?: AnsibleResult;
+    ignore_errors?: boolean;
 }
 
 export type ProcessEventData = ProcessElementEvent | AnsibleEvent | {};

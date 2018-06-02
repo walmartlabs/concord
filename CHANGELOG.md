@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible, concord-console: handle Ansible's `ignore_errors` modifier;
 - ansible: ability to use password-less secrets in the secret
 lookup plugin;
 - concord-client, concord-agent, concord-runner: enable session

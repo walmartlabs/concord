@@ -56,15 +56,24 @@ class AnsibleTaskList extends React.PureComponent<Props> {
                     <Table.Body>
                         {events &&
                             events.map((value, index) => {
+                                const { status, ignore_errors } = value.data;
+
+                                const error = status === AnsibleStatus.FAILED && !ignore_errors;
+                                const positive = status === AnsibleStatus.OK;
+                                const warning = value.data.status === AnsibleStatus.UNREACHABLE;
+
+                                const statusString =
+                                    status + (ignore_errors ? ' (errors ignored)' : '');
+
                                 return (
                                     <Table.Row
                                         key={index}
-                                        error={value.data.status === AnsibleStatus.FAILED}
-                                        positive={value.data.status === AnsibleStatus.OK}
-                                        warning={value.data.status === AnsibleStatus.UNREACHABLE}>
+                                        error={error}
+                                        positive={positive}
+                                        warning={warning}>
                                         {showHosts && <Table.Cell>{value.data.host}</Table.Cell>}
                                         <Table.Cell>{value.data.task}</Table.Cell>
-                                        <Table.Cell>{value.data.status}</Table.Cell>
+                                        <Table.Cell>{statusString}</Table.Cell>
                                         <Table.Cell>
                                             <LocalTimestamp value={value.eventDate} />
                                         </Table.Cell>
