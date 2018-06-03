@@ -20,4 +20,5 @@
 .logEntry {
     font-family: monospace;
     white-space: pre-wrap;
+    margin: 0;
 }
