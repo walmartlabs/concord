@@ -78,7 +78,7 @@ public class DefaultJobExecutor implements JobExecutor {
         this.logManager = logManager;
         this.dependencyManager = dependencyManager;
         this.objectMapper = new ObjectMapper();
-        this.pool = new ProcessPool(cfg.getMaxPreforkAge());
+        this.pool = new ProcessPool(cfg.getMaxPreforkAge(), cfg.getMaxPreforkCount());
         this.executor = Executors.newCachedThreadPool();
         this.processApiClient = processApiClient;
     }

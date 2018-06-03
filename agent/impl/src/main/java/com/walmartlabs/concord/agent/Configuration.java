@@ -52,6 +52,7 @@ public class Configuration {
     public static final String RUNNER_PATH = "RUNNER_PATH";
     public static final String WORKERS_COUNT_KEY = "WORKERS_COUNT";
     public static final String MAX_PREFORK_AGE_KEY = "MAX_PREFORK_AGE";
+    public static final String MAX_PREFORK_COUNT_KEY = "MAX_PREFORK_COUNT";
 
     public static final String DOCKER_ORPHAN_SWEEPER_ENABLED_KEY = "DOCKER_ORPHAN_SWEEPER_ENABLED";
     public static final String DOCKER_ORPHAN_SWEEPER_PERIOD_KEY = "DOCKER_ORPHAN_SWEEPER_PERIOD";
@@ -87,6 +88,7 @@ public class Configuration {
     private final Path runnerPath;
     private final int workersCount;
     private final long maxPreforkAge;
+    private final int maxPreforkCount;
     private final boolean dockerOrphanSweeperEnabled;
     private final long dockerOrphanSweeperPeriod;
     private final boolean dockerOldImageSweeperEnabled;
@@ -134,6 +136,7 @@ public class Configuration {
             this.workersCount = Integer.parseInt(getEnv(WORKERS_COUNT_KEY, "3"));
 
             this.maxPreforkAge = Long.parseLong(getEnv(MAX_PREFORK_AGE_KEY, "30000"));
+            this.maxPreforkCount = Integer.parseInt(getEnv(MAX_PREFORK_COUNT_KEY, "3"));
 
             this.dockerOrphanSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_ORPHAN_SWEEPER_ENABLED_KEY, "false"));
             this.dockerOrphanSweeperPeriod = Long.parseLong(getEnv(DOCKER_ORPHAN_SWEEPER_PERIOD_KEY, "900000")); // 15 min
@@ -210,6 +213,10 @@ public class Configuration {
 
     public long getMaxPreforkAge() {
         return maxPreforkAge;
+    }
+
+    public int getMaxPreforkCount() {
+        return maxPreforkCount;
     }
 
     public boolean isDockerOrphanSweeperEnabled() {

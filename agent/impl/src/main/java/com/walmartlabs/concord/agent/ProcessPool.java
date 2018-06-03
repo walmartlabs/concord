@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,17 +36,19 @@ public class ProcessPool {
     private static final long CLEANUP_PERIOD = 30000;
 
     private final long maxEntryAge;
+    private final int maxEntryCount;
     private final Map<HashCode, Queue<ProcessEntry>> pool = new HashMap<>();
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
-    public ProcessPool(long maxEntryAge) {
+    public ProcessPool(long maxEntryAge, int maxEntryCount) {
         this.maxEntryAge = maxEntryAge;
+        this.maxEntryCount = maxEntryCount;
         init();
     }
 
     public void init() {
         Thread t = new Thread(() -> {
-            log.info("run -> starting cleanup thread, max entry age: {}ms", maxEntryAge);
+            log.info("run -> starting cleanup thread, max entry age {}ms, max entry count {}", maxEntryAge, maxEntryCount);
 
             while (!Thread.currentThread().isInterrupted()) {
                 try {
@@ -87,6 +89,27 @@ public class ProcessPool {
 
     private void populate(HashCode hc, ProcessLauncher launcher) {
         synchronized (pool) {
+            // calculate the total number of processes in the pool
+            int total = 0;
+            for (Map.Entry<HashCode, Queue<ProcessEntry>> e : pool.entrySet()) {
+                total += e.getValue().size();
+            }
+
+            if (total >= maxEntryCount) {
+                // mark the oldest entry for removal
+                ProcessEntry oldest = null;
+                for (Map.Entry<HashCode, Queue<ProcessEntry>> q : pool.entrySet()) {
+                    for (ProcessEntry e : q.getValue()) {
+                        if (oldest == null || oldest.timestamp > e.timestamp) {
+                            oldest = e;
+                        }
+                    }
+                }
+
+                oldest.remove = true;
+            }
+
+            // add a new pool entry
             Queue<ProcessEntry> q = pool.computeIfAbsent(hc, k -> new LinkedList<>());
             try {
                 q.add(launcher.start());
@@ -105,8 +128,7 @@ public class ProcessPool {
         synchronized (pool) {
             pool.forEach((hc, q) -> {
                 q.removeIf(e -> {
-                    long dt = t - e.timestamp;
-                    if (dt >= maxEntryAge) {
+                    if (e.remove || t - e.timestamp >= maxEntryAge) {
                         processesToKill.add(e.process);
                         return true;
                     }
@@ -141,6 +163,8 @@ public class ProcessPool {
         private final long timestamp;
         private final Process process;
         private final Path workDir;
+
+        private boolean remove = false;
 
         public ProcessEntry(Process process, Path workDir) {
             this.timestamp = System.currentTimeMillis();

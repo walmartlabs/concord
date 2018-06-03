@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-agent: new `MAX_PREFORK_COUNT` configuration parameter to
+limit the number of processes in the pool;
 - ansible: new parameter `disableConcordCallbacks` to disable
 Concord-specific Ansible callbacks: stdout filtering, event
 recording, etc;
