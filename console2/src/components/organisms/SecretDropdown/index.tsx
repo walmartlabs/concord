@@ -64,7 +64,7 @@ const makeOptions = (data: Secrets): DropdownItemProps[] => {
     return Object.keys(data)
         .map((k) => data[k])
         .sort(comparators.byName)
-        .map(({ name,id }) => ({
+        .map(({ name, id }) => ({
             value: id,
             text: name
         }));

@@ -84,7 +84,7 @@ export interface RepositoryTestRequest {
     branch?: string;
     commitId?: string;
     path?: string;
-    secretId?:string;
+    secretId?: string;
     secretName?: string;
 }
 

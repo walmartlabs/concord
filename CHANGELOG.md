@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: add `System` menu with `Documentation` and `About`
+links;
 - concord-agent: new `MAX_PREFORK_COUNT` configuration parameter to
 limit the number of processes in the pool;
 - ansible: new parameter `disableConcordCallbacks` to disable

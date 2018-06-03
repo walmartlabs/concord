@@ -17,6 +17,7 @@
  * limitations under the License.
  * =====
  */
+export { default as AboutPage } from './AboutPage';
 export { default as AddRepositoryPage } from './AddRepositoryPage';
 export { default as EditRepositoryPage } from './EditRepositoryPage';
 export { default as LoginPage } from './LoginPage';

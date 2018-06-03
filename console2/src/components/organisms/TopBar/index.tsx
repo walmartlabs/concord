@@ -20,6 +20,7 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router';
+import { push as pushHistory } from 'react-router-redux';
 
 import { actions, State as SessionState } from '../../../state/session';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
@@ -39,6 +40,8 @@ interface StateProps {
 }
 
 interface DispatchProps {
+    openDocumentation: () => void;
+    openAbout: () => void;
     logOut: () => void;
 }
 
@@ -56,6 +59,8 @@ const mapStateToProps = ({ session }: { session: SessionState }): StateProps => 
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+    openDocumentation: () => window.open('http://concord.walmart.com/docs/index.html', '_blank'),
+    openAbout: () => dispatch(pushHistory('/about')),
     logOut: () => dispatch(actions.logout())
 });
 

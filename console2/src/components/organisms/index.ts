@@ -45,6 +45,7 @@ export { default as SecretDropdown } from './SecretDropdown';
 export { default as SecretInfo } from './SecretInfo';
 export { default as SecretList } from './SecretList';
 export { default as SecretStoreDropdown } from './SecretStoreDropdown';
+export { default as ServerVersion } from './ServerVersion';
 export { default as StartRepositoryPopup } from './StartRepositoryPopup';
 export { default as TeamActivity } from './TeamActivity';
 export { default as TeamDeleteActivity } from './TeamDeleteActivity';

@@ -38,7 +38,8 @@ import {
     ProcessWizardPage,
     ProjectPage,
     SecretPage,
-    TeamPage
+    TeamPage,
+    AboutPage
 } from './components/pages';
 import { Layout } from './components/templates';
 import { actions as session } from './state/session';
@@ -142,6 +143,8 @@ class App extends React.Component {
                                         />
                                     </Switch>
                                 </ProtectedRoute>
+
+                                <ProtectedRoute path="/about" exact={true} component={AboutPage} />
 
                                 <Route component={NotFoundPage} />
                             </Switch>
