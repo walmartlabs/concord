@@ -89,6 +89,8 @@ public final class AnsibleConstants {
 
     public static final String GROUP_VARS_KEY = "groupVars";
 
+    public static final String DISABLE_CONCORD_CALLBACKS_KEY = "disableConcordCallbacks";
+
     private AnsibleConstants() {
     }
 }

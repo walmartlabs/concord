@@ -4,6 +4,9 @@
 
 ### Added
 
+- ansible: new parameter `disableConcordCallbacks` to disable
+Concord-specific Ansible callbacks: stdout filtering, event
+recording, etc;
 - ansible, concord-console: handle Ansible's `ignore_errors` modifier;
 - ansible: ability to use password-less secrets in the secret
 lookup plugin;

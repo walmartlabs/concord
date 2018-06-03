@@ -79,7 +79,8 @@ public class RunPlaybookTask2 implements Task {
         }
         log.info("Using a playbook: {}", playbook);
 
-        Path cfgFile = workDir.relativize(getCfgFile(args, workDir, tmpDir, debug));
+        boolean disableConcordCallbacks = getBoolean(args, AnsibleConstants.DISABLE_CONCORD_CALLBACKS_KEY, false);
+        Path cfgFile = workDir.relativize(getCfgFile(args, workDir, tmpDir, debug, disableConcordCallbacks));
 
         Path inventoryPath = workDir.relativize(getInventoryPath(args, workDir, tmpDir));
 
@@ -97,7 +98,12 @@ public class RunPlaybookTask2 implements Task {
             privateKeyPath = workDir.relativize(privateKeyPath);
         }
 
-        processCallback(workDir, tmpDir);
+        if (disableConcordCallbacks) {
+            log.warn("Concord-specific Ansible callbacks are disabled.");
+        } else {
+            processCallback(workDir, tmpDir);
+        }
+
         processLookups(workDir, tmpDir);
         processStrategy(tmpDir);
 
@@ -120,7 +126,7 @@ public class RunPlaybookTask2 implements Task {
                     .withTags(trim(getListAsString(args, AnsibleConstants.TAGS_KEY)))
                     .withSkipTags(trim(getListAsString(args, AnsibleConstants.SKIP_TAGS_KEY)))
                     .withExtraVars(extraVars)
-                    .withLimit(getLimit(args))
+                    .withLimit(getLimit(args, playbook))
                     .withDebug(debug)
                     .withVerboseLevel(getVerboseLevel(args))
                     .withEnv(env);
@@ -147,10 +153,10 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    private String getLimit(Map<String, Object> args) {
+    private String getLimit(Map<String, Object> args, String playbook) {
         boolean retry = getBoolean(args, AnsibleConstants.RETRY_KEY, false);
         if (retry) {
-            return "@" + getNameWithoutExtension(getString(args, AnsibleConstants.PLAYBOOK_KEY)) + ".retry";
+            return "@" + getNameWithoutExtension(playbook) + ".retry";
         }
 
         String limit = getString(args, AnsibleConstants.LIMIT_KEY);
@@ -187,8 +193,6 @@ public class RunPlaybookTask2 implements Task {
         Path libDir = workDir.resolve(PYTHON_LIB_DIR);
         Files.createDirectories(libDir);
 
-        copyResourceToFile("/server_pb2.py", libDir.resolve("server_pb2.py"));
-        copyResourceToFile("/server_pb2_grpc.py", libDir.resolve("server_pb2_grpc.py"));
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lib/task_policy.py", libDir.resolve("task_policy.py"));
 
         Path callbackDir = tmpDir.resolve(CALLBACK_PLUGINS_DIR);
@@ -246,6 +250,7 @@ public class RunPlaybookTask2 implements Task {
 
         addIfPresent(ctx, args, AnsibleConstants.CONFIG_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.DISABLE_CONCORD_CALLBACKS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DOCKER_OPTS_KEY);
         addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.EXTRA_ENV_KEY);
@@ -350,7 +355,7 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> makeAnsibleCfg(Map<String, Object> userCfg) {
+    private static Map<String, Object> makeAnsibleCfg(Map<String, Object> userCfg, boolean disableConcordCallbacks) {
         Map<String, Object> defaults = makeDefaults();
 
         Map<String, Object> m = new HashMap<>();
@@ -373,8 +378,10 @@ public class RunPlaybookTask2 implements Task {
         // enforce some of the defaults
         defaults = (Map<String, Object>) m.get("defaults");
 
-        // enable the log filtering plugin
-        defaults.put("stdout_callback", "concord_protectdata");
+        if (!disableConcordCallbacks) {
+            // enable the log filtering plugin
+            defaults.put("stdout_callback", "concord_protectdata");
+        }
 
         // enforce the policy engine strategy
         defaults.put("strategy_plugins", STRATEGY_PLUGINS_DIR);
@@ -433,7 +440,9 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private static Path getCfgFile(Map<String, Object> args, Path workDir, Path tmpDir, boolean debug) throws IOException {
+    private static Path getCfgFile(Map<String, Object> args, Path workDir, Path tmpDir,
+                                   boolean debug, boolean disableConcordCallbacks) throws IOException {
+
         String s = (String) args.get(AnsibleConstants.CONFIG_FILE_KEY);
         if (s != null) {
             Path provided = workDir.resolve(s);
@@ -444,7 +453,7 @@ public class RunPlaybookTask2 implements Task {
         }
 
         Map<String, Object> cfg = (Map<String, Object>) args.get(AnsibleConstants.CONFIG_KEY);
-        return createCfgFile(tmpDir, makeAnsibleCfg(cfg), debug);
+        return createCfgFile(tmpDir, makeAnsibleCfg(cfg, disableConcordCallbacks), debug);
     }
 
     @SuppressWarnings("unchecked")
