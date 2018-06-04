@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-agent: retries for errors during download of process
+payloads;
 - concord-agent: `AGENT_ID` and `USER_AGENT` parameters to support
 persistent agent IDs.
 

@@ -489,7 +489,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             }
         };
 
-        return Response.ok(out)
+        return Response.ok(out, "application/zip")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + instanceId + ".zip\"")
                 .build();
     }

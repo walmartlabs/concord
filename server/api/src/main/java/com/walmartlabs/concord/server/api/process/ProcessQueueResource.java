@@ -20,34 +20,36 @@ package com.walmartlabs.concord.server.api.process;
  * =====
  */
 
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.util.Map;
+import java.util.UUID;
 
-@Api(value = "ProcessQueue", authorizations = {@Authorization("api_key")})
+@Api(value = "Process Queue", authorizations = {@Authorization("api_key")})
 @Path("/api/v1/process/queue")
 public interface ProcessQueueResource {
 
     @POST
-    @ApiOperation(value = "Take a payload from the queue", response = File.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK",
-                    response = File.class,
-                    responseHeaders = @ResponseHeader(name = "X-Concord-InstanceId", description = "Process instance ID", response = String.class))})
+    @ApiOperation("Take a payload from the queue")
     @Path("/take")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    Response take(@ApiParam Map<String, Object> agentCapabilities,
-                  @Context HttpServletRequest request,
-                  @Context HttpHeaders headers);
+    @Produces(MediaType.APPLICATION_JSON)
+    ProcessEntry take(@ApiParam Map<String, Object> agentCapabilities,
+                      @Context HttpHeaders headers);
+
+
+    @GET
+    @ApiOperation(value = "Download the process state", response = File.class)
+    @Path("/state/{instanceId}")
+    @Produces("application/zip")
+    Response downloadState(@ApiParam @PathParam("instanceId") UUID instanceId);
 }

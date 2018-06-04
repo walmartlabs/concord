@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.api.process.ProcessEntry;
@@ -34,7 +33,6 @@ import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,13 +42,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
-import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 public class ProcessManager {
@@ -105,21 +101,8 @@ public class ProcessManager {
         this.objectMapper = new ObjectMapper();
     }
 
-    public PayloadEntry nextPayload(Map<String, Object> capabilities) throws IOException {
-        ProcessEntry p = queueDao.poll(capabilities);
-        if (p == null) {
-            return null;
-        }
-
-        UUID instanceId = p.getInstanceId();
-
-        // TODO this probably can be replaced with an in-memory buffer
-        Path tmp = IOUtils.createTempFile("payload", ".zip");
-        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-            stateManager.export(instanceId, zipTo(zip));
-        }
-
-        return new PayloadEntry(p, tmp);
+    public ProcessEntry nextPayload(Map<String, Object> capabilities) {
+        return queueDao.poll(capabilities);
     }
 
     public ProcessResult start(Payload payload, boolean sync) {

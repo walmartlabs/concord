@@ -344,9 +344,9 @@ public interface ProcessResource {
      * Downloads the state snapshot of a process.
      */
     @GET
-    @ApiOperation("Download a process state snapshot")
+    @ApiOperation(value = "Download a process state snapshot", response = File.class)
     @Path("/{id}/state/snapshot")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces("application/zip")
     Response downloadState(@ApiParam @PathParam("id") UUID instanceId);
 
     @GET

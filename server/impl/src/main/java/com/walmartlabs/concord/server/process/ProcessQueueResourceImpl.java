@@ -20,67 +20,68 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.api.process.ProcessQueueResource;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Map;
+import java.util.UUID;
+
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 public class ProcessQueueResourceImpl implements ProcessQueueResource, Resource {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessQueueResourceImpl.class);
-
     private final ProcessManager processManager;
     private final LogManager logManager;
+    private final ProcessStateManager stateManager;
 
     @Inject
-    public ProcessQueueResourceImpl(ProcessManager processManager, LogManager logManager) {
+    public ProcessQueueResourceImpl(ProcessManager processManager,
+                                    LogManager logManager,
+                                    ProcessStateManager stateManager) {
+
         this.processManager = processManager;
         this.logManager = logManager;
+        this.stateManager = stateManager;
     }
 
     @Override
-    public Response take(Map<String, Object> capabilities, HttpServletRequest request, HttpHeaders headers) {
-        try {
-            ProcessManager.PayloadEntry p = processManager.nextPayload(capabilities);
-            if (p == null) {
-                return null;
-            }
-
-            StreamingOutput entity = out -> {
-                try {
-                    Files.copy(p.getPayloadArchive(), out);
-                } finally {
-                    Files.deleteIfExists(p.getPayloadArchive());
-                }
-            };
-
-            String userAgent = headers.getHeaderString(HttpHeaders.USER_AGENT);
-            if (userAgent == null) {
-                userAgent = "unknown";
-            }
-
-            logManager.info(p.getProcessEntry().getInstanceId(), "Acquired by: " + userAgent);
-
-            return Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM)
-                    .header(InternalConstants.Headers.PROCESS_INSTANCE_ID, p.getProcessEntry().getInstanceId().toString())
-                    .build();
-        } catch (IOException e) {
-            log.error("take -> error", e);
-            return Response.serverError().entity("Error while loading payload: " + e.getMessage()).build();
+    public ProcessEntry take(Map<String, Object> capabilities, HttpHeaders headers) {
+        ProcessEntry p = processManager.nextPayload(capabilities);
+        if (p == null) {
+            return null;
         }
+
+        String userAgent = headers.getHeaderString(HttpHeaders.USER_AGENT);
+        if (userAgent == null) {
+            userAgent = "unknown";
+        }
+        logManager.info(p.getInstanceId(), "Acquired by: " + userAgent);
+
+        // TODO generate a temporary token for downloading the state archive
+
+        return p;
+    }
+
+    @Override
+    public Response downloadState(UUID instanceId) {
+        StreamingOutput out = output -> {
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(output)) {
+                stateManager.export(instanceId, zipTo(zip));
+            }
+        };
+
+        return Response.ok(out, "application/zip")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + instanceId + ".zip\"")
+                .build();
     }
 }

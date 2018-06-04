@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,14 +20,13 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.rpc.JobEntry;
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessQueueApi;
+import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.rpc.JobEntry;
+import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +44,15 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static com.walmartlabs.concord.client.ClientUtils.withRetry;
+
 public class Worker implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(Worker.class);
 
     private static final long ERROR_DELAY = 5000;
+    private static final int PAYLOAD_DOWNLOAD_MAX_RETRIES = 3;
+    private static final int PAYLOAD_DOWNLOAD_RETRY_DELAY = 3000;
 
     private final ProcessQueueApi queueClient;
     private final ProcessApiClient processApiClient;
@@ -69,6 +72,7 @@ public class Worker implements Runnable {
 
         this.queueClient = queueClient;
         this.processApiClient = processApiClient;
+
         this.executionManager = executionManager;
         this.logSteamMaxDelay = logSteamMaxDelay;
         this.pollInterval = pollInterval;
@@ -103,12 +107,15 @@ public class Worker implements Runnable {
     }
 
     private JobEntry take() throws ApiException {
-        ApiResponse<File> resp = queueClient.takeWithHttpInfo(capabilities);
-        if (resp.getData() == null) {
+        ProcessEntry p = queueClient.take(capabilities);
+        if (p == null) {
             return null;
         }
-        String instanceId = ClientUtils.getHeader(InternalConstants.Headers.PROCESS_INSTANCE_ID, resp);
-        return new JobEntry(UUID.fromString(instanceId), resp.getData().toPath());
+
+        File payload = withRetry(PAYLOAD_DOWNLOAD_MAX_RETRIES, PAYLOAD_DOWNLOAD_RETRY_DELAY,
+                () -> queueClient.downloadState(p.getInstanceId()));
+
+        return new JobEntry(p.getInstanceId(), payload.toPath());
     }
 
     private void cleanup(JobEntry job) {
@@ -146,7 +153,7 @@ public class Worker implements Runnable {
 
         JobInstance i;
         try {
-            i = executionManager.start(instanceId,"n/a", payload);
+            i = executionManager.start(instanceId, "n/a", payload);
         } catch (ExecutionException e) {
             log.error("execute ['{}', '{}'] -> start error", instanceId, payload, e);
             return;
