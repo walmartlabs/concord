@@ -28,6 +28,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.CommandQueueApi;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessQueueApi;
+import com.walmartlabs.concord.project.InternalConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,7 +167,7 @@ public class ServerConnector implements MaintenanceModeListener {
         client.setApiKey(cfg.getApiKey());
         client.setReadTimeout(cfg.getReadTimeout());
         client.setConnectTimeout(cfg.getConnectTimeout());
-        client.setUserAgent("Concord-Agent: id=" + cfg.getAgentId());
+        client.setUserAgent(cfg.getUserAgent());
         return client;
     }
 }

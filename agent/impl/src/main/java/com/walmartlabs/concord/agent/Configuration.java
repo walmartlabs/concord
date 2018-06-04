@@ -41,6 +41,7 @@ public class Configuration {
 
     private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
+    public static final String AGENT_ID_KEY = "AGENT_ID";
     public static final String SERVER_HOST_KEY = "SERVER_HOST";
     public static final String SERVER_RPC_PORT_KEY = "SERVER_RPC_PORT";
     public static final String SERVER_API_BASE_URL_KEY = "SERVER_API_BASE_URL";
@@ -68,8 +69,8 @@ public class Configuration {
     public static final String RETRY_INTERVAL_KEY = "API_RETRY_INTERVAL_KEY";
     public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL_KEY";
     public static final String MAINTENANCE_MODE_KEY = "MAINTENANCE_MODE_FILE";
-
     public static final String CAPABILITIES_FILE_KEY = "CAPABILITIES_FILE";
+    public static final String USER_AGENT_KEY = "USER_AGENT";
 
     /**
      * As defined in server/db/src/main/resources/com/walmartlabs/concord/server/db/v0.69.0.xml
@@ -104,12 +105,13 @@ public class Configuration {
     private final Path maintenanceModeFile;
 
     private final Map<String, Object> capabilities;
+    private final String userAgent;
 
     @SuppressWarnings("unchecked")
     public Configuration() {
-        this.agentId = UUID.randomUUID().toString();
-
         try {
+            this.agentId = getEnv(AGENT_ID_KEY, UUID.randomUUID().toString());
+
             this.serverHost = getEnv(SERVER_HOST_KEY, "localhost");
             this.serverRpcPort = Integer.parseInt(getEnv(SERVER_RPC_PORT_KEY, "8101"));
             log.info("Using the RPC address {}:{}...", serverHost, serverRpcPort);
@@ -162,6 +164,8 @@ public class Configuration {
             } else {
                 this.capabilities = null;
             }
+            this.userAgent = getEnv(USER_AGENT_KEY, "Concord-Agent: id=" + agentId);
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -269,6 +273,10 @@ public class Configuration {
 
     public Map<String, Object> getCapabilities() {
         return capabilities;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
     }
 
     private static String getEnv(String key, String defaultValue) {

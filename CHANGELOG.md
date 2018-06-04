@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent: `AGENT_ID` and `USER_AGENT` parameters to support
+persistent agent IDs.
+
+
+
 ## [0.72.0] - 2018-06-03
 
 ### Added

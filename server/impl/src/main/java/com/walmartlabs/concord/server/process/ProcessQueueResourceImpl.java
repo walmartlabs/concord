@@ -73,8 +73,7 @@ public class ProcessQueueResourceImpl implements ProcessQueueResource, Resource 
                 userAgent = "unknown";
             }
 
-            String remote = request.getRemoteAddr() + ":" + request.getRemotePort();
-            logManager.info(p.getProcessEntry().getInstanceId(), "Acquired by: " + userAgent + " (" + remote + ")");
+            logManager.info(p.getProcessEntry().getInstanceId(), "Acquired by: " + userAgent);
 
             return Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM)
                     .header(InternalConstants.Headers.PROCESS_INSTANCE_ID, p.getProcessEntry().getInstanceId().toString())
