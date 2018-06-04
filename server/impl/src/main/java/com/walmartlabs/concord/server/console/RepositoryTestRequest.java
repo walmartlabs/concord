@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.console;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,7 @@ public class RepositoryTestRequest implements Serializable {
     private final String branch;
     private final String commitId;
     private final String path;
-    private final String secretName;
+    private final UUID secretId;
 
     @JsonCreator
     public RepositoryTestRequest(@JsonProperty("orgId") UUID orgId,
@@ -52,14 +52,14 @@ public class RepositoryTestRequest implements Serializable {
                                  @JsonProperty("branch") String branch,
                                  @JsonProperty("commitId") String commitId,
                                  @JsonProperty("path") String path,
-                                 @JsonProperty("secretName") String secretName) {
+                                 @JsonProperty("secretId") UUID secretId) {
         this.orgId = orgId;
         this.orgName = orgName;
         this.url = url;
         this.branch = branch;
         this.commitId = commitId;
         this.path = path;
-        this.secretName = secretName;
+        this.secretId = secretId;
     }
 
     public UUID getOrgId() {
@@ -86,7 +86,7 @@ public class RepositoryTestRequest implements Serializable {
         return path;
     }
 
-    public String getSecretName() {
-        return secretName;
+    public UUID getSecretId() {
+        return secretId;
     }
 }

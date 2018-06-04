@@ -7,6 +7,10 @@
 - concord-agent: `AGENT_ID` and `USER_AGENT` parameters to support
 persistent agent IDs.
 
+### Changed
+
+- concord-server: fixed "test repository connection" method.
+
 
 
 ## [0.72.0] - 2018-06-03
