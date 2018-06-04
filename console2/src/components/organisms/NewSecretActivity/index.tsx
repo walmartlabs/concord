@@ -112,7 +112,7 @@ class NewSecretActivity extends React.PureComponent<Props> {
     render() {
         const { error, submitting, submit, orgName, response } = this.props;
 
-        if (response) {
+        if (!error && response) {
             return this.renderResponse();
         }
 

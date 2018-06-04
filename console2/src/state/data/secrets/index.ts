@@ -127,10 +127,10 @@ const listSecretsReducer = combineReducers<ListSecretsState>({
 const createSecretReducer = combineReducers<CreateSecretState>({
     running: makeLoadingReducer(
         [actionTypes.CREATE_SECRET_REQUEST],
-        [actionTypes.CREATE_SECRET_RESPONSE]
+        [actionTypes.RESET_SECRET, actionTypes.CREATE_SECRET_RESPONSE]
     ),
     error: makeErrorReducer(
-        [actionTypes.CREATE_SECRET_REQUEST],
+        [actionTypes.RESET_SECRET, actionTypes.CREATE_SECRET_REQUEST],
         [actionTypes.CREATE_SECRET_RESPONSE]
     ),
     response: makeResponseReducer(actionTypes.CREATE_SECRET_RESPONSE, actionTypes.RESET_SECRET)

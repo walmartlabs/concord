@@ -129,6 +129,7 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
         } = this.props;
 
         const hasErrors = notEmpty(errors);
+        const testConnectionDisabled = dirty && (!isValid || hasErrors);
 
         return (
             <>
@@ -183,7 +184,7 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                                 negative={!!this.state.testError}
                                 floated="right"
                                 loading={this.state.testRunning}
-                                disabled={!isValid || hasErrors}
+                                disabled={testConnectionDisabled}
                                 onClick={(ev) => {
                                     ev.preventDefault();
                                     this.handleTestConnection();
