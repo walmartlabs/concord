@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: new `update` method for secrets. It allows changing
+of secret names and/or visibility;
 - concord-agent: retries for errors during download of process
 payloads;
 - concord-agent: `AGENT_ID` and `USER_AGENT` parameters to support
@@ -11,6 +13,8 @@ persistent agent IDs.
 
 ### Changed
 
+- concord-server: fixed the secret access level endpoint not
+accepting team names;
 - concord-server: fixed "test repository connection" method.
 
 

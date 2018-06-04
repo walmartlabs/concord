@@ -189,6 +189,11 @@ public class SecretManager {
         return new DecryptedKeyPair(e.getId(), k.getPublicKey());
     }
 
+    public void update(UUID orgId, String secretName, String newName, SecretVisibility visibility) {
+        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
+        secretDao.update(e.getId(), newName, visibility);
+    }
+
     public void delete(UUID orgId, String secretName) {
         SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
 

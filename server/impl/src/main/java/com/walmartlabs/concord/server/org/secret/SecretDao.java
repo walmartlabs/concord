@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,10 +25,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.secret.*;
-import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretOwner;
-import com.walmartlabs.concord.server.api.org.secret.SecretType;
-import com.walmartlabs.concord.server.api.org.secret.SecretVisibility;
+import com.walmartlabs.concord.server.jooq.tables.records.SecretsRecord;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -83,7 +80,7 @@ public class SecretDao extends AbstractDao {
     }
 
     public UUID insert(UUID orgId, String name, UUID ownerId, SecretType type,
-              SecretEncryptedByType encryptedBy, SecretStoreType storeType,
+                       SecretEncryptedByType encryptedBy, SecretStoreType storeType,
                        SecretVisibility visibility) {
 
         return txResult(tx -> insert(tx, orgId, name, ownerId, type, encryptedBy, storeType, visibility));
@@ -146,6 +143,33 @@ public class SecretDao extends AbstractDao {
         if (i != 1) {
             throw new DataAccessException("Invalid number of rows updated: " + i);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void update(UUID id, String newName, SecretVisibility visibility) {
+        if (newName == null && visibility == null) {
+            throw new IllegalArgumentException("Nothing to update");
+        }
+
+        tx(tx -> {
+            UpdateSetFirstStep<SecretsRecord> u = tx.update(SECRETS);
+
+            if (newName != null) {
+                u.set(SECRETS.SECRET_NAME, newName);
+            }
+
+            if (visibility != null) {
+                u.set(SECRETS.VISIBILITY, visibility.toString());
+            }
+
+            int i = ((UpdateSetMoreStep<SecretsRecord>) u)
+                    .where(SECRETS.SECRET_ID.eq(id))
+                    .execute();
+
+            if (i != 1) {
+                throw new DataAccessException("Invalid number of rows updated: " + i);
+            }
+        });
     }
 
     public void update(DSLContext tx, UUID id, UUID orgId, String name, SecretType type, SecretEncryptedByType encryptedByType, SecretVisibility visibility, byte[] data) {
@@ -266,7 +290,7 @@ public class SecretDao extends AbstractDao {
                     s.getStoreType(), s.getVisibility(), s.getOwner(), data);
         }
 
-        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName , SecretType type,
+        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, SecretType type,
                                SecretEncryptedByType encryptedByType, SecretStoreType storeType, SecretVisibility visibility,
                                SecretOwner owner, byte[] data) { //NOSONAR
 

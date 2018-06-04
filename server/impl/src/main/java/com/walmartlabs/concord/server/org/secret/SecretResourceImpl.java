@@ -29,11 +29,14 @@ import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.secret.*;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryData;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedKeyPair;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedSecret;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedUsernamePassword;
+import com.walmartlabs.concord.server.org.team.TeamDao;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
@@ -55,14 +58,23 @@ import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 public class SecretResourceImpl implements SecretResource, Resource {
 
     private final OrganizationManager orgManager;
+    private final OrganizationDao orgDao;
     private final SecretManager secretManager;
     private final SecretDao secretDao;
+    private final TeamDao teamDao;
 
     @Inject
-    public SecretResourceImpl(OrganizationManager orgManager, SecretManager secretManager, SecretDao secretDao) {
+    public SecretResourceImpl(OrganizationManager orgManager,
+                              OrganizationDao orgDao,
+                              SecretManager secretManager,
+                              SecretDao secretDao,
+                              TeamDao teamDao) {
+
         this.orgManager = orgManager;
+        this.orgDao = orgDao;
         this.secretManager = secretManager;
         this.secretDao = secretDao;
+        this.teamDao = teamDao;
     }
 
     @Override
@@ -97,6 +109,19 @@ public class SecretResourceImpl implements SecretResource, Resource {
         } catch (IOException e) {
             throw new WebApplicationException("Error while processing the request: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    @Validate
+    public GenericOperationResult update(String orgName, String secretName, SecretUpdateRequest req) {
+        if (req.getName() == null && req.getVisibility() == null) {
+            throw new ValidationErrorsException("Nothing to update");
+        }
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        secretManager.update(org.getId(), secretName, req.getName(), req.getVisibility());
+
+        return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     @Override
@@ -148,7 +173,9 @@ public class SecretResourceImpl implements SecretResource, Resource {
             throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
         }
 
-        secretManager.updateAccessLevel(secretId, entry.getTeamId(), entry.getLevel());
+        UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
+
+        secretManager.updateAccessLevel(secretId, teamId, entry.getLevel());
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 

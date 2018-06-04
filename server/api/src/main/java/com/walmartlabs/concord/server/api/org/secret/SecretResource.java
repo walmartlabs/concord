@@ -47,6 +47,15 @@ public interface SecretResource {
     SecretOperationResponse create(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam MultipartInput input);
 
+    @POST
+    @ApiOperation("Updates an existing secret")
+    @Path("/{orgName}/secret/{secretName}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    GenericOperationResult update(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                  @ApiParam @PathParam("secretName") @ConcordKey String secretName,
+                                  @ApiParam @Valid SecretUpdateRequest req);
+
     @GET
     @ApiOperation("Get an existing secret")
     @Path("/{orgName}/secret/{secretName}")

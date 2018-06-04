@@ -44,6 +44,11 @@ public class ResourceAccessEntry implements Serializable {
     @NotNull
     private final ResourceAccessLevel level;
 
+    public ResourceAccessEntry(String teamName, ResourceAccessLevel level) {
+        this(null, null, teamName, level);
+    }
+
+
     public ResourceAccessEntry(String orgName, String teamName, ResourceAccessLevel level) {
         this(null, orgName, teamName, level);
     }

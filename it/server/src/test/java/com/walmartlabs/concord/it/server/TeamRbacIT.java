@@ -21,13 +21,18 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.googlecode.junittoolbox.ParallelRunner;
+import com.walmartlabs.concord.server.api.GenericOperationResult;
+import com.walmartlabs.concord.server.api.OperationResult;
 import com.walmartlabs.concord.server.api.org.*;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryEntry;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryResource;
 import com.walmartlabs.concord.server.api.org.inventory.InventoryVisibility;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.ProjectResource;
+import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretResource;
+import com.walmartlabs.concord.server.api.org.secret.SecretUpdateRequest;
+import com.walmartlabs.concord.server.api.org.secret.SecretVisibility;
 import com.walmartlabs.concord.server.api.org.team.*;
 import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
 import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
@@ -43,8 +48,7 @@ import javax.ws.rs.ForbiddenException;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @RunWith(ParallelRunner.class)
 public class TeamRbacIT extends AbstractServerIT {
@@ -569,5 +573,96 @@ public class TeamRbacIT extends AbstractServerIT {
 
         teamResource.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MEMBER)));
         teamResource.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MAINTAINER)));
+    }
+
+    @Test(timeout = 60000)
+    public void testSecretAccessLevels() throws Exception {
+        SecretResource secretResource = proxy(SecretResource.class);
+
+        String orgName = "org_" + randomString();
+
+        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+
+        // ---
+
+        String secretName = "secret_" + randomString();
+        addPlainSecret(orgName, secretName, false, null, new byte[] {0, 1, 2});
+        secretResource.update(orgName, secretName, new SecretUpdateRequest(SecretVisibility.PRIVATE));
+
+        // ---
+
+        String userName = "user_" + randomString();
+
+        UserResource userResource = proxy(UserResource.class);
+        userResource.createOrUpdate(new CreateUserRequest(userName, UserType.LOCAL));
+
+        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(userName));
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        try {
+            secretResource.get(orgName, secretName);
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        resetApiKey();
+
+        // ---
+
+        String teamName = "team_" + randomString();
+
+        TeamResource teamResource = proxy(TeamResource.class);
+        teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+
+        teamResource.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry(userName, TeamRole.MEMBER)));
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        try {
+            secretResource.get(orgName, secretName);
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        resetApiKey();
+
+        secretResource.updateAccessLevel(orgName, secretName, new ResourceAccessEntry(teamName, ResourceAccessLevel.READER));
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        SecretEntry s = secretResource.get(orgName, secretName);
+        assertEquals(secretName, s.getName());
+
+        try {
+            secretResource.delete(orgName, secretName);
+            fail("Should fail");
+        } catch (ForbiddenException e) {
+        }
+
+        // ---
+
+        resetApiKey();
+
+        secretResource.updateAccessLevel(orgName, secretName, new ResourceAccessEntry(teamName, ResourceAccessLevel.WRITER));
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        GenericOperationResult r = secretResource.delete(orgName, secretName);
+        assertEquals(OperationResult.DELETED, r.getResult());
     }
 }

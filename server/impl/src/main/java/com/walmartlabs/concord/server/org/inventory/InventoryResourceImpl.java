@@ -104,7 +104,6 @@ public class InventoryResourceImpl implements InventoryResource, Resource {
         UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
 
         inventoryManager.updateAccessLevel(inventoryId, teamId, entry.getLevel());
-
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
