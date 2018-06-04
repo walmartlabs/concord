@@ -15,3 +15,66 @@ flows:
         password: myPwd # optional
       workingDir: myRepo
   # the repo will be cloned into `myRepo` directory
+
+
+  # creating a new branch and pushing it to remote origin
+  - task: git
+    in:
+      action: createBranch
+      url: git@github.com:myorg/myrepo.git
+      privateKey:
+         org: myOrg # optional
+         secretName: mySecret
+         password: myPwd # optional
+      workingDir: myRepo
+      baseBranch: feature-a # optional name of the branch to use as the starting point for the new branch
+      newBranch: myNewBranch
+      pushBranch: true # set this parameter to 'false' if you do not want to push the new branch to the origin
+
+  # merging branches
+  - task: git
+    in:
+      action: merge
+      url: git@github.com:myorg/myrepo.git
+      privateKey:
+         org: myOrg # optional
+         secretName: mySecret
+         password: myPwd # optional
+      workingDir: myRepo
+      sourceBranch: feature-a
+      destinationBranch: myNewBranch
+
+  # creating a pull request
+  - task: github
+    in:
+      action: createPR
+      accessToken: myGitToken
+      org: myOrg
+      repo: myRepo
+      prTitle: "my PullRequest Title"
+      prBody: "my PullRequest Body"
+      prSourceBranch: mySource   # the name of the branch where your changes are implemented.
+      prDestinationBranch: master # the name of the branch you want the changes pulled into
+  # the ID of the created PR will be stored as `${prId}`
+
+  # merging a pull request
+  - task: github
+    in:
+      action: mergePR
+      accessToken: myGitToken
+      org: myOrg
+      repo: myRepo
+      prId: ${prId}
+
+  # create a tag based on a specific commit SHA
+  - task: github
+    in:
+      action: createTag
+      accessToken: myGitToken
+      org: myOrg
+      repo: myRepo
+      tagVersion: v0.0.1
+      tagMessage: "Release 1.0.0"
+      tagAuthorName: "myUsedId"
+      tagAuthorEmail: "myEmail"
+      commitSHA: ${gitHubBranchSHA}
