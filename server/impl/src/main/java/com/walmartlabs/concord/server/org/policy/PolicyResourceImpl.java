@@ -85,6 +85,10 @@ public class PolicyResourceImpl implements PolicyResource, Resource {
         assertAdmin();
 
         UUID id = entry.getId();
+        if (id == null && entry.getName() != null) {
+            id = policyDao.getId(entry.getName());
+        }
+
         if (id == null) {
             id = policyDao.insert(entry.getName(), entry.getRules());
 

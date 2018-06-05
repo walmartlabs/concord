@@ -32,6 +32,7 @@ public class PolicyEngine {
     private final DependencyPolicy dependencyPolicy;
     private final FilePolicy filePolicy;
     private final TaskPolicy taskPolicy;
+    private final WorkspacePolicy workspacePolicy;
 
     public PolicyEngine(Map<String, Object> rules) {
         this(objectMapper.convertValue(rules, PolicyEngineRules.class));
@@ -41,6 +42,7 @@ public class PolicyEngine {
         this.dependencyPolicy = new DependencyPolicy(rules.getDependencyRules());
         this.filePolicy = new FilePolicy(rules.getFileRules());
         this.taskPolicy = new TaskPolicy(rules.getTaskRules());
+        this.workspacePolicy = new WorkspacePolicy(rules.getWorkspaceRule());
     }
 
     public DependencyPolicy getDependencyPolicy() {
@@ -53,6 +55,10 @@ public class PolicyEngine {
 
     public TaskPolicy getTaskPolicy() {
         return taskPolicy;
+    }
+
+    public WorkspacePolicy getWorkspacePolicy() {
+        return workspacePolicy;
     }
 
     private static ObjectMapper createObjectMapper() {

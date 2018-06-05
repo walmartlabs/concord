@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.policyengine.CheckResult;
+import com.walmartlabs.concord.policyengine.FileRule;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.WorkspaceRule;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.org.policy.PolicyEntry;
-import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -33,21 +35,20 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 
 /**
- * Adds policy to a payload.
+ * Applies policies.
  */
 @Named
 public class PolicyProcessor implements PayloadProcessor {
 
-    private final PolicyDao policyDao;
     private final LogManager logManager;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public PolicyProcessor(PolicyDao policyDao, LogManager logManager) {
-        this.policyDao = policyDao;
+    public PolicyProcessor(LogManager logManager) {
         this.logManager = logManager;
         this.objectMapper = new ObjectMapper();
     }
@@ -56,27 +57,68 @@ public class PolicyProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
 
-        UUID orgId = payload.getHeader(Payload.ORGANIZATION_ID);
-        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-
-        PolicyEntry policy = policyDao.getLinked(orgId, projectId);
-        if (policy == null) {
+        Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
+        Path policyFile = workDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.POLICY_FILE_NAME);
+        if (!Files.exists(policyFile)) {
             return chain.process(payload);
         }
 
-        logManager.info(instanceId, "Storing policy '{}' data", policy.getName());
-
-        Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
+        Map<String, Object> policy = readPolicy(instanceId, policyFile);
+        logManager.info(instanceId, "Applying policies...");
 
         try {
-            Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
-
-            objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
-
-            return chain.process(payload);
+            // TODO merge check results
+            applyWorkspacePolicy(instanceId, policy, workDir);
+            applyFilePolicy(instanceId, policy, workDir);
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while storing process policy: {}", e);
-            throw new ProcessException(instanceId, "Storing process policy error", e);
+            logManager.error(instanceId, "Error while applying policy: {}", e);
+            throw new ProcessException(instanceId, "Policy error", e);
+        }
+
+        return chain.process(payload);
+    }
+
+    private void applyWorkspacePolicy(UUID instanceId, Map<String, Object> policy, Path workDir) throws IOException {
+        CheckResult<WorkspaceRule, Path> result = new PolicyEngine(policy).getWorkspacePolicy().check(workDir);
+
+        result.getWarn().forEach(i -> {
+            logManager.warn(instanceId, "Potential workspace policy violation (policy: {})", i.getRule());
+        });
+
+        result.getDeny().forEach(i -> {
+            logManager.error(instanceId, "Workspace policy violation '{}'", i.getRule());
+        });
+
+        if (!result.getDeny().isEmpty()) {
+            throw new ProcessException(instanceId, "Found workspace policy violations");
+        }
+    }
+
+    private void applyFilePolicy(UUID instanceId, Map<String, Object> policy, Path workDir) throws IOException {
+        CheckResult<FileRule, Path> result = new PolicyEngine(policy).getFilePolicy().check(workDir);
+
+        result.getWarn().forEach(i -> {
+            logManager.warn(instanceId, "Potentially restricted file '{}' (file policy: {})",
+                    workDir.relativize(i.getEntity()), i.getRule());
+        });
+
+        result.getDeny().forEach(i -> {
+            logManager.error(instanceId, "File '{}' is forbidden by the file policy {}",
+                    workDir.relativize(i.getEntity()), i.getRule());
+        });
+
+        if (!result.getDeny().isEmpty()) {
+            throw new ProcessException(instanceId, "Found forbidden files");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> readPolicy(UUID instanceId, Path policyFile) {
+        try {
+            return objectMapper.readValue(policyFile.toFile(), Map.class);
+        } catch (IOException e) {
+            logManager.error(instanceId, "Error while reading policy: {}", e);
+            throw new ProcessException(instanceId, "Reading process policy error", e);
         }
     }
 }

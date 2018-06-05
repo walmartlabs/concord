@@ -32,13 +32,17 @@ public class PolicyEngineRules {
 
     private final PolicyRules<TaskRule> taskRules;
 
-    public PolicyEngineRules(
-            @JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
-            @JsonProperty("file") PolicyRules<FileRule> fileRules,
-            @JsonProperty("task") PolicyRules<TaskRule> taskRules) {
+    private final WorkspaceRule workspaceRule;
+
+    public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
+                             @JsonProperty("file") PolicyRules<FileRule> fileRules,
+                             @JsonProperty("task") PolicyRules<TaskRule> taskRules,
+                             @JsonProperty("workspace") WorkspaceRule workspaceRule) {
+
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
         this.taskRules = taskRules;
+        this.workspaceRule = workspaceRule;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -53,12 +57,17 @@ public class PolicyEngineRules {
         return taskRules;
     }
 
+    public WorkspaceRule getWorkspaceRule() {
+        return workspaceRule;
+    }
+
     @Override
     public String toString() {
         return "PolicyEngineRules{" +
                 "dependencyRules=" + dependencyRules +
                 ", fileRules=" + fileRules +
                 ", taskRules=" + taskRules +
+                ", workspaceRule=" + workspaceRule +
                 '}';
     }
 }
