@@ -93,7 +93,7 @@
         <mustache.version>0.9.5</mustache.version>
         <node.version>9.11.1</node.version>
         <okhttp.version>2.7.5</okhttp.version>
-        <okio.version>1.6.0</okio.version>
+        <okio.version>1.13.0</okio.version>
         <parc.version>0.1.2</parc.version>
         <postgres.version>42.2.2</postgres.version>
         <protobuf.version>3.5.0</protobuf.version>
@@ -509,6 +509,21 @@
                 <groupId>com.cronutils</groupId>
                 <artifactId>cron-utils</artifactId>
                 <version>${cronutils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio</artifactId>
+                <version>${okio.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp</groupId>
+                <artifactId>logging-interceptor</artifactId>
+                <version>${okhttp.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
