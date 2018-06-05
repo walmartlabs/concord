@@ -26,6 +26,10 @@ import { RequestState } from '../common';
 import { State as LogState } from './logs/types';
 import { State as PollState } from './poll/types';
 
+export interface GetProcessRequest extends Action {
+    instanceId: ConcordId;
+}
+
 export interface ListProjectProcessesRequest extends Action {
     orgName?: ConcordKey;
     projectName?: ConcordKey;
@@ -56,6 +60,8 @@ export type CancelProcessState = RequestState<boolean>;
 
 export interface State {
     processById: Processes;
+
+    // TODO use RequestState
     loading: boolean;
     error: RequestError;
 

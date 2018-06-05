@@ -22,13 +22,14 @@ import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { list as apiOrgList } from '../../../api/org/process';
-import { start as apiStart, kill as apiKill } from '../../../api/process';
+import { get as apiGet, kill as apiKill, start as apiStart } from '../../../api/process';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
 import { reducers as pollReducers, sagas as pollSagas } from './poll';
 import {
     CancelProcessRequest,
     CancelProcessState,
+    GetProcessRequest,
     ListProjectProcessesRequest,
     ProcessDataResponse,
     Processes,
@@ -42,6 +43,7 @@ export { Processes, State };
 const NAMESPACE = 'processes';
 
 const actionTypes = {
+    GET_PROCESS_REQUEST: `${NAMESPACE}/get/request`,
     LIST_PROJECT_PROCESSES_REQUEST: `${NAMESPACE}/project/list/request`,
     PROCESS_DATA_RESPONSE: `${NAMESPACE}/data/response`,
 
@@ -55,6 +57,11 @@ const actionTypes = {
 };
 
 export const actions = {
+    getProcess: (instanceId: ConcordId): GetProcessRequest => ({
+        type: actionTypes.GET_PROCESS_REQUEST,
+        instanceId
+    }),
+
     listProjectProcesses: (
         orgName?: ConcordKey,
         projectName?: ConcordKey
@@ -106,12 +113,12 @@ const processById: Reducer<Processes> = (
 };
 
 const loading = makeLoadingReducer(
-    [actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
+    [actionTypes.GET_PROCESS_REQUEST, actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
     [actionTypes.PROCESS_DATA_RESPONSE]
 );
 
 const errorMsg = makeErrorReducer(
-    [actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
+    [actionTypes.GET_PROCESS_REQUEST, actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
     [actionTypes.PROCESS_DATA_RESPONSE]
 );
 
@@ -159,6 +166,18 @@ export const reducers = combineReducers<State>({
     poll: pollReducers
 });
 
+function* onGetProcess({ instanceId }: GetProcessRequest) {
+    try {
+        const response = yield call(apiGet, instanceId);
+        yield put({
+            type: actionTypes.PROCESS_DATA_RESPONSE,
+            items: [response]
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.PROCESS_DATA_RESPONSE, e);
+    }
+}
+
 function* onProjectList({ orgName, projectName }: ListProjectProcessesRequest) {
     try {
         const response = yield call(apiOrgList, orgName, projectName);
@@ -196,6 +215,7 @@ function* onCancelProcess({ instanceId }: CancelProcessRequest) {
 
 export const sagas = function*() {
     yield all([
+        takeLatest(actionTypes.GET_PROCESS_REQUEST, onGetProcess),
         takeLatest(actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProjectList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
         takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),
