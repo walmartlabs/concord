@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,13 @@ import { Link } from 'react-router-dom';
 import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';
-import { ProcessList, ProjectList, RedirectButton, SecretList, TeamList } from '../../organisms';
+import {
+    ProcessList,
+    ProjectListActivity,
+    RedirectButton,
+    SecretList,
+    TeamList
+} from '../../organisms';
 import { NotFoundPage } from '../index';
 
 interface RouteProps {
@@ -106,23 +112,7 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
 
     renderProjects() {
         const { orgName } = this.props.match.params;
-        return (
-            <>
-                <Menu secondary={true}>
-                    <Menu.Item position={'right'}>
-                        <RedirectButton
-                            icon="plus"
-                            positive={true}
-                            labelPosition="left"
-                            content="New project"
-                            location={`/org/${orgName}/project/_new`}
-                        />
-                    </Menu.Item>
-                </Menu>
-
-                <ProjectList orgName={orgName} />
-            </>
-        );
+        return <ProjectListActivity orgName={orgName} />;
     }
 
     renderSecrets() {

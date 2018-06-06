@@ -36,6 +36,7 @@ export { default as ProcessWizard } from './ProcessWizard';
 export { default as ProjectActivity } from './ProjectActivity';
 export { default as ProjectDeleteActivity } from './ProjectDeleteActivity';
 export { default as ProjectList } from './ProjectList';
+export { default as ProjectListActivity } from './ProjectListActivity';
 export { default as ProjectRawPayloadActivity } from './ProjectRawPayloadActivity';
 export { default as ProjectRenameActivity } from './ProjectRenameActivity';
 export { default as ProtectedRoute } from './ProtectedRoute';

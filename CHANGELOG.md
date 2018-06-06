@@ -4,8 +4,9 @@
 
 ### Added
 
+- concord-console: a field to filter the project list by name;
 - concord-project-model: support for `withItems`. Allows iterating
-over a list of elements.
+over a list of elements;
 - concord-server: support for `Bearer <token>` authorization;
 - concord-console: the process page's organization and project links.
 

@@ -31,6 +31,7 @@ import { RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
     orgName: string;
+    filter?: string;
 }
 
 interface StateProps {
@@ -107,13 +108,17 @@ class ProjectList extends React.PureComponent<Props> {
 }
 
 // TODO refactor as a selector?
-const makeProjectList = (data: { [id: string]: ProjectEntry }): ProjectEntry[] =>
+const makeProjectList = (data: { [id: string]: ProjectEntry }, filter?: string): ProjectEntry[] =>
     Object.keys(data)
         .map((k) => data[k])
+        .filter((e) => (filter ? e.name.search(filter) >= 0 : true))
         .sort(comparators.byName);
 
-const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
-    projects: makeProjectList(projects.projectById),
+const mapStateToProps = (
+    { projects }: { projects: State },
+    { filter }: ExternalProps
+): StateProps => ({
+    projects: makeProjectList(projects.projectById, filter),
     loading: projects.loading,
     error: projects.error
 });
