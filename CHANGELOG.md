@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: support for `Bearer <token>` authorization;
 - concord-console: the process page's organization and project links.
 
 

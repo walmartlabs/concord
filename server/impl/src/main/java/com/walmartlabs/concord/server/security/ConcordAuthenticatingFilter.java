@@ -50,6 +50,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     private static final String AUTHORIZATION_HEADER = HttpHeaders.AUTHORIZATION;
     private static final String SESSION_TOKEN_HEADER = "X-Concord-SessionToken";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
+    private static final String BEARER_AUTH_PREFIX = "Bearer ";
 
     /**
      * List of URLs which do not require authentication or authorization.
@@ -134,18 +135,22 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             // create sessions if users are using username/password auth
             req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
             return parseBasicAuth(h);
-        } else {
-            validateApiKey(h);
-
-            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, isAgent(req));
-
-            UUID userId = apiKeyDao.findUserId(h);
-            if (userId == null) {
-                return new UsernamePasswordToken();
-            }
-
-            return new ApiKey(userId, h);
         }
+
+        if (h.startsWith(BEARER_AUTH_PREFIX)) {
+            h = h.substring(BASIC_AUTH_PREFIX.length() + 1);
+        }
+
+        validateApiKey(h);
+
+        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, isAgent(req));
+
+        UUID userId = apiKeyDao.findUserId(h);
+        if (userId == null) {
+            return new UsernamePasswordToken();
+        }
+
+        return new ApiKey(userId, h);
     }
 
     private AuthenticationToken createFromSessionHeader(String h, ServletRequest request) {
