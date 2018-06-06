@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Named
-public class RepositoryManager {
+public class ProjectRepositoryManager {
 
     private final ProjectAccessManager projectAccessManager;
     private final SecretManager secretManager;
@@ -46,11 +46,11 @@ public class RepositoryManager {
     private final EventResource eventResource;
 
     @Inject
-    public RepositoryManager(ProjectAccessManager projectAccessManager,
-                             SecretManager secretManager,
-                             SecretDao secretDao,
-                             RepositoryDao repositoryDao,
-                             EventResource eventResource) {
+    public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
+                                    SecretManager secretManager,
+                                    SecretDao secretDao,
+                                    RepositoryDao repositoryDao,
+                                    EventResource eventResource) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;

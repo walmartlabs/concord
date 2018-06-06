@@ -25,6 +25,7 @@ interface RequestErrorData {
     message?: string;
     details?: string;
     status: number;
+    level?: string;
 }
 
 export type RequestError = RequestErrorData | null;
@@ -55,6 +56,7 @@ export const parseJsonError = async (resp: Response) => {
     return {
         message,
         details: json.details,
+        level: json.level ? json.level : 'ERROR',
         status: resp.status
     };
 };

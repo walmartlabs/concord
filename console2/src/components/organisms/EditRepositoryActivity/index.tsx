@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
-
+import { Loader, Dimmer } from 'semantic-ui-react';
 import { ConcordKey, RequestError } from '../../../api/common';
 import { ProjectEntry } from '../../../api/org/project';
 import { EditRepositoryEntry } from '../../../api/org/project/repository';
@@ -62,6 +62,10 @@ class EditRepositoryActivity extends React.PureComponent<Props> {
 
         return (
             <>
+                <Dimmer active={submitting} inverted={true} page={true}>
+                    <Loader active={submitting} size="massive" content={'Saving'} />
+                </Dimmer>
+
                 {error && <RequestErrorMessage error={error} />}
                 <RepositoryForm
                     orgName={orgName}

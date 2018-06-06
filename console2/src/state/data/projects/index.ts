@@ -457,11 +457,11 @@ function* onAddRepository({ orgName, projectName, entry }: AddRepositoryRequest)
 function* onUpdateRepository({ orgName, projectName, entry }: UpdateRepositoryRequest) {
     try {
         const response = yield call(apiRepoCreateOrUpdate, orgName, projectName, entry);
-        yield put(genericResult(actionTypes.ADD_REPOSITORY_RESPONSE, response));
+        yield put(genericResult(actionTypes.UPDATE_REPOSITORY_RESPONSE, response));
 
         yield put(pushHistory(`/org/${orgName}/project/${projectName}/repository`));
     } catch (e) {
-        yield handleErrors(actionTypes.ADD_REPOSITORY_RESPONSE, e);
+        yield handleErrors(actionTypes.UPDATE_REPOSITORY_RESPONSE, e);
     }
 }
 

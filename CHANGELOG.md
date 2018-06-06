@@ -8,7 +8,9 @@
 - concord-project-model: support for `withItems`. Allows iterating
 over a list of elements;
 - concord-server: support for `Bearer <token>` authorization;
-- concord-console: the process page's organization and project links.
+- concord-console: the process page's organization and project links;
+- concord-server: optional git repository check for `concord.yml`;
+being present.
 
 
 

@@ -49,7 +49,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     private final RepositoryCacheDao repositoryCacheDao;
     private final EventResource eventResource;
     private final ProjectDao projectDao;
-    private final RepositoryManager repositoryManager;
+    private final ProjectRepositoryManager projectRepositoryManager;
 
     @Inject
     public RepositoryResourceImpl(OrganizationManager orgManager,
@@ -57,14 +57,14 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
                                   RepositoryCacheDao repositoryCacheDao,
                                   EventResource eventResource,
                                   ProjectDao projectDao,
-                                  RepositoryManager repositoryManager) {
+                                  ProjectRepositoryManager projectRepositoryManager) {
 
         this.orgManager = orgManager;
         this.accessManager = accessManager;
         this.repositoryCacheDao = repositoryCacheDao;
         this.eventResource = eventResource;
         this.projectDao = projectDao;
-        this.repositoryManager = repositoryManager;
+        this.projectRepositoryManager = projectRepositoryManager;
     }
 
     @Override
@@ -76,7 +76,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
             throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        repositoryManager.createOrUpdate(projectId, entry);
+        projectRepositoryManager.createOrUpdate(projectId, entry);
         return new GenericOperationResult(entry.getId() == null ? OperationResult.CREATED : OperationResult.UPDATED);
     }
 
@@ -89,7 +89,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
             throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        repositoryManager.delete(projectId, repositoryName);
+        projectRepositoryManager.delete(projectId, repositoryName);
 
         return new GenericOperationResult(OperationResult.DELETED);
     }

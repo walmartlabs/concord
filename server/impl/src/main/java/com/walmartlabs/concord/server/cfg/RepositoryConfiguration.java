@@ -38,15 +38,27 @@ public class RepositoryConfiguration {
 
     public static final String REPO_CACHE_DIR_KEY = "REPO_CACHE_DIR";
     public static final String REPO_META_DIR_KEY = "REPO_META_DIR";
+    public static final String REPO_VALIDATE_CONCORD_FILE_IN_PATH = "REPO_VALIDATE_CONCORD_FILE_IN_PATH";
 
     private final Path repoCacheDir;
     private final Path repoMetaDir;
+    private final boolean concordFileValidationEnabled;
 
     public RepositoryConfiguration() throws IOException {
         this.repoCacheDir = getEnvOrTemp(REPO_CACHE_DIR_KEY, "repos");
         this.repoMetaDir = getEnvOrTemp(REPO_META_DIR_KEY, "repos_meta");
+        this.concordFileValidationEnabled = getEnv(REPO_VALIDATE_CONCORD_FILE_IN_PATH, false);
 
-        log.info("init -> repoCacheDir: {}, repoMetaDir: {}", repoCacheDir, repoMetaDir);
+        log.info("init -> repoCacheDir: {}, repoMetaDir: {}, concordFileValidationEnabled: {}", repoCacheDir, repoMetaDir, concordFileValidationEnabled);
+    }
+
+    private boolean getEnv(String key, boolean defaultValue) {
+        String value = System.getenv(key);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        return Boolean.valueOf(value);
     }
 
     public Path getRepoCacheDir() {
@@ -55,6 +67,10 @@ public class RepositoryConfiguration {
 
     public Path getRepoMetaDir() {
         return repoMetaDir;
+    }
+
+    public boolean isConcordFileValidationEnabled() {
+        return concordFileValidationEnabled;
     }
 
     private static Path getEnvOrTemp(String key, String tempPrefix) throws IOException {

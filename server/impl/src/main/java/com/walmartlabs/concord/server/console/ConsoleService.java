@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.team.TeamDao;
+import com.walmartlabs.concord.server.repository.InvalidRepositoryPathException;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
@@ -48,7 +49,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Named
@@ -187,6 +190,16 @@ public class ConsoleService implements Resource {
             String secretName = secretDao.getName(req.getSecretId());
             repositoryManager.testConnection(org.getId(), req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), secretName);
             return true;
+        } catch (InvalidRepositoryPathException irpe) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Repository validation error");
+            response.put("level", "WARN");
+            response.put("details", irpe.getMessage());
+
+            throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                    .entity(response)
+                    .build());
         } catch (Exception e) {
             String msg;
             Throwable t = e;
@@ -213,7 +226,7 @@ public class ConsoleService implements Resource {
     @Path("/search/users")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<UserSearchResult> searchUsers(@QueryParam("filter") @Size(min=5, max=128) String filter) {
+    public List<UserSearchResult> searchUsers(@QueryParam("filter") @Size(min = 5, max = 128) String filter) {
         try {
             return ldapManager.search(filter);
         } catch (NamingException e) {

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.repository;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.Striped;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
@@ -31,7 +32,6 @@ import com.walmartlabs.concord.server.org.project.RepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -73,11 +73,16 @@ public class RepositoryManagerImpl implements RepositoryManager {
 
             RepositoryEntry repo = new RepositoryEntry(null, null, null, uri, branch, commitId, path, null, secretName, false, null);
             getProvider(uri).fetch(orgId, repo, tmpDir);
+            Path repoPath = repoPath(tmpDir, path);
 
-            repoPath(tmpDir, path);
+            if (cfg.isConcordFileValidationEnabled()) {
+                if (!isConcordFileExists(repoPath)) {
+                    throw new InvalidRepositoryPathException("Invalid repository path: `concord.yml` or `.concord.yml` is missing!");
+                }
+            }
         } catch (IOException e) {
             log.error("testConnection ['{}', '{}', '{}', '{}', '{}'] -> error", uri, branch, commitId, path, secretName, e);
-            throw new RepositoryException("test connection error", e);
+            throw new RepositoryException("Test connection error", e);
         } finally {
             if (tmpDir != null) {
                 try {
@@ -138,6 +143,17 @@ public class RepositoryManagerImpl implements RepositoryManager {
     public RepositoryInfo getInfo(RepositoryEntry repository, Path path) {
         RepositoryProvider provider = getProvider(repository.getUrl());
         return withLock(repository.getProjectId(), repository.getName(), () -> provider.getInfo(path));
+    }
+
+    private boolean isConcordFileExists(Path repoPath) {
+        for (String projectFileName : ProjectLoader.PROJECT_FILE_NAMES) {
+            Path projectFile = repoPath.resolve(projectFileName);
+            if (Files.exists(projectFile)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private UUID getOrgId(UUID projectId) {
@@ -201,7 +217,9 @@ public class RepositoryManagerImpl implements RepositoryManager {
 
         Path repoDir = baseDir.resolve(normalized);
         if (!Files.exists(repoDir)) {
-            throw new RepositoryException("Invalid repository path: " + p);
+            throw new RepositoryException("Invalid repository path: '" + p + "' doesn't exist");
+        } else if (!repoDir.toFile().isDirectory()) {
+            throw new RepositoryException("Invalid repository path: '" + p + "' must be a valid directory");
         }
 
         return repoDir;

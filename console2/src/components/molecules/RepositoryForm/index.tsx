@@ -60,6 +60,7 @@ interface State {
     testRunning: boolean;
     testSuccess: boolean;
     testError?: string;
+    testWarning?: string;
 }
 
 const sourceOptions = [
@@ -99,7 +100,7 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
 
     handleTestConnection() {
         const { values, testRepository } = this.props;
-        this.setState({ testRunning: true, testSuccess: false });
+        this.setState({ testRunning: true, testSuccess: false, testError: '', testWarning: '' });
 
         testRepository(sanitize(values))
             .then(() => {
@@ -112,7 +113,8 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                 this.setState({
                     testSuccess: false,
                     testRunning: false,
-                    testError: e.details ? e.details : e.message
+                    testError: e.details && e.level !== 'WARN' ? e.details : e.message,
+                    testWarning: e.level === 'WARN' ? e.details : ''
                 });
             });
     }
@@ -172,7 +174,10 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
 
                     <Divider />
 
-                    <Button primary={true} type="submit" disabled={!dirty || hasErrors}>
+                    <Button
+                        primary={true}
+                        type="submit"
+                        disabled={!dirty || hasErrors || this.state.testRunning}>
                         {editMode ? 'Save' : 'Add'}
                     </Button>
 
@@ -192,13 +197,25 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                                 Test connection
                             </Button>
                         }
-                        open={!!this.state.testError}
+                        open={
+                            (!!this.state.testError || !!this.state.testWarning) &&
+                            !this.props.isSubmitting
+                        }
                         wide={true}>
-                        <Popup.Content>
-                            <p style={{ color: 'red' }}>
-                                Connection test error: {this.state.testError}
-                            </p>
-                        </Popup.Content>
+                        {!!this.state.testWarning && (
+                            <Popup.Content>
+                                <p style={{ color: 'orange' }}>
+                                    Warning: {this.state.testWarning}
+                                </p>
+                            </Popup.Content>
+                        )}
+                        {!!this.state.testError && (
+                            <Popup.Content>
+                                <p style={{ color: 'red' }}>
+                                    Error: {this.state.testError}
+                                </p>
+                            </Popup.Content>
+                        )}
                     </Popup>
                 </Form>
             </>
