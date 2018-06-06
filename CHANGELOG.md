@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-project-model: support for `withItems`. Allows iterating
+over a list of elements.
 - concord-server: support for `Bearer <token>` authorization;
 - concord-console: the process page's organization and project links.
 

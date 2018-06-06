@@ -1,0 +1,30 @@
+flows:
+  default:
+  # calling a task for each element
+  - task: log
+    in:
+      msg: ${item}
+    withItems:
+    - "Hello!"
+    - "Bye!"
+
+  # calling a flow for each element
+  - call: myFlow
+    withItems:
+    - "first element"
+    - "second element"
+
+  # using a variable
+  - call: myFlow
+    withItems: ${myItems}
+
+  myFlow:
+  - log: "We got ${item}"
+
+configuration:
+  arguments:
+    # withItems supports any item type
+    myItems:
+    - 100500
+    - false
+    - "a string value"

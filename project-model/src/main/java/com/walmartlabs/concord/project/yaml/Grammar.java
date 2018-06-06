@@ -179,17 +179,27 @@ public class Grammar {
                     betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                             many1(kv))).map(v -> new KV<>("out", v)));
 
+    private static final Parser<Atom, KV<String, Object>> withItems = label("With Items",
+            satisfyField("withItems").then(
+                    betweenTokens(JsonToken.START_ARRAY, JsonToken.END_ARRAY,
+                            many1(value))).map(v -> new KV<>("withItems", v)));
+
+    private static final Parser<Atom, KV<String, Object>> withItemsShort = label("With Items (short form)",
+            satisfyField("withItems").then(
+                    satisfyToken(JsonToken.VALUE_STRING)
+                            .map(v -> new KV<>("withItems", v.value))));
+
     // exprOptions := (outField | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> exprOptions = label("Expression options",
             many(choice(errorBlock, outField)).map(Grammar::toMap));
 
     // taskOptions := (inVars | outVars | outField | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> taskOptions = label("Task options",
-            many(choice(inVars, outVars, errorBlock, outField, retryBlock)).map(Grammar::toMap));
+            many(choice(inVars, outVars, errorBlock, outField, retryBlock, withItems, withItemsShort)).map(Grammar::toMap));
 
     // callOptions := (inVars | outVars | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> callOptions = label("Process call options",
-            many(choice(inVars, outVars, errorBlock)).map(Grammar::toMap));
+            many(choice(inVars, outVars, errorBlock, withItems, withItemsShort)).map(Grammar::toMap));
 
     // groupOptions := (errorBlock)*
     private static final Parser<Atom, Map<String, Object>> groupOptions = label("Group options",

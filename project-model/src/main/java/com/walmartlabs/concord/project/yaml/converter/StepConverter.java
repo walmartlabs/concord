@@ -24,13 +24,13 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlStep;
-import io.takari.bpm.model.BoundaryEvent;
-import io.takari.bpm.model.SequenceFlow;
-import io.takari.bpm.model.SourceMap;
+import com.walmartlabs.concord.sdk.Task;
+import io.takari.bpm.api.ExecutionContext;
+import io.takari.bpm.model.*;
 import io.takari.bpm.model.SourceMap.Significance;
-import io.takari.bpm.model.VariableMapping;
 import io.takari.parc.Seq;
 
+import javax.inject.Named;
 import java.io.Serializable;
 import java.util.*;
 
@@ -63,6 +63,59 @@ public interface StepConverter<T extends YamlStep> {
 
         // keep the source map of the error block's steps
         c.addSourceMaps(err.getSourceMap());
+    }
+
+    @SuppressWarnings("unchecked")
+    default Chunk applyWithItems(ConverterContext ctx, Chunk c, Map<String, Object> opts) throws YamlConverterException {
+        Object withItems = getWithItems(opts);
+        if (withItems == null) {
+            return c;
+        }
+
+        Chunk result = new Chunk();
+
+        VariableMapping taskVars = new VariableMapping(null, null, withItems, "items", true);
+
+        String nextItemTaskId = ctx.nextId();
+        result.addElement(new ServiceTask(nextItemTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.nextItem(execution)}", Collections.singleton(taskVars), null, true));
+
+        result.addElement(new SequenceFlow(ctx.nextId(), nextItemTaskId, c.firstElement().getId()));
+
+        String hasNextGwId = ctx.nextId();
+        c.getOutputs().forEach(o -> {
+            result.addElement(new SequenceFlow(ctx.nextId(), o, hasNextGwId));
+        });
+        result.addElement(new ExclusiveGateway(hasNextGwId));
+        result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, nextItemTaskId, "${__withItemsHasNext}"));
+
+        String cleanupTaskId = ctx.nextId();
+        result.addElement(new ServiceTask(cleanupTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.cleanup(execution)}", null, null, true));
+        result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, cleanupTaskId));
+
+        result.addOutput(cleanupTaskId);
+
+        result.addElements(c.getElements());
+        result.addSourceMaps(c.getSourceMap());
+
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    static Object getWithItems(Map<String, Object> options) {
+        if (options == null) {
+            return null;
+        }
+
+        Object withItems = options.get("withItems");
+        if (withItems == null) {
+            return null;
+        }
+
+        if (withItems instanceof String) {
+            return withItems;
+        }
+
+        return ((Seq)withItems).toList();
     }
 
     default SourceMap toSourceMap(YamlStep step, String description) {
@@ -98,7 +151,20 @@ public interface StepConverter<T extends YamlStep> {
             result.add(new VariableMapping(null, sourceExpr, sourceValue, target, true));
         }
 
+        if (key.equals("in") && getWithItems(options) != null) {
+           result = appendWithItemsVar(result);
+        }
+
         return result;
+    }
+
+    static Set<VariableMapping> appendWithItemsVar(Set<VariableMapping> inVars) {
+        Set<VariableMapping> vars = new HashSet<>();
+        if (inVars != null) {
+            vars.addAll(inVars);
+        }
+        vars.add(new VariableMapping(null, "${item}", null, "item", true));
+        return vars;
     }
 
     static boolean isExpression(Object o) {
@@ -195,6 +261,32 @@ public interface StepConverter<T extends YamlStep> {
 
         public Set<VariableMapping> getArgs() {
             return args;
+        }
+    }
+
+    @Named("__withItemsUtils")
+    class WithItemsUtilsTask implements Task {
+
+        @SuppressWarnings("unchecked")
+        public void nextItem(ExecutionContext ctx) {
+            int currentItemIndex = 0;
+            Object itemIndex = ctx.getVariable("__currentWithItemIndex");
+            if (itemIndex != null) {
+                currentItemIndex = (int) itemIndex;
+            }
+
+            List<Object> items = (List)ctx.getVariable("items");
+            ctx.setVariable("item", items.get(currentItemIndex));
+
+            currentItemIndex++;
+            ctx.setVariable("__currentWithItemIndex", currentItemIndex);
+            ctx.setVariable("__withItemsHasNext", currentItemIndex < items.size());
+        }
+
+        public void cleanup(ExecutionContext ctx) {
+            ctx.removeVariable("__currentWithItemIndex");
+            ctx.removeVariable("item");
+            ctx.removeVariable("__withItemsHasNext");
         }
     }
 }

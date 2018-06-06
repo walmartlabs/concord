@@ -1,0 +1,13 @@
+main:
+  - task: testErrorTask
+    in:
+      msg: "test: ${item}"
+    retry:
+      in:
+        msg: "retry: ${item}"
+      times: 3
+    withItems:
+      - item1
+      - item2
+
+  - ${testBean.toString("end")}

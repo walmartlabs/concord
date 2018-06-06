@@ -13,6 +13,7 @@
 * [in_variables](in_variables) - how to use IN-variables when calling a flow;
 * [multiple_flows](multiple_flows) - multiple flows in a single YAML file;
 * [jira](jira) - how to create an issue in JIRA;
+* [loops](loops) - how to iterate a collection;
 * [oneops](oneops) - OneOps integration example;
 * [out](out) - how to use process OUT variables;
 * [out_groovy](out_groovy) - using OUT variables coming from Groovy scripts;

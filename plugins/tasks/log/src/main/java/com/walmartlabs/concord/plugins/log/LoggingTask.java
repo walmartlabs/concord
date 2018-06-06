@@ -20,6 +20,7 @@ package com.walmartlabs.concord.plugins.log;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,5 +66,19 @@ public class LoggingTask implements Task {
 
     public void call(String s) {
         log.info(s);
+    }
+
+    @Override
+    public void execute(Context ctx) {
+        String msg = assertString(ctx, "msg");
+        log.info(msg);
+    }
+
+    private static String assertString(Context ctx, String k) {
+        Object v = ctx.getVariable(k);
+        if (v == null) {
+            throw new IllegalArgumentException("Required parameter '" + k + "' is missing");
+        }
+        return v.toString();
     }
 }

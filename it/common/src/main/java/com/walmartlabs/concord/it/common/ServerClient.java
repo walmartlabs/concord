@@ -211,7 +211,7 @@ public class ServerClient {
         while (true) {
             try {
                 pir = processResource.get(instanceId);
-                if (pir.getStatus() == ProcessStatus.FAILED || pir.getStatus() == ProcessStatus.CANCELLED) {
+                if (pir.getStatus() == ProcessStatus.FINISHED || pir.getStatus() == ProcessStatus.FAILED || pir.getStatus() == ProcessStatus.CANCELLED) {
                     return pir;
                 }
 

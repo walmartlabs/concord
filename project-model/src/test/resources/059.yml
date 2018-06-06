@@ -1,0 +1,16 @@
+main:
+  - task: myLogger
+    in:
+       message: "hello ${item}"
+    withItems: ${myArray}
+
+  - call: myFlow
+    withItems:
+      - item1
+      - item2
+      - item3
+
+myFlow:
+- task: myLogger
+  in:
+     message: "hello from call ${item}"

@@ -1,0 +1,13 @@
+main:
+  - ${testBean.toString(x + 100)}
+
+  - call: myFlow
+    in:
+      x: 2
+    withItems:
+      - item1
+      - ${x}
+      - item3
+
+myFlow:
+  - ${testBean.toString(x += ':' += item)}

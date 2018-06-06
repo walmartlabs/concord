@@ -1,0 +1,7 @@
+main:
+  - call: myFlow
+    withItems:
+      - ${myArray}
+
+myFlow:
+  - ${testBean.toString(item)}

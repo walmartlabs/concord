@@ -1,0 +1,8 @@
+main:
+  - call: myFlow
+    withItems:
+      - { name: 'testuser1', groups: 'wheel' }
+      - { name: 'testuser2', groups: 'root' }
+
+myFlow:
+  - ${testBean.toString(item.name += ":" += item.groups)}

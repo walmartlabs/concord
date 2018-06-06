@@ -62,7 +62,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         applyErrorBlock(ctx, c, id, s.getOptions());
         applyRetryBlock(ctx, c, id, s);
 
-        return c;
+        return applyWithItems(ctx, c, s.getOptions());
     }
 
     @SuppressWarnings("unchecked")

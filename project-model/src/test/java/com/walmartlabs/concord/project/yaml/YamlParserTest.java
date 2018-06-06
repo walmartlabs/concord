@@ -22,6 +22,8 @@ package com.walmartlabs.concord.project.yaml;
 
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.yaml.converter.StepConverter;
+import com.walmartlabs.concord.project.yaml.converter.YamlCallConverter;
 import com.walmartlabs.concord.project.yaml.converter.YamlTaskStepConverter;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.EngineBuilder;
@@ -1542,6 +1544,280 @@ public class YamlParserTest {
         verifyNoMoreInteractions(task);
     }
 
+    @Test
+    public void test049() throws Exception {
+        deploy("049.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("x", 1L);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq(101L));
+        verify(testBean, times(1)).toString(eq("2:item1"));
+        verify(testBean, times(1)).toString(eq("2:1"));
+        verify(testBean, times(1)).toString(eq("2:item3"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test050() throws Exception {
+        deploy("050.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        List<String> arr = Arrays.asList("item1", "item2", "item3");
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("myArray", arr);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq(arr));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test051() throws Exception {
+        deploy("051.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        List<String> arr = Arrays.asList("item1", "item2", "item3");
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("myArray", arr);
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("single1"));
+        verify(testBean, times(1)).toString(eq(arr));
+        verify(testBean, times(1)).toString(eq("singleLast"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test052() throws Exception {
+        deploy("052.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("myArray", Arrays.asList("item1", "item2", "item3"));
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("item1"));
+        verify(testBean, times(1)).toString(eq("item2"));
+        verify(testBean, times(1)).toString(eq("item3"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test053() throws Exception {
+        deploy("053.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("myArray", Arrays.asList("item1", "item2", "item3"));
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(testBean, times(1)).toString(eq("testuser1:wheel"));
+        verify(testBean, times(1)).toString(eq("testuser2:root"));
+        verifyNoMoreInteractions(testBean);
+    }
+
+    @Test
+    public void test054() throws Exception {
+        deploy("054.yml");
+
+        MyLogger task = spy(new MyLogger());
+        taskRegistry.register("myLogger", task);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(task, times(3)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("hello red"));
+        verify(task, times(1)).log(eq("hello green"));
+        verify(task, times(1)).log(eq("hello blue"));
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test055() throws Exception {
+        deploy("055.yml");
+
+        MyLogger task = spy(new MyLogger());
+        taskRegistry.register("myLogger", task);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("x", Arrays.asList("item1", "item2"));
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(task, times(3)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("hello red"));
+        verify(task, times(1)).log(eq("hello [item1, item2]"));
+        verify(task, times(1)).log(eq("hello blue"));
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test056() throws Exception {
+        deploy("056.yml");
+
+        MyLogger task = spy(new MyLogger());
+        taskRegistry.register("myLogger", task);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("myArray", Arrays.asList("item1", "item2"));
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(task, times(1)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("hello [item1, item2]"));
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test057() throws Exception {
+        deploy("057.yml");
+
+        MyLogger task = spy(new MyLogger());
+        taskRegistry.register("myLogger", task);
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("myArray", Arrays.asList("item1", "item2"));
+        engine.start(key, "main", args);
+
+        // ---
+
+        verify(task, times(2)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("hello item1"));
+        verify(task, times(1)).log(eq("hello item2"));
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test058() throws Exception {
+        deploy("058.yml");
+
+        ProcessDefinition pd = workflowProvider.processes().getById("main");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        JavaDelegate task = mock(JavaDelegate.class);
+        doThrow(new BpmnError("first error"))
+                .doNothing()
+                .when(task).execute(any());
+
+        taskRegistry.register("testErrorTask", task);
+
+        taskRegistry.register("__retryUtils", new YamlTaskStepConverter.RetryUtilsTask());
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+        ArgumentCaptor<ExecutionContext> ctxCaptor = ArgumentCaptor.forClass(ExecutionContext.class);
+        verify(task, times(3)).execute(ctxCaptor.capture());
+
+        List<ExecutionContext> retryCtx = ctxCaptor.getAllValues();
+        assertEquals("test: item1", retryCtx.get(0).getVariable("msg"));
+        assertEquals("retry: item1", retryCtx.get(1).getVariable("msg"));
+        assertEquals("test: item2", retryCtx.get(2).getVariable("msg"));
+
+        verify(testBean, times(1)).toString(eq("end"));
+
+        verifyNoMoreInteractions(testBean);
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test059() throws Exception {
+        deploy("059.yml");
+
+        MyLogger task = spy(new MyLogger());
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        taskRegistry.register("myLogger", task);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("myArray", Arrays.asList("a1", "a2", "a3"));
+        engine.start(key, "main", args);
+
+        // ---
+        verify(task, times(6)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("hello a1"));
+        verify(task, times(1)).log(eq("hello a2"));
+        verify(task, times(1)).log(eq("hello a3"));
+
+        verify(task, times(1)).log(eq("hello from call item1"));
+        verify(task, times(1)).log(eq("hello from call item2"));
+        verify(task, times(1)).log(eq("hello from call item3"));
+
+        verifyNoMoreInteractions(task);
+    }
+
     // FORMS (100 - 199)
 
     @Test
@@ -1835,6 +2111,18 @@ public class YamlParserTest {
 
         public void set(ExecutionContext executionContext, Map<String, Object> vars) {
             vars.forEach(executionContext::setVariable);
+        }
+    }
+
+    private static class MyLogger implements JavaDelegate {
+
+        @Override
+        public void execute(ExecutionContext executionContext) throws Exception {
+            log(executionContext.getVariable("message"));
+        }
+
+        public void log(Object message) {
+            System.out.println(message);
         }
     }
 

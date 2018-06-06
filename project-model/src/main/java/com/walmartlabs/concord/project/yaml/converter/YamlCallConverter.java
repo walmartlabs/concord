@@ -22,27 +22,39 @@ package com.walmartlabs.concord.project.yaml.converter;
 
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlCall;
-import io.takari.bpm.model.CallActivity;
-import io.takari.bpm.model.VariableMapping;
+import com.walmartlabs.concord.sdk.Task;
+import io.takari.bpm.api.ExecutionContext;
+import io.takari.bpm.model.*;
+import io.takari.parc.Seq;
 
-import java.util.Set;
+import javax.inject.Named;
+import java.util.*;
 
 public class YamlCallConverter implements StepConverter<YamlCall> {
 
+    /**
+     * with items:
+     *         /<-----------------------/
+     * -> nextItem -> callActivity -> gw ->
+     *
+     *
+     * @param ctx
+     * @param s
+     * @return
+     * @throws YamlConverterException
+     */
     @Override
     public Chunk convert(ConverterContext ctx, YamlCall s) throws YamlConverterException {
-        Chunk c = new Chunk();
-
         Set<VariableMapping> inVars = getVarMap(s.getOptions(), "in");
         Set<VariableMapping> outVars = getVarMap(s.getOptions(), "out");
 
+        Chunk c = new Chunk();
         String id = ctx.nextId();
         c.addElement(new CallActivity(id, s.getKey(), inVars, outVars, true));
-        c.addOutput(id);
         c.addSourceMap(id, toSourceMap(s, "Flow call: " + s.getKey()));
-
+        c.addOutput(id);
         applyErrorBlock(ctx, c, id, s.getOptions());
 
-        return c;
+        return applyWithItems(ctx, c, s.getOptions());
     }
 }

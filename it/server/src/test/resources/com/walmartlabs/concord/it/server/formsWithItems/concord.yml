@@ -1,0 +1,14 @@
+flows:
+  default:
+  - call: formFlow
+    withItems:
+    - "Hello!"
+    - "Hi there!"
+
+  formFlow:
+  - form: myForm
+  - log: ${myForm.myValue}
+
+forms:
+  myForm:
+  - myValue: {type: "string", value: "${item}"}
