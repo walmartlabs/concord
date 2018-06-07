@@ -3,7 +3,11 @@
   tasks:
   - debug:
       # the org name can be optional if the process was started from a project
-      msg: "We got {{ lookup('concord_secret', 'Default', 'mySecret', 'myPassword') }}"
+      msg: "We got {{ lookup('concord_data_secret', 'Default', 'mySecret', 'myPassword') }}"
+      verbosity: 0
+  - debug:
+      # password can be set to None if secret was created without password.
+      msg: "We got {{ lookup('concord_data_secret', 'mySecret', None) }}"
       verbosity: 0
   - debug:
       # the org name can be optional if the process was started from a project
