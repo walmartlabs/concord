@@ -119,7 +119,7 @@ public class ProcessSecurityContext {
             throw new UnauthorizedException("user '" + userName + "'not found");
         }
 
-        UserPrincipal p = new UserPrincipal(realmName, u.getId(), u.getName(), u.isAdmin(), u.getType());
+        UserPrincipal p = new UserPrincipal(realmName, u);
 
         return runAs(new SimplePrincipalCollection(p, p.getRealm()), c);
     }

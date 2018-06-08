@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="concordSystemReaderRoleId" value="21d646b2-6a9c-11e8-acce-d37cf888abd9"/>
+
+    <changeSet id="74000" author="ibodrov@gmail.com">
+        <createTable tableName="ROLES">
+            <column name="ROLE_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ROLE_NAME" type="varchar(256)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="GLOBAL_READER" type="boolean" defaultValue="false"/>
+            <column name="GLOBAL_WRITER" type="boolean" defaultValue="false"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="74010" author="ibodrov@gmail.com">
+        <createTable tableName="USER_ROLES">
+            <column name="USER_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ROLE_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="USER_ROLES"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="FK_U_R_USER"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="USER_ROLES"
+                                 baseColumnNames="ROLE_ID"
+                                 constraintName="FK_U_R_ROLE"
+                                 referencedTableName="ROLES"
+                                 referencedColumnNames="ROLE_ID"/>
+    </changeSet>
+    
+    <changeSet id="74020" author="ibodrov@gmail.com">
+        <insert tableName="ROLES">
+            <column name="ROLE_ID">${concordSystemReaderRoleId}</column>
+            <column name="ROLE_NAME">concordSystemReader</column>
+            <column name="GLOBAL_READER">true</column>
+        </insert>
+
+        <insert tableName="USER_ROLES">
+            <column name="ROLE_ID">${concordSystemReaderRoleId}</column>
+            <column name="USER_ID">${concordGithubUserId}</column>
+        </insert>
+
+        <insert tableName="USER_ROLES">
+            <column name="ROLE_ID">${concordSystemReaderRoleId}</column>
+            <column name="USER_ID">${concordCronUserId}</column>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

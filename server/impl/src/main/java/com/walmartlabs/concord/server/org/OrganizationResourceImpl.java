@@ -67,7 +67,7 @@ public class OrganizationResourceImpl implements OrganizationResource, Resource 
 
         if (onlyCurrent) {
             UserPrincipal p = UserPrincipal.assertCurrent();
-            if (!p.isAdmin()) {
+            if (!p.isAdmin() && !p.isGlobalReader() && !p.isGlobalWriter()) {
                 userId = p.getId();
             }
         }

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
+import com.walmartlabs.concord.server.api.user.RoleEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.api.user.UserType;
 import org.jooq.*;
@@ -35,7 +36,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
+import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
+import static com.walmartlabs.concord.server.jooq.tables.UserRoles.USER_ROLES;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.select;
@@ -125,11 +128,17 @@ public class UserDao extends AbstractDao {
                 .where(TEAMS.TEAM_ID.in(teamIds))
                 .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null));
 
+        List<RoleEntry> roles = tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME, ROLES.GLOBAL_READER, ROLES.GLOBAL_WRITER)
+                .from(ROLES)
+                .where(ROLES.ROLE_ID.in(select(USER_ROLES.ROLE_ID).from(USER_ROLES).where(USER_ROLES.USER_ID.eq(r.get(USERS.USER_ID)))))
+                .fetch(e -> new RoleEntry(e.value1(), e.value2(), e.value3(), e.value4()));
+
         return new UserEntry(r.get(USERS.USER_ID),
                 r.get(USERS.USERNAME),
                 new HashSet<>(orgs),
                 r.get(USERS.IS_ADMIN),
-                UserType.valueOf(r.get(USERS.USER_TYPE)));
+                UserType.valueOf(r.get(USERS.USER_TYPE)),
+                new HashSet<>(roles));
     }
 
     public UUID getId(String username) {

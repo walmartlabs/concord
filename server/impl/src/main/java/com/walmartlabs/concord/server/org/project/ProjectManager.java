@@ -144,8 +144,8 @@ public class ProjectManager {
     public List<ProjectEntry> list(UUID orgId) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
-        if (p.isAdmin()) {
-            // admins can see any project, so we shouldn't filter projects by user
+        if (p.isAdmin() || p.isGlobalReader() || p.isGlobalWriter()) {
+            // admins or "global readers" can see any project, so we shouldn't filter projects by user
             userId = null;
         }
 

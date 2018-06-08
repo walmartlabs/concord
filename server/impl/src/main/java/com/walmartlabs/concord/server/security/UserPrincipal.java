@@ -20,13 +20,20 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.walmartlabs.concord.server.api.user.RoleEntry;
 import com.walmartlabs.concord.server.api.user.UserEntry;
 import com.walmartlabs.concord.server.api.user.UserType;
 
 import java.io.Serializable;
+import java.util.Set;
 import java.util.UUID;
 
 public class UserPrincipal implements Serializable {
+
+    public UserPrincipal(String realm, UserEntry user) {
+        this.realm = realm;
+        this.user = user;
+    }
 
     public static UserPrincipal getCurrent() {
         return PrincipalUtils.getCurrent(UserPrincipal.class);
@@ -37,51 +44,66 @@ public class UserPrincipal implements Serializable {
     }
 
     private final String realm;
-    private final UUID id;
-    private final String username;
-    private final boolean admin;
-    private final UserType type;
-
-    public UserPrincipal(String realm, UserEntry e) {
-        this(realm, e.getId(), e.getName(), e.isAdmin(), e.getType());
-    }
-
-    public UserPrincipal(String realm, UUID id, String username, boolean admin, UserType type) {
-        this.realm = realm;
-        this.id = id;
-        this.username = username;
-        this.admin = admin;
-        this.type = type;
-    }
+    private final UserEntry user;
 
     public String getRealm() {
         return realm;
     }
 
+    public UserEntry getUser() {
+        return user;
+    }
+
     public UUID getId() {
-        return id;
+        return user.getId();
     }
 
     public String getUsername() {
-        return username;
+        return user.getName();
     }
 
     public boolean isAdmin() {
-        return admin;
+        return user.isAdmin();
+    }
+
+    public boolean isGlobalReader() {
+        Set<RoleEntry> s = user.getRoles();
+        if (s == null) {
+            return false;
+        }
+
+        for (RoleEntry e : s) {
+            if (e.isGlobalReader()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    public boolean isGlobalWriter() {
+        Set<RoleEntry> s = user.getRoles();
+        if (s == null) {
+            return false;
+        }
+
+        for (RoleEntry e : s) {
+            if (e.isGlobalWriter()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public UserType getType() {
-        return type;
+        return user.getType();
     }
 
     @Override
     public String toString() {
         return "UserPrincipal{" +
                 "realm='" + realm + '\'' +
-                ", id=" + id +
-                ", username='" + username + '\'' +
-                ", admin=" + admin +
-                ", type=" + type +
+                ", user=" + user +
                 '}';
     }
 }

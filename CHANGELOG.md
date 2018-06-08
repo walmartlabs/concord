@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: initial support for roles;
 - concord-console: a field to filter the project list by name;
 - concord-project-model: support for `withItems`. Allows iterating
 over a list of elements;

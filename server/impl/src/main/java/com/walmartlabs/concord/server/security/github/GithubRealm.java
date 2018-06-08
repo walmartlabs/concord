@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.github;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,6 @@ import java.util.UUID;
 public class GithubRealm extends AuthorizingRealm {
 
     private static final String REALM_NAME = "github";
-
     private static final String USER = "github";
 
     private final UserManager userManager;
@@ -66,7 +65,7 @@ public class GithubRealm extends AuthorizingRealm {
 
         return userManager.get(userId)
                 .map(u -> {
-                    UserPrincipal p = new UserPrincipal(REALM_NAME, u.getId(), u.getName(), u.isAdmin(), u.getType());
+                    UserPrincipal p = new UserPrincipal(REALM_NAME, u);
                     return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
                 })
                 .orElse(null);

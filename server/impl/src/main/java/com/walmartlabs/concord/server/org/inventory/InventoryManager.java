@@ -127,6 +127,12 @@ public class InventoryManager {
             return e;
         }
 
+        if (level == ResourceAccessLevel.READER && (p.isGlobalReader() || p.isGlobalWriter())) {
+            return e;
+        } else if (level == ResourceAccessLevel.WRITER && p.isGlobalWriter()) {
+            return e;
+        }
+
         InventoryOwner owner = e.getOwner();
         if (owner != null && owner.getId().equals(p.getId())) {
             // the owner can do anything with his inventories

@@ -26,7 +26,6 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,8 +34,7 @@ public class GithubCallbackIT extends AbstractServerIT {
 
     // for empty event and '123qwe' secret
     private static final String AUTH = "sha1=047cfb383db684bdfccc2c333698b70ee98e65d2";
-
-    private static final String concordTriggersRepoName = "triggers";
+    private static final String CONCORD_TRIGGERS_REPO_NAME = "triggers";
 
     @Test(timeout = 60000)
     public void test() throws Exception {
@@ -44,7 +42,7 @@ public class GithubCallbackIT extends AbstractServerIT {
 
         GithubEventResource githubResource = proxy(GithubEventResource.class);
         Map<String, Object> event = new HashMap<>();
-        event.put("repository", ImmutableMap.of("full_name", concordTriggersRepoName));
+        event.put("repository", ImmutableMap.of("full_name", CONCORD_TRIGGERS_REPO_NAME));
         String result = githubResource.push(event);
         assertNotNull(result);
         assertEquals("ok", result);

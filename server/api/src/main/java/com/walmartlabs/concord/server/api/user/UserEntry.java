@@ -38,19 +38,22 @@ public class UserEntry implements Serializable {
     private final Set<OrganizationEntry> orgs;
     private final boolean admin;
     private final UserType type;
+    private final Set<RoleEntry> roles;
 
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
                      @JsonProperty("orgs") Set<OrganizationEntry> orgs,
                      @JsonProperty("admin") boolean admin,
-                     @JsonProperty("type") UserType type) {
+                     @JsonProperty("type") UserType type,
+                     @JsonProperty("roles") Set<RoleEntry> roles) {
 
         this.id = id;
         this.name = name;
         this.orgs = orgs;
         this.admin = admin;
         this.type = type;
+        this.roles = roles;
     }
 
     public UUID getId() {
@@ -73,6 +76,10 @@ public class UserEntry implements Serializable {
         return type;
     }
 
+    public Set<RoleEntry> getRoles() {
+        return roles;
+    }
+
     @Override
     public String toString() {
         return "UserEntry{" +
@@ -81,6 +88,7 @@ public class UserEntry implements Serializable {
                 ", orgs=" + orgs +
                 ", admin=" + admin +
                 ", type=" + type +
+                ", roles=" + roles +
                 '}';
     }
 }
