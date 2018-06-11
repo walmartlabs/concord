@@ -745,6 +745,8 @@
                 <public-release.url>${public.nexusUrl}/content/repositories/devtools</public-release.url>
                 <public-snapshot.serverId>${public.serverId}</public-snapshot.serverId>
                 <public-snapshot.url>${public.nexusUrl}/content/repositories/devtools-snapshots</public-snapshot.url>
+                <site.id>mvn-site</site.id>
+                <site.url>dav:https://repository.walmart.com/content/sites/mvn-site/concord</site.url>
             </properties>
 
             <repositories>
@@ -783,6 +785,11 @@
                     <id>${public-snapshot.serverId}</id>
                     <url>${public-snapshot.url}</url>
                 </snapshotRepository>
+
+                <site>
+                  <id>${site.id}</id>
+                  <url>${site.url}</url>
+                </site>
             </distributionManagement>
         </profile>
     </profiles>

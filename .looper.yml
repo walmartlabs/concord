@@ -26,6 +26,9 @@ triggers:
   - manual:
       name: "Perform a release"
       call: release
+  - manual:
+      name: "Deploy Maven site"
+      call: siteDeploy
 
 tools:
   jdk: 8
@@ -152,3 +155,10 @@ flows:
     - ws_restore: binaries
     - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
     - call: buildImages(concord_version = ${RELEASE_VERSION})
+
+  siteDeploy:
+  - exposeVars(maven):
+      vars:
+        siteurl: 'project/distributionManagement/site/url'
+  - (Maven site deploy) mvn -B clean site-deploy
+  - echo "Site successfully deployed to ${siteurl}"
