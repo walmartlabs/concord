@@ -160,5 +160,5 @@ flows:
   - exposeVars(maven):
       vars:
         siteurl: 'project/distributionManagement/site/url'
-  - (Maven site deploy) mvn -B clean site-deploy
+  - (Maven site deploy) mvn -B clean site-deploy -P walmart
   - echo "Site successfully deployed to ${siteurl}"

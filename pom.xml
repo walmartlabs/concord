@@ -529,6 +529,13 @@
     </dependencyManagement>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-webdav-jackrabbit</artifactId>
+                <version>3.1.0</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -787,8 +794,8 @@
                 </snapshotRepository>
 
                 <site>
-                  <id>${site.id}</id>
-                  <url>${site.url}</url>
+                    <id>${site.id}</id>
+                    <url>${site.url}</url>
                 </site>
             </distributionManagement>
         </profile>
