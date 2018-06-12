@@ -36,6 +36,8 @@ import java.io.StringWriter;
 @Singleton
 public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessException> {
 
+    private static final int MAX_CAUSE_DEPTH = 5;
+
     public static final String TRACE_ENABLED_KEY = "X-Concord-Trace-Enabled";
 
     @Context
@@ -43,7 +45,7 @@ public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessExcept
 
     @Override
     protected Response convert(ProcessException e, String id) {
-        String details = e.getCause() != null ? e.getCause().getMessage() : null;
+        String details = getDetails(e.getCause());
 
         String stacktrace = null;
         if (traceEnabled()) {
@@ -62,5 +64,20 @@ public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessExcept
     private boolean traceEnabled() {
         String s = headers.getHeaderString(TRACE_ENABLED_KEY);
         return s != null && Boolean.parseBoolean(s);
+    }
+
+    private static String getDetails(Throwable t) {
+        if (t == null) {
+            return null;
+        }
+
+        int currentDepth = 0;
+        StringBuilder result = new StringBuilder();
+        while (t != null && currentDepth < MAX_CAUSE_DEPTH) {
+            result.append(t.getMessage()).append("\n");
+            t = t.getCause();
+            currentDepth++;
+        }
+        return result.toString();
     }
 }
