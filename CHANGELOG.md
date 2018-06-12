@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: check template output for cycles to avoid
+serialization issues;
 - concord-server: size limit for binary data secrets.
 
  

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.common.CycleChecker;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -70,6 +71,12 @@ public class TemplateScriptProcessor implements PayloadProcessor {
 
         Map<String, Object> in = payload.getHeader(Payload.REQUEST_DATA_MAP);
         Map<String, Object> out = processScript(instanceId, in, scriptPath);
+
+        CycleChecker.CheckResult result = CycleChecker.check(INPUT_REQUEST_DATA_KEY, out);
+        if (result.isHasCycle()) {
+            throw new ProcessException(instanceId, "Found cycle in " + REQUEST_DATA_TEMPLATE_FILE_NAME + ": " +
+                    result.getNode1() + " <-> " + result.getNode2() );
+        }
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, out);
 
         return chain.process(payload);
