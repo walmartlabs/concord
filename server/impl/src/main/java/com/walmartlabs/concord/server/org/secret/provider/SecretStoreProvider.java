@@ -34,9 +34,12 @@ import java.util.Collection;
 public class SecretStoreProvider {
 
     public static final String DEFAULT_STORE_KEY = "default.store";
+    public static final String MAX_SECRET_DATA_SIZE_KEY = "default.maxSecretDataSize";
 
     private final Collection<SecretStore> stores;
     private final SecretStorePropertyManager propertyManager;
+
+    private static final int DEFAULT_MAX_SECRET_DATA_SIZE = 1048576;
 
     @Inject
     public SecretStoreProvider(Collection<SecretStore> stores, SecretStorePropertyManager propertyManager) {
@@ -85,6 +88,15 @@ public class SecretStoreProvider {
             return SecretStoreType.valueOf(defaultStore.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ValidationErrorsException("Unsupported secret store type: " + defaultStore);
+        }
+    }
+
+    public int getMaxSecretDataSize() {
+        String maxSecretDataSize = propertyManager.getProperty(MAX_SECRET_DATA_SIZE_KEY);
+        if (maxSecretDataSize != null) {
+            return Integer.parseInt(maxSecretDataSize);
+        } else {
+            return DEFAULT_MAX_SECRET_DATA_SIZE;
         }
     }
 

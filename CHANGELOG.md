@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: size limit for binary data secrets.
+
+ 
+
 ## [0.74.0] - 2018-06-10
 
 ### Added

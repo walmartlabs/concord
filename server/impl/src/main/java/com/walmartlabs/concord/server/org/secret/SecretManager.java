@@ -179,7 +179,12 @@ public class SecretManager {
 
         orgManager.assertAccess(orgId, true);
 
-        BinaryDataSecret d = new BinaryDataSecret(ByteStreams.toByteArray(data));
+        int maxSecretDataSize = secretStoreProvider.getMaxSecretDataSize();
+        InputStream limitedDataInputStream = ByteStreams.limit(data, maxSecretDataSize + 1);
+        BinaryDataSecret d = new BinaryDataSecret(ByteStreams.toByteArray(limitedDataInputStream));
+        if (d.getData().length > maxSecretDataSize) {
+            throw new IllegalArgumentException("File size exceeds limit of " + maxSecretDataSize + " bytes");
+        }
         UUID id = store(name, orgId, d, storePassword, visibility, storeType);
         return new DecryptedBinaryData(id);
     }
