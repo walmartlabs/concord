@@ -32,11 +32,11 @@ class CallbackModule(CallbackBase):
         target_dir = self.base_dir;
         mkdir_p(target_dir)
 
-        target_filename = target_dir + "/ansible_stats.json";
+        target_filename = target_dir + "/ansible_stats.json"
         target_file = open(target_filename, "w")
         target_file.write(json.dumps(data, indent=2))
 
-        print "Trace saved to: ", target_filename
+        print "Trace saved to:", target_filename
 
     def playbook_on_stats(self, stats):
         failures = stats.failures.keys()

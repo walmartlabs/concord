@@ -23,6 +23,7 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
@@ -113,6 +114,14 @@ public class RunPlaybookTask2 implements Task {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
         }
 
+        Path outVarsFile = null;
+        String outVars = trim(getListAsString(args, AnsibleConstants.OUT_VARS_KEY));
+        if (outVars != null) {
+            env.put("CONCORD_OUT_VARS", outVars);
+            outVarsFile = IOUtils.createTempFile("facts", ".json");
+            env.put("CONCORD_OUT_VARS_FILE", outVarsFile.toString());
+        }
+
         GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretService, context);
         groupVarsProcessor.process(txId, args, workDir);
 
@@ -142,6 +151,7 @@ public class RunPlaybookTask2 implements Task {
             log.debug("execution -> done, code {}", code);
 
             updateAnsibleStats(workDir, code);
+            setAnsibleFacts(outVarsFile, context);
 
             if (code != SUCCESS_EXIT_CODE) {
                 saveRetryFile(args, workDir);
@@ -201,6 +211,7 @@ public class RunPlaybookTask2 implements Task {
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_trace.py", callbackDir.resolve("concord_trace.py"));
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_protectdata.py", callbackDir.resolve("concord_protectdata.py"));
         copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_strategy_enforce.py", callbackDir.resolve("concord_strategy_enforce.py"));
+        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_out_vars.py", callbackDir.resolve("concord_out_vars.py"));
     }
 
     private void processStrategy(Path tmpDir) throws IOException {
@@ -270,6 +281,7 @@ public class RunPlaybookTask2 implements Task {
         addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
         addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_KEY);
         addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.OUT_VARS_KEY);
 
         String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
@@ -613,6 +625,22 @@ public class RunPlaybookTask2 implements Task {
         try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             om.writeValue(out, m);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void setAnsibleFacts(Path factsFile, Context context) throws IOException {
+        if (factsFile == null || !Files.exists(factsFile)) {
+            return;
+        }
+
+        ObjectMapper om = new ObjectMapper();
+        Map<String, Object> m = new HashMap<>();
+        try (InputStream in = Files.newInputStream(factsFile)) {
+            m.putAll(om.readValue(in, Map.class));
+        }
+        m.forEach((k, v) -> context.setVariable(k, v));
+
+        Files.delete(factsFile);
     }
 
     private static void saveRetryFile(Map<String, Object> args, Path workDir) throws IOException {

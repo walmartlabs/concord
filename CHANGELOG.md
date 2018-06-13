@@ -4,6 +4,8 @@
 
 ### Added
 
+- ansible: new task parameter `outVars` to save specific Ansible
+variables as Concord flow variables;
 - concord-agent: a local interface to enable maintenance mode;
 - concord-server: check template output for cycles to avoid
 serialization issues;

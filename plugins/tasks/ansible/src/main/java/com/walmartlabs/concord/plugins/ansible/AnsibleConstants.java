@@ -91,6 +91,8 @@ public final class AnsibleConstants {
 
     public static final String DISABLE_CONCORD_CALLBACKS_KEY = "disableConcordCallbacks";
 
+    public static final String OUT_VARS_KEY = "outVars";
+
     private AnsibleConstants() {
     }
 }
