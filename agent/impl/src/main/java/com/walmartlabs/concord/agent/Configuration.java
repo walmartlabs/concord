@@ -68,7 +68,6 @@ public class Configuration {
     public static final String RETRY_COUNT_KEY = "API_RETRY_COUNT_KEY";
     public static final String RETRY_INTERVAL_KEY = "API_RETRY_INTERVAL_KEY";
     public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL_KEY";
-    public static final String MAINTENANCE_MODE_KEY = "MAINTENANCE_MODE_FILE";
     public static final String CAPABILITIES_FILE_KEY = "CAPABILITIES_FILE";
     public static final String USER_AGENT_KEY = "USER_AGENT";
 
@@ -102,7 +101,6 @@ public class Configuration {
     private final int retryCount;
     private final long retryInterval;
     private final long pollInterval;
-    private final Path maintenanceModeFile;
 
     private final Map<String, Object> capabilities;
     private final String userAgent;
@@ -154,8 +152,6 @@ public class Configuration {
             this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "5"));
             this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "30000"));
             this.pollInterval = Long.parseLong(getEnv(POLL_INTERVAL_KEY, "2000"));
-
-            this.maintenanceModeFile = getDir(MAINTENANCE_MODE_KEY, "maintenance-mode").resolve("info");
 
             String capabilitiesFile = getEnv(CAPABILITIES_FILE_KEY, null);
             if (capabilitiesFile != null) {
@@ -265,10 +261,6 @@ public class Configuration {
 
     public long getPollInterval() {
         return pollInterval;
-    }
-
-    public Path getMaintenanceModeFile() {
-        return maintenanceModeFile;
     }
 
     public Map<String, Object> getCapabilities() {

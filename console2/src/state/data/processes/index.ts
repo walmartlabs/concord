@@ -137,14 +137,16 @@ const startProcessReducers = combineReducers<StartProcessState>({
 const cancelProcessReducers = combineReducers<CancelProcessState>({
     running: makeLoadingReducer(
         [actionTypes.CANCEL_PROCESS_REQUEST],
-        [actionTypes.CANCEL_PROCESS_RESPONSE]
+        [actionTypes.RESET_PROCESS, actionTypes.CANCEL_PROCESS_RESPONSE]
     ),
     error: makeErrorReducer(
-        [actionTypes.CANCEL_PROCESS_REQUEST],
+        [actionTypes.RESET_PROCESS, actionTypes.CANCEL_PROCESS_REQUEST],
         [actionTypes.CANCEL_PROCESS_RESPONSE]
     ),
     response: (state = false, { type, error }: Action & { error?: {} }) => {
         switch (type) {
+            case actionTypes.RESET_PROCESS:
+                return false;
             case actionTypes.CANCEL_PROCESS_RESPONSE:
                 return !error;
             default:

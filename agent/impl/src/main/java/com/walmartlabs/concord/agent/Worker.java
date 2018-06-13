@@ -21,7 +21,6 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessQueueApi;
 import com.walmartlabs.concord.common.IOUtils;
@@ -38,9 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -62,13 +59,15 @@ public class Worker implements Runnable {
     private final Map<String, Object> capabilities;
 
     private volatile boolean maintenanceMode = false;
+    private final CountDownLatch doneSignal;
 
     public Worker(ProcessQueueApi queueClient,
                   ProcessApiClient processApiClient,
                   ExecutionManager executionManager,
                   long logSteamMaxDelay,
                   long pollInterval,
-                  Map<String, Object> capabilities) {
+                  Map<String, Object> capabilities,
+                  CountDownLatch doneSignal) {
 
         this.queueClient = queueClient;
         this.processApiClient = processApiClient;
@@ -77,6 +76,7 @@ public class Worker implements Runnable {
         this.logSteamMaxDelay = logSteamMaxDelay;
         this.pollInterval = pollInterval;
         this.capabilities = capabilities;
+        this.doneSignal = doneSignal;
     }
 
     @Override
@@ -100,6 +100,10 @@ public class Worker implements Runnable {
                 }
             }
         }
+
+        log.info("run -> done, maintenance mode: {}", maintenanceMode);
+
+        doneSignal.countDown();
     }
 
     public void setMaintenanceMode() {

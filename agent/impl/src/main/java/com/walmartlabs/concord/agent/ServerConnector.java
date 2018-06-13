@@ -32,7 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class ServerConnector implements MaintenanceModeListener {
@@ -48,7 +51,9 @@ public class ServerConnector implements MaintenanceModeListener {
     private Thread orphanSweeper;
     private Thread oldImageSweeper;
 
-    private Thread maintenanceModeNotifier;
+    private MaintenanceModeNotifier maintenanceModeNotifier;
+
+    private CountDownLatch doneSignal;
 
     public void start(Configuration cfg) throws IOException {
         String host = cfg.getServerHost();
@@ -62,8 +67,7 @@ public class ServerConnector implements MaintenanceModeListener {
 
         ExecutionManager executionManager = new ExecutionManager(cfg, processApi);
 
-        maintenanceModeNotifier = new Thread(new MaintenanceModeNotifier(cfg.getMaintenanceModeFile(), this),
-                "maintenance-mode-notifier");
+        maintenanceModeNotifier = new MaintenanceModeNotifier(this);
         maintenanceModeNotifier.start();
 
         executionCleanup = new Thread(new ExecutionStatusCleanup(executionManager),
@@ -74,6 +78,8 @@ public class ServerConnector implements MaintenanceModeListener {
         commandHandlerThread = new Thread(commandHandler, "command-handler");
         commandHandlerThread.start();
 
+        doneSignal = new CountDownLatch(workersCount);
+
         workers = new Worker[workersCount];
         workerThreads = new Thread[workersCount];
 
@@ -82,7 +88,7 @@ public class ServerConnector implements MaintenanceModeListener {
 
         for (int i = 0; i < workersCount; i++) {
             workers[i] = new Worker(queueApi, processApiClient, executionManager,
-                    cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities());
+                    cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities(), doneSignal);
 
             workerThreads[i] = new Thread(workers[i], "worker-" + i);
 
@@ -143,20 +149,24 @@ public class ServerConnector implements MaintenanceModeListener {
         }
 
         if (maintenanceModeNotifier != null) {
-            maintenanceModeNotifier.interrupt();
+            maintenanceModeNotifier.stop();
             maintenanceModeNotifier = null;
         }
     }
 
     @Override
-    public void onMaintenanceMode() {
+    public long onMaintenanceMode() {
         if (workers != null) {
             Stream.of(workers).forEach(Worker::setMaintenanceMode);
         }
 
-        if (commandHandler != null) {
-            commandHandler.setMaintenanceMode();
+        try {
+            doneSignal.await(15, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+
+        return doneSignal.getCount();
     }
 
     private static ApiClient createClient(Configuration cfg) throws IOException {

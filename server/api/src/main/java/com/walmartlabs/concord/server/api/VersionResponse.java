@@ -29,10 +29,14 @@ public class VersionResponse implements Serializable {
 
     private final boolean ok = true;
     private final String version;
+    private final String env;
 
     @JsonCreator
-    public VersionResponse(@JsonProperty("version") String version) {
+    public VersionResponse(@JsonProperty("version") String version,
+                           @JsonProperty("env") String env) {
+
         this.version = version;
+        this.env = env;
     }
 
     public boolean isOk() {
@@ -43,11 +47,16 @@ public class VersionResponse implements Serializable {
         return version;
     }
 
+    public String getEnv() {
+        return env;
+    }
+
     @Override
     public String toString() {
         return "VersionResponse{" +
                 "ok=" + ok +
                 ", version='" + version + '\'' +
+                ", env='" + env + '\'' +
                 '}';
     }
 }

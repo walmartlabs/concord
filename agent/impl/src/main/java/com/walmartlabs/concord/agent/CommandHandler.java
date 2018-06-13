@@ -21,9 +21,9 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.CommandQueueApi;
 import com.walmartlabs.concord.server.api.CommandType;
 import com.walmartlabs.concord.server.api.agent.CommandEntry;
-import com.walmartlabs.concord.client.CommandQueueApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +42,6 @@ public class CommandHandler implements Runnable {
 
     private final long pollInterval;
 
-    private volatile boolean maintenanceMode = false;
-
     public CommandHandler(String agentId, CommandQueueApi queueClient,
                           ExecutionManager executionManager, ExecutorService executor,
                           long pollInterval) {
@@ -56,7 +54,7 @@ public class CommandHandler implements Runnable {
 
     @Override
     public void run() {
-        while (!Thread.currentThread().isInterrupted() && !maintenanceMode) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 CommandEntry cmd = take();
                 if (cmd != null) {
@@ -69,10 +67,6 @@ public class CommandHandler implements Runnable {
                 sleep(ERROR_DELAY);
             }
         }
-    }
-
-    public void setMaintenanceMode() {
-        this.maintenanceMode = true;
     }
 
     private CommandEntry take() throws ApiException {

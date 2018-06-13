@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-agent: a local interface to enable maintenance mode;
 - concord-server: check template output for cycles to avoid
 serialization issues;
 - concord-server: size limit for binary data secrets.

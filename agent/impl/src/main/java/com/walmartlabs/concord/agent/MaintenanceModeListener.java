@@ -22,5 +22,5 @@ package com.walmartlabs.concord.agent;
 
 public interface MaintenanceModeListener {
 
-    void onMaintenanceMode();
+    long onMaintenanceMode();
 }

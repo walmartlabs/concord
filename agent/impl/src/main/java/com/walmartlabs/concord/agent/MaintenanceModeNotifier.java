@@ -20,83 +20,76 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.concurrent.TimeUnit;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 
-import static java.nio.file.StandardWatchEventKinds.*;
-
-public class MaintenanceModeNotifier implements Runnable {
+public class MaintenanceModeNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(MaintenanceModeNotifier.class);
 
-    private static final long RETRY_DELAY = TimeUnit.SECONDS.toMillis(5);
+    private final HttpServer server;
 
-    private final Path file;
-    private final MaintenanceModeListener listener;
-
-    public MaintenanceModeNotifier(Path file, MaintenanceModeListener listener) {
-        this.file = file;
-        this.listener = listener;
+    public MaintenanceModeNotifier(MaintenanceModeListener listener) throws IOException {
+        this.server = HttpServer.create(new InetSocketAddress("localhost", 8010), 0);
+        this.server.createContext("/maintenance-mode", new MaintenanceModeHandler(listener));
     }
 
-    @Override
-    public void run() {
-        log.info("run ['{}'] -> started", file);
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                waitFile(file);
-                log.info("Maintenance: {}", Files.readAllLines(file));
-                listener.onMaintenanceMode();
+    public void start() {
+        server.start();
+
+        log.info("start -> done");
+    }
+
+    public void stop() {
+        server.stop(0);
+
+        log.info("stop -> done");
+    }
+
+    private class MaintenanceModeHandler implements HttpHandler {
+
+        private static final String SUCCESS_RESPONSE = "{\"status\": \"ok\"}";
+        private static final String BUSY_RESPONSE = "{\"status\": \"busy\", \"busyWorkers\": %d}";
+
+        private final MaintenanceModeListener listener;
+
+        private MaintenanceModeHandler(MaintenanceModeListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            if (!"POST".equals(httpExchange.getRequestMethod())) {
+                String response = "404 (Not Found)\n";
+                httpExchange.sendResponseHeaders(404, response.length());
+                try(OutputStream os = httpExchange.getResponseBody()) {
+                    os.write(response.getBytes());
+                }
                 return;
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.info("run -> interrupted");
-            } catch (Exception e) {
-                log.error("run -> error, retry after {} sec", RETRY_DELAY / 1000, e);
-                sleep(RETRY_DELAY);
             }
-        }
-    }
 
-    private static void waitFile(Path file) throws IOException, InterruptedException {
-        Path path = file.getParent();
-        try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
-            path.register(watcher, ENTRY_CREATE, ENTRY_MODIFY);
-            while (true) {
-                WatchKey key = watcher.take();
-
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    WatchEvent.Kind kind = event.kind();
-
-                    if (kind == OVERFLOW) {
-                        log.info("waitFile ['{}'] -> overflow, ok:)", file);
-                        continue;
-                    }
-
-                    final Path changed = path.resolve((Path) event.context());
-                    if (changed.equals(file)) {
-                        log.info("waitFile ['{}'] -> done", file);
-                        return;
-                    }
-                }
-
-                boolean valid = key.reset();
-                if (!valid) {
-                    throw new IOException("watch directory inaccessible");
-                }
+            byte[] response;
+            long busyWorkers = listener.onMaintenanceMode();
+            if (busyWorkers == 0) {
+                response = SUCCESS_RESPONSE.getBytes();
+                log.info("handle -> maintenance mode on");
+            } else {
+                response = String.format(BUSY_RESPONSE, busyWorkers).getBytes();
+                log.info("handle -> {} workers active", busyWorkers);
             }
-        }
-    }
 
-    private static void sleep(long t) {
-        try {
-            Thread.sleep(t);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            httpExchange.getResponseHeaders().set("Content-Type", "application/json");
+            httpExchange.sendResponseHeaders(200, response.length);
+            try(OutputStream os = httpExchange.getResponseBody()) {
+                os.write(response);
+            }
         }
     }
 }

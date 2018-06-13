@@ -35,6 +35,7 @@ import java.util.Properties;
 public class ServerResourceImpl implements ServerResource, Resource {
 
     private final String version;
+    private final String env;
 
     public ServerResourceImpl() {
         Properties props = new Properties();
@@ -46,6 +47,7 @@ public class ServerResourceImpl implements ServerResource, Resource {
         }
 
         this.version = props.getProperty("version");
+        this.env = Utils.getEnv("CONCORD_ENV", "n/a");
     }
 
     public PingResponse ping() {
@@ -54,6 +56,6 @@ public class ServerResourceImpl implements ServerResource, Resource {
 
     @Override
     public VersionResponse version() {
-        return new VersionResponse(version);
+        return new VersionResponse(version, env);
     }
 }

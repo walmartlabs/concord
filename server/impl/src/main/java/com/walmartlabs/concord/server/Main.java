@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
-import com.walmartlabs.concord.server.cfg.Utils;
 import com.walmartlabs.concord.server.security.SecurityModule;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
