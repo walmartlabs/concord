@@ -39,7 +39,8 @@ import {
     ProjectPage,
     SecretPage,
     TeamPage,
-    AboutPage
+    AboutPage,
+    ProfilePage
 } from './components/pages';
 import { Layout } from './components/templates';
 import { actions as session } from './state/session';
@@ -145,6 +146,12 @@ class App extends React.Component {
                                 </ProtectedRoute>
 
                                 <ProtectedRoute path="/about" exact={true} component={AboutPage} />
+
+                                <ProtectedRoute
+                                    path="/profile"
+                                    exact={true}
+                                    component={ProfilePage}
+                                />
 
                                 <Route component={NotFoundPage} />
                             </Switch>

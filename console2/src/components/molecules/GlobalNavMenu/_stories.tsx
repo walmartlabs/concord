@@ -34,6 +34,7 @@ storiesOf('molecules/GlobalNavMenu', module)
                 userDisplayName={'Test Dummy'}
                 openDocumentation={() => action('Clicked Docs')}
                 openAbout={() => action('Clicked About')}
+                openProfile={() => action('Clicked Profile')}
                 logOut={() => action('Clicked Logout')}
             />
         </>

@@ -42,6 +42,7 @@ interface StateProps {
 interface DispatchProps {
     openDocumentation: () => void;
     openAbout: () => void;
+    openProfile: () => void;
     logOut: () => void;
 }
 
@@ -61,6 +62,7 @@ const mapStateToProps = ({ session }: { session: SessionState }): StateProps => 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     openDocumentation: () => window.open('http://concord.walmart.com/docs/index.html', '_blank'),
     openAbout: () => dispatch(pushHistory('/about')),
+    openProfile: () => dispatch(pushHistory('/profile')),
     logOut: () => dispatch(actions.logout())
 });
 

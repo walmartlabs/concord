@@ -204,16 +204,12 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         wide={true}>
                         {!!this.state.testWarning && (
                             <Popup.Content>
-                                <p style={{ color: 'orange' }}>
-                                    Warning: {this.state.testWarning}
-                                </p>
+                                <p style={{ color: 'orange' }}>Warning: {this.state.testWarning}</p>
                             </Popup.Content>
                         )}
                         {!!this.state.testError && (
                             <Popup.Content>
-                                <p style={{ color: 'red' }}>
-                                    Error: {this.state.testError}
-                                </p>
+                                <p style={{ color: 'red' }}>Error: {this.state.testError}</p>
                             </Popup.Content>
                         )}
                     </Popup>

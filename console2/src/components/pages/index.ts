@@ -31,6 +31,7 @@ export { default as ProcessFormPage } from './ProcessFormPage';
 export { default as ProcessListPage } from './ProcessListPage';
 export { default as ProcessPage } from './ProcessPage';
 export { default as ProcessWizardPage } from './ProcessWizardPage';
+export { default as ProfilePage } from './ProfilePage';
 export { default as ProjectPage } from './ProjectPage';
 export { default as SecretPage } from './SecretPage';
 export { default as TeamPage } from './TeamPage';

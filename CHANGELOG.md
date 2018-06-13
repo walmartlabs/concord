@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: the profile page and the API key form;
 - ansible: new task parameter `outVars` to save specific Ansible
 variables as Concord flow variables;
 - concord-agent: a local interface to enable maintenance mode;

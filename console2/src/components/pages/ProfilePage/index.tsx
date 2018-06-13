@@ -17,7 +17,28 @@
  * limitations under the License.
  * =====
  */
-.breadcrumbSegment {
-    padding-bottom: 0 !important;
-    padding-left: 0 !important;
+import * as React from 'react';
+import { Breadcrumb, Segment } from 'semantic-ui-react';
+
+import { BreadcrumbSegment } from '../../molecules';
+import NewAPIToken from '../../organisms/NewAPIToken';
+
+class ProfilePage extends React.PureComponent {
+    render() {
+        return (
+            <>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section active={true}>Profile Options</Breadcrumb.Section>
+                </BreadcrumbSegment>
+
+                <hr />
+
+                <Segment vertical={true}>
+                    <NewAPIToken />
+                </Segment>
+            </>
+        );
+    }
 }
+
+export default ProfilePage;

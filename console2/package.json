@@ -67,7 +67,7 @@
         "redux-saga": "0.16.0",
         "requirejs": "2.3.5",
         "semantic-ui-css": "2.2.14",
-        "semantic-ui-react": "0.80.2"
+        "semantic-ui-react": "0.81.1"
     },
     "scripts": {
         "start": "react-app-rewired start --scripts-version react-scripts-ts",

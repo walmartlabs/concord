@@ -28,12 +28,20 @@ interface Props {
     userDisplayName?: string;
     openDocumentation: () => void;
     openAbout: () => void;
+    openProfile: () => void;
     logOut: () => void;
 }
 
 class GlobalNavMenu extends React.PureComponent<Props> {
     render() {
-        const { activeTab, userDisplayName, openDocumentation, openAbout, logOut } = this.props;
+        const {
+            activeTab,
+            userDisplayName,
+            openDocumentation,
+            openAbout,
+            openProfile,
+            logOut
+        } = this.props;
 
         return (
             <Menu fluid={true} inverted={true} size="small" secondary={true}>
@@ -65,6 +73,11 @@ class GlobalNavMenu extends React.PureComponent<Props> {
                         <Menu.Item as={Dropdown} text={userDisplayName}>
                             {/* TODO can't add an icon here */}
                             <Dropdown.Menu>
+                                <Dropdown.Item
+                                    icon="setting"
+                                    text="Profile"
+                                    onClick={() => openProfile()}
+                                />
                                 <Dropdown.Item
                                     icon="log out"
                                     text="Log out"

@@ -17,7 +17,25 @@
  * limitations under the License.
  * =====
  */
-.breadcrumbSegment {
-    padding-bottom: 0 !important;
-    padding-left: 0 !important;
+import { fetchJson } from '../../../api/common';
+
+export interface CreateApiKeyResponse {
+    ok: boolean;
+    id: string;
+    key: string;
 }
+
+export const create = (username: string): Promise<CreateApiKeyResponse> => {
+    const obj: RequestInit = {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username
+        })
+    };
+
+    return fetchJson('/api/v1/apikey', obj);
+};
