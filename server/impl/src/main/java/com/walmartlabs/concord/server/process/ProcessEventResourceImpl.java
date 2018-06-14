@@ -26,9 +26,6 @@ import com.walmartlabs.concord.server.api.process.ProcessEventEntry;
 import com.walmartlabs.concord.server.api.process.ProcessEventRequest;
 import com.walmartlabs.concord.server.api.process.ProcessEventResource;
 import com.walmartlabs.concord.server.process.event.EventDao;
-import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
-import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
-import org.apache.shiro.authc.AuthenticationException;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -53,8 +50,6 @@ public class ProcessEventResourceImpl implements ProcessEventResource, Resource 
 
     @Override
     public void event(UUID processInstanceId, ProcessEventRequest req) {
-        assertSessionKey();
-
         String data;
         try {
             data = objectMapper.writeValueAsString(req.getData());
@@ -72,12 +67,5 @@ public class ProcessEventResourceImpl implements ProcessEventResource, Resource 
             ts = Timestamp.from(geTimestamp.getValue().toInstant());
         }
         return eventDao.list(processInstanceId, ts, limit);
-    }
-
-    private static void assertSessionKey() {
-        SessionKeyPrincipal p = SessionKeyPrincipal.getCurrent();
-        if (p == null) {
-            throw new AuthenticationException("Session key is required");
-        }
     }
 }

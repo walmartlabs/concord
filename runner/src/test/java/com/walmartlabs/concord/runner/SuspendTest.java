@@ -21,10 +21,10 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.google.inject.Injector;
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
-import com.walmartlabs.concord.sdk.RpcClient;
 import io.takari.bpm.api.Engine;
 import io.takari.bpm.model.*;
 import org.junit.Test;
@@ -52,7 +52,7 @@ public class SuspendTest {
                 new SequenceFlow("f2", "ev1", "end"),
                 new EndEvent("end")));
 
-        Engine engine = new EngineFactory(taskRegistry, mock(RpcClient.class)).create(project, baseDir, Collections.emptySet());
+        Engine engine = new EngineFactory(mock(ApiClient.class), taskRegistry).create(project, baseDir, Collections.emptySet());
 
         // ---
 

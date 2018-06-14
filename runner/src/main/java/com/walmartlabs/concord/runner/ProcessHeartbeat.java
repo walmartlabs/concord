@@ -20,9 +20,6 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.walmartlabs.concord.client.ConcordApiClient;
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.runner.engine.RpcClientImpl;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ProcessHeartbeatApi;
 import org.slf4j.Logger;
@@ -31,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.util.UUID;
 
 @Named
@@ -46,8 +42,8 @@ public class ProcessHeartbeat {
     private Thread worker;
 
     @Inject
-    public ProcessHeartbeat(Configuration cfg) throws IOException {
-        this.client = new ProcessHeartbeatApi(createClient(cfg));
+    public ProcessHeartbeat(ApiClient apiClient) {
+        this.client = new ProcessHeartbeatApi(apiClient);
     }
 
     public synchronized void start(UUID instanceId) {
@@ -76,15 +72,5 @@ public class ProcessHeartbeat {
         }, "process-heartbeat");
 
         worker.start();
-    }
-
-    private static ApiClient createClient(Configuration cfg) throws IOException {
-        ApiClient client = new ConcordApiClient();
-        client.setTempFolderPath(IOUtils.createTempDir("runner-client").toString());
-        client.setBasePath(cfg.getServerApiBaseUrl());
-        client.setApiKey(cfg.getApiKey());
-        client.setReadTimeout(cfg.getReadTimeout());
-        client.setConnectTimeout(cfg.getConnectTimeout());
-        return client;
     }
 }

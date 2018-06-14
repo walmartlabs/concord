@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,6 @@ package com.walmartlabs.concord.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -42,8 +40,6 @@ public class Configuration {
     private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
     public static final String AGENT_ID_KEY = "AGENT_ID";
-    public static final String SERVER_HOST_KEY = "SERVER_HOST";
-    public static final String SERVER_RPC_PORT_KEY = "SERVER_RPC_PORT";
     public static final String SERVER_API_BASE_URL_KEY = "SERVER_API_BASE_URL";
     public static final String LOG_DIR_KEY = "AGENT_LOG_DIR";
     public static final String LOG_MAX_DELAY_KEY = "LOG_MAX_DELAY";
@@ -77,8 +73,6 @@ public class Configuration {
     private static final String DEFAULT_AGENT_API_KEY = "O+JMYwBsU797EKtlRQYu+Q";
 
     private final String agentId;
-    private final String serverHost;
-    private final int serverRpcPort;
     private final String serverApiBaseUrl;
     private final Path logDir;
     private final long logMaxDelay;
@@ -110,11 +104,7 @@ public class Configuration {
         try {
             this.agentId = getEnv(AGENT_ID_KEY, UUID.randomUUID().toString());
 
-            this.serverHost = getEnv(SERVER_HOST_KEY, "localhost");
-            this.serverRpcPort = Integer.parseInt(getEnv(SERVER_RPC_PORT_KEY, "8101"));
-            log.info("Using the RPC address {}:{}...", serverHost, serverRpcPort);
-
-            this.serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://" + serverHost + ":8001");
+            this.serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://localhost:8001");
             log.info("Using the API address: {}", serverApiBaseUrl);
 
             this.logDir = getDir(LOG_DIR_KEY, "logDir");
@@ -169,14 +159,6 @@ public class Configuration {
 
     public String getAgentId() {
         return agentId;
-    }
-
-    public String getServerHost() {
-        return serverHost;
-    }
-
-    public int getServerRpcPort() {
-        return serverRpcPort;
     }
 
     public String getServerApiBaseUrl() {

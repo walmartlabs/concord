@@ -30,7 +30,8 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProcessEventRequest implements Serializable {
 
-    private final ProcessEventType eventType;
+    // TODO it should be final, but swagger makes it readOnly and provides no way to set the value
+    private ProcessEventType eventType;
     private final Map<String, Object> data;
 
     @JsonCreator
@@ -39,6 +40,10 @@ public class ProcessEventRequest implements Serializable {
 
         this.eventType = eventType;
         this.data = data;
+    }
+
+    public void setEventType(ProcessEventType eventType) {
+        this.eventType = eventType;
     }
 
     public ProcessEventType getEventType() {

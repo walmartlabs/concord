@@ -12,7 +12,11 @@ variables as Concord flow variables;
 serialization issues;
 - concord-server: size limit for binary data secrets.
 
- 
+### Changed
+
+- concord-rpc: module removed. 
+
+
 
 ## [0.74.0] - 2018-06-10
 

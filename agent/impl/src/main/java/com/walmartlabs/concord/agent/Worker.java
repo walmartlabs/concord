@@ -24,7 +24,6 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessQueueApi;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.rpc.JobEntry;
 import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -277,6 +276,33 @@ public class Worker implements Runnable {
         private Chunk(byte[] ab, int len) { //NOSONAR
             this.ab = ab;
             this.len = len;
+        }
+    }
+
+    private static class JobEntry {
+
+        private final UUID instanceId;
+        private final Path payload;
+
+        public JobEntry(UUID instanceId, Path payload) {
+            this.instanceId = instanceId;
+            this.payload = payload;
+        }
+
+        public UUID getInstanceId() {
+            return instanceId;
+        }
+
+        public Path getPayload() {
+            return payload;
+        }
+
+        @Override
+        public String toString() {
+            return "JobEntry{" +
+                    "instanceId='" + instanceId + '\'' +
+                    ", payload=" + payload +
+                    '}';
         }
     }
 }

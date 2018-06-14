@@ -22,6 +22,5 @@ package com.walmartlabs.concord.sdk;
 
 import java.io.Serializable;
 
-@Deprecated
 public interface Secret extends Serializable {
 }

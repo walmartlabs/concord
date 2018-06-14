@@ -20,13 +20,14 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.EventApi;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
 import com.walmartlabs.concord.runner.engine.el.TaskResolver;
 import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.RpcClient;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.Configuration;
 import io.takari.bpm.EngineBuilder;
@@ -58,13 +59,13 @@ import java.util.Map;
 @Named
 public class EngineFactory {
 
+    private final ApiClient apiClient;
     private final NamedTaskRegistry taskRegistry;
-    private final RpcClient rpcClient;
 
     @Inject
-    public EngineFactory(NamedTaskRegistry taskRegistry, RpcClient rpcClient) {
+    public EngineFactory(ApiClient apiClient, NamedTaskRegistry taskRegistry) {
+        this.apiClient = apiClient;
         this.taskRegistry = taskRegistry;
-        this.rpcClient = rpcClient;
     }
 
     @SuppressWarnings("deprecation")
@@ -106,7 +107,7 @@ public class EngineFactory {
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
         cfg.setCopyAllCallActivityOutVariables(true);
 
-        ElementEventProcessor eventProcessor = new ElementEventProcessor(rpcClient, adapter.processes());
+        ElementEventProcessor eventProcessor = new ElementEventProcessor(new EventApi(apiClient), adapter.processes());
 
         Engine engine = new EngineBuilder()
                 .withContextFactory(contextFactory)

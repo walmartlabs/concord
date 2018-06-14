@@ -341,8 +341,6 @@ public class DefaultJobExecutor implements JobExecutor {
 
         // Concord properties
         l.add("-DagentId=" + cfg.getAgentId());
-        l.add("-Drpc.server.host=" + cfg.getServerHost());
-        l.add("-Drpc.server.port=" + cfg.getServerRpcPort());
         l.add("-Dapi.baseUrl=" + cfg.getServerApiBaseUrl());
 
         // Runner's security manager

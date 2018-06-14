@@ -20,27 +20,22 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
-import com.walmartlabs.concord.client.ConcordApiClient;
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.CommandQueueApi;
+import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessQueueApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.concord.common.IOUtils;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class ServerConnector implements MaintenanceModeListener {
-
-    private static final Logger log = LoggerFactory.getLogger(ServerConnector.class);
 
     private Worker[] workers;
     private Thread[] workerThreads;
@@ -56,11 +51,7 @@ public class ServerConnector implements MaintenanceModeListener {
     private CountDownLatch doneSignal;
 
     public void start(Configuration cfg) throws IOException {
-        String host = cfg.getServerHost();
-        int port = cfg.getServerRpcPort();
         int workersCount = cfg.getWorkersCount();
-
-        log.info("start -> connecting to {}:{}", host, port);
 
         ApiClient apiClient = createClient(cfg);
         ProcessApi processApi = new ProcessApi(apiClient);

@@ -6,11 +6,7 @@
 
 - [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 - [Docker Community Edition](https://www.docker.com/community-edition)
-- Python, pip, and the following python library:
-  ```shell
-  pip install grpcio-tools
-  ```
-- [NodeJS and NPM](https://nodejs.org/en/download/) (Node 6 or greater)
+- [NodeJS and NPM](https://nodejs.org/en/download/) (Node 8 or greater)
 
 ## Building
 

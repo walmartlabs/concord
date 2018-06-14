@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,22 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
+import com.google.inject.Provider;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.ConcordApiClient;
+import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
+import java.io.IOException;
 
 @Named
-public class Configuration {
+@Singleton
+public class ApiClientProvider implements Provider<ApiClient> {
 
-    private static final Logger log = LoggerFactory.getLogger(Configuration.class);
+    private static final Logger log = LoggerFactory.getLogger(ApiClientProvider.class);
 
     public static final String SERVER_API_BASE_URL_KEY = "api.baseUrl";
 
@@ -41,38 +48,23 @@ public class Configuration {
      */
     private static final String DEFAULT_AGENT_API_KEY = "Gz0q/DeGlH8Zs7QJMj1v8g";
 
-    private final String serverApiBaseUrl;
-    private final String apiKey;
-    private final int readTimeout;
-    private final int connectTimeout;
+    private final ApiClient apiClient;
 
-    public Configuration() {
-        this.serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://localhost:8001");
+    public ApiClientProvider() throws IOException {
+        String serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://localhost:8001");
+
+        String apiKey = getEnv(API_KEY, DEFAULT_AGENT_API_KEY);
+        int connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
+        int readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
+
+        this.apiClient = new ConcordApiClient();
+        this.apiClient.setTempFolderPath(IOUtils.createTempDir("runner-client").toString());
+        this.apiClient.setBasePath(serverApiBaseUrl);
+        this.apiClient.setApiKey(apiKey);
+        this.apiClient.setReadTimeout(readTimeout);
+        this.apiClient.setConnectTimeout(connectTimeout);
+
         log.info("Using the API address: {}", serverApiBaseUrl);
-
-        this.apiKey = getEnv(API_KEY, DEFAULT_AGENT_API_KEY);
-        this.connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
-        this.readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
-    }
-
-    public int getReadTimeout() {
-        return readTimeout;
-    }
-
-    public int getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    public String getServerApiBaseUrl() {
-        return serverApiBaseUrl;
-    }
-
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    private static String getEnv(String key) {
-        return getEnv(key, null);
     }
 
     private static String getEnv(String key, String def) {
@@ -84,5 +76,10 @@ public class Configuration {
             return def;
         }
         throw new IllegalArgumentException(key + " must be specified");
+    }
+
+    @Override
+    public ApiClient get() {
+        return apiClient;
     }
 }

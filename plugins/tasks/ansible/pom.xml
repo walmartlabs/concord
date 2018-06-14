@@ -12,10 +12,6 @@
     <artifactId>ansible-tasks</artifactId>
     <packaging>takari-jar</packaging>
 
-    <properties>
-        <grpc.out>${project.build.directory}/generated-sources/python</grpc.out>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>

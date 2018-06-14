@@ -20,10 +20,8 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.walmartlabs.concord.sdk.EventType;
-import com.walmartlabs.concord.sdk.RpcClient;
+import com.walmartlabs.concord.client.EventApi;
+import com.walmartlabs.concord.client.ProcessEventRequest;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.ProcessDefinitionUtils;
 import io.takari.bpm.api.ExecutionException;
@@ -34,20 +32,21 @@ import io.takari.bpm.model.SourceMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 public class ElementEventProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ElementEventProcessor.class);
 
-    private final RpcClient rpc;
+    private final EventApi eventApi;
+
     private final ProcessDefinitionProvider processDefinitionProvider;
 
-    public ElementEventProcessor(RpcClient rpc, ProcessDefinitionProvider processDefinitionProvider) {
-        this.rpc = rpc;
+    public ElementEventProcessor(EventApi eventApi, ProcessDefinitionProvider processDefinitionProvider) {
+        this.eventApi = eventApi;
         this.processDefinitionProvider = processDefinitionProvider;
     }
 
@@ -81,11 +80,19 @@ public class ElementEventProcessor {
         }
 
         try {
-            ProcessElementEvent e = new ProcessElementEvent(definitionId, elementId,
-                    source.getLine(), source.getColumn(), source.getDescription(),
-                    builder.build(element));
+            Map<String, Object> e = new HashMap<>();
+            e.put("processDefinitionId", definitionId);
+            e.put("elementId", elementId);
+            e.put("line", source.getLine());
+            e.put("column", source.getColumn());
+            e.put("description", source.getDescription());
+            e.putAll(builder.build(element));
 
-            rpc.getEventService().onEvent(instanceId, new Date(), EventType.PROCESS_ELEMENT, e);
+            ProcessEventRequest req = new ProcessEventRequest();
+            req.setEventType(ProcessEventRequest.EventTypeEnum.ELEMENT);
+            req.setData(e);
+
+            eventApi.event(UUID.fromString(instanceId), req);
 
         } catch (Exception e) {
             log.warn("process ['{}'] -> transfer error: {}", instanceId, e.getMessage());
@@ -94,52 +101,5 @@ public class ElementEventProcessor {
 
     public interface EventParamsBuilder {
         Map<String, Object> build(AbstractElement element);
-    }
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class ProcessElementEvent implements Serializable {
-
-        private final String processDefinitionId;
-        private final String elementId;
-        private final int line;
-        private final int column;
-        private final String description;
-        private final Map<String, Object> params;
-
-        public ProcessElementEvent(
-                String processDefinitionId, String elementId, int line, int column, String description,
-                Map<String, Object> params) {
-            this.processDefinitionId = processDefinitionId;
-            this.elementId = elementId;
-            this.line = line;
-            this.column = column;
-            this.description = description;
-            this.params = params;
-        }
-
-        public int getLine() {
-            return line;
-        }
-
-        public int getColumn() {
-            return column;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public String getElementId() {
-            return elementId;
-        }
-
-        public String getProcessDefinitionId() {
-            return processDefinitionId;
-        }
-
-        @JsonAnyGetter
-        public Map<String, Object> getParams() {
-            return params;
-        }
     }
 }

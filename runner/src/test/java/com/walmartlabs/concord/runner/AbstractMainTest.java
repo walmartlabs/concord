@@ -21,11 +21,11 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.google.inject.Injector;
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.NamedTaskRegistry;
-import com.walmartlabs.concord.sdk.RpcClient;
 
 import java.net.URI;
 import java.nio.file.Files;
@@ -38,7 +38,7 @@ public abstract class AbstractMainTest {
 
     protected Main createMain(Injector injector, String instanceId, String resource) throws Exception {
         NamedTaskRegistry taskRegistry = new NamedTaskRegistry(injector, null);
-        EngineFactory engineFactory = new EngineFactory(taskRegistry, mock(RpcClient.class));
+        EngineFactory engineFactory = new EngineFactory(mock(ApiClient.class), taskRegistry);
 
         URI baseDir = this.getClass().getResource(resource).toURI();
         Path tmpDir = Files.createTempDirectory("test");

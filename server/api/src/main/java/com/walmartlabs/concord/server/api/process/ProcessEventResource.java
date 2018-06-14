@@ -42,7 +42,7 @@ public interface ProcessEventResource {
      * @param req
      */
     @POST
-    @ApiOperation(value = "Register a process event", authorizations = {@Authorization("session_key")})
+    @ApiOperation(value = "Register a process event", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
     @Path("/{processInstanceId}/event")
     @Consumes(MediaType.APPLICATION_JSON)
     void event(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,

@@ -26,6 +26,8 @@ import io.takari.bpm.api.interceptors.InterceptorElementEvent;
 import io.takari.bpm.model.ExpressionType;
 import io.takari.bpm.model.ServiceTask;
 
+import java.util.Collections;
+
 public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
 
     private final ElementEventProcessor eventProcessor;
@@ -37,7 +39,7 @@ public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
     @Override
     public void onElement(InterceptorElementEvent ev) throws ExecutionException {
         eventProcessor.process(ev.getProcessBusinessKey(), ev.getProcessDefinitionId(), ev.getElementId(),
-                element -> null,
+                element -> Collections.emptyMap(),
                 element -> !(element instanceof ServiceTask) || ((ServiceTask) element).getType() != ExpressionType.DELEGATE);
     }
 }
