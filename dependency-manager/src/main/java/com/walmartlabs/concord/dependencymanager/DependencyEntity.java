@@ -23,14 +23,11 @@ package com.walmartlabs.concord.dependencymanager;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 public class DependencyEntity {
 
     private final Path path;
-
     private final Artifact artifact;
-
     private final URI directLink;
 
     public DependencyEntity(Path path, String groupId, String artifactId, String version) {
@@ -82,9 +79,7 @@ public class DependencyEntity {
     public static class Artifact {
 
         private final String groupId;
-
         private final String artifactId;
-
         private final String version;
 
         public Artifact(String groupId, String artifactId, String version) {
@@ -103,6 +98,15 @@ public class DependencyEntity {
 
         public String getVersion() {
             return version;
+        }
+
+        @Override
+        public String toString() {
+            return "Artifact{" +
+                    "groupId='" + groupId + '\'' +
+                    ", artifactId='" + artifactId + '\'' +
+                    ", version='" + version + '\'' +
+                    '}';
         }
     }
 }
