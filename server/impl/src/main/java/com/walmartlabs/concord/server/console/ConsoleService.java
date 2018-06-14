@@ -49,10 +49,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 @Path("/api/service/console")
@@ -227,6 +224,16 @@ public class ConsoleService implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     public List<UserSearchResult> searchUsers(@QueryParam("filter") @Size(min = 5, max = 128) String filter) {
+        if (filter == null) {
+            return Collections.emptyList();
+        }
+
+        filter = filter.trim();
+        if (filter.startsWith("*")) {
+            // disallow "starts-with" filters, they can be too slow
+            return Collections.emptyList();
+        }
+
         try {
             return ldapManager.search(filter);
         } catch (NamingException e) {
