@@ -63,7 +63,7 @@ public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessExcept
 
     private boolean traceEnabled() {
         String s = headers.getHeaderString(TRACE_ENABLED_KEY);
-        return s != null && Boolean.parseBoolean(s);
+        return Boolean.parseBoolean(s);
     }
 
     private static String getDetails(Throwable t) {

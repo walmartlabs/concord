@@ -9,9 +9,9 @@ package com.walmartlabs.concord.policyengine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,10 +35,10 @@ public class WorkspacePolicyTest {
     @Test
     public void testMaxSize() throws Exception {
         Path p = Files.createTempDirectory("test1");
-        Files.write(p.resolve("test.bin"), new byte[] {0, 1, 2, 3, 4, 5 }, StandardOpenOption.CREATE_NEW);
+        Files.write(p.resolve("test.bin"), new byte[]{0, 1, 2, 3, 4, 5}, StandardOpenOption.CREATE_NEW);
 
-        WorkspacePolicy fiveBytes = new WorkspacePolicy(new WorkspaceRule("5 bytes", 5L));
-        WorkspacePolicy tenBytes = new WorkspacePolicy(new WorkspaceRule("10 bytes", 10L));
+        WorkspacePolicy fiveBytes = new WorkspacePolicy(new WorkspaceRule("5 bytes", 5L, null));
+        WorkspacePolicy tenBytes = new WorkspacePolicy(new WorkspaceRule("10 bytes", 10L, null));
 
         // ---
 

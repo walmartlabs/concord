@@ -26,7 +26,6 @@ import java.util.List;
 public class CheckResult<R, E> {
 
     private final List<Item<R, E>> warn;
-
     private final List<Item<R, E>> deny;
 
     public CheckResult() {
@@ -49,12 +48,17 @@ public class CheckResult<R, E> {
     public static class Item<R, E> {
 
         private final R rule;
-
         private final E entity;
+        private final String msg;
 
         public Item(R rule, E entity) {
+            this(rule, entity, null);
+        }
+
+        public Item(R rule, E entity, String msg) {
             this.rule = rule;
             this.entity = entity;
+            this.msg = msg;
         }
 
         public R getRule() {
@@ -63,6 +67,10 @@ public class CheckResult<R, E> {
 
         public E getEntity() {
             return entity;
+        }
+
+        public String getMsg() {
+            return msg;
         }
     }
 }

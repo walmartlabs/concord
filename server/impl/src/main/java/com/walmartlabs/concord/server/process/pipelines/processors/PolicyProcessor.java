@@ -82,11 +82,11 @@ public class PolicyProcessor implements PayloadProcessor {
         CheckResult<WorkspaceRule, Path> result = new PolicyEngine(policy).getWorkspacePolicy().check(workDir);
 
         result.getWarn().forEach(i -> {
-            logManager.warn(instanceId, "Potential workspace policy violation (policy: {})", i.getRule());
+            logManager.warn(instanceId, appendMsg("Potential workspace policy violation (policy: {})", i.getMsg()), i.getRule());
         });
 
         result.getDeny().forEach(i -> {
-            logManager.error(instanceId, "Workspace policy violation '{}'", i.getRule());
+            logManager.error(instanceId, appendMsg("Workspace policy violation", i.getMsg()), i.getRule());
         });
 
         if (!result.getDeny().isEmpty()) {
@@ -120,5 +120,12 @@ public class PolicyProcessor implements PayloadProcessor {
             logManager.error(instanceId, "Error while reading policy: {}", e);
             throw new ProcessException(instanceId, "Reading process policy error", e);
         }
+    }
+
+    private static String appendMsg(String msg, String s) {
+        if (s == null) {
+            return msg;
+        }
+        return msg + ": " + s;
     }
 }

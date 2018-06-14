@@ -4,6 +4,9 @@
 
 ### Added
 
+- policy-engine: optional rule violation messages;
+- concord-console: the repository start popup now has a link to the
+process log if the process failed to start;
 - concord-console: the profile page and the API key form;
 - ansible: new task parameter `outVars` to save specific Ansible
 variables as Concord flow variables;
@@ -14,6 +17,8 @@ serialization issues;
 
 ### Changed
 
+- policy-engine: fix calculation of workspace sizes; 
+- concord-console: fixed the server error details parsing;
 - concord-rpc: module removed. 
 
 

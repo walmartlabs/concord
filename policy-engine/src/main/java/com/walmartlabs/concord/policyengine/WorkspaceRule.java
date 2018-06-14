@@ -25,18 +25,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Set;
 
 public class WorkspaceRule implements Serializable {
 
     private final String msg;
     private final Long maxSizeInBytes;
+    private final Set<String> ignoredFiles;
 
     @JsonCreator
     public WorkspaceRule(@JsonProperty("msg") String msg,
-                         @JsonProperty("maxSizeInBytes") Long maxSizeInBytes) {
+                         @JsonProperty("maxSizeInBytes") Long maxSizeInBytes,
+                         @JsonProperty("ignoredFiles") Set<String> ignoredFiles) {
 
         this.msg = msg;
         this.maxSizeInBytes = maxSizeInBytes;
+        this.ignoredFiles = ignoredFiles;
     }
 
     public String getMsg() {
@@ -47,11 +51,16 @@ public class WorkspaceRule implements Serializable {
         return maxSizeInBytes;
     }
 
+    public Set<String> getIgnoredFiles() {
+        return ignoredFiles;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
                 .append("msg", msg)
                 .append("maxSizeInBytes", maxSizeInBytes)
+                .append("ignoredFiles", ignoredFiles)
                 .toString();
     }
 }

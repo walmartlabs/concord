@@ -22,6 +22,7 @@ export type ConcordId = string;
 export type ConcordKey = string;
 
 interface RequestErrorData {
+    instanceId?: ConcordId;
     message?: string;
     details?: string;
     status: number;
@@ -34,12 +35,13 @@ export const parseSiestaError = async (resp: Response) => {
     const json = await resp.json();
 
     let message;
-    if (resp.status < 400 && resp.status >= 500) {
+    if (resp.status < 400 || resp.status >= 500) {
         message = `ERROR: ${resp.statusText} (${resp.status})`;
     }
 
     return {
         message,
+        instanceId: json.instanceId,
         details: json[0].message,
         status: resp.status
     };
@@ -49,12 +51,13 @@ export const parseJsonError = async (resp: Response) => {
     const json = await resp.json();
 
     let message;
-    if (resp.status < 400 && resp.status >= 500) {
+    if (resp.status < 400 || resp.status >= 500) {
         message = json.message;
     }
 
     return {
         message,
+        instanceId: json.instanceId,
         details: json.details,
         level: json.level ? json.level : 'ERROR',
         status: resp.status
