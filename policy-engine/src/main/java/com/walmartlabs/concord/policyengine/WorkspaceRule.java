@@ -28,11 +28,19 @@ import java.io.Serializable;
 
 public class WorkspaceRule implements Serializable {
 
+    private final String msg;
     private final Long maxSizeInBytes;
 
     @JsonCreator
-    public WorkspaceRule(@JsonProperty("maxSizeInBytes") Long maxSizeInBytes) {
+    public WorkspaceRule(@JsonProperty("msg") String msg,
+                         @JsonProperty("maxSizeInBytes") Long maxSizeInBytes) {
+
+        this.msg = msg;
         this.maxSizeInBytes = maxSizeInBytes;
+    }
+
+    public String getMsg() {
+        return msg;
     }
 
     public Long getMaxSizeInBytes() {
@@ -42,6 +50,7 @@ public class WorkspaceRule implements Serializable {
     @Override
     public String toString() {
         return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
+                .append("msg", msg)
                 .append("maxSizeInBytes", maxSizeInBytes)
                 .toString();
     }

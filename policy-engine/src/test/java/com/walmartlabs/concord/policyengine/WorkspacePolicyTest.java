@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Collections;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -38,8 +37,8 @@ public class WorkspacePolicyTest {
         Path p = Files.createTempDirectory("test1");
         Files.write(p.resolve("test.bin"), new byte[] {0, 1, 2, 3, 4, 5 }, StandardOpenOption.CREATE_NEW);
 
-        WorkspacePolicy fiveBytes = new WorkspacePolicy(new WorkspaceRule(5L));
-        WorkspacePolicy tenBytes = new WorkspacePolicy(new WorkspaceRule(10L));
+        WorkspacePolicy fiveBytes = new WorkspacePolicy(new WorkspaceRule("5 bytes", 5L));
+        WorkspacePolicy tenBytes = new WorkspacePolicy(new WorkspaceRule("10 bytes", 10L));
 
         // ---
 
