@@ -82,6 +82,10 @@ public class ServerConnector implements MaintenanceModeListener {
                     cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities(), doneSignal);
 
             workerThreads[i] = new Thread(workers[i], "worker-" + i);
+        }
+
+        for (Thread w : workerThreads) {
+            w.start();
 
             // offset the worker start up slightly to smooth out the polling intervals
             try {
@@ -89,10 +93,6 @@ public class ServerConnector implements MaintenanceModeListener {
             } catch (InterruptedException e) {
                 // ignore
             }
-        }
-
-        for (Thread w : workerThreads) {
-            w.start();
         }
 
         if (cfg.isDockerOrphanSweeperEnabled()) {
