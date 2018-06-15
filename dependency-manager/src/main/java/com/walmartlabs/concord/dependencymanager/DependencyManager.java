@@ -99,13 +99,17 @@ public class DependencyManager {
         DependencyList deps = categorize(items);
 
         Collection<DependencyEntity> result = new HashSet<>();
+
         result.addAll(resolveDirectLinks(deps.directLinks));
+
         result.addAll(resolveMavenTransitiveDependencies(deps.mavenTransitiveDependencies).stream()
                 .map(DependencyManager::toDependency)
                 .collect(Collectors.toList()));
+
         result.addAll(resolveMavenSingleDependencies(deps.mavenSingleDependencies).stream()
                 .map(DependencyManager::toDependency)
                 .collect(Collectors.toList()));
+
         return result;
     }
 

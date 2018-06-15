@@ -27,6 +27,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
@@ -36,7 +37,6 @@ import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.ApiException;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +91,6 @@ public class DefaultJobExecutor implements JobExecutor {
 
         List<String> l = deps.stream()
                 .map(Object::toString)
-                .sorted()
                 .collect(Collectors.toList());
 
         StringBuilder b = new StringBuilder();
@@ -102,33 +101,41 @@ public class DefaultJobExecutor implements JobExecutor {
         logManager.log(instanceId, "Dependencies: %s", b);
     }
 
+    private Collection<Path> resolveDeps(UUID instanceId, Path workDir) throws IOException, ExecutionException {
+        Collection<URI> uris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(workDir).stream())
+                .collect(Collectors.toList());
+
+        Collection<DependencyEntity> deps = dependencyManager.resolve(uris);
+
+        checkDependencies(instanceId, workDir, deps);
+
+        Collection<Path> paths = deps.stream()
+                .map(DependencyEntity::getPath)
+                .sorted()
+                .collect(Collectors.toList());
+
+        boolean debugMode = debugMode(workDir);
+        if (debugMode) {
+            logDependencies(instanceId, paths);
+        } else {
+            logDependencies(instanceId, uris);
+        }
+
+        return paths;
+    }
+
     @Override
     public JobInstance start(UUID instanceId, Path workDir, String entryPoint) {
         try {
-            boolean debugMode = debugMode(workDir);
+            Collection<Path> resolvedDeps = resolveDeps(instanceId, workDir);
 
-            Collection<URI> depsUris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(workDir).stream())
-                    .collect(Collectors.toList());
-
-            Collection<DependencyEntity> resolvedDepEntities = dependencyManager.resolve(depsUris);
-
-            checkDependencies(instanceId, workDir, resolvedDepEntities);
-
-            Collection<Path> resolvedDeps = resolvedDepEntities.stream().map(DependencyEntity::getPath).collect(Collectors.toList());
-
-            if (debugMode) {
-                logDependencies(instanceId, resolvedDeps);
-            } else {
-                logDependencies(instanceId, depsUris);
-            }
+            String[] cmd = createCommand(resolvedDeps, workDir);
 
             ProcessEntry entry;
             if (canUsePrefork(workDir)) {
-                String[] cmd = createCommand(resolvedDeps, workDir);
                 entry = fork(instanceId, workDir, cmd);
             } else {
                 log.info("start ['{}'] -> can't use a pre-forked instance", instanceId);
-                String[] cmd = createCommand(resolvedDeps, workDir);
                 entry = startOneTime(instanceId, workDir, cmd);
             }
 
@@ -317,7 +324,7 @@ public class DefaultJobExecutor implements JobExecutor {
         }
     }
 
-    private String[] createCommand(Collection<Path> dependencies, Path workDir) {
+    private String[] createCommand(Collection<Path> dependencies, Path workDir) throws IOException {
         List<String> l = new ArrayList<>();
 
         l.add(cfg.getAgentJavaCmd());
@@ -356,14 +363,24 @@ public class DefaultJobExecutor implements JobExecutor {
         // main class
         l.add("com.walmartlabs.concord.runner.Main");
 
-        Collection<String> dependencyFiles = dependencies.stream()
-                .map(p -> p.toAbsolutePath().toString())
-                .sorted()
-                .collect(Collectors.toSet());
-        String deps = String.join(":", dependencyFiles);
-        l.add(joinClassPath(deps));
+        l.add(storeDeps(dependencies).toString());
 
         return l.toArray(new String[0]);
+    }
+
+    private Path storeDeps(Collection<Path> dependencies) throws IOException {
+        List<String> deps = dependencies.stream().map(p -> p.toAbsolutePath().toString()).collect(Collectors.toList());
+        HashCode depsHash = hash(deps.toArray(new String[0]));
+
+        Path result = cfg.getDependencyListsDir().resolve(depsHash.toString() + ".deps");
+        if (Files.exists(result)) {
+            return result;
+        }
+
+        Files.write(result,
+                (Iterable<String>) deps.stream()::iterator,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -509,12 +526,6 @@ public class DefaultJobExecutor implements JobExecutor {
             h.putString(s, Charsets.UTF_8);
         }
         return h.hash();
-    }
-
-    private static String joinClassPath(String... as) {
-        return String.join(":", Arrays.stream(as)
-                .filter(s -> s != null && !s.trim().isEmpty())
-                .collect(Collectors.toList()));
     }
 
     @SuppressWarnings("unchecked")

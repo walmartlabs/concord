@@ -292,7 +292,7 @@ public class Main {
         try {
             List<URL> deps = Collections.emptyList();
             if (args.length > 0) {
-                deps = parseDeps(args[0]);
+                deps = parseDeps(Paths.get(args[0]));
             }
 
             URLClassLoader depsClassLoader = new URLClassLoader(deps.toArray(new URL[0]), Main.class.getClassLoader());
@@ -337,15 +337,15 @@ public class Main {
         return e;
     }
 
-    private static List<URL> parseDeps(String plainDeps) throws IOException {
-        List<URL> result = new ArrayList<>();
-        for (String d : plainDeps.split(":")) {
-            try {
-                result.add(new URL("file://" + d));
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    private static List<URL> parseDeps(Path depsListFile) throws IOException {
+        List<URL> result = Files.readAllLines(depsListFile).stream()
+                .map(s -> {
+                    try {
+                        return new URL("file://" + s);
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException("invalid deps file: " + depsListFile + ", error:" + e.getMessage());
+                    }
+                }).collect(Collectors.toList());
 
         // payload's own libraries are stored in `./lib/` directory in the working directory
         Path baseDir = Paths.get(System.getProperty("user.dir"));

@@ -66,6 +66,7 @@ public class Configuration {
     public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL_KEY";
     public static final String CAPABILITIES_FILE_KEY = "CAPABILITIES_FILE";
     public static final String USER_AGENT_KEY = "USER_AGENT";
+    public static final String STORE_DEPS_DIR_KEY = "STORE_DEPS_DIR";
 
     /**
      * As defined in server/db/src/main/resources/com/walmartlabs/concord/server/db/v0.69.0.xml
@@ -98,6 +99,8 @@ public class Configuration {
 
     private final Map<String, Object> capabilities;
     private final String userAgent;
+
+    private final Path dependencyListsDir;
 
     @SuppressWarnings("unchecked")
     public Configuration() {
@@ -152,6 +155,7 @@ public class Configuration {
             }
             this.userAgent = getEnv(USER_AGENT_KEY, "Concord-Agent: id=" + agentId);
 
+            this.dependencyListsDir = getDir(STORE_DEPS_DIR_KEY, "dependencyListsDir");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -251,6 +255,10 @@ public class Configuration {
 
     public String getUserAgent() {
         return userAgent;
+    }
+
+    public Path getDependencyListsDir() {
+        return dependencyListsDir;
     }
 
     private static String getEnv(String key, String defaultValue) {
