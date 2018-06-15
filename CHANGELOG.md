@@ -17,6 +17,8 @@ serialization issues;
 
 ### Changed
 
+- concord-console: clean up the error message when users try to
+access a form without a matching LDAP group;
 - policy-engine: fix calculation of workspace sizes; 
 - concord-console: fixed the server error details parsing;
 - concord-rpc: module removed. 

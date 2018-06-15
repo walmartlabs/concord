@@ -68,7 +68,7 @@ public class FormAccessManager {
         String expectedUser = (String) runAsParams.get(InternalConstants.Forms.RUN_AS_USERNAME_KEY);
         if (expectedUser != null && !expectedUser.equals(p.getUsername())) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
-                    "the necessary permissions to resume process. Expected user '" + expectedUser + "'");
+                    "the necessary permissions to access the form.");
         }
 
         String group = (String) Optional.ofNullable(runAsParams.get(InternalConstants.Forms.RUN_AS_LDAP_KEY))
@@ -80,8 +80,8 @@ public class FormAccessManager {
         Set<String> userLdapGroups = Optional.ofNullable(ldapPrincipal).map(LdapPrincipal::getGroups).orElse(null);
 
         if (group != null && !matchesLdapGroup(group, userLdapGroups)) {
-            throw new UnauthorizedException("The current user (" + p.getUsername() + "[" + userLdapGroups + "]) doesn't have " +
-                    "the necessary permissions to resume process. Expected LDAP group '" + group + "'");
+            throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
+                    "the necessary permissions to access the form.");
         }
 
         return f;
