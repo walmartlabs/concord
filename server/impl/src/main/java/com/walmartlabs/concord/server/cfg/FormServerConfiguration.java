@@ -32,13 +32,17 @@ import java.nio.file.Paths;
 @Singleton
 public class FormServerConfiguration {
 
-    public static final String FORM_SERVER_DIR_KEY = "FORM_SERVER_DIR";
+    private static final String FORM_SERVER_DIR_KEY = "FORM_SERVER_DIR";
 
-    private final Path baseDir;
-
-    public FormServerConfiguration() throws IOException {
-        String s = System.getenv(FORM_SERVER_DIR_KEY);
-        this.baseDir = s != null ? Paths.get(s) : IOUtils.createTempDir("formserv");
+    // TODO externalize
+    public static final Path baseDir;
+    static {
+        try {
+            String s = System.getenv(FORM_SERVER_DIR_KEY);
+            baseDir = s != null ? Paths.get(s) : IOUtils.createTempDir("formserv"); // TODO externalize
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Path getBaseDir() {

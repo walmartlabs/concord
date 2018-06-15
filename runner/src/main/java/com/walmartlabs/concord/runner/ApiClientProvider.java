@@ -57,12 +57,11 @@ public class ApiClientProvider implements Provider<ApiClient> {
         int connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
         int readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
 
-        this.apiClient = new ConcordApiClient();
-        this.apiClient.setTempFolderPath(IOUtils.createTempDir("runner-client").toString());
-        this.apiClient.setBasePath(serverApiBaseUrl);
+        this.apiClient = new ConcordApiClient(serverApiBaseUrl)
+            .setTempFolderPath(IOUtils.createTempDir("runner-client").toString())
+            .setReadTimeout(readTimeout)
+            .setReadTimeout(connectTimeout);
         this.apiClient.setApiKey(apiKey);
-        this.apiClient.setReadTimeout(readTimeout);
-        this.apiClient.setConnectTimeout(connectTimeout);
 
         log.info("Using the API address: {}", serverApiBaseUrl);
     }

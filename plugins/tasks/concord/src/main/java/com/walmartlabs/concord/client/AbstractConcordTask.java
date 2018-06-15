@@ -45,8 +45,7 @@ public abstract class AbstractConcordTask implements Task {
     ApiConfiguration apiCfg;
 
     protected <T> T withClient(Context ctx, CheckedFunction<ApiClient, T> f) throws Exception {
-        ConcordApiClient c = new ConcordApiClient();
-        c.setBasePath(apiCfg.getBaseUrl());
+        ConcordApiClient c = new ConcordApiClient(apiCfg.getBaseUrl());
         c.setSessionToken(apiCfg.getSessionToken(ctx));
         c.setConnectTimeout(30000);
         c.addDefaultHeader("Accept", "*/*");

@@ -161,9 +161,8 @@ public class ServerConnector implements MaintenanceModeListener {
     }
 
     private static ApiClient createClient(Configuration cfg) throws IOException {
-        ApiClient client = new ConcordApiClient();
+        ApiClient client = new ConcordApiClient(cfg.getServerApiBaseUrl());
         client.setTempFolderPath(IOUtils.createTempDir("agent-client").toString());
-        client.setBasePath(cfg.getServerApiBaseUrl());
         client.setApiKey(cfg.getApiKey());
         client.setReadTimeout(cfg.getReadTimeout());
         client.setConnectTimeout(cfg.getConnectTimeout());

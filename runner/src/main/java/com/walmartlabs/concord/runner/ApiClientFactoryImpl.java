@@ -51,9 +51,8 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
             throw new RuntimeException("Can't create tmp dir", e);
         }
 
-        ConcordApiClient client = new ConcordApiClient();
+        ConcordApiClient client = new ConcordApiClient(cfg.getBaseUrl());
         client.setTempFolderPath(tmpDir.toString());
-        client.setBasePath(cfg.getBaseUrl());
         client.setSessionToken(cfg.getSessionToken(ctx));
         return client;
     }

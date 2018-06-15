@@ -34,7 +34,9 @@ public class ConcordApiClient extends ApiClient {
 
     private static final String SESSION_COOKIE_NAME = "JSESSIONID";
 
-    public ConcordApiClient() {
+    public ConcordApiClient(String baseUrl) {
+        setBasePath(baseUrl);
+
         OkHttpClient ok = getHttpClient();
 
         Map<String, String> cookieJar = new HashMap<>();

@@ -262,6 +262,24 @@
                             <outputDirectory>${deps.dir}</outputDirectory>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>ensure-available</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <!-- to test broken classpaths -->
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>io.takari.bpm</groupId>
+                                    <artifactId>bpm-engine-api</artifactId>
+                                    <version>0.10.0</version>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${java.io.tmpdir}</outputDirectory>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
