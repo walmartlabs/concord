@@ -92,7 +92,7 @@ public final class InternalConstants extends Constants {
         /**
          * Files, that won't be added to a payload or saved in the state store.
          */
-        public static final String[] IGNORED_FILES = {"^\\.git.*"};
+        public static final String[] IGNORED_FILES = {"^\\.git.*", ".*/\\.git/.*"};
 
         /**
          * File which contains data of process' OUT variables.
