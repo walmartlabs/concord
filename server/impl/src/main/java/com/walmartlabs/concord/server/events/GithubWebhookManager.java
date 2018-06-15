@@ -53,7 +53,7 @@ public class GithubWebhookManager {
             log.info("init -> connecting to the GitHub API '{}'", cfg.getApiUrl());
             this.gh = GitHub.connectToEnterprise(cfg.getApiUrl(), cfg.getOauthAccessToken());
         } else {
-            log.warn("init -> the GitHub APU URL is not configured, skipping");
+            log.warn("init -> the GitHub API URL is not configured, skipping");
             this.gh = null;
         }
     }
