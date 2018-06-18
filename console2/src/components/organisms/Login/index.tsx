@@ -55,8 +55,12 @@ class Login extends React.Component<LoginStateProps & LoginDispatchProps, LoginD
         this.state = { username: '', password: '' };
     }
 
-    handleChange(e: {}, { name, value }: InputOnChangeData) {
-        this.setState({ [name]: value });
+    handleUsernameChange(e: {}, { value }: InputOnChangeData) {
+        this.setState({ username: value });
+    }
+
+    handlePasswordChange(e: {}, { value }: InputOnChangeData) {
+        this.setState({ password: value });
     }
 
     handleSubmit() {
@@ -82,7 +86,7 @@ class Login extends React.Component<LoginStateProps & LoginDispatchProps, LoginD
                             icon="user"
                             required={true}
                             value={username}
-                            onChange={(e, data) => this.handleChange(e, data)}
+                            onChange={(e, data) => this.handleUsernameChange(e, data)}
                         />
                         <Form.Input
                             name="password"
@@ -92,7 +96,7 @@ class Login extends React.Component<LoginStateProps & LoginDispatchProps, LoginD
                             required={true}
                             value={password}
                             autoComplete="current-password"
-                            onChange={(e, data) => this.handleChange(e, data)}
+                            onChange={(e, data) => this.handlePasswordChange(e, data)}
                         />
 
                         <Message error={true} content={this.props.apiError} />

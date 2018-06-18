@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 import { Message } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';
@@ -41,7 +41,11 @@ export default class extends React.PureComponent<Props> {
             <Message negative={true}>
                 {error.message && <Message.Header>{error.message}</Message.Header>}
                 {details && <p>{details}</p>}
-                {error.instanceId && <p><Link to={`/process/${error.instanceId}/log`}>Open the process log</Link></p>}
+                {error.instanceId && (
+                    <p>
+                        <Link to={`/process/${error.instanceId}/log`}>Open the process log</Link>
+                    </p>
+                )}
             </Message>
         );
     }
