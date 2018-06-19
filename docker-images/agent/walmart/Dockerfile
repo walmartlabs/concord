@@ -2,6 +2,7 @@ FROM docker.prod.walmart.com/walmartlabs/concord-ansible:latest
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 ENV DOCKER_HOST tcp://dind:2375
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
 
 USER root
 
