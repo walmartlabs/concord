@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,24 +20,15 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.project.TemplateAliasEntry;
-import com.walmartlabs.concord.server.api.project.TemplateAliasResource;
-import com.walmartlabs.concord.server.process.pipelines.processors.TemplateScriptProcessor;
+import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,30 +46,40 @@ public class TemplateIT extends AbstractServerIT {
         String templateAlias = "template_" + randomString();
         Path templatePath = createTemplate();
 
-        TemplateAliasResource templateAliasResource = proxy(TemplateAliasResource.class);
-        templateAliasResource.createOrUpdate(new TemplateAliasEntry(templateAlias, templatePath.toUri().toString()));
+        TemplateAliasApi templateAliasResource = new TemplateAliasApi(getApiClient());
+        templateAliasResource.createOrUpdate(new TemplateAliasEntry()
+                .setAlias(templateAlias)
+                .setUrl(templatePath.toUri().toString()));
 
         // ---
 
+        String orgName = "Default";
         String projectName = "project_" + randomString();
         String myName = "myName_" + randomString();
 
         // ---
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         Map<String, Object> cfg = new HashMap<>();
-        cfg.put(InternalConstants.Request.TEMPLATE_KEY, templateAlias);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, cfg, null, null, true));
+        cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setCfg(cfg)
+                .setAcceptsRawPayload(true));
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, Collections.singletonMap("name", myName), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("name", myName);
+        StartProcessResponse spr = start(input);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
@@ -89,10 +90,10 @@ public class TemplateIT extends AbstractServerIT {
     private static Path createTemplate() throws IOException {
         Path tmpDir = createTempDir();
 
-        Path metaPath = tmpDir.resolve(TemplateScriptProcessor.REQUEST_DATA_TEMPLATE_FILE_NAME);
+        Path metaPath = tmpDir.resolve("_main.js");
         Files.write(metaPath, META_JS.getBytes());
 
-        Path processesPath = tmpDir.resolve(InternalConstants.Files.DEFINITIONS_DIR_NAME);
+        Path processesPath = tmpDir.resolve("flows");
         Files.createDirectories(processesPath);
 
         Path procPath = processesPath.resolve("hello.yml");

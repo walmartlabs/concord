@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,63 +20,57 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.user.UserResource;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
 
 import static org.junit.Assert.fail;
 
 public class ValidationIT extends AbstractServerIT {
 
-    @Test(expected = BadRequestException.class)
-    public void testApiKeys() {
-        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
+    @Test(expected = ApiException.class)
+    public void testApiKeys() throws Exception {
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
 
-        CreateApiKeyRequest req = new CreateApiKeyRequest(null, null);
+        CreateApiKeyRequest req = new CreateApiKeyRequest();
         apiKeyResource.create(req);
     }
 
     @Test
-    public void testProjectCreation() {
-        ProjectResource projectResource = proxy(ProjectResource.class);
+    public void testProjectCreation() throws Exception {
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         try {
-            ProjectEntry req = new ProjectEntry("@123_123");
-            projectResource.createOrUpdate(req);
+            ProjectEntry req = new ProjectEntry().setName("@123_123");
+            projectsApi.createOrUpdate("Default", req);
             fail("Should fail with validation error");
-        } catch (BadRequestException e) {
+        } catch (ApiException e) {
         }
 
-        ProjectEntry req = new ProjectEntry("aProperName@" + System.currentTimeMillis());
-        projectResource.createOrUpdate(req);
+        ProjectEntry req = new ProjectEntry().setName("aProperName@" + System.currentTimeMillis());
+        projectsApi.createOrUpdate("Default", req);
     }
 
     @Test
-    public void testInvalidUsername() {
-        UserResource userResource = proxy(UserResource.class);
+    public void testInvalidUsername() throws Exception {
+        UsersApi usersApi = new UsersApi(getApiClient());
 
         try {
-            userResource.findByUsername("test@localhost");
+            usersApi.findByUsername("test@localhost");
             fail("Should fail with validation error");
-        } catch (BadRequestException e) {
+        } catch (ApiException e) {
         }
 
         try {
-            userResource.findByUsername("local\\test");
+            usersApi.findByUsername("local\\test");
             fail("Should fail with validation error");
-        } catch (BadRequestException e) {
+        } catch (ApiException e) {
         }
 
         try {
-            userResource.findByUsername("test#" + System.currentTimeMillis());
+            usersApi.findByUsername("test#" + System.currentTimeMillis());
             fail("Random valid username, should fail with 404");
-        } catch (NotFoundException e) {
+        } catch (ApiException e) {
         }
     }
 }

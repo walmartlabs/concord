@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,15 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.OrganizationResource;
-import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectResource;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
@@ -98,8 +90,8 @@ public class CryptoIT extends AbstractServerIT {
     public void testExportAsFileWithOrg() throws Exception {
         String orgName = "org@" + randomString();
 
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // ---
 
@@ -121,8 +113,8 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*We got " + secretValue + ".*", ab);
@@ -132,8 +124,8 @@ public class CryptoIT extends AbstractServerIT {
     public void testWithoutPassword() throws Exception {
         String orgName = "org@" + randomString();
 
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // ---
 
@@ -153,8 +145,8 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*We got " + secretValue + ".*", ab);
@@ -164,21 +156,23 @@ public class CryptoIT extends AbstractServerIT {
     public void testDecryptString() throws Exception {
         String orgName = "org_" + randomString();
 
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // ---
 
         String projectName = "project_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
         // ---
 
         String value = "value_" + randomString();
 
-        EncryptValueResponse evr = projectResource.encrypt(orgName, projectName, value);
+        EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
         assertTrue(evr.isOk());
 
         // ---
@@ -189,12 +183,12 @@ public class CryptoIT extends AbstractServerIT {
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
-                "arguments.encryptedValue", DatatypeConverter.printBase64Binary(evr.getData())));
+                "arguments.encryptedValue", evr.getData()));
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*We got " + value + ".*", ab);
@@ -204,15 +198,17 @@ public class CryptoIT extends AbstractServerIT {
     public void testDecryptInvalidString() throws Exception {
         String orgName = "org_" + randomString();
 
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // ---
 
         String projectName = "project_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
         // ---
 
@@ -222,13 +218,13 @@ public class CryptoIT extends AbstractServerIT {
                 "org", orgName,
                 "project", projectName,
                 "archive", payload,
-                "arguments.encryptedValue", DatatypeConverter.printBase64Binary(new byte[] { 0, 1, 2 })));
+                "arguments.encryptedValue", DatatypeConverter.printBase64Binary(new byte[]{0, 1, 2})));
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FAILED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
         // ---
 
@@ -240,8 +236,8 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FAILED, pir.getStatus());
+        pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
     }
 
     private void test(String project, String secretName, String storePassword, String log) throws Exception {
@@ -254,8 +250,8 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(log, ab);

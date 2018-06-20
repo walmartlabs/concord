@@ -20,18 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
-import com.walmartlabs.concord.server.api.user.CreateUserRequest;
-import com.walmartlabs.concord.server.api.user.UserResource;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -44,11 +34,13 @@ public class InitiatorIT extends AbstractServerIT {
     public void test() throws Exception {
         String username = "user_" + randomString();
 
-        UserResource userResource = proxy(UserResource.class);
-        userResource.createOrUpdate(new CreateUserRequest(username, UserType.LOCAL, false));
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
 
-        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(username));
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest().setUsername(username));
 
         setApiKey(cakr.getKey());
 
@@ -56,13 +48,13 @@ public class InitiatorIT extends AbstractServerIT {
 
         byte[] payload = archive(ProcessIT.class.getResource("initiator").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 

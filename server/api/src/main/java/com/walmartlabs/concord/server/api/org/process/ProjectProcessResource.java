@@ -37,7 +37,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.UUID;
 
-@Api(value = "Processes", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Api(value = "Project Processes", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public interface ProjectProcessResource {
 

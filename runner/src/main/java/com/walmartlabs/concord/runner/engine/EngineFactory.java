@@ -21,7 +21,8 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.EventApi;
+import com.walmartlabs.concord.client.ExternalEventsApi;
+import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
@@ -107,7 +108,7 @@ public class EngineFactory {
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
         cfg.setCopyAllCallActivityOutVariables(true);
 
-        ElementEventProcessor eventProcessor = new ElementEventProcessor(new EventApi(apiClient), adapter.processes());
+        ElementEventProcessor eventProcessor = new ElementEventProcessor(new ProcessEventsApi(apiClient), adapter.processes());
 
         Engine engine = new EngineBuilder()
                 .withContextFactory(contextFactory)

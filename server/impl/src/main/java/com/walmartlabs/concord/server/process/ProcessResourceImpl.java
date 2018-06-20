@@ -86,7 +86,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
     private final SecretManager secretManager;
-    private final ProcessSecurityContext securityContext;
     private final OrganizationDao orgDao;
 
     @Inject
@@ -98,7 +97,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                UserDao userDao,
                                ProjectAccessManager projectAccessManager,
                                SecretManager secretManager,
-                               ProcessSecurityContext securityContext,
                                OrganizationDao orgDao) {
 
         this.processManager = processManager;
@@ -109,7 +107,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.userDao = userDao;
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
-        this.securityContext = securityContext;
         this.orgDao = orgDao;
     }
 
@@ -176,7 +173,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             // TODO remove after deprecating the old endpoints
             payload = new PayloadBuilder(payload)
                     .parentInstanceId(parentInstanceId)
-                    .outExpressions(out)
+                    .mergeOutExpressions(out)
                     .build();
         } catch (IOException e) {
             log.error("start -> error creating a payload: {}", e);
@@ -496,7 +493,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
 
     @Override
     @Validate
-    public Response downloadState(UUID instanceId, String fileName) {
+    public Response downloadStateFile(UUID instanceId, String fileName) {
         ProcessEntry p = assertProcess(instanceId);
 
         if (p.getProjectId() != null) {
@@ -564,7 +561,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         byte[] bytes;
 
         try {
-           bytes = ByteStreams.toByteArray(data);
+            bytes = ByteStreams.toByteArray(data);
         } catch (IOException e) {
             log.error("decrypt ['{}'] -> error data load", instanceId, e);
             throw new WebApplicationException("decrypt error: " + e.getMessage());

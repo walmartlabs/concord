@@ -13,9 +13,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <skipNodeInstall>false</skipNodeInstall>
-        <skipNpmInstall>false</skipNpmInstall>
-        <skipNpmBuild>false</skipNpmBuild>
+        <skipNpm>false</skipNpm>
     </properties>
 
     <build>
@@ -40,7 +38,7 @@
                             <goal>install-node-and-npm</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipNodeInstall}</skip>
+                            <skip>${skipNpm}</skip>
                         </configuration>
                     </execution>
                     <execution>
@@ -49,7 +47,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipNpmInstall}</skip>
+                            <skip>${skipNpm}</skip>
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
@@ -63,7 +61,7 @@
                             <environmentVariables>
                                 <REACT_APP_CONCORD_VERSION>${project.version}</REACT_APP_CONCORD_VERSION>
                             </environmentVariables>
-                            <skip>${skipNpmBuild}</skip>
+                            <skip>${skipNpm}</skip>
                             <arguments>run build</arguments>
                         </configuration>
                     </execution>

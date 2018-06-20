@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,17 +20,24 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.InputStream;
+import com.walmartlabs.concord.client.SecretOperationResponse;
+import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.it.common.ITUtils;
 import com.walmartlabs.concord.it.common.ServerClient;
-import com.walmartlabs.concord.server.api.org.secret.SecretOperationResponse;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import org.junit.After;
 import org.junit.Before;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractServerIT {
@@ -38,46 +45,72 @@ public abstract class AbstractServerIT {
     private ServerClient serverClient;
 
     @Before
-    public void _init() throws Exception {
+    public void _init() {
         serverClient = new ServerClient(ITConstants.SERVER_URL);
     }
 
-    @After
-    public void _destroy() {
-        serverClient.close();
+    protected ApiClient getApiClient() {
+        return serverClient.getClient();
     }
 
-    protected StartProcessResponse start(Map<String, Object> input) {
+    protected StartProcessResponse start(String orgName, String projectName, String repoName, String entryPoint, byte[] payload) throws ApiException {
+        Map<String, Object> input = new HashMap<>();
+        if (orgName != null) {
+            input.put("org", orgName);
+        }
+        if (projectName != null) {
+            input.put("project", projectName);
+        }
+        if (repoName != null) {
+            input.put("repo", repoName);
+        }
+        if (entryPoint != null) {
+            input.put("entryPoint", entryPoint);
+        }
+        if (payload != null) {
+            input.put("archive", payload);
+        }
+        return start(input);
+    }
+
+    protected StartProcessResponse start(String entryPoint, byte[] payload) throws ApiException {
+        Map<String, Object> input = new HashMap<>();
+        input.put("entryPoint", entryPoint);
+        input.put("archive", payload);
+        return start(input);
+    }
+
+    protected StartProcessResponse start(String entryPoint) throws ApiException {
+        Map<String, Object> input = new HashMap<>();
+        input.put("entryPoint", entryPoint);
+        return start(input);
+    }
+
+    protected StartProcessResponse start(byte[] payload) throws ApiException {
+        return start(Collections.singletonMap("archive", payload));
+    }
+
+    protected StartProcessResponse start(InputStream in) throws ApiException {
+        return start(Collections.singletonMap("archive", in));
+    }
+
+    protected StartProcessResponse start(Map<String, Object> input) throws ApiException {
         return serverClient.start(input);
     }
 
-    @Deprecated
-    protected StartProcessResponse start(Map<String, Object> input, boolean sync) {
-        return serverClient.start(input, sync);
-    }
-
-    @Deprecated
-    protected StartProcessResponse start(String entryPoint, Map<String, Object> input) {
-        return serverClient.start(entryPoint, input, false);
-    }
-
-    protected SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) {
+    protected SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
         return serverClient.addPlainSecret(orgName, name, generatePassword, storePassword, secret);
     }
 
-    protected SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) {
+    protected SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
         return serverClient.addUsernamePassword(orgName, name, generatePassword, storePassword, username, password);
     }
 
-    protected SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) {
+    protected SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) throws ApiException {
         return serverClient.generateKeyPair(orgName, name, generatePassword, storePassword);
     }
 
-    protected <T> T proxy(Class<T> klass) {
-        return serverClient.proxy(klass);
-    }
-
-    protected byte[] getLog(String logFileName) {
+    protected byte[] getLog(String logFileName) throws ApiException {
         return serverClient.getLog(logFileName);
     }
 
@@ -93,11 +126,11 @@ public abstract class AbstractServerIT {
         serverClient.setGithubKey(key);
     }
 
-    protected void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException {
+    protected void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException, ApiException {
         serverClient.waitForLog(logFileName, pattern);
     }
 
-    protected <T> T request(String uri, Map<String, Object> input, Class<T> entityType) {
+    protected <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
         return serverClient.request(uri, input, entityType);
     }
 
@@ -115,5 +148,11 @@ public abstract class AbstractServerIT {
         Path tmpDir = Files.createTempFile("test", suffix);
         Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rw-r--r--"));
         return tmpDir;
+    }
+
+    protected Map<String, Object> fromJson(File f) throws IOException {
+        try (Reader r = new FileReader(f)) {
+            return getApiClient().getJSON().getGson().fromJson(r, Map.class);
+        }
     }
 }

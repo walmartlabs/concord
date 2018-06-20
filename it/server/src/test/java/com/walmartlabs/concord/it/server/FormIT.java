@@ -20,10 +20,10 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.*;
+
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -43,16 +43,16 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formResource.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // ---
@@ -63,17 +63,17 @@ public class FormIT extends AbstractServerIT {
         String formId = f0.getFormInstanceId();
 
         Map<String, Object> data = Collections.singletonMap("firstName", firstName);
-        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formId, data);
         assertTrue(fsr.isOk());
 
-        ProcessEntry psr = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*100223.*", ab);
 
         // ---
 
-        forms = formResource.list(spr.getInstanceId());
+        forms = formsApi.list(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // ---
@@ -85,12 +85,12 @@ public class FormIT extends AbstractServerIT {
         data.put("rememberMe", true);
         data.put("file", "file-content");
 
-        fsr = formResource.submit(spr.getInstanceId(), formId, data);
+        fsr = formsApi.submit(spr.getInstanceId(), formId, data);
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
-        psr = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, psr.getStatus());
+        psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
@@ -111,16 +111,16 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formResource.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // ---
@@ -131,17 +131,17 @@ public class FormIT extends AbstractServerIT {
         String formId = f0.getFormInstanceId();
 
         Map<String, Object> data = Collections.singletonMap("firstName", firstName);
-        FormSubmitResponse fsr = request("api/v1/process/" + spr.getInstanceId() + "/form/" + formId, data, FormSubmitResponse.class);
+        FormSubmitResponse fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formId, data, FormSubmitResponse.class);
         assertTrue(fsr.isOk());
 
-        ProcessEntry psr = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*100223.*", ab);
 
         // ---
 
-        forms = formResource.list(spr.getInstanceId());
+        forms = formsApi.list(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // ---
@@ -153,12 +153,12 @@ public class FormIT extends AbstractServerIT {
         data.put("rememberMe", true);
         data.put("file", "file-content".getBytes());
 
-        fsr = request("api/v1/process/" + spr.getInstanceId() + "/form/" + formId, data, FormSubmitResponse.class);
+        fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formId, data, FormSubmitResponse.class);
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
-        psr = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, psr.getStatus());
+        psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
@@ -176,14 +176,14 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formResource = new ProcessFormsApi(getApiClient());
 
         List<FormListEntry> forms = formResource.list(spr.getInstanceId());
 
@@ -196,8 +196,8 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, psr.getStatus());
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*Hello, Concord.*", ab);
@@ -209,25 +209,25 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formResource.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
         FormListEntry f0 = forms.get(0);
         String formId = f0.getFormInstanceId();
 
-        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, Collections.emptyMap());
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formId, Collections.emptyMap());
         assertTrue(fsr.isOk());
 
         // ---
 
-        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, psr.getStatus());
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*we got 123 hello 234.*", ab);
@@ -246,14 +246,14 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formResource.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         // ---
@@ -264,10 +264,10 @@ public class FormIT extends AbstractServerIT {
         String formId = f0.getFormInstanceId();
 
         Map<String, Object> data = Collections.singletonMap("myField", fieldValue);
-        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formId, data);
         assertTrue(fsr.isOk());
 
-        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*We got " + fieldValue + ".*", ab);

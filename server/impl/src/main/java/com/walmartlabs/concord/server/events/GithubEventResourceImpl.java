@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.api.events.GithubEventResource;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;

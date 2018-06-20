@@ -43,7 +43,7 @@ public interface TriggerResource {
      * @return
      */
     @GET
-    @ApiOperation("List trigger definitions")
+    @ApiOperation(value = "List trigger definitions", responseContainer = "list", response = TriggerEntry.class)
     @Path("/{orgName}/project/{projectName}/repo/{repositoryName}/trigger")
     @Produces(MediaType.APPLICATION_JSON)
     List<TriggerEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,

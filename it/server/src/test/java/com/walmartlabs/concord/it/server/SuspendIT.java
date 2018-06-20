@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,23 +20,19 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.assertEquals;
 
 public class SuspendIT extends AbstractServerIT {
@@ -48,12 +44,12 @@ public class SuspendIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*aaaa.*", ab);
@@ -62,12 +58,12 @@ public class SuspendIT extends AbstractServerIT {
 
         String testValue = "test#" + randomString();
         Map<String, Object> args = Collections.singletonMap("testValue", testValue);
-        Map<String, Object> req = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY, args);
+        Map<String, Object> req = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
 
-        processResource.resume(spr.getInstanceId(), "ev1", req);
+        processApi.resume(spr.getInstanceId(), "ev1", req);
 
-        pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         waitForLog(pir.getLogFileName(), ".*bbbb.*");
         waitForLog(pir.getLogFileName(), ".*" + Pattern.quote(testValue) + ".*");

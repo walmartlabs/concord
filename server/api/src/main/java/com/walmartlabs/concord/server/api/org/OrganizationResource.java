@@ -48,7 +48,7 @@ public interface OrganizationResource {
     OrganizationEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName);
 
     @GET
-    @ApiOperation("List organizations")
+    @ApiOperation(value = "List organizations", responseContainer = "list", response = OrganizationEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     List<OrganizationEntry> list(@ApiParam @QueryParam("onlyCurrent") @DefaultValue("false") boolean onlyCurrent);
 }

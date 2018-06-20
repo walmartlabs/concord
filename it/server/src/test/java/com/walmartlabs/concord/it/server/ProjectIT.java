@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,33 +22,15 @@ package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.ImmutableMap;
 import com.googlecode.junittoolbox.ParallelRunner;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerResource;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
-import com.walmartlabs.concord.server.api.user.CreateUserRequest;
-import com.walmartlabs.concord.server.api.user.CreateUserResponse;
-import com.walmartlabs.concord.server.api.user.UserResource;
-import com.walmartlabs.concord.server.api.user.UserType;
-import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -79,9 +61,9 @@ public class ProjectIT extends AbstractServerIT {
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
-        String entryPoint = projectName + ":" + repoName + ":main";
+        String entryPoint = "main";
         String greeting = "Hello, _" + randomString();
-        Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
         // ---
@@ -112,11 +94,10 @@ public class ProjectIT extends AbstractServerIT {
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
-        String entryPoint = projectName + ":" + repoName;
 
         // ---
 
-        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, Collections.emptyMap(), false);
+        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, null, Collections.emptyMap(), false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*Hello, Concord.*", ab);
@@ -157,9 +138,9 @@ public class ProjectIT extends AbstractServerIT {
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
-        String entryPoint = projectName + ":" + repoName + ":main";
+        String entryPoint = "main";
         String greeting = "Hello, _" + randomString();
-        Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
         // ---
@@ -208,9 +189,9 @@ public class ProjectIT extends AbstractServerIT {
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
-        String entryPoint = projectName + ":" + repoName + ":main";
+        String entryPoint = "main";
         String greeting = "Hello, _" + randomString();
-        Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
                 Collections.singletonMap("greeting", greeting));
 
         // ---
@@ -240,9 +221,9 @@ public class ProjectIT extends AbstractServerIT {
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
-        String entryPoint = projectName + ":" + repoName + ":main";
+        String entryPoint = "main";
 
-        Map<String, Object> args = Collections.singletonMap(InternalConstants.Request.ARGUMENTS_KEY,
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
                 ImmutableMap.of(
                         "myForm1", ImmutableMap.of(
                                 "x", 100123, "firstName", "Boo"),
@@ -263,7 +244,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*120123.*", ab);
         assertLog(".*redColor.*", ab);
 
-        assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
+        assertTrue(psr.getStatus() == ProcessEntry.StatusEnum.FINISHED);
     }
 
     @Test(timeout = 60000)
@@ -289,9 +270,9 @@ public class ProjectIT extends AbstractServerIT {
 
         createProjectAndRepo(projectName, userName, permissions, repoName, repoUrl, null, null);
 
-        TriggerResource triggerResource = proxy(TriggerResource.class);
+        TriggersApi triggersApi = new TriggersApi(getApiClient());
         while (true) {
-            List<TriggerEntry> triggers = triggerResource.list(OrganizationManager.DEFAULT_ORG_NAME, projectName, repoName);
+            List<TriggerEntry> triggers = triggersApi.list("Default", projectName, repoName);
             if (hasCondition("github", "repository", "abc", triggers) &&
                     hasCondition("github", "repository", "abc2", triggers) &&
                     hasCondition("oneops", "org", "myOrg", triggers)) {
@@ -324,16 +305,20 @@ public class ProjectIT extends AbstractServerIT {
                                         String userName,
                                         Set<String> permissions,
                                         String repoName, String repoUrl,
-                                        String commitId, String tag) {
+                                        String commitId, String tag) throws Exception {
 
-        UserResource userResource = proxy(UserResource.class);
-        CreateUserResponse cur = userResource.createOrUpdate(new CreateUserRequest(userName, UserType.LOCAL, false));
+        UsersApi usersApi = new UsersApi(getApiClient());
+        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(userName)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
         assertTrue(cur.isOk());
 
         UUID userId = cur.getId();
 
-        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest(userId, null, UserType.LOCAL));
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest()
+                .setUserId(userId)
+                .setUserType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
         assertTrue(cakr.isOk());
 
         String apiKey = cakr.getKey();
@@ -342,10 +327,15 @@ public class ProjectIT extends AbstractServerIT {
 
         setApiKey(apiKey);
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName,
-                Collections.singletonMap(repoName,
-                        new RepositoryEntry(null, null, repoName, repoUrl, tag, commitId, null, null, null, false, null))));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse cpr = projectsApi.createOrUpdate("Default", new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repoName,
+                        new RepositoryEntry()
+                                .setName(repoName)
+                                .setUrl(repoUrl)
+                                .setBranch(tag)
+                                .setCommitId(commitId))));
         assertTrue(cpr.isOk());
     }
 
@@ -353,7 +343,7 @@ public class ProjectIT extends AbstractServerIT {
                                   String userName, Set<String> permissions,
                                   String repoName, String repoUrl,
                                   String entryPoint, Map<String, Object> args,
-                                  boolean sync) throws InterruptedException, IOException {
+                                  boolean sync) throws Exception {
         return doTest(projectName, userName, permissions, repoName, repoUrl,
                 entryPoint, args, null, null, sync);
     }
@@ -363,7 +353,7 @@ public class ProjectIT extends AbstractServerIT {
                                   String repoName, String repoUrl,
                                   String entryPoint, Map<String, Object> args,
                                   String commitId, String tag,
-                                  boolean sync) throws InterruptedException, IOException {
+                                  boolean sync) throws Exception {
 
         // ---
 
@@ -371,16 +361,29 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(entryPoint, args, null, sync, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        if (projectName != null) {
+            input.put("org", "Default");
+            input.put("project", projectName);
+        }
+        if (repoName != null) {
+            input.put("repo", repoName);
+        }
+        if (entryPoint != null) {
+            input.put("entryPoint", entryPoint);
+        }
+        input.put("request", args);
+        input.put("sync", sync);
+        StartProcessResponse spr = start(input);
         assertTrue(spr.isOk());
 
         UUID instanceId = spr.getInstanceId();
 
         // ---
 
-        ProcessEntry psr = waitForCompletion(processResource, instanceId);
-        assertTrue(psr.getStatus() == ProcessStatus.FINISHED);
+        ProcessEntry psr = waitForCompletion(processApi, instanceId);
+        assertTrue(psr.getStatus() == ProcessEntry.StatusEnum.FINISHED);
 
         // ---
 

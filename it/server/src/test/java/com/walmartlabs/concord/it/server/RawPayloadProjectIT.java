@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,13 +20,13 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectResource;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.ProjectEntry;
+import com.walmartlabs.concord.client.ProjectsApi;
 import org.junit.Test;
 
-import javax.ws.rs.BadRequestException;
-import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static org.junit.Assert.fail;
@@ -35,21 +35,25 @@ public class RawPayloadProjectIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testReject() throws Exception {
-        ProjectResource projectResource = proxy(ProjectResource.class);
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         String orgName = "Default";
         String projectName = "project_" + System.currentTimeMillis();
-        projectResource.createOrUpdate(orgName, new ProjectEntry(null, projectName, null, null, null, null, null, null, null, false));
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName));
 
         // ---
 
         byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
         try {
-            processResource.start(projectName, new ByteArrayInputStream(payload), null, false, null);
+            Map<String, Object> input = new HashMap<>();
+            input.put("org", orgName);
+            input.put("project", projectName);
+            input.put("archive", payload);
+            start(input);
             fail("should fail");
-        } catch (BadRequestException e) {
+        } catch (ApiException e) {
         }
     }
 }

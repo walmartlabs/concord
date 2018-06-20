@@ -157,6 +157,18 @@ public final class PayloadBuilder {
         return this;
     }
 
+    public PayloadBuilder mergeOutExpressions(String[] out) {
+        if (out == null || out.length == 0) {
+            return this;
+        }
+
+        Set<String> s = payload.getHeader(Payload.OUT_EXPRESSIONS);
+        s.addAll(Arrays.asList(out));
+        payload = payload.putHeader(Payload.OUT_EXPRESSIONS, s);
+
+        return this;
+    }
+
     public PayloadBuilder organization(UUID orgId) {
         if (orgId != null) {
             payload = payload.putHeader(Payload.ORGANIZATION_ID, orgId);

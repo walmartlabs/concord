@@ -41,7 +41,7 @@ public class LandingPageRefreshTask extends AbstractConcordTask implements Task 
         String repositoryName = get(cfg, REPOSITORY_KEY);
 
         withClient(ctx, client -> {
-            LandingPageApi api = new LandingPageApi(client);
+            LandingPagesApi api = new LandingPagesApi(client);
             api.refresh(orgName, projectName, repositoryName);
             return null;
         });

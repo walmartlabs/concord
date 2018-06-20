@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,18 +22,12 @@ package com.walmartlabs.concord.it.server;
 
 import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.ServerSetup;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Rule;
 import org.junit.Test;
 
 import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +49,7 @@ public class SmtpIT extends AbstractServerIT {
 
         // --
 
+        String orgName = "Default";
         String projectName = "project_" + randomString();
 
         Map<String, Object> smtpParams = new HashMap<>();
@@ -65,20 +60,27 @@ public class SmtpIT extends AbstractServerIT {
         args.put("smtpParams", smtpParams);
 
         Map<String, Object> cfg = new HashMap<>();
-        cfg.put(InternalConstants.Request.ARGUMENTS_KEY, args);
+        cfg.put(Constants.Request.ARGUMENTS_KEY, args);
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null, cfg, null, null, true));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setCfg(cfg)
+                .setAcceptsRawPayload(true));
 
         // --
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 

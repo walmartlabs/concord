@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,28 +21,21 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.googlecode.junittoolbox.ParallelRunner;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.project.ProjectLoader;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -103,15 +96,15 @@ public class ProjectFileIT extends AbstractServerIT {
                 l.add(line.replaceAll("WILL_BE_REPLACED", dep));
             }
 
-            Path p = tmpDir.resolve(ProjectLoader.PROJECT_FILE_NAME);
+            Path p = tmpDir.resolve(".concord.yml");
             Files.write(p, l);
         }
 
         // create the payload
 
         String request = "{ \"entryPoint\": \"main\" }";
-        Path requestFile = tmpDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
-        Files.write(requestFile, Arrays.asList(request));
+        Path requestFile = tmpDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Files.write(requestFile, Collections.singletonList(request));
 
         Path src = Paths.get(DependenciesIT.class.getResource("projectfile/deps").toURI());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -124,12 +117,12 @@ public class ProjectFileIT extends AbstractServerIT {
 
         // send the request
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, psr.getStatus());
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
@@ -150,8 +143,15 @@ public class ProjectFileIT extends AbstractServerIT {
 
         generateKeyPair(orgName, secretName, false, null);
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, null, secretName, false, null))));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setName(repoName)
+                        .setUrl(repoUrl)
+                        .setBranch("master")
+                        .setSecretName(secretName))));
 
         // ---
 
@@ -159,11 +159,15 @@ public class ProjectFileIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        StartProcessResponse spr = start(input);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 
@@ -185,8 +189,15 @@ public class ProjectFileIT extends AbstractServerIT {
 
         generateKeyPair(orgName, secretName, false, null);
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, null, secretName, false, null))));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setName(repoName)
+                        .setUrl(repoUrl)
+                        .setBranch("master")
+                        .setSecretName(secretName))));
 
         // ---
 
@@ -194,11 +205,16 @@ public class ProjectFileIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, true, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("sync", true);
+        StartProcessResponse spr = start(input);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = processResource.get(spr.getInstanceId());
+        ProcessEntry pir = processApi.get(spr.getInstanceId());
 
         // ---
         byte[] ab = getLog(pir.getLogFileName());
@@ -208,7 +224,7 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*100323.*", ab);
         assertLog(".*r3d.*", ab);
 
-        assertTrue(pir.getStatus() == ProcessStatus.FINISHED);
+        assertSame(pir.getStatus(), ProcessEntry.StatusEnum.FINISHED);
     }
 
     private void simpleTest(String resource, String... logPatterns) throws Exception {
@@ -216,11 +232,11 @@ public class ProjectFileIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 

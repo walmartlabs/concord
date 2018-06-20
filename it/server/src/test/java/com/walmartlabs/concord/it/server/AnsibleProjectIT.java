@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,23 +20,14 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+import java.io.File;
 import java.io.InputStream;
-import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -95,18 +86,12 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        Map<String, Object> input = new HashMap<>();
-        input.put("request", resource("ansibleproject/requestFailure.json"));
-
-        // ---
-
         String templatePath = "file://" + ITConstants.DEPENDENCIES_DIR + "/ansible-template.jar";
 
         String projectName = "project_" + randomString();
         String repoSecretName = "repoSecret_" + randomString();
         String repoName = "repo_" + randomString();
         String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
-        String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
 
         // ---
 
@@ -114,28 +99,39 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        RepositoryEntry repo = new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, null, repoSecretName, false, null);
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg, null, null, true));
+        RepositoryEntry repo = new RepositoryEntry()
+                .setName(repoName)
+                .setUrl(repoUrl)
+                .setBranch("master")
+                .setSecretName(repoSecretName);
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(singletonMap(repoName, repo))
+                .setCfg(cfg)
+                .setAcceptsRawPayload(true));
 
         // ---
 
-        StartProcessResponse spr = start(entryPoint, input);
+        Map<String, Object> input = new HashMap<>();
+        input.put("request", resource("ansibleproject/requestFailure.json"));
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("repo", repoName);
+        StartProcessResponse spr = start(input);
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // ---
 
-        Response resp = processResource.downloadAttachment(spr.getInstanceId(), "ansible_stats.json");
-        assertEquals(Status.OK.getStatusCode(), resp.getStatus());
+        File resp = processApi.downloadAttachment(spr.getInstanceId(), "ansible_stats.json");
+        assertNotNull(resp);
 
-        ObjectMapper om = new ObjectMapper();
-        Map<String, Object> stats = om.readValue(resp.readEntity(InputStream.class), Map.class);
-        resp.close();
+        Map<String, Object> stats = fromJson(resp);
 
         Collection<String> failures = (Collection<String>) stats.get("failures");
         assertNotNull(failures);
@@ -155,7 +151,6 @@ public class AnsibleProjectIT extends AbstractServerIT {
         String repoSecretName = "repoSecret_" + randomString();
         String repoName = "repo_" + randomString();
         String repoUrl = String.format(ITConstants.GIT_SERVER_URL_PATTERN, gitPort);
-        String entryPoint = URLEncoder.encode(projectName + ":" + repoName, "UTF-8");
 
         // ---
 
@@ -163,20 +158,29 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        RepositoryEntry repo = new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, null, repoSecretName, false, null);
-        ProjectResource projectResource = proxy(ProjectResource.class);
-
-        Map<String, Object> cfg = Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, templatePath);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, singletonMap(repoName, repo), cfg, null, null, true));
+        RepositoryEntry repo = new RepositoryEntry()
+                .setName(repoName)
+                .setUrl(repoUrl)
+                .setBranch("master")
+                .setSecretName(repoSecretName);
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        Map<String, Object> cfg = Collections.singletonMap(Constants.Request.TEMPLATE_KEY, templatePath);
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(singletonMap(repoName, repo))
+                .setCfg(cfg));
 
         // ---
 
-        StartProcessResponse spr = start(entryPoint, input);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("repo", repoName);
+        StartProcessResponse spr = start(input);
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry psr = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 
@@ -188,12 +192,10 @@ public class AnsibleProjectIT extends AbstractServerIT {
 
         // ---
 
-        Response resp = processResource.downloadAttachment(spr.getInstanceId(), "ansible_stats.json");
-        assertEquals(Status.OK.getStatusCode(), resp.getStatus());
+        File resp = processApi.downloadAttachment(spr.getInstanceId(), "ansible_stats.json");
+        assertNotNull(resp);
 
-        ObjectMapper om = new ObjectMapper();
-        Map<String, Object> stats = om.readValue(resp.readEntity(InputStream.class), Map.class);
-        resp.close();
+        Map<String, Object> stats = fromJson(resp);
 
         Collection<String> oks = (Collection<String>) stats.get("ok");
         assertNotNull(oks);

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,21 +20,15 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretOperationResponse;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.console.ProcessPortalService;
+import com.walmartlabs.concord.client.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.core.Response;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static java.util.Collections.singletonMap;
-import static org.junit.Assert.assertEquals;
 
 public class PortalIT extends AbstractServerIT {
 
@@ -74,14 +68,19 @@ public class PortalIT extends AbstractServerIT {
 
         // ---
 
-        RepositoryEntry repo = new RepositoryEntry(null, null, repoName, repoUrl, "master", null, null, response.getId(), null, false, null);
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName, singletonMap(repoName, repo)));
+        RepositoryEntry repo = new RepositoryEntry()
+                .setName(repoName)
+                .setUrl(repoUrl)
+                .setBranch("master")
+                .setSecretId(response.getId());
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(singletonMap(repoName, repo)));
 
         // ---
 
-        ProcessPortalService portalService = proxy(ProcessPortalService.class);
-        Response resp = portalService.startProcess(projectName + ":" + repoName + ":main", "test1,test2", null);
-        assertEquals(200, resp.getStatus());
+        ProjectProcessesApi portalService = new ProjectProcessesApi(getApiClient());
+        portalService.start(orgName, projectName, repoName, "main", "test1,test2");
     }
 }

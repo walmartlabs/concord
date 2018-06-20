@@ -30,7 +30,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.UUID;
 
-@Api(value = "API key", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Api(value = "API keys", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/apikey")
 public interface ApiKeyResource {
 

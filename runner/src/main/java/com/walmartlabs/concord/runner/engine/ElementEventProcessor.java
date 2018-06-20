@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner.engine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.client.EventApi;
 import com.walmartlabs.concord.client.ProcessEventRequest;
+import com.walmartlabs.concord.client.ProcessEventsApi;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.ProcessDefinitionUtils;
 import io.takari.bpm.api.ExecutionException;
@@ -41,12 +41,11 @@ public class ElementEventProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ElementEventProcessor.class);
 
-    private final EventApi eventApi;
-
+    private final ProcessEventsApi eventsApi;
     private final ProcessDefinitionProvider processDefinitionProvider;
 
-    public ElementEventProcessor(EventApi eventApi, ProcessDefinitionProvider processDefinitionProvider) {
-        this.eventApi = eventApi;
+    public ElementEventProcessor(ProcessEventsApi eventsApi, ProcessDefinitionProvider processDefinitionProvider) {
+        this.eventsApi = eventsApi;
         this.processDefinitionProvider = processDefinitionProvider;
     }
 
@@ -58,11 +57,11 @@ public class ElementEventProcessor {
                         EventParamsBuilder builder, Predicate<AbstractElement> filter) throws ExecutionException {
 
         ProcessDefinition pd = processDefinitionProvider.getById(definitionId);
-        if(pd == null) {
+        if (pd == null) {
             throw new RuntimeException("can't find process definition '" + definitionId + "'");
         }
 
-        if(!(pd instanceof SourceAwareProcessDefinition)) {
+        if (!(pd instanceof SourceAwareProcessDefinition)) {
             return;
         }
 
@@ -92,7 +91,7 @@ public class ElementEventProcessor {
             req.setEventType(ProcessEventRequest.EventTypeEnum.ELEMENT);
             req.setData(e);
 
-            eventApi.event(UUID.fromString(instanceId), req);
+            eventsApi.event(UUID.fromString(instanceId), req);
 
         } catch (Exception e) {
             log.warn("process ['{}'] -> transfer error: {}", instanceId, e.getMessage());

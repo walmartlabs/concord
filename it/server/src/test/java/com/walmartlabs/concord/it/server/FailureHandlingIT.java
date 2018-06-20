@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +20,11 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.*;
-import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.StartProcessResponse;
+import org.junit.Test;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
@@ -32,7 +33,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testFailure() throws Exception {
-        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
 
         // prepare the payload
 
@@ -40,8 +41,8 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // start the process and wait for it to fail
 
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
-        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
+        StartProcessResponse spr = start(payload);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // check the logs for the error message
 
@@ -50,7 +51,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processResource, spr.getInstanceId(), ProcessKind.FAILURE_HANDLER, ProcessStatus.FINISHED);
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, ProcessEntry.StatusEnum.FINISHED);
 
         // check the logs for the successful message
 
@@ -60,33 +61,33 @@ public class FailureHandlingIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testFailureHandlingError() throws Exception {
-        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
         byte[] payload = archive(ProcessIT.class.getResource("failureHandlingError").toURI());
 
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
-        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
+        StartProcessResponse spr = start(payload);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processResource, spr.getInstanceId(), ProcessKind.FAILURE_HANDLER, ProcessStatus.FAILED);
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, ProcessEntry.StatusEnum.FAILED);
     }
 
     @Test(timeout = 60000)
     public void testCancel() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelHandling").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.RUNNING);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.RUNNING);
 
         // cancel the running process
 
-        processResource.kill(spr.getInstanceId());
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.CANCELLED);
+        processApi.kill(spr.getInstanceId());
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.CANCELLED);
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processResource, spr.getInstanceId(), ProcessKind.CANCEL_HANDLER, ProcessStatus.FINISHED);
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.CANCEL_HANDLER, ProcessEntry.StatusEnum.FINISHED);
 
         // check the logs for the successful message
 
@@ -98,18 +99,18 @@ public class FailureHandlingIT extends AbstractServerIT {
     public void testCancelSuspended() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelSuspendHandling").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // cancel the running process
 
-        processResource.kill(spr.getInstanceId());
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.CANCELLED);
+        processApi.kill(spr.getInstanceId());
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.CANCELLED);
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processResource, spr.getInstanceId(), ProcessKind.CANCEL_HANDLER, ProcessStatus.FINISHED);
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.CANCEL_HANDLER, ProcessEntry.StatusEnum.FINISHED);
 
         // check the logs for the successful message
 

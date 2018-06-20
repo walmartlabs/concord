@@ -23,16 +23,14 @@ package com.walmartlabs.concord.it.server;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.StartProcessResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,11 +75,11 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGetAsString").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Success response.*", ab);
@@ -92,11 +90,11 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGet").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Success response.*", ab);
@@ -116,10 +114,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Success response.*", ab);
@@ -137,10 +135,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Success response.*", ab);
@@ -159,10 +157,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
         StartProcessResponse spr = start(input);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Success response.*", ab);
@@ -180,10 +178,10 @@ public class HttpTaskIT extends AbstractServerIT {
         input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathToken);
         StartProcessResponse spr = start(input);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Success response.*", ab);
@@ -195,11 +193,11 @@ public class HttpTaskIT extends AbstractServerIT {
         URI dir = HttpTaskIT.class.getResource("httpGetWithInvalidUrl").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FAILED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*server not exists.*", ab);

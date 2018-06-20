@@ -264,7 +264,7 @@ public interface ProcessResource {
      * @return
      */
     @GET
-    @ApiOperation("List attachments")
+    @ApiOperation(value = "List attachments", responseContainer = "list", response = String.class)
     @Path("/{id}/attachment")
     @Produces(MediaType.APPLICATION_JSON)
     List<String> listAttachments(@ApiParam @PathParam("id") UUID instanceId);
@@ -279,7 +279,7 @@ public interface ProcessResource {
      * @return
      */
     @GET
-    @ApiOperation("List processes for all user's organizations")
+    @ApiOperation(value = "List processes for all user's organizations", responseContainer = "list", response = ProcessEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> list(@ApiParam @QueryParam("projectId") UUID projectId,
                             @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
@@ -294,7 +294,7 @@ public interface ProcessResource {
      * @return
      */
     @GET
-    @ApiOperation(value = "List subprocesses of a parent process", response = ProcessEntry.class, responseContainer = "List")
+    @ApiOperation(value = "List subprocesses of a parent process", responseContainer = "list", response = ProcessEntry.class)
     @Path("/{id}/subprocess")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEntry> listSubprocesses(@ApiParam @PathParam("id") UUID parentInstanceId,
@@ -309,7 +309,7 @@ public interface ProcessResource {
     @POST
     @ApiOperation("Update process status")
     @Path("{id}/status")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.TEXT_PLAIN)
     void updateStatus(@ApiParam @PathParam("id") UUID instanceId,
                       @ApiParam(required = true) @QueryParam("agentId") String agentId,
                       @ApiParam(required = true) ProcessStatus status);
@@ -322,12 +322,11 @@ public interface ProcessResource {
      * @return
      */
     @GET
-    @ApiOperation("Retrieve the log")
+    @ApiOperation(value = "Retrieve the log")
     @Path("/{id}/log")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                     @HeaderParam("range") String range);
-
 
     /**
      * Appends a process' log.
@@ -341,7 +340,7 @@ public interface ProcessResource {
     void appendLog(@PathParam("id") UUID instanceId, InputStream data);
 
     /**
-     * Downloads the state snapshot of a process.
+     * Downloads the current state snapshot of a process.
      */
     @GET
     @ApiOperation(value = "Download a process state snapshot", response = File.class)
@@ -349,12 +348,15 @@ public interface ProcessResource {
     @Produces("application/zip")
     Response downloadState(@ApiParam @PathParam("id") UUID instanceId);
 
+    /**
+     * Downloads a single file from the current state snapshot of a process.
+     */
     @GET
-    @ApiOperation("Download a single file from a process state snapshot")
+    @ApiOperation(value = "Download a single file from a process state snapshot", response = File.class)
     @Path("/{id}/state/snapshot/{name:.*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    Response downloadState(@ApiParam @PathParam("id") UUID instanceId,
-                           @ApiParam @PathParam("name") @NotNull @Size(min = 1) String fileName);
+    Response downloadStateFile(@ApiParam @PathParam("id") UUID instanceId,
+                               @ApiParam @PathParam("name") @NotNull @Size(min = 1) String fileName);
 
     /**
      * Upload process attachments.

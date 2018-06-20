@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 
-@Api(value = "Inventory", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Api(value = "Inventory Queries", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
 public interface InventoryQueryResource {
 
@@ -66,8 +66,8 @@ public interface InventoryQueryResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
     CreateInventoryQueryResponse createOrUpdate(@ApiParam @PathParam("orgName") String orgName,
-                                                @ApiParam @PathParam("inventoryName")String inventoryName,
-                                                @ApiParam @PathParam("queryName")String queryName,
+                                                @ApiParam @PathParam("inventoryName") String inventoryName,
+                                                @ApiParam @PathParam("queryName") String queryName,
                                                 @ApiParam String text);
 
     /**

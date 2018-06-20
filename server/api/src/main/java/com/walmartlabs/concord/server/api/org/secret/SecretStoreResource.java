@@ -35,7 +35,7 @@ import java.util.List;
 public interface SecretStoreResource {
 
     @GET
-    @ApiOperation("List of active secret stores")
+    @ApiOperation(value = "List of active secret stores", responseContainer = "list", response = SecretStoreEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     List<SecretStoreEntry> listActiveStores();
 }

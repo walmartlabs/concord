@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,15 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -47,22 +44,28 @@ public class TemplateMergeIT extends AbstractServerIT {
 
         // ---
 
+        String orgName = "Default";
         String projectName = "project_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null,
-                Collections.singletonMap(InternalConstants.Request.TEMPLATE_KEY, template.toUri().toString()),
-                null, null, true));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setCfg(Collections.singletonMap(Constants.Request.TEMPLATE_KEY, template.toUri().toString()))
+                .setAcceptsRawPayload(true));
 
         // ---
 
-        StartProcessResponse spr = start(projectName, Collections.singletonMap("archive", payload));
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 

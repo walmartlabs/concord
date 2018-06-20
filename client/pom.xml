@@ -18,7 +18,7 @@
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-api</artifactId>
             <version>${project.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -36,11 +36,6 @@
         <dependency>
             <groupId>com.squareup.okio</groupId>
             <artifactId>okio</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.threeten</groupId>
-            <artifactId>threetenbp</artifactId>
-            <version>${threetenbp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -104,11 +99,16 @@
                         <configuration>
                             <inputSpec>${project.basedir}/../server/api/target/classes/com/walmartlabs/concord/server/api/swagger/swagger.json</inputSpec>
                             <language>java</language>
+                            <languageSpecificPrimitives>
+                                <supportJava6>false</supportJava6>
+                            </languageSpecificPrimitives>
+                            <templateDirectory>${project.basedir}/src/main/template</templateDirectory>
                             <library>okhttp-gson</library>
                             <apiPackage>com.walmartlabs.concord.client</apiPackage>
                             <modelPackage>com.walmartlabs.concord.client</modelPackage>
                             <configOptions>
                                 <sourceFolder>src/gen/java/main</sourceFolder>
+                                <dateLibrary>java8</dateLibrary>
                             </configOptions>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>

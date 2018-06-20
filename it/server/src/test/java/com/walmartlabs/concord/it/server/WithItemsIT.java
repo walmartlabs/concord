@@ -20,7 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.*;
+
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import java.net.URI;
@@ -45,9 +46,9 @@ public class WithItemsIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
@@ -70,18 +71,18 @@ public class WithItemsIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         // ---
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formResource = new ProcessFormsApi(getApiClient());
         List<FormListEntry> forms = formResource.list(spr.getInstanceId());
         assertEquals(1, forms.size());
 
         formResource.submit(spr.getInstanceId(), forms.get(0).getFormInstanceId(), Collections.emptyMap());
 
-        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Hello!.*", ab);
 
@@ -92,7 +93,7 @@ public class WithItemsIT extends AbstractServerIT {
 
         formResource.submit(spr.getInstanceId(), forms.get(0).getFormInstanceId(), Collections.emptyMap());
 
-        pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FINISHED);
+        pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
         ab = getLog(pir.getLogFileName());
         assertLog(".*Hi there!.*", ab);
     }
@@ -113,8 +114,8 @@ public class WithItemsIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 
@@ -144,9 +145,9 @@ public class WithItemsIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
     }
 
     @Test(timeout = 60000)
@@ -162,8 +163,8 @@ public class WithItemsIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
     }
 }

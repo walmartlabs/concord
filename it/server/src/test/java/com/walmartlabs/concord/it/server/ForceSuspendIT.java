@@ -20,10 +20,9 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.StartProcessResponse;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -50,8 +49,8 @@ public class ForceSuspendIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(input);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
         byte[] ab = getLog(pir.getLogFileName());
 
         assertLog(".*Requesting suspend.*", ab);
@@ -59,8 +58,8 @@ public class ForceSuspendIT extends AbstractServerIT {
 
         // ---
 
-        processResource.resume(pir.getInstanceId(), eventName, null);
-        pir = waitForCompletion(processResource, spr.getInstanceId());
+        processApi.resume(pir.getInstanceId(), eventName, null);
+        pir = waitForCompletion(processApi, spr.getInstanceId());
 
         ab = getLog(pir.getLogFileName());
 

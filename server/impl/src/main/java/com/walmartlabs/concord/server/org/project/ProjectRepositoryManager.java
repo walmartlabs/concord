@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.events.EventResource;
+import com.walmartlabs.concord.server.api.events.ExternalEventResource;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
@@ -43,20 +43,20 @@ public class ProjectRepositoryManager {
     private final SecretManager secretManager;
     private final SecretDao secretDao;
     private final RepositoryDao repositoryDao;
-    private final EventResource eventResource;
+    private final ExternalEventResource externalEventResource;
 
     @Inject
     public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
                                     SecretManager secretManager,
                                     SecretDao secretDao,
                                     RepositoryDao repositoryDao,
-                                    EventResource eventResource) {
+                                    ExternalEventResource externalEventResource) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
         this.secretDao = secretDao;
         this.repositoryDao = repositoryDao;
-        this.eventResource = eventResource;
+        this.externalEventResource = externalEventResource;
     }
 
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
@@ -95,7 +95,7 @@ public class ProjectRepositoryManager {
             ev = Events.Repository.repositoryUpdated(project.getOrgName(), project.getName(), entry.getName());
         }
 
-        eventResource.event(Events.CONCORD_EVENT, ev);
+        externalEventResource.event(Events.CONCORD_EVENT, ev);
 
         // TODO audit log
     }
@@ -125,7 +125,7 @@ public class ProjectRepositoryManager {
                 trim(entry.getPath()), secretId, false);
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
-        eventResource.event(Events.CONCORD_EVENT, ev);
+        externalEventResource.event(Events.CONCORD_EVENT, ev);
     }
 
     private static String trim(String s) {

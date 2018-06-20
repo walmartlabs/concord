@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,8 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.api.events.EventResource;
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.OrganizationResource;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectResource;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerResource;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
 import org.eclipse.jgit.api.Git;
 import org.junit.Test;
 
@@ -59,21 +49,24 @@ public class TriggerIT extends AbstractServerIT {
 
         String orgName = "org_" + randomString();
 
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // ---
 
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        ProjectOperationResponse por = projectResource.createOrUpdate(orgName, new ProjectEntry(projectName,
-                Collections.singletonMap(repoName, new RepositoryEntry(repoName, gitUrl))));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setName(repoName)
+                        .setUrl(gitUrl))));
 
         // ---
 
-        TriggerResource triggerResource = proxy(TriggerResource.class);
+        TriggersApi triggerResource = new TriggersApi(getApiClient());
         while (true) {
             List<TriggerEntry> triggers = triggerResource.list(orgName, projectName, repoName);
             if (triggers != null && triggers.size() == 2) {
@@ -85,15 +78,15 @@ public class TriggerIT extends AbstractServerIT {
 
         // ---
 
-        EventResource eventResource = proxy(EventResource.class);
+        ExternalEventsApi eventResource = new ExternalEventsApi(getApiClient());
         eventResource.event("testTrigger", Collections.singletonMap("x", "abc"));
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
 
         while (true) {
-            List<ProcessEntry> l = processResource.list(por.getId(), null, null, 10);
+            List<ProcessEntry> l = processApi.list(por.getId(), null, null, 10);
             if (l != null && l.size() == 1) {
                 break;
             }

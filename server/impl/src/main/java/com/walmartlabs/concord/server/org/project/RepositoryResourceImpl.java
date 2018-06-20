@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org.project;
 
 import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
-import com.walmartlabs.concord.server.api.events.EventResource;
+import com.walmartlabs.concord.server.api.events.ExternalEventResource;
 import com.walmartlabs.concord.server.api.org.OrganizationEntry;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
@@ -47,7 +47,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     private final OrganizationManager orgManager;
     private final ProjectAccessManager accessManager;
     private final RepositoryCacheDao repositoryCacheDao;
-    private final EventResource eventResource;
+    private final ExternalEventResource externalEventResource;
     private final ProjectDao projectDao;
     private final ProjectRepositoryManager projectRepositoryManager;
 
@@ -55,14 +55,14 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
     public RepositoryResourceImpl(OrganizationManager orgManager,
                                   ProjectAccessManager accessManager,
                                   RepositoryCacheDao repositoryCacheDao,
-                                  EventResource eventResource,
+                                  ExternalEventResource externalEventResource,
                                   ProjectDao projectDao,
                                   ProjectRepositoryManager projectRepositoryManager) {
 
         this.orgManager = orgManager;
         this.accessManager = accessManager;
         this.repositoryCacheDao = repositoryCacheDao;
-        this.eventResource = eventResource;
+        this.externalEventResource = externalEventResource;
         this.projectDao = projectDao;
         this.projectRepositoryManager = projectRepositoryManager;
     }
@@ -118,7 +118,7 @@ public class RepositoryResourceImpl implements RepositoryResource, Resource {
         event.put("project", projectName);
         event.put("repository", repositoryName);
 
-        eventResource.event("concord", event);
+        externalEventResource.event("concord", event);
 
         return new GenericOperationResult(OperationResult.UPDATED);
     }

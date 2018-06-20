@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-@Api(value = "Event", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Api(value = "Process Events", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
 public interface ProcessEventResource {
 
@@ -55,7 +55,7 @@ public interface ProcessEventResource {
      * @return
      */
     @GET
-    @ApiOperation("List process events")
+    @ApiOperation(value = "List process events", responseContainer = "list", response = ProcessEventEntry.class)
     @Path("/{processInstanceId}/event")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,

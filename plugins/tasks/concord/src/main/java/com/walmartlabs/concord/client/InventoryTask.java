@@ -128,7 +128,7 @@ public class InventoryTask extends AbstractConcordTask {
 
     private List<Object> execQuery(Context ctx, String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
         return withClient(ctx, client -> {
-            InventoryApi api = new InventoryApi(client);
+            InventoryQueriesApi api = new InventoryQueriesApi(client);
             return api.exec(orgName, inventoryName, queryName, params);
         });
     }

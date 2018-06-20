@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,17 +21,18 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.google.gson.reflect.TypeToken;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiResponse;
+import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.SecretService;
-import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.server.api.org.secret.SecretType;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.ProcessApi;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -133,13 +134,13 @@ public class SecretServiceImpl implements SecretService {
     public String decryptString(Context ctx, String instanceId, String s) throws Exception {
         byte[] input = DatatypeConverter.parseBase64Binary(s);
 
-        ProcessApi api = new ProcessApi(clientFactory.create(ctx));
+        ApiClient c = clientFactory.create(ctx);
 
         String path = "/api/v1/process/" + instanceId + "/decrypt";
-
         ApiResponse<byte[]> r = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            Type returnType = new TypeToken<byte[]>(){}.getType();
-            return ClientUtils.postData(api.getApiClient(), path, input, returnType);
+            Type returnType = new TypeToken<byte[]>() {
+            }.getType();
+            return ClientUtils.postData(c, path, input, returnType);
         });
 
         return new String(r.getData());

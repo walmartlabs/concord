@@ -21,23 +21,11 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.googlecode.junittoolbox.ParallelRunner;
-import com.walmartlabs.concord.server.api.org.*;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectResource;
-import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
-import com.walmartlabs.concord.server.api.org.team.*;
-import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
-import com.walmartlabs.concord.server.api.user.CreateUserRequest;
-import com.walmartlabs.concord.server.api.user.UserResource;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.ws.rs.ForbiddenException;
 import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -73,8 +61,12 @@ public class RunAsIT extends AbstractServerIT {
 
         // grant the team access to the project
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.updateAccessLevel(orgName, projectName, new ResourceAccessEntry(teamId, orgName, teamName, ResourceAccessLevel.READER));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .setTeamId(teamId)
+                .setOrgName(orgName)
+                .setTeamName(teamName)
+                .setLevel(ResourceAccessEntry.LevelEnum.READER));
 
         // Start a process
 
@@ -85,24 +77,24 @@ public class RunAsIT extends AbstractServerIT {
         input.put("project", projectName);
 
         StartProcessResponse p = start(input);
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pe = waitForStatus(processResource, p.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForStatus(processApi, p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(pe.getLogFileName());
         assertLog(".*username=" + userAName + ".*==.*username=" + userAName + ".*", ab);
 
         String formId = findForm(p.getInstanceId());
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
         Map<String, Object> data = Collections.singletonMap("firstName", "xxx");
 
         // try submit as a wrong user
 
         try {
-            formResource.submit(p.getInstanceId(), formId, data);
+            formsApi.submit(p.getInstanceId(), formId, data);
             fail("exception expected");
-        } catch (ForbiddenException e) {
+        } catch (ApiException e) {
             // ignore
         }
 
@@ -110,11 +102,11 @@ public class RunAsIT extends AbstractServerIT {
 
         resetApiKey();
 
-        FormSubmitResponse fsr = formResource.submit(p.getInstanceId(), formId, data);
+        FormSubmitResponse fsr = formsApi.submit(p.getInstanceId(), formId, data);
         assertTrue(fsr.isOk());
 
-        pe = waitForCompletion(processResource, p.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pe.getStatus());
+        pe = waitForCompletion(processApi, p.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         ab = getLog(pe.getLogFileName());
         assertLog(".*Now we are running as admin. Initiator: " + userAName + ".*", ab);
@@ -145,8 +137,8 @@ public class RunAsIT extends AbstractServerIT {
         input.put("arguments.sudoUser", userBName);
         StartProcessResponse spr = start(input);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pe = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(pe.getLogFileName());
         assertLog(".*AAA: " + userAName + ".*", ab);
@@ -157,13 +149,13 @@ public class RunAsIT extends AbstractServerIT {
 
         String formId = findForm(pe.getInstanceId());
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
         Map<String, Object> data = Collections.singletonMap("msg", "Hello!");
-        formResource.submit(pe.getInstanceId(), formId, data);
+        formsApi.submit(pe.getInstanceId(), formId, data);
 
         // wait for the process to finish
 
-        pe = waitForCompletion(processResource, spr.getInstanceId());
+        pe = waitForCompletion(processApi, spr.getInstanceId());
 
         // check the logs
 
@@ -172,40 +164,45 @@ public class RunAsIT extends AbstractServerIT {
         assertLog(".*CCC: " + userAName + ".*", ab);
     }
 
-    private void createOrg(String orgName) {
-        OrganizationResource orgResource = proxy(OrganizationResource.class);
-        CreateOrganizationResponse r = orgResource.createOrUpdate(new OrganizationEntry(orgName));
+    private void createOrg(String orgName) throws Exception {
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        CreateOrganizationResponse r = orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
         assertTrue(r.isOk());
     }
 
-    private UUID createTeam(String orgName, String teamName, String userName) {
-        TeamResource teamResource = proxy(TeamResource.class);
-        CreateTeamResponse ctr = teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+    private UUID createTeam(String orgName, String teamName, String userName) throws Exception {
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+        CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
 
-        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userName, TeamRole.MEMBER)));
+        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .setUsername(userName)
+                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
 
         return ctr.getId();
     }
 
-    private CreateApiKeyResponse addUser(String userAName) {
-        UserResource userResource = proxy(UserResource.class);
+    private CreateApiKeyResponse addUser(String userAName) throws ApiException {
+        UsersApi usersApi = new UsersApi(getApiClient());
 
-        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
+        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
 
-        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        return apiKeyResource.create(new CreateApiKeyRequest(userAName));
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        return apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
     }
 
-    private void createProject(String orgName, String projectName) {
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        ProjectOperationResponse por = projectResource.createOrUpdate(orgName, new ProjectEntry(projectName, ProjectVisibility.PRIVATE));
+    private void createProject(String orgName, String projectName) throws ApiException {
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
+                .setAcceptsRawPayload(true));
         assertTrue(por.isOk());
     }
 
-    private String findForm(UUID instanceId) {
-        FormResource formResource = proxy(FormResource.class);
+    private String findForm(UUID instanceId) throws Exception {
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formResource.list(instanceId);
+        List<FormListEntry> forms = formsApi.list(instanceId);
         assertEquals(1, forms.size());
 
         // ---

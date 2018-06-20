@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,12 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.DeleteProjectResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
-import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
@@ -42,39 +35,46 @@ public class ProjectDeleteIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void test() throws Exception {
+        String orgName = "Default";
         String projectName = "project_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
         assertTrue(cpr.isOk());
 
         // ---
 
         byte[] payload = archive(ProjectDeleteIT.class.getResource("simple").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        StartProcessResponse spr = start(input);
 
         // ---
 
-        ProcessEntry pe = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pe.getStatus());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
         assertEquals(cpr.getId(), pe.getProjectId());
 
         // ---
 
-        DeleteProjectResponse dpr = projectResource.delete(projectName);
+        GenericOperationResult dpr = projectsApi.delete(orgName, projectName);
         assertTrue(dpr.isOk());
 
         try {
-            projectResource.get(projectName);
+            projectsApi.get(orgName, projectName);
             fail("Should fail");
-        } catch (NotFoundException | BadRequestException e) {
+        } catch (ApiException e) {
         }
 
         // ---
 
-        pe = processResource.get(spr.getInstanceId());
+        pe = processApi.get(spr.getInstanceId());
         assertNull(pe.getProjectId());
     }
 }

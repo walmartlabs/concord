@@ -22,36 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
-import com.walmartlabs.concord.server.api.GenericOperationResult;
-import com.walmartlabs.concord.server.api.OperationResult;
-import com.walmartlabs.concord.server.api.org.CreateOrganizationResponse;
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.OrganizationResource;
-import com.walmartlabs.concord.server.api.org.OrganizationVisibility;
-import com.walmartlabs.concord.server.api.org.inventory.*;
-import com.walmartlabs.concord.server.api.org.landing.CreateLandingResponse;
-import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
-import com.walmartlabs.concord.server.api.org.landing.LandingPageResource;
-import com.walmartlabs.concord.server.api.org.policy.PolicyEntry;
-import com.walmartlabs.concord.server.api.org.policy.PolicyLinkEntry;
-import com.walmartlabs.concord.server.api.org.policy.PolicyOperationResponse;
-import com.walmartlabs.concord.server.api.org.policy.PolicyResource;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretResource;
-import com.walmartlabs.concord.server.api.org.team.CreateTeamResponse;
-import com.walmartlabs.concord.server.api.org.team.TeamEntry;
-import com.walmartlabs.concord.server.api.org.team.TeamResource;
-import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.DeleteProjectResponse;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
-import com.walmartlabs.concord.server.api.user.CreateUserRequest;
-import com.walmartlabs.concord.server.api.user.UserResource;
-import com.walmartlabs.concord.server.api.user.UserType;
-import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -65,121 +36,137 @@ import static org.junit.Assert.*;
 public class CrudIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
-    public void testProject() {
-        ProjectResource projectResource = proxy(ProjectResource.class);
+    public void testProject() throws Exception {
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
+        String orgName = "Default";
         String projectName = "project_" + randomString();
         String updateProjectName = "updateProject_" + randomString();
 
         // --- create
 
-        CreateProjectResponse createProjectResponse = projectResource.createOrUpdate(new ProjectEntry(projectName));
-        assertTrue(createProjectResponse.isOk());
-        assertNotNull(createProjectResponse.getId());
+        ProjectOperationResponse createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName));
+        assertTrue(createResp.isOk());
+        assertNotNull(createResp.getId());
 
         // --- update
 
-        CreateProjectResponse updateProjectResponse = projectResource.createOrUpdate(new ProjectEntry(updateProjectName, createProjectResponse.getId()));
-        assertEquals(updateProjectResponse.getResult(),OperationResult.UPDATED);
-        assertEquals(createProjectResponse.getId(), updateProjectResponse.getId());
+        ProjectOperationResponse updateResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setId(createResp.getId())
+                .setName(updateProjectName));
+        assertEquals(updateResp.getResult(), ProjectOperationResponse.ResultEnum.UPDATED);
+        assertEquals(createResp.getId(), updateResp.getId());
 
         // --- get
 
-        ProjectEntry projectEntry = projectResource.get(updateProjectName);
-        assertEquals(projectEntry.getId(), createProjectResponse.getId());
+        ProjectEntry projectEntry = projectsApi.get(orgName, updateProjectName);
+        assertEquals(projectEntry.getId(), createResp.getId());
 
         // --- create
 
-        createProjectResponse = projectResource.createOrUpdate(new ProjectEntry(projectName, Collections.emptyMap()));
-        assertTrue(createProjectResponse.isOk());
+        createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.emptyMap()));
+        assertTrue(createResp.isOk());
 
         // --- list
 
-        List<ProjectEntry> projectList = projectResource.list(null, null, false);
+        List<ProjectEntry> projectList = projectsApi.list(orgName);
         projectEntry = findProject(projectList, projectName);
         assertNotNull(projectEntry);
 
         // --- delete
 
-        DeleteProjectResponse deleteProjectResponse = projectResource.delete(projectName);
-        assertTrue(deleteProjectResponse.isOk());
+        GenericOperationResult deleteResp = projectsApi.delete(orgName, projectName);
+        assertTrue(deleteResp.isOk());
     }
 
     @Test(timeout = 60000)
     public void testNonUniqueRepositoryNames() throws Exception {
+        String orgName = "Default";
+
         String projectName1 = "project1_" + randomString();
         String projectName2 = "project2_" + randomString();
 
         String repoName = "repo_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName1,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, null, false, null))));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName1)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setName(repoName)
+                        .setUrl("n/a"))));
 
-        projectResource.createOrUpdate(new ProjectEntry(projectName2,
-                Collections.singletonMap(repoName, new RepositoryEntry(null, null, repoName, "n/a", null, null, null, null, null, false, null))));
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName2)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setName(repoName)
+                        .setUrl("n/a"))));
     }
 
     @Test(timeout = 60000)
     public void testInventory() throws Exception {
-        InventoryResource inventoryResource = proxy(InventoryResource.class);
+        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
 
-        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
+        String orgName = "Default";
         String inventoryName = "inventory_" + randomString();
         String updatedInventoryName = "updateInventory_" + randomString();
 
         // --- create
 
-        CreateInventoryResponse cir = inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
+        CreateInventoryResponse cir = inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
         assertTrue(cir.isOk());
         assertNotNull(cir.getId());
 
         // --- update
 
-        CreateInventoryResponse updateInventoryResponse = inventoryResource.createOrUpdate(orgName, new InventoryEntry(cir.getId(), updatedInventoryName, null, null, null, null, null));
-        assertEquals(updateInventoryResponse.getResult(),OperationResult.UPDATED);
+        CreateInventoryResponse updateInventoryResponse = inventoriesApi.createOrUpdate(orgName,
+                new InventoryEntry()
+                        .setId(cir.getId())
+                        .setName(updatedInventoryName));
+        assertEquals(updateInventoryResponse.getResult(), CreateInventoryResponse.ResultEnum.UPDATED);
         assertEquals(updateInventoryResponse.getId(), cir.getId());
 
         // --- get
 
-        InventoryEntry inventoryEntry = inventoryResource.get(orgName, updatedInventoryName);
+        InventoryEntry inventoryEntry = inventoriesApi.get(orgName, updatedInventoryName);
         assertNotNull(inventoryEntry);
 
         // --- delete
 
-        GenericOperationResult deleteInventoryResponse = inventoryResource.delete(orgName, updatedInventoryName);
-        assertTrue(deleteInventoryResponse.getResult() == OperationResult.DELETED);
+        GenericOperationResult deleteInventoryResponse = inventoriesApi.delete(orgName, updatedInventoryName);
+        assertTrue(deleteInventoryResponse.getResult() == GenericOperationResult.ResultEnum.DELETED);
     }
 
     @Test(timeout = 60000)
     public void testInventoryData() throws Exception {
-        InventoryDataResource resource = proxy(InventoryDataResource.class);
+        InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
 
-        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
+        String orgName = "Default";
         String inventoryName = "inventory_" + randomString();
         String itemPath = "/a";
         Map<String, Object> data = Collections.singletonMap("k", "v");
 
-        InventoryResource inventoryResource = proxy(InventoryResource.class);
-        inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
+        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
+        inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
 
         // --- create
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> result = (Map<String, Object>) resource.data(orgName, inventoryName, itemPath, data);
+        Map<String, Object> result = (Map<String, Object>) dataApi.data(orgName, inventoryName, itemPath, data);
         assertNotNull(result);
         assertEquals(Collections.singletonMap("a", data), result);
 
         // --- get
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> result2 = (Map<String, Object>) resource.get(orgName, inventoryName, itemPath);
+        Map<String, Object> result2 = (Map<String, Object>) dataApi.get(orgName, inventoryName, itemPath);
         assertNotNull(result2);
         assertEquals(Collections.singletonMap("a", data), result);
 
         // --- delete
 
-        DeleteInventoryDataResponse didr = resource.delete(orgName, inventoryName, itemPath);
+        DeleteInventoryDataResponse didr = dataApi.delete(orgName, inventoryName, itemPath);
         assertNotNull(didr);
         assertTrue(didr.isOk());
     }
@@ -187,20 +174,20 @@ public class CrudIT extends AbstractServerIT {
     @Test(timeout = 60000)
     @SuppressWarnings("unchecked")
     public void testInventoryQuery() throws Exception {
-        InventoryQueryResource resource = proxy(InventoryQueryResource.class);
+        InventoryQueriesApi resource = new InventoryQueriesApi(getApiClient());
 
-        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
+        String orgName = "Default";
         String inventoryName = "inventory_" + randomString();
         String queryName = "queryName_" + randomString();
         String text = "text_" + randomString();
 
-        InventoryResource inventoryResource = proxy(InventoryResource.class);
-        inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
+        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
+        inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
 
         // ---
 
-        InventoryDataResource inventoryDataResource = proxy(InventoryDataResource.class);
-        inventoryDataResource.data(orgName, inventoryName, "/test", Collections.singletonMap("k", "v"));
+        InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
+        dataApi.data(orgName, inventoryName, "/test", Collections.singletonMap("k", "v"));
 
         // --- create
 
@@ -237,102 +224,121 @@ public class CrudIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testLanding() throws Exception {
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        LandingPageResource resource = proxy(LandingPageResource.class);
+        LandingPagesApi resource = new LandingPagesApi(getApiClient());
 
+        String orgName = "Default";
         String projectName = "project_" + randomString();
         String repositoryName = "repository_" + randomString();
         String name = "lp-name-1";
         String description = "description";
         String icon = Base64.encode("icon".getBytes());
 
-        projectResource.createOrUpdate(new ProjectEntry(projectName,
-                Collections.singletonMap(repositoryName,
-                        new RepositoryEntry(null, null, repositoryName, "http://localhost", null, null, null, null, null, false, null))));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repositoryName, new RepositoryEntry()
+                        .setName(repositoryName)
+                        .setUrl("http://localhost"))));
 
         // --- create
-        LandingEntry entry = new LandingEntry(null, null, null, null, projectName, repositoryName, name, description, icon);
-        CreateLandingResponse result = resource.createOrUpdate(OrganizationManager.DEFAULT_ORG_NAME, entry);
+        LandingEntry entry = new LandingEntry()
+                .setProjectName(projectName)
+                .setRepositoryName(repositoryName)
+                .setName(name)
+                .setDescription(description)
+                .setIcon(icon);
+        CreateLandingResponse result = resource.createOrUpdate(orgName, entry);
         assertNotNull(result);
         assertTrue(result.isOk());
         assertNotNull(result.getId());
-        assertEquals(OperationResult.CREATED, result.getResult());
+        assertEquals(CreateLandingResponse.ResultEnum.CREATED, result.getResult());
 
         // --- update
-        result = resource.createOrUpdate(OrganizationManager.DEFAULT_ORG_NAME, new LandingEntry(result.getId(), null, null, null, projectName, repositoryName, name, description, icon));
+        result = resource.createOrUpdate(orgName, new LandingEntry()
+                .setId(result.getId())
+                .setProjectName(projectName)
+                .setRepositoryName(repositoryName)
+                .setName(name)
+                .setDescription(description)
+                .setIcon(icon));
         assertNotNull(result);
         assertTrue(result.isOk());
         assertNotNull(result.getId());
-        assertEquals(OperationResult.UPDATED, result.getResult());
+        assertEquals(CreateLandingResponse.ResultEnum.UPDATED, result.getResult());
 
         // --- list
-        List<LandingEntry> listResult = resource.list(OrganizationManager.DEFAULT_ORG_NAME);
+        List<LandingEntry> listResult = resource.list(orgName);
         assertNotNull(listResult);
     }
 
     @Test(timeout = 60000)
-    public void testDashes() {
+    public void testDashes() throws Exception {
         String orgName = randomString() + "-test~";
 
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
-        organizationResource.get(orgName);
+        orgApi.get(orgName);
 
         // ---
 
         String teamName = randomString() + "-test~";
 
-        TeamResource teamResource = proxy(TeamResource.class);
-        teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+        teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
 
-        teamResource.get(orgName, teamName);
+        teamsApi.get(orgName, teamName);
 
         // ---
 
         String projectName = randomString() + "-test~";
 
-        com.walmartlabs.concord.server.api.org.project.ProjectResource projectResource = proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName));
 
-        projectResource.get(orgName, projectName);
+        projectsApi.get(orgName, projectName);
 
         // ---
 
         String secretName = randomString() + "-test~";
         addPlainSecret(orgName, secretName, true, null, new byte[]{0, 1, 2, 3});
 
-        SecretResource secretResource = proxy(SecretResource.class);
+        SecretsApi secretResource = new SecretsApi(getApiClient());
         secretResource.delete(orgName, secretName);
     }
+
     @Test(timeout = 60000)
-    public void testTeam() throws Exception
-    {
+    public void testTeam() throws Exception {
         String teamName = "team_" + randomString();
-        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
-        TeamResource teamResource = proxy(TeamResource.class);
+        String orgName = "Default";
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
 
         // Create
-        CreateTeamResponse teamResponse = teamResource.createOrUpdate(orgName,new TeamEntry(teamName));
+        CreateTeamResponse teamResponse = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
         assertTrue(teamResponse.isOk());
         assertNotNull(teamResponse.getId());
-        assertEquals(teamResponse.getResult(), OperationResult.CREATED);
+        assertEquals(teamResponse.getResult(), CreateTeamResponse.ResultEnum.CREATED);
 
         // Update Team by Name
-        CreateTeamResponse updateTeamResponse = teamResource.createOrUpdate(orgName,new TeamEntry(null,null,null,teamName,"Update Description") );
+        CreateTeamResponse updateTeamResponse = teamsApi.createOrUpdate(orgName, new TeamEntry()
+                .setName(teamName)
+                .setDescription("Update Description"));
         assertEquals(updateTeamResponse.getId(), teamResponse.getId());
-        assertEquals(updateTeamResponse.getResult(),OperationResult.UPDATED);
+        assertEquals(updateTeamResponse.getResult(), CreateTeamResponse.ResultEnum.UPDATED);
 
         // Update Team by ID
-        String updatedTeamName = "UpdatedName_"+ randomString();
-        CreateTeamResponse updateTeamById = teamResource.createOrUpdate(orgName,new TeamEntry(teamResponse.getId(),null,null,updatedTeamName,"Name is updated"));
-        assertEquals(teamResponse.getId(),updateTeamById.getId());
-        assertEquals(updateTeamResponse.getResult(),OperationResult.UPDATED);
+        String updatedTeamName = "UpdatedName_" + randomString();
+        CreateTeamResponse updateTeamById = teamsApi.createOrUpdate(orgName, new TeamEntry()
+                .setId(teamResponse.getId())
+                .setName(updatedTeamName)
+                .setDescription("Name is updated"));
+        assertEquals(teamResponse.getId(), updateTeamById.getId());
+        assertEquals(updateTeamResponse.getResult(), CreateTeamResponse.ResultEnum.UPDATED);
 
         // Get
-        TeamEntry teamEntry = teamResource.get(orgName,updatedTeamName);
+        TeamEntry teamEntry = teamsApi.get(orgName, updatedTeamName);
         assertEquals(teamResponse.getId(), teamEntry.getId());
-        assertEquals(updatedTeamName,teamEntry.getName());
+        assertEquals(updatedTeamName, teamEntry.getName());
 
     }
 
@@ -340,8 +346,8 @@ public class CrudIT extends AbstractServerIT {
     public void testSecrets() throws Exception {
         String orgName = "org_" + randomString();
 
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // ---
 
@@ -353,19 +359,22 @@ public class CrudIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
         String repoName = "repo_" + randomString();
 
-        com.walmartlabs.concord.server.api.org.project.ProjectResource projectResource = proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName,
-                Collections.singletonMap(repoName,
-                        new RepositoryEntry(null, null, repoName, "git@localhost:/test", null, null, null, null, secretName, false, null))));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setName(repoName)
+                        .setUrl("git@localhost:/test")
+                        .setSecretName(secretName))));
 
         // ---
 
-        SecretResource secretResource = proxy(SecretResource.class);
-        secretResource.delete(orgName, secretName);
+        SecretsApi secretsApi = new SecretsApi(getApiClient());
+        secretsApi.delete(orgName, secretName);
 
         /// ---
 
-        ProjectEntry projectEntry = projectResource.get(orgName, projectName);
+        ProjectEntry projectEntry = projectsApi.get(orgName, projectName);
         Map<String, RepositoryEntry> repos = projectEntry.getRepositories();
         assertEquals(1, repos.size());
 
@@ -380,32 +389,34 @@ public class CrudIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testOrganization() throws Exception {
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
         String updatedOrgName = "updateOrg_" + randomString();
 
         // --- create
 
-        CreateOrganizationResponse createOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        CreateOrganizationResponse createOrganizationResponse = orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
         assertTrue(createOrganizationResponse.isOk());
         assertNotNull(createOrganizationResponse.getId());
 
         // --- update
 
-        CreateOrganizationResponse updateOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(createOrganizationResponse.getId(),updatedOrgName, null, null));
-        assertEquals(updateOrganizationResponse.getResult(),OperationResult.UPDATED);
+        CreateOrganizationResponse updateOrganizationResponse = orgApi.createOrUpdate(new OrganizationEntry()
+                .setId(createOrganizationResponse.getId())
+                .setName(updatedOrgName));
+        assertEquals(updateOrganizationResponse.getResult(), CreateOrganizationResponse.ResultEnum.UPDATED);
         assertEquals(updateOrganizationResponse.getId(), createOrganizationResponse.getId());
 
         // --- get
 
-        OrganizationEntry organizationEntry = organizationResource.get(updatedOrgName);
+        OrganizationEntry organizationEntry = orgApi.get(updatedOrgName);
         assertNotNull(organizationEntry);
         assertEquals(createOrganizationResponse.getId(), organizationEntry.getId());
 
         // --- list
 
-        List<OrganizationEntry> organizationEntryList = organizationResource.list(true);
+        List<OrganizationEntry> organizationEntryList = orgApi.list(true);
         assertNotNull(organizationEntryList);
         organizationEntry = findOrganization(organizationEntryList, updatedOrgName);
         assertNotNull(organizationEntry);
@@ -413,49 +424,53 @@ public class CrudIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testOrgVisibility() throws Exception {
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
 
         // create private org
 
-        CreateOrganizationResponse createOrganizationResponse = organizationResource.createOrUpdate(new OrganizationEntry(orgName, OrganizationVisibility.PRIVATE));
+        CreateOrganizationResponse createOrganizationResponse = orgApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .setVisibility(OrganizationEntry.VisibilityEnum.PRIVATE));
         assertTrue(createOrganizationResponse.isOk());
         assertNotNull(createOrganizationResponse.getId());
 
         // --- private org available for admin
 
-        List<OrganizationEntry> orgs = organizationResource.list(false);
+        List<OrganizationEntry> orgs = orgApi.list(false);
         assertTrue(orgs.stream().anyMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
 
         // add the user A
 
-        UserResource userResource = proxy(UserResource.class);
+        UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
+        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
 
-        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
 
         setApiKey(apiKeyA.getKey());
 
-        orgs = organizationResource.list(true);
+        orgs = orgApi.list(true);
         assertTrue(orgs.stream().noneMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
     }
 
     @Test(timeout = 60000)
     public void testOrgMeta() throws Exception {
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
         Map<String, Object> meta = Collections.singletonMap("x", true);
 
-        CreateOrganizationResponse cor = organizationResource.createOrUpdate(new OrganizationEntry(orgName, meta));
+        CreateOrganizationResponse cor = orgApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .setMeta(meta));
 
         // ---
 
-        OrganizationEntry e = organizationResource.get(orgName);
+        OrganizationEntry e = orgApi.get(orgName);
         assertNotNull(e);
 
         Map<String, Object> meta2 = e.getMeta();
@@ -464,10 +479,12 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        meta = Collections.singletonMap("y", 123);
-        organizationResource.createOrUpdate(new OrganizationEntry(cor.getId(), null, null, meta));
+        meta = Collections.singletonMap("y", 123.0);
+        orgApi.createOrUpdate(new OrganizationEntry()
+                .setId(cor.getId())
+                .setMeta(meta));
 
-        e = organizationResource.get(orgName);
+        e = orgApi.get(orgName);
         assertNotNull(e);
 
         Map<String, Object> meta3 = e.getMeta();
@@ -478,31 +495,39 @@ public class CrudIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testPolicies() throws Exception {
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
         String orgName = "org_" + randomString();
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // ---
 
-        com.walmartlabs.concord.server.api.org.project.ProjectResource projectResource = proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
         String projectName = "project_" + randomString();
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+        projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName));
 
         // ---
 
-        PolicyResource policyResource = proxy(PolicyResource.class);
+        PolicyApi policyResource = new PolicyApi(getApiClient());
 
         String policyName = "policy_" + randomString();
         Map<String, Object> policyRules = Collections.singletonMap("x", 123);
 
-        PolicyOperationResponse por = policyResource.createOrUpdate(new PolicyEntry(policyName, policyRules));
+        PolicyOperationResponse por = policyResource.createOrUpdate(new PolicyEntry()
+                .setName(policyName)
+                .setRules(policyRules));
 
         String newPolicyName = "policy2_" + randomString();
-        policyResource.createOrUpdate(new PolicyEntry(por.getId(), newPolicyName, policyRules));
+        policyResource.createOrUpdate(new PolicyEntry()
+                .setId(por.getId())
+                .setName(newPolicyName)
+                .setRules(policyRules));
 
-        policyResource.createOrUpdate(new PolicyEntry(por.getId(), policyName, policyRules));
+        policyResource.createOrUpdate(new PolicyEntry()
+                .setId(por.getId())
+                .setName(policyName)
+                .setRules(policyRules));
 
         // ---
 
@@ -511,7 +536,9 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        policyResource.link(policyName, new PolicyLinkEntry(orgName, projectName));
+        policyResource.link(policyName, new PolicyLinkEntry()
+                .setOrgName(orgName)
+                .setProjectName(projectName));
 
         List<PolicyEntry> l = policyResource.list(orgName, projectName);
         assertEquals(1, l.size());
@@ -519,7 +546,7 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
-        policyResource.link(policyName, new PolicyLinkEntry(orgName));
+        policyResource.link(policyName, new PolicyLinkEntry().setOrgName(orgName));
 
         l = policyResource.list(orgName, null);
         assertEquals(1, l.size());

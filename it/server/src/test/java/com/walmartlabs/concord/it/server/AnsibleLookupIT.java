@@ -20,14 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.OrganizationResource;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectResource;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import java.net.URI;
@@ -43,8 +36,8 @@ public class AnsibleLookupIT extends AbstractServerIT {
     @Test(timeout = 60000)
     public void testSecrets() throws Exception {
         String orgName = "org_" + randomString();
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         String secretName = "mySecret";
         String secretValue = "value_" + randomString();
@@ -52,8 +45,10 @@ public class AnsibleLookupIT extends AbstractServerIT {
         addPlainSecret(orgName, secretName, false, secretPwd, secretValue.getBytes());
 
         String projectName = "project_" + randomString();
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
         // ---
 
@@ -72,9 +67,9 @@ public class AnsibleLookupIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
@@ -87,8 +82,8 @@ public class AnsibleLookupIT extends AbstractServerIT {
     @Test(timeout = 60000)
     public void testSecretData() throws Exception {
         String orgName = "org_" + randomString();
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         String secretName = "mySecret";
         String secretValue = "value_" + randomString();
@@ -96,8 +91,10 @@ public class AnsibleLookupIT extends AbstractServerIT {
         addPlainSecret(orgName, secretName, false, secretPwd, secretValue.getBytes());
 
         String projectName = "project_" + randomString();
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
         // ---
 
@@ -116,9 +113,9 @@ public class AnsibleLookupIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
@@ -131,16 +128,18 @@ public class AnsibleLookupIT extends AbstractServerIT {
     @Test(timeout = 60000)
     public void testSecretDataNoPassword() throws Exception {
         String orgName = "org_" + randomString();
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         String secretName = "mySecret";
         String secretValue = "value_" + randomString();
-        addPlainSecret(orgName, secretName, false,null, secretValue.getBytes());
+        addPlainSecret(orgName, secretName, false, null, secretValue.getBytes());
 
         String projectName = "project_" + randomString();
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
         // ---
 
@@ -157,9 +156,9 @@ public class AnsibleLookupIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
@@ -171,15 +170,17 @@ public class AnsibleLookupIT extends AbstractServerIT {
     @Test(timeout = 60000)
     public void testPublickey() throws Exception {
         String orgName = "org_" + randomString();
-        OrganizationResource organizationResource = proxy(OrganizationResource.class);
-        organizationResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         String secretName = "mySecret_" + randomString();
         generateKeyPair(orgName, secretName, false, null);
 
         String projectName = "project_" + randomString();
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(orgName, new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
         // ---
 
@@ -198,9 +199,9 @@ public class AnsibleLookupIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 

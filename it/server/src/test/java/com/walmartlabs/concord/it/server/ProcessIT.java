@@ -21,30 +21,12 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.googlecode.junittoolbox.ParallelRunner;
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.OrganizationResource;
-import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
-import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOperationResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
-import com.walmartlabs.concord.server.api.org.team.*;
-import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.api.security.apikey.ApiKeyResource;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyRequest;
-import com.walmartlabs.concord.server.api.security.apikey.CreateApiKeyResponse;
-import com.walmartlabs.concord.server.api.user.CreateUserRequest;
-import com.walmartlabs.concord.server.api.user.UserResource;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.*;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
 import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -62,13 +44,13 @@ public class ProcessIT extends AbstractServerIT {
 
         // start the process
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -86,9 +68,9 @@ public class ProcessIT extends AbstractServerIT {
     public void testDefaultEntryPoint() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("defaultEntryPoint").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
 
@@ -102,8 +84,8 @@ public class ProcessIT extends AbstractServerIT {
 
         int count = 100;
         for (int i = 0; i < count; i++) {
-            ProcessResource processResource = proxy(ProcessResource.class);
-            processResource.start(new ByteArrayInputStream(payload), null, false, null);
+            ProcessApi processApi = new ProcessApi(getApiClient());
+            start(payload);
         }
     }
 
@@ -115,13 +97,16 @@ public class ProcessIT extends AbstractServerIT {
 
         // start the process
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, true, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("sync", true);
+        StartProcessResponse spr = start(input);
         assertNotNull(spr.getInstanceId());
 
         // wait for completion
 
-        ProcessEntry pir = processResource.get(spr.getInstanceId());
+        ProcessEntry pir = processApi.get(spr.getInstanceId());
 
         // get the name of the agent's log file
 
@@ -137,28 +122,28 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*120123.*", ab);
         assertLog(".*redColor.*", ab);
 
-        assertTrue(pir.getStatus() == ProcessStatus.FINISHED);
+        assertTrue(pir.getStatus() == ProcessEntry.StatusEnum.FINISHED);
     }
 
     @Test(timeout = 60000)
     public void testTimeout() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("timeout").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
         try {
-            processResource.waitForCompletion(spr.getInstanceId(), 3000);
+            processApi.waitForCompletion(spr.getInstanceId(), 3000L);
             fail("should fail");
-        } catch (WebApplicationException e) {
-            Response r = e.getResponse();
-            ProcessEntry pir = r.readEntity(ProcessEntry.class);
-            assertEquals(ProcessStatus.RUNNING, pir.getStatus());
+        } catch (ApiException e) {
+            String s = e.getResponseBody();
+            ProcessEntry pir = getApiClient().getJSON().deserialize(s, ProcessEntry.class);
+            assertEquals(ProcessEntry.StatusEnum.RUNNING, pir.getStatus());
         }
 
-        processResource.kill(spr.getInstanceId());
+        processApi.kill(spr.getInstanceId());
 
-        waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.CANCELLED, ProcessStatus.FAILED, ProcessStatus.FINISHED);
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.CANCELLED, ProcessEntry.StatusEnum.FAILED, ProcessEntry.StatusEnum.FINISHED);
     }
 
     @Test(timeout = 60000)
@@ -167,13 +152,13 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 
@@ -186,11 +171,11 @@ public class ProcessIT extends AbstractServerIT {
     public void testErrorHandling() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("errorHandling").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
 
@@ -202,11 +187,11 @@ public class ProcessIT extends AbstractServerIT {
     public void testStartupProblem() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("startupProblem").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FAILED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*gaaarbage.*", ab);
@@ -232,8 +217,8 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FINISHED);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*x=123.*", ab);
@@ -246,18 +231,18 @@ public class ProcessIT extends AbstractServerIT {
     public void testWorkDir() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("workDir").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.SUSPENDED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Hello!", ab);
         assertLog(".*Bye!", ab);
 
         // ---
 
-        FormResource formResource = proxy(FormResource.class);
+        ProcessFormsApi formResource = new ProcessFormsApi(getApiClient());
         List<FormListEntry> forms = formResource.list(pir.getInstanceId());
         assertEquals(1, forms.size());
 
@@ -267,7 +252,7 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        pir = waitForStatus(processResource, spr.getInstanceId(), ProcessStatus.FINISHED);
+        pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
         ab = getLog(pir.getLogFileName());
         assertLogAtLeast(".*Hello!", 2, ab);
         assertLogAtLeast(".*Bye!", 2, ab);
@@ -277,12 +262,12 @@ public class ProcessIT extends AbstractServerIT {
     public void testSwitch() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("switchCase").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 
@@ -296,12 +281,12 @@ public class ProcessIT extends AbstractServerIT {
     public void testTaskOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 
@@ -313,12 +298,12 @@ public class ProcessIT extends AbstractServerIT {
     public void testDelegateOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 
@@ -330,28 +315,31 @@ public class ProcessIT extends AbstractServerIT {
     public void testTags() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse parentSpr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse parentSpr = start(payload);
 
         // ---
 
-        waitForCompletion(processResource, parentSpr.getInstanceId());
+        waitForCompletion(processApi, parentSpr.getInstanceId());
 
         // ---
 
         payload = archive(ProcessIT.class.getResource("tags").toURI());
-        StartProcessResponse childSpr = processResource.start(new ByteArrayInputStream(payload), parentSpr.getInstanceId(), false, null);
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("parentInstanceId", parentSpr.getInstanceId().toString());
+        StartProcessResponse childSpr = start(input);
 
         // ---
 
-        waitForCompletion(processResource, childSpr.getInstanceId());
+        waitForCompletion(processApi, childSpr.getInstanceId());
 
         // ---
 
-        List<ProcessEntry> l = processResource.listSubprocesses(parentSpr.getInstanceId(), Collections.singleton("abc"));
+        List<ProcessEntry> l = processApi.listSubprocesses(parentSpr.getInstanceId(), Collections.singletonList("abc"));
         assertTrue(l.isEmpty());
 
-        l = processResource.listSubprocesses(parentSpr.getInstanceId(), Collections.singleton("test"));
+        l = processApi.listSubprocesses(parentSpr.getInstanceId(), Collections.singletonList("test"));
         assertEquals(1, l.size());
 
         ProcessEntry e = l.get(0);
@@ -359,10 +347,10 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        l = processResource.list(null, null, Collections.singleton("xyz"), 1);
+        l = processApi.list(null, null, Collections.singletonList("xyz"), 1);
         assertTrue(l.isEmpty());
 
-        l = processResource.list(null, null, Collections.singleton("IT"), 1);
+        l = processApi.list(null, null, Collections.singletonList("IT"), 1);
         assertEquals(1, l.size());
 
         e = l.get(0);
@@ -371,35 +359,40 @@ public class ProcessIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testProjectId() throws Exception {
+        String orgName = "Default";
         String projectName = "project_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(projectName));
-
-        String entryPoint = projectName;
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
         // ---
 
         byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse sprA = processResource.start(entryPoint, new ByteArrayInputStream(payload), null, false, null);
-        waitForCompletion(processResource, sprA.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        StartProcessResponse sprA = start(input);
+        waitForCompletion(processApi, sprA.getInstanceId());
 
         // ---
 
-        StartProcessResponse sprB = processResource.start(new ByteArrayInputStream(payload), null, false, null);
-        waitForCompletion(processResource, sprB.getInstanceId());
+        StartProcessResponse sprB = start(payload);
+        waitForCompletion(processApi, sprB.getInstanceId());
 
         // ---
 
-        List<ProcessEntry> l = processResource.list(UUID.randomUUID(), null, null, 30);
+        List<ProcessEntry> l = processApi.list(UUID.randomUUID(), null, null, 30);
         assertTrue(l.isEmpty());
 
-        l = processResource.list(cpr.getId(), null, null, 30);
+        l = processApi.list(cpr.getId(), null, null, 30);
         assertEquals(1, l.size());
 
-        l = processResource.list(null, null, null, 30);
+        l = processApi.list(null, null, null, 30);
         ProcessEntry p = null;
         for (ProcessEntry e : l) {
             if (e.getInstanceId().equals(sprB.getInstanceId())) {
@@ -416,14 +409,14 @@ public class ProcessIT extends AbstractServerIT {
         // ---
         byte[] payload = archive(ProcessIT.class.getResource("processWithChildren").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse parentSpr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse parentSpr = start(payload);
 
         // ---
 
-        waitForCompletion(processResource, parentSpr.getInstanceId());
+        waitForCompletion(processApi, parentSpr.getInstanceId());
 
-        ProcessEntry processEntry = processResource.get(parentSpr.getInstanceId());
+        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
         assertEquals(3, processEntry.getChildrenIds().size());
     }
 
@@ -433,27 +426,29 @@ public class ProcessIT extends AbstractServerIT {
 
         String orgName = "org_" + randomString();
 
-        OrganizationResource orgResource = proxy(OrganizationResource.class);
-        orgResource.createOrUpdate(new OrganizationEntry(orgName));
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
 
         // add the user A
 
-        UserResource userResource = proxy(UserResource.class);
+        UsersApi usersApi = new UsersApi(getApiClient());
 
         String userAName = "userA_" + randomString();
-        userResource.createOrUpdate(new CreateUserRequest(userAName, UserType.LOCAL));
+        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
 
-        ApiKeyResource apiKeyResource = proxy(ApiKeyResource.class);
-        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest(userAName));
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
 
         // create the user A's team
 
         String teamName = "team_" + randomString();
 
-        TeamResource teamResource = proxy(TeamResource.class);
-        CreateTeamResponse ctr = teamResource.createOrUpdate(orgName, new TeamEntry(teamName));
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+        CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
 
-        teamResource.addUsers(orgName, teamName, false, Collections.singleton(new TeamUserEntry(userAName, TeamRole.MEMBER)));
+        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
+                .setUsername(userAName)
+                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
 
         // switch to the user A and create a new private project
 
@@ -461,12 +456,19 @@ public class ProcessIT extends AbstractServerIT {
 
         String projectName = "project_" + randomString();
 
-        com.walmartlabs.concord.server.api.org.project.ProjectResource projectResource = proxy(com.walmartlabs.concord.server.api.org.project.ProjectResource.class);
-        ProjectOperationResponse por = projectResource.createOrUpdate(orgName, new ProjectEntry(projectName, ProjectVisibility.PRIVATE));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
+                .setAcceptsRawPayload(true));
 
         // grant the team access to the project
 
-        projectResource.updateAccessLevel(orgName, projectName, new ResourceAccessEntry(ctr.getId(), orgName, teamName, ResourceAccessLevel.READER));
+        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .setTeamId(ctr.getId())
+                .setOrgName(orgName)
+                .setTeamName(teamName)
+                .setLevel(ResourceAccessEntry.LevelEnum.READER));
 
         //Start a process with zero child
 
@@ -477,8 +479,8 @@ public class ProcessIT extends AbstractServerIT {
         input.put("project", projectName);
 
         StartProcessResponse singleNodeProcess = start(input);
-        ProcessResource processResource = proxy(ProcessResource.class);
-        waitForCompletion(processResource, singleNodeProcess.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForCompletion(processApi, singleNodeProcess.getInstanceId());
 
         // Start a process with children
 
@@ -489,11 +491,11 @@ public class ProcessIT extends AbstractServerIT {
         input.put("project", projectName);
 
         StartProcessResponse parentSpr = start(input);
-        waitForCompletion(processResource, parentSpr.getInstanceId());
+        waitForCompletion(processApi, parentSpr.getInstanceId());
 
         // ---
 
-        List<ProcessEntry> processEntry = processResource.list(por.getId(), null, null, 10);
+        List<ProcessEntry> processEntry = processApi.list(por.getId(), null, null, 10);
         for (ProcessEntry pe : processEntry) {
             if (pe.getInstanceId().equals(singleNodeProcess.getInstanceId())) {
                 assertTrue(pe.getChildrenIds().isEmpty());
@@ -510,17 +512,17 @@ public class ProcessIT extends AbstractServerIT {
         input.put("archive", payload);
 
         StartProcessResponse spr = start(input);
-        ProcessResource processResource = proxy(ProcessResource.class);
+        ProcessApi processApi = new ProcessApi(getApiClient());
 
-        waitForChild(processResource, spr.getInstanceId(), ProcessKind.DEFAULT, ProcessStatus.RUNNING);
+        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, ProcessEntry.StatusEnum.RUNNING);
 
-        processResource.killCascade(spr.getInstanceId());
+        processApi.killCascade(spr.getInstanceId());
 
-        waitForChild(processResource, spr.getInstanceId(), ProcessKind.DEFAULT, ProcessStatus.CANCELLED,ProcessStatus.FINISHED,ProcessStatus.FAILED);
+        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, ProcessEntry.StatusEnum.CANCELLED, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.FAILED);
 
-        List<ProcessEntry> processEntryList = processResource.listSubprocesses(spr.getInstanceId(), null);
-        for (ProcessEntry pe : processEntryList){
-            assertEquals(ProcessStatus.CANCELLED, pe.getStatus());
+        List<ProcessEntry> processEntryList = processApi.listSubprocesses(spr.getInstanceId(), null);
+        for (ProcessEntry pe : processEntryList) {
+            assertEquals(ProcessEntry.StatusEnum.CANCELLED, pe.getStatus());
         }
     }
 }

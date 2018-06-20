@@ -80,7 +80,7 @@ public interface SecretResource {
                                    @ApiParam @PathParam("secretName") @ConcordKey String secretName);
 
     @GET
-    @ApiOperation("List secrets")
+    @ApiOperation(value = "List secrets", responseContainer = "list", response = SecretEntry.class)
     @Path("/{orgName}/secret")
     @Produces(MediaType.APPLICATION_JSON)
     List<SecretEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName);

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,18 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
+import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.file.Files;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -80,16 +79,16 @@ public class KvServiceIT extends AbstractServerIT {
         Map<String, Object> args = ImmutableMap.of("testKey", testKey);
         byte[] payload = createPayload(entryPoint, args);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         return getLog(pir.getLogFileName());
     }
 
-    private static byte[] createPayload(String entryPoint, Map<String, Object> args) throws Exception {
+    private byte[] createPayload(String entryPoint, Map<String, Object> args) throws Exception {
         Path src = Paths.get(KvServiceIT.class.getResource("kvInc").toURI());
 
         Path tmpDir = createTempDir();
@@ -98,9 +97,10 @@ public class KvServiceIT extends AbstractServerIT {
         Map<String, Object> req = ImmutableMap.of("entryPoint", entryPoint,
                 "arguments", args);
 
-        Path reqFile = tmpDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
-        ObjectMapper om = new ObjectMapper();
-        om.writeValue(reqFile.toFile(), req);
+        Path reqFile = tmpDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        try (Writer w = new FileWriter(reqFile.toFile())) {
+            getApiClient().getJSON().getGson().toJson(req, w);
+        }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(baos)) {

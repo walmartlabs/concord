@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.api.org.policy;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,7 +72,7 @@ public interface PolicyResource {
                                   @ApiParam @QueryParam("projectName") @ConcordKey String projectName);
 
     @GET
-    @ApiOperation("List policies, optionally filtering by organization and/or project links")
+    @ApiOperation(value = "List policies, optionally filtering by organization and/or project links", responseContainer = "list", response = PolicyEntry.class)
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     List<PolicyEntry> list(@ApiParam @QueryParam("orgName") @ConcordKey String orgName,

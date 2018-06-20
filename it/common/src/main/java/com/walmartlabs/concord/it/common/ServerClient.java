@@ -20,29 +20,16 @@ package com.walmartlabs.concord.it.common;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.org.secret.SecretOperationResponse;
-import com.walmartlabs.concord.server.api.org.secret.SecretType;
-import com.walmartlabs.concord.server.api.process.*;
-import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
+import com.google.gson.reflect.TypeToken;
+import com.squareup.okhttp.Call;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.ApiResponse;
+import com.walmartlabs.concord.client.*;
 
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.*;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Supplier;
+import java.lang.reflect.Type;
+import java.util.*;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static org.junit.Assert.*;
@@ -54,25 +41,14 @@ public class ServerClient {
      */
     private static final String DEFAULT_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
 
-    private String apiKey = DEFAULT_API_KEY;
-    private String githubKey;
-
-    private final String baseUrl;
-    private final Client client;
-    private final WebTarget target;
+    private ApiClient client;
 
     public ServerClient(String baseUrl) {
-        this.baseUrl = baseUrl;
-        this.client = createClient(this::getApiKey, this::getGithubKey);
-        this.target = client.target(baseUrl);
+        this.client = createClient(baseUrl, DEFAULT_API_KEY, null);
     }
 
-    public <T> T proxy(Class<T> klass) {
-        return ((ResteasyWebTarget) target).proxy(klass);
-    }
-
-    public String getApiKey() {
-        return apiKey;
+    public ApiClient getClient() {
+        return client;
     }
 
     public void resetApiKey() {
@@ -80,86 +56,41 @@ public class ServerClient {
     }
 
     public synchronized void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
+        this.client.setApiKey(apiKey);
     }
 
     public void setGithubKey(String githubKey) {
-        this.githubKey = githubKey;
+        this.client.addDefaultHeader("X-Hub-Signature", githubKey);
     }
 
-    public String getGithubKey() {
-        return githubKey;
+    public StartProcessResponse start(Map<String, Object> input) throws ApiException {
+        return request("/api/v1/process", input, StartProcessResponse.class);
     }
 
-    public StartProcessResponse start(Map<String, Object> input) {
-        String uri = ProcessResource.class.getAnnotation(Path.class).value();
-        return request(uri, input, StartProcessResponse.class);
-    }
+    public <T> T request(String uri, Map<String, Object> input, Class<T> entityType) throws ApiException {
+        ApiResponse<T> resp = ClientUtils.postData(client, uri, input, entityType);
 
-    @Deprecated
-    public StartProcessResponse start(Map<String, Object> input, boolean sync) {
-        return start(null, input, sync);
-    }
-
-    @Deprecated
-    public StartProcessResponse start(String entryPoint, Map<String, Object> input, boolean sync) {
-        return request(ProcessResource.class.getAnnotation(Path.class).value() + (entryPoint != null ? "/" + entryPoint : "")
-                        + "?sync=" + sync,
-                input, StartProcessResponse.class);
-    }
-
-    private MultipartFormDataOutput createMDO(Map<String, Object> input) {
-        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-        input.forEach((k, v) -> {
-            if (v instanceof InputStream || v instanceof byte[]) {
-                mdo.addFormData(k, v, MediaType.APPLICATION_OCTET_STREAM_TYPE);
-            } else if (v instanceof String) {
-                mdo.addFormData(k, v, MediaType.TEXT_PLAIN_TYPE);
-            } else if (v instanceof Map) {
-                mdo.addFormData(k, v, MediaType.APPLICATION_JSON_TYPE);
-            } else if (v instanceof Boolean) {
-                mdo.addFormData(k, v.toString(), MediaType.TEXT_PLAIN_TYPE);
-            } else if (v instanceof String[]) {
-                mdo.addFormData(k, String.join(",", (String[]) v), MediaType.TEXT_PLAIN_TYPE);
-            } else {
-                throw new IllegalArgumentException("Unknown input type: " + v);
-            }
-        });
-        return mdo;
-    }
-
-    public <T> T request(String uri, Map<String, Object> input, Class<T> entityType) {
-        WebTarget target = client.target(baseUrl + "/" + uri);
-
-        MultipartFormDataOutput mdo = createMDO(input);
-        GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
-        };
-
-        Response resp = target.request().post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
-        if (resp.getStatus() != Status.OK.getStatusCode()) {
-            resp.close();
-            if (resp.getStatus() == 403) {
-                throw new ForbiddenException();
+        int code = resp.getStatusCode();
+        if (code < 200 || code >= 300) {
+            if (code == 403) {
+                throw new ForbiddenException("Forbidden!", resp.getData());
             }
 
-            throw new WebApplicationException(resp);
+            throw new ApiException("Request error: " + code);
         }
 
-        T e = resp.readEntity(entityType);
-        resp.close();
-        return e;
+        return resp.getData();
     }
 
-    public SecretOperationResponse postSecret(String orgName, Map<String, Object> input) {
-        return request(com.walmartlabs.concord.server.api.org.secret.SecretResource.class.getAnnotation(Path.class).value() + "/" + orgName + "/secret",
-                input, SecretOperationResponse.class);
+    public SecretOperationResponse postSecret(String orgName, Map<String, Object> input) throws ApiException {
+        return request("/api/v1/org/" + orgName + "/secret", input, SecretOperationResponse.class);
     }
 
-    public SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) {
+    public SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("generatePassword", generatePassword);
-        m.put("type", SecretType.KEY_PAIR.toString());
+        m.put("type", SecretEntry.TypeEnum.KEY_PAIR.toString());
         if (storePassword != null) {
             m.put("storePassword", storePassword);
         }
@@ -167,10 +98,10 @@ public class ServerClient {
         return postSecret(orgName, m);
     }
 
-    public SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) {
+    public SecretOperationResponse addPlainSecret(String orgName, String name, boolean generatePassword, String storePassword, byte[] secret) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
-        m.put("type", SecretType.DATA.toString());
+        m.put("type", SecretEntry.TypeEnum.DATA.toString());
         m.put("generatePassword", generatePassword);
         m.put("data", secret);
         if (storePassword != null) {
@@ -180,10 +111,10 @@ public class ServerClient {
         return postSecret(orgName, m);
     }
 
-    public SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) {
+    public SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
-        m.put("type", SecretType.USERNAME_PASSWORD.toString());
+        m.put("type", SecretEntry.TypeEnum.USERNAME_PASSWORD.toString());
         m.put("generatePassword", generatePassword);
         m.put("username", username);
         m.put("password", password);
@@ -194,34 +125,39 @@ public class ServerClient {
         return postSecret(orgName, m);
     }
 
-    public byte[] getLog(String logFileName) {
-        WebTarget t = client.target(baseUrl + "/logs/" + logFileName);
-        Response resp = t.request().get();
-        assertEquals(Status.OK.getStatusCode(), resp.getStatus());
-        byte[] ab = resp.readEntity(byte[].class);
-        resp.close();
-        return ab;
+    public byte[] getLog(String logFileName) throws ApiException {
+        Set<String> auths = client.getAuthentications().keySet();
+        String[] authNames = auths.toArray(new String[0]);
+
+        Call c = client.buildCall("/logs/" + logFileName, "GET", new ArrayList<>(), new ArrayList<>(),
+                null, new HashMap<>(), new HashMap<>(), authNames, null);
+
+        Type t = new TypeToken<byte[]>() {
+        }.getType();
+        return client.<byte[]>execute(c, t).getData();
     }
 
-    public static ProcessEntry waitForStatus(ProcessResource processResource, UUID instanceId,
-                                             ProcessStatus status, ProcessStatus... more) throws InterruptedException {
+    public static ProcessEntry waitForStatus(ProcessApi api, UUID instanceId,
+                                             ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) throws InterruptedException {
         int retries = 10;
 
         ProcessEntry pir;
         while (true) {
             try {
-                pir = processResource.get(instanceId);
-                if (pir.getStatus() == ProcessStatus.FINISHED || pir.getStatus() == ProcessStatus.FAILED || pir.getStatus() == ProcessStatus.CANCELLED) {
+                pir = api.get(instanceId);
+                if (pir.getStatus() == ProcessEntry.StatusEnum.FINISHED || pir.getStatus() == ProcessEntry.StatusEnum.FAILED || pir.getStatus() == ProcessEntry.StatusEnum.CANCELLED) {
                     return pir;
                 }
 
                 if (isSame(pir.getStatus(), status, more)) {
                     return pir;
                 }
-            } catch (NotFoundException e) {
-                System.out.println(String.format("waitForCompletion ['%s'] -> not found, retrying... (%s)", instanceId, retries));
-                if (--retries < 0) {
-                    throw e;
+            } catch (ApiException e) {
+                if (e.getCode() == 404) {
+                    System.out.println(String.format("waitForCompletion ['%s'] -> not found, retrying... (%s)", instanceId, retries));
+                    if (--retries < 0) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
 
@@ -229,20 +165,20 @@ public class ServerClient {
         }
     }
 
-    public static ProcessEntry waitForChild(ProcessResource processResource,
-                                            UUID parentInstanceId, ProcessKind kind,
-                                            ProcessStatus status, ProcessStatus... more) throws InterruptedException {
+    public static ProcessEntry waitForChild(ProcessApi api,
+                                            UUID parentInstanceId, ProcessEntry.KindEnum kind,
+                                            ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) throws InterruptedException, ApiException {
 
         int retries = 10;
         while (true) {
-            List<ProcessEntry> l = processResource.listSubprocesses(parentInstanceId, null);
+            List<ProcessEntry> l = api.listSubprocesses(parentInstanceId, null);
             for (ProcessEntry e : l) {
                 if (e.getKind() == kind) {
                     if (e.getStatus() == status) {
                         return e;
                     }
 
-                    for (ProcessStatus s : more) {
+                    for (ProcessEntry.StatusEnum s : more) {
                         if (e.getStatus() == s) {
                             return e;
                         }
@@ -258,8 +194,8 @@ public class ServerClient {
         }
     }
 
-    public static ProcessEntry waitForCompletion(ProcessResource processResource, UUID instanceId) throws InterruptedException {
-        return waitForStatus(processResource, instanceId, ProcessStatus.FAILED, ProcessStatus.FINISHED);
+    public static ProcessEntry waitForCompletion(ProcessApi api, UUID instanceId) throws InterruptedException {
+        return waitForStatus(api, instanceId, ProcessEntry.StatusEnum.FAILED, ProcessEntry.StatusEnum.FINISHED);
     }
 
     public static void assertLog(String pattern, byte[] ab) throws IOException {
@@ -282,7 +218,7 @@ public class ServerClient {
         assertTrue(times <= grep(pattern, ab).size());
     }
 
-    public void waitForLog(String logFileName, String pattern) throws IOException, InterruptedException {
+    public void waitForLog(String logFileName, String pattern) throws ApiException, IOException, InterruptedException {
         int retries = 5;
 
         while (true) {
@@ -299,13 +235,13 @@ public class ServerClient {
         }
     }
 
-    private static boolean isSame(ProcessStatus status, ProcessStatus first, ProcessStatus... more) {
+    private static boolean isSame(ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum first, ProcessEntry.StatusEnum... more) {
         if (status == first) {
             return true;
         }
 
         if (more != null) {
-            for (ProcessStatus s : more) {
+            for (ProcessEntry.StatusEnum s : more) {
                 if (status == s) {
                     return true;
                 }
@@ -315,27 +251,22 @@ public class ServerClient {
         return false;
     }
 
-    private static Client createClient(Supplier<String> auth, Supplier<String> github) {
-        return ClientBuilder.newClient()
-                .register((ClientRequestFilter) req -> {
-                    MultivaluedMap<String, Object> headers = req.getHeaders();
+    private static ApiClient createClient(String baseUrl, String apiKey, String gitHubKey) {
+        ApiClient c = new ConcordApiClient(baseUrl);
+        c.setReadTimeout(60000);
+        c.setConnectTimeout(10000);
+        c.setWriteTimeout(60000);
 
-                    headers.putSingle("X-Concord-Trace-Enabled", "true");
+        c.addDefaultHeader("X-Concord-Trace-Enabled", "true");
 
-                    String v = auth.get();
-                    if (v != null) {
-                        headers.putSingle("Authorization", v);
-                    }
-                    v = github.get();
-                    if (v != null) {
-                        headers.putSingle("X-Hub-Signature", v);
-                    }
-                });
-    }
-
-    public void close() {
-        if (client != null) {
-            client.close();
+        if (apiKey != null) {
+            c.setApiKey(apiKey);
         }
+
+        if (gitHubKey != null) {
+            c.addDefaultHeader("X-Hub-Signature", gitHubKey);
+        }
+
+        return c;
     }
 }

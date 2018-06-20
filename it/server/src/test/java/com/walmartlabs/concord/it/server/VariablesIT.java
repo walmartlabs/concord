@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,17 +21,9 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.server.api.org.project.EncryptValueResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.EncryptValueRequest;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,25 +35,31 @@ public class VariablesIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void test() throws Exception {
+        String orgName = "Default";
         String projectName = "project_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, null, null, null,
-                ImmutableMap.of("arguments",
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setCfg(ImmutableMap.of("arguments",
                         ImmutableMap.of("nested",
                                 ImmutableMap.of(
                                         "y", "cba",
-                                        "z", true))),
-                null, null, true));
+                                        "z", true))))
+                .setAcceptsRawPayload(true));
 
         // ---
 
         byte[] payload = archive(VariablesIT.class.getResource("variables").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        StartProcessResponse spr = start(payload);
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
 
@@ -75,26 +73,34 @@ public class VariablesIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testCrypto() throws Exception {
+        String orgName = "Default";
         String projectName = "project_" + randomString();
         String secretValue = "secret_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        projectResource.createOrUpdate(new ProjectEntry(projectName));
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
-        EncryptValueResponse evr = projectResource.encrypt(projectName, new EncryptValueRequest(secretValue));
-        String encryptedValue = DatatypeConverter.printBase64Binary(evr.getData());
+        EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, secretValue);
+        String encryptedValue = evr.getData();
 
-        projectResource.updateConfiguration(projectName, ImmutableMap.of("arguments",
-                ImmutableMap.of("mySecret", encryptedValue)));
+        projectsApi.updateConfiguration(orgName, projectName,
+                ImmutableMap.of("arguments",
+                        ImmutableMap.of("mySecret", encryptedValue)));
 
         // ---
 
         byte[] payload = archive(VariablesIT.class.getResource("crypto").toURI());
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(projectName, new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*" + secretValue + ".*", ab);
@@ -110,8 +116,8 @@ public class VariablesIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(req);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*test.duration=60.*", ab);
@@ -139,8 +145,8 @@ public class VariablesIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*" + varA + ".*" + varB + ".*", ab);

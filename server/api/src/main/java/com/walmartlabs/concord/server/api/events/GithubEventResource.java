@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.console;
+package com.walmartlabs.concord.server.api.events;
 
 /*-
  * *****
@@ -20,15 +20,25 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-import org.junit.Test;
-import org.openqa.selenium.By;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
-public class SimpleIT extends AbstractIT {
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.util.Map;
 
-    @Test(timeout = 30000)
-    public void test() throws Exception {
-        start();
-        waitForPage();
-        waitFor("Logo should be visible", By.id("strati-logo"));
-    }
+@Api(value = "GitHub Events", authorizations = {})
+@Path("/events/github")
+public interface GithubEventResource {
+
+    @POST
+    @ApiOperation("Handles GitHub push events")
+    @Path("/push")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
+    String push(@ApiParam Map<String, Object> event);
 }

@@ -104,6 +104,4 @@ public class CryptoTask implements Task {
     public String decryptString(@InjectVariable("txId") String instanceId, String s) throws Exception {
         return secretService.decryptString(context, instanceId, s);
     }
-
-
 }

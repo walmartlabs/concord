@@ -33,12 +33,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Api(value = "Form", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Api(value = "Process Forms", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
 public interface FormResource {
 
     @GET
-    @ApiOperation("List the available forms")
+    @ApiOperation(value = "List the available forms", responseContainer = "list", response = FormListEntry.class)
     @Path("/{processInstanceId}/form")
     @Produces(MediaType.APPLICATION_JSON)
     List<FormListEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId);

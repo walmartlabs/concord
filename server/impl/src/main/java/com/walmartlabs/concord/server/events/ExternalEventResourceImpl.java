@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.events.EventResource;
+import com.walmartlabs.concord.server.api.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -35,14 +35,14 @@ import java.util.Map;
 import java.util.UUID;
 
 @Named
-public class EventResourceImpl extends AbstractEventResource implements EventResource, Resource {
+public class ExternalEventResourceImpl extends AbstractEventResource implements ExternalEventResource, Resource {
 
-    private static final Logger log = LoggerFactory.getLogger(EventResourceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ExternalEventResourceImpl.class);
 
     @Inject
-    public EventResourceImpl(ProcessManager processManager,
-                             TriggersDao triggersDao,
-                             ProjectDao projectDao) {
+    public ExternalEventResourceImpl(ProcessManager processManager,
+                                     TriggersDao triggersDao,
+                                     ProjectDao projectDao) {
 
         super(processManager, triggersDao, projectDao);
     }

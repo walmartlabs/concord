@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.console;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,6 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-import com.walmartlabs.concord.it.common.ServerClient;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -38,7 +35,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public abstract class AbstractIT {
@@ -48,20 +44,8 @@ public abstract class AbstractIT {
     @Rule
     public final WebDriverRule rule = new WebDriverRule();
 
-    private ServerClient serverClient;
-
     protected WebDriver getDriver() {
         return rule.getDriver();
-    }
-
-    @Before
-    public void init() {
-        serverClient = new ServerClient(ITConstants.SERVER_URL);
-    }
-
-    @After
-    public void _destroy() {
-        serverClient.close();
     }
 
     protected void start() {
@@ -77,10 +61,6 @@ public abstract class AbstractIT {
             return ITConstants.REMOTE_CONSOLE_PORT;
         }
         return ITConstants.LOCAL_CONSOLE_PORT;
-    }
-
-    protected <T> T proxy(Class<T> klass) {
-        return serverClient.proxy(klass);
     }
 
     protected void waitForPage() {

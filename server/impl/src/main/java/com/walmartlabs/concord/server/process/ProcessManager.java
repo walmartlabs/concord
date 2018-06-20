@@ -199,7 +199,7 @@ public class ProcessManager {
             if (status == ProcessStatus.SUSPENDED) {
                 wakeUpProcess(instanceId, params);
             } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
-                throw new ProcessException(instanceId, "Process error", Status.INTERNAL_SERVER_ERROR);
+                throw new ProcessException(instanceId, "Process error: " + status, Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
                 return readOutValues(instanceId);
             }

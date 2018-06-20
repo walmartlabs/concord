@@ -33,23 +33,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server-api</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.ws.rs</groupId>
-            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -105,7 +88,6 @@
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
-                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                         <IT_SELENIUM_PORT>${it.selenium.port}</IT_SELENIUM_PORT>
                         <IT_WEBDRIVER_TYPE>${webdriver.type}</IT_WEBDRIVER_TYPE>
                         <IT_SCREENSHOTS_DIR>${project.build.directory}/screenshots</IT_SCREENSHOTS_DIR>
@@ -169,52 +151,6 @@
                             <skipRun>${skip.it.tests}</skipRun>
                             <images>
                                 <image>
-                                    <name>${db.image}</name>
-                                    <alias>db</alias>
-                                    <run>
-                                        <env>
-                                            <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
-                                        </env>
-                                        <wait>
-                                            <log>(?s).*ready for start up.*ready to accept connections.*</log>
-                                        </wait>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>walmartlabs/concord-server</name>
-                                    <alias>server</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.server.port:8001</port>
-                                        </ports>
-                                        <links>
-                                            <link>db</link>
-                                        </links>
-                                        <env>
-                                            <DB_URL>jdbc:postgresql://db:5432/postgres</DB_URL>
-                                            <DB_DIALECT>POSTGRES</DB_DIALECT>
-                                            <DB_DRIVER>org.postgresql.Driver</DB_DRIVER>
-                                            <DB_USERNAME>postgres</DB_USERNAME>
-                                            <DB_PASSWORD>it</DB_PASSWORD>
-                                        </env>
-                                        <wait>
-                                            <!--suppress MavenModelInspection -->
-                                            <http>
-                                                <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
-                                            </http>
-                                        </wait>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>walmartlabs/concord-agent</name>
-                                    <alias>agent</alias>
-                                    <run>
-                                        <links>
-                                            <link>server</link>
-                                        </links>
-                                    </run>
-                                </image>
-                                <image>
                                     <name>walmartlabs/concord-console</name>
                                     <alias>console</alias>
                                     <!--suppress MavenModelInspection -->
@@ -223,9 +159,6 @@
                                             <port>it.console.port:8080</port>
                                             <port>${it.selenium.port}:4444</port>
                                         </ports>
-                                        <links>
-                                            <link>server</link>
-                                        </links>
                                         <wait>
                                             <http>
                                                 <url>http://localhost:${it.console.port}/index.html</url>

@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-project-model</artifactId>
+            <artifactId>concord-client</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -30,28 +30,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-multipart-provider</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.ws.rs</groupId>
-            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-client</artifactId>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
@@ -62,6 +40,14 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
         </dependency>
     </dependencies>
 

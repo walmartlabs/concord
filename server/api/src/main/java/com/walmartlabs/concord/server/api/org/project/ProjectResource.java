@@ -53,7 +53,7 @@ public interface ProjectResource {
                      @ApiParam @PathParam("projectName") @ConcordKey String projectName);
 
     @GET
-    @ApiOperation("List existing projects")
+    @ApiOperation(value = "List existing projects", responseContainer = "list", response = ProjectEntry.class)
     @Path("/{orgName}/project")
     @Produces(MediaType.APPLICATION_JSON)
     List<ProjectEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName);

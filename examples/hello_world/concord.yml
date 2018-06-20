@@ -1,7 +1,9 @@
 flows:
   default:
-  - log: "Hello, ${name}"
+  - log: "Hello, ${a.concat(b).concat(c)}"
 
 configuration:
   arguments:
-    name: "Concord"
+    a: "Hello "
+    b: "Concord"
+    c: "!"

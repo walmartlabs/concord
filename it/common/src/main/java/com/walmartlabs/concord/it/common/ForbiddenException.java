@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.events;
+package com.walmartlabs.concord.it.common;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,16 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.MediaType;
-import java.util.Map;
+public class ForbiddenException extends RuntimeException {
 
-@Path("/events/github")
-public interface GithubEventResource {
+    private final Object data;
 
-    @POST
-    @Path("/push")
-    @Consumes(MediaType.APPLICATION_JSON)
-    String push(Map<String, Object> event);
+    public ForbiddenException(String message, Object data) {
+        super(message);
+        this.data = data;
+    }
+
+    public Object getData() {
+        return data;
+    }
 }

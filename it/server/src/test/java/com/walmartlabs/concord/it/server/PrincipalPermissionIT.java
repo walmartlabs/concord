@@ -20,12 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.org.inventory.*;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -35,9 +30,7 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class PrincipalPermissionIT extends AbstractServerIT {
 
@@ -47,15 +40,15 @@ public class PrincipalPermissionIT extends AbstractServerIT {
 
         byte[] payload = archive(PrincipalPermissionIT.class.getResource("principalPermission").toURI());
 
-        InventoryQueryResource resource = proxy(InventoryQueryResource.class);
+        InventoryQueriesApi resource = new InventoryQueriesApi(getApiClient());
 
-        String orgName = OrganizationManager.DEFAULT_ORG_NAME;
+        String orgName = "Default";
         String inventoryName = "inventory" + randomString();
         String queryName = "query" + randomString();
         String text = "select item_path from inventory_data where item_path like '%/testPath'";
 
-        InventoryResource inventoryResource = proxy(InventoryResource.class);
-        inventoryResource.createOrUpdate(orgName, new InventoryEntry(inventoryName));
+        InventoriesApi inventoryResource = new InventoriesApi(getApiClient());
+        inventoryResource.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
 
         CreateInventoryQueryResponse cqr = resource.createOrUpdate(orgName, inventoryName, queryName, text);
         assertTrue(cqr.isOk());
@@ -68,13 +61,13 @@ public class PrincipalPermissionIT extends AbstractServerIT {
         input.put("arguments.queryName", queryName);
         StartProcessResponse spr = start(input);
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
-        List<ProcessEntry> processEntryList = processResource.listSubprocesses(spr.getInstanceId(), null);
+        List<ProcessEntry> processEntryList = processApi.listSubprocesses(spr.getInstanceId(), null);
         for (ProcessEntry pe : processEntryList) {
-            assertEquals(ProcessStatus.FINISHED, pe.getStatus());
+            assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
         }
 
         byte[] ab = getLog(pir.getLogFileName());

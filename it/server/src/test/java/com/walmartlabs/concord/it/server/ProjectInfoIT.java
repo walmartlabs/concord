@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,9 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessResource;
-import com.walmartlabs.concord.server.api.process.StartProcessResponse;
-import com.walmartlabs.concord.server.api.project.CreateProjectResponse;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.project.ProjectResource;
-import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -41,14 +34,15 @@ public class ProjectInfoIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void test() throws Exception {
-        UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
+        String orgName = "Default";
+        UUID orgId = UUID.fromString("0fac1b18-d179-11e7-b3e7-d7df4543ed4f");
 
         String projectName = "project_" + randomString();
 
-        ProjectResource projectResource = proxy(ProjectResource.class);
-        CreateProjectResponse cpr = projectResource.createOrUpdate(new ProjectEntry(null, projectName, null, orgId, null, null, null, null, null, true));
-
-        String entryPoint = projectName;
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
 
         // ---
 
@@ -56,11 +50,11 @@ public class ProjectInfoIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(entryPoint, new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(orgName, projectName, null, null, payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // ---
 

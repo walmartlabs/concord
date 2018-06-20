@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,11 +20,10 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.api.process.*;
+
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -44,18 +43,18 @@ public class AnsibleEventIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        ProcessEventResource processEventResource = proxy(ProcessEventResource.class);
-        List<ProcessEventEntry> l = processEventResource.list(pir.getInstanceId(), null, -1);
+        ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
+        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, -1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {
@@ -78,8 +77,9 @@ public class AnsibleEventIT extends AbstractServerIT {
             return msg.equals("Hi there!");
         }).count();
 
-            assertEquals(1, cnt);
+        assertEquals(1, cnt);
     }
+
     @Test(timeout = 60000)
     @SuppressWarnings("unchecked")
     public void testIgnoredFailures() throws Exception {
@@ -88,18 +88,18 @@ public class AnsibleEventIT extends AbstractServerIT {
 
         // ---
 
-        ProcessResource processResource = proxy(ProcessResource.class);
-        StartProcessResponse spr = processResource.start(new ByteArrayInputStream(payload), null, false, null);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processResource, spr.getInstanceId());
-        assertEquals(ProcessStatus.FINISHED, pir.getStatus());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         // ---
 
-        ProcessEventResource processEventResource = proxy(ProcessEventResource.class);
-        List<ProcessEventEntry> l = processEventResource.list(pir.getInstanceId(), null, -1);
+        ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
+        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, -1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {

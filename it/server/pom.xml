@@ -19,13 +19,19 @@
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <dind.image>docker:stable-dind</dind.image>
-        <deps.dir>${project.build.directory}/deps</deps.dir>
+        <deps.dir>${java.io.tmpdir}/deps</deps.dir>
         <docker.host.addr>localhost</docker.host.addr>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <it.server.port>8001</it.server.port>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-client</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>concord-common-it</artifactId>
@@ -36,16 +42,6 @@
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-project-model</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -56,23 +52,11 @@
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock</artifactId>
-            <version>2.14.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server-api</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -90,26 +74,6 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-client</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-jackson2-provider</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-multipart-provider</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.ws.rs</groupId>
-            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -167,6 +131,10 @@
             <artifactId>junit-toolbox</artifactId>
             <version>2.4</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
         </dependency>
     </dependencies>
 
