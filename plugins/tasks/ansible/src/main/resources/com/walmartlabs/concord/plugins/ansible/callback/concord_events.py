@@ -14,6 +14,9 @@ class CallbackModule(CallbackBase):
     CALLBACK_NEEDS_WHITELIST = False
 
     MAX_STRING_LEN = 1024
+    OVERLIMIT_STRING_LEN = MAX_STRING_LEN / 10
+    MAX_ARRAY_LEN = 25
+    OVERLIMIT_ARRAY_LEN = MAX_ARRAY_LEN / 10
 
     def __init__(self):
         super(CallbackModule, self).__init__()
@@ -54,7 +57,7 @@ class CallbackModule(CallbackBase):
         if 'exception' in abridged_result:
             del abridged_result['exception']
 
-        return self._trunc_long_strings(abridged_result)
+        return self._trunc_long_items(abridged_result)
 
     def _strip_internal_keys(self, dirty):
         clean = dirty.copy()
@@ -65,16 +68,22 @@ class CallbackModule(CallbackBase):
                 clean[k] = self._strip_internal_keys(dirty[k])
         return clean
 
-    def _trunc_long_strings(self, obj):
+    def _trunc_long_items(self, obj):
         if isinstance(obj, basestring):
             overlimit = len(obj) - self.MAX_STRING_LEN
-            return (obj[:self.MAX_STRING_LEN] + '...[skipped ' + str(overlimit) +  ' bytes]') if overlimit > 0 else obj
+            return (obj[:self.MAX_STRING_LEN] + '...[skipped ' + str(overlimit) +  ' bytes]') if overlimit > self.OVERLIMIT_STRING_LEN else obj
         elif isinstance(obj, list):
-            return [self._trunc_long_strings(o) for o in obj]
+            overlimit = len(obj) - self.MAX_ARRAY_LEN
+            if overlimit > self.OVERLIMIT_ARRAY_LEN:
+                copy = [self._trunc_long_items(o) for o in obj[:self.MAX_ARRAY_LEN]]
+                copy.append('[skipped ' + str(overlimit) + ' lines]')
+                return copy
+            else:
+                return [self._trunc_long_items(o) for o in obj]
         elif isinstance(obj, tuple):
-            return tuple(self._trunc_long_strings(o) for o in obj)
+            return tuple(self._trunc_long_items(o) for o in obj)
         elif isinstance(obj, dict):
-            return dict((k, self._trunc_long_strings(v)) for (k,v) in obj.items())
+            return dict((k, self._trunc_long_items(v)) for (k,v) in obj.items())
         else:
             return obj
 
