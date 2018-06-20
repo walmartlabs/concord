@@ -24,8 +24,20 @@ $ curl http://localhost:18001/api/v1/server/ping
 ```
 
 The Console will be available on port `18080`.
-
 The default user is `myuser` with password `q1`.
+
+The examples can be started using `localhost:18001` as the API
+endpoint:
+```
+$ cd ../examples/hello_world
+$ ./run.sh localhost:18001
+Username: myuser
+Enter host password for user 'myuser': q1
+{
+  "instanceId" : "...",
+  "ok" : true
+}
+```
 
 The VM can be stopped with `vagrant halt` or suspended
 with `vagrant suspend`.
