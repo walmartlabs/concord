@@ -50,7 +50,8 @@ const applyFilter = (
     }
 
     if (filter) {
-        result = result.filter(({ host }) => host.toLowerCase().search(filter) >= 0);
+        const f = filter.toLowerCase();
+        result = result.filter(({ host }) => host.toLowerCase().indexOf(f) >= 0);
     }
 
     return Array.from(new Set(result.map((e) => e.host))).sort();

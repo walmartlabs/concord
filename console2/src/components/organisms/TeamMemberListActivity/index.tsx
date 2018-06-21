@@ -57,7 +57,8 @@ const filterData = (data: TeamUserEntry[], filter?: string): TeamUserEntry[] => 
         return data;
     }
 
-    return data.filter((d) => d.username.search(filter) >= 0);
+    const f = filter.toLowerCase();
+    return data.filter((d) => d.username.toLowerCase().search(f) >= 0);
 };
 
 class TeamMemberListActivity extends React.PureComponent<Props, OwnState> {
