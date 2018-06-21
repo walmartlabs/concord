@@ -23,7 +23,6 @@ package com.walmartlabs.concord.project.yaml;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.yaml.converter.StepConverter;
-import com.walmartlabs.concord.project.yaml.converter.YamlCallConverter;
 import com.walmartlabs.concord.project.yaml.converter.YamlTaskStepConverter;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.EngineBuilder;
@@ -2022,6 +2021,50 @@ public class YamlParserTest {
     @Test
     public void test107() throws Exception {
         deploy("107.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        UUID formId = getFirstFormId();
+
+        FormSubmitResult result = formService.submit(formId, Collections.singletonMap("testValue", "else"));
+        assertTrue(result.isValid());
+
+        verify(testBean, times(1)).toString(eq("else"));
+    }
+
+    @Test
+    public void test108() throws Exception {
+        deploy("108.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        engine.start(key, "main", null);
+
+        // ---
+
+        UUID formId = getFirstFormId();
+
+        FormSubmitResult result = formService.submit(formId, Collections.singletonMap("testValue", "else"));
+        assertTrue(result.isValid());
+
+        verify(testBean, times(1)).toString(eq("else"));
+    }
+
+    @Test
+    public void test109() throws Exception {
+        deploy("109.yml");
 
         TestBean testBean = spy(new TestBean());
         taskRegistry.register("testBean", testBean);

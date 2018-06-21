@@ -29,13 +29,11 @@ import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
@@ -71,17 +69,29 @@ public class FormAccessManager {
                     "the necessary permissions to access the form.");
         }
 
-        String group = (String) Optional.ofNullable(runAsParams.get(InternalConstants.Forms.RUN_AS_LDAP_KEY))
+        Object groups = Optional.ofNullable(runAsParams.get(InternalConstants.Forms.RUN_AS_LDAP_KEY))
                 .map(v -> (Map<String, Object>) v)
                 .map(v -> v.get(InternalConstants.Forms.RUN_AS_GROUP_KEY))
                 .orElse(null);
 
-        LdapPrincipal ldapPrincipal = LdapPrincipal.getCurrent();
-        Set<String> userLdapGroups = Optional.ofNullable(ldapPrincipal).map(LdapPrincipal::getGroups).orElse(null);
+        if (groups != null) {
+            Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
+                    .map(LdapPrincipal::getGroups)
+                    .orElse(null);
 
-        if (group != null && !matchesLdapGroup(group, userLdapGroups)) {
-            throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
-                    "the necessary permissions to access the form.");
+            boolean isGroupMatched = false;
+            // For backward compatibility - Previously suspended forms on prod still have group as String type
+            if (groups instanceof String) {
+                isGroupMatched = matchesLdapGroup((String) groups, userLdapGroups);
+            } else if (groups instanceof List) {
+                isGroupMatched = ((List<String>) groups).stream()
+                        .anyMatch(group -> matchesLdapGroup(group, userLdapGroups));
+            }
+
+            if (!isGroupMatched) {
+                throw new UnauthorizedException("The current user (" + p.getUsername() + "[" + userLdapGroups + "]) doesn't have " +
+                        "the necessary permissions to resume process. Expected LDAP group(s) '" + groups + "'");
+            }
         }
 
         return f;

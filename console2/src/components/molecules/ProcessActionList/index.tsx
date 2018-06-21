@@ -43,11 +43,22 @@ const renderRunAs = (v?: FormRunAs) => {
     }
 
     if (v.ldap && v.ldap.group) {
-        return (
-            <p>
-                <b>Expects group:</b> {v.ldap.group}
-            </p>
-        );
+        if(Array.isArray(v.ldap.group)){
+            return (
+                <p>
+                    <b>Expect groups:</b> {v.ldap.group.map(function(item) {
+                    return '[' + item + ']';
+                })}
+                </p>
+            );
+        } else {
+            // For backward compatibility - Previously suspended forms still have `group` as string
+            return (
+                <p>
+                    <b>Expects group:</b> [{v.ldap.group}]
+                </p>
+            );
+        }
     }
 
     return;

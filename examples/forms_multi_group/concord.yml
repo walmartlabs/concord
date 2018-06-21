@@ -1,0 +1,12 @@
+flows:
+  default:
+  - log: "Starting as ${initiator}"
+  - form: myForm
+    runAs:
+      ldap:
+       - group: "CN=Strati-SDE-Concord-sdeconcord,.*"
+       - group: "CN=Open Source Developers-opensource_devs,.*"
+
+forms:
+  myForm:
+  - firstName: { label: "First name", type: "string", value: "John" }

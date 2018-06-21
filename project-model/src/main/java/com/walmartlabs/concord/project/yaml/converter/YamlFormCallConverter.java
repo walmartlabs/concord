@@ -20,12 +20,14 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlFormCall;
 import io.takari.bpm.model.UserTask;
 import io.takari.bpm.model.form.FormExtension;
 
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
 
@@ -34,14 +36,36 @@ public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
         Chunk c = new Chunk();
 
         String id = ctx.nextId();
-        Map<String, Object> opts = s.getOptions();
+        Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(s.getOptions());
         if (opts != null && opts.isEmpty()) {
             opts = null;
         }
+
+        if (opts != null && opts.get(InternalConstants.Forms.RUN_AS_KEY) != null) {
+            Map<String, Object> runAsParams = (Map<String, Object>) opts.get(InternalConstants.Forms.RUN_AS_KEY);
+            Object ldapObj = runAsParams.get(InternalConstants.Forms.RUN_AS_LDAP_KEY);
+
+            runAsParams.put(InternalConstants.Forms.RUN_AS_LDAP_KEY, getGroupsMap(ldapObj));
+        }
+
         c.addElement(new UserTask(id, new FormExtension(s.getKey(), opts)));
         c.addOutput(id);
         c.addSourceMap(id, toSourceMap(s, "Form: " + s.getKey()));
 
         return c;
+    }
+
+    private Map<String, Object> getGroupsMap(Object ldapObj) {
+        List<String> groupList = null;
+        if (ldapObj instanceof List) {
+            groupList = ((List<Map>) ldapObj).stream()
+                    .map(group -> (String) group.get(InternalConstants.Forms.RUN_AS_GROUP_KEY))
+                    .collect(Collectors.toList());
+        } else if (ldapObj instanceof Map) {
+            groupList = new ArrayList<>();
+            groupList.add((String) ((Map) ldapObj).get(InternalConstants.Forms.RUN_AS_GROUP_KEY));
+        }
+
+        return Collections.singletonMap(InternalConstants.Forms.RUN_AS_GROUP_KEY, groupList);
     }
 }

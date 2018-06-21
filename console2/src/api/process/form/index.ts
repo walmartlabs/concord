@@ -22,7 +22,7 @@ import { ConcordId, fetchJson } from '../../common';
 export interface FormRunAs {
     username?: string;
     ldap?: {
-        group: string;
+        group: string[];
     };
     keep?: boolean;
 }

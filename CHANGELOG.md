@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: multiple ldap group support in forms
+
 ### Changed
 
 - ansible: fixed a bug than prevented `outVars` from working except
