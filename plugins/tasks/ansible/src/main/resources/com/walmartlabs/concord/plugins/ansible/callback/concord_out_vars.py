@@ -17,7 +17,7 @@ class CallbackModule(CallbackBase):
 
         self.out_vars = None
         if "CONCORD_OUT_VARS" in os.environ:
-            self.out_vars = os.environ["CONCORD_OUT_VARS"].split(",")
+            self.out_vars = [v.strip() for v in os.environ["CONCORD_OUT_VARS"].split(",")]
 
         self.out_vars_file_name = None
         if "CONCORD_OUT_VARS_FILE" in os.environ:

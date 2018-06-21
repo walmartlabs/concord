@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- ansible: fixed a bug than prevented `outVars` from working except
+for the first variable in the list.
+
+
+
 ## [0.75.0] - 2018-06-17
 
 ### Added
