@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-console: project, team members and ansible host filters are
+now using simple substring search instead of regular expressions;
 - ansible: fixed a bug than prevented `outVars` from working except
 for the first variable in the list.
 

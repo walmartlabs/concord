@@ -111,7 +111,7 @@ class ProjectList extends React.PureComponent<Props> {
 const makeProjectList = (data: { [id: string]: ProjectEntry }, filter?: string): ProjectEntry[] =>
     Object.keys(data)
         .map((k) => data[k])
-        .filter((e) => (filter ? e.name.search(filter) >= 0 : true))
+        .filter((e) => (filter ? e.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 : true))
         .sort(comparators.byName);
 
 const mapStateToProps = (
