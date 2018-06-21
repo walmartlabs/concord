@@ -1,4 +1,6 @@
 ---
 - hosts: local
   tasks:
-  - shell: "echo $SYS_PWD"
+  - debug:
+      msg: "{{ greetings }}"
+      verbosity: 0
