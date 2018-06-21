@@ -17,16 +17,6 @@
         "jsx-no-multiline-js": false,
         "label-position": true,
         "member-access": false,
-        "member-ordering": [
-            true,
-            {
-                "order": [
-                    "public-before-private",
-                    "static-before-instance",
-                    "variables-before-functions"
-                ]
-            }
-        ],
         "no-any": false,
         "no-arg": true,
         "no-bitwise": true,

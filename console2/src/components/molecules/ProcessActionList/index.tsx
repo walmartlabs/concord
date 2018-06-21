@@ -46,9 +46,7 @@ const renderRunAs = (v?: FormRunAs) => {
         if(Array.isArray(v.ldap.group)){
             return (
                 <p>
-                    <b>Expect groups:</b> {v.ldap.group.map(function(item) {
-                    return '[' + item + ']';
-                })}
+                    <b>Expect groups:</b> {v.ldap.group.map(item => '[' + item + ']')}
                 </p>
             );
         } else {

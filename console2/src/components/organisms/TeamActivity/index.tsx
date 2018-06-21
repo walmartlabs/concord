@@ -49,6 +49,23 @@ interface DispatchProps {
 type Props = ExternalProps & StateProps & DispatchProps;
 
 class TeamActivity extends React.PureComponent<Props> {
+
+    static renderSetting(t: TeamEntry) {
+        return (
+            <>
+                <Divider horizontal={true} content="Danger Zone" />
+
+                <Segment color="red">
+                    <Header as="h4">Team name</Header>
+                    <TeamRenameActivity orgName={t.orgName} teamId={t.id} teamName={t.name} />
+
+                    <Header as="h4">Delete team</Header>
+                    <TeamDeleteActivity orgName={t.orgName} teamName={t.name} />
+                </Segment>
+            </>
+        );
+    }
+
     componentDidMount() {
         this.init();
     }
@@ -65,22 +82,6 @@ class TeamActivity extends React.PureComponent<Props> {
     init() {
         const { orgName, teamName, load } = this.props;
         load(orgName, teamName);
-    }
-
-    static renderSetting(t: TeamEntry) {
-        return (
-            <>
-                <Divider horizontal={true} content="Danger Zone" />
-
-                <Segment color="red">
-                    <Header as="h4">Team name</Header>
-                    <TeamRenameActivity orgName={t.orgName} teamId={t.id} teamName={t.name} />
-
-                    <Header as="h4">Delete team</Header>
-                    <TeamDeleteActivity orgName={t.orgName} teamName={t.name} />
-                </Segment>
-            </>
-        );
     }
 
     render() {

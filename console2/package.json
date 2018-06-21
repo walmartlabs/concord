@@ -66,7 +66,7 @@
         "redux-logger": "3.0.6",
         "redux-saga": "0.16.0",
         "requirejs": "2.3.5",
-        "semantic-ui-css": "2.2.14",
+        "semantic-ui-css": "2.3.2",
         "semantic-ui-react": "0.81.1"
     },
     "scripts": {

@@ -58,23 +58,6 @@ interface DispatchProps {
 type Props = ExternalProps & StateProps & DispatchProps;
 
 class ProjectActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.init();
-    }
-
-    componentDidUpdate(prevProps: Props) {
-        const { orgName: newOrgName, projectName: newProjectName } = this.props;
-        const { orgName: oldOrgName, projectName: oldProjectName } = prevProps;
-
-        if (oldOrgName !== newOrgName || oldProjectName !== newProjectName) {
-            this.init();
-        }
-    }
-
-    init() {
-        const { orgName, projectName, load } = this.props;
-        load(orgName, projectName);
-    }
 
     static renderRepositories(p: ProjectEntry) {
         const repos = p.repositories;
@@ -132,6 +115,24 @@ class ProjectActivity extends React.PureComponent<Props> {
                 </Segment>
             </>
         );
+    }
+
+    componentDidMount() {
+        this.init();
+    }
+
+    componentDidUpdate(prevProps: Props) {
+        const { orgName: newOrgName, projectName: newProjectName } = this.props;
+        const { orgName: oldOrgName, projectName: oldProjectName } = prevProps;
+
+        if (oldOrgName !== newOrgName || oldProjectName !== newProjectName) {
+            this.init();
+        }
+    }
+
+    init() {
+        const { orgName, projectName, load } = this.props;
+        load(orgName, projectName);
     }
 
     render() {
