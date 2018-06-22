@@ -46,7 +46,6 @@ public class ProjectManager {
     private final ProjectRepositoryManager projectRepositoryManager;
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
-    private final GithubWebhookService githubWebhookService;
     private final AuditLog auditLog;
 
     @Inject
@@ -55,7 +54,6 @@ public class ProjectManager {
                           ProjectRepositoryManager projectRepositoryManager,
                           ProjectAccessManager accessManager,
                           SecretManager secretManager,
-                          GithubWebhookService githubWebhookService,
                           AuditLog auditLog) {
 
         this.projectDao = projectDao;
@@ -63,7 +61,6 @@ public class ProjectManager {
         this.projectRepositoryManager = projectRepositoryManager;
         this.accessManager = accessManager;
         this.secretManager = secretManager;
-        this.githubWebhookService = githubWebhookService;
         this.auditLog = auditLog;
     }
 
@@ -84,10 +81,7 @@ public class ProjectManager {
                     entry.getVisibility(), acceptsRawPayload);
 
             if (repos != null) {
-                repos.forEach((k, v) -> {
-                    githubWebhookService.register(pId, k, v.getUrl());
-                    projectRepositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v);
-                });
+                repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v));
             }
 
             return pId;
@@ -116,10 +110,7 @@ public class ProjectManager {
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);
-                repos.forEach((k, v) -> {
-                    githubWebhookService.register(projectId, v.getName(), v.getUrl());
-                    projectRepositoryManager.insert(tx, orgId, prevEntry.getOrgName(), projectId, prevEntry.getName(), v);
-                });
+                repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, prevEntry.getOrgName(), projectId, prevEntry.getName(), v));
             }
         });
 

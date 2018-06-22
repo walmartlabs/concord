@@ -76,7 +76,7 @@ public class GithubWebhookManager {
             log.info("register ['{}'] -> ok (id: {})", githubRepoName, hook.getId());
             return hook.getId();
         } catch (GHFileNotFoundException e) {
-            log.warn("register ['{}'] -> the repository not found", githubRepoName);
+            log.warn("register ['{}'] -> repository not found", githubRepoName);
             return null;
         } catch (IOException e) {
             log.error("register ['{}'] -> error", githubRepoName, e);
@@ -103,7 +103,7 @@ public class GithubWebhookManager {
 
             log.info("unregister ['{}'] -> ok", githubRepoName);
         } catch (GHFileNotFoundException e) {
-            log.warn("unregister ['{}'] -> the webhook not found", githubRepoName);
+            log.warn("unregister ['{}'] -> webhook not found", githubRepoName);
         } catch (IOException e) {
             log.error("unregister ['{}'] -> error: {}", githubRepoName, e.getMessage());
         }

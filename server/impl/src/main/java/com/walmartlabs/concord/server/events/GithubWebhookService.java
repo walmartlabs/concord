@@ -74,7 +74,7 @@ public class GithubWebhookService {
 
     public boolean register(UUID projectId, String repoName, String repoUrl) {
         if(!needWebhookForRepository(repoUrl)) {
-            log.info("register ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoName, repoUrl);
+            log.info("register ['{}', '{}', '{}'] -> not a GitHub URL", projectId, repoName, repoUrl);
             return false;
         }
 

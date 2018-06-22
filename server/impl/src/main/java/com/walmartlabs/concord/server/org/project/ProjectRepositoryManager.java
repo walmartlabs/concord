@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.events.Events;
+import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import org.jooq.DSLContext;
@@ -44,19 +45,22 @@ public class ProjectRepositoryManager {
     private final SecretDao secretDao;
     private final RepositoryDao repositoryDao;
     private final ExternalEventResource externalEventResource;
+    private final GithubWebhookService githubWebhookService;
 
     @Inject
     public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
                                     SecretManager secretManager,
                                     SecretDao secretDao,
                                     RepositoryDao repositoryDao,
-                                    ExternalEventResource externalEventResource) {
+                                    ExternalEventResource externalEventResource,
+                                    GithubWebhookService githubWebhookService) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
         this.secretDao = secretDao;
         this.repositoryDao = repositoryDao;
         this.externalEventResource = externalEventResource;
+        this.githubWebhookService = githubWebhookService;
     }
 
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
@@ -123,6 +127,8 @@ public class ProjectRepositoryManager {
                 entry.getName(), entry.getUrl(),
                 trim(entry.getBranch()), trim(entry.getCommitId()),
                 trim(entry.getPath()), secretId, false);
+
+        githubWebhookService.register(projectId, entry.getName(), entry.getUrl());
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);

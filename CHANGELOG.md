@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-server: fixed the repository webhook registration when an
+individual repository is created or updated;
 - concord-console: project, team members and ansible host filters are
 now using simple substring search instead of regular expressions;
 - ansible: fixed a bug than prevented `outVars` from working except
