@@ -29,7 +29,10 @@
                 {{#if success}}
                 <h3 id="success" class="ui header">Success</h3>
                 {{else}}
-                <form class="ui form {{#if errors}}error{{/if}}" method="post" action="{{submitUrl}}">
+
+                <!-- multipart/form-data is required for uploading files -->
+                <form class="ui form {{#if errors}}error{{/if}}" method="post" enctype="multipart/form-data"
+                      action="{{submitUrl}}">
 
                     {{#if errors}}
                     <div class="ui error message">
@@ -65,6 +68,10 @@
                                 {{/each}}
                             </div>
                         </div>
+                    </div>
+                    <div class="field {{#if errors.aFile}}error{{/if}}">
+                        <label>File:</label>
+                        <input name="aFile" type="file"/>
                     </div>
                     <div class="field">
                         <div class="ui checkbox">
