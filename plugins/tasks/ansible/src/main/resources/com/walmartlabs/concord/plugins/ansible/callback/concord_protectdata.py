@@ -18,7 +18,7 @@ class CallbackModule(CallbackModule_default):
 
     def __init__(self):
         super(CallbackModule, self).__init__()
-        self.secret_list = ['password', 'pwd', 'credentials', 'secret', 'ansible_password', 'vaultpassword']
+        self.secret_list = ['password', 'credentials', 'secret', 'ansible_password', 'vaultpassword']
         print "Log filter is enabled..."
     
     def hide_password(self, result):
