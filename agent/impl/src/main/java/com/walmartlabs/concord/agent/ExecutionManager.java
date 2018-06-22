@@ -22,9 +22,9 @@ package com.walmartlabs.concord.agent;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.client.ProcessApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public class ExecutionManager {
     private final LogManager logManager;
     private final Configuration cfg;
 
-    private final Cache<UUID, ProcessStatus> statuses = CacheBuilder.newBuilder()
+    private final Cache<UUID, ProcessEntry.StatusEnum> statuses = CacheBuilder.newBuilder()
             .expireAfterAccess(JOB_ENTRY_TTL, TimeUnit.MILLISECONDS)
             .build();
 
@@ -75,7 +75,7 @@ public class ExecutionManager {
         Path tmpDir = extract(payload);
 
         synchronized (mutex) {
-            statuses.put(instanceId, ProcessStatus.RUNNING);
+            statuses.put(instanceId, ProcessEntry.StatusEnum.RUNNING);
         }
 
         JobInstance i;
@@ -94,7 +94,7 @@ public class ExecutionManager {
         CompletableFuture<?> f = i.future();
         f.thenRun(() -> {
             synchronized (mutex) {
-                statuses.put(instanceId, ProcessStatus.FINISHED);
+                statuses.put(instanceId, ProcessEntry.StatusEnum.FINISHED);
             }
         }).exceptionally(e -> {
             handleError(instanceId);
@@ -106,18 +106,18 @@ public class ExecutionManager {
 
     private void handleError(UUID instanceId) {
         synchronized (mutex) {
-            ProcessStatus s = statuses.getIfPresent(instanceId);
-            if (s != ProcessStatus.CANCELLED) {
-                statuses.put(instanceId, ProcessStatus.FAILED);
+            ProcessEntry.StatusEnum s = statuses.getIfPresent(instanceId);
+            if (s != ProcessEntry.StatusEnum.CANCELLED) {
+                statuses.put(instanceId, ProcessEntry.StatusEnum.FAILED);
             }
         }
     }
 
     public void cancel(UUID id) {
         synchronized (mutex) {
-            ProcessStatus s = statuses.getIfPresent(id);
-            if (s != null && s == ProcessStatus.RUNNING) {
-                statuses.put(id, ProcessStatus.CANCELLED);
+            ProcessEntry.StatusEnum s = statuses.getIfPresent(id);
+            if (s != null && s == ProcessEntry.StatusEnum.RUNNING) {
+                statuses.put(id, ProcessEntry.StatusEnum.CANCELLED);
             }
         }
 
@@ -129,8 +129,8 @@ public class ExecutionManager {
         i.cancel();
     }
 
-    public ProcessStatus getStatus(UUID id) {
-        ProcessStatus s;
+    public ProcessEntry.StatusEnum getStatus(UUID id) {
+        ProcessEntry.StatusEnum s;
         synchronized (mutex) {
             s = statuses.getIfPresent(id);
         }
@@ -143,7 +143,7 @@ public class ExecutionManager {
     }
 
     public boolean isRunning(UUID id) {
-        ProcessStatus s;
+        ProcessEntry.StatusEnum s;
         synchronized (mutex) {
             s = statuses.getIfPresent(id);
         }
@@ -152,7 +152,7 @@ public class ExecutionManager {
              return false;
         }
 
-        return s == ProcessStatus.RUNNING;
+        return s == ProcessEntry.StatusEnum.RUNNING;
     }
 
     public void cleanup() {

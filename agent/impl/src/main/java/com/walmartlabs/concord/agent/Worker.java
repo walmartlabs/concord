@@ -24,7 +24,6 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessQueueApi;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,12 +161,12 @@ public class Worker implements Runnable {
             return;
         }
 
-        Supplier<Boolean> isRunning = () -> executionManager.getStatus(instanceId) == ProcessStatus.RUNNING;
+        Supplier<Boolean> isRunning = () -> executionManager.getStatus(instanceId) == ProcessEntry.StatusEnum.RUNNING;
 
         // check the status to avoid races
         if (isRunning.get()) {
             try {
-                processApiClient.updateStatus(instanceId, ProcessStatus.RUNNING);
+                processApiClient.updateStatus(instanceId, ProcessEntry.StatusEnum.RUNNING);
             } catch (ApiException e) {
                 log.error("execute ['{}', '{}'] -> status update error", instanceId, payload, e);
             }
@@ -206,7 +205,7 @@ public class Worker implements Runnable {
 
     private void handleSuccess(UUID instanceId) {
         try {
-            processApiClient.updateStatus(instanceId, ProcessStatus.FINISHED);
+            processApiClient.updateStatus(instanceId, ProcessEntry.StatusEnum.FINISHED);
         } catch (ApiException e) {
             log.warn("handleSuccess ['{}'] -> error while updating status of a job: {}", instanceId, e.getMessage());
         }
@@ -214,11 +213,11 @@ public class Worker implements Runnable {
     }
 
     private void handleError(UUID instanceId, Throwable error) {
-        ProcessStatus status = ProcessStatus.FAILED;
+        ProcessEntry.StatusEnum status = ProcessEntry.StatusEnum.FAILED;
 
         if (error instanceof CancellationException) {
             log.info("handleError ['{}'] -> job cancelled", instanceId);
-            status = ProcessStatus.CANCELLED;
+            status = ProcessEntry.StatusEnum.CANCELLED;
         } else {
             log.error("handleError ['{}'] -> job failed", instanceId, error);
         }

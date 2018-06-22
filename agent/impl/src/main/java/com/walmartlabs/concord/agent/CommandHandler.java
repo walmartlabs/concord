@@ -21,9 +21,8 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.CommandEntry;
 import com.walmartlabs.concord.client.CommandQueueApi;
-import com.walmartlabs.concord.server.api.CommandType;
-import com.walmartlabs.concord.server.api.agent.CommandEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,17 +69,14 @@ public class CommandHandler implements Runnable {
     }
 
     private CommandEntry take() throws ApiException {
-        com.walmartlabs.concord.client.CommandEntry cmd = queueClient.take(agentId);
-        if (cmd != null) {
-            return new CommandEntry(CommandType.valueOf(cmd.getType().getValue()), cmd.getPayload());
-        }
-        return null;
+        return queueClient.take(agentId);
     }
 
     private void execute(CommandEntry cmd) {
         log.info("execute -> got a command: {}", cmd);
 
-        if (cmd.getType() == CommandType.CANCEL_JOB) {
+        // TODO fix the auto-generated enum names
+        if (cmd.getType() == CommandEntry.TypeEnum.JOB) {
             executionManager.cancel(UUID.fromString((String)cmd.getPayload().get("instanceId")));
         } else {
             log.warn("execute -> unsupported command type: " + cmd.getClass());

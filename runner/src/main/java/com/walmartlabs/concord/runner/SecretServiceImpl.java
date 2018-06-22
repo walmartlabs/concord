@@ -26,13 +26,13 @@ import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.SecretEntry;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.SecretService;
-import com.walmartlabs.concord.server.api.org.secret.SecretType;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -68,7 +68,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public String exportAsString(Context ctx, String instanceId, String orgName, String name, String password) throws Exception {
-        BinaryDataSecret s = get(ctx, instanceId, orgName, name, password, SecretType.DATA);
+        BinaryDataSecret s = get(ctx, instanceId, orgName, name, password, SecretEntry.TypeEnum.DATA);
         return new String(s.getData());
     }
 
@@ -79,7 +79,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public Map<String, String> exportKeyAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        KeyPair kp = get(ctx, instanceId, orgName, name, password, SecretType.KEY_PAIR);
+        KeyPair kp = get(ctx, instanceId, orgName, name, password, SecretEntry.TypeEnum.KEY_PAIR);
 
         Path baseDir = Paths.get(workDir);
         Path tmpDir = assertTempDir(baseDir);
@@ -104,7 +104,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public Map<String, String> exportCredentials(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        UsernamePassword up = get(ctx, instanceId, orgName, name, password, SecretType.USERNAME_PASSWORD);
+        UsernamePassword up = get(ctx, instanceId, orgName, name, password, SecretEntry.TypeEnum.USERNAME_PASSWORD);
 
         Map<String, String> m = new HashMap<>();
         m.put("username", up.getUsername());
@@ -119,7 +119,7 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public String exportAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        BinaryDataSecret bds = get(ctx, instanceId, orgName, name, password, SecretType.DATA);
+        BinaryDataSecret bds = get(ctx, instanceId, orgName, name, password, SecretEntry.TypeEnum.DATA);
 
         Path baseDir = Paths.get(workDir);
         Path tmpDir = assertTempDir(baseDir);
@@ -146,7 +146,7 @@ public class SecretServiceImpl implements SecretService {
         return new String(r.getData());
     }
 
-    private <T> T get(Context ctx, String instanceId, String orgName, String name, String password, SecretType type) throws Exception {
+    private <T> T get(Context ctx, String instanceId, String orgName, String name, String password, SecretEntry.TypeEnum type) throws Exception {
         // workaround for EL "null to empty string" conversion
         final String pwd;
         if ("".equals(password)) {
@@ -177,7 +177,7 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T readSecret(SecretType type, byte[] bytes) {
+    private static <T> T readSecret(SecretEntry.TypeEnum type, byte[] bytes) {
         switch (type) {
             case DATA:
                 return (T) new BinaryDataSecret(bytes);
@@ -198,8 +198,8 @@ public class SecretServiceImpl implements SecretService {
         return p;
     }
 
-    private static void assertSecretType(SecretType expected, ApiResponse<File> response) {
-        SecretType actual = SecretType.valueOf(ClientUtils.getHeader(InternalConstants.Headers.SECRET_TYPE, response));
+    private static void assertSecretType(SecretEntry.TypeEnum expected, ApiResponse<File> response) {
+        SecretEntry.TypeEnum actual = SecretEntry.TypeEnum.valueOf(ClientUtils.getHeader(InternalConstants.Headers.SECRET_TYPE, response));
         if (expected != actual) {
             throw new IllegalArgumentException("Expected " + expected + " got " + actual);
         }

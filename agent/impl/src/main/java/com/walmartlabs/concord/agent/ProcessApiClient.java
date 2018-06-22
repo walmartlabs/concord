@@ -21,9 +21,9 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessEntry;
 
 import java.nio.file.Path;
 import java.util.UUID;
@@ -44,7 +44,7 @@ public class ProcessApiClient {
         this.retryInterval = cfg.getRetryInterval();
     }
 
-    public void updateStatus(UUID instanceId, ProcessStatus status) throws ApiException {
+    public void updateStatus(UUID instanceId, ProcessEntry.StatusEnum status) throws ApiException {
         ClientUtils.withRetry(retryCount, retryInterval, () -> {
             processApi.updateStatus(instanceId, agentId, status.name());
             return null;

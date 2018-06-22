@@ -38,6 +38,7 @@ public class CommandEntry {
     public CommandEntry(
             @JsonProperty("type") CommandType type,
             @JsonProperty("payload") Map<String, Object> payload) {
+
         this.type = type;
         this.payload = payload;
     }
