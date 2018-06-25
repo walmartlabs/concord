@@ -4,7 +4,7 @@
 
 ### Added
 
-- concord-server: multiple ldap group support in forms
+- concord-server: multiple ldap groups support in forms
 
 ### Changed
 
@@ -12,8 +12,8 @@
 individual repository is created or updated;
 - concord-console: project, team members and ansible host filters are
 now using simple substring search instead of regular expressions;
-- ansible: fixed a bug than prevented `outVars` from working except
-for the first variable in the list.
+- ansible: fixed a bug than prevented `outVars` from working for any
+variables other than the first in the list.
 
 
 
