@@ -25,11 +25,9 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.IsoDateParam;
-import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.process.*;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -44,6 +42,7 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -84,7 +83,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final UserDao userDao;
-    private final ProjectAccessManager projectAccessManager;
     private final SecretManager secretManager;
     private final OrganizationDao orgDao;
 
@@ -95,7 +93,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                PayloadManager payloadManager,
                                ProcessStateManager stateManager,
                                UserDao userDao,
-                               ProjectAccessManager projectAccessManager,
                                SecretManager secretManager,
                                OrganizationDao orgDao) {
 
@@ -105,7 +102,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.userDao = userDao;
-        this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
         this.orgDao = orgDao;
     }
@@ -476,9 +472,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     public Response downloadState(UUID instanceId) {
         ProcessEntry p = assertProcess(instanceId);
 
-        if (p.getProjectId() != null) {
-            projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.READER, false);
-        }
+        assertProcessStateAccess(p);
 
         StreamingOutput out = output -> {
             try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(output)) {
@@ -496,9 +490,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     public Response downloadStateFile(UUID instanceId, String fileName) {
         ProcessEntry p = assertProcess(instanceId);
 
-        if (p.getProjectId() != null) {
-            projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.READER, false);
-        }
+        assertProcessStateAccess(p);
 
         StreamingOutput out = output -> {
             Path tmp = stateManager.get(instanceId, fileName, ProcessResourceImpl::copyToTmp)
@@ -613,6 +605,14 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         } catch (Exception e) {
             log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
             throw new WebApplicationException("Error while fetching a secret: " + e.getMessage());
+        }
+    }
+
+    private void assertProcessStateAccess(ProcessEntry p) {
+        UserPrincipal principal = UserPrincipal.assertCurrent();
+        if (!(p.getInitiator().equals(principal.getUsername()) || principal.isAdmin() || principal.isGlobalReader())) {
+            throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+                    "the necessary access to the download the state of process: " + p.getInstanceId());
         }
     }
 

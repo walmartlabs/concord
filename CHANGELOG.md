@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: now process state snapshots can only be accessed by
+admins, process owners and "global readers". 
+
+
+
 ## [0.76.0] - 2018-06-24
 
 ### Added
