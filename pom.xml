@@ -741,7 +741,7 @@
 
             <properties>
                 <public.serverId>walmart-gec</public.serverId>
-                <public.nexusUrl>http://gec-nexus.prod.glb.prod.walmart.com/nexus</public.nexusUrl>
+                <public.nexusUrl>https://repository.walmart.com/nexus</public.nexusUrl>
                 <public-release.serverId>${public.serverId}</public-release.serverId>
                 <public-release.url>${public.nexusUrl}/content/repositories/devtools</public-release.url>
                 <public-snapshot.serverId>${public.serverId}</public-snapshot.serverId>
@@ -759,7 +759,7 @@
                         <enabled>true</enabled>
                     </snapshots>
                     <id>walmart-gec</id>
-                    <url>http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/groups/devtools-public</url>
+                    <url>https://repository.walmart.com/nexus/content/groups/devtools-public</url>
                 </repository>
             </repositories>
 
@@ -772,7 +772,7 @@
                         <enabled>true</enabled>
                     </snapshots>
                     <id>walmart-gec</id>
-                    <url>http://gec-nexus.prod.glb.prod.walmart.com/nexus/content/groups/devtools-public</url>
+                    <url>https://repository.walmart.com/nexus/content/groups/devtools-public</url>
                 </pluginRepository>
             </pluginRepositories>
 

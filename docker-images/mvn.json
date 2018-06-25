@@ -10,7 +10,7 @@
     },
     {
       "id": "warm",
-      "url": "https://nexus.prod.walmart.com/nexus/content/groups/public/"
+      "url": "https://repository.walmart.com/nexus/content/groups/public/"
     }
   ]
 }

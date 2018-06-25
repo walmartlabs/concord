@@ -117,7 +117,7 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <nodeDownloadRoot>http://nexus.prod.walmart.com/nexus/content/repositories/nodejs/</nodeDownloadRoot>
+                            <nodeDownloadRoot>https://repository.walmart.com/nexus/content/repositories/nodejs/</nodeDownloadRoot>
                         </configuration>
                     </plugin>
                 </plugins>

@@ -69,7 +69,7 @@ public class DependencyManager {
     private static final String FILES_CACHE_DIR = "files";
     private static final String MAVEN_CACHE_DIR = "maven";
 
-    private static final MavenRepository WALMART_WARM = new MavenRepository("warm", "default", "https://nexus.prod.walmart.com/nexus/content/groups/public/", false);
+    private static final MavenRepository WALMART_WARM = new MavenRepository("warm", "default", "https://repository.walmart.com/nexus/content/groups/public/", false);
     private static final MavenRepository MAVEN_CENTRAL = new MavenRepository("central", "default", "https://repo.maven.apache.org/maven2/", false);
     private static final MavenRepository LOCAL_M2 = new MavenRepository("local", "default", "file://" + System.getProperty("user.home") + "/.m2/repository", true);
     private static final List<MavenRepository> DEFAULT_REPOS = Arrays.asList(LOCAL_M2, WALMART_WARM, MAVEN_CENTRAL);
