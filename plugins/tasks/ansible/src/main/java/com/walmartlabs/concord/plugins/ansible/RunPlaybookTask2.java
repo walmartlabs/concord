@@ -23,7 +23,6 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
@@ -68,24 +67,80 @@ public class RunPlaybookTask2 implements Task {
         this.secretService = secretService;
     }
 
-    private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilderFactory pb) throws Exception {
-        boolean debug = getBoolean(args, AnsibleConstants.DEBUG_KEY, false);
+    public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
+        log.info("Using the docker image: {}", dockerImageName);
 
-        Path workDir = Paths.get(payloadPath);
-        Path tmpDir = createTmpDir(workDir);
+        List<Map.Entry<String, String>> dockerOpts = DockerOptionsConverter.convert(ArgUtils.getMap(args, AnsibleConstants.DOCKER_OPTS_KEY));
+        log.info("Using the docker options: {}", dockerOpts);
 
-        String playbook = getString(args, AnsibleConstants.PLAYBOOK_KEY);
+        run(args, payloadPath,
+                new DockerPlaybookProcessBuilder(txId, dockerImageName, payloadPath)
+                        .withForcePull(ArgUtils.getBoolean(args, AnsibleConstants.FORCE_PULL_KEY, true))
+                        .withDockerOptions(dockerOpts));
+    }
+
+    @SuppressWarnings({"unchecked", "deprecation"})
+    public void run(Map<String, Object> args, String payloadPath) throws Exception {
+        run(args, payloadPath, new PlaybookProcessBuilderImpl(payloadPath));
+    }
+
+    @Override
+    public void execute(Context ctx) throws Exception {
+        Map<String, Object> args = new HashMap<>();
+
+        addIfPresent(ctx, args, AnsibleConstants.CONFIG_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.DISABLE_CONCORD_CALLBACKS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.DOCKER_OPTS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.EXTRA_ENV_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.EXTRA_VARS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.FORCE_PULL_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.GROUP_VARS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.LIMIT_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.PLAYBOOK_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.RETRY_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.SAVE_RETRY_FILE);
+        addIfPresent(ctx, args, AnsibleConstants.SKIP_TAGS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
+        addIfPresent(ctx, args, AnsibleConstants.OUT_VARS_KEY);
+
+        String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
+        if (payloadPath == null) {
+            payloadPath = (String) ctx.getVariable(AnsibleConstants.WORK_DIR_KEY);
+        }
+
+        String dockerImage = (String) ctx.getVariable(AnsibleConstants.DOCKER_IMAGE_KEY);
+        if (dockerImage != null) {
+            run(dockerImage, args, payloadPath);
+        } else {
+            run(args, payloadPath);
+        }
+    }
+
+    private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilder processBuilder) throws Exception {
+        String playbook = ArgUtils.getString(args, AnsibleConstants.PLAYBOOK_KEY);
         if (playbook == null || playbook.trim().isEmpty()) {
             throw new IllegalArgumentException("Missing '" + AnsibleConstants.PLAYBOOK_KEY + "' parameter");
         }
         log.info("Using a playbook: {}", playbook);
 
-        boolean disableConcordCallbacks = getBoolean(args, AnsibleConstants.DISABLE_CONCORD_CALLBACKS_KEY, false);
+        boolean debug = ArgUtils.getBoolean(args, AnsibleConstants.DEBUG_KEY, false);
+
+        Path workDir = Paths.get(payloadPath);
+        Path tmpDir = createTmpDir(workDir);
+
+        boolean disableConcordCallbacks = ArgUtils.getBoolean(args, AnsibleConstants.DISABLE_CONCORD_CALLBACKS_KEY, false);
         Path cfgFile = workDir.relativize(getCfgFile(args, workDir, tmpDir, debug, disableConcordCallbacks));
 
         Path inventoryPath = workDir.relativize(getInventoryPath(args, workDir, tmpDir));
-
-        Map<String, String> extraVars = getMap(args, AnsibleConstants.EXTRA_VARS_KEY);
 
         Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
 
@@ -114,33 +169,30 @@ public class RunPlaybookTask2 implements Task {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
         }
 
-        Path outVarsFile = null;
-        String outVars = trim(getListAsString(args, AnsibleConstants.OUT_VARS_KEY));
-        if (outVars != null) {
-            env.put("CONCORD_OUT_VARS", outVars);
-            outVarsFile = IOUtils.createTempFile("facts", ".json");
-            env.put("CONCORD_OUT_VARS_FILE", outVarsFile.toString());
-        }
-
         GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretService, context);
         groupVarsProcessor.process(txId, args, workDir);
 
+        OutVarsProcessor outVarsProcessor = new OutVarsProcessor();
+        outVarsProcessor.prepare(args, env, workDir, tmpDir);
+
         try {
-            PlaybookProcessBuilder b = pb.build(playbook, inventoryPath.toString())
+            PlaybookArgsBuilder b = new PlaybookArgsBuilder(playbook, inventoryPath.toString(), workDir, tmpDir)
                     .withAttachmentsDir(toString(attachmentsPath))
                     .withCfgFile(toString(cfgFile))
                     .withPrivateKey(toString(privateKeyPath))
                     .withVaultPasswordFile(toString(vaultPasswordPath))
-                    .withUser(trim(getString(args, AnsibleConstants.USER_KEY)))
-                    .withTags(trim(getListAsString(args, AnsibleConstants.TAGS_KEY)))
-                    .withSkipTags(trim(getListAsString(args, AnsibleConstants.SKIP_TAGS_KEY)))
-                    .withExtraVars(extraVars)
+                    .withUser(ArgUtils.getString(args, AnsibleConstants.USER_KEY))
+                    .withTags(ArgUtils.getListAsString(args, AnsibleConstants.TAGS_KEY))
+                    .withSkipTags(ArgUtils.getListAsString(args, AnsibleConstants.SKIP_TAGS_KEY))
+                    .withExtraVars(ArgUtils.getMap(args, AnsibleConstants.EXTRA_VARS_KEY))
                     .withLimit(getLimit(args, playbook))
-                    .withDebug(debug)
                     .withVerboseLevel(getVerboseLevel(args))
                     .withEnv(env);
 
-            Process p = b.build();
+            Process p = processBuilder
+                    .withDebug(debug)
+                    .build(b.buildArgs(), b.buildEnv());
+
             BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
@@ -151,7 +203,7 @@ public class RunPlaybookTask2 implements Task {
             log.debug("execution -> done, code {}", code);
 
             updateAnsibleStats(workDir, code);
-            setAnsibleFacts(outVarsFile, context);
+            outVarsProcessor.process(context);
 
             if (code != SUCCESS_EXIT_CODE) {
                 saveRetryFile(args, workDir);
@@ -160,16 +212,17 @@ public class RunPlaybookTask2 implements Task {
             }
         } finally {
             groupVarsProcessor.postProcess();
+            outVarsProcessor.postProcess();
         }
     }
 
     private String getLimit(Map<String, Object> args, String playbook) {
-        boolean retry = getBoolean(args, AnsibleConstants.RETRY_KEY, false);
+        boolean retry = ArgUtils.getBoolean(args, AnsibleConstants.RETRY_KEY, false);
         if (retry) {
             return "@" + getNameWithoutExtension(playbook) + ".retry";
         }
 
-        String limit = getString(args, AnsibleConstants.LIMIT_KEY);
+        String limit = ArgUtils.getString(args, AnsibleConstants.LIMIT_KEY);
         if (limit != null) {
             return limit;
         }
@@ -234,65 +287,6 @@ public class RunPlaybookTask2 implements Task {
     private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
         try (InputStream is = RunPlaybookTask2.class.getResourceAsStream(resourceName)) {
             Files.copy(is, dest, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
-    public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
-        log.info("Using the docker image: {}", dockerImageName);
-
-        List<Map.Entry<String, String>> dockerOpts = DockerOptionsConverter.convert(getMap(args, AnsibleConstants.DOCKER_OPTS_KEY));
-        log.info("Using the docker options: {}", dockerOpts);
-
-        run(args, payloadPath, (playbookPath, inventoryPath) ->
-                new DockerPlaybookProcessBuilder(txId, dockerImageName, payloadPath, playbookPath, inventoryPath)
-                        .withForcePull(getBoolean(args, AnsibleConstants.FORCE_PULL_KEY, true))
-                        .withDockerOptions(dockerOpts));
-    }
-
-    @SuppressWarnings({"unchecked", "deprecation"})
-    public void run(Map<String, Object> args, String payloadPath) throws Exception {
-        run(args, payloadPath, (playbookPath, inventoryPath) ->
-                new PlaybookProcessBuilderImpl(payloadPath, playbookPath, inventoryPath));
-    }
-
-    @Override
-    public void execute(Context ctx) throws Exception {
-        Map<String, Object> args = new HashMap<>();
-
-        addIfPresent(ctx, args, AnsibleConstants.CONFIG_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.DEBUG_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.DISABLE_CONCORD_CALLBACKS_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.DOCKER_OPTS_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.DYNAMIC_INVENTORY_FILE_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.EXTRA_ENV_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.EXTRA_VARS_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.FORCE_PULL_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.GROUP_VARS_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_FILE_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.INVENTORY_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.LIMIT_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.PLAYBOOK_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.PRIVATE_KEY_FILE_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.RETRY_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.SAVE_RETRY_FILE);
-        addIfPresent(ctx, args, AnsibleConstants.SKIP_TAGS_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.TAGS_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.USER_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_FILE_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.VAULT_PASSWORD_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.VERBOSE_LEVEL_KEY);
-        addIfPresent(ctx, args, AnsibleConstants.OUT_VARS_KEY);
-
-        String payloadPath = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
-        if (payloadPath == null) {
-            payloadPath = (String) ctx.getVariable(AnsibleConstants.WORK_DIR_KEY);
-        }
-
-        String dockerImage = (String) ctx.getVariable(AnsibleConstants.DOCKER_IMAGE_KEY);
-        if (dockerImage != null) {
-            run(dockerImage, args, payloadPath);
-        } else {
-            run(args, payloadPath);
         }
     }
 
@@ -378,7 +372,7 @@ public class RunPlaybookTask2 implements Task {
             m = ConfigurationUtils.deepMerge(m, userCfg);
 
             // prepend plugin paths with default values
-            Map<String, Object> userDefaults = assertMap(userCfg, "defaults");
+            Map<String, Object> userDefaults = ArgUtils.assertMap(userCfg, "defaults");
             if (userDefaults != null) {
                 Map<String, Object> mergedDefaults = (Map<String, Object>) m.get("defaults");
 
@@ -604,52 +598,13 @@ public class RunPlaybookTask2 implements Task {
         return p;
     }
 
-    @SuppressWarnings("unchecked")
-    private static void updateAnsibleStats(Path workDir, int code) throws IOException {
-        Path p = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME).resolve(AnsibleConstants.STATS_FILE_NAME);
-        if (!Files.exists(p)) {
-            return;
-        }
-
-        ObjectMapper om = new ObjectMapper()
-                .enable(SerializationFeature.INDENT_OUTPUT);
-
-        Map<String, Object> m = new HashMap<>();
-        try (InputStream in = Files.newInputStream(p)) {
-            Map<String, Object> mm = om.readValue(in, Map.class);
-            m.putAll(mm);
-        }
-
-        m.put(AnsibleConstants.EXIT_CODE_KEY, code);
-
-        try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            om.writeValue(out, m);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void setAnsibleFacts(Path factsFile, Context context) throws IOException {
-        if (factsFile == null || !Files.exists(factsFile)) {
-            return;
-        }
-
-        ObjectMapper om = new ObjectMapper();
-        Map<String, Object> m = new HashMap<>();
-        try (InputStream in = Files.newInputStream(factsFile)) {
-            m.putAll(om.readValue(in, Map.class));
-        }
-        m.forEach((k, v) -> context.setVariable(k, v));
-
-        Files.delete(factsFile);
-    }
-
     private static void saveRetryFile(Map<String, Object> args, Path workDir) throws IOException {
-        boolean saveRetryFiles = getBoolean(args, AnsibleConstants.SAVE_RETRY_FILE, false);
+        boolean saveRetryFiles = ArgUtils.getBoolean(args, AnsibleConstants.SAVE_RETRY_FILE, false);
         if (!saveRetryFiles) {
             return;
         }
 
-        String playbookName = getString(args, AnsibleConstants.PLAYBOOK_KEY);
+        String playbookName = ArgUtils.getString(args, AnsibleConstants.PLAYBOOK_KEY);
         String retryFile = getNameWithoutExtension(playbookName + ".retry");
         if (retryFile == null) {
             return;
@@ -664,10 +619,6 @@ public class RunPlaybookTask2 implements Task {
         Path dst = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME).resolve(AnsibleConstants.LAST_RETRY_FILE);
         Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
         log.info("The retry file was saved as: {}", workDir.relativize(dst));
-    }
-
-    private static String trim(String s) {
-        return s != null ? s.trim() : null;
     }
 
     private static Path createInventoryFile(Path tmpDir, Map<String, Object> m) throws IOException {
@@ -706,20 +657,7 @@ public class RunPlaybookTask2 implements Task {
     }
 
     private static int getVerboseLevel(Map<String, Object> args) {
-        Object v = args.get(AnsibleConstants.VERBOSE_LEVEL_KEY);
-        if (v == null) {
-            return 0;
-        }
-
-        if (v instanceof Integer) {
-            return (Integer) v;
-        }
-
-        if (v instanceof Long) {
-            return ((Long) v).intValue();
-        }
-
-        throw new IllegalArgumentException("'" + AnsibleConstants.VERBOSE_LEVEL_KEY + "' should be an integer: " + v);
+        return ArgUtils.getInt(args, AnsibleConstants.VERBOSE_LEVEL_KEY, 0);
     }
 
     @SuppressWarnings("unchecked")
@@ -735,74 +673,31 @@ public class RunPlaybookTask2 implements Task {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
-    private static <K, V> Map<K, V> getMap(Map<String, Object> args, String key) {
-        return (Map<K, V>) args.get(key);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <K, V> Map<K, V> assertMap(Map<String, Object> args, String key) {
-        Object v = args.get(key);
-        if (v == null) {
-            return null;
-        }
-
-        if (!(v instanceof Map)) {
-            throw new IllegalArgumentException("Expected an object '" + key + ", got: " + v);
-        }
-
-        return (Map<K, V>) v;
-    }
-
-    private static boolean getBoolean(Map<String, Object> args, String key, boolean defaultValue) {
-        Object v = args.get(key);
-        if (v == null) {
-            return defaultValue;
-        }
-
-        if (v instanceof Boolean) {
-            return (Boolean) v;
-        } else if (v instanceof String) {
-            return Boolean.parseBoolean((String) v);
-        } else {
-            throw new IllegalArgumentException("Invalid boolean value '" + v + "' for key '" + key + "'");
-        }
-    }
-
-    private static String getString(Map<String, Object> args, String key) {
-        Object v = args.get(key);
-
-        if (v == null) {
-            return null;
-        }
-
-        if (!(v instanceof String)) {
-            throw new IllegalArgumentException("Expected a string value '" + key + "', got: " + v);
-        }
-
-        return (String) v;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static String getListAsString(Map<String, Object> args, String key) {
-        Object v = args.get(key);
-        if (v == null) {
-            return null;
-        }
-
-        if (v instanceof String) {
-            return (String) v;
-        }
-
-        if (v instanceof Collection) {
-            return String.join(", ", (Collection<String>) v);
-        }
-
-        throw new IllegalArgumentException("unexpected '" + key + "' type: " + v);
-    }
-
     private static String getNameWithoutExtension(String fileName) {
         int i = fileName.lastIndexOf('.');
         return (i == -1) ? fileName : fileName.substring(0, i);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void updateAnsibleStats(Path workDir, int code) throws IOException {
+        Path p = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME).resolve(AnsibleConstants.STATS_FILE_NAME);
+        if (!Files.exists(p)) {
+            return;
+        }
+
+        ObjectMapper om = new ObjectMapper()
+                .enable(SerializationFeature.INDENT_OUTPUT);
+
+        Map<String, Object> m = new HashMap<>();
+        try (InputStream in = Files.newInputStream(p)) {
+            Map<String, Object> mm = om.readValue(in, Map.class);
+            m.putAll(mm);
+        }
+
+        m.put(AnsibleConstants.EXIT_CODE_KEY, code);
+
+        try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            om.writeValue(out, m);
+        }
     }
 }
