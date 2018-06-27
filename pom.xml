@@ -6,7 +6,7 @@
     <parent>
         <artifactId>takari</artifactId>
         <groupId>io.takari</groupId>
-        <version>23</version>
+        <version>27</version>
     </parent>
 
     <groupId>com.walmartlabs.concord</groupId>
