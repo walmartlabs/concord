@@ -24,6 +24,7 @@ package com.walmartlabs.concord.server.events;
 import com.walmartlabs.concord.server.api.events.GithubEventResource;
 import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
@@ -67,7 +68,7 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
                                    ProcessManager processManager,
                                    GithubWebhookManager webhookManager) {
 
-        super(processManager, triggersDao, projectDao);
+        super(processManager, triggersDao, projectDao, new ProjectOrgEnricher(projectDao));
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -102,11 +103,15 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
                 continue;
             }
 
+            ProjectEntry project = projectDao.get(r.getProjectId());
+            if (project == null) {
+                log.warn("push ['{}'] -> project '{}' not found", repoName, r.getProjectId());
+                continue;
+            }
+
             repositoryCacheDao.updateLastPushDate(r.getId(), new Date());
 
-            ProjectEntry project = projectDao.get(r.getProjectId());
-
-            Map<String, Object> triggerConditions = buildConditions(r, event);
+            Map<String, Object> triggerConditions = buildConditions(r, event, project);
             Map<String, Object> triggerEvent = buildTriggerEvent(event, r, project, triggerConditions);
 
             String eventId = r.getId().toString();
@@ -141,8 +146,10 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
         return refPath[refPath.length - 1];
     }
 
-    private static Map<String, Object> buildConditions(RepositoryEntry repo, Map<String, Object> event) {
+    private static Map<String, Object> buildConditions(RepositoryEntry repo, Map<String, Object> event, ProjectEntry project) {
         Map<String, Object> result = new HashMap<>();
+        result.put(ORG_NAME_KEY, project.getOrgName());
+        result.put(PROJECT_NAME_KEY, project.getName());
         result.put(REPO_NAME_KEY, repo.getName());
         result.put(REPO_BRANCH_KEY, Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH));
         result.put(PUSHER_KEY, getPusher(event));
@@ -159,4 +166,39 @@ public class GithubEventResourceImpl extends AbstractEventResource implements Gi
         return (String) pusher.get("name");
     }
 
+    private static class ProjectOrgEnricher implements TriggerDefinitionEnricher {
+
+        private final ProjectDao projectDao;
+
+        private ProjectOrgEnricher(ProjectDao projectDao) {
+            this.projectDao = projectDao;
+        }
+
+        @Override
+        public TriggerEntry enrich(TriggerEntry entry) {
+            Map<String, Object> conditions = entry.getConditions();
+            if (conditions == null) {
+                conditions = new HashMap<>();
+            }
+
+            conditions.computeIfAbsent(ORG_NAME_KEY, k -> {
+                ProjectEntry e = projectDao.get(entry.getProjectId());
+                if (e == null) {
+                    return null;
+                }
+                return e.getOrgName();
+            });
+            conditions.computeIfAbsent(PROJECT_NAME_KEY, k -> entry.getProjectName());
+
+            return new TriggerEntry(entry.getId(),
+                    entry.getProjectId(),
+                    entry.getProjectName(),
+                    entry.getRepositoryId(),
+                    entry.getRepositoryName(),
+                    entry.getEventSource(),
+                    entry.getEntryPoint(),
+                    entry.getArguments(),
+                    conditions);
+        }
+    }
 }

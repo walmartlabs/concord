@@ -43,23 +43,33 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractEventResource {
 
-    private final Logger log;
+    private static final TriggerDefinitionEnricher AS_IS_ENRICHER = entry -> entry;
 
+    private final Logger log;
     private final ProcessManager processManager;
     private final TriggersDao triggersDao;
     private final ProjectDao projectDao;
+    private final TriggerDefinitionEnricher triggerDefinitionEnricher;
 
     public AbstractEventResource(ProcessManager processManager,
                                  TriggersDao triggersDao, ProjectDao projectDao) {
+        this(processManager, triggersDao, projectDao, AS_IS_ENRICHER);
+    }
+
+    public AbstractEventResource(ProcessManager processManager,
+                                 TriggersDao triggersDao, ProjectDao projectDao,
+                                 TriggerDefinitionEnricher enricher) {
 
         this.processManager = processManager;
         this.triggersDao = triggersDao;
         this.projectDao = projectDao;
+        this.triggerDefinitionEnricher = enricher;
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
     protected int process(String eventId, String eventName, Map<String, Object> conditions, Map<String, Object> event) {
         List<TriggerEntry> triggers = triggersDao.list(eventName).stream()
+                .map(triggerDefinitionEnricher::enrich)
                 .filter(t -> filter(conditions, t))
                 .collect(Collectors.toList());
 
@@ -125,5 +135,9 @@ public abstract class AbstractEventResource {
 
         UserPrincipal p = (UserPrincipal) subject.getPrincipal();
         return p != null ? p.getUsername() : null;
+    }
+
+    public interface TriggerDefinitionEnricher {
+        TriggerEntry enrich(TriggerEntry entry);
     }
 }
