@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
  * limitations under the License.
  * =====
  */
+
 import { push as pushHistory } from 'react-router-redux';
 import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, put, select, takeLatest } from 'redux-saga/effects';

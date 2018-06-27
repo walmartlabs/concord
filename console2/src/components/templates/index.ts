@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,5 +17,6 @@
  * limitations under the License.
  * =====
  */
+
 export { default as Layout } from './Layout';
 export { default as OrgActivityPage } from './OrgActivityPage';

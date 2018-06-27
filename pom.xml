@@ -567,7 +567,7 @@
                 <configuration>
                     <verbose>false</verbose>
                     <licenseName>apache_v2</licenseName>
-                    <organizationName>Wal-Mart Store, Inc.</organizationName>
+                    <organizationName>Walmart Inc.</organizationName>
                     <projectName>Concord</projectName>
                     <inceptionYear>2017</inceptionYear>
                     <processStartTag>*****</processStartTag>

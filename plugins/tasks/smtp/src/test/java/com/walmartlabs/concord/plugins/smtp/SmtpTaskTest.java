@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.smtp;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 Wal-Mart Store, Inc.
+ * Copyright (C) 2017 - 2018 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.walmartlabs.concord.plugins.smtp;
  * limitations under the License.
  * =====
  */
+
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
