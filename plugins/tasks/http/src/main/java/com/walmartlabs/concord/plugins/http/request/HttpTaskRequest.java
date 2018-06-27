@@ -31,6 +31,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.HttpPut;
 
 import javax.ws.rs.core.MediaType;
+import java.util.Map;
 
 /**
  * Implementation of {@link Request} use to create Http request object
@@ -89,6 +90,14 @@ public class HttpTaskRequest implements Request {
             this.request.setHeader(HttpHeaders.ACCEPT, acceptType);
         }
 
+        return this;
+    }
+
+    @Override
+    public Request withHeaders(Map<String, String> headers) {
+        if (headers != null) {
+            headers.forEach(this.request::setHeader);
+        }
         return this;
     }
 

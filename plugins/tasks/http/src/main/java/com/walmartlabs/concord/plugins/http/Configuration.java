@@ -38,13 +38,14 @@ import static javax.xml.transform.OutputKeys.METHOD;
  */
 public class Configuration {
 
-    private String url;
-    private String encodedAuthToken;
-    private RequestType requestType;
-    private ResponseType responseType;
-    private String workDir;
-    private RequestMethodType methodType;
-    private Object body;
+    private final String url;
+    private final String encodedAuthToken;
+    private final RequestType requestType;
+    private final ResponseType responseType;
+    private final String workDir;
+    private final RequestMethodType methodType;
+    private final Map<String, String> requestHeaders;
+    private final Object body;
 
     private Configuration(RequestMethodType methodType,
                           String url,
@@ -52,6 +53,7 @@ public class Configuration {
                           RequestType requestType,
                           ResponseType responseType,
                           String workDir,
+                          Map<String, String> requestHeaders,
                           Object body) {
 
         this.methodType = methodType;
@@ -60,6 +62,7 @@ public class Configuration {
         this.requestType = requestType;
         this.responseType = responseType;
         this.workDir = workDir;
+        this.requestHeaders = requestHeaders;
         this.body = body;
     }
 
@@ -134,6 +137,10 @@ public class Configuration {
      */
     public String getWorkDir() {
         return workDir;
+    }
+
+    public Map<String, String> getRequestHeaders() {
+        return requestHeaders;
     }
 
     /**
@@ -220,6 +227,7 @@ public class Configuration {
         private ResponseType responseType;
         private String workDir;
         private RequestMethodType methodType;
+        private Map<String, String> requestHeaders;
         private Object body;
 
         @Override
@@ -278,7 +286,7 @@ public class Configuration {
                 throw new IllegalArgumentException("Body is missing for Put method");
             }
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, body);
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body);
         }
 
         @Override
@@ -322,9 +330,11 @@ public class Configuration {
                 throw new IllegalArgumentException("Working directory is mandatory for ResponseType FILE");
             }
 
+            this.requestHeaders = (Map<String, String>) ctx.getVariable(HEADERS_KEY);
+
             this.body = ctx.getVariable(BODY_KEY);
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, body);
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body);
         }
 
         /**

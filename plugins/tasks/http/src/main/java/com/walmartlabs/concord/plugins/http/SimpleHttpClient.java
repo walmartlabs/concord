@@ -247,6 +247,7 @@ public class SimpleHttpClient {
                 .withBasicAuth(cfg.getEncodedAuthToken())
                 .withRequestType(cfg.getRequestType())
                 .withResponseType(ResponseType.ANY)
+                .withHeaders(cfg.getRequestHeaders())
                 .withBody(getHttpEntity(cfg.getBody(), cfg.getRequestType()))
                 .get();
     }
@@ -262,6 +263,7 @@ public class SimpleHttpClient {
                 .withBasicAuth(cfg.getEncodedAuthToken())
                 .withRequestType(cfg.getRequestType())
                 .withResponseType(ResponseType.ANY)
+                .withHeaders(cfg.getRequestHeaders())
                 .get();
     }
 
@@ -277,6 +279,7 @@ public class SimpleHttpClient {
                 .withBasicAuth(cfg.getEncodedAuthToken())
                 .withRequestType(cfg.getRequestType())
                 .withResponseType(ResponseType.ANY)
+                .withHeaders(cfg.getRequestHeaders())
                 .withBody(getHttpEntity(cfg.getBody(), cfg.getRequestType()))
                 .get();
     }

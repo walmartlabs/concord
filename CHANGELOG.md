@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- http: support for custom headers.
+
 ### Changed
 
 - concord-server: GitHub triggers will now correctly use the repo's

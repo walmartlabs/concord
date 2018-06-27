@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,15 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.extension.Parameters;
+import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
+import com.github.tomakehurst.wiremock.http.HttpHeader;
+import com.github.tomakehurst.wiremock.http.Request;
+import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
@@ -35,6 +41,7 @@ import org.junit.Test;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -50,10 +57,12 @@ public class HttpTaskIT extends AbstractServerIT {
     public static final String mockHttpBaseUrl = "http://localhost:";
     public static final String mockHttpPathToken = "/token";
     public static final String mockHttpPathPassword = "/password";
+    public static final String mockHttpPathHeaders = "/headers";
 
     @Rule
     public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
             .notifier(new ConsoleNotifier(true))
+            .extensions(new RequestHeaders())
             .dynamicPort());
 
     @Before
@@ -63,7 +72,7 @@ public class HttpTaskIT extends AbstractServerIT {
         stubForPostSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
         stubForGetSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
         stubForPostSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
-
+        stubForHeadersEndpoint(mockHttpPathHeaders);
     }
 
     @After
@@ -202,7 +211,29 @@ public class HttpTaskIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*server not exists.*", ab);
+    }
 
+    @Test(timeout = 60000)
+    public void testGetWithHeaders() throws Exception {
+
+        URI dir = HttpTaskIT.class.getResource("httpGetWithHeaders").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathHeaders);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Success response.*", ab);
+        assertLog(".*Out Response: true*", ab);
+        assertLog(".*Response content: request headers:.*h1=v1.*", ab);
+        assertLog(".*Response content: request headers:.*h2=v2.*", ab);
     }
 
     private void stubForGetSecureEndpoint(String user, String password, String url) {
@@ -248,4 +279,52 @@ public class HttpTaskIT extends AbstractServerIT {
                                 "}"))
         );
     }
+
+    private void stubForHeadersEndpoint(String url) {
+        rule.stubFor(post(urlEqualTo(url))
+                .willReturn(aResponse()
+                        .withTransformers("request-headers"))
+        );
+    }
+
+    public static class RequestHeaders extends ResponseDefinitionTransformer {
+
+        @Override
+        public ResponseDefinition transform(Request request, ResponseDefinition responseDefinition, FileSource files, Parameters parameters) {
+            String headers = "";
+            if (request.getHeaders() != null) {
+                headers = request.getHeaders().all().stream()
+                        .map(this::toString)
+                        .collect(Collectors.joining(", "));
+            }
+            return new ResponseDefinitionBuilder()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/plain")
+                    .withBody("request headers: " + headers)
+                    .build();
+        }
+
+        private String toString(HttpHeader h) {
+            String value = "";
+            if (h.isPresent()) {
+                value = h.firstValue();
+                if (h.values().size() > 1) {
+                    value = String.join(",", h.values());
+                }
+            }
+            return h.key() + "=" + value;
+        }
+
+        @Override
+        public String getName() {
+            return "request-headers";
+        }
+
+        @Override
+        public boolean applyGlobally() {
+            return false;
+        }
+    }
+
+
 }

@@ -26,6 +26,8 @@ import com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpUriRequest;
 
+import java.util.Map;
+
 public interface Request {
 
     /**
@@ -52,6 +54,15 @@ public interface Request {
      * @return Instance of this Request
      */
     Request withResponseType(ResponseType responseType);
+
+
+    /**
+     * Method to set the request headers
+     *
+     * @param headers
+     * @return Instance of this Request
+     */
+    Request withHeaders(Map<String, String> headers);
 
     /**
      * Method to set the Body of the request

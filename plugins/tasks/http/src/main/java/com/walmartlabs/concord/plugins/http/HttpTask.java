@@ -159,6 +159,7 @@ public class HttpTask implements Task {
         static final String BASIC_KEY = "basic";
         static final String SUCCESS_KEY = "success";
         static final String CONTENT_KEY = "content";
+        static final String HEADERS_KEY = "headers";
 
         private HttpTaskConstant() {
         }
