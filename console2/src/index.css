@@ -37,3 +37,8 @@ body {
   height: 100% !important;
   min-height: 100% !important;
 }
+
+/* TODO should be fixed in semantic-ui-react or semantic-ui-css */
+.ui.basic.red.label {
+  color: #ffffff !important;
+}
