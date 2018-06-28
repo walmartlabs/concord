@@ -59,7 +59,6 @@ interface DispatchProps {
 type Props = ExternalProps & StateProps & DispatchProps;
 
 class ProjectActivity extends React.PureComponent<Props> {
-
     static renderRepositories(p: ProjectEntry) {
         const repos = p.repositories;
         if (!repos) {

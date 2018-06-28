@@ -20,7 +20,7 @@
 
 import { InjectedFormikProps, withFormik } from 'formik';
 import * as React from 'react';
-import { Button, Divider, Form } from 'semantic-ui-react';
+import { Button, Divider, Form, Segment } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
 import {
@@ -33,7 +33,7 @@ import { isSecretExists } from '../../../api/service/console';
 import { notEmpty } from '../../../utils';
 import { secret as validation, secretAlreadyExistsError } from '../../../validation';
 import { FormikDropdown, FormikFileInput, FormikInput } from '../../atoms';
-import { SecretStoreDropdown } from '../../organisms';
+import { ProjectDropdown, SecretStoreDropdown } from '../../organisms';
 
 enum StorePasswordType {
     DONT_USE,
@@ -54,6 +54,7 @@ interface FormValues {
     storePasswordType?: StorePasswordType;
     storePassword?: string;
     storeType?: SecretStoreType;
+    projectName?: ConcordKey;
 }
 
 export type NewSecretFormValues = FormValues;
@@ -103,7 +104,7 @@ class NewSecretForm extends React.Component<InjectedFormikProps<Props, FormValue
     }
 
     render() {
-        const { submitting, handleSubmit, errors, dirty, values } = this.props;
+        const { submitting, handleSubmit, errors, dirty, values, orgName } = this.props;
 
         const hasErrors = notEmpty(errors);
 
@@ -175,6 +176,27 @@ class NewSecretForm extends React.Component<InjectedFormikProps<Props, FormValue
                 )}
 
                 <SecretStoreDropdown name="storeType" label="Store type" required={true} />
+
+                <Divider />
+
+                <ProjectDropdown
+                    name="projectName"
+                    label="Project"
+                    placeholder="any"
+                    orgName={orgName}
+                />
+
+                <Segment secondary={true} basic={true}>
+                    <p>
+                        Project-scoped secrets can only be used in the processes of specified
+                        projects. They cannot be used as repository credentials.
+                    </p>
+
+                    <p>
+                        Secrets not linked to any project can be used anywhere. Standard permission
+                        checks are applied in both cases.
+                    </p>
+                </Segment>
 
                 <Divider />
 

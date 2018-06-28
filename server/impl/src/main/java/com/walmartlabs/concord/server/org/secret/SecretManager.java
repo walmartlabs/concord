@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.api.org.secret.*;
+import com.walmartlabs.concord.server.api.process.ProcessEntry;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -38,7 +39,9 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -59,20 +62,21 @@ public class SecretManager {
     private static final int SECRET_PASSWORD_LENGTH = 12;
     private static final String SECRET_PASSWORD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~`!@#$%^&*()-_=+[{]}|,<.>/?\\";
 
+    private final AuditLog auditLog;
+    private final OrganizationManager orgManager;
+    private final ProcessQueueDao processQueueDao;
     private final SecretDao secretDao;
     private final SecretStoreConfiguration secretCfg;
-    private final OrganizationManager orgManager;
-    private final UserDao userDao;
     private final SecretStoreProvider secretStoreProvider;
-    private final AuditLog auditLog;
+    private final UserDao userDao;
 
     @Inject
-    public SecretManager(SecretDao secretDao,
-                         SecretStoreConfiguration secretCfg,
+    public SecretManager(AuditLog auditLog,
                          OrganizationManager orgManager,
-                         UserDao userDao,
-                         SecretStoreProvider secretStoreProvider,
-                         AuditLog auditLog) {
+                         ProcessQueueDao processQueueDao,
+                         SecretDao secretDao,
+                         SecretStoreConfiguration secretCfg,
+                         SecretStoreProvider secretStoreProvider, UserDao userDao) {
 
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
@@ -80,6 +84,7 @@ public class SecretManager {
         this.userDao = userDao;
         this.secretStoreProvider = secretStoreProvider;
         this.auditLog = auditLog;
+        this.processQueueDao = processQueueDao;
     }
 
     public SecretEntry assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
@@ -139,17 +144,17 @@ public class SecretManager {
         return e;
     }
 
-    public DecryptedKeyPair createKeyPair(UUID orgId, String name, String storePassword,
+    public DecryptedKeyPair createKeyPair(UUID orgId, UUID projectId, String name, String storePassword,
                                           SecretVisibility visibility, SecretStoreType secretStoreType) {
 
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = KeyPairUtils.create();
-        UUID id = store(name, orgId, k, storePassword, visibility, secretStoreType);
+        UUID id = store(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
-    public DecryptedKeyPair createKeyPair(UUID orgId, String name, String storePassword,
+    public DecryptedKeyPair createKeyPair(UUID orgId, UUID projectId, String name, String storePassword,
                                           InputStream publicKey,
                                           InputStream privateKey, SecretVisibility visibility,
                                           SecretStoreType secretStoreType) throws IOException {
@@ -159,22 +164,22 @@ public class SecretManager {
         KeyPair k = KeyPairUtils.create(publicKey, privateKey);
         validate(k);
 
-        UUID id = store(name, orgId, k, storePassword, visibility, secretStoreType);
+        UUID id = store(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
-    public DecryptedUsernamePassword createUsernamePassword(UUID orgId, String name, String storePassword,
+    public DecryptedUsernamePassword createUsernamePassword(UUID orgId, UUID projectId, String name, String storePassword,
                                                             String username, char[] password, SecretVisibility visibility,
                                                             SecretStoreType secretStoreType) {
 
         orgManager.assertAccess(orgId, true);
 
         UsernamePassword p = new UsernamePassword(username, password);
-        UUID id = store(name, orgId, p, storePassword, visibility, secretStoreType);
+        UUID id = store(name, orgId, projectId, p, storePassword, visibility, secretStoreType);
         return new DecryptedUsernamePassword(id);
     }
 
-    public DecryptedBinaryData createBinaryData(UUID orgId, String name, String storePassword,
+    public DecryptedBinaryData createBinaryData(UUID orgId, UUID projectId, String name, String storePassword,
                                                 InputStream data, SecretVisibility visibility,
                                                 SecretStoreType storeType) throws IOException {
 
@@ -186,7 +191,7 @@ public class SecretManager {
         if (d.getData().length > maxSecretDataSize) {
             throw new IllegalArgumentException("File size exceeds limit of " + maxSecretDataSize + " bytes");
         }
-        UUID id = store(name, orgId, d, storePassword, visibility, storeType);
+        UUID id = store(name, orgId, projectId, d, storePassword, visibility, storeType);
         return new DecryptedBinaryData(id);
     }
 
@@ -225,7 +230,6 @@ public class SecretManager {
         return RandomStringUtils.random(SECRET_PASSWORD_LENGTH, SECRET_PASSWORD_CHARS);
     }
 
-    // TODO refactor using getRaw
     public DecryptedSecret getSecret(UUID orgId, String name, String password, SecretType expectedType) {
         SecretDataEntry e = getRaw(orgId, name, password);
 
@@ -234,29 +238,39 @@ public class SecretManager {
         }
 
         Secret s = deserialize(e.getType(), e.getData());
-
-        auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
-                .field("id", e.getId())
-                .field("orgId", e.getOrgId())
-                .field("name", e.getName())
-                .field("type", e.getType())
-                .log();
-
         return new DecryptedSecret(e.getId(), s);
     }
 
     public SecretDataEntry getRaw(UUID orgId, String name, String password) {
-        SecretEntry entry = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
-        if (entry == null) {
+        SecretEntry e = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
+        if (e == null) {
             return null;
         }
 
-        SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
-        assertEncryptedByType(name, providedEncryptedByType, entry.getEncryptedBy());
+        // handle project-scoped secrets
+        UUID projectId = e.getProjectId();
+        if (projectId != null) {
+            SessionKeyPrincipal session = SessionKeyPrincipal.getCurrent();
+            if (session == null) {
+                throw new UnauthorizedException("Project-scoped secrets can only be accessed within a running process. Secret: " + e.getName());
+            }
 
-        byte[] data = getSecretStore(entry.getStoreType()).get(entry.getId());
+            ProcessEntry p = processQueueDao.get(session.getProcessInstanceId());
+            if (p == null) {
+                throw new IllegalStateException("Process not found: " + session.getProcessInstanceId());
+            }
+
+            if (!projectId.equals(p.getProjectId())) {
+                throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
+            }
+        }
+
+        SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
+        assertEncryptedByType(name, providedEncryptedByType, e.getEncryptedBy());
+
+        byte[] data = getSecretStore(e.getStoreType()).get(e.getId());
         if (data == null) {
-            throw new IllegalStateException("Can't find the secret's data in the store " + entry.getStoreType() + " : " + entry.getId());
+            throw new IllegalStateException("Can't find the secret's data in the store " + e.getStoreType() + " : " + e.getId());
         }
 
         byte[] pwd = getPwd(password);
@@ -266,13 +280,13 @@ public class SecretManager {
 
         // TODO add access context? e.g. access from a flow, repo, etc
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
-                .field("id", entry.getId())
-                .field("orgId", entry.getOrgId())
-                .field("name", entry.getName())
-                .field("type", entry.getType())
+                .field("id", e.getId())
+                .field("orgId", e.getOrgId())
+                .field("name", e.getName())
+                .field("type", e.getType())
                 .log();
 
-        return new SecretDataEntry(entry, ab);
+        return new SecretDataEntry(e, ab);
     }
 
     public KeyPair getKeyPair(UUID orgId, String name, String password) {
@@ -290,7 +304,7 @@ public class SecretManager {
         secretDao.upsertAccessLevel(secretId, teamId, level);
     }
 
-    private UUID store(String name, UUID orgId, Secret s, String password, SecretVisibility visibility, SecretStoreType storeType) {
+    private UUID store(String name, UUID orgId, UUID projectId, Secret s, String password, SecretVisibility visibility, SecretStoreType storeType) {
         byte[] data;
 
         SecretType type;
@@ -313,7 +327,7 @@ public class SecretManager {
         byte[] ab = SecretUtils.encrypt(data, pwd, salt);
         SecretEncryptedByType encryptedByType = getEncryptedBy(password);
 
-        UUID id = secretDao.insert(orgId, name, getOwnerId(), type, encryptedByType, storeType, visibility);
+        UUID id = secretDao.insert(orgId, projectId, name, getOwnerId(), type, encryptedByType, storeType, visibility);
         try {
             getSecretStore(storeType).store(id, ab);
         } catch (Exception e) {

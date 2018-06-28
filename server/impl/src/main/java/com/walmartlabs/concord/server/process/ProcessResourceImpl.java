@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,14 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.IsoDateParam;
 import com.walmartlabs.concord.server.api.process.*;
-import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
@@ -56,7 +54,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -85,7 +82,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
     private final ProcessStateManager stateManager;
     private final UserDao userDao;
     private final SecretManager secretManager;
-    private final OrganizationDao orgDao;
 
     @Inject
     public ProcessResourceImpl(ProcessManager processManager,
@@ -94,8 +90,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                                PayloadManager payloadManager,
                                ProcessStateManager stateManager,
                                UserDao userDao,
-                               SecretManager secretManager,
-                               OrganizationDao orgDao) {
+                               SecretManager secretManager) {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
@@ -104,7 +99,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
         this.stateManager = stateManager;
         this.userDao = userDao;
         this.secretManager = secretManager;
-        this.orgDao = orgDao;
     }
 
     @Override
@@ -177,7 +171,7 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
             throw new WebApplicationException("Error creating a payload", e);
         }
 
-        boolean sync2 = MultipartUtils.getBoolean(input, "sync", false);
+        boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
         return toResponse(processManager.start(payload, sync || sync2));
     }
 
@@ -575,40 +569,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                 .build();
     }
 
-    @Override
-    public Response fetchSecret(UUID instanceId, String orgName, String secretName, String password) {
-        if (secretName == null) {
-            throw new SecretException("Secret name is required");
-        }
-
-        UUID orgId = getOrgId(instanceId, orgName);
-
-        SecretDao.SecretDataEntry entry;
-        try {
-            entry = secretManager.getRaw(orgId, secretName, password);
-        } catch (SecurityException e) {
-            log.warn("fetchSecret -> error: {}", e.getMessage());
-            throw new SecretException("Error while fetching a secret: " + e.getMessage());
-        } catch (ValidationErrorsException e) {
-            log.warn("fetchSecret -> error: {}", e.getMessage());
-            return null;
-        }
-
-        if (entry == null) {
-            return null;
-        }
-
-        try {
-            return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
-                    MediaType.APPLICATION_OCTET_STREAM)
-                    .header(InternalConstants.Headers.SECRET_TYPE, entry.getType().name())
-                    .build();
-        } catch (Exception e) {
-            log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
-            throw new WebApplicationException("Error while fetching a secret: " + e.getMessage());
-        }
-    }
-
     private void assertProcessStateAccess(ProcessEntry p) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
         if (!(p.getInitiator().equals(principal.getUsername()) || principal.isAdmin() || principal.isGlobalReader())) {
@@ -616,28 +576,6 @@ public class ProcessResourceImpl implements ProcessResource, Resource {
                     "the necessary access to the download the state of process: " + p.getInstanceId());
         }
     }
-
-    private UUID getOrgId(UUID instanceId, String orgName) {
-        UUID id = null;
-
-        if (orgName != null) {
-            id = orgDao.getId(orgName);
-            if (id == null) {
-                throw new WebApplicationException("Organization '" + orgName + "' not found");
-            }
-        }
-
-        if (id == null) {
-            id = queueDao.getOrgId(instanceId);
-        }
-
-        if (id == null) {
-            return OrganizationManager.DEFAULT_ORG_ID;
-        }
-
-        return id;
-    }
-
 
     private ProcessEntry assertProcess(UUID instanceId) {
         ProcessEntry p = queueDao.get(instanceId);

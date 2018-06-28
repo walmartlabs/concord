@@ -24,16 +24,14 @@ package com.walmartlabs.concord.server.api.org.secret;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.org.ResourceAccessEntry;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.annotations.*;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.util.List;
 
 @Api(value = "Secrets", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
@@ -65,7 +63,11 @@ public interface SecretResource {
                     @ApiParam @PathParam("secretName") @ConcordKey String secretName);
 
     @POST
-    @ApiOperation("Retrieves a binary data secret using the provided password")
+    @ApiOperation(value = "Get an existing secret's data", response = File.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK",
+                    response = File.class,
+                    responseHeaders = @ResponseHeader(name = "X-Concord-SecretType", description = "Secret type", response = String.class))})
     @Path("/{orgName}/secret/{secretName}/data")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)

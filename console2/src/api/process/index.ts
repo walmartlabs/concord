@@ -18,7 +18,6 @@
  * =====
  */
 
-
 import { SemanticCOLORS } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, fetchJson, managedFetch } from '../common';
 import { StartProcessResponse } from '../org/process';

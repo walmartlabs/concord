@@ -89,6 +89,7 @@ class SecretList extends React.PureComponent<Props> {
                         <Table.HeaderCell collapsing={true} />
                         <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
                         <Table.HeaderCell>Type</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true}>Project</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -103,6 +104,7 @@ class SecretList extends React.PureComponent<Props> {
                                 </Link>
                             </Table.Cell>
                             <Table.Cell>{typeToText(secret.type)}</Table.Cell>
+                            <Table.Cell>{secret.projectName}</Table.Cell>
                         </Table.Row>
                     ))}
                 </Table.Body>

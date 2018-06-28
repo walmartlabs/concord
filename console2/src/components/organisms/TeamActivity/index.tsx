@@ -50,7 +50,6 @@ interface DispatchProps {
 type Props = ExternalProps & StateProps & DispatchProps;
 
 class TeamActivity extends React.PureComponent<Props> {
-
     static renderSetting(t: TeamEntry) {
         return (
             <>

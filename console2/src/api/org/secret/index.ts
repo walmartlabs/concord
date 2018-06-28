@@ -57,6 +57,9 @@ export interface SecretEntry {
     orgId: ConcordId;
     orgName: ConcordKey;
 
+    projectId: ConcordId;
+    projectName: ConcordKey;
+
     visibility: SecretVisibility;
     type: SecretType;
     encryptedBy: SecretEncryptedByType;
@@ -69,6 +72,7 @@ export interface SecretEntry {
 export interface NewSecretEntry {
     name: string;
     visibility: SecretVisibility;
+    projectName?: ConcordKey;
     type: SecretTypeExt;
     publicFile?: File;
     privateFile?: File;
@@ -153,6 +157,10 @@ export const create = (
 
     if (entry.storeType) {
         data.append('storeType', entry.storeType);
+    }
+
+    if (entry.projectName) {
+        data.append('project', entry.projectName);
     }
 
     const opts = {

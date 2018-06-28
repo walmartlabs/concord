@@ -56,7 +56,6 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     private static final Logger log = LoggerFactory.getLogger(GitCliRepositoryProvider.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
-
     private static final String DEFAULT_BRANCH = "master";
 
     private final SecretManager secretManager;

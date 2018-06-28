@@ -104,7 +104,11 @@ public abstract class AbstractServerIT {
     }
 
     protected SecretOperationResponse addUsernamePassword(String orgName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
-        return serverClient.addUsernamePassword(orgName, name, generatePassword, storePassword, username, password);
+        return serverClient.addUsernamePassword(orgName, null, name, generatePassword, storePassword, username, password);
+    }
+
+    protected SecretOperationResponse addUsernamePassword(String orgName, String projectName, String name, boolean generatePassword, String storePassword, String username, String password) throws ApiException {
+        return serverClient.addUsernamePassword(orgName, projectName, name, generatePassword, storePassword, username, password);
     }
 
     protected SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) throws ApiException {

@@ -18,7 +18,6 @@
  * =====
  */
 
-
 export type ConcordId = string;
 export type ConcordKey = string;
 

@@ -354,6 +354,13 @@ export const reducers = combineReducers<State>({
 });
 
 export const selectors = {
+    projectNames: (state: State, orgName: ConcordKey): ConcordKey[] =>
+        Object.keys(state.projectById)
+            .map((id) => state.projectById[id])
+            .filter((p) => p.orgName === orgName)
+            .map((p) => p.name)
+            .sort(),
+
     projectByName: (state: State, orgName: ConcordKey, projectName: ConcordKey) => {
         for (const id of Object.keys(state.projectById)) {
             const p = state.projectById[id];

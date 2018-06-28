@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -239,6 +239,51 @@ public class CryptoIT extends AbstractServerIT {
 
         pir = waitForCompletion(processApi, spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FAILED, pir.getStatus());
+    }
+
+    @Test
+    public void testProjectSecret() throws Exception {
+        String orgName = "Default";
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
+
+        // ---
+
+        String secretName = "secret@" + randomString();
+        String secretUsername = "username@" + randomString();
+        String secretPassword = "password@" + randomString();
+        String storePassword = "store@" + randomString();
+
+        addUsernamePassword(orgName, projectName, secretName, false, storePassword, secretUsername, secretPassword);
+
+        // ---
+
+        String userName = "user_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(userName)
+                .setType(CreateUserRequest.TypeEnum.LOCAL)
+                .setAdmin(false));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
+                .setUsername(userName));
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        // ---
+
+        test("cryptoPwd", secretName, storePassword, ".*Forbidden:.*" + secretName + ".*");
     }
 
     private void test(String project, String secretName, String storePassword, String log) throws Exception {

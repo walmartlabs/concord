@@ -42,7 +42,7 @@
                                  referencedTableName="ROLES"
                                  referencedColumnNames="ROLE_ID"/>
     </changeSet>
-    
+
     <changeSet id="74020" author="ibodrov@gmail.com">
         <insert tableName="ROLES">
             <column name="ROLE_ID">${concordSystemReaderRoleId}</column>

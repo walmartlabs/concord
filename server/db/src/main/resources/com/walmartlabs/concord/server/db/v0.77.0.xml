@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="77000" author="ybrigo@gmail.com">
+        <addColumn tableName="SECRETS">
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="SECRETS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_PRJ_ID_SECRETS"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

@@ -108,7 +108,12 @@ public final class MultipartUtils {
             for (InputPart p : input.getParts()) {
                 String n = MultipartUtils.extractName(p);
                 if (key.equalsIgnoreCase(n)) {
-                    return p.getBodyAsString().trim();
+                    String result = p.getBodyAsString().trim();
+                    if (result.isEmpty()) {
+                        return null;
+                    } else {
+                        return result;
+                    }
                 }
             }
         } catch (IOException e) {

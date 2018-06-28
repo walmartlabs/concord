@@ -52,7 +52,7 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration());
-        UUID secretId = secretDao.insert(orgId, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, SecretStoreType.CONCORD,null);
+        UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, SecretStoreType.CONCORD,null);
         secretDao.updateData(secretId, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();

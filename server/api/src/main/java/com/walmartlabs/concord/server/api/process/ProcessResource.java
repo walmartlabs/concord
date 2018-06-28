@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.api.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,10 @@ package com.walmartlabs.concord.server.api.process;
 
 
 import com.walmartlabs.concord.server.api.IsoDateParam;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
 import javax.validation.constraints.NotNull;
@@ -382,28 +385,4 @@ public interface ProcessResource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     Response decrypt(@PathParam("id") UUID instanceId, InputStream data);
-
-    /**
-     * Get secret.
-     *
-     * @param instanceId
-     * @param orgName
-     * @param secretName
-     * @param password
-     * @return
-     */
-    @POST
-    @ApiOperation(value = "Get secret", response = File.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK",
-                    response = File.class,
-                    responseHeaders = @ResponseHeader(name = "X-Concord-SecretType", description = "Secret type", response = String.class))})
-    @Path("{id}/secret")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    Response fetchSecret(@PathParam("id") UUID instanceId,
-                         @FormParam("org") String orgName,
-                         @FormParam("name") String secretName,
-                         @FormParam("password") String password);
-
 }

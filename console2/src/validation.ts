@@ -18,7 +18,6 @@
  * =====
  */
 
-
 /**
  * @see com.walmartlabs.concord.common.validation.ConcordKey
  * @type {RegExp}

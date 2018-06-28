@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: project-scoped secrets;
 - http: support for custom headers.
 
 ### Changed

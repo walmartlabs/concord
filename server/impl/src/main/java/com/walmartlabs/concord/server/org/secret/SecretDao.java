@@ -36,6 +36,7 @@ import javax.inject.Named;
 import java.util.List;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.SecretTeamAccess.SECRET_TEAM_ACCESS;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
@@ -80,14 +81,14 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public UUID insert(UUID orgId, String name, UUID ownerId, SecretType type,
+    public UUID insert(UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, SecretStoreType storeType,
                        SecretVisibility visibility) {
 
-        return txResult(tx -> insert(tx, orgId, name, ownerId, type, encryptedBy, storeType, visibility));
+        return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility));
     }
 
-    public UUID insert(DSLContext tx, UUID orgId, String name, UUID ownerId, SecretType type,
+    public UUID insert(DSLContext tx, UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, SecretStoreType storeType,
                        SecretVisibility visibility) {
 
@@ -95,11 +96,12 @@ public class SecretDao extends AbstractDao {
                 .columns(SECRETS.SECRET_NAME,
                         SECRETS.SECRET_TYPE,
                         SECRETS.ORG_ID,
+                        SECRETS.PROJECT_ID,
                         SECRETS.OWNER_ID,
                         SECRETS.ENCRYPTED_BY,
                         SECRETS.STORE_TYPE,
                         SECRETS.VISIBILITY)
-                .values(name, type.toString(), orgId, ownerId, encryptedBy.toString(), storeType.toString(), visibility.toString())
+                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType.toString(), visibility.toString())
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
                 .getSecretId();
@@ -173,9 +175,10 @@ public class SecretDao extends AbstractDao {
         });
     }
 
-    public void update(DSLContext tx, UUID id, UUID orgId, String name, SecretType type, SecretEncryptedByType encryptedByType, SecretVisibility visibility, byte[] data) {
+    public void update(DSLContext tx, UUID id, UUID orgId, UUID projectId, String name, SecretType type, SecretEncryptedByType encryptedByType, SecretVisibility visibility, byte[] data) {
         int i = tx.update(SECRETS)
                 .set(SECRETS.ORG_ID, orgId)
+                .set(SECRETS.PROJECT_ID, projectId)
                 .set(SECRETS.SECRET_NAME, name)
                 .set(SECRETS.SECRET_TYPE, type.toString())
                 .set(SECRETS.ENCRYPTED_BY, encryptedByType.toString())
@@ -190,7 +193,7 @@ public class SecretDao extends AbstractDao {
 
     public List<SecretEntry> list(UUID orgId, Field<?> sortField, boolean asc) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record10<UUID, String, UUID, String, UUID, String, String, String, String, String>> query = selectEntry(tx);
+            SelectJoinStep<Record12<UUID, String, UUID, String, UUID, String, UUID, String, String, String, String, String>> query = selectEntry(tx);
 
             if (orgId != null) {
                 query.where(SECRETS.ORG_ID.eq(orgId));
@@ -240,10 +243,14 @@ public class SecretDao extends AbstractDao {
                 .execute();
     }
 
-    private static SelectJoinStep<Record10<UUID, String, UUID, String, UUID, String, String, String, String, String>> selectEntry(DSLContext tx) {
+    private static SelectJoinStep<Record12<UUID, String, UUID, String, UUID, String, UUID, String, String, String, String, String>> selectEntry(DSLContext tx) {
         Field<String> orgName = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
                 .where(ORGANIZATIONS.ORG_ID.eq(SECRETS.ORG_ID)).asField();
+
+        Field<String> projectName = select(PROJECTS.PROJECT_NAME)
+                .from(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(SECRETS.PROJECT_ID)).asField();
 
         Field<String> ownerUsernameField = select(USERS.USERNAME)
                 .from(USERS)
@@ -254,6 +261,8 @@ public class SecretDao extends AbstractDao {
                 SECRETS.SECRET_NAME,
                 SECRETS.ORG_ID,
                 orgName,
+                SECRETS.PROJECT_ID,
+                projectName,
                 SECRETS.OWNER_ID,
                 ownerUsernameField,
                 SECRETS.SECRET_TYPE,
@@ -263,16 +272,18 @@ public class SecretDao extends AbstractDao {
                 .from(SECRETS);
     }
 
-    private static SecretEntry toEntry(Record10<UUID, String, UUID, String, UUID, String, String, String, String, String> r) {
+    private static SecretEntry toEntry(Record12<UUID, String, UUID, String, UUID, String, UUID, String, String, String, String, String> r) {
         return new SecretEntry(r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(SECRETS.ORG_ID),
                 r.value4(),
+                r.get(SECRETS.PROJECT_ID),
+                r.value6(),
                 SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
                 SecretEncryptedByType.valueOf(r.get(SECRETS.ENCRYPTED_BY)),
                 SecretStoreType.valueOf(r.get(SECRETS.STORE_TYPE)),
                 SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
-                toOwner(r.get(SECRETS.OWNER_ID), r.value6()));
+                toOwner(r.get(SECRETS.OWNER_ID), r.value8()));
     }
 
     private static SecretOwner toOwner(UUID id, String username) {
@@ -287,15 +298,15 @@ public class SecretDao extends AbstractDao {
         private final byte[] data;
 
         public SecretDataEntry(SecretEntry s, byte[] data) { //NOSONAR
-            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getType(), s.getEncryptedBy(),
-                    s.getStoreType(), s.getVisibility(), s.getOwner(), data);
+            this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjectId(), s.getProjectName(),
+                    s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(), data);
         }
 
-        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, SecretType type,
+        public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, UUID projectId, String projectName, SecretType type,
                                SecretEncryptedByType encryptedByType, SecretStoreType storeType, SecretVisibility visibility,
                                SecretOwner owner, byte[] data) { //NOSONAR
 
-            super(id, name, orgId, orgName, type, encryptedByType, storeType, visibility, owner);
+            super(id, name, orgId, orgName, projectId, projectName, type, encryptedByType, storeType, visibility, owner);
             this.data = data;
         }
 

@@ -103,6 +103,10 @@ class SecretInfo extends React.PureComponent<Props> {
                             <Table.Cell>{encryptedByToText(secret.encryptedBy)}</Table.Cell>
                         </Table.Row>
                         <Table.Row>
+                            <Table.Cell>Project</Table.Cell>
+                            <Table.Cell>{secret.projectName}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
                             <Table.Cell>Owner</Table.Cell>
                             <Table.Cell>{secret.owner ? secret.owner.username : '-'}</Table.Cell>
                         </Table.Row>

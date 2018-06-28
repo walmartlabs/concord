@@ -46,6 +46,11 @@ public class SecretEntry implements Serializable {
     @ConcordKey
     private final String orgName;
 
+    private final UUID projectId;
+
+    @ConcordKey
+    private final String projectName;
+
     @NotNull
     private final SecretType type;
 
@@ -63,6 +68,8 @@ public class SecretEntry implements Serializable {
                        @JsonProperty("name") String name,
                        @JsonProperty("orgId") UUID orgId,
                        @JsonProperty("orgName") String orgName,
+                       @JsonProperty("projectId") UUID projectId,
+                       @JsonProperty("projectName") String projectName,
                        @JsonProperty("type") SecretType type,
                        @JsonProperty("encryptedBy") SecretEncryptedByType encryptedBy,
                        @JsonProperty("storeType") SecretStoreType storeType,
@@ -73,6 +80,8 @@ public class SecretEntry implements Serializable {
         this.name = name;
         this.orgId = orgId;
         this.orgName = orgName;
+        this.projectId = projectId;
+        this.projectName = projectName;
         this.type = type;
         this.encryptedBy = encryptedBy;
         this.storeType = storeType;
@@ -96,10 +105,17 @@ public class SecretEntry implements Serializable {
         return orgName;
     }
 
+    public UUID getProjectId() {
+        return projectId;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
     public SecretType getType() {
         return type;
     }
-
 
     public SecretEncryptedByType getEncryptedBy() {
         return encryptedBy;
@@ -124,6 +140,8 @@ public class SecretEntry implements Serializable {
                 ", name='" + name + '\'' +
                 ", orgId=" + orgId +
                 ", orgName='" + orgName + '\'' +
+                ", projectId='" + projectId + '\'' +
+                ", projectName='" + projectName + '\'' +
                 ", type=" + type +
                 ", encryptedBy=" + encryptedBy +
                 ", storeType=" + storeType +

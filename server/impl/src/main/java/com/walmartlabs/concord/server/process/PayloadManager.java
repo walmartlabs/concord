@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.process.ProcessKind;
 import com.walmartlabs.concord.server.org.OrganizationDao;
@@ -68,7 +69,7 @@ public class PayloadManager {
 
     public Payload createPayload(MultipartInput input) throws IOException {
         UUID instanceId = UUID.randomUUID();
-        UUID parentInstanceId = MultipartUtils.getUuid(input, "parentInstanceId");
+        UUID parentInstanceId = MultipartUtils.getUuid(input, Constants.Multipart.PARENT_INSTANCE_ID);
 
         UUID orgId = getOrg(input);
         UUID projectId = getProject(input, orgId);
@@ -79,7 +80,7 @@ public class PayloadManager {
             projectId = repositoryDao.getProjectId(repoId);
         }
 
-        String entryPoint = MultipartUtils.getString(input, "entryPoint");
+        String entryPoint = MultipartUtils.getString(input, Constants.Multipart.ENTRY_POINT);
 
         UserPrincipal initiator = UserPrincipal.assertCurrent();
 
@@ -304,8 +305,8 @@ public class PayloadManager {
     }
 
     private UUID getOrg(MultipartInput input) {
-        UUID id = MultipartUtils.getUuid(input, "orgId");
-        String name = MultipartUtils.getString(input, "org");
+        UUID id = MultipartUtils.getUuid(input, Constants.Multipart.ORG_ID);
+        String name = MultipartUtils.getString(input, Constants.Multipart.ORG_NAME);
         if (id == null && name != null) {
             id = orgDao.getId(name);
             if (id == null) {
@@ -316,8 +317,8 @@ public class PayloadManager {
     }
 
     private UUID getProject(MultipartInput input, UUID orgId) {
-        UUID id = MultipartUtils.getUuid(input, "projectId");
-        String name = MultipartUtils.getString(input, "project");
+        UUID id = MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID);
+        String name = MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME);
         if (id == null && name != null) {
             if (orgId == null) {
                 throw new ValidationErrorsException("Organization ID or name is required");
@@ -332,8 +333,8 @@ public class PayloadManager {
     }
 
     private UUID getRepo(MultipartInput input, UUID projectId) {
-        UUID id = MultipartUtils.getUuid(input, "repoId");
-        String name = MultipartUtils.getString(input, "repo");
+        UUID id = MultipartUtils.getUuid(input, Constants.Multipart.REPO_ID);
+        String name = MultipartUtils.getString(input, Constants.Multipart.REPO_NAME);
         if (id == null && name != null) {
             if (projectId == null) {
                 throw new ValidationErrorsException("Project ID or name is required");
@@ -348,7 +349,7 @@ public class PayloadManager {
     }
 
     private String[] getOutExpressions(MultipartInput input) {
-        String s = MultipartUtils.getString(input, "out");
+        String s = MultipartUtils.getString(input, Constants.Multipart.OUT_EXPR);
         if (s == null) {
             return null;
         }

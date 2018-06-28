@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-
-import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.api.GenericOperationResult;
 import com.walmartlabs.concord.server.api.OperationResult;
@@ -33,12 +33,14 @@ import com.walmartlabs.concord.server.api.org.secret.*;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessUtils;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryData;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedKeyPair;
-import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedSecret;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedUsernamePassword;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -46,8 +48,10 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -58,24 +62,29 @@ import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 @Named
 public class SecretResourceImpl implements SecretResource, Resource {
 
+    private static final Logger log = LoggerFactory.getLogger(SecretResourceImpl.class);
+
     private final OrganizationManager orgManager;
     private final OrganizationDao orgDao;
     private final SecretManager secretManager;
     private final SecretDao secretDao;
     private final TeamDao teamDao;
+    private final ProjectDao projectDao;
 
     @Inject
     public SecretResourceImpl(OrganizationManager orgManager,
                               OrganizationDao orgDao,
                               SecretManager secretManager,
                               SecretDao secretDao,
-                              TeamDao teamDao) {
+                              TeamDao teamDao,
+                              ProjectDao projectDao) {
 
         this.orgManager = orgManager;
         this.orgDao = orgDao;
         this.secretManager = secretManager;
         this.secretDao = secretDao;
         this.teamDao = teamDao;
+        this.projectDao = projectDao;
     }
 
     @Override
@@ -90,19 +99,21 @@ public class SecretResourceImpl implements SecretResource, Resource {
             String name = assertName(input);
             assertUnique(org.getId(), name);
 
-            boolean generatePwd = MultipartUtils.getBoolean(input, "generatePassword", false);
+            boolean generatePwd = MultipartUtils.getBoolean(input, Constants.Multipart.GENERATE_PASSWORD, false);
             String storePwd = getOrGenerateStorePassword(input, generatePwd);
             SecretVisibility visibility = getVisibility(input);
 
+            UUID projectId = getProject(input, org.getId());
+
             switch (type) {
                 case KEY_PAIR: {
-                    return createKeyPair(org.getId(), name, storePwd, visibility, input, storeType);
+                    return createKeyPair(org.getId(), projectId, name, storePwd, visibility, input, storeType);
                 }
                 case USERNAME_PASSWORD: {
-                    return createUsernamePassword(org.getId(), name, storePwd, visibility, input, storeType);
+                    return createUsernamePassword(org.getId(), projectId, name, storePwd, visibility, input, storeType);
                 }
                 case DATA: {
-                    return createData(org.getId(), name, storePwd, visibility, input, storeType);
+                    return createData(org.getId(), projectId, name, storePwd, visibility, input, storeType);
                 }
                 default:
                     throw new ValidationErrorsException("Unsupported secret type: " + type);
@@ -133,12 +144,32 @@ public class SecretResourceImpl implements SecretResource, Resource {
 
     @Override
     public Response getData(String orgName, String secretName, MultipartInput input) {
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        String storePwd = MultipartUtils.getString(input, "storePassword");
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        String password = MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD);
 
-        DecryptedSecret s = secretManager.getSecret(org.getId(), secretName, storePwd, SecretType.DATA);
-        BinaryDataSecret d = (BinaryDataSecret) s.getSecret();
-        return Response.ok(d.getData()).build();
+        SecretDao.SecretDataEntry entry;
+        try {
+            entry = secretManager.getRaw(org.getId(), secretName, password);
+            if (entry == null) {
+                return null;
+            }
+        } catch (SecurityException e) {
+            log.warn("fetchSecret -> error: {}", e.getMessage());
+            throw new SecretException("Error while fetching a secret: " + e.getMessage());
+        } catch (ValidationErrorsException e) {
+            log.warn("fetchSecret -> error: {}", e.getMessage());
+            return null;
+        }
+
+        try {
+            return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
+                    MediaType.APPLICATION_OCTET_STREAM)
+                    .header(InternalConstants.Headers.SECRET_TYPE, entry.getType().name())
+                    .build();
+        } catch (Exception e) {
+            log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
+            throw new WebApplicationException("Error while fetching a secret: " + e.getMessage());
+        }
     }
 
     @Override
@@ -180,41 +211,41 @@ public class SecretResourceImpl implements SecretResource, Resource {
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
-    private PublicKeyResponse createKeyPair(UUID orgId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, SecretStoreType storeType) throws IOException {
+    private PublicKeyResponse createKeyPair(UUID orgId, UUID projectId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, SecretStoreType storeType) throws IOException {
         DecryptedKeyPair k;
 
-        InputStream publicKey = MultipartUtils.getStream(input, "public");
+        InputStream publicKey = MultipartUtils.getStream(input, Constants.Multipart.PUBLIC);
         if (publicKey != null) {
-            InputStream privateKey = assertStream(input, "private");
+            InputStream privateKey = assertStream(input, Constants.Multipart.PRIVATE);
             try {
-                k = secretManager.createKeyPair(orgId, name, storePassword, publicKey, privateKey, visibility, storeType);
+                k = secretManager.createKeyPair(orgId, projectId, name, storePassword, publicKey, privateKey, visibility, storeType);
             } catch (IllegalArgumentException e) {
                 throw new ValidationErrorsException(e.getMessage());
             }
         } else {
-            k = secretManager.createKeyPair(orgId, name, storePassword, visibility, storeType);
+            k = secretManager.createKeyPair(orgId, projectId, name, storePassword, visibility, storeType);
         }
 
         return new PublicKeyResponse(k.getId(), OperationResult.CREATED, storePassword, new String(k.getData()));
     }
 
-    private SecretOperationResponse createUsernamePassword(UUID orgId, String name, String storePassword,
+    private SecretOperationResponse createUsernamePassword(UUID orgId, UUID projectId, String name, String storePassword,
                                                            SecretVisibility visibility, MultipartInput input,
                                                            SecretStoreType storeType) {
 
-        String username = assertString(input, "username");
-        String password = assertString(input, "password");
+        String username = assertString(input, Constants.Multipart.USERNAME);
+        String password = assertString(input, Constants.Multipart.PASSWORD);
 
-        DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, name, storePassword, username, password.toCharArray(), visibility, storeType);
+        DecryptedUsernamePassword e = secretManager.createUsernamePassword(orgId, projectId, name, storePassword, username, password.toCharArray(), visibility, storeType);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
-    private SecretOperationResponse createData(UUID orgId, String name, String storePassword,
+    private SecretOperationResponse createData(UUID orgId, UUID projectId, String name, String storePassword,
                                                SecretVisibility visibility, MultipartInput input,
                                                SecretStoreType storeType) throws IOException {
 
-        InputStream data = assertStream(input, "data");
-        DecryptedBinaryData e = secretManager.createBinaryData(orgId, name, storePassword, data, visibility, storeType);
+        InputStream data = assertStream(input, Constants.Multipart.DATA);
+        DecryptedBinaryData e = secretManager.createBinaryData(orgId, projectId, name, storePassword, data, visibility, storeType);
         return new SecretOperationResponse(e.getId(), OperationResult.CREATED, storePassword);
     }
 
@@ -227,7 +258,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     private String getOrGenerateStorePassword(MultipartInput input, boolean generatePassword) {
         String password;
         try {
-            password = MultipartUtils.getString(input, "storePassword");
+            password = MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD);
         } catch (WebApplicationException e) {
             throw new WebApplicationException("Can't get a password from the request", e);
         }
@@ -239,8 +270,8 @@ public class SecretResourceImpl implements SecretResource, Resource {
         return password;
     }
 
-    private String assertName(MultipartInput input) throws IOException {
-        String s = assertString(input, "name");
+    private String assertName(MultipartInput input) {
+        String s = assertString(input, Constants.Multipart.NAME);
         if (s == null || s.trim().isEmpty()) {
             throw new ValidationErrorsException("'name' is required");
         }
@@ -253,7 +284,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     private static SecretType assertType(MultipartInput input) {
-        String s = MultipartUtils.getString(input, "type");
+        String s = MultipartUtils.getString(input, Constants.Multipart.TYPE);
         if (s == null) {
             throw new ValidationErrorsException("'type' is required");
         }
@@ -266,7 +297,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     private SecretStoreType assertStoreType(MultipartInput input) {
-        String s = MultipartUtils.getString(input, "storeType");
+        String s = MultipartUtils.getString(input, Constants.Multipart.STORE_TYPE);
         if (s == null) {
             return secretManager.getDefaultSecretStoreType();
         }
@@ -298,7 +329,7 @@ public class SecretResourceImpl implements SecretResource, Resource {
     }
 
     private static SecretVisibility getVisibility(MultipartInput input) {
-        String s = MultipartUtils.getString(input, "visibility");
+        String s = MultipartUtils.getString(input, Constants.Multipart.VISIBILITY);
         if (s == null) {
             return SecretVisibility.PUBLIC;
         }
@@ -316,5 +347,17 @@ public class SecretResourceImpl implements SecretResource, Resource {
             throw new ValidationErrorsException("Value not found: " + key);
         }
         return in;
+    }
+
+    private UUID getProject(MultipartInput input, UUID orgId) {
+        UUID id = MultipartUtils.getUuid(input, Constants.Multipart.PROJECT_ID);
+        String name = MultipartUtils.getString(input, Constants.Multipart.PROJECT_NAME);
+        if (id == null && name != null) {
+            id = projectDao.getId(orgId, name);
+            if (id == null) {
+                throw new ValidationErrorsException("Project not found: " + name);
+            }
+        }
+        return id;
     }
 }
