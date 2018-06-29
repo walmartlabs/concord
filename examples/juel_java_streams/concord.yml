@@ -3,17 +3,22 @@ configuration:
   - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
   arguments:
     items1:
-      - "a"
-      - "b"
+    - "a"
+    - "b"
     items2:
-      - "a"
-      - "b"
-      - "c"
+    - "a"
+    - "b"
+    - "c"
+    items3: [1, 2, 3] # using a different syntax to make list
 
 flows:
   default:
-  # calculates the difference between items1 and items2
+  # using expressions
+  - log: "${items3.stream().filter(i -> i % 2 == 0).toList()}"
+
+  # using Java Streams API in Groovy
   - script: groovy
+    # calculates the difference between items1 and items2
     body: |
       execution.setVariable("delta",
         items2.stream()
