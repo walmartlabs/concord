@@ -20,7 +20,6 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-
 import org.apache.commons.lang3.mutable.MutableLong;
 
 import java.io.IOException;

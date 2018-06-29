@@ -20,11 +20,10 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.org.inventory.InventoryQueryEntry;
+import com.walmartlabs.concord.server.org.inventory.InventoryQueryEntry;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 

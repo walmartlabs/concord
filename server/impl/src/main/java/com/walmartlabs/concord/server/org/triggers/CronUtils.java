@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.time.ExecutionTime;

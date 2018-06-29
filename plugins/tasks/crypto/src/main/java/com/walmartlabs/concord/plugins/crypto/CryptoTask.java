@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.crypto;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Inject;

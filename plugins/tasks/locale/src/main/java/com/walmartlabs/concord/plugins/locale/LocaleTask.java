@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.locale;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Task;
 
 import javax.inject.Named;

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-
 import org.junit.Test;
 import org.openqa.selenium.By;
 

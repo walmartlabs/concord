@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.events.ExternalEventResource;
-import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretEntry;
+import com.walmartlabs.concord.server.events.ExternalEventResource;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.secret.SecretDao;

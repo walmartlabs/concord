@@ -20,7 +20,6 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
-
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Objects;

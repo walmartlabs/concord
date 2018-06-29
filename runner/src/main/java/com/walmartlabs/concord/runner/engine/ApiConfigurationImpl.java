@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;

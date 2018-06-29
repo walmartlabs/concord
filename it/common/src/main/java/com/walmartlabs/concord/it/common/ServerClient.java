@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.common;
  * =====
  */
 
-
 import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.Call;
 import com.walmartlabs.concord.ApiClient;

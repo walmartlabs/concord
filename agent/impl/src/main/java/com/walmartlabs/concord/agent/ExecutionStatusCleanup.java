@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-
 import java.util.concurrent.TimeUnit;
 
 public class ExecutionStatusCleanup implements Runnable {

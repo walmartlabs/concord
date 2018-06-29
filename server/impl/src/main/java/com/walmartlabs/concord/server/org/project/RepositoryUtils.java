@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import java.util.Map;

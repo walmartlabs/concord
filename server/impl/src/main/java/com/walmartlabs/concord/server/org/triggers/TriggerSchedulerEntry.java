@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;

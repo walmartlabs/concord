@@ -20,7 +20,6 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.impl.DSL;

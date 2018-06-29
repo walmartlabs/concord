@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common.validation;
  * =====
  */
 
-
 import javax.validation.Constraint;
 import javax.validation.Payload;
 import javax.validation.constraints.Pattern;

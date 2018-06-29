@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-
 import com.walmartlabs.concord.project.yaml.converter.ConverterContext;
 import com.walmartlabs.concord.project.yaml.model.YamlProcessDefinition;
 import com.walmartlabs.concord.project.yaml.model.YamlStep;

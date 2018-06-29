@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.security.secret;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.server.AbstractDaoTest;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.api.org.secret.SecretStoreType;
-import com.walmartlabs.concord.server.api.org.secret.SecretType;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.secret.SecretStoreType;
+import com.walmartlabs.concord.server.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;

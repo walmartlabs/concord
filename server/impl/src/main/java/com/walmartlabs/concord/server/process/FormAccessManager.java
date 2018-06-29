@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;

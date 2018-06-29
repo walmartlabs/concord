@@ -20,13 +20,12 @@ package com.walmartlabs.concord.server.org.team;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.api.org.team.TeamEntry;
-import com.walmartlabs.concord.server.api.org.team.TeamRole;
-import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.server.org.team.TeamEntry;
+import com.walmartlabs.concord.server.org.team.TeamRole;
+import com.walmartlabs.concord.server.org.team.TeamUserEntry;
+import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.UserTeamsRecord;
 import org.jooq.*;

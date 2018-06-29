@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;

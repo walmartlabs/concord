@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadBuilder;

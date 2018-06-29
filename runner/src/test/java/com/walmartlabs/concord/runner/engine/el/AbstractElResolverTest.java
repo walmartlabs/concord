@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine.el;
  * =====
  */
 
-
 import com.sun.el.lang.EvaluationContext;
 import io.takari.bpm.api.ExecutionContext;
 

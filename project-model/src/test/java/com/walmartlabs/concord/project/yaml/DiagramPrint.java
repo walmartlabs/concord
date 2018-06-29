@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-
 import io.takari.bpm.model.*;
 
 import java.util.*;

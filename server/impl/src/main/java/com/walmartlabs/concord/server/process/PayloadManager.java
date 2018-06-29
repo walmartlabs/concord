@@ -20,11 +20,10 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.api.process.ProcessKind;
+import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;

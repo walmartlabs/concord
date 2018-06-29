@@ -20,11 +20,10 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectOwner;
-import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.project.ProjectOwner;
+import com.walmartlabs.concord.server.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;

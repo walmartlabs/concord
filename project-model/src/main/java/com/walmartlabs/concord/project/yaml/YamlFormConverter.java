@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-
 import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.project.ConcordFormFields;
 import com.walmartlabs.concord.project.yaml.model.YamlFormDefinition;

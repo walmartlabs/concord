@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.model;
  * =====
  */
 
-
 import java.io.Serializable;
 import java.util.Map;
 

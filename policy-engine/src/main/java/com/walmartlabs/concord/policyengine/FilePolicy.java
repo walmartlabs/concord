@@ -20,7 +20,6 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;

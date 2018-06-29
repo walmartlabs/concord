@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-
 import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
 import com.walmartlabs.concord.project.yaml.model.*;

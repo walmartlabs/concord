@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.agent;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
 import org.eclipse.sisu.EagerSingleton;

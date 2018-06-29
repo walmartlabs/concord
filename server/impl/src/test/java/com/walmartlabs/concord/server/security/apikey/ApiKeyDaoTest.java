@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import org.junit.Ignore;
 import org.junit.Test;

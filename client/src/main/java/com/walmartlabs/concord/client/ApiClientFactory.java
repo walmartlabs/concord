@@ -20,7 +20,6 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.ApiClient;
 

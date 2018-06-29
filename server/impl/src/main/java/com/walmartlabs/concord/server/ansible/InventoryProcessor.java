@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.ansible;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;

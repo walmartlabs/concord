@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.IOUtils;
 
 import javax.inject.Named;

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
-
 import org.apache.shiro.authc.AuthenticationToken;
 
 import java.util.UUID;

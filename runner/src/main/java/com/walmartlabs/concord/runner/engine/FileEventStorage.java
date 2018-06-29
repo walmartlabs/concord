@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.IOUtils;
 import io.takari.bpm.event.Event;
 import io.takari.bpm.event.EventStorage;

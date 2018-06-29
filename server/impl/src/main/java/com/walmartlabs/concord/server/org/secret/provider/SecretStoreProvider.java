@@ -20,8 +20,7 @@ package com.walmartlabs.concord.server.org.secret.provider;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.org.secret.SecretStoreType;
+import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 import com.walmartlabs.concord.server.org.secret.store.SecretStorePropertyManager;
 import org.sonatype.siesta.ValidationErrorsException;

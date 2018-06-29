@@ -20,7 +20,6 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-
 import java.util.Collections;
 import java.util.List;
 

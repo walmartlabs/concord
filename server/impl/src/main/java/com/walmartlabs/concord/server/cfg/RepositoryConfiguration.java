@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

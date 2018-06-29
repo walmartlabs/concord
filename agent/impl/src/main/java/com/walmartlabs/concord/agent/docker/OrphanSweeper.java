@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent.docker;
  * =====
  */
 
-
 import com.walmartlabs.concord.agent.ExecutionManager;
 import com.walmartlabs.concord.common.DockerProcessBuilder;
 import org.slf4j.Logger;

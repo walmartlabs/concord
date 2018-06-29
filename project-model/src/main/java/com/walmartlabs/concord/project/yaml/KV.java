@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-
 import java.util.Map;
 
 public class KV<K, V> implements Map.Entry<K, V> {

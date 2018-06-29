@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 

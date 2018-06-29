@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;

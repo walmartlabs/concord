@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

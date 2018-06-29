@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
-
 import io.takari.bpm.model.AbstractElement;
 import io.takari.bpm.model.SourceMap;
 

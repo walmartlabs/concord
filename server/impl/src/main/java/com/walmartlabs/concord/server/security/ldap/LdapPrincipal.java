@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 
 import java.io.Serializable;

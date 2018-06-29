@@ -20,7 +20,6 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
-
 import org.junit.Ignore;
 import org.junit.Test;
 

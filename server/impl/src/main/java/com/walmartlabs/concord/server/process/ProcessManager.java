@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.agent.AgentManager;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;

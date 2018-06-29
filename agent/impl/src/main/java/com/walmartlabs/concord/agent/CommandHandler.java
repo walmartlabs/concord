@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.CommandEntry;
 import com.walmartlabs.concord.client.CommandQueueApi;

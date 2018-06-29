@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.runner;
  * =====
  */
 
-
 import org.junit.Test;
 
 import java.nio.file.Paths;

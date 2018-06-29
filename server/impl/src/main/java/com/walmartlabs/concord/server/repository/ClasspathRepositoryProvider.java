@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-
 import com.google.common.io.Resources;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryException;
 
 import java.io.IOException;

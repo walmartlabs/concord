@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.server.api.process.ProcessKind;
+import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 

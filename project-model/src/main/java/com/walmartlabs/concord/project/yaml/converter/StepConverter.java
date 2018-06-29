@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
-
 import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;

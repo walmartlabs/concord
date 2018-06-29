@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.example;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.Task;

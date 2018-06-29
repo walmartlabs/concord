@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.example;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.ExecutionContext;

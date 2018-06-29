@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionContextFactory;

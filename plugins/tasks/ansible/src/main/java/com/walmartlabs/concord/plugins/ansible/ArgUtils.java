@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-
 import java.util.Collection;
 import java.util.Map;
 

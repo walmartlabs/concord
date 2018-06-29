@@ -20,8 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.process.ProcessKind;
+import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-
 import com.google.inject.AbstractModule;
 import com.walmartlabs.concord.db.CommonDataSourceProvider;
 import com.walmartlabs.concord.db.JooqConfigurationProvider;

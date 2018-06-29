@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-
 import com.google.common.base.Throwables;
 
 import javax.net.SocketFactory;

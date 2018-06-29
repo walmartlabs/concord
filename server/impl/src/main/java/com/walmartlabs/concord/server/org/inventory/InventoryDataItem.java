@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-
 import java.io.Serializable;
 
 public class InventoryDataItem implements Serializable {

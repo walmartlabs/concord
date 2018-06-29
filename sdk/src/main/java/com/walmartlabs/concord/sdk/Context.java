@@ -20,7 +20,6 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
-
 import java.util.Map;
 import java.util.Set;
 

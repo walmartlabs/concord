@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.http.request;
  * =====
  */
 
-
 import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import org.apache.http.HttpEntity;

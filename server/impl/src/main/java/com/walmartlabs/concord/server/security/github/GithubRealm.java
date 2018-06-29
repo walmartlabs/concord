@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.github;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationException;

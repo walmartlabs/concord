@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-
 import com.google.inject.Key;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-
 import java.io.IOException;
 
 public final class PrivilegedAction {

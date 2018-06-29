@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.CommonDataSourceProvider;
 import com.walmartlabs.concord.db.DatabaseConfiguration;

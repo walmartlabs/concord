@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.DatabaseConfiguration;
 import com.walmartlabs.concord.server.Utils;
 import org.jooq.SQLDialect;

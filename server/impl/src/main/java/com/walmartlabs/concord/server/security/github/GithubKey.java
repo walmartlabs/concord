@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.github;
  * =====
  */
 
-
 import org.apache.shiro.authc.AuthenticationToken;
 
 public class GithubKey implements AuthenticationToken {

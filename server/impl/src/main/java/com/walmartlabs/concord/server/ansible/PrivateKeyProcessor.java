@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.ansible;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;

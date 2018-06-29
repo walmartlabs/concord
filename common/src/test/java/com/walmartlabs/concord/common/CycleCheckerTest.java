@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 

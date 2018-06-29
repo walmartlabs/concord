@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.example;
  * =====
  */
 
-
 import java.io.Serializable;
 
 public class ExampleBean implements Serializable {

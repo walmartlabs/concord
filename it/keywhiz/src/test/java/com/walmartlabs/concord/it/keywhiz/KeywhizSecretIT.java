@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.keywhiz;
  * =====
  */
 
-
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.ITUtils;

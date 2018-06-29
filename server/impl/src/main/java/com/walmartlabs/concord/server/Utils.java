@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-
 import java.util.Properties;
 
 public final class Utils {

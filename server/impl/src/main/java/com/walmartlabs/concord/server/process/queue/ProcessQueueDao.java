@@ -20,13 +20,12 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessKind;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessKind;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
 import org.jooq.*;

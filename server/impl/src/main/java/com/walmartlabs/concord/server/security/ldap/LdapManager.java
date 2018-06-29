@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.console.UserSearchResult;
 import org.apache.shiro.realm.ldap.LdapContextFactory;

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,15 +20,15 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.api.process.FormInstanceEntry;
-import com.walmartlabs.concord.server.api.process.FormListEntry;
-import com.walmartlabs.concord.server.api.process.FormResource;
-import com.walmartlabs.concord.server.api.process.FormSubmitResponse;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
@@ -37,16 +37,20 @@ import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
+import javax.inject.Singleton;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
 @Named
-public class FormResourceImpl implements FormResource, Resource {
+@Singleton
+@Api(value = "Process Forms", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Path("/api/v1/process")
+public class FormResourceImpl implements Resource {
 
     public static final String FORMS_RESOURCES_PATH = "forms";
 
@@ -59,9 +63,11 @@ public class FormResourceImpl implements FormResource, Resource {
         this.validatorLocale = new DefaultFormValidatorLocale();
     }
 
-    @Override
-    @Validate
-    public List<FormListEntry> list(UUID processInstanceId) {
+    @GET
+    @ApiOperation(value = "List the available forms", responseContainer = "list", response = FormListEntry.class)
+    @Path("/{processInstanceId}/form")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<FormListEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId) {
         try {
             return formService.list(processInstanceId);
         } catch (Exception e) {
@@ -69,10 +75,20 @@ public class FormResourceImpl implements FormResource, Resource {
         }
     }
 
-    @Override
-    @Validate
+    /**
+     * Return the current state of a form instance.
+     *
+     * @param formInstanceId
+     * @return
+     */
+    @GET
+    @ApiOperation("Get the current state of a form")
+    @Path("/{processInstanceId}/form/{formInstanceId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @SuppressWarnings("unchecked")
-    public FormInstanceEntry get(UUID processInstanceId, String formInstanceId) {
+    public FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
+                                 @ApiParam @PathParam("formInstanceId") @ConcordId String formInstanceId) {
+
         Form form = formService.get(processInstanceId, formInstanceId);
         if (form == null) {
             throw new WebApplicationException("Form not found: " + formInstanceId, Status.NOT_FOUND);
@@ -126,6 +142,55 @@ public class FormResourceImpl implements FormResource, Resource {
         return new FormInstanceEntry(pbk, fiid, name, fields, isCustomForm, yield);
     }
 
+    /**
+     * Submit form instance's data, potentially resuming a suspended process.
+     *
+     * @param formInstanceId
+     * @param data
+     * @return
+     */
+    @POST
+    @ApiOperation("Submit JSON form data")
+    @Path("/{processInstanceId}/form/{formInstanceId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public FormSubmitResponse submit(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
+                                     @ApiParam @PathParam("formInstanceId") @ConcordId String formInstanceId,
+                                     @ApiParam Map<String, Object> data) {
+
+        Form form = formService.get(processInstanceId, formInstanceId);
+        try {
+            data = FormUtils.convert(validatorLocale, form, data);
+        } catch (ValidationException e) {
+            Map<String, String> errors = Collections.singletonMap(e.getField().getName(), e.getMessage());
+            return new FormSubmitResponse(processInstanceId, errors);
+        }
+
+        FormSubmitResult result = formService.submit(processInstanceId, formInstanceId, data);
+
+        Map<String, String> errors = mergeErrors(result.getErrors());
+        return new FormSubmitResponse(result.getProcessInstanceId(), errors);
+    }
+
+    /**
+     * Submit form instance's data, potentially resuming a suspended process.
+     * It's not annotated with Swagger's {@link ApiOperation} to avoid conflicts.
+     *
+     * @param formInstanceId
+     * @param data
+     * @return
+     */
+    @POST
+    @Path("/{processInstanceId}/form/{formInstanceId}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public FormSubmitResponse submit(@PathParam("processInstanceId") UUID processInstanceId,
+                                     @PathParam("formInstanceId") @ConcordId String formInstanceId,
+                                     MultipartInput data) {
+
+        return submit(processInstanceId, formInstanceId, MultipartUtils.toMap(data));
+    }
+
     private static FormInstanceEntry.Cardinality map(FormField.Cardinality c) {
         if (c == null) {
             return null;
@@ -143,29 +208,6 @@ public class FormResourceImpl implements FormResource, Resource {
             default:
                 throw new IllegalArgumentException("Unsupported cardinality type: " + c);
         }
-    }
-
-    @Override
-    @Validate
-    public FormSubmitResponse submit(UUID processInstanceId, String formInstanceId, Map<String, Object> data) {
-        Form form = formService.get(processInstanceId, formInstanceId);
-        try {
-            data = FormUtils.convert(validatorLocale, form, data);
-        } catch (ValidationException e) {
-            Map<String, String> errors = Collections.singletonMap(e.getField().getName(), e.getMessage());
-            return new FormSubmitResponse(processInstanceId, errors);
-        }
-
-        FormSubmitResult result = formService.submit(processInstanceId, formInstanceId, data);
-
-        Map<String, String> errors = mergeErrors(result.getErrors());
-        return new FormSubmitResponse(result.getProcessInstanceId(), errors);
-    }
-
-    @Override
-    @Validate
-    public FormSubmitResponse submit(UUID processInstanceId, String formInstanceId, MultipartInput data) {
-        return submit(processInstanceId, formInstanceId, MultipartUtils.toMap(data));
     }
 
     private static Map<String, String> mergeErrors(List<ValidationError> errors) {

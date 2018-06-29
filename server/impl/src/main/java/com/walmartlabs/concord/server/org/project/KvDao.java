@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.ProjectKvStore;
 import org.jooq.Configuration;

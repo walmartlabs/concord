@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-
 import com.google.common.base.Strings;
 
 public final class ITConstants {

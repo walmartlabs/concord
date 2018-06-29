@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.secret.*;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.secret.*;
 import com.walmartlabs.concord.server.jooq.tables.records.SecretsRecord;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;

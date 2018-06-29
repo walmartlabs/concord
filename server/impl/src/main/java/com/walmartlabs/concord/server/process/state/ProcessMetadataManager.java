@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.UUID;

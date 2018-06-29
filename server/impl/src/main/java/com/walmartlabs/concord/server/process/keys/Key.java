@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.keys;
  * =====
  */
 
-
 import java.io.Serializable;
 
 public abstract class Key<T> implements Serializable {

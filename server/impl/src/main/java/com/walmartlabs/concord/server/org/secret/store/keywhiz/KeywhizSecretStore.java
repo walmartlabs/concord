@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.org.secret.store.keywhiz;
  * =====
  */
 
-
 import com.google.common.base.Throwables;
-import com.walmartlabs.concord.server.api.org.secret.SecretStoreType;
+import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 
 import javax.inject.Inject;

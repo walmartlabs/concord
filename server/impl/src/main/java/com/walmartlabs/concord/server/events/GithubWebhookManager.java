@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import org.kohsuke.github.*;

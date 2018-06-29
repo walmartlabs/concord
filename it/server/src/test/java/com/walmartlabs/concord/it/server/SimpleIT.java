@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-
 import org.junit.Test;
 
 import java.net.URL;

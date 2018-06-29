@@ -20,11 +20,9 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
 import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.*;
 import org.jooq.impl.DSL;

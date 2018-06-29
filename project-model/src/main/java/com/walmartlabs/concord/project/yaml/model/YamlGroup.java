@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.model;
  * =====
  */
 
-
 import com.fasterxml.jackson.core.JsonLocation;
 import io.takari.parc.Seq;
 

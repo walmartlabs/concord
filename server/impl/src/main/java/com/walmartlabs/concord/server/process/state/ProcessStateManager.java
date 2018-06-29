@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
-
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;

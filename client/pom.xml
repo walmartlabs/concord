@@ -16,10 +16,11 @@
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
-            <artifactId>concord-server-api</artifactId>
+            <artifactId>concord-server</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
@@ -97,7 +98,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/../server/api/target/classes/com/walmartlabs/concord/server/api/swagger/swagger.json</inputSpec>
+                            <inputSpec>${project.basedir}/../server/impl/target/classes/com/walmartlabs/concord/server/swagger/swagger.json</inputSpec>
                             <language>java</language>
                             <languageSpecificPrimitives>
                                 <supportJava6>false</supportJava6>

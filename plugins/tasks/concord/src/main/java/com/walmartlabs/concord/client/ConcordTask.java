@@ -20,7 +20,6 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;

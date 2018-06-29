@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.audit;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.slf4j.Logger;

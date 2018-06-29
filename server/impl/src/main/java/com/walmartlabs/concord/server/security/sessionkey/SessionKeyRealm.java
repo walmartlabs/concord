@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.security.sessionkey;
  * =====
  */
 
-
 import com.google.common.collect.ImmutableSet;
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import org.apache.shiro.authc.AuthenticationException;

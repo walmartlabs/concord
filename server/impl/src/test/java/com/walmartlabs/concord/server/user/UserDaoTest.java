@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.SecureRandomProvider;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.junit.Before;
 import org.junit.Ignore;

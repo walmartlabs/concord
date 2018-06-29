@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.DockerProcessBuilder;
 import io.takari.parc.Seq;
 

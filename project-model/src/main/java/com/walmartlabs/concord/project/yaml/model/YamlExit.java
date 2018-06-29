@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.model;
  * =====
  */
 
-
 import com.fasterxml.jackson.core.JsonLocation;
 
 public class YamlExit extends YamlStep {

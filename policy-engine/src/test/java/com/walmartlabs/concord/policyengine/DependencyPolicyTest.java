@@ -20,7 +20,6 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import org.junit.Test;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project;
  * =====
  */
 
-
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;

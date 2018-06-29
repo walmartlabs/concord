@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
 import com.walmartlabs.concord.server.security.ConcordAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;

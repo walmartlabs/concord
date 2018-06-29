@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-
 import com.walmartlabs.concord.project.model.Trigger;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;

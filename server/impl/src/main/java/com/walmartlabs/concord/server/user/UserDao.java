@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.user.RoleEntry;
-import com.walmartlabs.concord.server.api.user.UserEntry;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.user.RoleEntry;
+import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
-
 import java.io.Serializable;
 import java.util.Date;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collections;
 import java.util.HashSet;

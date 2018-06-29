@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.log;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import org.slf4j.Logger;

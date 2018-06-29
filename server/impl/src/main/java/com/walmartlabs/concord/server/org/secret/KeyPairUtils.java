@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-
 import com.google.common.io.ByteStreams;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;

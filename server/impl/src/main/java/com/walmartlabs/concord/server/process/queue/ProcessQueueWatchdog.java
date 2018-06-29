@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.api.process.ProcessKind;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.ProcessKind;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;

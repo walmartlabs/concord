@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-
 import io.takari.bpm.resource.ClassPathResourceResolver;
 import io.takari.bpm.resource.ResourceResolver;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-
 import com.google.inject.Injector;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.engine.TaskClassHolder;

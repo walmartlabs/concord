@@ -20,7 +20,6 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-
 import javax.inject.Named;
 import javax.inject.Singleton;
 

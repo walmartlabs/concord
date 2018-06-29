@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
-
 import com.google.common.base.Charsets;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import org.junit.Ignore;

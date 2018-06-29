@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 
 public class PolicyEngineHolder {

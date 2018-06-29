@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import org.eclipse.sisu.EagerSingleton;

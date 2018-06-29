@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;

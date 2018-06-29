@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.subject.PrincipalCollection;

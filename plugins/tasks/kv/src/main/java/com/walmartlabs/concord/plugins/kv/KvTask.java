@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.kv;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;

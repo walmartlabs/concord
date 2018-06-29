@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-
 import org.junit.Test;
 
 import java.util.Arrays;

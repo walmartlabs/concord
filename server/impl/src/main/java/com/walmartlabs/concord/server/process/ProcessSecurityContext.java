@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
-import com.walmartlabs.concord.server.api.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;

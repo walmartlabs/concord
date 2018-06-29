@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 

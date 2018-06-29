@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;

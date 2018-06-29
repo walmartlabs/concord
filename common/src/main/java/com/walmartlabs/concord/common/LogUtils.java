@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-
 import org.junit.Test;
 
 import java.io.BufferedReader;

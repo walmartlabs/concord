@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.agent;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.process.ProcessEntry;
-import com.walmartlabs.concord.server.api.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

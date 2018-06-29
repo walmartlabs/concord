@@ -20,7 +20,6 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;

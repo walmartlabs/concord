@@ -20,13 +20,12 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.OrganizationVisibility;
-import com.walmartlabs.concord.server.api.org.team.TeamRole;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.OrganizationVisibility;
+import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;

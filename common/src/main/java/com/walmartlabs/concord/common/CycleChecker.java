@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-
 import java.util.*;
 
 public final class CycleChecker {

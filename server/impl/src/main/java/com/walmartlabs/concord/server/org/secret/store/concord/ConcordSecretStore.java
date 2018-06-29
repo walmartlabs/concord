@@ -20,8 +20,7 @@ package com.walmartlabs.concord.server.org.secret.store.concord;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.org.secret.SecretStoreType;
+import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 

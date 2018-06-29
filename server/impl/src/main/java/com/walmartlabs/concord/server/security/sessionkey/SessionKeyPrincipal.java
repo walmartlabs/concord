@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.sessionkey;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 
 import java.util.UUID;

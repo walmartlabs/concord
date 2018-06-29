@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ExternalEventsApi;
 import com.walmartlabs.concord.client.ProcessEventsApi;

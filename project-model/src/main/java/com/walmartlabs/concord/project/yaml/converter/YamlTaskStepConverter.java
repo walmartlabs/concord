@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;

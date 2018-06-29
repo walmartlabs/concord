@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-
 import org.sonatype.siesta.ExceptionMapperSupport;
 
 import javax.inject.Named;

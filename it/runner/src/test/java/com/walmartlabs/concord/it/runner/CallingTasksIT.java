@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.runner;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;

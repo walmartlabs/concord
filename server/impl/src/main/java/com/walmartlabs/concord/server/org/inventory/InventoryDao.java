@@ -20,13 +20,12 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.api.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.api.org.inventory.InventoryEntry;
-import com.walmartlabs.concord.server.api.org.inventory.InventoryOwner;
-import com.walmartlabs.concord.server.api.org.inventory.InventoryVisibility;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.inventory.InventoryEntry;
+import com.walmartlabs.concord.server.org.inventory.InventoryOwner;
+import com.walmartlabs.concord.server.org.inventory.InventoryVisibility;
 import com.walmartlabs.concord.server.jooq.tables.Inventories;
 import org.jooq.*;
 import org.jooq.impl.DSL;

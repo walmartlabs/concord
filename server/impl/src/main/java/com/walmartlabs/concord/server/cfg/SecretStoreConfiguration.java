@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;

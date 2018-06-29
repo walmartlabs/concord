@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import org.junit.Test;
 

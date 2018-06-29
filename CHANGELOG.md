@@ -9,10 +9,16 @@
 
 ### Changed
 
+- concord-server: merge `api` and `impl` modules;
 - concord-server: GitHub triggers will now correctly use the repo's
 organization and project names to match the events;
 - concord-server: now process state snapshots can only be accessed by
-admins, process owners and "global readers". 
+admins, process owners and "global readers".
+
+### Breaking
+
+- concord-server: removed the old project API endpoint
+`/api/v1/project`.
 
 
 

@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.process.ProcessEventEntry;
-import com.walmartlabs.concord.server.api.process.ProcessEventType;
+import com.walmartlabs.concord.server.process.ProcessEventEntry;
+import com.walmartlabs.concord.server.process.ProcessEventType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 

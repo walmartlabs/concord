@@ -20,7 +20,6 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-
 import org.jooq.Configuration;
 import org.jooq.SQLDialect;
 import org.jooq.conf.RenderNameStyle;

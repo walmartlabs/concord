@@ -20,7 +20,6 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
-
 import java.io.Serializable;
 
 public class MavenRepository implements Serializable {

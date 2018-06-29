@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-
 import com.google.common.base.Throwables;
 
 import javax.inject.Named;

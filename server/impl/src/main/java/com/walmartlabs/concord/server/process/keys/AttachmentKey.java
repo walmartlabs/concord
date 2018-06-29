@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.keys;
  * =====
  */
 
-
 import java.nio.file.Path;
 
 public final class AttachmentKey extends Key<Path> {

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.model;
  * =====
  */
 
-
 import io.takari.parc.Seq;
 
 public class YamlProcessDefinition implements YamlDefinition {

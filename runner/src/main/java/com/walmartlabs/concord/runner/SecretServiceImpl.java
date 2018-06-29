@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-
 import com.google.gson.reflect.TypeToken;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiResponse;

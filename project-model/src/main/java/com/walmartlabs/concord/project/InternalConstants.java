@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.model.ProcessDefinition;
 

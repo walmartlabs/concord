@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
-
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlDockerStep;
 import io.takari.bpm.model.ExpressionType;

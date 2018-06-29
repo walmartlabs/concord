@@ -20,8 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.process.ErrorMessage;
+import com.walmartlabs.concord.server.process.ErrorMessage;
 import org.sonatype.siesta.ExceptionMapperSupport;
 
 import javax.inject.Named;

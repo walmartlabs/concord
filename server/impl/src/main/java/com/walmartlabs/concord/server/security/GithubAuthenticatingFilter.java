@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.security.github.GithubKey;

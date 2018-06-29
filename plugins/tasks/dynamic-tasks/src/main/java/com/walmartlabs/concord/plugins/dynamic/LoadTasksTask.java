@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.dynamic;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.DynamicTaskRegistry;
 import com.walmartlabs.concord.sdk.Task;
 import groovy.lang.GroovyClassLoader;

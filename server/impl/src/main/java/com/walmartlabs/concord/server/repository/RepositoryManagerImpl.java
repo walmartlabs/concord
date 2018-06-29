@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.Striped;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.ProjectLoader;
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;

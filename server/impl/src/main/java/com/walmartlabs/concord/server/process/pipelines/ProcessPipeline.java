@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines;
  * =====
  */
 
-
 import com.google.inject.Injector;
 import com.walmartlabs.concord.server.ansible.InventoryProcessor;
 import com.walmartlabs.concord.server.ansible.PrivateKeyProcessor;

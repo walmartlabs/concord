@@ -20,7 +20,6 @@ package com.walmartlabs.concord.common.secret;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Secret;
 
 public class BinaryDataSecret implements Secret {

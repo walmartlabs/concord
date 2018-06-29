@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ExceptionMapperSupport;
 

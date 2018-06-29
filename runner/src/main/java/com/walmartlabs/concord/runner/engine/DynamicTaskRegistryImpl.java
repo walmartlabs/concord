@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-
 import com.google.inject.Injector;
 import com.walmartlabs.concord.common.DynamicTaskRegistry;
 import com.walmartlabs.concord.sdk.Task;

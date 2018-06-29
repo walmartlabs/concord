@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;

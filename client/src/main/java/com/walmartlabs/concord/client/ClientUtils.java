@@ -20,7 +20,6 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-
 import com.google.gson.Gson;
 import com.squareup.okhttp.*;
 import com.squareup.okhttp.MediaType;

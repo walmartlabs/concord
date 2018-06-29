@@ -20,11 +20,10 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.ConcordFormFields;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.api.process.FormListEntry;
+import com.walmartlabs.concord.server.process.FormListEntry;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;

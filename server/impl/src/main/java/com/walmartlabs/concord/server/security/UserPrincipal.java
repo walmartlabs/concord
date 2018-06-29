@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.user.RoleEntry;
-import com.walmartlabs.concord.server.api.user.UserEntry;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.server.user.RoleEntry;
+import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserType;
 
 import java.io.Serializable;
 import java.util.Set;

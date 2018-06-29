@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.misc;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 

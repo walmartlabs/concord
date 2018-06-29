@@ -20,13 +20,12 @@ package com.walmartlabs.concord.server.org.team;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.org.OrganizationEntry;
-import com.walmartlabs.concord.server.api.org.team.TeamEntry;
-import com.walmartlabs.concord.server.api.org.team.TeamRole;
-import com.walmartlabs.concord.server.api.org.team.TeamUserEntry;
-import com.walmartlabs.concord.server.api.user.UserEntry;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.team.TeamEntry;
+import com.walmartlabs.concord.server.org.team.TeamRole;
+import com.walmartlabs.concord.server.org.team.TeamUserEntry;
+import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;

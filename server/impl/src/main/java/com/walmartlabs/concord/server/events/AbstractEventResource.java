@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.api.org.trigger.TriggerEntry;
+import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.Payload;

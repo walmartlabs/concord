@@ -20,11 +20,10 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.api.process.ProcessKind;
+import com.walmartlabs.concord.server.process.ProcessKind;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 

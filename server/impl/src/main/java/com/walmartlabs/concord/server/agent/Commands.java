@@ -20,8 +20,7 @@ package com.walmartlabs.concord.server.agent;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.CommandType;
+import com.walmartlabs.concord.server.CommandType;
 
 import java.util.HashMap;
 import java.util.Map;

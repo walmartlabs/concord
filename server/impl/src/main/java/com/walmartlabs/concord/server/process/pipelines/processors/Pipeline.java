@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-
 import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.Payload;
 

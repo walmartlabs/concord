@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-
 import com.google.common.io.Files;
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;

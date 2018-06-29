@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.org.landing;
  * =====
  */
 
-
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.api.org.landing.LandingEntry;
-import com.walmartlabs.concord.server.api.org.project.ProjectVisibility;
+import com.walmartlabs.concord.server.org.landing.LandingEntry;
+import com.walmartlabs.concord.server.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.jooq.tables.LandingPage;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Repositories;

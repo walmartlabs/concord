@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.model;
  * =====
  */
 
-
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 

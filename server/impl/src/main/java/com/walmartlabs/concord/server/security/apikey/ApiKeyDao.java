@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
-
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import org.jooq.Configuration;

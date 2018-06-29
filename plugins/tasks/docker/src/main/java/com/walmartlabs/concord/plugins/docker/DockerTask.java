@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.docker;
  * =====
  */
 
-
 import com.walmartlabs.concord.common.DockerProcessBuilder;
 import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.sdk.Constants;

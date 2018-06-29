@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner.engine.el;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.InjectVariable;
 
 import javax.el.BeanELResolver;

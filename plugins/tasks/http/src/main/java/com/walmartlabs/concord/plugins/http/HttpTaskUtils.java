@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import org.apache.http.HttpEntity;

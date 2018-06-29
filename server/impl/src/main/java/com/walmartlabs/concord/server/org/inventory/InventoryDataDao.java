@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;

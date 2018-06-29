@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.user.UserEntry;
-import com.walmartlabs.concord.server.api.user.UserType;
+import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;

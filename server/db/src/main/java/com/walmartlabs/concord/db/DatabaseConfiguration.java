@@ -20,7 +20,6 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-
 import org.jooq.SQLDialect;
 
 import java.io.Serializable;

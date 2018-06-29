@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.smtp;
  * =====
  */
 
-
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;

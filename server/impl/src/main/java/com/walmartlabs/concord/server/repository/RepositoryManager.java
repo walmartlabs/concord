@@ -20,8 +20,7 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-
-import com.walmartlabs.concord.server.api.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryException;
 
 import java.nio.file.Path;

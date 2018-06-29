@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-
 import java.util.Collection;
 import java.util.Map;
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-
 import io.takari.parc.Input;
 
 import java.util.List;

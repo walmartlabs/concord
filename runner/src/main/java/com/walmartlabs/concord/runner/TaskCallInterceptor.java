@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import com.walmartlabs.concord.policyengine.CheckResult;

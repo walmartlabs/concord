@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.tasks.brokendeps;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import org.slf4j.Logger;

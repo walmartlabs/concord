@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
-
 import com.walmartlabs.concord.sdk.Context;
 import org.junit.Test;
 
