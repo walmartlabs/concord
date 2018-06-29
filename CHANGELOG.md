@@ -9,6 +9,7 @@
 
 ### Changed
 
+- concord-client: better handling of server-side validation errors;
 - concord-server: merge `api` and `impl` modules;
 - concord-server: GitHub triggers will now correctly use the repo's
 organization and project names to match the events;

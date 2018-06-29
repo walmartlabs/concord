@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -220,6 +221,27 @@ public class CrudIT extends AbstractServerIT {
         DeleteInventoryQueryResponse dqr = resource.delete(orgName, inventoryName, queryName);
         assertNotNull(dqr);
         assertTrue(dqr.isOk());
+    }
+
+    @Test(timeout = 60000)
+    public void testInvalidQueryName() throws Exception {
+        InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
+
+        String orgName = "Default";
+        String inventoryName = "inventory_" + randomString();
+        String queryName = "queryName_" + randomString();
+
+        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
+        inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));
+
+        // ---
+
+        try {
+            queriesApi.exec(orgName, inventoryName, queryName, null);
+            fail("should fail");
+        } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("not found") && e.getMessage().contains(queryName));
+        }
     }
 
     @Test(timeout = 60000)

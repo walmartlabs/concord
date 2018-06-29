@@ -24,10 +24,7 @@ import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Authorization;
+import io.swagger.annotations.*;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -181,7 +178,7 @@ public class InventoryQueryResource implements Resource {
 
         UUID id = inventoryQueryDao.getId(inventoryId, queryName);
         if (id == null) {
-            throw new ValidationErrorsException("Query nor found: " + queryName);
+            throw new ValidationErrorsException("Query not found: " + queryName);
         }
         return id;
     }

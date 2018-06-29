@@ -77,7 +77,7 @@ public class ApiClient {
     /*
      * Constructor for ApiClient
      */
-    protected ApiClient() {
+    public ApiClient() {
         httpClient = new OkHttpClient();
 
         {{#useGzipFeature}}
@@ -753,10 +753,7 @@ public class ApiClient {
      * @throws ApiException If fail to serialize the given object
      */
     public RequestBody serialize(Object obj, String contentType) throws ApiException {
-        if (obj instanceof String) {
-            // String body parameter support
-            return RequestBody.create(MediaType.parse(contentType), (String) obj);
-        } else if (obj instanceof byte[]) {
+        if (obj instanceof byte[]) {
             // Binary (byte array) body parameter support.
             return RequestBody.create(MediaType.parse(contentType), (byte[]) obj);
         } else if (obj instanceof File) {
@@ -939,32 +936,15 @@ public class ApiClient {
                 return deserialize(response, returnType);
             }
         } else {
-            String msg = response.message();
-
             String respBody = null;
             if (response.body() != null) {
                 try {
                     respBody = response.body().string();
-
-                    String type = response.header("Content-Type");
-                    Map<String, Object> vErrs = null;
-                    if ("application/vnd.siesta-validation-errors-v1+json".equals(type)) {
-                        List<Object> l = (List<Object>) json.deserialize(respBody, List.class);
-                        if (!l.isEmpty()) {
-                            vErrs = (Map<String,Object>) l.get(0);
-                        }
-                    } else if ("application/json".equals(type)) {
-                        vErrs = (Map<String,Object>) json.deserialize(respBody, Map.class);
-                    }
-
-                    if (vErrs != null && vErrs.containsKey("message")) {
-                        msg = (String) vErrs.get("message");
-                    }
                 } catch (IOException e) {
                     throw new ApiException(response.message(), e, response.code(), response.headers().toMultimap());
                 }
             }
-            throw new ApiException(msg, response.code(), response.headers().toMultimap(), respBody);
+            throw new ApiException(response.message(), response.code(), response.headers().toMultimap(), respBody);
         }
     }
 
