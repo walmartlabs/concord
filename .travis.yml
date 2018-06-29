@@ -13,9 +13,8 @@ services:
 cache:
   directories:
   - $HOME/.m2
-  - console/node_modules
+  - console2/node_modules
 
 install: true
 script:
-- pip install --user grpcio-tools
 - mvn install -Pdocker -Pit -B

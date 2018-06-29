@@ -26,14 +26,21 @@ You can build docker images using this commands:
 
 #### Running Docker Images
 
-User Authentication requires an LDAP server.
+User authentication requires an LDAP server.
 
-- Create a LDAP.Properties file as detailed in steps 4 and 5 of the [Open LDAP setup](https://github.com/takari/concord/blob/openldap-setup/docs/openldap/README.md). If you have your own LDAP server setup, you can substitute those details into the file.
-- Set the LDAP_CFG environment variable to the location of the `oldap.properties` file you created.
+- create a `ldap.properties` file as detailed in steps 4 and 5 of
+the [Open LDAP setup](http://concord.walmart.com/docs/getting-started/development.html#using-openldap-for-authentication).
+If you have your own LDAP server setup, you can substitute those
+details into the file.
+- set the `LDAP_CFG` environment variable to the location of the
+`ldap.properties` file you created.
 
-Now the docker containers can be started with the following helper scripts found in the [docker-images](docker-images) directory.
+Now the docker containers can be started with the following helper
+scripts found in the [docker-images](docker-images) directory.
 
-The `run` script will pull docker images from docker hub while `run_local` will start the docker containers you built locally from this project.
+The `run*` scripts will pull docker images from Docker Hub while
+`run_local*` will start the docker containers you built locally from
+this project.
 
 On Linux use
 
@@ -47,14 +54,17 @@ On OSX use these instead
 
 ### Console
 
-Console can be built and ran separately from within the console directory.
+Console can be built and ran separately from within the console
+directory.
 
 ```shell
-cd ./console
+cd ./console2
 npm install # Install dependencies
 ```
 
-In order for the console to successfully startup the proxy property in [console/package.json](console/package.json) needs to point to a running concord server instance.
+In order for the console to successfully startup the proxy property
+in [console/package.json](console/package.json) needs to point to a
+running concord server instance.
 
 ```shell
 npm run start # Starts the Concord Console proxied to concord server
@@ -67,7 +77,7 @@ npm run start # Starts the Concord Console proxied to concord server
 Prerequisites:
 
 - Docker, listening on `tcp://127.0.0.1:2375`;
-- Ansible 2.4.2+ must be installed and available in `$PATH`.
+- Ansible 2.5.0+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
 - Java must be available in `$PATH` as `java`.
 

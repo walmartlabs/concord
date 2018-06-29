@@ -14,6 +14,7 @@
   url=ldaps://honts0102.homeoffice.wal-mart.com:3269
   searchBase=DC=Wal-Mart,DC=com
   principalSearchFilter=(&(sAMAccountName={0})(objectCategory=person))
+  userSearchFilter=(&(|(sAMAccountName={0}*)(displayName={0}*))(objectCategory=person))
   usernameProperty=sAMAccountName
   systemUsername=AD_USERNAME
   systemPassword=AD_PASSWORD
