@@ -51,7 +51,7 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord.agent</groupId>
+                                    <groupId>com.walmartlabs.concord</groupId>
                                     <artifactId>concord-agent</artifactId>
                                     <version>${project.version}</version>
                                     <type>tar.gz</type>
