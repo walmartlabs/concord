@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.smtp;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,21 +20,22 @@ package com.walmartlabs.concord.plugins.smtp;
  * =====
  */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import com.icegreen.greenmail.junit.GreenMailRule;
+import com.icegreen.greenmail.smtp.SmtpServer;
+import com.icegreen.greenmail.util.ServerSetupTest;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.MockContext;
+import org.junit.Rule;
+import org.junit.Test;
 
+import javax.mail.internet.MimeMessage;
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.mail.internet.MimeMessage;
-
-import org.junit.Rule;
-import org.junit.Test;
-
-import com.icegreen.greenmail.junit.GreenMailRule;
-import com.icegreen.greenmail.smtp.SmtpServer;
-import com.icegreen.greenmail.util.ServerSetupTest;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class SmtpTaskTest {
 
@@ -51,10 +52,40 @@ public class SmtpTaskTest {
         MimeMessage[] messages = mail.getReceivedMessages();
         assertEquals(2, messages.length);
         assertEquals("Hello!\r\n", messages[0].getContent());
-        
+
         mail.reset();
     }
-    
+
+    @Test
+    public void testVariables() throws Exception {
+        SmtpServer server = mail.getSmtp();
+
+        Map<String, Object> smtpParams = new HashMap<>();
+        smtpParams.put("host", "localhost");
+        smtpParams.put("port", server.getPort());
+
+        Map<String, Object> mailParams = new HashMap<>();
+        mailParams.put("from", "my@mail.com");
+        mailParams.put("to", "their@mail.com");
+        mailParams.put("template", new File(ClassLoader.getSystemResource("test.mustache").toURI()).toString());
+
+        Map<String, Object> m = new HashMap<>();
+        m.put("name", "Concord");
+        m.put("workDir", "/");
+        m.put("smtp", smtpParams);
+        m.put("mail", mailParams);
+
+        Context ctx = new MockContext(m);
+
+        SmtpTask t = new SmtpTask();
+        t.execute(ctx);
+
+        MimeMessage[] messages = mail.getReceivedMessages();
+        assertEquals("Hello, Concord!\r\n", messages[0].getContent());
+
+        mail.reset();
+    }
+
     @Test
     public void testNoBcc() throws Exception {
         SmtpServer server = mail.getSmtp();
@@ -66,25 +97,25 @@ public class SmtpTaskTest {
         assertEquals(1, messages.length);
         assertEquals("Hello!\r\n", messages[0].getContent());
         assertEquals(1, messages[0].getAllRecipients().length);
-        
+
         mail.reset();
     }
-    
+
     @Test
     public void testNoBccViaCall() throws Exception {
         SmtpServer server = mail.getSmtp();
 
         Map<String, Object> smtpParams = new HashMap<String, Object>();
         Map<String, Object> mailParams = new HashMap<String, Object>();
-        
+
         smtpParams.put("host", "localhost");
         smtpParams.put("port", server.getPort());
-        
+
         mailParams.put("from", "my@mail.com");
         mailParams.put("to", "their@mail.com");
         mailParams.put("subject", "test");
         mailParams.put("message", "Hello!");
-        
+
         SmtpTask t = new SmtpTask();
         t.call(smtpParams, mailParams);
 
@@ -92,7 +123,7 @@ public class SmtpTaskTest {
         assertEquals(1, messages.length);
         assertEquals("Hello!\r\n", messages[0].getContent());
         assertEquals(1, messages[0].getAllRecipients().length);
-        
+
         mail.reset();
     }
 

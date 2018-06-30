@@ -76,18 +76,18 @@ public class SmtpTask implements Task {
     }
 
     private void send(Context ctx, Map<String, Object> smtp, Map<String, Object> mail) throws Exception {
-        String host = assertString(smtp, "host");
-        int port = assertInt(smtp, "port");
+        String host = assertString(smtp, "host", "smtp");
+        int port = assertInt(smtp, "port", "smtp");
 
         mail = applyTemplate(ctx, mail);
 
-        String from = assertString(mail, "from");
-        Collection<String> to = oneOrManyStrings(mail, "to");
-        Collection<String> cc = zeroOrManyStrings(mail, "cc");
-        Collection<String> bcc = zeroOrManyStrings(mail, "bcc");
-        Collection<String> replyTo = zeroOrManyStrings(mail, "replyTo");
+        String from = assertString(mail, "from", "mail");
+        Collection<String> to = oneOrManyStrings(mail, "to", "mail");
+        Collection<String> cc = zeroOrManyStrings(mail, "cc", "mail");
+        Collection<String> bcc = zeroOrManyStrings(mail, "bcc", "mail");
+        Collection<String> replyTo = zeroOrManyStrings(mail, "replyTo", "mail");
         String subject = (String) mail.get("subject");
-        String msg = assertString(mail, "message");
+        String msg = assertString(mail, "message", "mail");
 
         try {
             Email email = new SimpleEmail();
@@ -124,6 +124,10 @@ public class SmtpTask implements Task {
     }
 
     private static Map<String, Object> applyTemplate(Context ctx, Map<String, Object> mailParams) throws Exception {
+        if (mailParams == null) {
+            return null;
+        }
+
         String template = (String) mailParams.get("template");
         if (template == null) {
             return mailParams;
@@ -160,25 +164,32 @@ public class SmtpTask implements Task {
         return m;
     }
 
-    private static String assertString(Map<String, Object> m, String k) {
+    private static String varName(String parent, String k) {
+        if (parent == null) {
+            return k;
+        }
+        return parent + "." + k;
+    }
+
+    private static String assertString(Map<String, Object> m, String k, String parent) {
         String v = m != null ? (String) m.get(k) : null;
         if (v == null) {
-            throw new IllegalArgumentException("'" + k + "' is required");
+            throw new IllegalArgumentException("'" + varName(parent, k) + "' is required");
         }
 
         return v;
     }
 
-    private static int assertInt(Map<String, Object> m, String k) {
+    private static int assertInt(Map<String, Object> m, String k, String parent) {
         Integer v = (Integer) m.get(k);
         if (v == null) {
-            throw new IllegalArgumentException("'" + k + "' is required");
+            throw new IllegalArgumentException("'" + varName(parent, k) + "' is required");
         }
         return v;
     }
 
     @SuppressWarnings("unchecked")
-    private static Collection<String> zeroOrManyStrings(Map<String, Object> m, String k) {
+    private static Collection<String> zeroOrManyStrings(Map<String, Object> m, String k, String parent) {
         Object v = m.get(k);
 
         if (v instanceof String) {
@@ -192,7 +203,7 @@ public class SmtpTask implements Task {
             Collection<?> c = (Collection<?>) v;
             c.forEach(i -> {
                 if (!(i instanceof String)) {
-                    throw new IllegalArgumentException("'" + k + "' - expected a list of string values, got: " + v);
+                    throw new IllegalArgumentException("'" + varName(parent, k) + "' - expected a list of string values, got: " + v);
                 }
             });
             return (Collection<String>) c;
@@ -202,10 +213,10 @@ public class SmtpTask implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private static Collection<String> oneOrManyStrings(Map<String, Object> m, String k) {
-        Collection<String> c = zeroOrManyStrings(m, k);
+    private static Collection<String> oneOrManyStrings(Map<String, Object> m, String k, String parent) {
+        Collection<String> c = zeroOrManyStrings(m, k, parent);
         if (c.isEmpty()) {
-            throw new IllegalArgumentException("'" + k + "' - expected a single string value or a list of strings");
+            throw new IllegalArgumentException("'" + varName(parent, k) + "' - expected a single string value or a list of strings");
         }
         return c;
     }
