@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,9 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.google.inject.AbstractModule;
-import com.walmartlabs.concord.db.CommonDataSourceProvider;
-import com.walmartlabs.concord.db.JooqConfigurationProvider;
-import org.jooq.Configuration;
+public interface BackgroundTask {
 
-import javax.sql.DataSource;
+    void start();
 
-public class DatabaseModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(DataSource.class).toProvider(CommonDataSourceProvider.class);
-        bind(Configuration.class).toProvider(JooqConfigurationProvider.class);
-    }
+    void stop();
 }

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.events;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
-import org.eclipse.sisu.EagerSingleton;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record4;
@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -40,8 +41,8 @@ import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORI
 import static org.jooq.impl.DSL.value;
 
 @Named
-@EagerSingleton
-public class GithubWebhookService {
+@Singleton
+public class GithubWebhookService implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(GithubWebhookService.class);
 
@@ -49,6 +50,9 @@ public class GithubWebhookService {
 
     private final GithubConfiguration cfg;
     private final GithubWebhookManager webhookManager;
+    private final RefresherDao refresherDao;
+
+    private Thread worker;
 
     @Inject
     public GithubWebhookService(GithubConfiguration cfg,
@@ -56,24 +60,31 @@ public class GithubWebhookService {
                                 RefresherDao refresherDao) {
         this.cfg = cfg;
         this.webhookManager = webhookManager;
-
-        init(refresherDao);
+        this.refresherDao = refresherDao;
     }
 
-    private void init(RefresherDao dao) {
+    @Override
+    public void start() {
         if (!this.cfg.isEnabled() || this.cfg.getRefreshInterval() <= 0) {
             log.info("init -> the webhook refresh is disabled");
             return;
         }
 
-        HookRefresher w = new HookRefresher(dao);
+        HookRefresher w = new HookRefresher(refresherDao);
 
-        Thread t = new Thread(w, "webhook-refresher");
-        t.start();
+        this.worker = new Thread(w, "webhook-refresher");
+        this.worker.start();
+    }
+
+    @Override
+    public void stop() {
+        if (this.worker != null) {
+            this.worker.interrupt();
+        }
     }
 
     public boolean register(UUID projectId, String repoName, String repoUrl) {
-        if(!needWebhookForRepository(repoUrl)) {
+        if (!needWebhookForRepository(repoUrl)) {
             log.info("register ['{}', '{}', '{}'] -> not a GitHub URL", projectId, repoName, repoUrl);
             return false;
         }
@@ -89,7 +100,7 @@ public class GithubWebhookService {
     }
 
     private void unregister(UUID projectId, String repoName, String repoUrl) {
-        if(!needWebhookForRepository(repoUrl)) {
+        if (!needWebhookForRepository(repoUrl)) {
             log.info("unregister ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoName, repoUrl);
             return;
         }
@@ -167,10 +178,10 @@ public class GithubWebhookService {
 
         public void update(UUID repoId, boolean hasWebHook) {
             tx(tx ->
-                tx.update(REPOSITORIES)
-                        .set(REPOSITORIES.HAS_WEBHOOK, value(hasWebHook))
-                        .where(REPOSITORIES.REPO_ID.eq(repoId))
-                        .execute());
+                    tx.update(REPOSITORIES)
+                            .set(REPOSITORIES.HAS_WEBHOOK, value(hasWebHook))
+                            .where(REPOSITORIES.REPO_ID.eq(repoId))
+                            .execute());
         }
 
         private static Entity toEntry(Record4<UUID, UUID, String, String> r) {

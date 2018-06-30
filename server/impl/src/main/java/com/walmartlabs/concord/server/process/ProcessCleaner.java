@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,8 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
-import org.eclipse.sisu.EagerSingleton;
 import org.jooq.Configuration;
 import org.jooq.Record1;
 import org.jooq.SelectConditionStep;
@@ -33,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -43,8 +43,8 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 
 @Named
-@EagerSingleton
-public class ProcessCleaner {
+@Singleton
+public class ProcessCleaner implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCleaner.class);
 
@@ -57,16 +57,30 @@ public class ProcessCleaner {
             ProcessStatus.RESUMING.toString()
     };
 
+    private final CleanerDao cleanerDao;
+    private final ProcessStateConfiguration cfg;
+
+    private Thread worker;
+
     @Inject
     public ProcessCleaner(CleanerDao cleanerDao, ProcessStateConfiguration cfg) {
-        init(cleanerDao, cfg.getMaxStateAge());
+        this.cleanerDao = cleanerDao;
+        this.cfg = cfg;
     }
 
-    private void init(CleanerDao cleanerDao, long maxAge) {
-        Worker w = new Worker(cleanerDao, maxAge);
+    @Override
+    public void start() {
+        Worker w = new Worker(cleanerDao, cfg.getMaxStateAge());
 
-        Thread t = new Thread(w, "process-state-cleaner");
-        t.start();
+        this.worker = new Thread(w, "process-state-cleaner");
+        this.worker.start();
+    }
+
+    @Override
+    public void stop() {
+        if (this.worker != null) {
+            this.worker.interrupt();
+        }
     }
 
     private static final class Worker implements Runnable {

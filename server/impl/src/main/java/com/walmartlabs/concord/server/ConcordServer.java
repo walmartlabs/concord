@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
 import com.walmartlabs.concord.server.security.ConcordAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
@@ -32,6 +34,7 @@ import com.walmartlabs.ollie.guice.OllieServerBuilder;
 import org.eclipse.jetty.servlet.DefaultServlet;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -39,6 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ConcordServer {
 
@@ -47,6 +51,7 @@ public class ConcordServer {
                 .port(8001)
                 .apiPatterns("/api/*", "/events/github/*")
                 .name("concord-server")
+                .module(new ServerModule())
                 .packageToScan("com.walmartlabs.concord.server")
                 .realm(ApiKeyRealm.class)
                 .realm(SessionKeyRealm.class)
@@ -58,6 +63,7 @@ public class ConcordServer {
                 .filterChain("/events/github/*", GithubAuthenticatingFilter.class)
                 .serve("/forms/*").with(DefaultServlet.class, formsServletParams())
                 .serve("/logs/*").with(LogServlet.class) // backward compatibility
+                .serve("/concord/*").with(new ServiceInitServlet()) // only to start the background services
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
                 .sessionsEnabled(true);
@@ -93,6 +99,35 @@ public class ConcordServer {
             String instanceId = uri.substring(i + 1, len - 4);
             RequestDispatcher dispatcher = req.getRequestDispatcher("/api/v1/process/" + instanceId + "/log");
             dispatcher.forward(req, resp);
+        }
+    }
+
+    public static class ServiceInitServlet extends HttpServlet {
+
+        @Inject
+        Set<BackgroundTask> tasks;
+
+        @Override
+        public void init() throws ServletException {
+            super.init();
+
+            ServletContext ctx = getServletContext();
+            Injector injector = (Injector) ctx.getAttribute(Injector.class.getName());
+
+            injector.injectMembers(this);
+
+            if (tasks != null) {
+                tasks.forEach(BackgroundTask::start);
+            }
+        }
+
+        @Override
+        public void destroy() {
+            if (tasks != null) {
+                tasks.forEach(BackgroundTask::stop);
+            }
+
+            super.destroy();
         }
     }
 }

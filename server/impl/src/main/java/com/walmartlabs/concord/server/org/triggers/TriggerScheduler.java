@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.triggers;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,23 +21,24 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadBuilder;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
-import org.eclipse.sisu.EagerSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import javax.xml.bind.DatatypeConverter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Named
-@EagerSingleton
-public class TriggerScheduler {
+@Singleton
+public class TriggerScheduler implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerScheduler.class);
 
@@ -46,11 +47,34 @@ public class TriggerScheduler {
 
     private static final long ERROR_DELAY = TimeUnit.MINUTES.toMillis(5);
 
+    private final TriggerScheduleDao scheduleDao;
+    private final ProcessManager processManager;
+    private final ProcessSecurityContext processSecurityContext;
+
+    private Thread worker;
+
     @Inject
-    public TriggerScheduler(TriggerScheduleDao schedulerDao, ProcessManager processManager,
+    public TriggerScheduler(TriggerScheduleDao scheduleDao,
+                            ProcessManager processManager,
                             ProcessSecurityContext processSecurityContext) {
-        new Thread(new SchedulerWorker(schedulerDao, processManager, processSecurityContext),
-                "cron-trigger-worker").start();
+
+        this.scheduleDao = scheduleDao;
+        this.processManager = processManager;
+        this.processSecurityContext = processSecurityContext;
+    }
+
+    @Override
+    public void start() {
+        this.worker = new Thread(new SchedulerWorker(scheduleDao, processManager, processSecurityContext),
+                "cron-trigger-worker");
+        this.worker.start();
+    }
+
+    @Override
+    public void stop() {
+        if (this.worker != null) {
+            this.worker.interrupt();
+        }
     }
 
     private static final class SchedulerWorker implements Runnable {

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.agent;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
-import org.eclipse.sisu.EagerSingleton;
 import org.jooq.Configuration;
 import org.jooq.Field;
 import org.slf4j.Logger;
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.sql.Timestamp;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
@@ -37,8 +38,8 @@ import static org.jooq.impl.DSL.currentTimestamp;
 import static org.jooq.impl.DSL.field;
 
 @Named
-@EagerSingleton
-public class AgentCommandWatchdog {
+@Singleton
+public class AgentCommandWatchdog implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(AgentCommandWatchdog.class);
 
@@ -47,15 +48,25 @@ public class AgentCommandWatchdog {
 
     private final WatchdogDao watchdogDao;
 
+    private Thread worker;
+
     @Inject
     public AgentCommandWatchdog(WatchdogDao watchdogDao) {
         this.watchdogDao = watchdogDao;
-        init();
     }
 
-    private void init() {
-        new Thread(new Worker(POLL_DELAY, ERROR_DELAY, watchdogDao),
-                "stalled-agent-commands-worker").start();
+    @Override
+    public void start() {
+        this.worker = new Thread(new Worker(POLL_DELAY, ERROR_DELAY, watchdogDao),
+                "stalled-agent-commands-worker");
+        this.worker.start();
+    }
+
+    @Override
+    public void stop() {
+        if (this.worker != null) {
+            this.worker.interrupt();
+        }
     }
 
     private static final class Worker implements Runnable {

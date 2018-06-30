@@ -21,13 +21,11 @@ package com.walmartlabs.concord.server.metrics;
  */
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 
 import javax.inject.Named;
 
 @Named
-@Singleton
 public class MetricsModule extends AbstractModule {
 
     @Override

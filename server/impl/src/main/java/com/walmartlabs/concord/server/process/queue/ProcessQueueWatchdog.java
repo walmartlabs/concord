@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,23 +22,20 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.process.ProcessKind;
-import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadManager;
-import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.state.ProcessMetadataManager;
-import org.eclipse.sisu.EagerSingleton;
 import org.jooq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -51,8 +48,8 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_ST
 import static org.jooq.impl.DSL.*;
 
 @Named
-@EagerSingleton
-public class ProcessQueueWatchdog {
+@Singleton
+public class ProcessQueueWatchdog implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessQueueWatchdog.class);
 
@@ -110,6 +107,10 @@ public class ProcessQueueWatchdog {
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
 
+    private Thread processHandlersWorker;
+    private Thread processStalledWorker;
+    private Thread processStartFailuresWorker;
+
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
                                 ProcessQueueDao queueDao,
@@ -124,21 +125,41 @@ public class ProcessQueueWatchdog {
         this.watchdogDao = watchdogDao;
         this.payloadManager = payloadManager;
         this.processManager = processManager;
-
-        init();
     }
 
-    private void init() {
-        new Thread(new Worker(HANDLERS_POLL_DELAY, HANDLERS_ERROR_DELAY, new ProcessHandlersWorker()),
-                "process-handlers-worker").start();
+    @Override
+    public void start() {
+        this.processHandlersWorker = new Thread(new Worker(HANDLERS_POLL_DELAY, HANDLERS_ERROR_DELAY,
+                new ProcessHandlersWorker()),
+                "process-handlers-worker");
+        this.processHandlersWorker.start();
 
-        new Thread(new Worker(STALLED_POLL_DELAY, STALLED_ERROR_DELAY, new ProcessStalledWorker()),
-                "process-stalled-worker").start();
+        this.processStalledWorker = new Thread(new Worker(STALLED_POLL_DELAY, STALLED_ERROR_DELAY,
+                new ProcessStalledWorker()),
+                "process-stalled-worker");
+        this.processStalledWorker.start();
 
-        new Thread(new Worker(FAILED_TO_START_POLL_DELAY, FAILED_TO_START_ERROR_DELAY, new ProcessStartFailuresWorker()),
-                "process-start-failures-worker").start();
+        this.processStartFailuresWorker = new Thread(new Worker(FAILED_TO_START_POLL_DELAY, FAILED_TO_START_ERROR_DELAY,
+                new ProcessStartFailuresWorker()),
+                "process-start-failures-worker");
+        this.processStartFailuresWorker.start();
 
         log.info("init -> watchdog started");
+    }
+
+    @Override
+    public void stop() {
+        if (this.processHandlersWorker != null) {
+            this.processHandlersWorker.interrupt();
+        }
+
+        if (this.processStalledWorker != null) {
+            this.processStalledWorker.interrupt();
+        }
+
+        if (this.processStartFailuresWorker != null) {
+            this.processStartFailuresWorker.interrupt();
+        }
     }
 
     private static final class Worker implements Runnable {
