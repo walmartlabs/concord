@@ -21,29 +21,29 @@ package com.walmartlabs.concord.plugins.http;
  */
 
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.walmartlabs.concord.sdk.Context;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 public abstract class AbstractHttpTaskTest {
     @Rule
-    public WireMockRule rule = new WireMockRule(WireMockConfiguration.options().notifier(new ConsoleNotifier(true)));
+    public WireMockRule rule = new WireMockRule(wireMockConfig()
+            .dynamicPort()
+            .notifier(new ConsoleNotifier(true)));
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder(new File(System.getProperty("user.dir") + "/src/test/resources/__files"));
@@ -117,7 +117,6 @@ public abstract class AbstractHttpTaskTest {
 
     protected void stubForPostRequest() {
         rule.stubFor(post(urlEqualTo("/post"))
-                //.withRequestBody(matchingJsonPath("$.request"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
@@ -190,5 +189,4 @@ public abstract class AbstractHttpTaskTest {
                         .withBody("Error string"))
         );
     }
-
 }
