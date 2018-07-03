@@ -71,7 +71,7 @@ interface HasError {
 
 export const makeResponseReducer = <R, A extends R & Action & HasError>(
     responseType: {},
-    resetType: {}
+    resetType?: {}
 ): Reducer<R | null> => (state = null, action: A) => {
     switch (action.type) {
         case responseType:

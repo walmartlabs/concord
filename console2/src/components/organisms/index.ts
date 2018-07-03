@@ -45,6 +45,7 @@ export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as PublicKeyPopup } from './PublicKeyPopup';
 export { default as RedirectButton } from './RedirectButton';
 export { default as RefreshRepositoryPopup } from './RefreshRepositoryPopup';
+export { default as RepositoryTriggersPopup } from './RepositoryTriggersPopup';
 export { default as SecretDropdown } from './SecretDropdown';
 export { default as SecretInfo } from './SecretInfo';
 export { default as SecretList } from './SecretList';

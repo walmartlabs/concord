@@ -20,26 +20,28 @@
 
 import { all, fork } from 'redux-saga/effects';
 
+import { sagas as Forms } from '../state/data/forms';
 import { sagas as Login } from '../components/organisms/Login';
 import { sagas as Organizations } from '../state/data/orgs';
 import { sagas as Processes } from '../state/data/processes';
-import { sagas as Forms } from '../state/data/forms';
 import { sagas as Projects } from '../state/data/projects';
-import { sagas as Secrets } from '../state/data/secrets';
-import { sagas as Teams } from '../state/data/teams';
 import { sagas as Search } from '../state/data/search';
+import { sagas as Secrets } from '../state/data/secrets';
 import { sagas as Session } from '../state/session';
+import { sagas as Teams } from '../state/data/teams';
+import { sagas as Triggers } from '../state/data/triggers';
 
 export default function* root() {
     yield all([
-        fork(Session),
+        fork(Forms),
         fork(Login),
         fork(Organizations),
-        fork(Projects),
-        fork(Secrets),
-        fork(Teams),
-        fork(Search),
         fork(Processes),
-        fork(Forms)
+        fork(Projects),
+        fork(Search),
+        fork(Secrets),
+        fork(Session),
+        fork(Teams),
+        fork(Triggers)
     ]);
 }

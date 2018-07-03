@@ -21,40 +21,43 @@
 import { routerReducer, RouterState } from 'react-router-redux';
 import { combineReducers, Reducer } from 'redux';
 
+import { reducers as formsReducers, State as FormsState } from '../state/data/forms';
 import { reducers as loginReducers, State as LoginState } from '../components/organisms/Login';
 import { reducers as orgsReducer, State as OrgsState } from '../state/data/orgs';
 import { reducers as processesReducers, State as ProcessesState } from '../state/data/processes';
 import { reducers as projectsReducer, State as ProjectsState } from '../state/data/projects';
-import { reducers as secretsReducer, State as SecretsState } from '../state/data/secrets';
-import { reducers as formsReducers, State as FormsState } from '../state/data/forms';
-import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
 import { reducers as searchReducers, State as SearchState } from '../state/data/search';
+import { reducers as secretsReducer, State as SecretsState } from '../state/data/secrets';
 import { reducers as sessionReducers, State as SessionState } from '../state/session';
+import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
+import { reducers as triggersReducer, State as TriggersState } from '../state/data/triggers';
 
 export interface State {
-    session: SessionState;
+    forms: FormsState;
     login: LoginState;
     orgs: OrgsState;
-    projects: ProjectsState;
-    secrets: SecretsState;
     processes: ProcessesState;
-    teams: TeamsState;
-    forms: FormsState;
-    search: SearchState;
+    projects: ProjectsState;
     router: RouterState;
+    search: SearchState;
+    secrets: SecretsState;
+    session: SessionState;
+    teams: TeamsState;
+    triggers: TriggersState;
 }
 
 const reducers: Reducer<State> = combineReducers({
-    session: sessionReducers,
+    forms: formsReducers,
     login: loginReducers,
-    router: routerReducer,
     orgs: orgsReducer,
-    projects: projectsReducer,
-    secrets: secretsReducer,
     processes: processesReducers,
-    teams: teamReducers,
+    projects: projectsReducer,
+    router: routerReducer,
     search: searchReducers,
-    forms: formsReducers
+    secrets: secretsReducer,
+    session: sessionReducers,
+    teams: teamReducers,
+    triggers: triggersReducer
 });
 
 export default reducers;

@@ -42,6 +42,14 @@ export interface EditRepositoryEntry {
     secretId: string;
 }
 
+export interface TriggerEntry {
+    id: ConcordId;
+    eventSource: ConcordKey;
+    entryPoint: string;
+    arguments?: object;
+    conditions?: object;
+}
+
 export const createOrUpdate = (
     orgName: ConcordKey,
     projectName: ConcordKey,
@@ -84,3 +92,10 @@ export const refreshRepository = (
         opts
     );
 };
+
+export const listTriggers = (
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    repoName: ConcordKey
+): Promise<TriggerEntry[]> =>
+    fetchJson(`/api/v1/org/${orgName}/project/${projectName}/repo/${repoName}/trigger`);
