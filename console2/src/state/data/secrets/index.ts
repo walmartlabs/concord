@@ -18,16 +18,20 @@
  * =====
  */
 
+import { push as pushHistory } from 'react-router-redux';
 import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 
-import { ConcordKey } from '../../../api/common';
+import { ConcordId, ConcordKey } from '../../../api/common';
 import {
     create as apiCreate,
     deleteSecret as apiDelete,
     get as apiGet,
     list as apiList,
-    NewSecretEntry
+    NewSecretEntry,
+    renameSecret as apiRenameSecret,
+    updateSecretVisibility as apiUpdateSecretVisibility,
+    SecretVisibility
 } from '../../../api/org/secret';
 import {
     genericResult,
@@ -45,9 +49,14 @@ import {
     GetSecretRequest,
     ListSecretsRequest,
     ListSecretsState,
+    RenameSecretRequest,
+    RenameSecretState,
     SecretDataResponse,
     Secrets,
-    State
+    State,
+    UpdateSecretVisibilityResponse,
+    UpdateSecretVisiblityRequest,
+    UpdateSecretVisiblityState
 } from './types';
 
 export { State };
@@ -64,6 +73,12 @@ const actionTypes = {
 
     DELETE_SECRET_REQUEST: `${NAMESPACE}/delete/request`,
     DELETE_SECRET_RESPONSE: `${NAMESPACE}/delete/response`,
+
+    RENAME_SECRET_REQUEST: `${NAMESPACE}/rename/request`,
+    RENAME_SECRET_RESPONSE: `${NAMESPACE}/rename/response`,
+
+    UPDATE_SECRET_VISIBLITY_REQUEST: `${NAMESPACE}/visibility/request`,
+    UPDATE_SECRET_VISIBLITY_RESPONSE: `${NAMESPACE}/visibility/response`,
 
     RESET_SECRET: `${NAMESPACE}/reset`
 };
@@ -92,27 +107,67 @@ export const actions = {
         secretName
     }),
 
+    renameSecret: (
+        orgName: ConcordKey,
+        secretId: ConcordId,
+        secretName: ConcordKey
+    ): RenameSecretRequest => ({
+        type: actionTypes.RENAME_SECRET_REQUEST,
+        orgName,
+        secretId,
+        secretName
+    }),
+
+    updateSecretVisibility: (
+        orgName: ConcordKey,
+        secretId: ConcordId,
+        visibility: SecretVisibility
+    ): UpdateSecretVisiblityRequest => ({
+        type: actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST,
+        orgName,
+        secretId,
+        visibility
+    }),
+
     reset: (): Action => ({
         type: actionTypes.RESET_SECRET
     })
 };
 
-const secretById: Reducer<Secrets> = (state = {}, { type, error, items }: SecretDataResponse) => {
-    switch (type) {
-        case actionTypes.LIST_SECRETS_REQUEST:
+const secretById: Reducer<Secrets> = (
+    state = {},
+    action: SecretDataResponse | UpdateSecretVisibilityResponse
+) => {
+    switch (action.type) {
+        case actionTypes.LIST_SECRETS_REQUEST: {
             return {};
-        case actionTypes.SECRET_DATA_RESPONSE:
-            if (error || !items) {
+        }
+        case actionTypes.SECRET_DATA_RESPONSE: {
+            const a = action as SecretDataResponse;
+
+            if (a.error || !a.items) {
                 return {};
             }
 
             const result = {};
-            items.forEach((o) => {
+            a.items.forEach((o) => {
                 result[o.id] = o;
             });
             return result;
-        default:
+        }
+        case actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE: {
+            const a = action as UpdateSecretVisibilityResponse;
+
+            if (a.error) {
+                return state;
+            }
+
+            state[a.secretId].visibility = a.visibility;
             return state;
+        }
+        default: {
+            return state;
+        }
     }
 };
 
@@ -149,12 +204,41 @@ const deleteSecretReducers = combineReducers<DeleteSecretState>({
     response: makeResponseReducer(actionTypes.DELETE_SECRET_RESPONSE, actionTypes.RESET_SECRET)
 });
 
+const renameSecretReducers = combineReducers<RenameSecretState>({
+    running: makeLoadingReducer(
+        [actionTypes.RENAME_SECRET_REQUEST],
+        [actionTypes.RENAME_SECRET_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.RENAME_SECRET_REQUEST],
+        [actionTypes.RENAME_SECRET_RESPONSE]
+    ),
+    response: makeResponseReducer(actionTypes.RENAME_SECRET_RESPONSE, actionTypes.RESET_SECRET)
+});
+
+const updateSecretVisibilityReducers = combineReducers<UpdateSecretVisiblityState>({
+    running: makeLoadingReducer(
+        [actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST],
+        [actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST],
+        [actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE,
+        actionTypes.RESET_SECRET
+    )
+});
+
 export const reducers = combineReducers<State>({
     secretById, // TODO use makeEntityByIdReducer
 
     listSecrets: listSecretsReducer,
     createSecret: createSecretReducer,
-    deleteSecret: deleteSecretReducers
+    deleteSecret: deleteSecretReducers,
+    renameSecret: renameSecretReducers,
+    updateSecretVisibility: updateSecretVisibilityReducers
 });
 
 export const selectors = {
@@ -213,8 +297,34 @@ function* onDelete({ orgName, secretName }: DeleteSecretRequest) {
     try {
         const response = yield call(apiDelete, orgName, secretName);
         yield put(genericResult(actionTypes.DELETE_SECRET_RESPONSE, response));
+
+        yield put(pushHistory(`/org/${orgName}/secret/`));
     } catch (e) {
         yield handleErrors(actionTypes.DELETE_SECRET_RESPONSE, e);
+    }
+}
+
+function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
+    try {
+        const response = yield call(apiRenameSecret, orgName, secretId, secretName);
+        yield put(genericResult(actionTypes.RENAME_SECRET_RESPONSE, response));
+
+        yield put(pushHistory(`/org/${orgName}/secret/`));
+    } catch (e) {
+        yield handleErrors(actionTypes.RENAME_SECRET_RESPONSE, e);
+    }
+}
+
+function* onUpdateVisibility({ orgName, secretId, visibility }: UpdateSecretVisiblityRequest) {
+    try {
+        yield call(apiUpdateSecretVisibility, orgName, secretId, visibility);
+        yield put({
+            type: actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE,
+            secretId,
+            visibility
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE, e);
     }
 }
 
@@ -223,6 +333,8 @@ export const sagas = function*() {
         takeLatest(actionTypes.LIST_SECRETS_REQUEST, onList),
         takeLatest(actionTypes.GET_SECRET_REQUEST, onGet),
         takeLatest(actionTypes.CREATE_SECRET_REQUEST, onCreate),
-        takeLatest(actionTypes.DELETE_SECRET_REQUEST, onDelete)
+        takeLatest(actionTypes.DELETE_SECRET_REQUEST, onDelete),
+        takeLatest(actionTypes.RENAME_SECRET_REQUEST, onRename),
+        takeLatest(actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST, onUpdateVisibility)
     ]);
 };

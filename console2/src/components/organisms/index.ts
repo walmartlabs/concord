@@ -20,7 +20,6 @@
 
 export { default as CancelProcessPopup } from './CancelProcessPopup';
 export { default as DeleteRepositoryPopup } from './DeleteRepositoryPopup';
-export { default as DeleteSecretPopup } from './DeleteSecretPopup';
 export { default as EditRepositoryActivity } from './EditRepositoryActivity';
 export { default as FindUserField } from './FindUserField';
 export { default as Login } from './Login';
@@ -46,10 +45,13 @@ export { default as PublicKeyPopup } from './PublicKeyPopup';
 export { default as RedirectButton } from './RedirectButton';
 export { default as RefreshRepositoryPopup } from './RefreshRepositoryPopup';
 export { default as RepositoryTriggersPopup } from './RepositoryTriggersPopup';
+export { default as SecretActivity } from './SecretActivity';
+export { default as SecretDeleteActivity } from './SecretDeleteActivity';
 export { default as SecretDropdown } from './SecretDropdown';
-export { default as SecretInfo } from './SecretInfo';
 export { default as SecretList } from './SecretList';
+export { default as SecretRenameActivity } from './SecretRenameActivity';
 export { default as SecretStoreDropdown } from './SecretStoreDropdown';
+export { default as SecretVisibilityActivity } from './SecretVisibilityActivity';
 export { default as ServerVersion } from './ServerVersion';
 export { default as StartRepositoryPopup } from './StartRepositoryPopup';
 export { default as TeamActivity } from './TeamActivity';

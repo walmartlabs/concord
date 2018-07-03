@@ -19,25 +19,25 @@
  */
 
 import * as React from 'react';
-import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
+import { Breadcrumb } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
 import { BreadcrumbSegment } from '../../molecules';
-import { SecretInfo } from '../../organisms';
-import { NotFoundPage } from '../index';
+import { SecretActivity } from '../../organisms';
+import { TabLink } from '../../organisms/SecretActivity';
 
 interface RouteProps {
     orgName: ConcordKey;
     secretName: ConcordKey;
 }
 
-type TabLink = 'info' | null;
-
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/info')) {
         return 'info';
+    } else if (s.endsWith('/settings')) {
+        return 'settings';
     }
 
     return null;
@@ -46,7 +46,6 @@ const pathToTab = (s: string): TabLink => {
 class SecretPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
     render() {
         const { orgName, secretName } = this.props.match.params;
-        const { url } = this.props.match;
 
         const activeTab = pathToTab(this.props.location.pathname);
 
@@ -60,26 +59,7 @@ class SecretPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
                     <Breadcrumb.Section active={true}>{secretName}</Breadcrumb.Section>
                 </BreadcrumbSegment>
 
-                <Route path={`${url}/^(repository)`}>
-                    <Menu tabular={true}>
-                        <Menu.Item active={activeTab === 'info'}>
-                            <Icon name="file" />
-                            <Link to={`/org/${orgName}/secret/${secretName}/info`}>Info</Link>
-                        </Menu.Item>
-                    </Menu>
-                </Route>
-
-                <Switch>
-                    <Route path={url} exact={true}>
-                        <Redirect to={`${url}/info`} />
-                    </Route>
-
-                    <Route path={`${url}/info`} exact={true}>
-                        <SecretInfo orgName={orgName} secretName={secretName} />
-                    </Route>
-
-                    <Route component={NotFoundPage} />
-                </Switch>
+                <SecretActivity orgName={orgName} secretName={secretName} activeTab={activeTab} />
             </>
         );
     }

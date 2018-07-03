@@ -154,17 +154,15 @@ class ProjectActivity extends React.PureComponent<Props> {
                 <Menu tabular={true}>
                     <Menu.Item active={activeTab === 'process'}>
                         <Icon name="tasks" />
-                        <Link to={`/org/${orgName}/project/${projectName}/process`}>Processes</Link>
+                        <Link to={`${baseUrl}/process`}>Processes</Link>
                     </Menu.Item>
                     <Menu.Item active={activeTab === 'repository'}>
                         <Icon name="code" />
-                        <Link to={`/org/${orgName}/project/${projectName}/repository`}>
-                            Repositories
-                        </Link>
+                        <Link to={`${baseUrl}/repository`}>Repositories</Link>
                     </Menu.Item>
                     <Menu.Item active={activeTab === 'settings'}>
                         <Icon name="setting" />
-                        <Link to={`/org/${orgName}/project/${projectName}/settings`}>Settings</Link>
+                        <Link to={`${baseUrl}/settings`}>Settings</Link>
                     </Menu.Item>
                 </Menu>
 

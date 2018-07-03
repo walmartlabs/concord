@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: ability to rename secrets and update their
+visibility;
 - concord-console: the list of registered triggers for a repository.
 
 

@@ -644,8 +644,10 @@ public class TeamRbacIT extends AbstractServerIT {
         // ---
 
         String secretName = "secret_" + randomString();
-        addPlainSecret(orgName, secretName, false, null, new byte[]{0, 1, 2});
-        secretResource.update(orgName, secretName, new SecretUpdateRequest().setVisibility(SecretUpdateRequest.VisibilityEnum.PRIVATE));
+        SecretOperationResponse sor = addPlainSecret(orgName, secretName, false, null, new byte[]{0, 1, 2});
+        secretResource.update(orgName, secretName, new SecretUpdateRequest()
+                .setId(sor.getId())
+                .setVisibility(SecretUpdateRequest.VisibilityEnum.PRIVATE));
 
         // ---
 

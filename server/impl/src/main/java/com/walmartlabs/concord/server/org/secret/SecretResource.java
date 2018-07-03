@@ -131,7 +131,7 @@ public class SecretResource implements Resource {
     }
 
     @POST
-    @ApiOperation("Updates an existing secret")
+    @ApiOperation("Updates an existing secret") // weird URLs as a workaround for swagger-maven-plugin issue
     @Path("/{orgName}/secret/{secretName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -140,12 +140,15 @@ public class SecretResource implements Resource {
                                          @ApiParam @PathParam("secretName") @ConcordKey String secretName,
                                          @ApiParam @Valid SecretUpdateRequest req) {
 
+        if (req.getId() == null) {
+            throw new ValidationErrorsException("Secret ID is required");
+        }
+
         if (req.getName() == null && req.getVisibility() == null) {
             throw new ValidationErrorsException("Nothing to update");
         }
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        secretManager.update(org.getId(), secretName, req.getName(), req.getVisibility());
+        secretManager.update(req.getId(), req.getName(), req.getVisibility());
 
         return new GenericOperationResult(OperationResult.UPDATED);
     }

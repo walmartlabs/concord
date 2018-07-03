@@ -20,8 +20,8 @@
 
 import { Action } from 'redux';
 
-import { ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
-import { NewSecretEntry, SecretEntry } from '../../../api/org/secret';
+import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
+import { NewSecretEntry, SecretEntry, SecretVisibility } from '../../../api/org/secret';
 import { RequestState } from '../common';
 
 export interface GetSecretRequest extends Action {
@@ -55,6 +55,24 @@ export interface DeleteSecretRequest extends Action {
     secretName: ConcordKey;
 }
 
+export interface RenameSecretRequest extends Action {
+    orgName: ConcordKey;
+    secretId: ConcordId;
+    secretName: ConcordKey;
+}
+
+export interface UpdateSecretVisiblityRequest extends Action {
+    orgName: ConcordKey;
+    secretId: ConcordId;
+    visibility: SecretVisibility;
+}
+
+export interface UpdateSecretVisibilityResponse extends Action {
+    error?: RequestError;
+    secretId: ConcordId;
+    visibility: SecretVisibility;
+}
+
 export interface Secrets {
     [id: string]: SecretEntry;
 }
@@ -62,6 +80,8 @@ export interface Secrets {
 export type ListSecretsState = RequestState<{}>;
 export type CreateSecretState = RequestState<CreateSecretResponse>;
 export type DeleteSecretState = RequestState<GenericOperationResult>;
+export type RenameSecretState = RequestState<GenericOperationResult>;
+export type UpdateSecretVisiblityState = RequestState<GenericOperationResult>;
 
 export interface State {
     secretById: Secrets;
@@ -69,4 +89,6 @@ export interface State {
     listSecrets: ListSecretsState;
     createSecret: CreateSecretState;
     deleteSecret: DeleteSecretState;
+    renameSecret: RenameSecretState;
+    updateSecretVisibility: UpdateSecretVisiblityState;
 }

@@ -31,21 +31,28 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SecretUpdateRequest implements Serializable {
 
+    private final UUID id;
+
     @ConcordKey
     private final String name;
 
     private final SecretVisibility visibility;
 
-    public SecretUpdateRequest(SecretVisibility visibility) {
-        this(null, visibility);
+    public SecretUpdateRequest(UUID id, SecretVisibility visibility) {
+        this(id, null, visibility);
     }
 
     @JsonCreator
-    public SecretUpdateRequest(@JsonProperty("name") String name,
+    public SecretUpdateRequest(@JsonProperty("id") UUID id,
+                               @JsonProperty("name") String name,
                                @JsonProperty("visibility") SecretVisibility visibility) {
-
+        this.id = id;
         this.name = name;
         this.visibility = visibility;
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public String getName() {
@@ -59,7 +66,8 @@ public class SecretUpdateRequest implements Serializable {
     @Override
     public String toString() {
         return "SecretUpdateRequest{" +
-                "name='" + name + '\'' +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 ", visibility=" + visibility +
                 '}';
     }

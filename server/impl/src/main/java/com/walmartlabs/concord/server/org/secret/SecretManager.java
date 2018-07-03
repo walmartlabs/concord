@@ -86,6 +86,10 @@ public class SecretManager {
     }
 
     public SecretEntry assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
+        if (secretId == null && (orgId == null || secretName == null)) {
+            throw new ValidationErrorsException("Secret ID or an organization ID and a secret name is required");
+        }
+
         SecretEntry e = null;
 
         if (secretId != null) {
@@ -95,15 +99,11 @@ public class SecretManager {
             }
         }
 
-        if (e == null && secretName != null) {
+        if (e == null) {
             e = secretDao.getByName(orgId, secretName);
             if (e == null) {
                 throw new ValidationErrorsException("Secret not found: " + secretName);
             }
-        }
-
-        if (e == null) {
-            throw new ValidationErrorsException("Secret ID or name is required");
         }
 
         UserPrincipal p = UserPrincipal.assertCurrent();
@@ -204,8 +204,8 @@ public class SecretManager {
         return new DecryptedKeyPair(e.getId(), k.getPublicKey());
     }
 
-    public void update(UUID orgId, String secretName, String newName, SecretVisibility visibility) {
-        SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
+    public void update(UUID secretId, String newName, SecretVisibility visibility) {
+        SecretEntry e = assertAccess(null, secretId, newName, ResourceAccessLevel.WRITER, true);
         secretDao.update(e.getId(), newName, visibility);
     }
 
