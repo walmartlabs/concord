@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Button, Header, Icon, Menu, Sticky } from 'semantic-ui-react';
+import { Button, Header, Icon, Menu, Radio, Sticky } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
@@ -29,6 +29,7 @@ import './styles.css';
 
 interface State {
     refreshStuck: boolean;
+    scrollAnchorRef: boolean;
 }
 
 interface Props {
@@ -48,10 +49,16 @@ interface Props {
 
 class ProcessLogViewer extends React.Component<Props, State> {
     private stickyRef: any;
+    private scrollAnchorRef: any;
 
     constructor(props: Props) {
         super(props);
-        this.state = { refreshStuck: false };
+        this.state = {
+            refreshStuck: false,
+            scrollAnchorRef: false
+        };
+        this.handleScroll = this.handleScroll.bind(this);
+        this.scrollToBottom = this.scrollToBottom.bind(this);
     }
 
     componentDidMount() {
@@ -63,15 +70,35 @@ class ProcessLogViewer extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Props) {
-        const { instanceId, startPolling, stopPolling } = this.props;
+        const { instanceId, startPolling, stopPolling, data } = this.props;
+        const { scrollAnchorRef } = this.state;
+
+        if (prevProps.data !== data && scrollAnchorRef === true) {
+            this.scrollToBottom();
+        }
         if (instanceId !== prevProps.instanceId) {
             stopPolling();
             startPolling();
         }
     }
 
+    handleScroll(ev: any, { checked }: any) {
+        this.setState({
+            scrollAnchorRef: checked!
+        });
+
+        if (checked === true) {
+            this.scrollToBottom();
+        }
+    }
+
+    scrollToBottom() {
+        this.scrollAnchorRef.scrollIntoView({ behavior: 'instant' });
+    }
+
     renderToolbar() {
         const { loading, refresh, status, completed, loadWholeLog, instanceId } = this.props;
+        const { scrollAnchorRef } = this.state;
 
         return (
             <Menu borderless={true} secondary={!this.state.refreshStuck}>
@@ -87,6 +114,13 @@ class ProcessLogViewer extends React.Component<Props, State> {
                     </Header>
                 </Menu.Item>
                 <Menu.Item position="right">
+                    <Radio
+                        label="Auto-Scroll"
+                        toggle={true}
+                        checked={scrollAnchorRef}
+                        onChange={this.handleScroll}
+                        style={{ paddingRight: 20 }}
+                    />
                     <Button.Group>
                         {status &&
                             !completed && (
@@ -128,6 +162,11 @@ class ProcessLogViewer extends React.Component<Props, State> {
                         {value}
                     </pre>
                 ))}
+                <div
+                    ref={(scroll) => {
+                        this.scrollAnchorRef = scroll;
+                    }}
+                />
             </div>
         );
     }
