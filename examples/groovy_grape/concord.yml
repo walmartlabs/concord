@@ -1,0 +1,9 @@
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+  - "mvn://org.apache.ivy:ivy:2.4.0"
+
+flows:
+  default:
+  - script: test.groovy
+

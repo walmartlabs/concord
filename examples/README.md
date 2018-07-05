@@ -39,6 +39,7 @@
 * [forms_brandind](forms_branding) - using forms with custom HTML/CSS;
 * [forms_override](forms_override) - how to override default values in forms;
 * [groovy](groovy) - running a Groovy script from a flow;
+* [groovy](groovy_grape) - how to use Groovy's `@Grab` in scripts;
 * [groovy_rest](groovy_rest) - calling a REST endpoint from a flow using Groovy;
 * [juel_java_steams](juel_java_steams) - using expressions, Groovy and Java Streams;
 * [oneops_scaling](oneops_scaling) - how to scaling up or down a platform in OneOps;
