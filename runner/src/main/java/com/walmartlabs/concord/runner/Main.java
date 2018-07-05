@@ -307,7 +307,7 @@ public class Main {
         } catch (Exception e) {
             // try to unroll nested exceptions to get a meaningful one
             Throwable t = unroll(e);
-            log.error("main -> unhandled exception: " + t.getMessage());
+            log.error("main -> unhandled exception", t);
             System.exit(1);
         }
     }
