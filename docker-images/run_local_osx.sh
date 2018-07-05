@@ -2,10 +2,10 @@
 
 # mvn clean install -Pdocker -Pwalmart
 
-if [ -z $LDAP_CFG ]; then
-    LDAP_CFG="/opt/concord/conf/ldap.properties"
+if [ -z $CONCORD_CFG_FILE ]; then
+    CONCORD_CFG_FILE="/opt/concord/conf/server.conf"
 fi
-echo "LDAP_CFG: ${LDAP_CFG}"
+echo "CONCORD_CFG_FILE: ${CONCORD_CFG_FILE}"
 
 docker rm -f db dind agent server console
 
@@ -21,10 +21,8 @@ docker run -d \
 --link db \
 --name server \
 -p 8001:8001 \
--v /tmp:/tmp \
--v /concordDB:/var/lib/postgresql/data \
--v ${LDAP_CFG}:/opt/concord/conf/ldap.properties:ro \
--e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
+-v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
+-e "CONCORD_CFG_FILE=$CONCORD_CFG_FILE" \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
 walmartlabs/concord-server
 

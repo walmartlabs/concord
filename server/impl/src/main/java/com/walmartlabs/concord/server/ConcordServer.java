@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
+import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
 import com.walmartlabs.concord.server.security.ConcordAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
@@ -77,7 +77,7 @@ public class ConcordServer {
 
         m.put("acceptRanges", "true");
         m.put("dirAllowed", "false");
-        m.put("resourceBase", FormServerConfiguration.baseDir.toAbsolutePath().toString());
+        m.put("resourceBase", CustomFormConfiguration.baseDir.toAbsolutePath().toString());
         m.put("pathInfoOnly", "true");
         m.put("redirectWelcome", "false");
 

@@ -26,6 +26,8 @@ import java.util.UUID;
 
 public interface SecretStore {
 
+    boolean isEnabled();
+
     void store(UUID id, byte[] data);
 
     void delete(UUID id);
@@ -35,6 +37,4 @@ public interface SecretStore {
     String getDescription();
 
     SecretStoreType getType();
-
-    String getConfigurationPrefix();
 }

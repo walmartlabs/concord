@@ -66,6 +66,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);

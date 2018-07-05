@@ -20,10 +20,9 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.server.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.ollie.config.Config;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
@@ -32,17 +31,9 @@ import java.io.Serializable;
 @Singleton
 public class ProcessStateConfiguration implements Serializable {
 
-    private static final Logger log = LoggerFactory.getLogger(RepositoryConfiguration.class);
-
-    public static final String MAX_STATE_AGE_KEY = "CONCORD_MAX_STATE_AGE";
-    public static final String DEFAULT_MAX_STATE_AGE = "604800000"; // 7 days
-
-    private final long maxStateAge;
-
-    public ProcessStateConfiguration() {
-        this.maxStateAge = Long.parseLong(Utils.getEnv(MAX_STATE_AGE_KEY, DEFAULT_MAX_STATE_AGE));
-        log.info("init -> max state age: {}ms", maxStateAge);
-    }
+    @Inject
+    @Config("process.maxStateAge")
+    private long maxStateAge;
 
     public long getMaxStateAge() {
         return maxStateAge;

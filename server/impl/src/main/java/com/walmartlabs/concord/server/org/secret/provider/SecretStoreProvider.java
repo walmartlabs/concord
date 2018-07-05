@@ -22,8 +22,7 @@ package com.walmartlabs.concord.server.org.secret.provider;
 
 import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
-import com.walmartlabs.concord.server.org.secret.store.SecretStorePropertyManager;
-import org.sonatype.siesta.ValidationErrorsException;
+import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,24 +32,23 @@ import java.util.Collection;
 @Named
 public class SecretStoreProvider {
 
-    public static final String DEFAULT_STORE_KEY = "default.store";
-    public static final String MAX_SECRET_DATA_SIZE_KEY = "default.maxSecretDataSize";
-
     private final Collection<SecretStore> stores;
-    private final SecretStorePropertyManager propertyManager;
-
-    private static final int DEFAULT_MAX_SECRET_DATA_SIZE = 1048576;
+    private final int maxSecretDataSize;
+    private final SecretStoreType defaultSecretStoreType;
 
     @Inject
-    public SecretStoreProvider(Collection<SecretStore> stores, SecretStorePropertyManager propertyManager) {
+    public SecretStoreProvider(Collection<SecretStore> stores,
+                               @Config("secretStore.maxSecretDataSize") int maxSecretDataSize,
+                               @Config("secretStore.default") String defaultStore) {
         this.stores = stores;
-        this.propertyManager = propertyManager;
+        this.maxSecretDataSize = maxSecretDataSize;
+        this.defaultSecretStoreType = SecretStoreType.valueOf(defaultStore.toUpperCase());
     }
 
     public SecretStore getSecretStore(SecretStoreType secretSourceType) {
         for (SecretStore secretStore : stores) {
             if (secretSourceType == secretStore.getType()) {
-                if (isEnabled(secretStore)) {
+                if (secretStore.isEnabled()) {
                     return secretStore;
                 }
 
@@ -65,7 +63,7 @@ public class SecretStoreProvider {
         Collection<SecretStore> activeStores = new ArrayList<>();
 
         for (SecretStore secretStore : stores) {
-            if (isEnabled(secretStore)) {
+            if (secretStore.isEnabled()) {
                 activeStores.add(secretStore);
             }
         }
@@ -74,34 +72,10 @@ public class SecretStoreProvider {
     }
 
     public SecretStoreType getDefaultStoreType() {
-        String defaultStore = propertyManager.getProperty(DEFAULT_STORE_KEY);
-        if (defaultStore == null) {
-            Collection<SecretStore> activeSecretStores = getActiveSecretStores();
-            if (activeSecretStores.size() == 1) {
-                return activeSecretStores.iterator().next().getType();
-            }
-
-            throw new ValidationErrorsException(DEFAULT_STORE_KEY + " configuration property is missing");
-        }
-
-        try {
-            return SecretStoreType.valueOf(defaultStore.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ValidationErrorsException("Unsupported secret store type: " + defaultStore);
-        }
+        return defaultSecretStoreType;
     }
 
     public int getMaxSecretDataSize() {
-        String maxSecretDataSize = propertyManager.getProperty(MAX_SECRET_DATA_SIZE_KEY);
-        if (maxSecretDataSize != null) {
-            return Integer.parseInt(maxSecretDataSize);
-        } else {
-            return DEFAULT_MAX_SECRET_DATA_SIZE;
-        }
-    }
-
-    private boolean isEnabled(SecretStore secretStore) {
-        String isEnabledString = secretStore.getConfigurationPrefix() + ".enabled";
-        return Boolean.valueOf(propertyManager.getProperty(isEnabledString));
+        return maxSecretDataSize;
     }
 }

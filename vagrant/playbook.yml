@@ -64,8 +64,8 @@
   - name: Copy the LDAP configuration file
     become: true
     copy:
-      src: ldap.properties
-      dest: /opt/concord/conf/ldap.properties
+      src: server.conf
+      dest: /opt/concord/conf/server.conf
 
   - name: Start the database
     become: true
@@ -107,7 +107,7 @@
       - 8001:8001
       env:
         DB_URL: jdbc:postgresql://db:5432/postgres
-        LDAP_CFG: /opt/concord/conf/ldap.properties
+        CONCORD_CFG_FILE: /opt/concord/conf/server.conf
 
   - name: Start the Concord Console
     become: true

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.secret.store.keywhiz;
+package com.walmartlabs.concord.server.org.secretStore.keywhiz;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret.store.keywhiz;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
-import com.walmartlabs.concord.server.cfg.KeywhizConfiguration;
+import com.walmartlabs.concord.server.cfg.KeywhizSecretStoreConfiguration;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -60,13 +60,13 @@ import java.util.*;
 @Named
 public class KeywhizClient {
 
-    private final KeywhizConfiguration cfg;
+    private final KeywhizSecretStoreConfiguration cfg;
     private HttpClientConnectionManager cm;
 
     private final ObjectMapper objectMapper = createObjectMapper();
 
     @Inject
-    public KeywhizClient(KeywhizConfiguration cfg) throws Exception {
+    public KeywhizClient(KeywhizSecretStoreConfiguration cfg) throws Exception {
         this.cfg = cfg;
 
         if (!cfg.isEnabled()) {
@@ -81,17 +81,17 @@ public class KeywhizClient {
         request.setContent(Base64.getEncoder().encodeToString(content));
         request.setName(name);
 
-        httpPost(cfg.getBaseUrl() + "/automation/v2/secrets/" + name, request);
+        httpPost(cfg.getUrl() + "/automation/v2/secrets/" + name, request);
     }
 
     public void deleteSecret(String name) throws IOException {
-        httpDelete(cfg.getBaseUrl() + "/automation/v2/secrets/" + name);
+        httpDelete(cfg.getUrl() + "/automation/v2/secrets/" + name);
     }
 
     public byte[] getSecret(String name) throws IOException {
         SecretContentsRequestV2 request = new SecretContentsRequestV2(Collections.singleton(name));
 
-        String resp = httpPost(cfg.getBaseUrl() + "/automation/v2/secrets/request/contents", request);
+        String resp = httpPost(cfg.getUrl() + "/automation/v2/secrets/request/contents", request);
         SecretContentsResponseV2 r = objectMapper.readValue(resp, SecretContentsResponseV2.class);
 
         if (r.getSuccessSecrets() == null) {
@@ -112,28 +112,27 @@ public class KeywhizClient {
                 .build();
     }
 
-    private static HttpClientConnectionManager createConnectionManager(KeywhizConfiguration cfg) throws Exception {
+    private static HttpClientConnectionManager createConnectionManager(KeywhizSecretStoreConfiguration cfg) throws Exception {
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(createConnectionRegistry(cfg));
         cm.setDefaultSocketConfig(createSocketConfig(cfg));
         return cm;
     }
 
-    private static Registry<ConnectionSocketFactory> createConnectionRegistry(KeywhizConfiguration cfg) throws Exception {
+    private static Registry<ConnectionSocketFactory> createConnectionRegistry(KeywhizSecretStoreConfiguration cfg) throws Exception {
         return RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", PlainConnectionSocketFactory.getSocketFactory())
                 .register("https", createSslSocketFactory(cfg))
                 .build();
     }
 
-    private static SocketConfig createSocketConfig(KeywhizConfiguration cfg) {
+    private static SocketConfig createSocketConfig(KeywhizSecretStoreConfiguration cfg) {
         return SocketConfig.custom().setSoTimeout(cfg.getSoTimeout()).build();
     }
 
-    private static ConnectionSocketFactory createSslSocketFactory(KeywhizConfiguration cfg) throws Exception {
+    private static ConnectionSocketFactory createSslSocketFactory(KeywhizSecretStoreConfiguration cfg) throws Exception {
         SSLContext sslcontext = SSLContexts.custom()
-                .loadKeyMaterial(new File(cfg.getKeyStore()), cfg.getKeyStorePassword(), cfg.getKeyStorePassword(), null)
-                .loadTrustMaterial(new File(cfg.getTrustStore()), cfg.getTrustStorePassword(),
-                        new TrustSelfSignedStrategy())
+                .loadKeyMaterial(new File(cfg.getKeyStore()), cfg.getKeyStorePassword().toCharArray(), cfg.getKeyStorePassword().toCharArray(), null)
+                .loadTrustMaterial(new File(cfg.getTrustStore()), cfg.getTrustStorePassword().toCharArray(), new TrustSelfSignedStrategy())
                 .build();
 
         return new SSLConnectionSocketFactory(

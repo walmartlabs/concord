@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import java.util.Properties;
-
 public final class Utils {
 
     public static String[] toString(Enum<?>... e) {
@@ -38,22 +36,6 @@ public final class Utils {
             return defaultValue;
         }
         return s;
-    }
-
-    public static long getLong(Properties props, String key, long defaultValue) {
-        String s = props.getProperty(key);
-        if (s == null) {
-            return defaultValue;
-        }
-        return Long.parseLong(s);
-    }
-
-    public static boolean getBoolean(Properties props, String key, boolean defaultValue) {
-        String s = props.getProperty(key);
-        if (s == null) {
-            return defaultValue;
-        }
-        return Boolean.parseBoolean(s);
     }
 
     private Utils() {

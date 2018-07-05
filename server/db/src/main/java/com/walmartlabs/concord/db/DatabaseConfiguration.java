@@ -20,33 +20,33 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-import org.jooq.SQLDialect;
-
 import java.io.Serializable;
 
 public class DatabaseConfiguration implements Serializable {
 
-    private final SQLDialect dialect;
     private final String driverClassName;
     private final String url;
-    private final String username;
-    private final String password;
+    private final String appUsername;
+    private final String appPassword;
+    private final String inventoryUsername;
+    private final String inventoryPassword;
     private final int maxPoolSize;
 
-    public DatabaseConfiguration(SQLDialect dialect, String driverClassName, String url,
-                                 String username, String password,
+    public DatabaseConfiguration(String driverClassName,
+                                 String url,
+                                 String appUsername,
+                                 String appPassword,
+                                 String inventoryUsername,
+                                 String inventoryPassword,
                                  int maxPoolSize) {
 
-        this.dialect = dialect;
         this.driverClassName = driverClassName;
         this.url = url;
-        this.username = username;
-        this.password = password;
+        this.appUsername = appUsername;
+        this.appPassword = appPassword;
+        this.inventoryUsername = inventoryUsername;
+        this.inventoryPassword = inventoryPassword;
         this.maxPoolSize = maxPoolSize;
-    }
-
-    public SQLDialect getDialect() {
-        return dialect;
     }
 
     public String getDriverClassName() {
@@ -57,12 +57,20 @@ public class DatabaseConfiguration implements Serializable {
         return url;
     }
 
-    public String getUsername() {
-        return username;
+    public String getAppUsername() {
+        return appUsername;
     }
 
-    public String getPassword() {
-        return password;
+    public String getAppPassword() {
+        return appPassword;
+    }
+
+    public String getInventoryUsername() {
+        return inventoryUsername;
+    }
+
+    public String getInventoryPassword() {
+        return inventoryPassword;
     }
 
     public int getMaxPoolSize() {

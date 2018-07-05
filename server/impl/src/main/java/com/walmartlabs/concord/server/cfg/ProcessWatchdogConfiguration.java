@@ -20,8 +20,9 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.ollie.config.Config;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
@@ -30,19 +31,17 @@ import java.io.Serializable;
 @Singleton
 public class ProcessWatchdogConfiguration implements Serializable {
 
-    private static final String MAX_FAILURE_HANDLING_AGE_KEY = "MAX_FAILURE_HANDLING_AGE";
-    private static final String MAX_STALLED_AGE_KEY = "MAX_STALLED_AGE";
-    private static final String MAX_START_FAILURE_AGE_KEY = "MAX_START_FAILURE_AGE";
+    @Inject
+    @Config("process.maxFailureHandlingAge")
+    private String maxFailureHandlingAge;
 
-    private final String maxFailureHandlingAge;
-    private final String maxStalledAge;
-    private final String maxStartFailureAge;
+    @Inject
+    @Config("process.maxStalledAge")
+    private String maxStalledAge;
 
-    public ProcessWatchdogConfiguration() {
-        this.maxFailureHandlingAge = Utils.getEnv(MAX_FAILURE_HANDLING_AGE_KEY, "3 days");
-        this.maxStalledAge = Utils.getEnv(MAX_STALLED_AGE_KEY, "1 minute");
-        this.maxStartFailureAge = Utils.getEnv(MAX_START_FAILURE_AGE_KEY, "10 minutes");
-    }
+    @Inject
+    @Config("process.maxStartFailureAge")
+    private String maxStartFailureAge;
 
     public String getMaxFailureHandlingAge() {
         return maxFailureHandlingAge;

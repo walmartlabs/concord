@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.68.2"
+VERSION="0.76.0"
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 docker rm -f db dind agent server console

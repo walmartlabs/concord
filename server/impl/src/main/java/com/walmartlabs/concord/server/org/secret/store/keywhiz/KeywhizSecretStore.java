@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.secret.store.keywhiz;
+package com.walmartlabs.concord.server.org.secretStore.keywhiz;
 
 /*-
  * *****
@@ -21,25 +21,35 @@ package com.walmartlabs.concord.server.org.secret.store.keywhiz;
  */
 
 import com.google.common.base.Throwables;
+import com.walmartlabs.concord.server.cfg.KeywhizSecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
+import com.walmartlabs.concord.server.org.secretStore.keywhiz.KeywhizClient;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.UUID;
 
 @Named("keywhizSecretStore")
+@Singleton
 public class KeywhizSecretStore implements SecretStore {
 
-    public static final String DESCRIPTION = "Keywhiz";
-    public static final String CONFIG_PREFIX = "keywhiz";
+    private static final String DESCRIPTION = "Keywhiz";
 
+    private final boolean enabled;
     private final KeywhizClient client;
 
     @Inject
-    public KeywhizSecretStore(KeywhizClient client) {
+    public KeywhizSecretStore(KeywhizSecretStoreConfiguration cfg, KeywhizClient client) {
+        this.enabled = cfg.isEnabled();
         this.client = client;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
     }
 
     @Override
@@ -77,10 +87,5 @@ public class KeywhizSecretStore implements SecretStore {
     @Override
     public SecretStoreType getType() {
         return SecretStoreType.KEYWHIZ;
-    }
-
-    @Override
-    public String getConfigurationPrefix() {
-        return CONFIG_PREFIX;
     }
 }

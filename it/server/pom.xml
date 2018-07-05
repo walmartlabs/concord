@@ -308,6 +308,7 @@
                                         </network>
                                         <volumes>
                                             <bind>
+                                                <!-- to access test files -->
                                                 <volume>/tmp:/tmp</volume>
                                                 <!-- allows the server to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}:ro</volume>
@@ -317,8 +318,6 @@
                                         </volumes>
                                         <env>
                                             <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
-                                            <DB_DIALECT>POSTGRES</DB_DIALECT>
-                                            <DB_DRIVER>org.postgresql.Driver</DB_DRIVER>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>

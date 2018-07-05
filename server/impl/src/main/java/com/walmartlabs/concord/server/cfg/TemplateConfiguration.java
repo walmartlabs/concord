@@ -20,25 +20,31 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.ollie.config.Config;
+import org.eclipse.sisu.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+
+import static com.walmartlabs.concord.server.cfg.Utils.getPath;
 
 @Named
 @Singleton
 public class TemplateConfiguration {
 
-    public static final String CACHE_DIR_KEY = "TEMPLATE_CACHE_DIR";
+    private static final Logger log = LoggerFactory.getLogger(TemplateConfiguration.class);
 
     private final Path cacheDir;
 
-    public TemplateConfiguration() throws IOException {
-        String s = System.getenv(CACHE_DIR_KEY);
-        this.cacheDir = s != null ? Paths.get(s) : IOUtils.createTempDir("templateCache");
+    @Inject
+    public TemplateConfiguration(@Config("template.cacheDir") @Nullable String cacheDir) throws IOException {
+        this.cacheDir = getPath(cacheDir, "templateCache");
+        log.info("init -> using {} to cache templates", this.cacheDir);
     }
 
     public Path getCacheDir() {

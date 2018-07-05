@@ -2,6 +2,11 @@
 
 APP_DIR="/opt/concord/server"
 
+CFG_FILE="";
+if [ ! -z "$CONCORD_CFG_FILE" ]; then
+    CFG_FILE="-Dollie.conf=$CONCORD_CFG_FILE"
+fi
+
 GC_LOG_DIR=${GC_LOG_DIR:-"${APP_DIR}/logs/gc"}
 mkdir -p ${GC_LOG_DIR}
 
@@ -30,5 +35,6 @@ exec java \
 -Dcom.sun.management.jmxremote.authenticate=true \
 -Dcom.sun.management.jmxremote.access.file=${APP_DIR}/jmx/jmx.access \
 -Dcom.sun.management.jmxremote.password.file=${APP_DIR}/jmx/jmx.password \
+$CFG_FILE \
 -cp "${APP_DIR}/*" \
 com.walmartlabs.concord.server.Main

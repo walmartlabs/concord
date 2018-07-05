@@ -20,22 +20,45 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.concord.db.DatabaseConfiguration;
+import com.walmartlabs.ollie.config.Config;
+
+import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Named
 @Singleton
-public class DatabaseConfigurationProvider extends AbstractDatabaseConfigurationProvider {
+public class DatabaseConfigurationProvider implements Provider<DatabaseConfiguration> {
 
-    public static final String DB_USERNAME_KEY = "DB_USERNAME";
-    public static final String DEFAULT_DB_USERNAME = "postgres";
+    @Inject
+    @Config("db.url")
+    private String url;
 
-    public static final String DB_PASSWORD_KEY = "DB_PASSWORD";
-    public static final String DEFAULT_DB_PASSWORD = "q1";
+    @Inject
+    @Config("db.appUsername")
+    private String appUsername;
 
-    public static final String DB_MAX_POOL_SIZE_KEY = "DB_MAX_POOL_SIZE";
+    @Inject
+    @Config("db.appPassword")
+    private String appPassword;
 
-    public DatabaseConfigurationProvider() {
-        super(DB_USERNAME_KEY, DEFAULT_DB_USERNAME, DB_PASSWORD_KEY, DEFAULT_DB_PASSWORD, DB_MAX_POOL_SIZE_KEY);
+    @Inject
+    @Config("db.inventoryUsername")
+    private String inventoryUsername;
+
+    @Inject
+    @Config("db.inventoryPassword")
+    private String inventoryPassword;
+
+    @Inject
+    @Config("db.maxPoolSize")
+    private int maxPoolSize;
+
+    @Override
+    public DatabaseConfiguration get() {
+        return new DatabaseConfiguration("org.postgresql.Driver", url,
+                appUsername, appPassword, inventoryUsername, inventoryPassword, maxPoolSize);
     }
 }

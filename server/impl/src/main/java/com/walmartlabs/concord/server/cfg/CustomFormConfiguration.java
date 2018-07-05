@@ -20,22 +20,32 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
+@Named
 @Singleton
-@Named("inventory")
-public class InventoryDatabaseConfigurationProvider extends AbstractDatabaseConfigurationProvider {
+public class CustomFormConfiguration {
 
-    public static final String DB_USERNAME_KEY = "DB_INVENTORY_USERNAME";
-    public static final String DEFAULT_DB_USERNAME = "postgres";
+    private static final String FORM_SERVER_DIR_KEY = "FORM_SERVER_DIR";
 
-    public static final String DB_PASSWORD_KEY = "DB_INVENTORY_PASSWORD";
-    public static final String DEFAULT_DB_PASSWORD = "q1";
+    // TODO externalize
+    public static final Path baseDir;
+    static {
+        try {
+            String s = System.getenv(FORM_SERVER_DIR_KEY);
+            baseDir = s != null ? Paths.get(s) : IOUtils.createTempDir("formserv"); // TODO externalize
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    public static final String DB_MAX_POOL_SIZE_KEY = "DB_INVENTORY_MAX_POOL_SIZE";
-
-    public InventoryDatabaseConfigurationProvider() {
-        super(DB_USERNAME_KEY, DEFAULT_DB_USERNAME, DB_PASSWORD_KEY, DEFAULT_DB_PASSWORD, DB_MAX_POOL_SIZE_KEY);
+    public Path getBaseDir() {
+        return baseDir;
     }
 }

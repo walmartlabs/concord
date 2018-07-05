@@ -55,7 +55,7 @@ public class ExecutionManager {
 
     private final Object mutex = new Object();
 
-    public ExecutionManager(Configuration cfg, ProcessApi processApi) {
+    public ExecutionManager(Configuration cfg, ProcessApi processApi) throws IOException {
 
         this.logManager = new LogManager(cfg);
         this.cfg = cfg;

@@ -21,11 +21,8 @@ package com.walmartlabs.concord.server;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.db.CommonDataSourceProvider;
 import com.walmartlabs.concord.db.DatabaseConfiguration;
-import com.walmartlabs.concord.db.JooqConfigurationProvider;
-import com.walmartlabs.concord.db.DatabaseChangeLogProviderImpl;
-import com.walmartlabs.concord.server.cfg.DatabaseConfigurationProvider;
+import com.walmartlabs.concord.db.DatabaseModule;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -34,7 +31,6 @@ import org.junit.Before;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Method;
-import java.util.Collections;
 
 public abstract class AbstractDaoTest {
 
@@ -43,13 +39,14 @@ public abstract class AbstractDaoTest {
 
     @Before
     public void initDataSource() {
-        CommonDataSourceProvider dsp = new CommonDataSourceProvider(new DatabaseConfigurationProvider().get(),
-                Collections.singleton(new DatabaseChangeLogProviderImpl()));
+        DatabaseConfiguration cfg = new DatabaseConfiguration("org.postgresql.Driver",
+                "jdbc:postgresql://localhost:5432/postgres",
+                "postgres", "q1", "inventory", "q1", 3);
 
-        dataSource = dsp.get();
+        DatabaseModule db = new DatabaseModule();
+        this.dataSource = db.appDataSource(cfg);
 
-        DatabaseConfiguration dbCfg = new DatabaseConfigurationProvider().get();
-        cfg = new JooqConfigurationProvider(dataSource, dbCfg).get();
+        this.cfg = db.appJooqConfiguration(this.dataSource);
     }
 
     @After

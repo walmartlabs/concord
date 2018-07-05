@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.server.agent.AgentCommandWatchdog;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.metrics.MetricsModule;

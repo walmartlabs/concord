@@ -80,12 +80,15 @@ public class DependencyManager {
     private final RepositorySystem maven = newMavenRepositorySystem();
     private final RepositoryCache mavenCache = new DefaultRepositoryCache();
 
-    public DependencyManager(Path cacheDir) {
+    public DependencyManager(Path cacheDir) throws IOException {
         this(cacheDir, readCfg());
     }
 
-    public DependencyManager(Path cacheDir, List<MavenRepository> repositories) {
+    public DependencyManager(Path cacheDir, List<MavenRepository> repositories) throws IOException {
         this.cacheDir = cacheDir;
+        if (!Files.exists(cacheDir)) {
+            Files.createDirectories(cacheDir);
+        }
 
         log.info("init -> using repositories: {}", repositories);
         this.repositories = toRemote(repositories);

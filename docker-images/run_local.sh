@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ -z $LDAP_CFG ]; then
-    LDAP_CFG="/opt/concord/conf/ldap.properties"
+if [ -z "$CONCORD_CFG_FILE" ]; then
+    CONCORD_CFG_FILE="/opt/concord/conf/server.conf"
 fi
-echo "LDAP_PROPERTIES: ${LDAP_CFG}"
+echo "CONCORD_CFG_FILE: ${CONCORD_CFG_FILE}"
 
 docker rm -f db agent server console
 
@@ -15,12 +15,10 @@ library/postgres:latest
 
 docker run -d \
 --name server \
--v /tmp:/tmp \
 -v ${HOME}:${HOME}:ro \
 -v ${HOME}/.m2/repository:/home/concord/.m2/repository:ro \
--v ${LDAP_CFG}:/opt/concord/conf/ldap.properties:ro \
--e 'LDAP_CFG=/opt/concord/conf/ldap.properties' \
--e 'DB_URL=jdbc:postgresql://localhost:5432/postgres' \
+-v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
+-e "CONCORD_CFG_FILE=$CONCORD_CFG_FILE" \
 -e 'GC_LOG_DIR=/tmp/server/gc' \
 --network=host \
 walmartlabs/concord-server

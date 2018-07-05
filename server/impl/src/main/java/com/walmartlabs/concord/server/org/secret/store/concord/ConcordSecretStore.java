@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.secret.store.concord;
+package com.walmartlabs.concord.server.org.secretStore.concord;
 
 /*-
  * *****
@@ -20,25 +20,34 @@ package com.walmartlabs.concord.server.org.secret.store.concord;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.secret.SecretStoreType;
+import com.walmartlabs.concord.server.cfg.ConcordSecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
+import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.UUID;
 
 @Named("concordSecretStore")
+@Singleton
 public class ConcordSecretStore implements SecretStore {
 
-    public static final String DESCRIPTION = "Concord";
-    public static final String CONFIG_PREFIX = "concord";
+    private static final String DESCRIPTION = "Concord";
 
+    private final boolean enabled;
     private final SecretDao secretDao;
 
     @Inject
-    public ConcordSecretStore(SecretDao secretDao) {
+    public ConcordSecretStore(ConcordSecretStoreConfiguration cfg, SecretDao secretDao) {
+        this.enabled = cfg.isEnabled();
         this.secretDao = secretDao;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
     }
 
     @Override
@@ -49,11 +58,6 @@ public class ConcordSecretStore implements SecretStore {
     @Override
     public SecretStoreType getType() {
         return SecretStoreType.CONCORD;
-    }
-
-    @Override
-    public String getConfigurationPrefix() {
-        return CONFIG_PREFIX;
     }
 
     @Override

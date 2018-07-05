@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.cfg.FormServerConfiguration;
+import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
 import com.walmartlabs.concord.server.process.ConcordFormService;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.FormUtils;
@@ -82,7 +82,7 @@ public class CustomFormService implements Resource {
 
     private static final long STATUS_REFRESH_DELAY = 250;
 
-    private final FormServerConfiguration cfg;
+    private final CustomFormConfiguration cfg;
     private final ConcordFormService formService;
     private final ProcessStateManager stateManager;
     private final ProcessQueueDao queueDao;
@@ -90,7 +90,7 @@ public class CustomFormService implements Resource {
     private final FormValidatorLocale validatorLocale;
 
     @Inject
-    public CustomFormService(FormServerConfiguration cfg,
+    public CustomFormService(CustomFormConfiguration cfg,
                              ConcordFormService formService,
                              ProcessStateManager stateManager,
                              ProcessQueueDao queueDao) {

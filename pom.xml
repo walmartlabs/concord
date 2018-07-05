@@ -114,7 +114,7 @@
         <node.version>9.11.1</node.version>
         <okhttp.version>2.7.5</okhttp.version>
         <okio.version>1.13.0</okio.version>
-        <ollie.version>0.0.17</ollie.version>
+        <ollie.version>0.0.18</ollie.version>
         <parc.version>0.1.2</parc.version>
         <postgres.version>42.2.2</postgres.version>
         <protobuf.version>3.5.0</protobuf.version>

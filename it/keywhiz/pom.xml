@@ -164,7 +164,7 @@
                                             <DB_DRIVER>org.postgresql.Driver</DB_DRIVER>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
-                                            <SECRET_STORE_CFG>/keywhiz/secret_store.properties</SECRET_STORE_CFG>
+                                            <CONCORD_CFG_FILE>/keywhiz/server.conf</CONCORD_CFG_FILE>
                                         </env>
                                         <volumes>
                                             <bind>

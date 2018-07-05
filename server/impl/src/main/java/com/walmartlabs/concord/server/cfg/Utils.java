@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.db;
+package com.walmartlabs.concord.server.cfg;
 
 /*-
  * *****
@@ -20,12 +20,21 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 
-public interface DatabaseChangeLogProvider {
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-    String getChangeLogPath();
+public final class Utils {
 
-    String getChangeLogTable();
+    public static Path getPath(String s, String defaultPrefix) throws IOException {
+        if (s == null) {
+            return IOUtils.createTempDir(defaultPrefix);
+        }
+        return Paths.get(s);
+    }
 
-    String getLockTable();
+    private Utils() {
+    }
 }
