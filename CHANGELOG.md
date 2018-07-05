@@ -9,6 +9,13 @@
 visibility;
 - concord-console: the list of registered triggers for a repository.
 
+# Changed
+
+- concord-server: configuration migrated into a single configuration
+file.
+- concord-runner: full stacktraces will be printed out for unhandled
+exceptions.
+
 
 
 ## [0.77.0] - 2018-07-01
