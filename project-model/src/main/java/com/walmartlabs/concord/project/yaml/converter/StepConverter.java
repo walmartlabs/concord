@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlStep;
+import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.model.*;
@@ -275,7 +276,7 @@ public interface StepConverter<T extends YamlStep> {
                 currentItemIndex = (int) itemIndex;
             }
 
-            List<Object> items = (List)ctx.getVariable("items");
+            List<Object> items = assertItems(ctx);
             ctx.setVariable("item", items.get(currentItemIndex));
 
             currentItemIndex++;
@@ -287,6 +288,20 @@ public interface StepConverter<T extends YamlStep> {
             ctx.removeVariable("__currentWithItemIndex");
             ctx.removeVariable("item");
             ctx.removeVariable("__withItemsHasNext");
+        }
+
+        @SuppressWarnings("unchecked")
+        private static List<Object> assertItems(ExecutionContext ctx) {
+            Object result = ctx.getVariable("items");
+            if (result == null) {
+                throw new IllegalArgumentException("'withItems' value cannot be null");
+            }
+
+            if (result instanceof List) {
+                return (List<Object>)result;
+            }
+
+            throw new IllegalArgumentException("'withItems' values should be a list, got: " + result.getClass());
         }
     }
 }

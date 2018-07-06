@@ -1817,6 +1817,50 @@ public class YamlParserTest {
         verifyNoMoreInteractions(task);
     }
 
+    @Test
+    public void test060() throws Exception {
+        deploy("060.yml");
+
+        MyLogger task = spy(new MyLogger());
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        taskRegistry.register("myLogger", task);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("nullVariable", null);
+
+        try {
+            engine.start(key, "main", args);
+            fail("exception expected");
+        } catch (ExecutionException e) {
+            assertTrue(e.getCause().getMessage().contains("cannot be null"));
+        }
+    }
+
+    @Test
+    public void test061() throws Exception {
+        deploy("061.yml");
+
+        MyLogger task = spy(new MyLogger());
+        taskRegistry.register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        taskRegistry.register("myLogger", task);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("notArrayVariable", "invalid variable type");
+
+        try {
+            engine.start(key, "main", args);
+            fail("exception expected");
+        } catch (ExecutionException e) {
+            assertTrue(e.getCause().getMessage().contains("should be a list"));
+        }
+    }
+
     // FORMS (100 - 199)
 
     @Test
