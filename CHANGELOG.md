@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-project-model: improved validation of `withItems` values;
 - concord-console: autoscrolling for process logs;
 - concord-console: ability to rename secrets and update their
 visibility;
