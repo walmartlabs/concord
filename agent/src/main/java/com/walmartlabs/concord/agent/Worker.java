@@ -35,7 +35,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -115,7 +118,7 @@ public class Worker implements Runnable {
         }
 
         File payload = withRetry(PAYLOAD_DOWNLOAD_MAX_RETRIES, PAYLOAD_DOWNLOAD_RETRY_DELAY,
-                () -> queueClient.downloadState(p.getInstanceId()));
+                () -> processApiClient.downloadState(p.getInstanceId()));
 
         return new JobEntry(p.getInstanceId(), payload.toPath());
     }

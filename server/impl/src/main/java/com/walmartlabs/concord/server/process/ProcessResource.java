@@ -842,10 +842,19 @@ public class ProcessResource implements Resource {
 
     private void assertProcessStateAccess(ProcessEntry p) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
-        if (!(p.getInitiator().equals(principal.getUsername()) || principal.isAdmin() || principal.isGlobalReader())) {
-            throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                    "the necessary access to the download the state of process: " + p.getInstanceId());
+
+        String initiator = p.getInitiator();
+        if (principal.getUsername().equals(initiator)) {
+            // process owners should be able to download the process' state
+            return;
         }
+
+        if (principal.isAdmin() || principal.isGlobalReader()) {
+            return;
+        }
+
+        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+                "the necessary permissions to the download the process state: " + p.getInstanceId());
     }
 
     private ProcessEntry assertProcess(UUID instanceId) {

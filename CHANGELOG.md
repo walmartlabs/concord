@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: now uses the same REST API endpoint to download
+process state snapshots as regular users. 
+
+
+
 ## [0.78.1] - 2018-07-08
 
 ### Changed

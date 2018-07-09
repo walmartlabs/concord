@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process;
+package com.walmartlabs.concord.server.process.queue;
 
 /*-
  * *****
@@ -20,44 +20,44 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.io.File;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import java.util.Map;
-import java.util.UUID;
-
-import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 @Singleton
 @Api(value = "Process Queue", authorizations = {@Authorization("api_key")})
 @Path("/api/v1/process/queue")
-public class ProcessQueueResourceImpl implements Resource {
+public class ProcessQueueResource implements Resource {
 
     private final ProcessManager processManager;
     private final LogManager logManager;
-    private final ProcessStateManager stateManager;
 
     @Inject
-    public ProcessQueueResourceImpl(ProcessManager processManager,
-                                    LogManager logManager,
-                                    ProcessStateManager stateManager) {
+    public ProcessQueueResource(ProcessManager processManager,
+                                LogManager logManager) {
 
         this.processManager = processManager;
         this.logManager = logManager;
-        this.stateManager = stateManager;
     }
 
     @POST
@@ -67,6 +67,8 @@ public class ProcessQueueResourceImpl implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     public ProcessEntry take(@ApiParam Map<String, Object> capabilities,
                              @Context HttpHeaders headers) {
+
+        assertPermissions();
 
         ProcessEntry p = processManager.nextPayload(capabilities);
         if (p == null) {
@@ -82,19 +84,12 @@ public class ProcessQueueResourceImpl implements Resource {
         return p;
     }
 
-    @GET
-    @ApiOperation(value = "Download the process state", response = File.class)
-    @Path("/state/{instanceId}")
-    @Produces("application/zip")
-    public Response downloadState(@ApiParam @PathParam("instanceId") UUID instanceId) {
-        StreamingOutput out = output -> {
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(output)) {
-                stateManager.export(instanceId, zipTo(zip));
-            }
-        };
+    private static void assertPermissions() {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (p.isAdmin() || p.isGlobalReader()) {
+            return;
+        }
 
-        return Response.ok(out, "application/zip")
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + instanceId + ".zip\"")
-                .build();
+        throw new UnauthorizedException("Forbidden");
     }
 }

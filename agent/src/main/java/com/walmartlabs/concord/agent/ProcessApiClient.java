@@ -25,6 +25,7 @@ import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -67,5 +68,9 @@ public class ProcessApiClient {
             ClientUtils.postData(processApi.getApiClient(), path, data.toFile());
             return null;
         });
+    }
+
+    public File downloadState(UUID instanceId) throws ApiException {
+        return processApi.downloadState(instanceId);
     }
 }
