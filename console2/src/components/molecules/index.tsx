@@ -27,6 +27,7 @@ export { default as ButtonWithConfirmation } from './ButtonWithConfirmation';
 export { default as DonutChart } from './DonutChart';
 export { default as EntityRenameForm } from './EntityRenameForm';
 export { default as GlobalNavMenu, GlobalNavTab } from './GlobalNavMenu';
+export { default as Highlighter } from './Highlighter';
 export { default as LocalTimestamp } from './LocalTimestamp';
 export { default as NewProjectForm, NewProjectFormValues } from './NewProjectForm';
 export { default as NewSecretForm, NewSecretFormValues } from './NewSecretForm';

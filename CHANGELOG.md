@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-console: highlighting of errors and warning messages in
+process logs;
 - concord-agent: now uses the same REST API endpoint to download
 process state snapshots as regular users. 
 

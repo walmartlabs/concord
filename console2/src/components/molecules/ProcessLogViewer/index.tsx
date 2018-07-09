@@ -23,7 +23,7 @@ import { Button, Header, Icon, Menu, Radio, Sticky } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
-import { RequestErrorMessage } from '../../molecules';
+import { RequestErrorMessage, Highlighter } from '../../molecules';
 
 import './styles.css';
 
@@ -158,8 +158,15 @@ class ProcessLogViewer extends React.Component<Props, State> {
                 </Sticky>
 
                 {data.map((value, idx) => (
-                    <pre key={idx} className="logEntry">
-                        {value}
+                    <pre className="logEntry" key={idx}>
+                        <Highlighter
+                            value={value}
+                            config={[
+                                { string: 'INFO ', style: 'color: #00B5F0' },
+                                { string: 'WARN ', style: 'color: #ffae42' },
+                                { string: 'ERROR', style: 'color: #ff0000' }
+                            ]}
+                        />
                     </pre>
                 ))}
                 <div
