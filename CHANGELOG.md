@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed a bug that prevented the custom forms API
+endpoint from registering correctly.
+
+
+
 ## [0.78.0] - 2018-07-08
 
 ### Added

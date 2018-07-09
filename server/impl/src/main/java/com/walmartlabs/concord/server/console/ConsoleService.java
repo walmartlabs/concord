@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.console;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
-import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -33,6 +32,7 @@ import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -42,6 +42,7 @@ import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import javax.naming.NamingException;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
@@ -52,6 +53,7 @@ import javax.ws.rs.core.Response.Status;
 import java.util.*;
 
 @Named
+@Singleton
 @Path("/api/service/console")
 public class ConsoleService implements Resource {
 

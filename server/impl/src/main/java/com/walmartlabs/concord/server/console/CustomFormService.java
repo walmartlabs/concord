@@ -50,6 +50,7 @@ import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -64,6 +65,7 @@ import java.util.*;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
+@Named
 @Singleton
 @javax.ws.rs.Path("/api/service/custom_form")
 public class CustomFormService implements Resource {
