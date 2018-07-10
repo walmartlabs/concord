@@ -2,10 +2,14 @@
 
 ## [Unreleased]
 
-### Changed
+### Added
 
+- concord-console: scroll back to top button on the process log page;
 - concord-console: highlighting of errors and warning messages in
 process logs;
+
+### Changed
+
 - concord-agent: now uses the same REST API endpoint to download
 process state snapshots as regular users. 
 

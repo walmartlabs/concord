@@ -25,6 +25,8 @@ import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
 import { RequestErrorMessage, Highlighter } from '../../molecules';
 
+import { CircleArrow as ScrollUpButton } from 'react-scroll-up-button';
+
 import './styles.css';
 
 interface State {
@@ -174,6 +176,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                         this.scrollAnchorRef = scroll;
                     }}
                 />
+                <ScrollUpButton />
             </div>
         );
     }
