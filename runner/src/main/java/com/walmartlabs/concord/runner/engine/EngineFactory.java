@@ -20,9 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ExternalEventsApi;
-import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
@@ -33,8 +31,10 @@ import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.Configuration;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
-import io.takari.bpm.api.*;
-import io.takari.bpm.context.ExecutionContextImpl;
+import io.takari.bpm.api.Engine;
+import io.takari.bpm.api.ExecutionContext;
+import io.takari.bpm.api.ExecutionException;
+import io.takari.bpm.api.JavaDelegate;
 import io.takari.bpm.el.DefaultExpressionManager;
 import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.event.EventStorage;
@@ -60,12 +60,12 @@ import java.util.Map;
 @Named
 public class EngineFactory {
 
-    private final ApiClient apiClient;
+    private final ApiClientFactory apiClientFactory;
     private final NamedTaskRegistry taskRegistry;
 
     @Inject
-    public EngineFactory(ApiClient apiClient, NamedTaskRegistry taskRegistry) {
-        this.apiClient = apiClient;
+    public EngineFactory(ApiClientFactory apiClientFactory, NamedTaskRegistry taskRegistry) {
+        this.apiClientFactory = apiClientFactory;
         this.taskRegistry = taskRegistry;
     }
 
@@ -91,7 +91,7 @@ public class EngineFactory {
                 new TaskResolver(taskRegistry),
                 new InjectVariableELResolver());
 
-        ExecutionContextFactory<? extends ExecutionContextImpl> contextFactory = new ConcordExecutionContextFactory(expressionManager);
+        ConcordExecutionContextFactory contextFactory = new ConcordExecutionContextFactory(expressionManager);
 
         EventStorage eventStorage = new FileEventStorage(eventsDir);
         PersistenceManager persistenceManager = new FilePersistenceManager(instancesDir);
@@ -108,7 +108,7 @@ public class EngineFactory {
         cfg.setWrapAllExceptionsAsBpmnErrors(true);
         cfg.setCopyAllCallActivityOutVariables(true);
 
-        ElementEventProcessor eventProcessor = new ElementEventProcessor(new ProcessEventsApi(apiClient), adapter.processes());
+        ElementEventProcessor eventProcessor = new ElementEventProcessor(apiClientFactory, adapter.processes());
 
         Engine engine = new EngineBuilder()
                 .withContextFactory(contextFactory)

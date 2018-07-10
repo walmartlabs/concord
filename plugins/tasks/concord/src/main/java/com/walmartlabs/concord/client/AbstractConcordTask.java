@@ -44,12 +44,11 @@ public abstract class AbstractConcordTask implements Task {
     @Inject
     ApiConfiguration apiCfg;
 
+    @Inject
+    ApiClientFactory apiClientFactory;
+
     protected <T> T withClient(Context ctx, CheckedFunction<ApiClient, T> f) throws Exception {
-        ConcordApiClient c = new ConcordApiClient(apiCfg.getBaseUrl());
-        c.setSessionToken(apiCfg.getSessionToken(ctx));
-        c.setConnectTimeout(30000);
-        c.addDefaultHeader("Accept", "*/*");
-        c.setTempFolderPath(IOUtils.createTempDir("concord-tasks").toString());
+        ApiClient c = apiClientFactory.create(ctx);
         return f.apply(c);
     }
 

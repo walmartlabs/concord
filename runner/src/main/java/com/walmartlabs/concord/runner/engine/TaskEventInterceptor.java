@@ -23,6 +23,8 @@ package com.walmartlabs.concord.runner.engine;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.runner.ContextUtils;
+import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
@@ -46,9 +48,7 @@ public class TaskEventInterceptor {
     public void preTask(Context ctx) throws ExecutionException {
         UUID correlationId = UUID.randomUUID();
 
-        String instanceId = (String) ctx.getVariable(ExecutionContext.PROCESS_BUSINESS_KEY);
-
-        eventProcessor.process(instanceId, ctx.getProcessDefinitionId(), ctx.getElementId(), (element) -> {
+        eventProcessor.process(buildEvent(ctx), (element) -> {
             Map<String, Object> params = new HashMap<>();
             params.put("correlationId", correlationId);
             params.put("phase", "pre");
@@ -65,9 +65,7 @@ public class TaskEventInterceptor {
     public void postTask(Context ctx) throws ExecutionException {
         UUID correlationId = (UUID) ctx.getVariable(EVENT_CORRELATION_KEY);
 
-        String instanceId = (String) ctx.getVariable(ExecutionContext.PROCESS_BUSINESS_KEY);
-
-        eventProcessor.process(instanceId, ctx.getProcessDefinitionId(), ctx.getElementId(), (element) -> {
+        eventProcessor.process(buildEvent(ctx), (element) -> {
             Map<String, Object> params = new HashMap<>();
             params.put("correlationId", correlationId);
             params.put("phase", "post");
@@ -79,6 +77,13 @@ public class TaskEventInterceptor {
         });
 
         ctx.removeVariable(EVENT_CORRELATION_KEY);
+    }
+
+    private ElementEventProcessor.ElementEvent buildEvent(Context ctx) {
+        String instanceId = (String) ctx.getVariable(ExecutionContext.PROCESS_BUSINESS_KEY);
+
+        return new ElementEventProcessor.ElementEvent(instanceId,
+                ctx.getProcessDefinitionId(), ctx.getElementId(), ContextUtils.getSessionToken(ctx));
     }
 
     private List<VariableMapping> getInParams(Context ctx, AbstractElement element) {

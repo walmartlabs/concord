@@ -1,3 +1,8 @@
 {
-  "entryPoint": "default"
+  "entryPoint": "default",
+  "arguments": {
+    "processInfo":{
+      "sessionKey":"rIEhsx9jkDDjhi6xceeOFdbiDz0cdGd+7jk31O1weJ9V+KYL2rx8STvlkgygj2rh"
+    }
+  }
 }

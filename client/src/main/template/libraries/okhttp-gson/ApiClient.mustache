@@ -78,7 +78,11 @@ public class ApiClient {
      * Constructor for ApiClient
      */
     protected ApiClient() {
-        httpClient = new OkHttpClient();
+        this(new OkHttpClient());
+    }
+
+    protected ApiClient(OkHttpClient httpClient) {
+        this.httpClient = httpClient;
 
         {{#useGzipFeature}}
         // Enable gzip request compression
@@ -320,11 +324,11 @@ public class ApiClient {
      *
      * @param apiKey API key
      */
-    public void setApiKey(String apiKey) {
+    public ApiClient setApiKey(String apiKey) {
         for (Authentication auth : authentications.values()) {
             if (auth instanceof ApiKeyAuth) {
                 ((ApiKeyAuth) auth).setApiKey(apiKey);
-                return;
+                return this;
             }
         }
         throw new RuntimeException("No API key authentication configured!");

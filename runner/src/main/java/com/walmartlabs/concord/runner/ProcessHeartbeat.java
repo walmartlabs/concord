@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessHeartbeatApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,21 +38,23 @@ public class ProcessHeartbeat {
 
     private static final long HEARTBEAT_INTERVAL = 10000;
 
-    private final ProcessHeartbeatApi client;
+    private final ApiClientFactory apiClientFactory;
     private Thread worker;
 
     @Inject
-    public ProcessHeartbeat(ApiClient apiClient) {
-        this.client = new ProcessHeartbeatApi(apiClient);
+    public ProcessHeartbeat(ApiClientFactory apiClientFactory) {
+        this.apiClientFactory = apiClientFactory;
     }
 
-    public synchronized void start(UUID instanceId) {
+    public synchronized void start(UUID instanceId, String sessionToken) {
         if (worker != null) {
             throw new IllegalArgumentException("Heartbeat worker is already running");
         }
 
         worker = new Thread(() -> {
             log.info("start ['{}'] -> running every {}ms", instanceId, HEARTBEAT_INTERVAL);
+
+            ProcessHeartbeatApi client = new ProcessHeartbeatApi(apiClientFactory.create(sessionToken));
 
             while (!Thread.currentThread().isInterrupted()) {
                 try {

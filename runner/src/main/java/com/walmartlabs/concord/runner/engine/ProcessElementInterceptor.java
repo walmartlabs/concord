@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.runner.ContextUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.api.interceptors.ExecutionInterceptorAdapter;
 import io.takari.bpm.api.interceptors.InterceptorElementEvent;
@@ -38,7 +39,10 @@ public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
 
     @Override
     public void onElement(InterceptorElementEvent ev) throws ExecutionException {
-        eventProcessor.process(ev.getProcessBusinessKey(), ev.getProcessDefinitionId(), ev.getElementId(),
+        ElementEventProcessor.ElementEvent event = new ElementEventProcessor.ElementEvent(ev.getProcessBusinessKey(),
+                ev.getProcessDefinitionId(), ev.getElementId(), ContextUtils.getSessionToken(ev.getVariables()));
+
+        eventProcessor.process(event,
                 element -> Collections.emptyMap(),
                 element -> !(element instanceof ServiceTask) || ((ServiceTask) element).getType() != ExpressionType.DELEGATE);
     }

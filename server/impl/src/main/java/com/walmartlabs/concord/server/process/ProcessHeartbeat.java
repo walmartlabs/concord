@@ -37,7 +37,7 @@ import java.util.UUID;
 
 @Named
 @Singleton
-@Api(value = "ProcessHeartbeat", authorizations = {@Authorization("api_key")})
+@Api(value = "ProcessHeartbeat", authorizations = {@Authorization("api_key"), @Authorization("session_key")})
 @Path("/api/v1/process")
 public class ProcessHeartbeat implements Resource {
 

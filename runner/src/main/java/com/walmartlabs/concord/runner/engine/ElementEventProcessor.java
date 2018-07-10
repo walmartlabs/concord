@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
 import io.takari.bpm.ProcessDefinitionProvider;
@@ -41,24 +42,23 @@ public class ElementEventProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ElementEventProcessor.class);
 
-    private final ProcessEventsApi eventsApi;
+    private final ApiClientFactory apiClientFactory;
     private final ProcessDefinitionProvider processDefinitionProvider;
 
-    public ElementEventProcessor(ProcessEventsApi eventsApi, ProcessDefinitionProvider processDefinitionProvider) {
-        this.eventsApi = eventsApi;
+    public ElementEventProcessor(ApiClientFactory apiClientFactory, ProcessDefinitionProvider processDefinitionProvider) {
+        this.apiClientFactory = apiClientFactory;
         this.processDefinitionProvider = processDefinitionProvider;
     }
 
-    public void process(String instanceId, String definitionId, String elementId, EventParamsBuilder builder) throws ExecutionException {
-        process(instanceId, definitionId, elementId, builder, null);
+    public void process(ElementEvent event, EventParamsBuilder builder) throws ExecutionException {
+        process(event, builder, null);
     }
 
-    public void process(String instanceId, String definitionId, String elementId,
-                        EventParamsBuilder builder, Predicate<AbstractElement> filter) throws ExecutionException {
+    public void process(ElementEvent event, EventParamsBuilder builder, Predicate<AbstractElement> filter) throws ExecutionException {
 
-        ProcessDefinition pd = processDefinitionProvider.getById(definitionId);
+        ProcessDefinition pd = processDefinitionProvider.getById(event.getProcessDefinitionId());
         if (pd == null) {
-            throw new RuntimeException("can't find process definition '" + definitionId + "'");
+            throw new RuntimeException("Process definition not found: " + event.getProcessDefinitionId());
         }
 
         if (!(pd instanceof SourceAwareProcessDefinition)) {
@@ -67,12 +67,12 @@ public class ElementEventProcessor {
 
         Map<String, SourceMap> sourceMaps = ((SourceAwareProcessDefinition) pd).getSourceMaps();
 
-        SourceMap source = sourceMaps.get(elementId);
+        SourceMap source = sourceMaps.get(event.getElementId());
         if (source == null) {
             return;
         }
 
-        AbstractElement element = ProcessDefinitionUtils.findElement(pd, elementId);
+        AbstractElement element = ProcessDefinitionUtils.findElement(pd, event.getElementId());
 
         if (filter != null && !filter.test(element)) {
             return;
@@ -80,8 +80,8 @@ public class ElementEventProcessor {
 
         try {
             Map<String, Object> e = new HashMap<>();
-            e.put("processDefinitionId", definitionId);
-            e.put("elementId", elementId);
+            e.put("processDefinitionId", event.getProcessDefinitionId());
+            e.put("elementId", event.getElementId());
             e.put("line", source.getLine());
             e.put("column", source.getColumn());
             e.put("description", source.getDescription());
@@ -91,14 +91,45 @@ public class ElementEventProcessor {
             req.setEventType(ProcessEventRequest.EventTypeEnum.ELEMENT);
             req.setData(e);
 
-            eventsApi.event(UUID.fromString(instanceId), req);
-
+            ProcessEventsApi client = new ProcessEventsApi(apiClientFactory.create(event.getSessionToken()));
+            client.event(UUID.fromString(event.getInstanceId()), req);
         } catch (Exception e) {
-            log.warn("process ['{}'] -> transfer error: {}", instanceId, e.getMessage());
+            log.warn("process ['{}'] -> transfer error: {}", event.getInstanceId(), e.getMessage());
         }
     }
 
     public interface EventParamsBuilder {
         Map<String, Object> build(AbstractElement element);
+    }
+
+    public static class ElementEvent {
+
+        private final String instanceId;
+        private final String processDefinitionId;
+        private final String elementId;
+        private final String sessionToken;
+
+        public ElementEvent(String instanceId, String processDefinitionId, String elementId, String sessionToken) {
+            this.instanceId = instanceId;
+            this.processDefinitionId = processDefinitionId;
+            this.elementId = elementId;
+            this.sessionToken = sessionToken;
+        }
+
+        public String getInstanceId() {
+            return instanceId;
+        }
+
+        public String getProcessDefinitionId() {
+            return processDefinitionId;
+        }
+
+        public String getElementId() {
+            return elementId;
+        }
+
+        public String getSessionToken() {
+            return sessionToken;
+        }
     }
 }

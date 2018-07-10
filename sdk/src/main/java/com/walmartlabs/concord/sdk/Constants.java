@@ -202,6 +202,11 @@ public class Constants {
          * Concord system files.
          */
         public static final String CONCORD_SYSTEM_DIR_NAME = ".concord";
+
+        /**
+         * File wgich contains process session token.
+         */
+        public static final String SESSION_TOKEN_FILE_NAME = ".session_token";
     }
 
     public static class Flows {

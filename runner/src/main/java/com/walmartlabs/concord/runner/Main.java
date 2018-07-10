@@ -85,14 +85,15 @@ public class Main {
         }
         String instanceId = new String(Files.readAllBytes(idPath));
 
-        heartbeat.start(UUID.fromString(instanceId));
-
         Map<String, Object> policy = readPolicyRules(baseDir);
         if (policy.isEmpty()) {
             PolicyEngineHolder.INSTANCE.setEngine(null);
         } else {
             PolicyEngineHolder.INSTANCE.setEngine(new PolicyEngine(policy));
         }
+
+        String sessionToken = getSessionToken(baseDir);
+        heartbeat.start(UUID.fromString(instanceId), sessionToken);
 
         String eventName = readResumeEvent(baseDir);
         if (eventName == null) {
@@ -138,10 +139,11 @@ public class Main {
 
     private void resume(String instanceId, Path baseDir, String eventName) throws ExecutionException {
         // read the request data
-        Map<String, Object> cfg = readRequest(baseDir);
-        Map<String, Object> args = createArgs(instanceId, baseDir, cfg);
+        Map<String, Object> req = readRequest(baseDir);
 
-        Object currentUser = cfg.get(InternalConstants.Request.CURRENT_USER_KEY);
+        Map<String, Object> args = createArgs(instanceId, baseDir, req);
+
+        Object currentUser = req.get(InternalConstants.Request.CURRENT_USER_KEY);
         if (currentUser != null) {
             args.put(InternalConstants.Request.CURRENT_USER_KEY, currentUser);
         }
@@ -149,7 +151,7 @@ public class Main {
         log.debug("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
 
         // get active profiles from the request data
-        Collection<String> activeProfiles = getActiveProfiles(cfg);
+        Collection<String> activeProfiles = getActiveProfiles(req);
 
         // load the project
         ProjectDefinition project = loadProject(baseDir);
@@ -309,6 +311,16 @@ public class Main {
             Throwable t = unroll(e);
             log.error("main -> unhandled exception", t);
             System.exit(1);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String getSessionToken(Path baseDir) throws ExecutionException {
+        Path p = baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME);
+        try {
+            return new String(Files.readAllBytes(p));
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading sesison token data", e);
         }
     }
 

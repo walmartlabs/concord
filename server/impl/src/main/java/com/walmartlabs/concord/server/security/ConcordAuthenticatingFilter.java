@@ -143,7 +143,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
         validateApiKey(h);
 
-        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, isAgent(req));
+        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
 
         UUID userId = apiKeyDao.findUserId(h);
         if (userId == null) {
@@ -206,11 +206,5 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         String password = s.substring(idx + 1, s.length());
 
         return new UsernamePasswordToken(username, password);
-    }
-
-    // TODO find a way to clear IT client's cookies and remove this method
-    private static boolean isAgent(ServletRequest req) {
-        String s = WebUtils.toHttp(req).getHeader(HttpHeaders.USER_AGENT);
-        return s != null && s.contains("Concord-Agent");
     }
 }

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.common;
 
 import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.Call;
+import com.squareup.okhttp.OkHttpClient;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
@@ -255,7 +256,7 @@ public class ServerClient {
     }
 
     private static ApiClient createClient(String baseUrl, String apiKey, String gitHubKey) {
-        ApiClient c = new ConcordApiClient(baseUrl);
+        ApiClient c = new ConcordApiClient(baseUrl, new OkHttpClient());
         c.setReadTimeout(60000);
         c.setConnectTimeout(10000);
         c.setWriteTimeout(60000);

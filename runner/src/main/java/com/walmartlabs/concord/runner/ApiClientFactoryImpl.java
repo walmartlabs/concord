@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
+import com.squareup.okhttp.OkHttpClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
@@ -29,31 +30,58 @@ import com.walmartlabs.concord.client.ConcordApiClient;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 @Named
+@Singleton
 public class ApiClientFactoryImpl implements ApiClientFactory {
 
+    private static final String CONNECT_TIMEOUT_KEY = "api.connect.timeout";
+    private static final String READ_TIMEOUT_KEY = "api.read.timeout";
+
     private final ApiConfiguration cfg;
+    private final Path tmpDir;
+    private final OkHttpClient httpClient;
 
     @Inject
-    public ApiClientFactoryImpl(ApiConfiguration cfg) {
+    public ApiClientFactoryImpl(ApiConfiguration cfg) throws IOException {
         this.cfg = cfg;
+        this.tmpDir = IOUtils.createTempDir("task-client");
+
+        this.httpClient = new OkHttpClient();
+
+        int connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
+        int readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
+
+        this.httpClient.setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
+        this.httpClient.setReadTimeout(readTimeout, TimeUnit.MILLISECONDS);
+        this.httpClient.setWriteTimeout(30, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public ApiClient create(String sessionToken) {
+        return new ConcordApiClient(cfg.getBaseUrl(), httpClient)
+                .setSessionToken(sessionToken)
+                .addDefaultHeader("Accept", "*/*")
+                .setTempFolderPath(tmpDir.toString());
     }
 
     @Override
     public ApiClient create(Context ctx) {
-        Path tmpDir;
-        try {
-            tmpDir = IOUtils.createTempDir("task-client");
-        } catch (IOException e) {
-            throw new RuntimeException("Can't create tmp dir", e);
-        }
+        return create(cfg.getSessionToken(ctx));
+    }
 
-        ConcordApiClient client = new ConcordApiClient(cfg.getBaseUrl());
-        client.setTempFolderPath(tmpDir.toString());
-        client.setSessionToken(cfg.getSessionToken(ctx));
-        return client;
+    private static String getEnv(String key, String def) {
+        String value = System.getProperty(key);
+        if (value != null) {
+            return value;
+        }
+        if (def != null) {
+            return def;
+        }
+        throw new IllegalArgumentException(key + " must be specified");
     }
 }

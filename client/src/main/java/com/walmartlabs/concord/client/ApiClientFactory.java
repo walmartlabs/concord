@@ -25,5 +25,7 @@ import com.walmartlabs.concord.ApiClient;
 
 public interface ApiClientFactory {
 
+    ApiClient create(String sessionToken);
+
     ApiClient create(Context ctx);
 }

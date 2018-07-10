@@ -20,13 +20,19 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,16 +42,18 @@ import java.util.UUID;
 public class ProcessInfoProcessor implements PayloadProcessor {
 
     private final SecretStoreConfiguration secretCfg;
+    private final LogManager logManager;
 
     @Inject
-    public ProcessInfoProcessor(SecretStoreConfiguration secretCfg) {
+    public ProcessInfoProcessor(SecretStoreConfiguration secretCfg, LogManager logManager) {
         this.secretCfg = secretCfg;
+        this.logManager = logManager;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        Map<String, Object> m = createProcessInfo(payload);
+        UUID instanceId = payload.getInstanceId();
 
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (req == null) {
@@ -58,15 +66,26 @@ public class ProcessInfoProcessor implements PayloadProcessor {
             req.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
+        String token = createSessionKey(payload.getInstanceId());
+        Map<String, Object> m = new HashMap<>();
+        m.put("sessionKey", token);
+
         args.put(Constants.Request.PROCESS_INFO_KEY, m);
+
+        Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
+        exportSessionToken(instanceId, ws, token);
 
         return chain.process(payload.putHeader(Payload.REQUEST_DATA_MAP, req));
     }
 
-    private Map<String, Object> createProcessInfo(Payload p) {
-        Map<String, Object> m = new HashMap<>();
-        m.put("sessionKey", createSessionKey(p.getInstanceId()));
-        return m;
+    private void exportSessionToken(UUID instanceId, Path ws, String token) {
+        try {
+            Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
+            Files.write(dst.resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME), token.getBytes());
+        } catch (IOException e) {
+            logManager.error(instanceId, "Error while storing the session token: {}", e);
+            throw new ProcessException(instanceId, "Error while string the session token", e);
+        }
     }
 
     private String createSessionKey(UUID instanceId) {

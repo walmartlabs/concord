@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.squareup.okhttp.OkHttpClient;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
@@ -53,7 +54,7 @@ public class ServerConnector implements MaintenanceModeListener {
     public void start(Configuration cfg) throws IOException {
         int workersCount = cfg.getWorkersCount();
 
-        ApiClient apiClient = createClient(cfg);
+        ApiClient apiClient = ApiClientFactory.create(cfg);
         ProcessApi processApi = new ProcessApi(apiClient);
 
         ExecutionManager executionManager = new ExecutionManager(cfg, processApi);
@@ -158,15 +159,5 @@ public class ServerConnector implements MaintenanceModeListener {
         }
 
         return doneSignal.getCount();
-    }
-
-    private static ApiClient createClient(Configuration cfg) throws IOException {
-        ApiClient client = new ConcordApiClient(cfg.getServerApiBaseUrl());
-        client.setTempFolderPath(IOUtils.createTempDir("agent-client").toString());
-        client.setApiKey(cfg.getApiKey());
-        client.setReadTimeout(cfg.getReadTimeout());
-        client.setConnectTimeout(cfg.getConnectTimeout());
-        client.setUserAgent(cfg.getUserAgent());
-        return client;
     }
 }

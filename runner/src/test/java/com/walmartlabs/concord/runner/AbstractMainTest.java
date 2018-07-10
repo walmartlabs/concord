@@ -38,10 +38,14 @@ public abstract class AbstractMainTest {
 
     protected Main createMain(Injector injector, String instanceId, String resource) throws Exception {
         NamedTaskRegistry taskRegistry = new NamedTaskRegistry(injector, null);
-        EngineFactory engineFactory = new EngineFactory(mock(ApiClient.class), taskRegistry);
+        EngineFactory engineFactory = new EngineFactory(mock(ApiClientFactoryImpl.class), taskRegistry);
 
         URI baseDir = this.getClass().getResource(resource).toURI();
         Path tmpDir = Files.createTempDirectory("test");
+        // session token
+        Files.createDirectory(tmpDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
+        Files.write(tmpDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME), "token".getBytes());
+
         IOUtils.copy(Paths.get(baseDir), tmpDir);
         System.setProperty("user.dir", tmpDir.toString());
 
