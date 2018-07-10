@@ -1,17 +1,72 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:jira-task:0.49.0"
-
-  arguments:
-    jiraConfig:
-      jiraUrl: "https://jira.example.com"
-      jiraUid: "jiraUser"
-      jiraPwd: "${crypto.decryptString('encryptedJiraPassword')}"
-      jiraProjectKey: "MYPROJECT"
-      jiraSummary: "My Summary"
-      jiraDescription: "My Description"
-      jiraRequestorUid: "${initiator.username}"
+  - "mvn://com.walmartlabs.concord.plugins:jira-task:0.50.1"
 
 flows:
   default:
-  - ${jira.create(context, jiraConfig)}
+
+  # create new issue
+  - task: jira
+    in:
+      action: "createIssue"
+      userId: "${initiator.username}"
+      password: "myJiraPassword" # should be encrypted and exported using `crypto` task
+      projectKey: "MYPROJECTKEY"
+      summary: "mySummary"
+      description: "myDescription"
+      requestorUid: "${initiator.username}"
+      issueType: "Bug"
+      priority: "P4"
+
+      # complex fields, the actual field names and values depend on the configuration of the JIRA instance
+      customFieldsTypeFieldAttr:
+        customfield_10212: # environment
+          value: "Development"
+
+        customfield_10216: # severity
+          value: "4 - Cosmetic"
+
+        customfield_20400: # application/service (array of values)
+          - "2125921"      # "SDE - Concord"
+
+
+  # the issue ID is stored as `issueId`
+  - log: "Issue ID: ${issueId}"
+
+
+  # add a comment
+  - task: jira
+    in:
+      action: "addComment"
+      userId: "${initiator.username}"
+      password: "myJiraPassword"
+      issueKey: "${issueId}"
+      comment: "This is my comment from Concord"
+
+
+  # transition to another status
+  - task: jira
+    in:
+      action: "transition"
+      userId: "${initiator.username}"
+      password: "myJiraPassword"
+      issueKey: "${issueId}"
+      transitionId: 321
+      transitionComment: "Marking as Done"
+      customFieldsTypeFieldAttr:
+        customfield_10229: # resolution
+          value: "Done"
+        customfield_20106: # release handling option
+          id: "24226"      # "This is not going into production (ever)"
+
+
+  # delete an existing issue
+  - task: jira
+    in:
+      action: "deleteIssue"
+      userId: "${initiator.username}"
+      password: "myJiraPassword"
+      issueKey: "${issueId}"
+
+
+  - log: "Done!"
