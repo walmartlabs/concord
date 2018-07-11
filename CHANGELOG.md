@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: all secured endpoints will now return appropriate
+auth challenge headers;
 - concord-console: scroll back to top button on the process log page;
 - concord-console: highlighting of errors and warning messages in
 process logs;

@@ -60,16 +60,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             "/api/v1/server/version",
             "/api/service/console/logout"};
 
-    /**
-     * List of URLs which enforces use of basic authentication.
-     */
-    private static final String[] FORCE_BASIC_AUTH_URLS = {
-            "/forms/.*",
-            "/api/service/process_portal/.*",
-            "/api/v1/org/.*/project/.*/repo/.*/start/.*",
-            "/jolokia/.*"
-    };
-
     private final ApiKeyDao apiKeyDao;
     private final SecretStoreConfiguration secretCfg;
 
@@ -118,7 +108,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             HttpServletResponse resp = WebUtils.toHttp(response);
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-            forceBasicAuthIfNeeded(request, response);
+            reportAuthSchemes(request, response);
         }
 
         return loggedId;
@@ -174,22 +164,14 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
     }
 
-    private static void forceBasicAuthIfNeeded(ServletRequest request, ServletResponse response) {
-        // send "WWW-Authenticate: Basic", but only for specific requests w/o
-        // authentication header or with basic authentication
-
+    private static void reportAuthSchemes(ServletRequest request, ServletResponse response) {
         HttpServletRequest req = WebUtils.toHttp(request);
         HttpServletResponse resp = WebUtils.toHttp(response);
 
         String authHeader = req.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || authHeader.contains("Basic")) {
-            String p = req.getRequestURI();
-            for (String s : FORCE_BASIC_AUTH_URLS) {
-                if (p.matches(s)) {
-                    resp.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic");
-                    break;
-                }
-            }
+            resp.addHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic");
+            resp.addHeader(HttpHeaders.WWW_AUTHENTICATE, "ConcordApiToken");
         }
     }
 
