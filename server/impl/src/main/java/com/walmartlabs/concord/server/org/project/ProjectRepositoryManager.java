@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import com.walmartlabs.concord.project.ProjectLoader;
+import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -29,11 +31,15 @@ import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.repository.RepositoryManager;
 import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.xml.ws.WebServiceException;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,25 +48,33 @@ public class ProjectRepositoryManager {
 
     private final ProjectAccessManager projectAccessManager;
     private final SecretManager secretManager;
+    private final RepositoryManager repositoryManager;
     private final SecretDao secretDao;
     private final RepositoryDao repositoryDao;
     private final ExternalEventResource externalEventResource;
     private final GithubWebhookService githubWebhookService;
+    private final RepositoryValidator repositoryValidator;
+
+    private final ProjectLoader loader = new ProjectLoader();
 
     @Inject
     public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
                                     SecretManager secretManager,
+                                    RepositoryManager repositoryManager,
                                     SecretDao secretDao,
                                     RepositoryDao repositoryDao,
                                     ExternalEventResource externalEventResource,
-                                    GithubWebhookService githubWebhookService) {
+                                    GithubWebhookService githubWebhookService,
+                                    RepositoryValidator repositoryValidator) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
+        this.repositoryManager = repositoryManager;
         this.secretDao = secretDao;
         this.repositoryDao = repositoryDao;
         this.externalEventResource = externalEventResource;
         this.githubWebhookService = githubWebhookService;
+        this.repositoryValidator = repositoryValidator;
     }
 
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
@@ -132,6 +146,13 @@ public class ProjectRepositoryManager {
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
+    }
+
+    public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) throws IOException
+    {
+        Path srcPath = repositoryManager.fetch(projectId, repositoryEntry);
+        ProjectDefinition pd = loader.load(srcPath);
+        repositoryValidator.validate(pd);
     }
 
     private static String trim(String s) {

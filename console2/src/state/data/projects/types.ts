@@ -22,7 +22,10 @@ import { Action } from 'redux';
 
 import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
 import { NewProjectEntry, ProjectEntry, ProjectOperationResult } from '../../../api/org/project';
-import { EditRepositoryEntry } from '../../../api/org/project/repository';
+import {
+    EditRepositoryEntry,
+    RepositoryValidationResponse
+} from '../../../api/org/project/repository';
 import { RequestState } from '../common';
 
 export interface GetProjectRequest extends Action {
@@ -85,6 +88,12 @@ export interface RefreshRepositoryRequest extends Action {
     repoName: ConcordKey;
 }
 
+export interface ValidateRepositoryRequest extends Action {
+    orgName: ConcordKey;
+    projectName: ConcordKey;
+    repoName: ConcordKey;
+}
+
 export interface Projects {
     [id: string]: ProjectEntry;
 }
@@ -96,6 +105,7 @@ export type CreateRepositoryState = RequestState<GenericOperationResult>;
 export type UpdateRepositoryState = RequestState<GenericOperationResult>;
 export type DeleteRepositoryState = RequestState<GenericOperationResult>;
 export type RefreshRepositoryState = RequestState<GenericOperationResult>;
+export type ValidateRepositoryState = RequestState<RepositoryValidationResponse>;
 
 export interface State {
     projectById: Projects;
@@ -112,4 +122,5 @@ export interface State {
     updateRepository: UpdateRepositoryState;
     deleteRepository: DeleteRepositoryState;
     refreshRepository: RefreshRepositoryState;
+    validateRepository: ValidateRepositoryState;
 }

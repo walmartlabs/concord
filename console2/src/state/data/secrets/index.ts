@@ -298,7 +298,7 @@ function* onDelete({ orgName, secretName }: DeleteSecretRequest) {
         const response = yield call(apiDelete, orgName, secretName);
         yield put(genericResult(actionTypes.DELETE_SECRET_RESPONSE, response));
 
-        yield put(pushHistory(`/org/${orgName}/secret/`));
+        yield put(pushHistory(`/org/${orgName}/secret`));
     } catch (e) {
         yield handleErrors(actionTypes.DELETE_SECRET_RESPONSE, e);
     }
@@ -309,7 +309,7 @@ function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
         const response = yield call(apiRenameSecret, orgName, secretId, secretName);
         yield put(genericResult(actionTypes.RENAME_SECRET_RESPONSE, response));
 
-        yield put(pushHistory(`/org/${orgName}/secret/`));
+        yield put(pushHistory(`/org/${orgName}/secret`));
     } catch (e) {
         yield handleErrors(actionTypes.RENAME_SECRET_RESPONSE, e);
     }

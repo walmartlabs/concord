@@ -21,7 +21,7 @@
 export type ConcordId = string;
 export type ConcordKey = string;
 
-interface RequestErrorData {
+export interface RequestErrorData {
     instanceId?: ConcordId;
     message?: string;
     details?: string;
@@ -52,7 +52,7 @@ export const parseJsonError = async (resp: Response) => {
 
     let message;
     if (resp.status < 400 || resp.status >= 500) {
-        message = json.message;
+        message = json;
     }
 
     return {

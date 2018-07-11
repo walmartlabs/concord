@@ -25,8 +25,9 @@ import { ConcordKey } from '../../../api/common';
 import {
     DeleteRepositoryPopup,
     RefreshRepositoryPopup,
-    RepositoryTriggersPopup,
-    StartRepositoryPopup
+    StartRepositoryPopup,
+    ValidateRepositoryPopup,
+    RepositoryTriggersPopup
 } from '../../organisms';
 
 interface ExternalProps {
@@ -50,6 +51,17 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="play" color="blue" />
                                 <span className="text">Run</span>
+                            </Dropdown.Item>
+                        )}
+                    />
+                    <ValidateRepositoryPopup
+                        orgName={orgName}
+                        projectName={projectName}
+                        repoName={repoName}
+                        trigger={(onClick) => (
+                            <Dropdown.Item onClick={onClick}>
+                                <Icon name="check" />
+                                <span className="text">Validate</span>
                             </Dropdown.Item>
                         )}
                     />

@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { Button, Header, Modal } from 'semantic-ui-react';
 
-import { RequestError } from '../../../api/common';
+import { RequestError, RequestErrorData } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
 
 interface State {
@@ -43,6 +43,7 @@ interface Props {
     successMsg?: React.ReactNode;
 
     error: RequestError;
+    errorRenderer?: (error: RequestErrorData) => React.ReactNode;
 
     reset: () => void;
     onConfirm: () => void;
@@ -71,13 +72,16 @@ class SingleOperationPopup extends React.Component<Props, State> {
     }
 
     renderContent() {
-        const { success, successMsg, error, running, runningMsg, introMsg } = this.props;
+        const {success, successMsg, error, errorRenderer, running, runningMsg, introMsg} = this.props;
 
         if (success) {
             return successMsg ? successMsg : <p>The operation was completed successfully.</p>;
         }
 
         if (error) {
+            if (errorRenderer) {
+                return errorRenderer(error);
+            }
             return <RequestErrorMessage error={error} />;
         }
 

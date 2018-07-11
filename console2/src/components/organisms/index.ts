@@ -61,3 +61,4 @@ export { default as TeamList } from './TeamList';
 export { default as TeamMemberListActivity } from './TeamMemberListActivity';
 export { default as TeamRenameActivity } from './TeamRenameActivity';
 export { default as TopBar } from './TopBar';
+export { default as ValidateRepositoryPopup } from './ValidateRepositoryPopup';

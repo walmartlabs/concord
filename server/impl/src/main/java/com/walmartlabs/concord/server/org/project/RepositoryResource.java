@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.repository.CachedRepositoryManager.RepositoryCacheDao;
+import com.walmartlabs.concord.server.repository.RepositoryValidationResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -41,6 +42,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,6 +59,7 @@ public class RepositoryResource implements Resource {
     private final RepositoryCacheDao repositoryCacheDao;
     private final ExternalEventResource externalEventResource;
     private final ProjectDao projectDao;
+    private final RepositoryDao repositoryDao;
     private final ProjectRepositoryManager projectRepositoryManager;
 
     @Inject
@@ -65,6 +68,7 @@ public class RepositoryResource implements Resource {
                               RepositoryCacheDao repositoryCacheDao,
                               ExternalEventResource externalEventResource,
                               ProjectDao projectDao,
+                              RepositoryDao repositoryDao,
                               ProjectRepositoryManager projectRepositoryManager) {
 
         this.orgManager = orgManager;
@@ -72,6 +76,7 @@ public class RepositoryResource implements Resource {
         this.repositoryCacheDao = repositoryCacheDao;
         this.externalEventResource = externalEventResource;
         this.projectDao = projectDao;
+        this.repositoryDao = repositoryDao;
         this.projectRepositoryManager = projectRepositoryManager;
     }
 
@@ -155,5 +160,43 @@ public class RepositoryResource implements Resource {
         externalEventResource.event("concord", event);
 
         return new GenericOperationResult(OperationResult.UPDATED);
+    }
+
+    /**
+     * Validate a repository.
+     *
+     * @param orgName
+     * @param projectName
+     * @param repositoryName
+     * @return
+     */
+    @POST
+    @ApiOperation("Validate an existing repository")
+    @Path("/{orgName}/project/{projectName}/repository/{repositoryName}/validate")
+    @Produces(MediaType.APPLICATION_JSON)
+    public RepositoryValidationResponse validateRepository(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                           @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                                           @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+
+        UUID orgId = orgManager.assertAccess(orgName, true).getId();
+        UUID projectId = projectDao.getId(orgId, projectName);
+        if (projectId == null) {
+            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+        }
+
+        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
+
+        UUID repoId = repositoryDao.getId(projectId, repositoryName);
+        if (repoId == null) {
+            throw new WebApplicationException("Repository not found: " + repositoryName, Status.NOT_FOUND);
+        }
+
+        try {
+            projectRepositoryManager.validateRepository(projectId, repositoryDao.get(projectId, repoId));
+        } catch (IOException e) {
+            throw new WebApplicationException("Validation failed: " + repositoryName, e);
+        }
+
+        return new RepositoryValidationResponse(OperationResult.VALIDATED);
     }
 }

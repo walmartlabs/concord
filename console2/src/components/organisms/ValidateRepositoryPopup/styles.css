@@ -17,12 +17,8 @@
  * limitations under the License.
  * =====
  */
-.codeSnippet {
-    color: #B03060;
-    background-color: #F0F0F0;
+.resultBox {
+    width: 100%;
     font-family: monospace;
-}
-
-.encryptedValue input {
-    font-family: monospace !important;
+    white-space: pre-wrap;
 }

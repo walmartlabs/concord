@@ -18,7 +18,13 @@
  * =====
  */
 
-import { ConcordId, ConcordKey, fetchJson, GenericOperationResult } from '../../../common';
+import {
+    ConcordId,
+    ConcordKey,
+    fetchJson,
+    GenericOperationResult,
+    OperationResult
+} from '../../../common';
 
 export interface RepositoryEntry {
     id: ConcordId;
@@ -48,6 +54,11 @@ export interface TriggerEntry {
     entryPoint: string;
     arguments?: object;
     conditions?: object;
+}
+
+export interface RepositoryValidationResponse {
+    ok: boolean;
+    result: OperationResult;
 }
 
 export const createOrUpdate = (
@@ -89,6 +100,21 @@ export const refreshRepository = (
 
     return fetchJson(
         `/api/v1/org/${orgName}/project/${projectName}/repository/${repoName}/refresh`,
+        opts
+    );
+};
+
+export const validateRepository = (
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    repoName: ConcordKey
+): Promise<RepositoryValidationResponse> => {
+    const opts = {
+        method: 'POST'
+    };
+
+    return fetchJson(
+        `/api/v1/org/${orgName}/project/${projectName}/repository/${repoName}/validate`,
         opts
     );
 };

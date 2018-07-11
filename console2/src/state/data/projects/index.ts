@@ -36,7 +36,8 @@ import {
     createOrUpdate as apiRepoCreateOrUpdate,
     deleteRepository as apiRepoDelete,
     EditRepositoryEntry,
-    refreshRepository as apiRepoRefresh
+    refreshRepository as apiRepoRefresh,
+    validateRepository as apiRepoValidation
 } from '../../../api/org/project/repository';
 import {
     genericResult,
@@ -65,7 +66,9 @@ import {
     SetAcceptsRawPayloadState,
     State,
     UpdateRepositoryRequest,
-    UpdateRepositoryState
+    UpdateRepositoryState,
+    ValidateRepositoryState,
+    ValidateRepositoryRequest
 } from './types';
 
 export { State };
@@ -99,6 +102,9 @@ const actionTypes = {
 
     REFRESH_REPOSITORY_REQUEST: `${NAMESPACE}/repo/refresh/request`,
     REFRESH_REPOSITORY_RESPONSE: `${NAMESPACE}/repo/refresh/response`,
+
+    VALIDATE_REPOSITORY_REQUEST: `${NAMESPACE}/repo/validate/request`,
+    VALIDATE_REPOSITORY_RESPONSE: `${NAMESPACE}/repo/validate/response`,
 
     RESET_REPOSITORY: `${NAMESPACE}/repo/reset`
 };
@@ -188,6 +194,17 @@ export const actions = {
         repoName: ConcordKey
     ): RefreshRepositoryRequest => ({
         type: actionTypes.REFRESH_REPOSITORY_REQUEST,
+        orgName,
+        projectName,
+        repoName
+    }),
+
+    validateRepository: (
+        orgName: ConcordKey,
+        projectName: ConcordKey,
+        repoName: ConcordKey
+    ): ValidateRepositoryRequest => ({
+        type: actionTypes.VALIDATE_REPOSITORY_REQUEST,
         orgName,
         projectName,
         repoName
@@ -338,6 +355,21 @@ const refreshRepositoryReducers = combineReducers<RefreshRepositoryState>({
     )
 });
 
+const validateRepositoryReducers = combineReducers<ValidateRepositoryState>({
+    running: makeLoadingReducer(
+        [actionTypes.VALIDATE_REPOSITORY_REQUEST],
+        [actionTypes.VALIDATE_REPOSITORY_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.VALIDATE_REPOSITORY_REQUEST],
+        [actionTypes.VALIDATE_REPOSITORY_RESPONSE, actionTypes.RESET_REPOSITORY]
+    ),
+    response: makeResponseReducer(
+        actionTypes.VALIDATE_REPOSITORY_RESPONSE,
+        actionTypes.RESET_REPOSITORY
+    )
+});
+
 export const reducers = combineReducers<State>({
     projectById, // TODO use makeEntityByIdReducer
     loading,
@@ -350,7 +382,8 @@ export const reducers = combineReducers<State>({
     createRepository: createRepositoryReducers,
     updateRepository: updateRepositoryReducers,
     deleteRepository: deleteRepositoryReducers,
-    refreshRepository: refreshRepositoryReducers
+    refreshRepository: refreshRepositoryReducers,
+    validateRepository: validateRepositoryReducers
 });
 
 export const selectors = {
@@ -491,6 +524,15 @@ function* onRefreshRepository({ orgName, projectName, repoName }: RefreshReposit
     }
 }
 
+function* onValidateRepository({ orgName, projectName, repoName }: ValidateRepositoryRequest) {
+    try {
+        const response = yield call(apiRepoValidation, orgName, projectName, repoName);
+        yield put(genericResult(actionTypes.VALIDATE_REPOSITORY_RESPONSE, response));
+    } catch (e) {
+        yield handleErrors(actionTypes.VALIDATE_REPOSITORY_RESPONSE, e);
+    }
+}
+
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_PROJECT_REQUEST, onGet),
@@ -502,6 +544,7 @@ export const sagas = function*() {
         takeLatest(actionTypes.ADD_REPOSITORY_REQUEST, onAddRepository),
         takeLatest(actionTypes.UPDATE_REPOSITORY_REQUEST, onUpdateRepository),
         takeLatest(actionTypes.DELETE_REPOSITORY_REQUEST, onDeleteRepository),
-        takeLatest(actionTypes.REFRESH_REPOSITORY_REQUEST, onRefreshRepository)
+        takeLatest(actionTypes.REFRESH_REPOSITORY_REQUEST, onRefreshRepository),
+        takeLatest(actionTypes.VALIDATE_REPOSITORY_REQUEST, onValidateRepository)
     ]);
 };

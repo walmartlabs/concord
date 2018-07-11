@@ -1,0 +1,30 @@
+flows:
+  default:
+  - log: "default flow..."
+
+  onCronEvent:
+  - log: "on Cron event"
+
+  onGitEvent:
+  - log: "on Git event"
+
+triggers:
+  - cron:
+      spec: 30 * * * *
+      entryPoint: onCronEvent
+
+  - github:
+      project: "myProject"
+      repository: "myRepository"
+      entryPoint: onGitEvent
+
+  - eventSource:
+      spec: "specs"
+      param1: ".*123.*"
+      param2: false
+      param3: 123
+      entryPoint: default
+      arguments:
+         array:
+          - val1
+          - val2

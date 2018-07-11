@@ -189,15 +189,15 @@ public class ConsoleService implements Resource {
             String secretName = secretDao.getName(req.getSecretId());
             repositoryManager.testConnection(org.getId(), req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), secretName);
             return true;
-        } catch (InvalidRepositoryPathException irpe) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Repository validation error");
-            response.put("level", "WARN");
-            response.put("details", irpe.getMessage());
+        } catch (InvalidRepositoryPathException e) {
+            Map<String, String> m = new HashMap<>();
+            m.put("message", "Repository validation error");
+            m.put("level", "WARN");
+            m.put("details", e.getMessage());
 
             throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                    .entity(response)
+                    .entity(m)
                     .build());
         } catch (Exception e) {
             String msg;

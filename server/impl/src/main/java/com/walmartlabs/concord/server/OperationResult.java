@@ -27,5 +27,6 @@ public enum OperationResult {
     UPDATED,
     DELETED,
     ALREADY_EXISTS,
-    NOT_FOUND
+    NOT_FOUND,
+    VALIDATED
 }

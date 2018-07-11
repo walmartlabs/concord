@@ -150,7 +150,6 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
     }
 
-
     @Test
     public void testWithTag() throws Exception {
         Path tmpDir = createTempDir();
@@ -282,6 +281,41 @@ public class ProjectIT extends AbstractServerIT {
             Thread.sleep(1_000);
         }
     }
+
+    @Test(timeout = 30000)
+    public void testRepositoryValidation() throws Exception{
+        Path tmpDir = createTempDir();
+
+        File src = new File(ProjectIT.class.getResource("repositoryValidation").toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.toAbsolutePath().toString();
+
+        // ---
+
+        String projectName = "myProject_" + randomString();
+        String userName = "myUser_" + randomString();
+        Set<String> permissions = Collections.emptySet();
+        String repoName = "myRepo_" + randomString();
+        String repoUrl = gitUrl;
+
+        // ---
+
+        createProjectAndRepo(projectName, userName, permissions, repoName,repoUrl, null, null);
+
+        // ---
+
+        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        RepositoryValidationResponse result =  repositoriesApi.validateRepository("Default",projectName,repoName);
+        assertTrue(result.isOk());
+
+
+    }
+
 
     private static boolean hasCondition(String src, String k, Object v, Collection<TriggerEntry> entries) {
         for (TriggerEntry e : entries) {

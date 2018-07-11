@@ -115,7 +115,7 @@ const processById: Reducer<Processes> = (
 
 const loading = makeLoadingReducer(
     [actionTypes.GET_PROCESS_REQUEST, actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
-    [actionTypes.PROCESS_DATA_RESPONSE]
+    [actionTypes.PROCESS_DATA_RESPONSE, actionTypes]
 );
 
 const errorMsg = makeErrorReducer(

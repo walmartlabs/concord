@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: new method to validate a repo
+without starting it;
 - concord-console: new form to encrypt values to use with
 `crypto.decryptString`;
 - concord-server: all secured endpoints will now return appropriate
