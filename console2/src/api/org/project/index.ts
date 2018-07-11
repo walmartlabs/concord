@@ -132,3 +132,16 @@ export const deleteProject = (
     projectName: ConcordKey
 ): Promise<GenericOperationResult> =>
     fetchJson(`/api/v1/org/${orgName}/project/${projectName}`, { method: 'DELETE' });
+
+export const encrypt = (
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    value: string
+): Promise<GenericOperationResult> => {
+    const opts = {
+        method: 'POST',
+        body: value
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/encrypt`, opts);
+};

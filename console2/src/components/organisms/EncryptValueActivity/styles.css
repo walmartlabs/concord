@@ -1,0 +1,9 @@
+.codeSnippet {
+    color: #B03060;
+    background-color: #F0F0F0;
+    font-family: monospace;
+}
+
+.encryptedValue input {
+    font-family: monospace !important;
+}

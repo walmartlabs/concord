@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: new form to encrypt values to use with
+`crypto.decryptString`;
 - concord-server: all secured endpoints will now return appropriate
 auth challenge headers;
 - concord-console: scroll back to top button on the process log page;

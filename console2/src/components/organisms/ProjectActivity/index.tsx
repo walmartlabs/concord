@@ -29,6 +29,7 @@ import { ProjectEntry } from '../../../api/org/project';
 import { actions, selectors, State } from '../../../state/data/projects';
 import { comparators } from '../../../utils';
 import { RepositoryList, RequestErrorMessage } from '../../molecules';
+import { EncryptValueActivity } from '../../organisms';
 import { NotFoundPage } from '../../pages';
 import {
     ProcessList,
@@ -98,6 +99,11 @@ class ProjectActivity extends React.PureComponent<Props> {
                         projectId={p.id}
                         acceptsRawPayload={p.acceptsRawPayload}
                     />
+                </Segment>
+
+                <Segment>
+                    <Header as="h4">Encrypt a value</Header>
+                    <EncryptValueActivity orgName={p.orgName} projectName={p.name} />
                 </Segment>
 
                 <Divider horizontal={true} content="Danger Zone" />
