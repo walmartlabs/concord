@@ -28,6 +28,7 @@ import { canBeCancelled, hasState, ProcessEntry } from '../../../api/process';
 import {
     AnsibleEvent,
     AnsibleStatus,
+    ProcessElementEvent,
     ProcessEventEntry,
     ProcessEventType
 } from '../../../api/process/event';
@@ -41,6 +42,7 @@ import {
     ProcessStatusTable
 } from '../../molecules';
 import { CancelProcessPopup } from '../index';
+import { timestampDiffMs } from '../../../utils';
 
 interface OwnState {
     selectedStatus?: AnsibleStatus;
@@ -54,7 +56,7 @@ interface StateProps {
     loading: boolean;
     process?: ProcessEntry;
     forms: FormListEntry[];
-    events: Array<ProcessEventEntry<{}>>;
+    events: Array<ProcessEventEntry<ProcessElementEvent>>;
     ansibleEvents: Array<ProcessEventEntry<AnsibleEvent>>;
 }
 
@@ -182,24 +184,85 @@ interface StateType {
 // TODO move to selectors?
 
 // assumes that "eventDate" can be sorted lexicographically
-const makeEventList = (eventById: ProcessEvents): Array<ProcessEventEntry<{}>> =>
+const makeElementEvents = (
+    eventById: ProcessEvents
+): Array<ProcessEventEntry<ProcessElementEvent>> =>
     Object.keys(eventById)
         .map((k) => eventById[k])
+        .filter((e) => e.eventType === ProcessEventType.ELEMENT)
+        .map((e) => e as ProcessEventEntry<ProcessElementEvent>)
         .sort((a, b) => (a.eventDate > b.eventDate ? 1 : a.eventDate < b.eventDate ? -1 : 0));
 
 const filterAnsibleEvents = (eventById: ProcessEvents): Array<ProcessEventEntry<AnsibleEvent>> =>
     Object.keys(eventById)
         .map((k) => eventById[k])
         .filter((e) => e.eventType === ProcessEventType.ANSIBLE)
-        .map((e) => e as ProcessEventEntry<AnsibleEvent>)
-        .filter(({ data }) => !!data.host);
+        .map((e) => e as ProcessEventEntry<AnsibleEvent>);
+
+const combinePrePostEvents = (
+    events: Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>>
+): Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>> => {
+    function findEvent(
+        phase: string,
+        correlationId: string
+    ): ProcessEventEntry<AnsibleEvent | ProcessElementEvent> | undefined {
+        return events.find(
+            (value) => value.data.phase === phase && value.data.correlationId === correlationId
+        );
+    }
+
+    const processed = {};
+    const result = new Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>>();
+    events.forEach((event) => {
+        const data = event.data;
+        if (!data.correlationId) {
+            result.push(event);
+            return;
+        }
+
+        if (processed[data.correlationId]) {
+            return;
+        }
+
+        processed[data.correlationId] = true;
+
+        if (data.phase === 'pre' && data.correlationId) {
+            const postEvent = findEvent('post', data.correlationId);
+            if (postEvent) {
+                const clone = { ...event };
+                clone.data = postEvent.data;
+                clone.duration = timestampDiffMs(postEvent.eventDate, event.eventDate);
+                result.push(clone);
+            } else {
+                result.push(event);
+            }
+        } else if (data.phase === 'post' && data.correlationId) {
+            const preEvent = findEvent('pre', data.correlationId);
+            if (preEvent) {
+                const clone = { ...preEvent };
+                clone.duration = timestampDiffMs(event.eventDate, preEvent.eventDate);
+                result.push(clone);
+            } else {
+                result.push(event);
+            }
+        } else {
+            result.push(event);
+        }
+    });
+
+    return result;
+};
 
 export const mapStateToProps = ({ processes: { poll } }: StateType): StateProps => ({
     loading: poll.currentRequest.running,
     process: poll.currentRequest.response ? poll.currentRequest.response.process : undefined,
     forms: poll.forms,
-    events: makeEventList(poll.eventById),
-    ansibleEvents: filterAnsibleEvents(poll.eventById)
+    events: combinePrePostEvents(makeElementEvents(poll.eventById)) as Array<
+        ProcessEventEntry<ProcessElementEvent>
+    >,
+    ansibleEvents: combinePrePostEvents(filterAnsibleEvents(poll.eventById)) as Array<
+        ProcessEventEntry<AnsibleEvent>
+    >
 });
 
 export const mapDispatchToProps = (

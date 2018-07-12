@@ -24,5 +24,8 @@ class StrategyModule(StrategyModule_linear):
             super(StrategyModule, self)._queue_task(host, _task, task_vars, play_context)
             return
 
+
+        self._tqm.send_callback('concord_on_task_start', host, task)
+
         super(StrategyModule, self)._queue_task(host, task, task_vars, play_context)
 

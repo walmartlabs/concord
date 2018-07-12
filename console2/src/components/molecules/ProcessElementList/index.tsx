@@ -20,27 +20,13 @@
 
 import * as React from 'react';
 import { Icon, Table } from 'semantic-ui-react';
-import {
-    ProcessElementEvent,
-    ProcessEventEntry,
-    ProcessEventType
-} from '../../../api/process/event';
+import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
 import { formatTimestamp } from '../../../utils';
+import { HumanizedDuration } from '../../molecules';
 
 interface Props {
-    events: Array<ProcessEventEntry<{}>>;
+    events: Array<ProcessEventEntry<ProcessElementEvent>>;
 }
-
-const phaseToStr = (v?: string) => {
-    switch (v) {
-        case 'pre':
-            return '(start)';
-        case 'post':
-            return '(end)';
-        default:
-            return '';
-    }
-};
 
 const renderDefinitionId = (
     { data: { processDefinitionId } }: ProcessEventEntry<ProcessElementEvent>,
@@ -76,10 +62,11 @@ const renderElementRow = (
     return (
         <Table.Row key={idx}>
             <Table.Cell textAlign="right">{renderDefinitionId(ev, idx, arr)}</Table.Cell>
-            <Table.Cell>
-                {ev.data.description} {phaseToStr(ev.data.phase)}
-            </Table.Cell>
+            <Table.Cell>{ev.data.description}</Table.Cell>
             <Table.Cell singleLine={true}>{renderTimestamp(ev, idx, arr)}</Table.Cell>
+            <Table.Cell singleLine={true}>
+                <HumanizedDuration value={ev.duration} />
+            </Table.Cell>
             <Table.Cell>{ev.data.line}</Table.Cell>
             <Table.Cell>{ev.data.column}</Table.Cell>
         </Table.Row>
@@ -98,16 +85,16 @@ class ProcessElementList extends React.PureComponent<Props> {
                         <Table.HeaderCell collapsing={true} singleLine={true}>
                             <Icon name="time" />Timestamp
                         </Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true} singleLine={true}>
+                            Duration
+                        </Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Line</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Col</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
 
                 <Table.Body>
-                    {events
-                        .filter((e) => e.eventType === ProcessEventType.ELEMENT)
-                        .map((e) => e as ProcessEventEntry<ProcessElementEvent>)
-                        .map((e, idx, arr) => renderElementRow(e, idx, arr))}
+                    {events.map((e, idx, arr) => renderElementRow(e, idx, arr))}
                 </Table.Body>
             </Table>
         );

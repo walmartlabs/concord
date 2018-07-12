@@ -24,7 +24,17 @@ import { AnsibleStatChartEntry } from '../AnsibleStatChart';
 
 export const makeHostList = (
     events: Array<ProcessEventEntry<AnsibleEvent>>
-): AnsibleHostListEntry[] => events.map(({ data }) => ({ host: data.host!, status: data.status! }));
+): AnsibleHostListEntry[] => {
+    const result: { [id: string]: AnsibleHostListEntry } = {};
+    events.forEach((e) => {
+        const data = e.data;
+        const hostDuration =
+            ((result[data.host] && result[data.host].duration) || 0) + (e.duration || 0);
+        result[data.host] = { host: data.host, status: data.status!, duration: hostDuration };
+    });
+
+    return Object.keys(result).map((k) => result[k]);
+};
 
 const hostsByStatus = (
     evs: Array<ProcessEventEntry<AnsibleEvent>>,

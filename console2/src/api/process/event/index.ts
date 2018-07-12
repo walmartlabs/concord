@@ -29,16 +29,18 @@ export enum ProcessEventType {
 // TODO find which properties are always defined
 
 export interface ProcessElementEvent {
-    processDefinitionId?: string;
-    elementId?: string;
-    line?: number;
-    column?: number;
+    processDefinitionId: string;
+    elementId: string;
+    line: number;
+    column: number;
     description?: string;
     phase?: 'pre' | 'post';
-    params?: {};
+    in?: {};
+    correlationId?: string;
 }
 
 export enum AnsibleStatus {
+    RUNNING = 'RUNNING',
     CHANGED = 'CHANGED',
     FAILED = 'FAILED',
     OK = 'OK',
@@ -80,18 +82,15 @@ export const getStatusColor = (status: AnsibleStatus) => {
     }
 };
 
-export interface AnsibleResult {
-    msg?: string;
-    changed: boolean;
-}
-
 export interface AnsibleEvent {
-    host?: string;
-    playbook?: string;
-    status?: AnsibleStatus;
-    task?: string;
-    result?: AnsibleResult;
+    host: string;
+    playbook: string;
+    status: AnsibleStatus;
+    task: string;
+    result?: object;
     ignore_errors?: boolean;
+    phase: 'pre' | 'post';
+    correlationId: string;
 }
 
 export type ProcessEventData = ProcessElementEvent | AnsibleEvent | {};
@@ -100,6 +99,7 @@ export interface ProcessEventEntry<T extends ProcessEventData> {
     id: ConcordId;
     eventType: ProcessEventType;
     eventDate: string;
+    duration?: number;
     data: T;
 }
 

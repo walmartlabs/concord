@@ -60,3 +60,64 @@ export const formatTimestamp = (t?: moment.MomentInput): string | undefined => {
 
     return moment(t).format('YYYY-MM-DD HH:mm:ss');
 };
+
+const second2Ms = 1000;
+const minute2Ms = 60 * second2Ms;
+const hour2Ms = 60 * minute2Ms;
+const day2Ms = 24 * hour2Ms;
+
+export const formatDuration = (ms?: number): string | undefined => {
+    if (ms === 0) {
+        return '0ms';
+    }
+
+    if (!ms) {
+        return;
+    }
+
+    let t = ms;
+
+    if (t < second2Ms) {
+        return `${t}ms`;
+    }
+
+    if (t < minute2Ms) {
+        return `~ ${Math.ceil(t / second2Ms)}s`;
+    }
+
+    if (t < hour2Ms) {
+        return `~ ${Math.ceil(t / minute2Ms)}m`;
+    }
+
+    let s = '~';
+
+    const days = Math.floor(t / day2Ms);
+    if (days > 0) {
+        s += ` ${days}d`;
+        t -= days * day2Ms;
+    }
+
+    const hours = Math.floor(t / hour2Ms);
+    if (hours > 0) {
+        s += ` ${hours}h`;
+        t -= hours * hour2Ms;
+    }
+
+    const mins = Math.floor(t / minute2Ms);
+    if (mins > 0) {
+        s += ` ${mins}m`;
+    }
+
+    return s;
+};
+
+export const timestampDiffMs = (
+    t1?: moment.MomentInput,
+    t2?: moment.MomentInput
+): number | undefined => {
+    if (!t1 || !t2) {
+        return;
+    }
+
+    return moment(t1).diff(moment(t2));
+};

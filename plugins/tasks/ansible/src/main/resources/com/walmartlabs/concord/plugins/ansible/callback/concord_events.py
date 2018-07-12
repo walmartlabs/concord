@@ -87,6 +87,31 @@ class CallbackModule(CallbackBase):
         else:
             return obj
 
+    def _on_task_start(self, host, task):
+        data = {
+            'status': "RUNNING",
+            'playbook': self.playbook._file_name,
+            'host': host.name,
+            'task': task.get_name(),
+            'correlationId': host.name + task._uuid,
+            'phase': "pre"
+        }
+
+        self.handle_event(data)
+
+    def _on_task_skipped(self, result):
+        data = {
+            'status': 'SKIPPED',
+            'playbook': self.playbook._file_name,
+            'host': result._host.name,
+            'task': result._task.get_name(),
+            'correlationId': result._host.name + result._task._uuid,
+            'phase': "post",
+            'result': self.cleanup_results(result._result)
+        }
+
+        self.handle_event(data)
+
     ### Ansible callbacks ###
 
     def v2_playbook_on_start(self, playbook):
@@ -99,6 +124,8 @@ class CallbackModule(CallbackBase):
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'task': result._task.get_name(),
+            'correlationId': result._host.name + result._task._uuid,
+            'phase': "post",
             'result': self.cleanup_results(result._result),
             'ignore_errors': result._task_fields['ignore_errors']
         }
@@ -111,6 +138,8 @@ class CallbackModule(CallbackBase):
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'task': result._task.get_name(),
+            'correlationId': result._host.name + result._task._uuid,
+            'phase': "post",
             'result': self.cleanup_results(result._result)
         }
 
@@ -122,6 +151,8 @@ class CallbackModule(CallbackBase):
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'task': result._task.get_name(),
+            'correlationId': result._host.name + result._task._uuid,
+            'phase': "post",
             'result': self.cleanup_results(result._result)
         }
 
@@ -133,7 +164,18 @@ class CallbackModule(CallbackBase):
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'task': result._task.get_name(),
+            'correlationId': result._host.name + result._task._uuid,
+            'phase': "post",
             'result': self.cleanup_results(result._result)
         }
 
         self.handle_event(data)
+
+    def concord_on_task_start(self, host, task):
+        self._on_task_start(host, task)
+
+    def v2_runner_on_skipped(self, result):
+        self._on_task_skipped(result)
+
+    def v2_runner_item_on_skipped(self, result):
+        self._on_task_skipped(result)

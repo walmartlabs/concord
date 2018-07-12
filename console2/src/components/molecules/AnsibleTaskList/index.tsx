@@ -23,7 +23,7 @@ import ReactJson from 'react-json-view';
 import { Header, Table } from 'semantic-ui-react';
 
 import { AnsibleEvent, AnsibleStatus, ProcessEventEntry } from '../../../api/process/event';
-import { LocalTimestamp } from '../../molecules';
+import { HumanizedDuration, LocalTimestamp } from '../../molecules';
 
 interface Props {
     title?: string;
@@ -45,12 +45,15 @@ class AnsibleTaskList extends React.PureComponent<Props> {
                 <Table celled={true} attached="bottom">
                     <Table.Header>
                         <Table.Row>
-                            {showHosts && <Table.HeaderCell>Host</Table.HeaderCell>}
-                            <Table.HeaderCell>Ansible Task</Table.HeaderCell>
-                            <Table.HeaderCell>Status</Table.HeaderCell>
-                            <Table.HeaderCell>Event Time</Table.HeaderCell>
+                            {showHosts && (
+                                <Table.HeaderCell collapsing={true}>Host</Table.HeaderCell>
+                            )}
+                            <Table.HeaderCell collapsing={true}>Ansible Task</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true}>Event Time</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true}>Duration</Table.HeaderCell>
                             <Table.HeaderCell>Results</Table.HeaderCell>
-                            <Table.HeaderCell>Playbook</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true}>Playbook</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
 
@@ -72,21 +75,30 @@ class AnsibleTaskList extends React.PureComponent<Props> {
                                         error={error}
                                         positive={positive}
                                         warning={warning}>
-                                        {showHosts && <Table.Cell>{value.data.host}</Table.Cell>}
-                                        <Table.Cell>{value.data.task}</Table.Cell>
+                                        {showHosts && (
+                                            <Table.Cell singleLine={true}>
+                                                {value.data.host}
+                                            </Table.Cell>
+                                        )}
+                                        <Table.Cell singleLine={true}>{value.data.task}</Table.Cell>
                                         <Table.Cell>{statusString}</Table.Cell>
-                                        <Table.Cell>
+                                        <Table.Cell singleLine={true}>
                                             <LocalTimestamp value={value.eventDate} />
+                                        </Table.Cell>
+                                        <Table.Cell singleLine={true}>
+                                            <HumanizedDuration value={value.duration} />
                                         </Table.Cell>
                                         <Table.Cell>
                                             <ReactJson
-                                                src={value.data}
+                                                src={value.data.result as object}
                                                 collapsed={true}
                                                 name={null}
                                                 enableClipboard={false}
                                             />
                                         </Table.Cell>
-                                        <Table.Cell>{value.data.playbook}</Table.Cell>
+                                        <Table.Cell singleLine={true}>
+                                            {value.data.playbook}
+                                        </Table.Cell>
                                     </Table.Row>
                                 );
                             })}
