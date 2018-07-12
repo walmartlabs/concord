@@ -1,0 +1,97 @@
+select
+  cast(json_build_object(
+    'host', a.item_data->'host',
+    'zone', a.item_data->'zone',
+    'profile', a.item_data->'profile',
+    'apiServer', a.item_data->'apiServer',
+    'ingress', a.item_data->'ingress',
+    'k8sVersion', a.item_data->'k8sVersion'
+  ) as varchar)
+from inventory_data a
+where
+  item_data @> ?::jsonb
+
+
+select
+  cast(json_build_object(
+    'host', a.item_path,
+    'name', a.item_data->'name',
+    'clusterTokenRef', a.item_data->'clusterTokenRef',
+    'manifest', a.item_data->'manifest'
+  ) as varchar)
+from inventory_data a
+where
+  item_data @> ?::jsonb
+
+
+select
+  cast(json_build_object(
+    'host', a.item_path,
+    'workload_config', a.item_data->'workload_config',
+    'manifest', a.item_data->'manifest'
+  ) as varchar)
+from inventory_data a
+where
+  item_data->'workload_config' @> ?::jsonb
+
+
+select
+  cast(json_build_object(
+    'hostname', a.item_data->'hostname',
+    'address', a.item_data->'address',
+    'kind', a.item_data->'kind',
+    'profile', a.item_data->'profile',
+    'zone', a.item_data->'zone',
+    'clusterInventoryRef', a.item_data->'clusterInventoryRef'
+  ) as varchar)
+from inventory_data a
+where
+  item_data @> ?::jsonb
+
+
+select
+  cast(json_build_object(
+    'host', a.item_data->'host',
+    'ansible_host', a.item_data->'ip',
+    'ooInstanceName', a.item_data->'ooInstanceName',
+    'type', a.item_data->'type',
+    'profile', a.item_data->'profile',
+    'zone', a.item_data->'zone',
+    'clusterInventoryRef', a.item_data->'clusterInventoryRef'
+  ) as varchar)
+from inventory_data a
+where
+  item_data @> ?::jsonb
+
+
+select cast(a.item_data as varchar) from
+  inventory_data a
+where
+  item_data @> ?::jsonb
+
+
+select cast(a.item_data as varchar) from
+  inventory_data a
+where
+  item_data @> ?::jsonb
+
+
+select cast(a.item_data as varchar) from
+  inventory_data a
+where
+  item_data @> ?::jsonb
+
+
+select cast(?::jsonb as varchar)
+
+
+select cast(json_build_object('host', a.item_data->'gls'->'k8s', 'env', 'dev') as varchar) from inventory_data a where item_data @> ?::jsonb
+
+
+select cast(?::jsonb as varchar)
+
+
+select a.item_data->>'server_name' as server_name  from inventory_data a;
+
+
+select cast( json_build_object('server_name', a.item_data->>'server_name') as varchar) from inventory_data a

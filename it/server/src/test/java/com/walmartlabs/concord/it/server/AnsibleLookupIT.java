@@ -210,6 +210,4 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertNoLog(".*Implicit org: ssh-rsa" + ".*", ab);
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
-
-
 }

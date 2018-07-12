@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: improved inventory query validation;
 - concord-console: display flow and ansible event duration;
 - ansible: record "pre" and "post" task events separately;
 - concord-console: new API key management UI;

@@ -180,7 +180,7 @@ public class CrudIT extends AbstractServerIT {
         String orgName = "Default";
         String inventoryName = "inventory_" + randomString();
         String queryName = "queryName_" + randomString();
-        String text = "text_" + randomString();
+        String text = "select * from test_" + randomString();
 
         InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
         inventoriesApi.createOrUpdate(orgName, new InventoryEntry().setName(inventoryName));

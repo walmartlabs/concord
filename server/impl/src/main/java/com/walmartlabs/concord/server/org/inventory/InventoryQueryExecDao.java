@@ -23,8 +23,25 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.org.inventory.InventoryQueryEntry;
-import org.jooq.*;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.CastExpression;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.JdbcParameter;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.StatementVisitorAdapter;
+import net.sf.jsqlparser.statement.create.table.ColDataType;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.QueryPart;
+import org.jooq.Record;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -34,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.tables.InventoryData.INVENTORY_DATA;
 import static org.jooq.impl.DSL.val;
 
 @Named
@@ -59,21 +77,11 @@ public class InventoryQueryExecDao extends AbstractDao {
             return null;
         }
 
-        String sql = q.getText();
-
-        // TODO a better way to add the inventory filter
-        String sqlLow = sql.toLowerCase()
-                .replace("\n", " ")
-                .replace("\r", " ");
-        if (sqlLow.contains(" from inventory_data")) {
-            if (sqlLow.contains(" where ")) {
-                sql += " and inventory_id = cast(? AS uuid)";
-            } else {
-                sql += " where inventory_id = cast(? AS uuid)";
-            }
-        }
+        String sql = createQuery(q.getText());
 
         try (DSLContext tx = DSL.using(cfg)) {
+            // TODO we should probably inspect the query to determine whether we need to bind the params or not
+
             QueryPart[] args;
             if (params == null) {
                 args = new QueryPart[]{val(q.getInventoryId())};
@@ -112,6 +120,49 @@ public class InventoryQueryExecDao extends AbstractDao {
             return objectMapper.readValue(ab, Object.class);
         } catch (IOException e) {
             throw Throwables.propagate(e);
+        }
+    }
+
+    private static String createQuery(String src) {
+        try {
+            Statement st = CCJSqlParserUtil.parse(src);
+            st.accept(new StatementVisitorAdapter() {
+
+                @Override
+                public void visit(Select select) {
+                    select.getSelectBody().accept(new SelectVisitorAdapter() {
+                        @Override
+                        public void visit(PlainSelect plainSelect) {
+
+                            // inventory_data.inventory_id
+                            Column left = new Column(new Table(INVENTORY_DATA.getName()), INVENTORY_DATA.INVENTORY_ID.getName());
+
+                            // cast(? as uuid)
+                            CastExpression right = new CastExpression();
+                            right.setLeftExpression(new JdbcParameter());
+                            ColDataType t = new ColDataType();
+                            t.setDataType("uuid");
+                            right.setType(t);
+
+                            // inventory_data.inventory_id = cast(? as uuid)
+                            EqualsTo eq = new EqualsTo();
+                            eq.setLeftExpression(left);
+                            eq.setRightExpression(right);
+
+                            Expression where = eq;
+                            if (plainSelect.getWhere() != null) {
+                                where = new AndExpression(plainSelect.getWhere(), eq);
+                            }
+
+                            plainSelect.setWhere(where);
+                        }
+                    });
+                }
+            });
+
+            return st.toString();
+        } catch (JSQLParserException e) {
+            throw new IllegalArgumentException("Query parse error: " + e.getMessage(), e);
         }
     }
 }

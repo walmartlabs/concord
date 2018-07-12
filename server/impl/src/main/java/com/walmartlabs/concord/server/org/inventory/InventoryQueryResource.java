@@ -24,7 +24,12 @@ import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -107,6 +112,8 @@ public class InventoryQueryResource implements Resource {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
 
+        validateQuery(text);
+
         UUID inventoryId = inventory.getId();
         UUID queryId = inventoryQueryDao.getId(inventoryId, queryName);
 
@@ -181,5 +188,18 @@ public class InventoryQueryResource implements Resource {
             throw new ValidationErrorsException("Query not found: " + queryName);
         }
         return id;
+    }
+
+    private static void validateQuery(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            throw new ValidationErrorsException("Query should not be empty");
+        }
+
+        try {
+            CCJSqlParserUtil.parse(text);
+        } catch (JSQLParserException e) {
+            String msg = e.getCause().getMessage();
+            throw new ValidationErrorsException("Query parse error: " + msg);
+        }
     }
 }
