@@ -23,3 +23,13 @@
     white-space: pre-wrap;
     margin: 0;
 }
+
+.scrollToTopButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    cursor: pointer;
+    opacity: 1;
+    color: #2185D0;
+}
+

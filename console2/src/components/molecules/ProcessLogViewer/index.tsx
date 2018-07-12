@@ -19,13 +19,11 @@
  */
 
 import * as React from 'react';
-import { Button, Header, Icon, Menu, Radio, Sticky } from 'semantic-ui-react';
+import { Button, Header, Icon, Menu, Radio, Sticky, Transition } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
 import { RequestErrorMessage, Highlighter } from '../../molecules';
-
-import { CircleArrow as ScrollUpButton } from 'react-scroll-up-button';
 
 import './styles.css';
 
@@ -176,7 +174,11 @@ class ProcessLogViewer extends React.Component<Props, State> {
                         this.scrollAnchorRef = scroll;
                     }}
                 />
-                <ScrollUpButton />
+                <Transition animation="fade up" duration={550} visible={window.scrollY > 164}>
+                    <div className="scrollToTopButton" onClick={() => window.scrollTo({ top: 0 })}>
+                        <Icon name="chevron circle up" size="huge" />
+                    </div>
+                </Transition>
             </div>
         );
     }
