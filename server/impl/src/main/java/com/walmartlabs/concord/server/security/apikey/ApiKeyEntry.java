@@ -20,56 +20,55 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
+
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.user.UserType;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.UUID;
 
-public class CreateApiKeyRequest implements Serializable {
+@JsonInclude(Include.NON_NULL)
+public class ApiKeyEntry implements Serializable {
 
-    private final UUID userId;
-    private final String username;
-    private final UserType userType;
+    private final UUID id;
+
     @ConcordKey
     private final String name;
 
+    private final Date expiredAt;
+
     @JsonCreator
-    public CreateApiKeyRequest(@JsonProperty("userId") UUID userId,
-                               @JsonProperty("username") String username,
-                               @JsonProperty("userType") UserType userType,
-                               @JsonProperty("name") String name) {
-        this.userId = userId;
-        this.username = username;
-        this.userType = userType;
+    public ApiKeyEntry(@JsonProperty("id") UUID id,
+                       @JsonProperty("name") String name,
+                       @JsonProperty("expiredAt") Date expiredAt) {
+
+        this.id = id;
         this.name = name;
+        this.expiredAt = expiredAt;
     }
 
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public UserType getUserType() {
-        return userType;
+    public UUID getId() {
+        return id;
     }
 
     public String getName() {
         return name;
     }
 
+    public Date getExpiredAt() {
+        return expiredAt;
+    }
+
     @Override
     public String toString() {
-        return "CreateApiKeyRequest{" +
-                "userId=" + userId +
-                ", username='" + username + '\'' +
-                ", userType=" + userType +
+        return "ApiKeyEntry{" +
+                "id=" + id +
                 ", name='" + name + '\'' +
+                ", expiredAt=" + expiredAt +
                 '}';
     }
 }

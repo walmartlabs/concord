@@ -10,4 +10,67 @@
             <column name="USER_ID">${concordAgentUserId}</column>
         </insert>
     </changeSet>
+
+    <changeSet id="79100" author="ybrigo@gmail.com">
+        <addColumn tableName="API_KEYS">
+            <column name="KEY_NAME" type="varchar(128)" defaultValue="n/a">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EXPIRED_AT" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="79110" author="ybrigo@gmail.com">
+        <sql>
+            update api_keys a
+            set key_name = b.key_name
+            from (select key_id, 'key-' || row_number() OVER (PARTITION BY user_id ORDER BY user_id) AS key_name
+            from api_keys) AS b
+            where a.key_id = b.key_id
+        </sql>
+        <createIndex tableName="API_KEYS" indexName="IDX_API_KEYS_NAME_USER" unique="true">
+            <column name="KEY_NAME"/>
+            <column name="USER_ID"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="79120" author="ybrigo@gmail.com">
+        <addColumn tableName="API_KEYS">
+            <column name="LAST_NOTIFIED_AT" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="79130" author="ybrigo@gmail.com">
+        <addColumn tableName="USERS">
+            <column name="USER_EMAIL" type="varchar(512)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="79140" author="ybrigo@gmail.com">
+        <createTable tableName="API_KEYS_NOTIFIER_LOCK">
+            <column name="ID" type="int">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="LOCKED" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LOCKED_BY" type="varchar(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="LOCKED_AT" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <insert tableName="API_KEYS_NOTIFIER_LOCK">
+            <column name="ID" value="1"/>
+            <column name="LOCKED" value="false"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

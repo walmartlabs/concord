@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -52,8 +53,9 @@ public class UserDaoTest extends AbstractDaoTest {
         UUID userId = userDao.insert(username, UserType.LOCAL, false);
 
         String s = "key#" + System.currentTimeMillis();
+        String name = "name#" + System.currentTimeMillis();
         String apiKey = Base64.getEncoder().encodeToString(s.getBytes());
-        apiKeyDao.insert(userId, apiKey);
+        apiKeyDao.insert(userId, apiKey, name, Instant.now());
 
         // ---
 

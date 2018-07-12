@@ -1,5 +1,3 @@
-package com.walmartlabs.concord.server.security.apikey;
-
 /*-
  * *****
  * Concord
@@ -20,20 +18,24 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
-import java.io.Serializable;
+import * as React from 'react';
+import { Menu } from 'semantic-ui-react';
+import NewAPITokenActivity from '../../organisms/NewAPITokenActivity';
 
-public class DeleteApiKeyResponse implements Serializable {
+class NewAPITokenPage extends React.PureComponent {
+    render() {
+        return (
+            <>
+                <Menu secondary={true} pointing={true}>
+                    <Menu.Item position={'left'}>
+                        <h4>New API Token</h4>
+                    </Menu.Item>
+                </Menu>
 
-    private final boolean ok = true;
-
-    public boolean isOk() {
-        return ok;
-    }
-
-    @Override
-    public String toString() {
-        return "DeleteApiKeyResponse{" +
-                "ok=" + ok +
-                '}';
+                <NewAPITokenActivity />
+            </>
+        );
     }
 }
+
+export default NewAPITokenPage;

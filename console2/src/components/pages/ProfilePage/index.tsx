@@ -19,27 +19,68 @@
  */
 
 import * as React from 'react';
-import { Breadcrumb, Segment } from 'semantic-ui-react';
+import { Link } from 'react-router-dom';
+import { Breadcrumb, Grid, Menu } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';
-import NewAPIToken from '../../organisms/NewAPIToken';
+import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
+import { NotFoundPage } from '../index';
+import { APITokensListPage, NewAPITokenPage } from '../../../components/pages';
 
-class ProfilePage extends React.PureComponent {
+interface RouteProps {
+    orgName: string;
+}
+
+type TabLink = 'token' | null;
+
+const pathToTab = (s: string): TabLink => {
+    if (s.includes('/api-token')) {
+        return 'token';
+    }
+
+    return null;
+};
+
+class ProfilePage extends React.PureComponent<RouteComponentProps<RouteProps>> {
     render() {
+        const { url } = this.props.match;
+
+        const activeTab = pathToTab(this.props.location.pathname);
+
         return (
             <>
                 <BreadcrumbSegment>
                     <Breadcrumb.Section active={true}>Profile Options</Breadcrumb.Section>
                 </BreadcrumbSegment>
 
-                <hr />
+                <Grid centered={true}>
+                    <Grid.Column width={3}>
+                        <Menu tabular={true} vertical={true} fluid={true}>
+                            <Menu.Item active={activeTab === 'token'}>
+                                <Link to={`${url}/api-token`}>API Tokens</Link>
+                            </Menu.Item>
+                        </Menu>
+                    </Grid.Column>
 
-                <Segment vertical={true}>
-                    <NewAPIToken />
-                </Segment>
+                    <Grid.Column width={13}>
+                        <Switch>
+                            <Route path={url} exact={true}>
+                                <Redirect to={`${url}/api-token`} />
+                            </Route>
+                            <Route path={`${url}/api-token/_new`}>
+                                <NewAPITokenPage />
+                            </Route>
+                            <Route path={`${url}/api-token`}>
+                                <APITokensListPage />
+                            </Route>
+
+                            <Route component={NotFoundPage} />
+                        </Switch>
+                    </Grid.Column>
+                </Grid>
             </>
         );
     }
 }
 
-export default ProfilePage;
+export default withRouter(ProfilePage);

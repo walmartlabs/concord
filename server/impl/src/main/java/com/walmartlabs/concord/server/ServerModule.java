@@ -29,6 +29,8 @@ import com.walmartlabs.concord.server.metrics.MetricsModule;
 import com.walmartlabs.concord.server.org.triggers.TriggerScheduler;
 import com.walmartlabs.concord.server.process.ProcessCleaner;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueWatchdog;
+import com.walmartlabs.concord.server.security.apikey.ApiKeyCleaner;
+import com.walmartlabs.concord.server.security.apikey.ApiKeyExpirationNotifier;
 
 public class ServerModule extends AbstractModule {
 
@@ -43,5 +45,7 @@ public class ServerModule extends AbstractModule {
         tasks.addBinding().to(ProcessCleaner.class);
         tasks.addBinding().to(ProcessQueueWatchdog.class);
         tasks.addBinding().to(TriggerScheduler.class);
+        tasks.addBinding().to(ApiKeyCleaner.class);
+        tasks.addBinding().to(ApiKeyExpirationNotifier.class);
     }
 }

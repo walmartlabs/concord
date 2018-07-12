@@ -20,6 +20,9 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
+import com.walmartlabs.concord.server.GenericOperationResult;
+import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -41,6 +44,9 @@ import javax.naming.NamingException;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 
 @Named
@@ -49,15 +55,32 @@ import java.util.UUID;
 @Path("/api/v1/apikey")
 public class ApiKeyResource implements Resource {
 
+    private final ApiKeyConfiguration cfg;
     private final ApiKeyDao apiKeyDao;
     private final UserManager userManager;
     private final LdapManager ldapManager;
 
     @Inject
-    public ApiKeyResource(ApiKeyDao apiKeyDao, UserManager userManager, LdapManager ldapManager) {
+    public ApiKeyResource(ApiKeyConfiguration cfg, ApiKeyDao apiKeyDao, UserManager userManager, LdapManager ldapManager) {
+        this.cfg = cfg;
         this.apiKeyDao = apiKeyDao;
         this.userManager = userManager;
         this.ldapManager = ldapManager;
+    }
+
+    @GET
+    @ApiOperation(value = "List user api keys", responseContainer = "list", response = ApiKeyEntry.class)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public List<ApiKeyEntry> list(@ApiParam @QueryParam("userId") UUID requestUserId) {
+        UUID userId = requestUserId;
+        if (userId == null) {
+            userId = UserPrincipal.assertCurrent().getId();
+        }
+
+        assertOwner(userId);
+
+        return apiKeyDao.list(userId);
     }
 
     @POST
@@ -72,13 +95,25 @@ public class ApiKeyResource implements Resource {
         }
 
         if (userId == null) {
-            throw new ValidationErrorsException("User ID or name is required");
+            userId = UserPrincipal.assertCurrent().getId();
         }
 
         assertOwner(userId);
 
+        String name = trim(req.getName());
+        if (name == null || name.isEmpty()) {
+            // auto generate the name
+            name = "key#" + (apiKeyDao.count(userId) + 1);
+        }
+
         String key = apiKeyDao.newApiKey();
-        UUID id = apiKeyDao.insert(userId, key);
+
+        Instant expiredAt = null;
+        if (cfg.isExpirationEnabled()) {
+            expiredAt = Instant.now().plus(cfg.getExpirationPeriodDays(), ChronoUnit.DAYS);
+        }
+
+        UUID id = apiKeyDao.insert(userId, key, name, expiredAt);
         return new CreateApiKeyResponse(id, key);
     }
 
@@ -87,7 +122,7 @@ public class ApiKeyResource implements Resource {
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public DeleteApiKeyResponse delete(@ApiParam @PathParam("id") UUID id) {
+    public GenericOperationResult delete(@ApiParam @PathParam("id") UUID id) {
         UUID userId = apiKeyDao.getUserId(id);
         if (userId == null) {
             throw new ValidationErrorsException("API key not found: " + id);
@@ -96,7 +131,7 @@ public class ApiKeyResource implements Resource {
         assertOwner(userId);
 
         apiKeyDao.delete(id);
-        return new DeleteApiKeyResponse();
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 
     private UUID assertUsername(String username, UserType type) {
@@ -135,7 +170,7 @@ public class ApiKeyResource implements Resource {
         return userId;
     }
 
-    private void assertOwner(UUID userId) {
+    private static void assertOwner(UUID userId) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin()) {
             // admin users can manage other user's keys
@@ -145,5 +180,13 @@ public class ApiKeyResource implements Resource {
         if (!userId.equals(p.getId())) {
             throw new UnauthorizedException("Operation is not permitted");
         }
+    }
+
+    private static String trim(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        return s.trim();
     }
 }

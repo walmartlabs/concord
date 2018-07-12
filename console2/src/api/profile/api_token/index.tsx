@@ -18,25 +18,39 @@
  * =====
  */
 
-import { fetchJson } from '../../../api/common';
+import { fetchJson, GenericOperationResult, ConcordId, ConcordKey } from '../../common';
 
-export interface CreateApiKeyResponse {
+export interface TokenEntry {
+    id: ConcordId;
+    name: ConcordKey;
+    expiredAt: string;
+}
+
+export interface NewTokenEntry {
+    name: ConcordKey;
+}
+
+export interface CreateApiKeyResult {
     ok: boolean;
     id: string;
     key: string;
+    expiredAt: string;
 }
 
-export const create = (username: string): Promise<CreateApiKeyResponse> => {
+export const list = (): Promise<TokenEntry[]> => fetchJson(`/api/v1/apikey`);
+
+export const create = (entry: NewTokenEntry): Promise<CreateApiKeyResult> => {
     const obj: RequestInit = {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            username
-        })
+        body: JSON.stringify(entry)
     };
 
     return fetchJson('/api/v1/apikey', obj);
 };
+
+export const deleteToken = (id: ConcordId): Promise<GenericOperationResult> =>
+    fetchJson(`/api/v1/apikey/${id}`, { method: 'DELETE' });

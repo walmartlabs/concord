@@ -31,13 +31,15 @@ public class LdapPrincipal implements Serializable {
     private final String username;
     private final String nameInNamespace;
     private final String displayName;
+    private final String email;
     private final Set<String> groups;
     private final Map<String, String> attributes;
 
-    public LdapPrincipal(String username, String nameInNamespace, String displayName, Set<String> groups, Map<String, String> attributes) {
+    public LdapPrincipal(String username, String nameInNamespace, String displayName, String email, Set<String> groups, Map<String, String> attributes) {
         this.username = username;
         this.nameInNamespace = nameInNamespace;
         this.displayName = displayName;
+        this.email = email;
         this.groups = groups;
         this.attributes = attributes;
     }
@@ -58,6 +60,10 @@ public class LdapPrincipal implements Serializable {
         return displayName;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
     public Set<String> getGroups() {
         return groups;
     }
@@ -72,6 +78,7 @@ public class LdapPrincipal implements Serializable {
                 "username='" + username + '\'' +
                 ", nameInNamespace='" + nameInNamespace + '\'' +
                 ", displayName='" + displayName + '\'' +
+                ", email='" + email + '\'' +
                 ", groups=" + groups +
                 ", attributes=" + attributes +
                 '}';

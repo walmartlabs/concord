@@ -47,7 +47,7 @@ import java.util.Arrays;
 @Named
 public class LdapRealm extends AbstractLdapRealm {
 
-    public static final String REALM_NAME = "ldap";
+    private static final String REALM_NAME = "ldap";
     
     private static final Logger log = LoggerFactory.getLogger(LdapRealm.class);
 
@@ -124,6 +124,13 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         UserEntry user = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
+
+        // update user's email if needed
+        if (user.getEmail() == null && ldapPrincipal.getEmail() != null) {
+            user = userManager.update(user.getId(), ldapPrincipal.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User record not found"));
+        }
+
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, user);
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)

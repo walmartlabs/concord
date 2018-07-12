@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
-import { TextArea } from "semantic-ui-react";
+import { TextArea } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
@@ -51,14 +51,14 @@ class ValidateRepositoryPopup extends React.Component<Props> {
     render() {
         const { trigger, validating, success, error, reset, onConfirm, repoName } = this.props;
 
-        let title = "Validate repository?";
+        let title = 'Validate repository?';
 
         if (success) {
-            title = "Validation complete";
+            title = 'Validation complete';
         }
 
         if (error) {
-            title = "Validation error"
+            title = 'Validation error';
         }
 
         return (
@@ -74,7 +74,9 @@ class ValidateRepositoryPopup extends React.Component<Props> {
                 success={success}
                 successMsg={<p> Repository validated successfully.</p>}
                 error={error}
-                errorRenderer={(e) => <TextArea className="resultBox" value={e.details} rows={5} readOnly={true}/>}
+                errorRenderer={(e) => (
+                    <TextArea className="resultBox" value={e.details} rows={5} readOnly={true} />
+                )}
                 reset={reset}
                 onConfirm={onConfirm}
             />

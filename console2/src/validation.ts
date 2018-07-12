@@ -41,6 +41,8 @@ export const repositoryAlreadyExistsError = (n: string) => `Repository already e
 
 export const teamAlreadyExistsError = (n: string) => `Team already exists: ${n}`;
 
+export const apiTokenAlreadyExistsError = (n: string) => `API Token already exists: ${n}`;
+
 const concordKeyValidator = (v?: string) => {
     if (!v) {
         return requiredError();

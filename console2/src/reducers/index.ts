@@ -29,6 +29,7 @@ import { reducers as projectsReducer, State as ProjectsState } from '../state/da
 import { reducers as searchReducers, State as SearchState } from '../state/data/search';
 import { reducers as secretsReducer, State as SecretsState } from '../state/data/secrets';
 import { reducers as sessionReducers, State as SessionState } from '../state/session';
+import { reducers as tokensReducers, State as TokensState } from '../state/data/apiTokens';
 import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
 import { reducers as triggersReducer, State as TriggersState } from '../state/data/triggers';
 
@@ -43,6 +44,7 @@ export interface State {
     secrets: SecretsState;
     session: SessionState;
     teams: TeamsState;
+    tokens: TokensState;
     triggers: TriggersState;
 }
 
@@ -57,6 +59,7 @@ const reducers: Reducer<State> = combineReducers({
     secrets: secretsReducer,
     session: sessionReducers,
     teams: teamReducers,
+    tokens: tokensReducers,
     triggers: triggersReducer
 });
 

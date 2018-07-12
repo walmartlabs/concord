@@ -148,11 +148,7 @@ class App extends React.Component {
 
                                 <ProtectedRoute path="/about" exact={true} component={AboutPage} />
 
-                                <ProtectedRoute
-                                    path="/profile"
-                                    exact={true}
-                                    component={ProfilePage}
-                                />
+                                <ProtectedRoute path="/profile" component={ProfilePage} />
 
                                 <Route component={NotFoundPage} />
                             </Switch>

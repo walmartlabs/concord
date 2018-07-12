@@ -72,7 +72,15 @@ class SingleOperationPopup extends React.Component<Props, State> {
     }
 
     renderContent() {
-        const {success, successMsg, error, errorRenderer, running, runningMsg, introMsg} = this.props;
+        const {
+            success,
+            successMsg,
+            error,
+            errorRenderer,
+            running,
+            runningMsg,
+            introMsg
+        } = this.props;
 
         if (success) {
             return successMsg ? successMsg : <p>The operation was completed successfully.</p>;

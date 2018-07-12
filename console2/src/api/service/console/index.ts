@@ -78,6 +78,12 @@ export const isTeamExists = throttle(async (orgName: ConcordKey, name: string): 
     return json as boolean;
 }, 1000);
 
+// TODO throttle in sagas?
+export const isApiTokenExists = throttle(async (name: string): Promise<boolean> => {
+    const json = await fetchJson(`/api/service/console/apikey/${name}/exists`);
+    return json as boolean;
+}, 1000);
+
 export interface RepositoryTestRequest {
     orgId?: ConcordId;
     orgName?: ConcordKey;

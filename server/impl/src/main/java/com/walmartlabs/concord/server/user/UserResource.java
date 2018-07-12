@@ -79,7 +79,7 @@ public class UserResource implements Resource {
             UserEntry e = userManager.create(username, req.getType(), admin);
             return new CreateUserResponse(e.getId(), OperationResult.CREATED);
         } else {
-            userDao.update(id, req.getAdmin());
+            userDao.update(id, req.getAdmin(), null);
             return new CreateUserResponse(id, OperationResult.UPDATED);
         }
     }

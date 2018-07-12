@@ -20,8 +20,10 @@
 
 export { default as AboutPage } from './AboutPage';
 export { default as AddRepositoryPage } from './AddRepositoryPage';
+export { default as APITokensListPage } from './APITokensListPage';
 export { default as EditRepositoryPage } from './EditRepositoryPage';
 export { default as LoginPage } from './LoginPage';
+export { default as NewAPITokenPage } from './NewAPITokenPage';
 export { default as NewProjectPage } from './NewProjectPage';
 export { default as NewSecretPage } from './NewSecretPage';
 export { default as NewTeamPage } from './NewTeamPage';

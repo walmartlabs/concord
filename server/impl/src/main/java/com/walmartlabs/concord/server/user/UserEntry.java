@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.user;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +38,7 @@ public class UserEntry implements Serializable {
     private final Set<OrganizationEntry> orgs;
     private final boolean admin;
     private final UserType type;
+    private final String email;
     private final Set<RoleEntry> roles;
 
     @JsonCreator
@@ -46,6 +47,7 @@ public class UserEntry implements Serializable {
                      @JsonProperty("orgs") Set<OrganizationEntry> orgs,
                      @JsonProperty("admin") boolean admin,
                      @JsonProperty("type") UserType type,
+                     @JsonProperty("email") String email,
                      @JsonProperty("roles") Set<RoleEntry> roles) {
 
         this.id = id;
@@ -53,6 +55,7 @@ public class UserEntry implements Serializable {
         this.orgs = orgs;
         this.admin = admin;
         this.type = type;
+        this.email = email;
         this.roles = roles;
     }
 
@@ -76,6 +79,10 @@ public class UserEntry implements Serializable {
         return type;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
     public Set<RoleEntry> getRoles() {
         return roles;
     }
@@ -88,6 +95,7 @@ public class UserEntry implements Serializable {
                 ", orgs=" + orgs +
                 ", admin=" + admin +
                 ", type=" + type +
+                ", email='" + email + '\'' +
                 ", roles=" + roles +
                 '}';
     }

@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.console;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -65,6 +67,7 @@ public class ConsoleService implements Resource {
     private final RepositoryDao repositoryDao;
     private final TeamDao teamDao;
     private final LdapManager ldapManager;
+    private final ApiKeyDao apiKeyDao;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -74,7 +77,8 @@ public class ConsoleService implements Resource {
                           OrganizationManager orgManager,
                           RepositoryDao repositoryDao,
                           TeamDao teamDao,
-                          LdapManager ldapManager) {
+                          LdapManager ldapManager,
+                          ApiKeyDao apiKeyDao) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -84,6 +88,7 @@ public class ConsoleService implements Resource {
         this.orgManager = orgManager;
         this.teamDao = teamDao;
         this.ldapManager = ldapManager;
+        this.apiKeyDao = apiKeyDao;
     }
 
     @GET
@@ -176,6 +181,19 @@ public class ConsoleService implements Resource {
         } catch (UnauthorizedException e) {
             return false;
         }
+    }
+
+    @GET
+    @Path("/apikey/{name}/exists")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean isApiTokenExists(@PathParam("name") @ConcordKey String tokenName) {
+        UserPrincipal currentUser = UserPrincipal.getCurrent();
+        if (currentUser == null) {
+            return false;
+        }
+
+        UUID userId = currentUser.getId();
+        return apiKeyDao.getId(userId, tokenName) != null;
     }
 
     @POST

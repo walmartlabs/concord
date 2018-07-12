@@ -142,6 +142,11 @@ public class LdapManager {
             return;
         }
 
+        if (id.equals(cfg.getMailProperty())) {
+            b.email(attr.get().toString());
+            return;
+        }
+
         switch (id) {
             case MEMBER_OF_ATTR: {
                 Collection<String> names = LdapUtils.getAllAttributeValues(attr);
@@ -166,6 +171,7 @@ public class LdapManager {
         private String username;
         private String nameInNamespace;
         private String displayName;
+        private String email;
         private Set<String> groups;
         private Map<String, String> attributes;
 
@@ -181,6 +187,11 @@ public class LdapManager {
 
         public LdapPrincipalBuilder displayName(String displayName) {
             this.displayName = displayName;
+            return this;
+        }
+
+        public LdapPrincipalBuilder email(String email) {
+            this.email = email;
             return this;
         }
 
@@ -208,7 +219,7 @@ public class LdapManager {
                 attributes = Collections.emptyMap();
             }
 
-            return new LdapPrincipal(username, nameInNamespace, displayName, groups, attributes);
+            return new LdapPrincipal(username, nameInNamespace, displayName, email, groups, attributes);
         }
     }
 }

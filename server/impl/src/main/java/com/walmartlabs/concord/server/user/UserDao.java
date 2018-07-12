@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.user;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,10 +21,8 @@ package com.walmartlabs.concord.server.user;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
-import com.walmartlabs.concord.server.user.RoleEntry;
-import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -57,13 +55,11 @@ public class UserDao extends AbstractDao {
     }
 
     public UUID insert(DSLContext tx, String username, UserType type, boolean admin) {
-        UUID id = tx.insertInto(USERS)
+        return tx.insertInto(USERS)
                 .columns(USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_TYPE)
                 .values(username, admin, type.toString())
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
-
-        return id;
     }
 
     public void delete(UUID id) {
@@ -72,23 +68,32 @@ public class UserDao extends AbstractDao {
                 .execute());
     }
 
-    public void update(UUID id, Boolean admin) {
-        tx(tx -> {
+    public UserEntry update(UUID id, Boolean admin, String email) {
+        return txResult(tx -> {
+            UpdateQuery<UsersRecord> q = tx.updateQuery(USERS);
+
             if (admin != null) {
-                tx.update(USERS)
-                        .set(USERS.IS_ADMIN, admin)
-                        .where(USERS.USER_ID.eq(id))
-                        .execute();
+                q.addValue(USERS.IS_ADMIN, admin);
             }
+
+            if (email != null) {
+                q.addValue(USERS.USER_EMAIL, email);
+            }
+
+            q.addConditions(USERS.USER_ID.eq(id));
+            q.execute();
+
+            return get(id);
         });
     }
 
     public UserEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record4<UUID, String, String, Boolean> r = tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN)
-                    .from(USERS)
-                    .where(USERS.USER_ID.eq(id))
-                    .fetchOne();
+            Record5<UUID, String, String, Boolean, String> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_EMAIL)
+                            .from(USERS)
+                            .where(USERS.USER_ID.eq(id))
+                            .fetchOne();
 
             if (r == null) {
                 return null;
@@ -100,10 +105,11 @@ public class UserDao extends AbstractDao {
 
     public UserEntry getByName(String userName) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record4<UUID, String, String, Boolean> r = tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN)
-                    .from(USERS)
-                    .where(USERS.USERNAME.eq(userName))
-                    .fetchOne();
+            Record5<UUID, String, String, Boolean, String> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_EMAIL)
+                            .from(USERS)
+                            .where(USERS.USERNAME.eq(userName))
+                            .fetchOne();
 
             if (r == null) {
                 return null;
@@ -113,7 +119,7 @@ public class UserDao extends AbstractDao {
         }
     }
 
-    private UserEntry getUserInfo(DSLContext tx, Record4<UUID, String, String, Boolean> r) {
+    private UserEntry getUserInfo(DSLContext tx, Record5<UUID, String, String, Boolean, String> r) {
         // TODO join?
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
@@ -138,6 +144,7 @@ public class UserDao extends AbstractDao {
                 new HashSet<>(orgs),
                 r.get(USERS.IS_ADMIN),
                 UserType.valueOf(r.get(USERS.USER_TYPE)),
+                r.get(USERS.USER_EMAIL),
                 new HashSet<>(roles));
     }
 
@@ -190,6 +197,15 @@ public class UserDao extends AbstractDao {
                     .from(TEAMS)
                     .where(TEAMS.TEAM_ID.in(teamIds))
                     .fetchSet(TEAMS.ORG_ID);
+        }
+    }
+
+    public String getEmail(UUID id) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(USERS.USER_EMAIL)
+                    .from(USERS)
+                    .where(USERS.USER_ID.eq(id))
+                    .fetchOne(USERS.USER_EMAIL);
         }
     }
 }

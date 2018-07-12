@@ -17,7 +17,8 @@
  * limitations under the License.
  * =====
  */
-
+export { default as APITokenList } from './APITokenList';
+export { default as APITokenDeleteActivity } from './APITokenDeleteActivity';
 export { default as CancelProcessPopup } from './CancelProcessPopup';
 export { default as DeleteRepositoryPopup } from './DeleteRepositoryPopup';
 export { default as EditRepositoryActivity } from './EditRepositoryActivity';

@@ -63,6 +63,10 @@ public class LdapConfiguration implements Serializable {
     @Config("ldap.systemPassword")
     private String systemPassword;
 
+    @Inject
+    @Config("ldap.mailProperty")
+    private String mailProperty;
+
     private final Set<String> exposeAttributes;
 
     @Inject
@@ -96,6 +100,10 @@ public class LdapConfiguration implements Serializable {
 
     public String getSystemPassword() {
         return systemPassword;
+    }
+
+    public String getMailProperty() {
+        return mailProperty;
     }
 
     public Set<String> getExposeAttributes() {

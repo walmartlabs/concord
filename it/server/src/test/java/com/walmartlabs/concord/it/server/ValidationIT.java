@@ -21,20 +21,14 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ProjectEntry;
+import com.walmartlabs.concord.client.ProjectsApi;
+import com.walmartlabs.concord.client.UsersApi;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
 public class ValidationIT extends AbstractServerIT {
-
-    @Test(expected = ApiException.class)
-    public void testApiKeys() throws Exception {
-        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-
-        CreateApiKeyRequest req = new CreateApiKeyRequest();
-        apiKeyResource.create(req);
-    }
 
     @Test
     public void testProjectCreation() throws Exception {

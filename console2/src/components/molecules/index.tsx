@@ -29,6 +29,7 @@ export { default as EntityRenameForm } from './EntityRenameForm';
 export { default as GlobalNavMenu, GlobalNavTab } from './GlobalNavMenu';
 export { default as Highlighter } from './Highlighter';
 export { default as LocalTimestamp } from './LocalTimestamp';
+export { default as NewAPITokenForm, NewAPITokenFormValues } from './NewAPITokenForm';
 export { default as NewProjectForm, NewProjectFormValues } from './NewProjectForm';
 export { default as NewSecretForm, NewSecretFormValues } from './NewSecretForm';
 export { default as NewTeamForm } from './NewTeamForm';

@@ -57,7 +57,7 @@ public class UserManager {
     }
 
     public Optional<UserEntry> get(UUID id) {
-        return Optional.of(userDao.get(id));
+        return Optional.ofNullable(userDao.get(id));
     }
 
     public Optional<UUID> getId(String username) {
@@ -66,7 +66,11 @@ public class UserManager {
     }
 
     public Optional<UserEntry> getByName(String name) {
-        return Optional.of(userDao.getByName(name));
+        return Optional.ofNullable(userDao.getByName(name));
+    }
+
+    public Optional<UserEntry> update(UUID userId, String email) {
+        return Optional.ofNullable(userDao.update(userId, null, email));
     }
 
     public UserEntry create(String username, UserType type, boolean admin) {
