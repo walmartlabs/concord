@@ -22,11 +22,8 @@ package com.walmartlabs.concord.server.org.inventory;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.inventory.InventoryEntry;
-import com.walmartlabs.concord.server.org.inventory.InventoryOwner;
-import com.walmartlabs.concord.server.org.inventory.InventoryVisibility;
 import com.walmartlabs.concord.server.jooq.tables.Inventories;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -71,6 +68,33 @@ public class InventoryDao extends AbstractDao {
         tx(tx -> delete(tx, inventoryId));
     }
 
+    public List<InventoryEntry> list(UUID orgId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
+                    .from(ORGANIZATIONS)
+                    .where(ORGANIZATIONS.ORG_ID.eq(INVENTORIES.ORG_ID))
+                    .asField();
+
+            Field<String> ownerUsernameField = select(USERS.USERNAME)
+                    .from(USERS)
+                    .where(USERS.USER_ID.eq(INVENTORIES.OWNER_ID))
+                    .asField();
+
+            return tx.select(INVENTORIES.INVENTORY_ID,
+                    INVENTORIES.INVENTORY_NAME,
+                    INVENTORIES.ORG_ID,
+                    orgNameField,
+                    INVENTORIES.VISIBILITY,
+                    INVENTORIES.OWNER_ID,
+                    ownerUsernameField,
+                    INVENTORIES.PARENT_INVENTORY_ID)
+                    .from(INVENTORIES)
+                    .where(INVENTORIES.ORG_ID.eq(orgId))
+                    .orderBy(INVENTORIES.INVENTORY_NAME)
+                    .fetch(InventoryDao::toEntry);
+        }
+    }
+
     public InventoryEntry get(UUID inventoryId) {
         try (DSLContext tx = DSL.using(cfg)) {
             Table<Record> nodes = table("nodes");
@@ -100,7 +124,7 @@ public class InventoryDao extends AbstractDao {
                             .from(i2, nodes)
                             .where(i2.INVENTORY_ID.eq(INVENTORIES.as("nodes").PARENT_INVENTORY_ID));
 
-            List<InventoryEntity> items =
+            List<InventoryEntry> items =
                     tx.withRecursive("nodes",
                             INVENTORIES.INVENTORY_ID.getName(),
                             INVENTORIES.INVENTORY_NAME.getName(),
@@ -135,14 +159,13 @@ public class InventoryDao extends AbstractDao {
                 .execute();
     }
 
-
     public boolean hasAccessLevel(UUID inventoryId, UUID userId, ResourceAccessLevel... levels) {
         try (DSLContext tx = DSL.using(cfg)) {
             return hasAccessLevel(tx, inventoryId, userId, levels);
         }
     }
 
-    public boolean hasAccessLevel(DSLContext tx, UUID inventoryId, UUID userId, ResourceAccessLevel... levels) {
+    private boolean hasAccessLevel(DSLContext tx, UUID inventoryId, UUID userId, ResourceAccessLevel... levels) {
         SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
                 .from(USER_TEAMS)
                 .where(USER_TEAMS.USER_ID.eq(userId));
@@ -153,40 +176,14 @@ public class InventoryDao extends AbstractDao {
                         .and(INVENTORY_TEAM_ACCESS.ACCESS_LEVEL.in(Utils.toString(levels)))));
     }
 
-    private static InventoryEntry buildEntity(UUID inventoryId, List<InventoryEntity> items) {
-        InventoryEntity i = items.stream()
+    private static InventoryEntry buildEntity(UUID inventoryId, List<InventoryEntry> items) {
+        InventoryEntry i = items.stream()
                 .filter(e -> e.getId().equals(inventoryId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Can't find inventory in results"));
 
         return new InventoryEntry(inventoryId, i.getName(), i.getOrgId(), i.getOrgName(), i.getVisibility(),
-                i.getOwner(),
-                buildParent(i.getParentId(), items));
-    }
-
-    private static InventoryEntry buildParent(UUID parentId, List<InventoryEntity> items) {
-        if (parentId == null) {
-            return null;
-        }
-
-        InventoryEntity entity = items.stream()
-                .filter(e -> e.getId().equals(parentId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Can't find parent inventory in results"));
-
-        return new InventoryEntry(entity.getId(), entity.getName(),
-                entity.getOrgId(), entity.getOrgName(), entity.getVisibility(), entity.getOwner(),
-                buildParent(entity.getParentId(), items));
-    }
-
-    private static InventoryEntity toEntity(Record r) {
-        return new InventoryEntity(r.getValue(INVENTORIES.INVENTORY_ID),
-                r.getValue(INVENTORIES.INVENTORY_NAME),
-                r.getValue(INVENTORIES.ORG_ID),
-                r.getValue(ORGANIZATIONS.ORG_NAME),
-                InventoryVisibility.valueOf(r.getValue(INVENTORIES.VISIBILITY)),
-                toOwner(r.get(INVENTORIES.OWNER_ID), r.get(USERS.USERNAME)),
-                r.getValue(INVENTORIES.PARENT_INVENTORY_ID));
+                i.getOwner(), buildParent(i.getParentId(), items));
     }
 
     private UUID insert(DSLContext tx, UUID ownerId, String name, UUID orgId, UUID parentId, InventoryVisibility visibility) {
@@ -224,58 +221,43 @@ public class InventoryDao extends AbstractDao {
         return new InventoryOwner(id, username);
     }
 
-    private static class InventoryEntity {
+    private static InventoryEntry buildParent(UUID parentId) {
+        return new InventoryEntry(parentId, null, null, null, null, null, null);
+    }
 
-        private final UUID id;
-
-        private final String name;
-
-        private final UUID orgId;
-
-        private final String orgName;
-
-        private final InventoryVisibility visibility;
-
-        private final InventoryOwner owner;
-
-        private final UUID parentId;
-
-        public InventoryEntity(UUID id, String name, UUID orgId, String orgName, InventoryVisibility visibility, InventoryOwner owner, UUID parentId) {
-            this.id = id;
-            this.name = name;
-            this.orgId = orgId;
-            this.orgName = orgName;
-            this.visibility = visibility;
-            this.owner = owner;
-            this.parentId = parentId;
+    private static InventoryEntry buildParent(UUID parentId, List<InventoryEntry> items) {
+        if (parentId == null) {
+            return null;
         }
 
-        public UUID getId() {
-            return id;
-        }
+        InventoryEntry entity = items.stream()
+                .filter(e -> e.getId().equals(parentId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Can't find parent inventory in results"));
 
-        public String getName() {
-            return name;
-        }
+        return new InventoryEntry(entity.getId(), entity.getName(),
+                entity.getOrgId(), entity.getOrgName(), entity.getVisibility(), entity.getOwner(),
+                buildParent(entity.getParentId(), items));
+    }
 
-        public String getOrgName() {
-            return orgName;
-        }
+    // TODO create a unified method
+    private static InventoryEntry toEntity(Record r) {
+        return new InventoryEntry(r.getValue(INVENTORIES.INVENTORY_ID),
+                r.getValue(INVENTORIES.INVENTORY_NAME),
+                r.getValue(INVENTORIES.ORG_ID),
+                r.getValue(ORGANIZATIONS.ORG_NAME),
+                InventoryVisibility.valueOf(r.getValue(INVENTORIES.VISIBILITY)),
+                toOwner(r.get(INVENTORIES.OWNER_ID), r.get(USERS.USERNAME)),
+                buildParent(r.getValue(INVENTORIES.PARENT_INVENTORY_ID)));
+    }
 
-        public UUID getParentId() {
-            return parentId;
-        }
-
-        public UUID getOrgId() {
-            return orgId;
-        }
-
-        public InventoryVisibility getVisibility() {
-            return visibility;
-        }
-
-        public InventoryOwner getOwner() {
-            return owner;
-        }
+    private static InventoryEntry toEntry(Record8<UUID, String, UUID, String, String, UUID, String, UUID> r) {
+        return new InventoryEntry(r.value1(),
+                r.value2(),
+                r.value3(),
+                r.value4(),
+                InventoryVisibility.valueOf(r.value5()),
+                toOwner(r.value6(), r.value7()),
+                buildParent(r.value8()));
     }
 }

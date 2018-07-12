@@ -20,10 +20,15 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -78,9 +83,9 @@ public class InventoryQueryResource implements Resource {
     @ApiOperation("Get inventory query")
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public InventoryQueryEntry get(@ApiParam @PathParam("orgName") String orgName,
-                                   @ApiParam @PathParam("inventoryName") String inventoryName,
-                                   @ApiParam @PathParam("queryName") String queryName) {
+    public InventoryQueryEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                   @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                   @ApiParam @PathParam("queryName") @ConcordKey String queryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
@@ -104,9 +109,9 @@ public class InventoryQueryResource implements Resource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
-    public CreateInventoryQueryResponse createOrUpdate(@ApiParam @PathParam("orgName") String orgName,
-                                                       @ApiParam @PathParam("inventoryName") String inventoryName,
-                                                       @ApiParam @PathParam("queryName") String queryName,
+    public CreateInventoryQueryResponse createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                       @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                                       @ApiParam @PathParam("queryName") @ConcordKey String queryName,
                                                        @ApiParam String text) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
@@ -127,6 +132,25 @@ public class InventoryQueryResource implements Resource {
     }
 
     /**
+     * List inventory queries.
+     *
+     * @param orgName       organization's name
+     * @param inventoryName inventory's name
+     * @return
+     */
+    @GET
+    @ApiOperation(value = "List inventory queries", responseContainer = "list", response = InventoryQueryEntry.class)
+    @Path("/{orgName}/inventory/{inventoryName}/query")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<InventoryQueryEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                          @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
+        return inventoryQueryDao.list(inventory.getId());
+    }
+
+    /**
      * Deletes inventory query
      *
      * @param orgName       organization's name
@@ -138,9 +162,9 @@ public class InventoryQueryResource implements Resource {
     @ApiOperation("Delete inventory query")
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public DeleteInventoryQueryResponse delete(@ApiParam @PathParam("orgName") String orgName,
-                                               @ApiParam @PathParam("inventoryName") String inventoryName,
-                                               @ApiParam @PathParam("queryName") String queryName) {
+    public DeleteInventoryQueryResponse delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                               @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
+                                               @ApiParam @PathParam("queryName") @ConcordKey String queryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
@@ -165,9 +189,9 @@ public class InventoryQueryResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}/exec")
-    public List<Object> exec(@ApiParam @PathParam("orgName") String orgName,
-                             @ApiParam @PathParam("inventoryName") String inventoryName,
-                             @ApiParam @PathParam("queryName") String queryName,
+    public List<Object> exec(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                             @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
+                             @ApiParam @PathParam("queryName") @ConcordKey String queryName,
                              @ApiParam @Valid Map<String, Object> params) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);

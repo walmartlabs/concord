@@ -9,6 +9,8 @@
 - ansible: record "pre" and "post" task events separately;
 - concord-console: new API key management UI;
 - concord-server: optional API key expiration;
+- concord-server: methods to list existing inventories and inventory
+queries;
 - concord-server, concord-console: new method to validate a repo
 without starting it;
 - concord-console: new form to encrypt values to use with

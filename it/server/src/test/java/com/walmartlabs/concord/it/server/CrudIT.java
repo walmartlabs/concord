@@ -133,6 +133,11 @@ public class CrudIT extends AbstractServerIT {
         InventoryEntry inventoryEntry = inventoriesApi.get(orgName, updatedInventoryName);
         assertNotNull(inventoryEntry);
 
+        // -- list
+
+        List<InventoryEntry> l = inventoriesApi.list(orgName);
+        assertTrue(l.stream().anyMatch(e -> updatedInventoryName.equals(e.getName()) && orgName.equals(e.getOrgName())));
+
         // --- delete
 
         GenericOperationResult deleteInventoryResponse = inventoriesApi.delete(orgName, updatedInventoryName);
@@ -175,7 +180,7 @@ public class CrudIT extends AbstractServerIT {
     @Test(timeout = 60000)
     @SuppressWarnings("unchecked")
     public void testInventoryQuery() throws Exception {
-        InventoryQueriesApi resource = new InventoryQueriesApi(getApiClient());
+        InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
 
         String orgName = "Default";
         String inventoryName = "inventory_" + randomString();
@@ -192,33 +197,36 @@ public class CrudIT extends AbstractServerIT {
 
         // --- create
 
-        CreateInventoryQueryResponse cqr = resource.createOrUpdate(orgName, inventoryName, queryName, text);
+        CreateInventoryQueryResponse cqr = queriesApi.createOrUpdate(orgName, inventoryName, queryName, text);
         assertTrue(cqr.isOk());
         assertNotNull(cqr.getId());
 
         // --- update
         String updatedText = "select item_data::text from inventory_data";
-        CreateInventoryQueryResponse uqr = resource.createOrUpdate(orgName, inventoryName, queryName, updatedText);
+        CreateInventoryQueryResponse uqr = queriesApi.createOrUpdate(orgName, inventoryName, queryName, updatedText);
         assertTrue(uqr.isOk());
         assertNotNull(uqr.getId());
 
         // --- get
-        InventoryQueryEntry e1 = resource.get(orgName, inventoryName, queryName);
+        InventoryQueryEntry e1 = queriesApi.get(orgName, inventoryName, queryName);
         assertNotNull(e1);
         assertNotNull(e1.getId());
-        assertEquals(inventoryName, e1.getInventoryName());
         assertEquals(queryName, e1.getName());
         assertEquals(updatedText, e1.getText());
 
+        // --- list
+        List<InventoryQueryEntry> list = queriesApi.list(orgName, inventoryName);
+        assertTrue(list.stream().anyMatch(e -> queryName.equals(e.getName()) && updatedText.equals(e.getText())));
+
         // --- exec
         @SuppressWarnings("unchecked")
-        List<Object> result = resource.exec(orgName, inventoryName, queryName, null);
+        List<Object> result = queriesApi.exec(orgName, inventoryName, queryName, null);
         assertNotNull(result);
         Map<String, Object> m = (Map<String, Object>) result.get(0);
         assertEquals(Collections.singletonMap("k", "v"), m);
 
         // --- delete
-        DeleteInventoryQueryResponse dqr = resource.delete(orgName, inventoryName, queryName);
+        DeleteInventoryQueryResponse dqr = queriesApi.delete(orgName, inventoryName, queryName);
         assertNotNull(dqr);
         assertTrue(dqr.isOk());
     }

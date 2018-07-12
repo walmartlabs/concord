@@ -253,11 +253,9 @@
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
-
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -379,13 +377,6 @@
                         </apiSource>
                     </apiSources>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.commons</groupId>
-                        <artifactId>commons-lang3</artifactId>
-                        <version>3.6</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>

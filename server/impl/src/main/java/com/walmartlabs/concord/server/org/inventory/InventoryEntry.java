@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.org.project.ProjectOwner;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -77,6 +76,10 @@ public class InventoryEntry implements Serializable {
         this.parent = parent;
     }
 
+    public UUID getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }
@@ -89,12 +92,15 @@ public class InventoryEntry implements Serializable {
         return orgName;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
     public InventoryVisibility getVisibility() {
         return visibility;
+    }
+
+    public UUID getParentId() {
+        if (parent == null) {
+            return null;
+        }
+        return parent.getId();
     }
 
     public InventoryEntry getParent() {

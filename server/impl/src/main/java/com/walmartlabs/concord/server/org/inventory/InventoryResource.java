@@ -40,6 +40,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 import java.util.UUID;
 
 @Named
@@ -66,6 +67,21 @@ public class InventoryResource implements Resource {
         this.orgManager = orgManager;
         this.orgDao = orgDao;
         this.teamDao = teamDao;
+    }
+
+    /**
+     * List existing inventories.
+     *
+     * @param orgName organization's name
+     * @return
+     */
+    @GET
+    @ApiOperation(value = "List existing inventories", responseContainer = "list", response = InventoryEntry.class)
+    @Path("/{orgName}/inventory")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<InventoryEntry> list(@ApiParam @PathParam("orgName") String orgName) {
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        return inventoryDao.list(org.getId());
     }
 
     /**

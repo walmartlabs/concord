@@ -21,18 +21,18 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.org.inventory.InventoryQueryEntry;
-import com.walmartlabs.concord.server.jooq.tables.InventoryQueries;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.Record4;
+import org.jooq.SelectJoinStep;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.tables.Inventories.INVENTORIES;
 import static com.walmartlabs.concord.server.jooq.tables.InventoryQueries.INVENTORY_QUERIES;
-import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.value;
 
 @Named
@@ -55,25 +55,24 @@ public class InventoryQueryDao extends AbstractDao {
 
     public InventoryQueryEntry get(UUID queryId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            InventoryQueries q = INVENTORY_QUERIES.as("q");
-            Field<String> inventoryNameField = select(INVENTORIES.INVENTORY_NAME).from(INVENTORIES).where(INVENTORIES.INVENTORY_ID.eq(q.INVENTORY_ID)).asField();
-
-            Record5<UUID, String, UUID, String, String> r =
-                    tx.select(
-                        q.QUERY_ID,
-                        q.QUERY_NAME,
-                        q.INVENTORY_ID,
-                        inventoryNameField,
-                        q.QUERY_TEXT)
-                    .from(q)
-                    .where(q.QUERY_ID.eq(queryId))
+            Record4<UUID, String, UUID, String> r = createSelect(tx)
+                    .where(INVENTORY_QUERIES.QUERY_ID.eq(queryId))
                     .fetchOne();
 
             if (r == null) {
                 return null;
             }
 
-            return new InventoryQueryEntry(r.get(q.QUERY_ID), r.get(q.QUERY_NAME), r.get(q.INVENTORY_ID), r.get(inventoryNameField), r.get(q.QUERY_TEXT));
+            return toEntry(r);
+        }
+    }
+
+    public List<InventoryQueryEntry> list(UUID inventoryId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return createSelect(tx)
+                    .where(INVENTORY_QUERIES.INVENTORY_ID.eq(inventoryId))
+                    .orderBy(INVENTORY_QUERIES.QUERY_NAME)
+                    .fetch(InventoryQueryDao::toEntry);
         }
     }
 
@@ -112,5 +111,20 @@ public class InventoryQueryDao extends AbstractDao {
         tx.deleteFrom(INVENTORY_QUERIES)
                 .where(INVENTORY_QUERIES.QUERY_ID.eq(queryId))
                 .execute();
+    }
+
+    private static InventoryQueryEntry toEntry(Record4<UUID, String, UUID, String> r) {
+        return new InventoryQueryEntry(r.get(INVENTORY_QUERIES.QUERY_ID),
+                r.get(INVENTORY_QUERIES.QUERY_NAME),
+                r.get(INVENTORY_QUERIES.INVENTORY_ID),
+                r.get(INVENTORY_QUERIES.QUERY_TEXT));
+    }
+
+    private static SelectJoinStep<Record4<UUID, String, UUID, String>> createSelect(DSLContext tx) {
+        return tx.select(INVENTORY_QUERIES.QUERY_ID,
+                INVENTORY_QUERIES.QUERY_NAME,
+                INVENTORY_QUERIES.INVENTORY_ID,
+                INVENTORY_QUERIES.QUERY_TEXT)
+                .from(INVENTORY_QUERIES);
     }
 }

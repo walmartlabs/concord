@@ -50,10 +50,6 @@ public class InventoryManager {
         this.auditLog = auditLog;
     }
 
-    public InventoryEntry get(UUID inventoryId) {
-        return assertInventoryAccess(inventoryId, ResourceAccessLevel.READER, false);
-    }
-
     public UUID insert(UUID orgId, InventoryEntry entry) {
         UUID parentId = assertParentInventoryAccess(orgId, entry.getParent(), ResourceAccessLevel.WRITER, true);
 
