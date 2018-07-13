@@ -49,7 +49,7 @@ public class TriggerScheduleDao extends AbstractDao {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public TriggerScheduleDao(Configuration cfg) {
+    public TriggerScheduleDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

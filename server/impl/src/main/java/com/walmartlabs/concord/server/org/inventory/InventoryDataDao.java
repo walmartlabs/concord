@@ -42,7 +42,7 @@ public class InventoryDataDao extends AbstractDao {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public InventoryDataDao(Configuration cfg) {
+    public InventoryDataDao(@Named("app") Configuration cfg) {
         super(cfg);
         this.objectMapper = new ObjectMapper();
     }

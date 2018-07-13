@@ -97,7 +97,7 @@ public class ExclusiveLock {
         private static final int LOCK_ID = 1;
 
         @Inject
-        public ExclusiveLockDao(Configuration cfg) {
+        public ExclusiveLockDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 

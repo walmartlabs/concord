@@ -48,7 +48,7 @@ import static org.jooq.impl.DSL.selectFrom;
 public class SecretDao extends AbstractDao {
 
     @Inject
-    public SecretDao(Configuration cfg) {
+    public SecretDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

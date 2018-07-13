@@ -62,9 +62,7 @@ public class InventoryQueryExecDao extends AbstractDao {
     private final InventoryQueryDao inventoryQueryDao;
 
     @Inject
-    public InventoryQueryExecDao(
-            @Named("inventory") Configuration cfg,
-            InventoryQueryDao inventoryQueryDao) {
+    public InventoryQueryExecDao(@Named("inventory") Configuration cfg, InventoryQueryDao inventoryQueryDao) {
         super(cfg);
 
         this.objectMapper = new ObjectMapper();

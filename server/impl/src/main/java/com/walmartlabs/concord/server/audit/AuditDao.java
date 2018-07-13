@@ -41,7 +41,7 @@ public class AuditDao extends AbstractDao {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public AuditDao(Configuration cfg) {
+    public AuditDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

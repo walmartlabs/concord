@@ -44,7 +44,7 @@ import static org.jooq.impl.DSL.value;
 public class ProcessLogsDao extends AbstractDao {
 
     @Inject
-    public ProcessLogsDao(Configuration cfg) {
+    public ProcessLogsDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

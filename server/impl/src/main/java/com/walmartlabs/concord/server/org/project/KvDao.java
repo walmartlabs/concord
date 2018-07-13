@@ -38,7 +38,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_
 public class KvDao extends AbstractDao {
 
     @Inject
-    public KvDao(Configuration cfg) {
+    public KvDao(@Named("app") Configuration cfg) {
         super(cfg);
 
         switch (cfg.dialect()) {

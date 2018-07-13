@@ -43,7 +43,7 @@ import static org.jooq.impl.DSL.*;
 public class InventoryDao extends AbstractDao {
 
     @Inject
-    public InventoryDao(Configuration cfg) {
+    public InventoryDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

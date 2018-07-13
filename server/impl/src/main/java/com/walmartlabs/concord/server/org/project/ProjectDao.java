@@ -61,7 +61,7 @@ public class ProjectDao extends AbstractDao {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public ProjectDao(Configuration cfg) {
+    public ProjectDao(@Named("app") Configuration cfg) {
         super(cfg);
         this.objectMapper = new ObjectMapper();
     }

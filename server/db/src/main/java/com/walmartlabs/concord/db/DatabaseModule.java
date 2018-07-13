@@ -97,6 +97,7 @@ public class DatabaseModule extends AbstractModule {
     }
 
     @Provides
+    @Named("app")
     @Singleton
     public Configuration appJooqConfiguration(@Named("app") DataSource ds) {
         return createJooqConfiguration(ds);

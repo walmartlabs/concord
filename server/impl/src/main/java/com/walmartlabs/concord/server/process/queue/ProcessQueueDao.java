@@ -51,7 +51,7 @@ public class ProcessQueueDao extends AbstractDao {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    protected ProcessQueueDao(Configuration cfg) {
+    protected ProcessQueueDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

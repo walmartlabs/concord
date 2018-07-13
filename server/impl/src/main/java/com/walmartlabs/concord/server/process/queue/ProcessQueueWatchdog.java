@@ -283,7 +283,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
     private static final class WatchdogDao extends AbstractDao {
 
         @Inject
-        public WatchdogDao(Configuration cfg) {
+        public WatchdogDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 

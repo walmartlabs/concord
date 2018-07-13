@@ -47,7 +47,7 @@ import static org.jooq.impl.DSL.*;
 public class LandingDao extends AbstractDao {
 
     @Inject
-    public LandingDao(Configuration cfg) {
+    public LandingDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

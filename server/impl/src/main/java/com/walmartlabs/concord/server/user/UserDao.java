@@ -46,7 +46,7 @@ import static org.jooq.impl.DSL.selectFrom;
 public class UserDao extends AbstractDao {
 
     @Inject
-    public UserDao(Configuration cfg) {
+    public UserDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

@@ -76,7 +76,7 @@ public class LandingPageResource extends AbstractDao implements Resource {
     private final OrganizationManager orgManager;
 
     @Inject
-    public LandingPageResource(Configuration cfg,
+    public LandingPageResource(@Named("app") Configuration cfg,
                                LandingDao landingDao,
                                ProjectDao projectDao,
                                RepositoryDao repositoryDao,

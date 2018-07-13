@@ -48,7 +48,7 @@ public class OrganizationDao extends AbstractDao {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public OrganizationDao(Configuration cfg) {
+    public OrganizationDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

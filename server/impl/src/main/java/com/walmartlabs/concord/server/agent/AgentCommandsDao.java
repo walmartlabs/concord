@@ -48,7 +48,7 @@ public class AgentCommandsDao extends AbstractDao {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public AgentCommandsDao(Configuration cfg) {
+    public AgentCommandsDao(@Named("app") Configuration cfg) {
         super(cfg);
         this.objectMapper = new ObjectMapper();
     }

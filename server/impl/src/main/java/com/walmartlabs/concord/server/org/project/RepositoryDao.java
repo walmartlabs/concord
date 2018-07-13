@@ -38,7 +38,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 public class RepositoryDao extends AbstractDao {
 
     @Inject
-    public RepositoryDao(Configuration cfg) {
+    public RepositoryDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

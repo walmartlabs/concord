@@ -77,7 +77,7 @@ public class TriggerResource extends AbstractDao implements Resource {
                            RepositoryDao repositoryDao,
                            TriggersDao triggersDao,
                            RepositoryManager repositoryManager,
-                           Configuration cfg,
+                           @Named("app") Configuration cfg,
                            ProjectAccessManager projectAccessManager,
                            OrganizationManager orgManager,
                            Map<String, TriggerProcessor> triggerProcessors) {

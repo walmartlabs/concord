@@ -103,7 +103,7 @@ public class CachedRepositoryManager implements RepositoryManager {
     public static class RepositoryCacheDao extends AbstractDao {
 
         @Inject
-        public RepositoryCacheDao(Configuration cfg) {
+        public RepositoryCacheDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 

@@ -114,7 +114,7 @@ public class ApiKeyCleaner implements BackgroundTask {
     private static class CleanerDao extends AbstractDao {
 
         @Inject
-        protected CleanerDao(Configuration cfg) {
+        protected CleanerDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 

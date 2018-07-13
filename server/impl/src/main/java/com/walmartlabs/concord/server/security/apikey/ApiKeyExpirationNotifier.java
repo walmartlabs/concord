@@ -199,7 +199,7 @@ public class ApiKeyExpirationNotifier implements BackgroundTask {
     private static class ExpiredKeysDao extends AbstractDao {
 
         @Inject
-        public ExpiredKeysDao(Configuration cfg) {
+        public ExpiredKeysDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 

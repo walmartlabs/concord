@@ -48,7 +48,7 @@ import static org.jooq.impl.DSL.selectFrom;
 public class TeamDao extends AbstractDao {
 
     @Inject
-    public TeamDao(Configuration cfg) {
+    public TeamDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

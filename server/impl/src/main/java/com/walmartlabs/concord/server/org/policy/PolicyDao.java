@@ -46,7 +46,7 @@ public class PolicyDao extends AbstractDao {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public PolicyDao(Configuration cfg) {
+    public PolicyDao(@Named("app") Configuration cfg) {
         super(cfg);
 
         this.objectMapper = new ObjectMapper();

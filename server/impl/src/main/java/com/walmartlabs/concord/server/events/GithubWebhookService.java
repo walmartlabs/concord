@@ -164,7 +164,7 @@ public class GithubWebhookService implements BackgroundTask {
     private static class RefresherDao extends AbstractDao {
 
         @Inject
-        protected RefresherDao(Configuration cfg) {
+        protected RefresherDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 

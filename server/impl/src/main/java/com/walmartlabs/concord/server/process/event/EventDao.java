@@ -39,7 +39,7 @@ import static org.jooq.impl.DSL.*;
 public class EventDao extends AbstractDao {
 
     @Inject
-    public EventDao(Configuration cfg) {
+    public EventDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

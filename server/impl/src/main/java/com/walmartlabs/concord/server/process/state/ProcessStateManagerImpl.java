@@ -50,7 +50,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_ST
 public class ProcessStateManagerImpl extends AbstractDao implements ProcessStateManager {
 
     @Inject
-    protected ProcessStateManagerImpl(Configuration cfg) {
+    protected ProcessStateManagerImpl(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

@@ -45,7 +45,7 @@ public class TriggersDao extends AbstractDao {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public TriggersDao(Configuration cfg) {
+    public TriggersDao(@Named("app") Configuration cfg) {
         super(cfg);
 
         this.objectMapper = new ObjectMapper();

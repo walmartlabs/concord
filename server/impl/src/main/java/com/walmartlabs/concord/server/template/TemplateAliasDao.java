@@ -37,7 +37,7 @@ import static com.walmartlabs.concord.server.jooq.tables.TemplateAliases.TEMPLAT
 public class TemplateAliasDao extends AbstractDao {
 
     @Inject
-    public TemplateAliasDao(Configuration cfg) {
+    public TemplateAliasDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 

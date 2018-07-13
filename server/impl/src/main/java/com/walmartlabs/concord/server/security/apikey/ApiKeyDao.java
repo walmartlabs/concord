@@ -48,7 +48,7 @@ public class ApiKeyDao extends AbstractDao {
     private final SecureRandom rnd;
 
     @Inject
-    public ApiKeyDao(Configuration cfg, SecureRandom rnd) {
+    public ApiKeyDao(@Named("app") Configuration cfg, SecureRandom rnd) {
         super(cfg);
         this.rnd = rnd;
     }

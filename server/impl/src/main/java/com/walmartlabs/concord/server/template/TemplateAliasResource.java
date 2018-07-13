@@ -48,7 +48,7 @@ public class TemplateAliasResource extends AbstractDao implements Resource {
     private final TemplateAliasDao aliasDao;
 
     @Inject
-    public TemplateAliasResource(Configuration cfg, TemplateAliasDao aliasDao) {
+    public TemplateAliasResource(@Named("app") Configuration cfg, TemplateAliasDao aliasDao) {
         super(cfg);
         this.aliasDao = aliasDao;
     }
