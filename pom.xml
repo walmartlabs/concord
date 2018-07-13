@@ -106,7 +106,7 @@
         <metrics.version>3.2.2</metrics.version>
         <mockito.version>2.13.0</mockito.version>
         <mustache.version>0.9.5</mustache.version>
-        <node.version>9.11.1</node.version>
+        <node.version>10.5.0</node.version>
         <okhttp.version>2.7.5</okhttp.version>
         <okio.version>1.13.0</okio.version>
         <ollie.version>0.0.18</ollie.version>
