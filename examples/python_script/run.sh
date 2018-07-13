@@ -3,7 +3,7 @@
 SERVER_ADDR="$1"
 
 rm -rf target && mkdir target
-cp -R concord.yml example.py target/
+cp -R concord.yml *.py target/
 
 cd target && zip -r payload.zip ./* > /dev/null && cd ..
 

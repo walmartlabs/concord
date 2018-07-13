@@ -8,5 +8,3 @@ flows:
   default:
   - script: example.py
   - log: "The result: ${y}"
-
-
