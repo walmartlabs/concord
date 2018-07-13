@@ -21,22 +21,99 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.Test;
 
 import java.io.File;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class TriggerIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testInvalidConditionals() throws Exception {
+        String orgName = "org_" + randomString();
+        String projectName = "project_" + randomString();
+        ProjectOperationResponse por = register(orgName, projectName, "invalidTriggers", 2);
+
+        // ---
+
+        ExternalEventsApi eventResource = new ExternalEventsApi(getApiClient());
+        eventResource.event("testTrigger", Collections.singletonMap("x", "abc"));
+
+        // ---
+
+        waitForProcs(por.getId(), 1, null);
+    }
+
+    @Test(timeout = 60000)
+    public void testTriggerProcessStartupFailure() throws Exception {
+        String orgName = "org_" + randomString();
+        String projectAName = "projectA_" + randomString();
+        String projectBName = "projectA_" + randomString();
+
+        ProjectOperationResponse porA = register(orgName, projectAName, "invalidTriggersBrokenProcess/a", 1);
+        ProjectOperationResponse porB = register(orgName, projectBName, "invalidTriggersBrokenProcess/b", 1);
+
+        // ---
+
+        String policyName = "policy_" + randomString();
+
+        PolicyApi policyApi = new PolicyApi(getApiClient());
+        policyApi.createOrUpdate(new PolicyEntry()
+                .setName(policyName)
+                .setRules(readPolicy("invalidTriggersBrokenProcess/policy.json")));
+
+        policyApi.link(policyName, new PolicyLinkEntry().setOrgName(orgName));
+
+        // ---
+
+        ExternalEventsApi eventResource = new ExternalEventsApi(getApiClient());
+        eventResource.event("testTrigger2", Collections.singletonMap("x", "abc"));
+
+        // ---
+
+        waitForProcs(porA.getId(), 1, StatusEnum.FAILED);
+        waitForProcs(porB.getId(), 1, StatusEnum.FINISHED);
+    }
+
+    private ProjectOperationResponse register(String orgName, String projectName, String repoResource, int expectedTriggerCount) throws Exception {
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        if (orgApi.get(orgName) == null) {
+            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        }
+
+        // ---
+
+        String repoName = "repo_" + randomString();
+
+        ProjectOperationResponse por = createProject(orgName, projectName, repoName, repoResource);
+
+        // ---
+
+        TriggersApi triggerResource = new TriggersApi(getApiClient());
+        while (true) {
+            List<TriggerEntry> triggers = triggerResource.list(orgName, projectName, repoName);
+            if (triggers != null && triggers.size() == expectedTriggerCount) {
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
+
+        return por;
+    }
+
+    private ProjectOperationResponse createProject(String orgName, String projectName, String repoName, String repoResource) throws Exception {
         Path tmpDir = createTempDir();
 
-        File src = new File(ProjectIT.class.getResource("invalidTriggers").toURI());
+        File src = new File(ProjectIT.class.getResource(repoResource).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
@@ -47,51 +124,35 @@ public class TriggerIT extends AbstractServerIT {
 
         // ---
 
-        String orgName = "org_" + randomString();
-
-        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
-
-        // ---
-
-        String projectName = "project_" + randomString();
-        String repoName = "repo_" + randomString();
-
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        return projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setName(repoName)
                         .setUrl(gitUrl))));
+    }
 
-        // ---
+    private Map<String, Object> readPolicy(String file) throws Exception {
+        URL url = AnsiblePolicyIT.class.getResource(file);
+        return fromJson(new File(url.toURI()));
+    }
 
-        TriggersApi triggerResource = new TriggersApi(getApiClient());
-        while (true) {
-            List<TriggerEntry> triggers = triggerResource.list(orgName, projectName, repoName);
-            if (triggers != null && triggers.size() == 2) {
-                break;
-            }
-
-            Thread.sleep(1000);
-        }
-
-        // ---
-
-        ExternalEventsApi eventResource = new ExternalEventsApi(getApiClient());
-        eventResource.event("testTrigger", Collections.singletonMap("x", "abc"));
-
-        // ---
-
+    private List<ProcessEntry> waitForProcs(UUID id, int expectedCount, StatusEnum expectedStatus) throws Exception {
         ProcessApi processApi = new ProcessApi(getApiClient());
 
         while (true) {
-            List<ProcessEntry> l = processApi.list(por.getId(), null, null, 10);
-            if (l != null && l.size() == 1) {
-                break;
+            List<ProcessEntry> l = processApi.list(id, null, null, 10);
+            if (l != null && l.size() == expectedCount && allHasStatus(l, expectedStatus)) {
+                return l;
             }
 
             Thread.sleep(1000);
         }
+    }
+
+    private static boolean allHasStatus(List<ProcessEntry> l, StatusEnum s) {
+        if (s == null) {
+            return true;
+        }
+        return l.stream().allMatch(e -> s.equals(e.getStatus()));
     }
 }

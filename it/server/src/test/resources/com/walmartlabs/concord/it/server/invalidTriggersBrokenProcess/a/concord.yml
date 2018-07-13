@@ -1,0 +1,10 @@
+flows:
+  default:
+  - log: "Hello, default"
+
+  onValidTrigger:
+  - log: "Hello, valid trigger"
+
+triggers:
+  - testTrigger2:
+      entryPoint: onValidTrigger

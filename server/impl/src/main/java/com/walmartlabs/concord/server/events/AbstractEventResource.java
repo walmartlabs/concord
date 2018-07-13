@@ -34,6 +34,7 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,9 +80,13 @@ public abstract class AbstractEventResource {
             }
             args.put("event", event);
 
-            UUID orgId = projectDao.getOrgId(t.getProjectId());
-            UUID instanceId = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), args);
-            log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, instanceId, t);
+            try {
+                UUID orgId = projectDao.getOrgId(t.getProjectId());
+                UUID instanceId = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), args);
+                log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, instanceId, t);
+            } catch (Exception e) {
+                log.error("process ['{}', '{}', '{}'] -> error", event, eventName, t.getId(), e);
+            }
         }
 
         return triggers.size();
@@ -96,7 +101,7 @@ public abstract class AbstractEventResource {
         }
     }
 
-    private UUID startProcess(UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) {
+    private UUID startProcess(UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) throws IOException {
         UUID instanceId = UUID.randomUUID();
 
         String initiator = getInitiator();
@@ -104,9 +109,7 @@ public abstract class AbstractEventResource {
         Map<String, Object> request = new HashMap<>();
         request.put(Constants.Request.ARGUMENTS_KEY, args);
 
-        Payload payload;
-        try {
-            payload = new PayloadBuilder(instanceId)
+        Payload payload = new PayloadBuilder(instanceId)
                     .initiator(initiator)
                     .organization(orgId)
                     .project(projectId)
@@ -114,13 +117,6 @@ public abstract class AbstractEventResource {
                     .entryPoint(flowName)
                     .configuration(request)
                     .build();
-        } catch (ProcessException e) {
-            log.error("startProcess ['{}', '{}', '{}', '{}'] -> error creating a payload", orgId, projectId, repoId, flowName, e);
-            throw e;
-        } catch (Exception e) {
-            log.error("startProcess ['{}', '{}', '{}', '{}'] -> error creating a payload", orgId, projectId, repoId, flowName, e);
-            throw new ProcessException(instanceId, "Error while creating a payload: " + e.getMessage(), e);
-        }
 
         processManager.start(payload, false);
         return instanceId;

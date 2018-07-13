@@ -1,0 +1,9 @@
+{
+  "file": {
+    "deny": [
+      {
+        "names": [ "makepolicyfail.txt" ]
+      }
+    ]
+  }
+}

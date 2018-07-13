@@ -40,6 +40,7 @@ public class EntryPointProcessor implements PayloadProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         String s = payload.getHeader(Payload.ENTRY_POINT);
 

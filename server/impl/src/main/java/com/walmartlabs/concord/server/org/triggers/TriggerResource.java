@@ -47,7 +47,6 @@ import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -163,9 +162,9 @@ public class TriggerResource extends AbstractDao implements Resource {
         ProjectDefinition pd;
         try {
             pd = projectLoader.load(repoPath);
-        } catch (IOException e) {
-            log.error("refresh ['{}'] -> load project error", r.getId(), e);
-            throw new WebApplicationException("Refresh failed", e);
+        } catch (Exception e) {
+            log.error("refresh ['{}'] -> project load error", r.getId(), e);
+            throw new WebApplicationException("Refresh failed (repository ID: " + r.getId() + "): " + e.getMessage(), e);
         }
 
         tx(tx -> {
