@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
-import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -94,7 +93,7 @@ public class ProcessSecurityContext {
         try {
             return principalCache.get(instanceId, () -> doGetPrincipals(instanceId));
         } catch (ExecutionException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -146,7 +145,7 @@ public class ProcessSecurityContext {
         try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(principals);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         return baos.toByteArray();
     }
@@ -155,7 +154,7 @@ public class ProcessSecurityContext {
         try (ObjectInputStream ois = new ObjectInputStream(in)) {
             return Optional.of((PrincipalCollection) ois.readObject());
         } catch (IOException | ClassNotFoundException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

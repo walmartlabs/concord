@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-import com.google.common.base.Throwables;
-
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -48,7 +46,7 @@ public class TrustingSslSocketFactory extends SocketFactory {
             ctx.init(null, new TrustManager[]{new DummyTrustmanager()}, new SecureRandom());
             delegate = ctx.getSocketFactory();
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

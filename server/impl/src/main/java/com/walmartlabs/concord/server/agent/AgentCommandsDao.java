@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.agent;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
 import com.walmartlabs.concord.server.jooq.tables.records.AgentCommandsRecord;
@@ -32,11 +31,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.List;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 import static org.jooq.impl.DSL.currentTimestamp;
@@ -117,7 +112,7 @@ public class AgentCommandsDao extends AbstractDao {
         try {
             data = objectMapper.readValue(r.getCommandData(), Map.class);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         return new AgentCommand(commandId, agentId, status, createdAt, data);
@@ -127,7 +122,7 @@ public class AgentCommandsDao extends AbstractDao {
         try {
             return objectMapper.writeValueAsBytes(m);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

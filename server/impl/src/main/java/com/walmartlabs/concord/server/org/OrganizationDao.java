@@ -21,12 +21,9 @@ package com.walmartlabs.concord.server.org;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.org.OrganizationEntry;
-import com.walmartlabs.concord.server.org.OrganizationVisibility;
-import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
+import com.walmartlabs.concord.server.org.team.TeamRole;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -166,7 +163,7 @@ public class OrganizationDao extends AbstractDao {
         try {
             return objectMapper.writeValueAsString(m);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -179,7 +176,7 @@ public class OrganizationDao extends AbstractDao {
         try {
             return objectMapper.readValue(s, Map.class);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

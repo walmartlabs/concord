@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
@@ -332,7 +331,7 @@ public class SecretManager {
             // we can't use the transaction here because the store may update the record in the database independently,
             // as our transaction has not yet finalized so we may end up having exception in that case
             secretDao.delete(id);
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         auditLog.add(AuditObject.SECRET, AuditAction.CREATE)

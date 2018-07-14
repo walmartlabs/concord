@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.audit;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -66,7 +65,7 @@ public class AuditDao extends AbstractDao {
         try {
             return objectMapper.writeValueAsString(details);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.Striped;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.ProjectLoader;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +126,7 @@ public class RepositoryManagerImpl implements RepositoryManager {
             l.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
             return f.call();
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             l.unlock();
         }

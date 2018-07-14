@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.db.AbstractDao;
 import org.jooq.Configuration;
@@ -252,7 +251,7 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
                             bytesInBatch += Files.size(file);
                         } catch (SQLException e) {
-                            throw Throwables.propagate(e);
+                            throw new RuntimeException(e);
                         }
 
                         // limit the size of the batch
@@ -260,7 +259,7 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
                             try {
                                 ps.executeBatch();
                             } catch (Exception e) {
-                                throw Throwables.propagate(e);
+                                throw new RuntimeException(e);
                             }
                             bytesInBatch = 0;
                         }

@@ -20,11 +20,9 @@ package com.walmartlabs.concord.server.org.secretStore.keywhiz;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.server.cfg.KeywhizSecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
-import com.walmartlabs.concord.server.org.secretStore.keywhiz.KeywhizClient;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -57,7 +55,7 @@ public class KeywhizSecretStore implements SecretStore {
         try {
             this.client.createSecret(id.toString(), content);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -66,7 +64,7 @@ public class KeywhizSecretStore implements SecretStore {
         try {
             this.client.deleteSecret(id.toString());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -75,7 +73,7 @@ public class KeywhizSecretStore implements SecretStore {
         try {
             return this.client.getSecret(id.toString());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

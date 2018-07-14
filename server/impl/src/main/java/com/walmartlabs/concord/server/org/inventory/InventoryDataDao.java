@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.Inventories;
 import org.jooq.*;
@@ -30,7 +29,10 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Inventories.INVENTORIES;
 import static com.walmartlabs.concord.server.jooq.tables.InventoryData.INVENTORY_DATA;
@@ -125,7 +127,7 @@ public class InventoryDataDao extends AbstractDao {
         try {
             return objectMapper.writeValueAsString(m);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -138,7 +140,7 @@ public class InventoryDataDao extends AbstractDao {
         try {
             return objectMapper.readValue(ab, Object.class);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

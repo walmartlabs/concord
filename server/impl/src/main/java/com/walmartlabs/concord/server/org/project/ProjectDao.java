@@ -21,17 +21,12 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.org.project.ProjectOwner;
-import com.walmartlabs.concord.server.org.project.ProjectVisibility;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -381,7 +376,7 @@ public class ProjectDao extends AbstractDao {
         try {
             return objectMapper.writeValueAsString(m);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -394,7 +389,7 @@ public class ProjectDao extends AbstractDao {
         try {
             return objectMapper.readValue(ab, Map.class);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

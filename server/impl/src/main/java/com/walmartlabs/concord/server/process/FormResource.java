@@ -50,15 +50,15 @@ import java.util.*;
 @Singleton
 @Api(value = "Process Forms", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
-public class FormResourceImpl implements Resource {
+public class FormResource implements Resource {
 
-    public static final String FORMS_RESOURCES_PATH = "forms";
+    private static final String FORMS_RESOURCES_PATH = "forms";
 
     private final ConcordFormService formService;
     private final FormValidatorLocale validatorLocale;
 
     @Inject
-    public FormResourceImpl(ConcordFormService formService) {
+    public FormResource(ConcordFormService formService) {
         this.formService = formService;
         this.validatorLocale = new DefaultFormValidatorLocale();
     }

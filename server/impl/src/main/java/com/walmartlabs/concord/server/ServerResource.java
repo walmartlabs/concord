@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Named;
@@ -47,7 +46,7 @@ public class ServerResource implements Resource {
         try (InputStream in = ServerResource.class.getResourceAsStream("version.properties")) {
             props.load(in);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         this.version = props.getProperty("version");

@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.*;
@@ -184,7 +183,7 @@ public class TriggersDao extends AbstractDao {
         try {
             return objectMapper.writeValueAsString(m);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -197,7 +196,7 @@ public class TriggersDao extends AbstractDao {
         try {
             return objectMapper.readValue(ab, Map.class);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

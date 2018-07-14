@@ -21,9 +21,7 @@ package com.walmartlabs.concord.server.org.policy;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.jooq.tables.records.PolicyLinksRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -199,7 +197,7 @@ public class PolicyDao extends AbstractDao {
         try {
             return objectMapper.writeValueAsString(m);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -212,7 +210,7 @@ public class PolicyDao extends AbstractDao {
         try {
             return objectMapper.readValue(s, Map.class);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

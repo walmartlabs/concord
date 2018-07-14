@@ -286,7 +286,7 @@ public class CustomFormService implements Resource {
 
         String submitUrl = String.format(FORM_WIZARD_CONTINUE_URL_TEMPLATE, processInstanceId, formInstanceId);
 
-        // TODO merge with FormResourceImpl
+        // TODO merge with FormResource
         Map<String, FormDataDefinition> _definitions = new HashMap<>();
 
         // the order of precedence should be:

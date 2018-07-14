@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -429,7 +428,7 @@ public class JGitRepositoryProvider implements RepositoryProvider {
 
             log.warn("configureHttpTransport -> SSL verification is disabled");
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

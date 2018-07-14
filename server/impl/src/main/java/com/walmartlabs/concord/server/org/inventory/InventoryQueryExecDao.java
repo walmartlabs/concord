@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.db.AbstractDao;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.CastExpression;
@@ -104,7 +103,7 @@ public class InventoryQueryExecDao extends AbstractDao {
         try {
             return objectMapper.writeValueAsString(m);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -117,7 +116,7 @@ public class InventoryQueryExecDao extends AbstractDao {
         try {
             return objectMapper.readValue(ab, Object.class);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

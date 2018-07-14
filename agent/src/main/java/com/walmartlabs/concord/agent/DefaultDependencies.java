@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +50,7 @@ public class DefaultDependencies {
                 this.dependencies = stream.map(DefaultDependencies::parseUri)
                 .collect(Collectors.toList());
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
 
             log.info("init -> using external default dependencies configuration: {}", path);
@@ -61,7 +60,7 @@ public class DefaultDependencies {
                         .map(DefaultDependencies::parseUri)
                         .collect(Collectors.toList());
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
 
             log.info("init -> using classpath default dependencies configuration");
@@ -76,7 +75,7 @@ public class DefaultDependencies {
         try {
             return new URI(s);
         } catch (URISyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

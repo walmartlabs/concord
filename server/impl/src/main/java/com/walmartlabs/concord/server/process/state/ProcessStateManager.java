@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.state;
  * =====
  */
 
-import com.google.common.base.Throwables;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -202,7 +201,7 @@ public interface ProcessStateManager {
 
                 Files.setPosixFilePermissions(p, Posix.posix(unixMode));
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }
@@ -225,7 +224,7 @@ public interface ProcessStateManager {
                 IOUtils.copy(src, dst);
                 dst.closeArchiveEntry();
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }

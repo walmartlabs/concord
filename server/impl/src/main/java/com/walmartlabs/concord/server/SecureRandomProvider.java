@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.google.common.base.Throwables;
-
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.security.NoSuchAlgorithmException;
@@ -35,7 +33,7 @@ public class SecureRandomProvider implements Provider<SecureRandom> {
         try {
             return SecureRandom.getInstance("NativePRNGNonBlocking");
         } catch (NoSuchAlgorithmException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

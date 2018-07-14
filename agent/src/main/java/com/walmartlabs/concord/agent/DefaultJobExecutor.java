@@ -22,7 +22,6 @@ package com.walmartlabs.concord.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
@@ -501,7 +500,7 @@ public class DefaultJobExecutor implements JobExecutor {
             Map<String, Object> m = objectMapper.readValue(in, Map.class);
             return (List<String>) m.get(InternalConstants.Agent.JVM_ARGS_KEY);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
