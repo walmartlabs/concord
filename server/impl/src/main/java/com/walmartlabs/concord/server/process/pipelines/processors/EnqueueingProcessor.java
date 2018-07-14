@@ -21,10 +21,12 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.CommitInfo;
+import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
@@ -39,6 +41,8 @@ import java.util.UUID;
 
 @Named
 public class EnqueueingProcessor implements PayloadProcessor {
+
+    private static final int MAX_COMMIT_ID_LENGTH = 128;
 
     private final ProcessQueueDao queueDao;
 
@@ -66,7 +70,30 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
         Map<String, Object> requirements = payload.getHeader(Payload.REQUIREMENTS);
 
-        queueDao.update(instanceId, ProcessStatus.ENQUEUED, tags, startAt, requirements);
+        UUID repoId = null;
+        String repoUrl = null;
+        String repoPath = null;
+        String commitId = null;
+        String commitMsg = null;
+
+        RepositoryInfo repoInfo = payload.getHeader(RepositoryProcessor.REPOSITORY_INFO_KEY);
+        if (repoInfo != null) {
+            repoId = repoInfo.getId();
+            repoUrl = repoInfo.getUrl();
+            repoPath = repoInfo.getPath();
+
+            CommitInfo commitInfo = repoInfo.getCommitInfo();
+            if (commitInfo != null) {
+                commitId = commitInfo.getId();
+
+                commitMsg = commitInfo.getMessage();
+                if (commitMsg != null && commitMsg.length() > MAX_COMMIT_ID_LENGTH) {
+                    commitMsg = commitMsg.substring(0, MAX_COMMIT_ID_LENGTH - 3) + "...";
+                }
+            }
+        }
+
+        queueDao.update(instanceId, ProcessStatus.ENQUEUED, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg);
         return chain.process(payload);
     }
 

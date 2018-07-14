@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
@@ -86,9 +86,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         logManager.info(instanceId, "Copying the repository's data: {}", repo);
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
-        copyRepositoryData(instanceId, projectId, repo, dst);
-        RepositoryManager.RepositoryInfo r = repositoryManager.getInfo(repo, dst);
-
+        RepositoryManager.RepositoryInfo r = copyRepositoryData(instanceId, projectId, repo, dst);
         String branch = Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH);
 
         CommitInfo ci = null;
@@ -96,25 +94,26 @@ public class RepositoryProcessor implements PayloadProcessor {
             ci = new CommitInfo(r.getCommitId(), r.getAuthor(), r.getMessage());
         }
 
-        RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), branch, repo.getCommitId(), ci);
+        RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), branch, repo.getCommitId(), ci);
         payload = payload.putHeader(REPOSITORY_INFO_KEY, i);
 
         return chain.process(payload);
     }
 
-    private void copyRepositoryData(UUID instanceId, UUID projectId, RepositoryEntry repo, Path dst) {
-        repositoryManager.withLock(projectId, repo.getName(), () -> {
+    private RepositoryManager.RepositoryInfo copyRepositoryData(UUID instanceId, UUID projectId, RepositoryEntry repo, Path dst) {
+        return repositoryManager.withLock(projectId, repo.getName(), () -> {
             try {
                 Path src = repositoryManager.fetch(projectId, repo);
 
                 IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
                 log.info("process ['{}'] -> copy from {} to {}", instanceId, src, dst);
+
+                return repositoryManager.getInfo(repo, src);
             } catch (Exception e) {
                 log.error("process ['{}'] -> repository error", instanceId, e);
                 logManager.error(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
                 throw new ProcessException(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
             }
-            return null;
         });
     }
 
@@ -123,15 +122,23 @@ public class RepositoryProcessor implements PayloadProcessor {
         private final UUID id;
         private final String name;
         private final String url;
+        private final String path;
         private final String branch;
         private final String commitId;
         private final CommitInfo commitInfo;
 
-        public RepositoryInfo(UUID id, String name, String url, String branch, String commitId,
+        public RepositoryInfo(UUID id,
+                              String name,
+                              String url,
+                              String path,
+                              String branch,
+                              String commitId,
                               CommitInfo commitInfo) {
+
             this.id = id;
             this.name = name;
             this.url = url;
+            this.path = path;
             this.branch = branch;
             this.commitId = commitId;
             this.commitInfo = commitInfo;
@@ -147,6 +154,10 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         public String getUrl() {
             return url;
+        }
+
+        public String getPath() {
+            return path;
         }
 
         public String getBranch() {
@@ -167,6 +178,7 @@ public class RepositoryProcessor implements PayloadProcessor {
                     "id=" + id +
                     ", name='" + name + '\'' +
                     ", url='" + url + '\'' +
+                    ", path='" + path + '\'' +
                     ", branch='" + branch + '\'' +
                     ", commitId='" + commitId + '\'' +
                     ", commitInfo=" + commitInfo +
@@ -175,6 +187,7 @@ public class RepositoryProcessor implements PayloadProcessor {
     }
 
     public static final class CommitInfo implements Serializable {
+
         private final String id;
         private final String author;
         private final String message;

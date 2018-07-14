@@ -76,6 +76,11 @@ export interface ProcessEntry {
     status: ProcessStatus;
     orgName?: ConcordKey;
     projectName?: ConcordKey;
+    repoName?: ConcordKey;
+    repoUrl?: string;
+    repoPath?: string;
+    commitId?: string;
+    commitMsg?: string;
     initiator: string;
     createdAt: string;
     lastUpdatedAt: string;

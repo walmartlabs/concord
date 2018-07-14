@@ -41,6 +41,12 @@ public class ProcessEntry implements Serializable {
     private final String orgName;
     private final UUID projectId;
     private final String projectName;
+    private final UUID repoId;
+    private final String repoName;
+    private final String repoUrl;
+    private final String repoPath;
+    private final String commitId;
+    private final String commitMsg;
     private final String initiator;
     private final ProcessStatus status;
     private final String lastAgentId;
@@ -61,6 +67,12 @@ public class ProcessEntry implements Serializable {
                         @JsonProperty("orgName") String orgName,
                         @JsonProperty("projectId") UUID projectId,
                         @JsonProperty("projectName") String projectName,
+                        @JsonProperty("repoId") UUID repoId,
+                        @JsonProperty("repoName") String repoName,
+                        @JsonProperty("repoUrl") String repoUrl,
+                        @JsonProperty("repoPath") String repoPath,
+                        @JsonProperty("commitId") String commitId,
+                        @JsonProperty("commitMsg") String commitMsg,
                         @JsonProperty("createdAt") Date createdAt,
                         @JsonProperty("initiator") String initiator,
                         @JsonProperty("lastUpdatedAt") Date lastUpdatedAt,
@@ -76,6 +88,12 @@ public class ProcessEntry implements Serializable {
         this.orgName = orgName;
         this.projectId = projectId;
         this.projectName = projectName;
+        this.repoId = repoId;
+        this.repoName = repoName;
+        this.repoUrl = repoUrl;
+        this.repoPath = repoPath;
+        this.commitId = commitId;
+        this.commitMsg = commitMsg;
         this.createdAt = createdAt;
         this.initiator = initiator;
         this.lastUpdatedAt = lastUpdatedAt;
@@ -115,6 +133,30 @@ public class ProcessEntry implements Serializable {
 
     public String getProjectName() {
         return projectName;
+    }
+
+    public UUID getRepoId() {
+        return repoId;
+    }
+
+    public String getRepoName() {
+        return repoName;
+    }
+
+    public String getRepoUrl() {
+        return repoUrl;
+    }
+
+    public String getRepoPath() {
+        return repoPath;
+    }
+
+    public String getCommitId() {
+        return commitId;
+    }
+
+    public String getCommitMsg() {
+        return commitMsg;
     }
 
     public Date getCreatedAt() {
@@ -159,6 +201,12 @@ public class ProcessEntry implements Serializable {
                 ", orgName='" + orgName + '\'' +
                 ", projectId=" + projectId +
                 ", projectName='" + projectName + '\'' +
+                ", repoId=" + repoId +
+                ", repoName='" + repoName + '\'' +
+                ", repoUrl='" + repoUrl + '\'' +
+                ", repoPath='" + repoPath + '\'' +
+                ", commitId='" + commitId + '\'' +
+                ", commitMsg='" + commitMsg + '\'' +
                 ", initiator='" + initiator + '\'' +
                 ", status=" + status +
                 ", lastAgentId='" + lastAgentId + '\'' +

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,11 +23,11 @@ package com.walmartlabs.concord.server.process.queue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
+import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.ProcessStatus;
-import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
-import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -102,18 +102,23 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void update(UUID instanceId, ProcessStatus status) {
-        update(instanceId, status, (Set<String>) null, null, null);
+        update(instanceId, status, null, null, null, null, null, null, null, null);
     }
 
-    public void update(UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt, Map<String, Object> requirements) {
-        tx(tx -> update(tx, instanceId, status, tags, startAt, requirements));
+    public void update(UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt,
+                       Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
+                       String commitId, String commitMsg) {
+        tx(tx -> update(tx, instanceId, status, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg));
     }
 
     public void update(DSLContext tx, UUID instanceId, ProcessStatus status) {
-        update(tx, instanceId, status, null, null, null);
+        update(tx, instanceId, status, null, null, null, null, null, null, null, null);
     }
 
-    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt, Map<String, Object> requirements) {
+    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt,
+                       Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
+                       String commitId, String commitMsg) {
+
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
@@ -128,6 +133,26 @@ public class ProcessQueueDao extends AbstractDao {
 
         if (requirements != null) {
             q.set(PROCESS_QUEUE.REQUIREMENTS, field("?::jsonb", String.class, serialize(requirements)));
+        }
+
+        if (repoId != null) {
+            q.set(PROCESS_QUEUE.REPO_ID, repoId);
+        }
+
+        if (repoUrl != null) {
+            q.set(PROCESS_QUEUE.REPO_URL, repoUrl);
+        }
+
+        if (repoPath != null) {
+            q.set(PROCESS_QUEUE.REPO_PATH, repoPath);
+        }
+
+        if (commitId != null) {
+            q.set(PROCESS_QUEUE.COMMIT_ID, commitId);
+        }
+
+        if (commitMsg != null) {
+            q.set(PROCESS_QUEUE.COMMIT_MSG, commitMsg);
         }
 
         int i = q
@@ -211,7 +236,7 @@ public class ProcessQueueDao extends AbstractDao {
 
         try (DSLContext tx = DSL.using(cfg)) {
 
-            List<VProcessQueueRecord> res= tx.withRecursive("children").as(
+            List<VProcessQueueRecord> res = tx.withRecursive("children").as(
                     select()
                             .from(V_PROCESS_QUEUE)
                             .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
@@ -328,7 +353,7 @@ public class ProcessQueueDao extends AbstractDao {
             return q;
         }
 
-        String[] as = tags.toArray(new String[tags.size()]);
+        String[] as = tags.toArray(new String[0]);
         return q.where(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
     }
 
@@ -337,7 +362,7 @@ public class ProcessQueueDao extends AbstractDao {
             return q;
         }
 
-        String[] as = tags.toArray(new String[tags.size()]);
+        String[] as = tags.toArray(new String[0]);
         return q.and(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
     }
 
@@ -371,6 +396,12 @@ public class ProcessQueueDao extends AbstractDao {
                 r.getOrgName(),
                 r.getProjectId(),
                 r.getProjectName(),
+                r.getRepoId(),
+                r.getRepoName(),
+                r.getRepoUrl(),
+                r.getRepoPath(),
+                r.getCommitId(),
+                r.getCommitMsg(),
                 r.getCreatedAt(),
                 r.getInitiator(),
                 r.getLastUpdatedAt(),
@@ -398,7 +429,7 @@ public class ProcessQueueDao extends AbstractDao {
             return new String[0];
         }
 
-        return s.toArray(new String[s.size()]);
+        return s.toArray(new String[0]);
     }
 
     private String serialize(Object details) {

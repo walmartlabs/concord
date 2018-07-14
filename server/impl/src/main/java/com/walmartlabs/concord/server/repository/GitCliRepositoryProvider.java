@@ -85,7 +85,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             for (int i = 2; i < info.length; i++) {
                 message.append(info[i]).append("\n");
             }
-            return new RepositoryManager.RepositoryInfo(id, author, message.toString());
+            return new RepositoryManager.RepositoryInfo(id, message.toString(), author);
         } catch (RepositoryException e) {
             // ignore
             return null;

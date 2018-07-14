@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server, concord-console: repository metadata to processes;
 - concord-server: improved inventory query validation;
 - concord-console: display flow and ansible event duration;
 - ansible: record "pre" and "post" task events separately;

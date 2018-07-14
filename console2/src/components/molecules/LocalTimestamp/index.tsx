@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import { Popup } from 'semantic-ui-react';
 
 import { formatTimestamp } from '../../../utils';
 
@@ -34,6 +35,6 @@ export default class extends React.PureComponent<Props> {
             return <div>Bad date value provided</div>;
         }
 
-        return formatTimestamp(value);
+        return <Popup trigger={<span>{formatTimestamp(value)}</span>} content={'Browser time'} />;
     }
 }
