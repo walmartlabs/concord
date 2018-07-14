@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.*;
@@ -149,7 +150,7 @@ public class InventoryResource implements Resource {
 
         UUID inventoryId = inventoryDao.getId(org.getId(), inventoryName);
         if (inventoryId == null) {
-            throw new WebApplicationException("Inventory not found: " + inventoryName, Response.Status.NOT_FOUND);
+            throw new ConcordApplicationException("Inventory not found: " + inventoryName, Response.Status.NOT_FOUND);
         }
 
         UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);

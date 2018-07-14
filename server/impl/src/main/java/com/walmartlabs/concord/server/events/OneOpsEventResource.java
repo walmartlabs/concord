@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -36,7 +37,6 @@ import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -104,7 +104,7 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
         try {
             m = objectMapper.readValue(in, Map.class);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while reading JSON data: " + e.getMessage(), e);
+            throw new ConcordApplicationException("Error while reading JSON data: " + e.getMessage(), e);
         }
 
         return event(m);

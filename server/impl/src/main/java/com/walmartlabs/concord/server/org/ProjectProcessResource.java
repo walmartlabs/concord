@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -112,7 +113,7 @@ public class ProjectProcessResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
         }
 
         return queueDao.list(null, false, projectId, null, null, DEFAULT_LIST_LIMIT);
@@ -306,7 +307,7 @@ public class ProjectProcessResource implements Resource {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
             log.warn("getProcess ['{}'] -> not found", instanceId);
-            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
         return e;
     }

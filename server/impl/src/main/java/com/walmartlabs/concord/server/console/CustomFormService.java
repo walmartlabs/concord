@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordId;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
 import com.walmartlabs.concord.server.process.ConcordFormService;
@@ -52,7 +53,10 @@ import org.sonatype.siesta.Validate;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
@@ -145,7 +149,7 @@ public class CustomFormService implements Resource {
         } catch (IOException e) {
             log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}",
                     processInstanceId, formInstanceId, e);
-            throw new WebApplicationException("Error while preparing a custom form", e);
+            throw new ConcordApplicationException("Error while preparing a custom form", e);
         }
 
         return new FormSessionResponse(formPath(processInstanceId, formInstanceId));
@@ -244,7 +248,7 @@ public class CustomFormService implements Resource {
                 writeData(formDir, d);
             }
         } catch (Exception e) {
-            throw new WebApplicationException("Error while submitting a form", e);
+            throw new ConcordApplicationException("Error while submitting a form", e);
         }
 
         return redirectToForm(uriInfo, headers, processInstanceId, formInstanceId);
@@ -254,7 +258,7 @@ public class CustomFormService implements Resource {
         Form form = formService.get(processInstanceId, formInstanceId);
         if (form == null) {
             log.warn("assertForm ['{}', '{}'] -> not found", processInstanceId, formInstanceId);
-            throw new WebApplicationException("Form not found", Status.NOT_FOUND);
+            throw new ConcordApplicationException("Form not found", Status.NOT_FOUND);
         }
         return form;
     }

@@ -167,7 +167,7 @@ public class TeamResource implements Resource {
     public AddTeamUsersResponse addUsers(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                          @ApiParam @PathParam("teamName") @ConcordKey String teamName,
                                          @ApiParam @QueryParam("replace") @DefaultValue("false") boolean replace,
-                                         @ApiParam Collection<TeamUserEntry> users) {
+                                         @ApiParam @Valid Collection<TeamUserEntry> users) {
 
         if (users == null || users.isEmpty()) {
             throw new ValidationErrorsException("Empty user list");

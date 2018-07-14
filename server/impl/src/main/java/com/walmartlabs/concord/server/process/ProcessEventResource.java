@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.process.event.EventDao;
 import io.swagger.annotations.Api;
@@ -71,7 +72,7 @@ public class ProcessEventResource implements Resource {
         try {
             data = objectMapper.writeValueAsString(req.getData());
         } catch (IOException e) {
-            throw new WebApplicationException("Error while serializing the event's data: " + e.getMessage(), e);
+            throw new ConcordApplicationException("Error while serializing the event's data: " + e.getMessage(), e);
         }
 
         eventDao.insert(processInstanceId, req.getEventType(), data);

@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -50,7 +49,7 @@ public final class MultipartUtils {
             for (InputPart p : input.getParts()) {
                 String name = MultipartUtils.extractName(p);
                 if (name == null || name.startsWith("/") || name.contains("..")) {
-                    throw new WebApplicationException("Invalid attachment name: " + name);
+                    throw new ConcordApplicationException("Invalid attachment name: " + name);
                 }
 
                 if (name.endsWith(JSON_FIELD_SUFFIX)) {
@@ -66,7 +65,7 @@ public final class MultipartUtils {
             }
             return result;
         } catch (IOException e) {
-            throw new WebApplicationException("Error parsing the request", e);
+            throw new ConcordApplicationException("Error parsing the request", e);
         }
     }
 
@@ -116,7 +115,7 @@ public final class MultipartUtils {
                 }
             }
         } catch (IOException e) {
-            throw new WebApplicationException("Error parsing the request", e);
+            throw new ConcordApplicationException("Error parsing the request", e);
         }
         return null;
     }
@@ -137,7 +136,7 @@ public final class MultipartUtils {
         try {
             return UUID.fromString(s);
         } catch (IllegalArgumentException e) {
-            throw new WebApplicationException("Error parsing the request", e);
+            throw new ConcordApplicationException("Error parsing the request", e);
         }
     }
 
@@ -150,7 +149,7 @@ public final class MultipartUtils {
                 }
             }
         } catch (IOException e) {
-            throw new WebApplicationException("Error parsing the request", e);
+            throw new ConcordApplicationException("Error parsing the request", e);
         }
         return null;
     }

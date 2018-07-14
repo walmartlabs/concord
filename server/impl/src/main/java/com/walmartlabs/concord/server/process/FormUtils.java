@@ -22,13 +22,13 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.ConcordFormFields;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.DefaultFormFields;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.InputStream;
@@ -151,7 +151,7 @@ public final class FormUtils {
                         Files.write(tmp, s.getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
                         return tmp.toString();
                     } catch (IOException e) {
-                        throw new WebApplicationException("Error reading file for form field '" + f.getName() + "'", e);
+                        throw new ConcordApplicationException("Error reading file for form field '" + f.getName() + "'", e);
                     }
                 }
             }
@@ -175,7 +175,7 @@ public final class FormUtils {
                     Files.copy(is, tmp, REPLACE_EXISTING);
                     return tmp.toString();
                 } catch (IOException e) {
-                    throw new WebApplicationException("Error reading file for form field '" + f.getName() + "'", e);
+                    throw new ConcordApplicationException("Error reading file for form field '" + f.getName() + "'", e);
                 }
             }
         } else if (v == null) {

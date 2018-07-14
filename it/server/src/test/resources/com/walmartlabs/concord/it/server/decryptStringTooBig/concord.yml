@@ -1,0 +1,11 @@
+flows:
+  default:
+  - script: javascript
+    body: |
+      var t = "";
+      for (var i = 0; i < 256 * 1024; i++) {
+        t += "z";
+      }
+      execution.setVariable("encryptedValue", t);
+
+  - log: "We got ${crypto.decryptString(encryptedValue)}"

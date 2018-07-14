@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -154,7 +155,7 @@ public class InventoryDataResource implements Resource {
         try {
             return JsonBuilder.build(inventoryDataDao.get(inventoryId, itemPath));
         } catch (IOException e) {
-            throw new WebApplicationException("Error while building the response: " + e.getMessage(), e);
+            throw new ConcordApplicationException("Error while building the response: " + e.getMessage(), e);
         }
     }
 }

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordId;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
@@ -71,7 +72,7 @@ public class FormResource implements Resource {
         try {
             return formService.list(processInstanceId);
         } catch (Exception e) {
-            throw new WebApplicationException("Error while retrieving a list of forms: " + processInstanceId, e);
+            throw new ConcordApplicationException("Error while retrieving a list of forms: " + processInstanceId, e);
         }
     }
 
@@ -91,7 +92,7 @@ public class FormResource implements Resource {
 
         Form form = formService.get(processInstanceId, formInstanceId);
         if (form == null) {
-            throw new WebApplicationException("Form not found: " + formInstanceId, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Form not found: " + formInstanceId, Status.NOT_FOUND);
         }
 
         FormDefinition fd = form.getFormDefinition();

@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: added limits for "encrypted strings" size;
+- concord-server: improved error reporting for non-process related
+errors;
 - concord-server, concord-console: repository metadata to processes;
 - concord-server: improved inventory query validation;
 - concord-console: display flow and ansible event duration;

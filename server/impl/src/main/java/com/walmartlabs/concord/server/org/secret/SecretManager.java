@@ -351,6 +351,11 @@ public class SecretManager {
     }
 
     public byte[] decryptData(String projectName, byte[] data) {
+        if (data.length > secretCfg.getMaxEncryptedStringLength()) {
+            throw new ValidationErrorsException("Value too big. Limit: " + secretCfg.getMaxEncryptedStringLength()
+                    + ", the data's size: " + data.length);
+        }
+
         byte[] pwd = projectName.getBytes();
         return SecretUtils.decrypt(data, pwd, secretCfg.getProjectSecretsSalt());
     }

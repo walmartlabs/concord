@@ -21,11 +21,13 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.CreateUserRequest;
 import com.walmartlabs.concord.client.ProjectEntry;
 import com.walmartlabs.concord.client.ProjectsApi;
 import com.walmartlabs.concord.client.UsersApi;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class ValidationIT extends AbstractServerIT {
@@ -37,8 +39,9 @@ public class ValidationIT extends AbstractServerIT {
         try {
             ProjectEntry req = new ProjectEntry().setName("@123_123");
             projectsApi.createOrUpdate("Default", req);
-            fail("Should fail with validation error");
+            fail("Should fail with a validation error");
         } catch (ApiException e) {
+            assertInvalidRequest(e);
         }
 
         ProjectEntry req = new ProjectEntry().setName("aProperName@" + System.currentTimeMillis());
@@ -46,25 +49,51 @@ public class ValidationIT extends AbstractServerIT {
     }
 
     @Test
-    public void testInvalidUsername() throws Exception {
+    public void testInvalidUsername() {
+        String longUsername = "01234567890123456789012345678901234567890123456789012345678901234567890123456789" +
+                "01234567890123456789012345678901234567890123456789012345678901234567890123456789";
+
         UsersApi usersApi = new UsersApi(getApiClient());
 
         try {
             usersApi.findByUsername("test@localhost");
-            fail("Should fail with validation error");
+            fail("Should fail with a validation error");
         } catch (ApiException e) {
+            assertInvalidRequest(e);
         }
 
         try {
             usersApi.findByUsername("local\\test");
-            fail("Should fail with validation error");
+            fail("Should fail with a validation error");
         } catch (ApiException e) {
+            assertInvalidRequest(e);
+        }
+
+        try {
+            usersApi.findByUsername(longUsername);
+            fail("Should fail with a validation error");
+        } catch (ApiException e) {
+            assertInvalidRequest(e);
         }
 
         try {
             usersApi.findByUsername("test#" + System.currentTimeMillis());
             fail("Random valid username, should fail with 404");
         } catch (ApiException e) {
+            assertInvalidRequest(e);
         }
+
+        try {
+            usersApi.createOrUpdate(new CreateUserRequest().setUsername(longUsername)
+                    .setType(CreateUserRequest.TypeEnum.LOCAL));
+            fail("Should fail with a validation error");
+        } catch (ApiException e) {
+            assertInvalidRequest(e);
+        }
+    }
+
+    private static void assertInvalidRequest(ApiException e) {
+        int code = e.getCode();
+        assertTrue(code >= 400 && code < 500);
     }
 }

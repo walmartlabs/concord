@@ -22,9 +22,8 @@ package com.walmartlabs.concord.server.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.agent.AgentManager;
-import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
@@ -38,11 +37,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -263,7 +260,7 @@ public class ProcessManager {
 
                 return Optional.ofNullable(args);
             } catch (IOException e) {
-                throw new WebApplicationException("Error while reading request data", e);
+                throw new ConcordApplicationException("Error while reading request data", e);
             }
         });
         return o.orElse(Collections.emptyMap());
@@ -274,25 +271,6 @@ public class ProcessManager {
                 .filter(r -> expected.contains(r.getStatus()))
                 .map(ProcessEntry::getInstanceId)
                 .collect(Collectors.toList());
-    }
-
-    public static final class PayloadEntry {
-
-        private final ProcessEntry processEntry;
-        private final Path payloadArchive;
-
-        public PayloadEntry(ProcessEntry processEntry, Path payloadArchive) {
-            this.processEntry = processEntry;
-            this.payloadArchive = payloadArchive;
-        }
-
-        public ProcessEntry getProcessEntry() {
-            return processEntry;
-        }
-
-        public Path getPayloadArchive() {
-            return payloadArchive;
-        }
     }
 
     public static final class ProcessResult implements Serializable {

@@ -21,9 +21,8 @@ package com.walmartlabs.concord.server.console;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
-import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
-import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -32,6 +31,7 @@ import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.repository.InvalidRepositoryPathException;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -97,7 +97,7 @@ public class ConsoleService implements Resource {
     public UserResponse whoami() {
         UserPrincipal p = UserPrincipal.getCurrent();
         if (p == null) {
-            throw new WebApplicationException("Can't determine current user: entry not found",
+            throw new ConcordApplicationException("Can't determine current user: entry not found",
                     Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -113,7 +113,7 @@ public class ConsoleService implements Resource {
         }
 
         UserEntry user = userManager.get(p.getId())
-                .orElseThrow(() -> new WebApplicationException("Unknown user: " + p.getId()));
+                .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.getId()));
 
         return new UserResponse(p.getRealm(), user.getName(), displayName, user.getOrgs());
     }
@@ -162,7 +162,7 @@ public class ConsoleService implements Resource {
             OrganizationEntry org = orgManager.assertAccess(orgName, true);
             UUID projectId = projectDao.getId(org.getId(), projectName);
             if (projectId == null) {
-                throw new WebApplicationException("Project not found: " + projectName, Status.BAD_REQUEST);
+                throw new ConcordApplicationException("Project not found: " + projectName, Status.BAD_REQUEST);
             }
             return repositoryDao.getId(projectId, repoName) != null;
         } catch (UnauthorizedException e) {
@@ -213,7 +213,7 @@ public class ConsoleService implements Resource {
             m.put("level", "WARN");
             m.put("details", e.getMessage());
 
-            throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR)
+            throw new ConcordApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                     .entity(m)
                     .build());
@@ -232,7 +232,7 @@ public class ConsoleService implements Resource {
                 msg = "Repository test error";
             }
 
-            throw new WebApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR)
+            throw new ConcordApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
                     .entity(msg)
                     .build());
@@ -257,7 +257,7 @@ public class ConsoleService implements Resource {
         try {
             return ldapManager.search(filter);
         } catch (NamingException e) {
-            throw new WebApplicationException("LDAP search error: " + e.getMessage(), e);
+            throw new ConcordApplicationException("LDAP search error: " + e.getMessage(), e);
         }
     }
 }

@@ -43,6 +43,10 @@ public class SecretStoreConfiguration implements Serializable {
     @Config("secretStore.projectSecretSalt")
     private byte[] projectSecretsSalt;
 
+    @Inject
+    @Config("secretStore.maxEncryptedStringLength")
+    private int maxEncryptedStringLength;
+
     public byte[] getServerPwd() {
         return serverPwd;
     }
@@ -53,5 +57,9 @@ public class SecretStoreConfiguration implements Serializable {
 
     public byte[] getProjectSecretsSalt() {
         return projectSecretsSalt;
+    }
+
+    public int getMaxEncryptedStringLength() {
+        return maxEncryptedStringLength;
     }
 }

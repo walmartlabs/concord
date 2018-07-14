@@ -29,6 +29,7 @@ import javax.xml.bind.DatatypeConverter;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -192,6 +193,47 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*We got " + value + ".*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testDecryptStringTooBig() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
+
+        // ---
+
+        String value = "value_" + randomString();
+
+        EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
+        assertTrue(evr.isOk());
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("decryptStringTooBig").toURI());
+
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "org", orgName,
+                "project", projectName,
+                "archive", payload));
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*too big.*", ab);
     }
 
     @Test(timeout = 60000)

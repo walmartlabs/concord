@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
@@ -33,12 +34,22 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class UserEntry implements Serializable {
 
+    public static final int MAX_USERNAME_LENGTH = 128;
+
     private final UUID id;
+
+    @Size(max = MAX_USERNAME_LENGTH)
     private final String name;
+
     private final Set<OrganizationEntry> orgs;
+
     private final boolean admin;
+
     private final UserType type;
+
+    @Size(max = 256)
     private final String email;
+
     private final Set<RoleEntry> roles;
 
     @JsonCreator

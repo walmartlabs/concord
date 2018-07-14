@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.team;
  * =====
  */
 
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -39,7 +40,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
-import javax.ws.rs.WebApplicationException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -263,10 +263,10 @@ public class TeamManager {
                 // TODO this should be abstracted away
                 LdapPrincipal p = ldapManager.getPrincipal(username);
                 if (p == null) {
-                    throw new WebApplicationException("User not found: " + username);
+                    throw new ConcordApplicationException("User not found: " + username);
                 }
             } catch (NamingException e) {
-                throw new WebApplicationException("Error while retrieving LDAP data: " + e.getMessage(), e);
+                throw new ConcordApplicationException("Error while retrieving LDAP data: " + e.getMessage(), e);
             }
 
             user = userManager.getOrCreate(username, type);

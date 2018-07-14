@@ -25,12 +25,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordUsername;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 public class CreateUserRequest implements Serializable {
 
     @NotNull
     @ConcordUsername
+    @Size(max = UserEntry.MAX_USERNAME_LENGTH)
     private final String username;
 
     private final Boolean admin;

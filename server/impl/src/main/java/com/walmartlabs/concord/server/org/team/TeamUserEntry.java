@@ -24,8 +24,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserType;
 
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -33,8 +35,12 @@ import java.util.UUID;
 public class TeamUserEntry implements Serializable {
 
     private final UUID userId;
+
+    @Size(max = UserEntry.MAX_USERNAME_LENGTH)
     private final String username;
+
     private final UserType userType;
+
     private final TeamRole role;
 
     public TeamUserEntry(String username, TeamRole role) {

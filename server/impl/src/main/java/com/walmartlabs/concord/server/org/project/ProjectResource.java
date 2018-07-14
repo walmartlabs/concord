@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.project;
 import com.google.common.base.Splitter;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.*;
@@ -116,7 +117,7 @@ public class ProjectResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         return projectManager.get(projectId);
@@ -145,7 +146,7 @@ public class ProjectResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         // TODO move to ProjectManager
@@ -159,7 +160,7 @@ public class ProjectResource implements Resource {
                 return Collections.emptyMap();
             }
 
-            throw new WebApplicationException("Value not found: " + path, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Value not found: " + path, Status.NOT_FOUND);
         }
 
         return v;
@@ -181,7 +182,7 @@ public class ProjectResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         // TODO move to ProjectManager
@@ -233,7 +234,7 @@ public class ProjectResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         // TODO move to ProjectManager
@@ -268,7 +269,7 @@ public class ProjectResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         projectManager.delete(projectId);
@@ -289,7 +290,7 @@ public class ProjectResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
@@ -316,7 +317,7 @@ public class ProjectResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);

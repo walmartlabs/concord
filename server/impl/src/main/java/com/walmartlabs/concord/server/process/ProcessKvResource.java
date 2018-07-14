@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.org.project.KvDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import io.swagger.annotations.Api;
@@ -127,7 +128,7 @@ public class ProcessKvResource implements Resource {
     private UUID assertProjectId(String instanceId) {
         ProcessEntry entry = queueDao.get(UUID.fromString(instanceId));
         if (entry == null) {
-            throw new WebApplicationException("Process instance not found", Response.Status.NOT_FOUND);
+            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
         }
 
         UUID projectId = entry.getProjectId();

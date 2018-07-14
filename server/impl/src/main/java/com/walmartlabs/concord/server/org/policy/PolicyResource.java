@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.policy;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.audit.AuditAction;
@@ -84,7 +85,7 @@ public class PolicyResource implements Resource {
     public PolicyEntry get(@ApiParam @PathParam("policyName") @ConcordKey String policyName) {
         UUID id = policyDao.getId(policyName);
         if (id == null) {
-            throw new WebApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
         }
 
         return policyDao.get(id);
@@ -132,7 +133,7 @@ public class PolicyResource implements Resource {
 
         UUID id = policyDao.getId(policyName);
         if (id == null) {
-            throw new WebApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
         }
 
         policyDao.delete(id);
@@ -206,19 +207,19 @@ public class PolicyResource implements Resource {
         if (orgName != null) {
             orgId = orgDao.getId(orgName);
             if (orgId == null) {
-                throw new WebApplicationException("Organization not found: " + orgName, Status.BAD_REQUEST);
+                throw new ConcordApplicationException("Organization not found: " + orgName, Status.BAD_REQUEST);
             }
         }
 
         UUID projectId = null;
         if (projectName != null) {
             if (orgId == null) {
-                throw new WebApplicationException("Organization name is required", Status.BAD_REQUEST);
+                throw new ConcordApplicationException("Organization name is required", Status.BAD_REQUEST);
             }
 
             projectId = projectDao.getId(orgId, projectName);
             if (projectId == null) {
-                throw new WebApplicationException("Project not found: " + projectName, Status.BAD_REQUEST);
+                throw new ConcordApplicationException("Project not found: " + projectName, Status.BAD_REQUEST);
             }
         }
 
@@ -234,7 +235,7 @@ public class PolicyResource implements Resource {
     private UUID assertProject(UUID orgId, String projectName) {
         UUID id = projectDao.getId(orgId, projectName);
         if (id == null) {
-            throw new WebApplicationException("Project not found: " + projectName);
+            throw new ConcordApplicationException("Project not found: " + projectName);
         }
         return id;
     }
@@ -249,7 +250,7 @@ public class PolicyResource implements Resource {
     private PolicyLink assertLink(String policyName, String orgName, String projectName) {
         UUID policyId = policyDao.getId(policyName);
         if (policyId == null) {
-            throw new WebApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
         }
 
         UUID orgId = null;
@@ -263,7 +264,7 @@ public class PolicyResource implements Resource {
             if (orgId != null) {
                 projectId = assertProject(orgId, projectName);
             } else {
-                throw new WebApplicationException("Organization name is required", Status.BAD_REQUEST);
+                throw new ConcordApplicationException("Organization name is required", Status.BAD_REQUEST);
             }
         }
 

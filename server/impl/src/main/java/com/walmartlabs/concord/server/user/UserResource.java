@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.user;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordUsername;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
@@ -37,6 +38,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
@@ -95,12 +97,12 @@ public class UserResource implements Resource {
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public UserEntry findByUsername(@PathParam("username") @ConcordUsername @NotNull String username) {
+    public UserEntry findByUsername(@PathParam("username") @ConcordUsername @Size(max = UserEntry.MAX_USERNAME_LENGTH) @NotNull String username) {
         assertAdmin();
 
         UUID id = userDao.getId(username);
         if (id == null) {
-            throw new WebApplicationException("User not found: " + username, Status.NOT_FOUND);
+            throw new ConcordApplicationException("User not found: " + username, Status.NOT_FOUND);
         }
         return userDao.get(id);
     }

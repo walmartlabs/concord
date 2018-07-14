@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.secret;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
@@ -126,7 +127,7 @@ public class SecretResource implements Resource {
                     throw new ValidationErrorsException("Unsupported secret type: " + type);
             }
         } catch (IOException e) {
-            throw new WebApplicationException("Error while processing the request: " + e.getMessage(), e);
+            throw new ConcordApplicationException("Error while processing the request: " + e.getMessage(), e);
         }
     }
 
@@ -201,7 +202,7 @@ public class SecretResource implements Resource {
                     .build();
         } catch (Exception e) {
             log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
-            throw new WebApplicationException("Error while fetching a secret: " + e.getMessage());
+            throw new ConcordApplicationException("Error while fetching a secret: " + e.getMessage());
         }
     }
 
@@ -255,7 +256,7 @@ public class SecretResource implements Resource {
 
         UUID secretId = secretDao.getId(org.getId(), secretName);
         if (secretId == null) {
-            throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
         }
 
         UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
@@ -313,7 +314,7 @@ public class SecretResource implements Resource {
         try {
             password = MultipartUtils.getString(input, Constants.Multipart.STORE_PASSWORD);
         } catch (WebApplicationException e) {
-            throw new WebApplicationException("Can't get a password from the request", e);
+            throw new ConcordApplicationException("Can't get a password from the request", e);
         }
 
         if (password == null && generatePassword) {
@@ -390,7 +391,7 @@ public class SecretResource implements Resource {
         try {
             return SecretVisibility.valueOf(s);
         } catch (IllegalArgumentException e) {
-            throw new WebApplicationException("Invalid visibility value: " + s, Status.BAD_REQUEST);
+            throw new ConcordApplicationException("Invalid visibility value: " + s, Status.BAD_REQUEST);
         }
     }
 

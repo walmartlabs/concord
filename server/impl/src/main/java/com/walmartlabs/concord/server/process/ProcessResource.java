@@ -24,8 +24,10 @@ import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
+import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -64,10 +66,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -93,6 +92,7 @@ public class ProcessResource implements Resource {
     private final ProcessStateManager stateManager;
     private final UserDao userDao;
     private final SecretManager secretManager;
+    private final SecretStoreConfiguration secretStoreCfg;
 
     @Inject
     public ProcessResource(ProcessManager processManager,
@@ -101,7 +101,8 @@ public class ProcessResource implements Resource {
                            PayloadManager payloadManager,
                            ProcessStateManager stateManager,
                            UserDao userDao,
-                           SecretManager secretManager) {
+                           SecretManager secretManager,
+                           SecretStoreConfiguration secretStoreCfg) {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
@@ -110,6 +111,7 @@ public class ProcessResource implements Resource {
         this.stateManager = stateManager;
         this.userDao = userDao;
         this.secretManager = secretManager;
+        this.secretStoreCfg = secretStoreCfg;
     }
 
     /**
@@ -140,7 +142,7 @@ public class ProcessResource implements Resource {
             payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), in, out);
         } catch (IOException e) {
             log.error("start -> error creating a payload: {}", e);
-            throw new WebApplicationException("Error creating a payload", e);
+            throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         return toResponse(processManager.start(payload, sync));
@@ -202,7 +204,7 @@ public class ProcessResource implements Resource {
             payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, req, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
-            throw new WebApplicationException("Error creating a payload", e);
+            throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         return toResponse(processManager.start(payload, sync));
@@ -236,7 +238,7 @@ public class ProcessResource implements Resource {
                     .build();
         } catch (IOException e) {
             log.error("start -> error creating a payload: {}", e);
-            throw new WebApplicationException("Error creating a payload", e);
+            throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
@@ -277,7 +279,7 @@ public class ProcessResource implements Resource {
             payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, input, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
-            throw new WebApplicationException("Error creating a payload", e);
+            throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         return toResponse(processManager.start(payload, sync));
@@ -322,7 +324,7 @@ public class ProcessResource implements Resource {
             payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, in, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
-            throw new WebApplicationException("Error creating a payload", e);
+            throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         return toResponse(processManager.start(payload, sync));
@@ -350,7 +352,7 @@ public class ProcessResource implements Resource {
             payload = payloadManager.createResumePayload(instanceId, eventName, req);
         } catch (IOException e) {
             log.error("resume ['{}', '{}'] -> error creating a payload: {}", instanceId, eventName, e);
-            throw new WebApplicationException("Error creating a payload", e);
+            throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         processManager.resume(payload);
@@ -389,7 +391,7 @@ public class ProcessResource implements Resource {
                     getInitiator(), projectId, req, out);
         } catch (IOException e) {
             log.error("fork ['{}', '{}'] -> error creating a payload: {}", instanceId, parentInstanceId, e);
-            throw new WebApplicationException("Error creating a payload", e);
+            throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         return toResponse(processManager.startFork(payload, sync));
@@ -424,7 +426,7 @@ public class ProcessResource implements Resource {
                 long t2 = System.currentTimeMillis();
                 if (t2 - t1 >= timeout) {
                     log.warn("waitForCompletion ['{}', {}] -> timeout, last status: {}", instanceId, timeout, r.getStatus());
-                    throw new WebApplicationException(Response.status(Status.REQUEST_TIMEOUT).entity(r).build());
+                    throw new ConcordApplicationException(Response.status(Status.REQUEST_TIMEOUT).entity(r).build());
                 }
             }
 
@@ -475,7 +477,7 @@ public class ProcessResource implements Resource {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
-            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
         return e;
     }
@@ -498,7 +500,7 @@ public class ProcessResource implements Resource {
 
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
-            throw new WebApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
+            throw new ConcordApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
         }
 
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
@@ -510,7 +512,7 @@ public class ProcessResource implements Resource {
                 }
                 return Optional.of(tmp);
             } catch (IOException e) {
-                throw new WebApplicationException("Error while exporting an attachment: " + attachmentName, e);
+                throw new ConcordApplicationException("Error while exporting an attachment: " + attachmentName, e);
             }
         });
 
@@ -567,7 +569,7 @@ public class ProcessResource implements Resource {
                                    @ApiParam @QueryParam("limit") @DefaultValue("30") int limit) {
 
         if (limit <= 0) {
-            throw new WebApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
+            throw new ConcordApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
         }
 
         Set<UUID> orgIds = null;
@@ -634,7 +636,7 @@ public class ProcessResource implements Resource {
 
         if (range != null && !range.trim().isEmpty()) {
             if (!range.startsWith("bytes=")) {
-                throw new WebApplicationException("Invalid range header: " + range, Status.BAD_REQUEST);
+                throw new ConcordApplicationException("Invalid range header: " + range, Status.BAD_REQUEST);
             }
 
             String[] as = range.substring("bytes=".length()).split("-");
@@ -698,7 +700,7 @@ public class ProcessResource implements Resource {
             logsDao.append(instanceId, ByteStreams.toByteArray(data));
         } catch (IOException e) {
             log.error("appendLog ['{}'] -> error", instanceId, e);
-            throw new WebApplicationException("append log error: " + e.getMessage());
+            throw new ConcordApplicationException("append log error: " + e.getMessage());
         }
     }
 
@@ -742,7 +744,7 @@ public class ProcessResource implements Resource {
 
         StreamingOutput out = output -> {
             Path tmp = stateManager.get(instanceId, fileName, ProcessResource::copyToTmp)
-                    .orElseThrow(() -> new WebApplicationException("State file not found: " + fileName, Status.NOT_FOUND));
+                    .orElseThrow(() -> new ConcordApplicationException("State file not found: " + fileName, Status.NOT_FOUND));
 
             try (InputStream in = Files.newInputStream(tmp)) {
                 IOUtils.copy(in, output);
@@ -781,7 +783,7 @@ public class ProcessResource implements Resource {
             stateManager.importPath(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, finalTmpDir);
         } catch (IOException e) {
             log.error("uploadAttachments ['{}'] -> error", instanceId, e);
-            throw new WebApplicationException("upload error: " + e.getMessage());
+            throw new ConcordApplicationException("upload error: " + e.getMessage());
         } finally {
             if (tmpDir != null) {
                 try {
@@ -816,24 +818,31 @@ public class ProcessResource implements Resource {
     public Response decrypt(@PathParam("id") UUID instanceId, InputStream data) {
         ProcessEntry p = assertProcess(instanceId);
 
-        byte[] bytes;
-
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
         try {
-            bytes = ByteStreams.toByteArray(data);
+            int read;
+            byte[] buf = new byte[1024];
+            while ((read = data.read(buf)) > 0) {
+                baos.write(buf, 0, read);
+
+                if (baos.size() > secretStoreCfg.getMaxEncryptedStringLength()) {
+                    throw new ConcordApplicationException("Value too big, limit: " + secretStoreCfg.getMaxEncryptedStringLength(),
+                            Status.BAD_REQUEST);
+                }
+            }
         } catch (IOException e) {
-            log.error("decrypt ['{}'] -> error data load", instanceId, e);
-            throw new WebApplicationException("decrypt error: " + e.getMessage());
+            throw new ConcordApplicationException("Error while reading encrypted data: " + e.getMessage(), e);
         }
 
         byte[] result;
         try {
-            result = secretManager.decryptData(p.getProjectName(), bytes);
+            result = secretManager.decryptData(p.getProjectName(), baos.toByteArray());
         } catch (SecurityException e) {
             log.error("decrypt ['{}'] -> error", instanceId, e);
             throw new SecretException("Decrypt error: " + e.getMessage());
         } catch (Exception e) {
             log.error("decrypt ['{}'] -> error", instanceId, e);
-            throw new WebApplicationException("decrypt error: " + e.getMessage());
+            throw new ConcordApplicationException("Decrypt error: " + e.getMessage());
         }
 
         return Response.ok((StreamingOutput) output -> output.write(result))
@@ -860,7 +869,7 @@ public class ProcessResource implements Resource {
     private ProcessEntry assertProcess(UUID instanceId) {
         ProcessEntry p = queueDao.get(instanceId);
         if (p == null) {
-            throw new WebApplicationException("Process instance not found", Status.NOT_FOUND);
+            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
         return p;
     }
@@ -912,7 +921,7 @@ public class ProcessResource implements Resource {
         try {
             return in.available() <= 0;
         } catch (IOException e) {
-            throw new WebApplicationException("Internal error", e);
+            throw new ConcordApplicationException("Internal error", e);
         }
     }
 
@@ -924,7 +933,7 @@ public class ProcessResource implements Resource {
             }
             return Optional.of(p);
         } catch (IOException e) {
-            throw new WebApplicationException("Error while copying a state file: " + e.getMessage(), e);
+            throw new ConcordApplicationException("Error while copying a state file: " + e.getMessage(), e);
         }
     }
 }

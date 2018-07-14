@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
@@ -93,7 +94,7 @@ public class RepositoryResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         projectRepositoryManager.createOrUpdate(projectId, entry);
@@ -112,7 +113,7 @@ public class RepositoryResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         projectRepositoryManager.delete(projectId, repositoryName);
@@ -139,14 +140,14 @@ public class RepositoryResource implements Resource {
 
         UUID projectId = projectDao.getId(org.getId(), projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         ProjectEntry prj = accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
 
         Map<String, RepositoryEntry> repos = prj.getRepositories();
         if (repos == null || !repos.containsKey(repositoryName)) {
-            throw new WebApplicationException("Repository not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Repository not found: " + projectName, Status.NOT_FOUND);
         }
 
         repositoryCacheDao.updateLastPushDate(repos.get(repositoryName).getId(), new Date());
@@ -181,20 +182,20 @@ public class RepositoryResource implements Resource {
         UUID orgId = orgManager.assertAccess(orgName, true).getId();
         UUID projectId = projectDao.getId(orgId, projectName);
         if (projectId == null) {
-            throw new WebApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
         accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
 
         UUID repoId = repositoryDao.getId(projectId, repositoryName);
         if (repoId == null) {
-            throw new WebApplicationException("Repository not found: " + repositoryName, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Repository not found: " + repositoryName, Status.NOT_FOUND);
         }
 
         try {
             projectRepositoryManager.validateRepository(projectId, repositoryDao.get(projectId, repoId));
         } catch (IOException e) {
-            throw new WebApplicationException("Validation failed: " + repositoryName, e);
+            throw new ConcordApplicationException("Validation failed: " + repositoryName, e);
         }
 
         return new RepositoryValidationResponse(OperationResult.VALIDATED);

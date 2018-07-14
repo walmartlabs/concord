@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
@@ -146,7 +147,7 @@ public class ApiKeyResource implements Resource {
                     throw new ValidationErrorsException("LDAP user not found: " + username);
                 }
             } catch (NamingException e) {
-                throw new WebApplicationException(e);
+                throw new ConcordApplicationException(e);
             }
         }
 
