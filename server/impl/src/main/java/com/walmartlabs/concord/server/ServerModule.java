@@ -24,6 +24,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.server.agent.AgentCommandWatchdog;
+import com.walmartlabs.concord.server.audit.AuditLogCleaner;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.metrics.MetricsModule;
 import com.walmartlabs.concord.server.org.triggers.TriggerScheduler;
@@ -41,11 +42,12 @@ public class ServerModule extends AbstractModule {
 
         Multibinder<BackgroundTask> tasks = Multibinder.newSetBinder(binder(), BackgroundTask.class);
         tasks.addBinding().to(AgentCommandWatchdog.class);
+        tasks.addBinding().to(ApiKeyCleaner.class);
+        tasks.addBinding().to(ApiKeyExpirationNotifier.class);
+        tasks.addBinding().to(AuditLogCleaner.class);
         tasks.addBinding().to(GithubWebhookService.class);
         tasks.addBinding().to(ProcessCleaner.class);
         tasks.addBinding().to(ProcessQueueWatchdog.class);
         tasks.addBinding().to(TriggerScheduler.class);
-        tasks.addBinding().to(ApiKeyCleaner.class);
-        tasks.addBinding().to(ApiKeyExpirationNotifier.class);
     }
 }

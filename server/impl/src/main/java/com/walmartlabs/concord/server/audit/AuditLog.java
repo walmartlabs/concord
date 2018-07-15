@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.audit;
  * =====
  */
 
+import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.slf4j.Logger;
@@ -36,10 +37,12 @@ public class AuditLog {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLog.class);
 
+    private final AuditConfiguration cfg;
     private final AuditDao auditDao;
 
     @Inject
-    public AuditLog(AuditDao auditDao) {
+    public AuditLog(AuditConfiguration cfg, AuditDao auditDao) {
+        this.cfg = cfg;
         this.auditDao = auditDao;
     }
 
@@ -76,6 +79,10 @@ public class AuditLog {
         }
 
         public void log() {
+            if (!cfg.isEnabled()) {
+                return;
+            }
+
             try {
                 doLog();
             } catch (Exception e) {

@@ -24,8 +24,8 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.ExclusiveLock;
+import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.Configuration;
@@ -53,7 +53,7 @@ import static org.jooq.impl.DSL.trunc;
 
 @Named
 @Singleton
-public class ApiKeyExpirationNotifier implements BackgroundTask {
+public class ApiKeyExpirationNotifier extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyExpirationNotifier.class);
 
@@ -66,11 +66,11 @@ public class ApiKeyExpirationNotifier implements BackgroundTask {
     private final ExpiredKeysDao dao;
     private final UserDao userDao;
     private final EmailNotifier notifier;
-
-    private Thread worker;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd");
 
     @Inject
     public ApiKeyExpirationNotifier(ApiKeyConfiguration cfg, ExclusiveLock exclusiveLock, ExpiredKeysDao dao, UserDao userDao, EmailNotifier notifier) {
+        super(POLL_INTERVAL, RETRY_INTERVAL);
         this.cfg = cfg;
         this.exclusiveLock = exclusiveLock;
         this.dao = dao;
@@ -81,117 +81,67 @@ public class ApiKeyExpirationNotifier implements BackgroundTask {
     @Override
     public void start() {
         if (!cfg.isExpirationEnabled()) {
-            log.info("start -> notifications of API key expiration are disabled");
+            log.info("start -> notifications of API key expiration is disabled");
             return;
         }
 
-        Worker w = new Worker(exclusiveLock, dao, userDao, notifier, cfg.getNotifyBeforeDays());
-
-        this.worker = new Thread(w, "api-key-expiration-notifier");
-        this.worker.start();
+        super.start();
     }
 
     @Override
-    public void stop() {
-        if (this.worker != null) {
-            this.worker.interrupt();
-            this.worker = null;
+    protected void performTask() {
+        exclusiveLock.withTryLock(API_KEYS_NOTIFIER_LOCK, this::processKeys);
+    }
+
+    private void processKeys() {
+        for (int days : cfg.getNotifyBeforeDays()) {
+            List<ApiKeyEntry> keys = dao.poll(days);
+
+            Map<UUID, List<ApiKeyEntry>> keysByUser = new HashMap<>();
+            keys.forEach(e -> keysByUser.computeIfAbsent(e.userId, k -> new ArrayList<>()).add(e));
+
+            for (Map.Entry<UUID, List<ApiKeyEntry>> e : keysByUser.entrySet()) {
+                UUID userId = e.getKey();
+                if (sendNotification(userId, days, e.getValue())) {
+                    List<UUID> keyIds = e.getValue().stream().map(k -> k.id).collect(Collectors.toList());
+                    dao.markNotified(keyIds, Instant.now());
+                }
+            }
+
+            log.info("processKeys -> {} keys, for days {}", keys.size(), days);
         }
     }
 
-    private static final class Worker implements Runnable {
-
-        private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/YYYY");
-
-        private final ExclusiveLock exclusiveLock;
-        private final ExpiredKeysDao dao;
-        private final UserDao userDao;
-        private final EmailNotifier notifier;
-        private final List<Integer> notifyBeforeDays;
-
-        private Worker(ExclusiveLock exclusiveLock, ExpiredKeysDao dao, UserDao userDao, EmailNotifier notifier, List<Integer> notifyBeforeDays) {
-            this.exclusiveLock = exclusiveLock;
-            this.dao = dao;
-            this.userDao = userDao;
-            this.notifier = notifier;
-            this.notifyBeforeDays = notifyBeforeDays;
+    private boolean sendNotification(UUID userId, int days, List<ApiKeyEntry> keys) {
+        String userEmail = userDao.getEmail(userId);
+        if (userEmail == null) {
+            log.info("sendNotification ['{}'] -> user email not found", userId);
+            return true;
         }
 
-        @Override
-        public void run() {
-            log.info("run -> started");
+        return notifier.send(userEmail, EMAIL_SUBJECT, getMessage(days, keys));
+    }
 
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    exclusiveLock.withTryLock(API_KEYS_NOTIFIER_LOCK, this::processKeys);
-                    sleep(POLL_INTERVAL);
-                } catch (Exception e) {
-                    log.warn("run -> notifier error: {}. Will retry in {}ms...", e.getMessage(), RETRY_INTERVAL);
-                    sleep(RETRY_INTERVAL);
-                }
-            }
+    private String getMessage(int days, List<ApiKeyEntry> keys) {
+        try (InputStreamReader in = new InputStreamReader(this.getClass().getResourceAsStream("/com/walmartlabs/concord/server/email/api-key-expiration.mustache"))) {
+            MustacheFactory mf = new DefaultMustacheFactory();
+            Mustache mustache = mf.compile(in, "api-key-notifier");
 
-            log.info("run -> ended");
-        }
+            Map<String, Object> ctx = new HashMap<>();
+            ctx.put("days", days);
+            ctx.put("keys", keys.stream().map(e -> {
+                Map<String, String> r = new HashMap<>();
+                r.put("name", e.getName());
+                r.put("expiredAt", dateFormat.format(e.getExpiredAt()));
+                return r;
+            }).collect(Collectors.toList()));
 
-        private void processKeys() {
-            for (int days : notifyBeforeDays) {
-                List<ApiKeyEntry> keys = dao.poll(days);
-
-                Map<UUID, List<ApiKeyEntry>> keysByUser = new HashMap<>();
-                keys.forEach(e -> keysByUser.computeIfAbsent(e.userId, k -> new ArrayList<>()).add(e));
-
-                for (Map.Entry<UUID, List<ApiKeyEntry>> e : keysByUser.entrySet()) {
-                    UUID userId = e.getKey();
-                    if (sendNotification(userId, days, e.getValue())) {
-                        List<UUID> keyIds = e.getValue().stream().map(k -> k.id).collect(Collectors.toList());
-                        dao.markNotified(keyIds, Instant.now());
-                    }
-                }
-
-                log.info("processKeys -> {} keys, for days {}", keys.size(), days);
-            }
-        }
-
-        private boolean sendNotification(UUID userId, int days, List<ApiKeyEntry> keys) {
-            String userEmail = userDao.getEmail(userId);
-            if (userEmail == null) {
-                log.info("sendNotification ['{}'] -> user email not found", userId);
-                return true;
-            }
-
-            return notifier.send(userEmail, EMAIL_SUBJECT, getMessage(days, keys));
-        }
-
-        private String getMessage(int days, List<ApiKeyEntry> keys) {
-            try (InputStreamReader in = new InputStreamReader(this.getClass().getResourceAsStream("/com/walmartlabs/concord/server/email/api-key-expiration.mustache"))) {
-                MustacheFactory mf = new DefaultMustacheFactory();
-                Mustache mustache = mf.compile(in, "api-key-notifier");
-
-                Map<String, Object> ctx = new HashMap<>();
-                ctx.put("days", days);
-                ctx.put("keys", keys.stream().map(e -> {
-                    Map<String, String> r = new HashMap<>();
-                    r.put("name", e.getName());
-                    r.put("expiredAt", dateFormat.format(e.getExpiredAt()));
-                    return r;
-                }).collect(Collectors.toList()));
-
-                StringWriter out = new StringWriter();
-                mustache.execute(out, ctx);
-                return out.toString();
-            } catch (IOException e) {
-                log.error("getMessage -> error", e);
-                throw new RuntimeException("get message error: " + e.getMessage());
-            }
-        }
-
-        private static void sleep(long ms) {
-            try {
-                Thread.sleep(ms);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+            StringWriter out = new StringWriter();
+            mustache.execute(out, ctx);
+            return out.toString();
+        } catch (IOException e) {
+            log.error("getMessage -> error", e);
+            throw new RuntimeException("get message error: " + e.getMessage());
         }
     }
 

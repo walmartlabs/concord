@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.security.apikey;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.BackgroundTask;
+import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
@@ -37,7 +37,7 @@ import static org.jooq.impl.DSL.currentTimestamp;
 
 @Named
 @Singleton
-public class ApiKeyCleaner implements BackgroundTask {
+public class ApiKeyCleaner extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyCleaner.class);
 
@@ -47,10 +47,9 @@ public class ApiKeyCleaner implements BackgroundTask {
     private final boolean enabled;
     private final CleanerDao cleanerDao;
 
-    private Thread worker;
-
     @Inject
     public ApiKeyCleaner(ApiKeyConfiguration cfg, CleanerDao cleanerDao) {
+        super(CLEANUP_INTERVAL, RETRY_INTERVAL);
         this.enabled = cfg.isExpirationEnabled();
         this.cleanerDao = cleanerDao;
     }
@@ -62,52 +61,12 @@ public class ApiKeyCleaner implements BackgroundTask {
             return;
         }
 
-        Worker w = new Worker(cleanerDao);
-
-        this.worker = new Thread(w, "api-key-cleaner");
-        this.worker.start();
+        super.start();
     }
 
     @Override
-    public void stop() {
-        if (this.worker != null) {
-            this.worker.interrupt();
-            this.worker = null;
-        }
-    }
-
-    private static final class Worker implements Runnable {
-
-        private final CleanerDao cleanerDao;
-
-        private Worker(CleanerDao cleanerDao) {
-            this.cleanerDao = cleanerDao;
-        }
-
-        @Override
-        public void run() {
-            log.info("run -> started");
-
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    cleanerDao.deleteExpiredKeys();
-                    sleep(CLEANUP_INTERVAL);
-                } catch (Exception e) {
-                    log.warn("run -> cleaning error: {}. Will retry in {}ms...", e.getMessage(), RETRY_INTERVAL);
-                    sleep(RETRY_INTERVAL);
-                }
-            }
-
-            log.info("run -> ended");
-        }
-
-        private static void sleep(long ms) {
-            try {
-                Thread.sleep(ms);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+    protected void performTask() {
+        cleanerDao.deleteExpiredKeys();
     }
 
     @Named

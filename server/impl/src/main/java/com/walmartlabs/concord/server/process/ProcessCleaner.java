@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.BackgroundTask;
+import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import org.jooq.Configuration;
 import org.jooq.Record1;
@@ -44,7 +44,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_ST
 
 @Named
 @Singleton
-public class ProcessCleaner implements BackgroundTask {
+public class ProcessCleaner extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCleaner.class);
 
@@ -58,63 +58,20 @@ public class ProcessCleaner implements BackgroundTask {
     };
 
     private final CleanerDao cleanerDao;
-    private final ProcessStateConfiguration cfg;
-
-    private Thread worker;
+    private final long maxAge;
 
     @Inject
     public ProcessCleaner(CleanerDao cleanerDao, ProcessStateConfiguration cfg) {
+        super(CLEANUP_INTERVAL, RETRY_INTERVAL);
         this.cleanerDao = cleanerDao;
-        this.cfg = cfg;
+        this.maxAge = cfg.getMaxStateAge();
     }
 
     @Override
-    public void start() {
-        Worker w = new Worker(cleanerDao, cfg.getMaxStateAge());
-
-        this.worker = new Thread(w, "process-state-cleaner");
-        this.worker.start();
-    }
-
-    @Override
-    public void stop() {
-        if (this.worker != null) {
-            this.worker.interrupt();
-        }
-    }
-
-    private static final class Worker implements Runnable {
-
-        private final CleanerDao cleanerDao;
-        private final long maxAge;
-
-        private Worker(CleanerDao cleanerDao, long maxAge) {
-            this.cleanerDao = cleanerDao;
-            this.maxAge = maxAge;
-        }
-
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    Timestamp cutoff = new Timestamp(System.currentTimeMillis() - maxAge);
-                    cleanerDao.deleteOldState(cutoff);
-                    cleanerDao.deleteOrphans();
-                    sleep(CLEANUP_INTERVAL);
-                } catch (Exception e) {
-                    log.warn("run -> state cleaning error: {}. Will retry in {}ms...", e.getMessage(), RETRY_INTERVAL);
-                    sleep(RETRY_INTERVAL);
-                }
-            }
-        }
-
-        private static void sleep(long ms) {
-            try {
-                Thread.sleep(ms);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+    protected void performTask() {
+        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - maxAge);
+        cleanerDao.deleteOldState(cutoff);
+        cleanerDao.deleteOrphans();
     }
 
     @Named
