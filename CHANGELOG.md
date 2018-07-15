@@ -4,6 +4,8 @@
 
 ### Added
 
+- project-model: additional YAML validations to prevent duplicate
+keys such as `configuration` or `arguments`;
 - concord-server: an option to perform DB migrations separately;
 - concord-server: periodic audit log clean up;
 - concord-server: option to disable audit logging;

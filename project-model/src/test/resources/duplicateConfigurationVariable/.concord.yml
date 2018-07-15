@@ -1,0 +1,9 @@
+flows:
+  main:
+  - ${example.hello()}
+
+configuration:
+  arguments:
+    x: 123
+    y: 234
+    x: 1235

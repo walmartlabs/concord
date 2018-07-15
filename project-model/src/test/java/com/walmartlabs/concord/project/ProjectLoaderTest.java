@@ -26,8 +26,7 @@ import org.junit.Test;
 import java.net.URI;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class ProjectLoaderTest {
 
@@ -59,6 +58,34 @@ public class ProjectLoaderTest {
         assertNotNull(pd.getFlows().get("other"));
 
         assertNotNull(pd.getForms().get("myForm"));
+    }
+
+    @Test
+    public void testDuplicateConfigurationSection() throws Exception {
+        ProjectLoader loader = new ProjectLoader();
+
+        URI uri = ClassLoader.getSystemResource("duplicateConfiguration").toURI();
+        try {
+            loader.load(Paths.get(uri));
+            fail("exception expected");
+        } catch (Exception e) {
+            assertNotNull(e.getCause());
+            assertTrue(e.getCause().getMessage().contains("Duplicate field 'configuration'"));
+        }
+    }
+
+    @Test
+    public void testDuplicateConfigurationVariable() throws Exception {
+        ProjectLoader loader = new ProjectLoader();
+
+        URI uri = ClassLoader.getSystemResource("duplicateConfigurationVariable").toURI();
+        try {
+            loader.load(Paths.get(uri));
+            fail("exception expected");
+        } catch (Exception e) {
+            assertNotNull(e.getCause());
+            assertTrue(e.getCause().getMessage().contains("Duplicate field 'x'"));
+        }
     }
 
     @Test

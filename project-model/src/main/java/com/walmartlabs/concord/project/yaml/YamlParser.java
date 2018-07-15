@@ -20,6 +20,7 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -34,7 +35,8 @@ public class YamlParser {
     private final ObjectMapper objectMapper;
 
     public YamlParser() {
-        ObjectMapper om = new ObjectMapper(new YAMLFactory());
+        ObjectMapper om = new ObjectMapper(new YAMLFactory()
+                .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION));
 
         SimpleModule module = new SimpleModule();
         module.addDeserializer(YamlStep.class, YamlDeserializers.getYamlStepDeserializer());

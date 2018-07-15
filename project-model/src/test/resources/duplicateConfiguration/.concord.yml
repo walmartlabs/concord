@@ -1,0 +1,14 @@
+configuration:
+  arguments:
+    x1: 1
+    y2: 2
+
+
+flows:
+  main:
+  - ${example.hello()}
+
+configuration:
+  arguments:
+    x: 123
+    y: 234
