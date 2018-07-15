@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: an option to perform DB migrations separately;
 - concord-server: periodic audit log clean up;
 - concord-server: option to disable audit logging;
 - concord-server: added limits for "encrypted strings" size;

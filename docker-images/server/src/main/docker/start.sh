@@ -1,5 +1,11 @@
 #!/bin/bash
 
+MAIN_CLASS="com.walmartlabs.concord.server.Main"
+
+if [ "${CONCORD_COMMAND}" = "migrateDb" ]; then
+    MAIN_CLASS="com.walmartlabs.concord.server.MigrateDB"
+fi
+
 APP_DIR="/opt/concord/server"
 
 CFG_FILE="";
@@ -37,4 +43,4 @@ exec java \
 -Dcom.sun.management.jmxremote.password.file=${APP_DIR}/jmx/jmx.password \
 $CFG_FILE \
 -cp "${APP_DIR}/*" \
-com.walmartlabs.concord.server.Main
+"${MAIN_CLASS}"
