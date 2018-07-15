@@ -30,6 +30,7 @@ process logs;
 
 ### Changed
 
+- docker-images: increased nginx's default max request size to 32Mb;
 - concord-server: a single invalid trigger no longer prevents other
 triggers from firing;
 - concord-agent: now uses the same REST API endpoint to download

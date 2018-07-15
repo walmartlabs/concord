@@ -9,6 +9,7 @@ server {
 	root                    /opt/concord/console/dist;
 
 	proxy_read_timeout      600;
+    client_max_body_size    32M;
 
 	location ~ ^/(api|logs|forms|events|swagger)/ {
         expires             off;
