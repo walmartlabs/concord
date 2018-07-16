@@ -1,7 +1,7 @@
 configuration:
   dependencies:
-  - mvn://org.codehaus.groovy:groovy-all:2.4.12
-  - mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:0.63.0
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+  - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:0.79.0"
   arguments:
     greeting: "Hello, %s"
 
