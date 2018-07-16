@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed an issue preventing
+`initiator.attributes.mail` from populating.
+
+
+
 ## [0.79.0] - 2018-07-15
 
 ### Added

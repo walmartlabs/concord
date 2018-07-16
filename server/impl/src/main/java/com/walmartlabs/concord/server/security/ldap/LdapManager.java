@@ -144,6 +144,7 @@ public class LdapManager {
 
         if (id.equals(cfg.getMailProperty())) {
             b.email(attr.get().toString());
+            b.addAttribute(id, attr.get().toString());
             return;
         }
 
