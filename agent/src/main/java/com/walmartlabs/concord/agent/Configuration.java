@@ -59,11 +59,12 @@ public class Configuration {
     public static final String RUNNER_SECURITY_MANAGER_ENABLED_KEY = "RUNNER_SECURITY_MANAGER_ENABLED";
 
     public static final String API_KEY = "API_KEY";
-    public static final String CONNECT_TIMEOUT_KEY = "API_CONNECT_TIMEOUT_KEY";
-    public static final String READ_TIMEOUT_KEY = "API_READ_TIMEOUT_KEY";
-    public static final String RETRY_COUNT_KEY = "API_RETRY_COUNT_KEY";
-    public static final String RETRY_INTERVAL_KEY = "API_RETRY_INTERVAL_KEY";
-    public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL_KEY";
+    public static final String CONNECT_TIMEOUT_KEY = "API_CONNECT_TIMEOUT";
+    public static final String READ_TIMEOUT_KEY = "API_READ_TIMEOUT";
+    public static final String RETRY_COUNT_KEY = "API_RETRY_COUNT";
+    public static final String RETRY_INTERVAL_KEY = "API_RETRY_INTERVAL";
+    public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL";
+
     public static final String CAPABILITIES_FILE_KEY = "CAPABILITIES_FILE";
     public static final String USER_AGENT_KEY = "USER_AGENT";
     public static final String STORE_DEPS_DIR_KEY = "STORE_DEPS_DIR";
@@ -140,8 +141,8 @@ public class Configuration {
             this.runnerSecurityManagerEnabled = Boolean.parseBoolean(getEnv(RUNNER_SECURITY_MANAGER_ENABLED_KEY, "false"));
 
             this.apiKey = getEnv(API_KEY, DEFAULT_AGENT_API_KEY);
-            this.connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
-            this.readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
+            this.connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "30000"));
+            this.readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "60000"));
             this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "5"));
             this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "30000"));
             this.pollInterval = Long.parseLong(getEnv(POLL_INTERVAL_KEY, "2000"));

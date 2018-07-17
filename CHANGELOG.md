@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-agent: fixed the configuration variable names;
+- concord-agent: increase default timeout values;
 - concord-server: correctly handle table aliases in inventory
 queries;
 - concord-server: escape special characters in commit messages

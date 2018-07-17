@@ -54,7 +54,7 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
         this.httpClient = new OkHttpClient();
 
         int connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
-        int readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "10000"));
+        int readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "60000"));
 
         this.httpClient.setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
         this.httpClient.setReadTimeout(readTimeout, TimeUnit.MILLISECONDS);
