@@ -83,7 +83,7 @@ class AnsibleStatChart extends React.PureComponent<Props> {
                             <text
                                 x={x + size}
                                 y={y + size / 2 + (idx + 1) * size + 3}
-                                fontFamily="Verdana"
+                                fontFamily="Verdana; Helvetica; sans-serif"
                                 fontSize={size / 2}
                                 onClick={onClick ? () => onClick(d.status) : undefined}
                                 style={onClick ? { cursor: 'pointer' } : undefined}>
