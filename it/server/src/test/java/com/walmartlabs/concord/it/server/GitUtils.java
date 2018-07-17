@@ -31,6 +31,10 @@ import java.nio.file.attribute.PosixFilePermissions;
 public final class GitUtils {
 
     public static Path createBareRepository(Path data) throws Exception {
+        return createBareRepository(data, "initial message");
+    }
+
+    public static Path createBareRepository(Path data, String commitMessage) throws Exception {
         // init bare repository
         Path repo = createTempDir();
         Git.init().setBare(true).setDirectory(repo.toFile()).call();
@@ -47,7 +51,7 @@ public final class GitUtils {
 
         // add, commit, and push copied files
         git.add().addFilepattern(".").call();
-        git.commit().setMessage("initial message").call();
+        git.commit().setMessage(commitMessage).call();
         git.push().call();
 
         return repo;

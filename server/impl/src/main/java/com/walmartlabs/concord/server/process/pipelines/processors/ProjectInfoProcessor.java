@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Named
 public class ProjectInfoProcessor implements PayloadProcessor {
@@ -94,10 +95,17 @@ public class ProjectInfoProcessor implements PayloadProcessor {
             if (ci != null) {
                 m.put("repoCommitId", ci.getId());
                 m.put("repoCommitAuthor", ci.getAuthor());
-                m.put("repoCommitMessage", ci.getMessage());
+                m.put("repoCommitMessage", escapeExpression(ci.getMessage()));
             }
         }
 
         return m;
+    }
+
+    private static String escapeExpression(String what) {
+        if (what == null) {
+            return null;
+        }
+        return what.replaceAll("\\$\\{", "\\\\\\${");
     }
 }

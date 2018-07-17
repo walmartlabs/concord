@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: escape special characters in commit messages
+`processInfo.repoCommitMessage`.
+
+
+
 ## [0.79.1] - 2018-07-16
 
 ### Changed
