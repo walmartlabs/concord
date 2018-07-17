@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [0.79.2]
 
 ### Changed
 
