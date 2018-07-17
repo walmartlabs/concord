@@ -25,6 +25,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import org.junit.Test;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -34,9 +35,24 @@ public class SqlParserTest {
 
     @Test
     public void test() throws Exception {
+        List<String> queries = parseQueries("queries.txt");
+
+        for (int i = 0; i < queries.size(); i++) {
+            String q = queries.get(i);
+
+            try {
+                CCJSqlParserUtil.parse(q);
+            } catch (JSQLParserException e) {
+                System.out.println("#" + i + ": " + q);
+                throw e;
+            }
+        }
+    }
+
+    public static List<String> parseQueries(String resourceName) throws IOException {
         List<String> queries = new ArrayList<>();
 
-        try (InputStream in = SqlParserTest.class.getResourceAsStream("queries.txt");
+        try (InputStream in = SqlParserTest.class.getResourceAsStream(resourceName);
              BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
             int brk = 0;
@@ -59,16 +75,6 @@ public class SqlParserTest {
                 brk = 0;
             }
         }
-
-        for (int i = 0; i < queries.size(); i++) {
-            String q = queries.get(i);
-
-            try {
-                CCJSqlParserUtil.parse(q);
-            } catch (JSQLParserException e) {
-                System.out.println("#" + i + ": " + q);
-                throw e;
-            }
-        }
+        return queries;
     }
 }

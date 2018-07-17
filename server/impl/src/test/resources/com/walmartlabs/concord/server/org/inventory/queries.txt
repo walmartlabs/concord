@@ -88,9 +88,6 @@ select cast(?::jsonb as varchar)
 select cast(json_build_object('host', a.item_data->'gls'->'k8s', 'env', 'dev') as varchar) from inventory_data a where item_data @> ?::jsonb
 
 
-select cast(?::jsonb as varchar)
-
-
 select a.item_data->>'server_name' as server_name  from inventory_data a;
 
 

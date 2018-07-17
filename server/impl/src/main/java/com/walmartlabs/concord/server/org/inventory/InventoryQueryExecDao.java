@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.Alias;
 import net.sf.jsqlparser.expression.CastExpression;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.JdbcParameter;
@@ -34,6 +35,7 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.StatementVisitorAdapter;
 import net.sf.jsqlparser.statement.create.table.ColDataType;
+import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
@@ -80,7 +82,7 @@ public class InventoryQueryExecDao extends AbstractDao {
             // TODO we should probably inspect the query to determine whether we need to bind the params or not
 
             QueryPart[] args;
-            if (params == null) {
+            if (params == null || params.isEmpty()) {
                 args = new QueryPart[]{val(q.getInventoryId())};
             } else {
                 args = new QueryPart[]{val(serialize(params)), val(q.getInventoryId())};
@@ -130,9 +132,17 @@ public class InventoryQueryExecDao extends AbstractDao {
                     select.getSelectBody().accept(new SelectVisitorAdapter() {
                         @Override
                         public void visit(PlainSelect plainSelect) {
+                            FromItem from = plainSelect.getFromItem();
+                            if (from == null) {
+                                return;
+                            }
+
+                            Alias fromAlias = from.getAlias();
 
                             // inventory_data.inventory_id
-                            Column left = new Column(new Table(INVENTORY_DATA.getName()), INVENTORY_DATA.INVENTORY_ID.getName());
+                            Table inventoryDataTable = new Table(INVENTORY_DATA.getName());
+                            inventoryDataTable.setAlias(fromAlias);
+                            Column left = new Column(inventoryDataTable, INVENTORY_DATA.INVENTORY_ID.getName());
 
                             // cast(? as uuid)
                             CastExpression right = new CastExpression();

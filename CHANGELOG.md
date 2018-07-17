@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: correctly handle table aliases in inventory
+queries;
 - concord-server: escape special characters in commit messages
 `processInfo.repoCommitMessage`.
 
