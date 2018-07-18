@@ -1861,6 +1861,25 @@ public class YamlParserTest {
         }
     }
 
+    @Test
+    public void test062() throws Exception {
+        deploy("062.yml");
+
+        TestBean testBean = spy(new TestBean());
+        taskRegistry.register("testBean", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("calledFlow", "myFlow1");
+
+        engine.start(key, "main", args);
+
+        verify(testBean, times(1)).toString(eq("from MyFlow1"));
+        verifyNoMoreInteractions(testBean);
+    }
+
     // FORMS (100 - 199)
 
     @Test

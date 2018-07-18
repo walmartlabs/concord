@@ -61,7 +61,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aopalliance.version>1.0</aopalliance.version>
-        <bpm.version>0.45.0</bpm.version>
+        <bpm.version>0.46.0</bpm.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
         <commons.compress.version>1.15</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>

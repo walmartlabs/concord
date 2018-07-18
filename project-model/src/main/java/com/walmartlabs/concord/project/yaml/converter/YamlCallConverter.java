@@ -50,7 +50,15 @@ public class YamlCallConverter implements StepConverter<YamlCall> {
 
         Chunk c = new Chunk();
         String id = ctx.nextId();
-        c.addElement(new CallActivity(id, s.getKey(), inVars, outVars, true));
+
+        String calledElement = null;
+        String calledElementExpression = null;
+        if (StepConverter.isExpression(s.getKey())) {
+            calledElementExpression = s.getKey();
+        } else {
+            calledElement = s.getKey();
+        }
+        c.addElement(new CallActivity(id, calledElement, calledElementExpression, inVars, outVars, true));
         c.addSourceMap(id, toSourceMap(s, "Flow call: " + s.getKey()));
         c.addOutput(id);
         applyErrorBlock(ctx, c, id, s.getOptions());
