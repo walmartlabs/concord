@@ -30,6 +30,7 @@
         <module>tasks/slack</module>
         <module>tasks/sleep</module>
         <module>tasks/smtp</module>
+        <module>tasks/throw</module>
         <module>tasks/variables</module>
         <module>templates/ansible</module>
     </modules>

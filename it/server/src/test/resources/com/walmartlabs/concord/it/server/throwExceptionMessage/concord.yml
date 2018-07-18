@@ -1,0 +1,7 @@
+flows:
+  default:
+  - try:
+    - log: "Running the default flow..."
+    - expr: ${myTask.doSomethingDangerous()}
+    error:
+    - throw: "Kaboom!! Error occurred."

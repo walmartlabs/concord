@@ -4,6 +4,7 @@
 
 ### Added
 
+- plugins: new built-in task `throw`;
 - concord-console: ability to filter Ansible hosts by their inventory
 group;
 - concord-server: RBAC checks for process kill and status update

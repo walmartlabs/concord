@@ -1,0 +1,7 @@
+flows:
+  default:
+  - try:
+    - log: "Running the default flow..."
+    - expr: ${misc.throwBpmnError('Catch that!')}
+    error:
+    - throw: ${lastError}
