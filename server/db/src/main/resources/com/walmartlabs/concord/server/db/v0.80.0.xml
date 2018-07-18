@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="concordSystemWriterRoleId" value="c162d868-89ea-11e8-80be-97fd8a9f7419"/>
+
+    <changeSet id="80000" author="ibodrov@gmail.com">
+        <insert tableName="ROLES">
+            <column name="ROLE_ID">${concordSystemWriterRoleId}</column>
+            <column name="ROLE_NAME">concordSystemWriter</column>
+            <column name="GLOBAL_WRITER">true</column>
+        </insert>
+
+        <insert tableName="USER_ROLES">
+            <column name="ROLE_ID">${concordSystemWriterRoleId}</column>
+            <column name="USER_ID">${concordAgentUserId}</column>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

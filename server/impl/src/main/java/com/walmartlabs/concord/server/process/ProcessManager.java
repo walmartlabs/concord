@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.agent.AgentManager;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
@@ -32,6 +34,9 @@ import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +60,7 @@ public class ProcessManager {
     private final AgentManager agentManager;
     private final LogManager logManager;
     private final ConcordFormService formService;
+    private final ProjectAccessManager projectAccessManager;
 
     private final Chain processPipeline;
     private final Chain resumePipeline;
@@ -81,6 +87,7 @@ public class ProcessManager {
                           AgentManager agentManager,
                           LogManager logManager,
                           ConcordFormService formService,
+                          ProjectAccessManager projectAccessManager,
                           ProcessPipeline processPipeline,
                           ResumePipeline resumePipeline,
                           ForkPipeline forkPipeline) {
@@ -90,6 +97,7 @@ public class ProcessManager {
         this.agentManager = agentManager;
         this.logManager = logManager;
         this.formService = formService;
+        this.projectAccessManager = projectAccessManager;
 
         this.processPipeline = processPipeline;
         this.resumePipeline = resumePipeline;
@@ -115,12 +123,14 @@ public class ProcessManager {
     }
 
     public void kill(UUID instanceId) {
-        ProcessEntry entry = queueDao.get(instanceId);
-        if (entry == null) {
+        ProcessEntry e = queueDao.get(instanceId);
+        if (e == null) {
             throw new ProcessException(null, "Process not found: " + instanceId, Status.NOT_FOUND);
         }
 
-        ProcessStatus s = entry.getStatus();
+        assertKillRights(e);
+
+        ProcessStatus s = e.getStatus();
         if (TERMINATED_PROCESS_STATUSES.contains(s)) {
             return;
         }
@@ -133,8 +143,14 @@ public class ProcessManager {
     }
 
     public void killCascade(UUID instanceId) {
-        List<ProcessEntry> l = null;
+        ProcessEntry e = queueDao.get(instanceId);
+        if (e == null) {
+            throw new ProcessException(null, "Process not found: " + instanceId, Status.NOT_FOUND);
+        }
 
+        assertKillRights(e);
+
+        List<ProcessEntry> l = null;
         boolean updated = false;
         while (!updated) {
             l = queueDao.getCascade(instanceId);
@@ -149,6 +165,8 @@ public class ProcessManager {
     }
 
     public void updateStatus(UUID instanceId, String agentId, ProcessStatus status) {
+        assertUpdateRights(instanceId);
+
         if (status == ProcessStatus.FINISHED && isSuspended(instanceId)) {
             status = ProcessStatus.SUSPENDED;
         }
@@ -264,6 +282,42 @@ public class ProcessManager {
             }
         });
         return o.orElse(Collections.emptyMap());
+    }
+
+    private void assertKillRights(ProcessEntry e) {
+        UserPrincipal p = UserPrincipal.assertCurrent();
+        if (p.isAdmin()) {
+            return;
+        }
+
+        if (p.getUsername().equals(e.getInitiator())) {
+            // process owners can kill their own processes
+            return;
+        }
+
+        if (e.getProjectId() != null) {
+            // only org members with WRITER rights can kill the process
+            projectAccessManager.assertProjectAccess(e.getProjectId(), ResourceAccessLevel.WRITER, true);
+        }
+
+        throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have permissions " +
+                "to kill the process: " + e.getInstanceId());
+    }
+
+    public void assertUpdateRights(UUID instanceId) {
+        UserPrincipal p = UserPrincipal.assertCurrent();
+        if (p.isAdmin() || p.isGlobalWriter()) {
+            return;
+        }
+
+        SessionKeyPrincipal s = SessionKeyPrincipal.getCurrent();
+        if (s != null && instanceId.equals(s.getProcessInstanceId())) {
+            // processes can update their own statuses
+            return;
+        }
+
+        throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have permissions " +
+                "to update the process status: " + instanceId);
     }
 
     private static List<UUID> filterProcessIds(List<ProcessEntry> l, List<ProcessStatus> expected) {

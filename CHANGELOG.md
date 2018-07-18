@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: RBAC checks for process kill and status update
+operations.
+
+
+
 ## [0.79.2]
 
 ### Changed
