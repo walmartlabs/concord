@@ -92,7 +92,7 @@ public class FormResource implements Resource {
 
         Form form = formService.get(processInstanceId, formInstanceId);
         if (form == null) {
-            throw new ConcordApplicationException("Form not found: " + formInstanceId, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Form " + formInstanceId + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
         }
 
         FormDefinition fd = form.getFormDefinition();
@@ -160,6 +160,10 @@ public class FormResource implements Resource {
                                      @ApiParam Map<String, Object> data) {
 
         Form form = formService.get(processInstanceId, formInstanceId);
+        if (form == null) {
+            throw new ConcordApplicationException("Form " + formInstanceId + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
+        }
+
         try {
             data = FormUtils.convert(validatorLocale, form, data);
         } catch (ValidationException e) {
