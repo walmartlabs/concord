@@ -19,24 +19,27 @@
  */
 
 import * as React from 'react';
-import { Input, Menu, Modal, Table } from 'semantic-ui-react';
+import { Dropdown, DropdownItemProps, Grid, Input, Modal, Table } from 'semantic-ui-react';
 
 import { AnsibleEvent, AnsibleStatus, ProcessEventEntry } from '../../../api/process/event';
 import { AnsibleTaskList, HumanizedDuration } from '../index';
 
 export interface AnsibleHostListEntry {
     host: string;
+    hostGroups: string[];
     status: AnsibleStatus;
     duration: number;
 }
 
 interface State {
-    filter?: string;
+    hostFilter?: string;
+    hostGroupFilter?: string;
 }
 
 interface Props {
     hosts: AnsibleHostListEntry[];
-    hostEventsFn: (host: string) => Array<ProcessEventEntry<AnsibleEvent>>;
+    hostGroups: string[];
+    hostEventsFn: (host: string, hostGroup?: string) => Array<ProcessEventEntry<AnsibleEvent>>;
     selectedStatus?: AnsibleStatus;
 }
 
@@ -46,7 +49,8 @@ const compareByHost = (a: AnsibleHostListEntry, b: AnsibleHostListEntry) =>
 const applyFilter = (
     hosts: AnsibleHostListEntry[],
     selectedStatus?: AnsibleStatus,
-    filter?: string
+    hostFilter?: string,
+    hostGroupFilter?: string
 ): AnsibleHostListEntry[] => {
     let result = [...hosts];
 
@@ -54,12 +58,25 @@ const applyFilter = (
         result = result.filter(({ status }) => status === selectedStatus);
     }
 
-    if (filter) {
-        const f = filter.toLowerCase();
+    if (hostFilter) {
+        const f = hostFilter.toLowerCase();
         result = result.filter(({ host }) => host.toLowerCase().indexOf(f) >= 0);
     }
 
+    if (hostGroupFilter) {
+        result = result.filter(({ hostGroups }) => hostGroups.indexOf(hostGroupFilter) > -1);
+    }
+
     return result.sort(compareByHost);
+};
+
+const makeHostGroupOptions = (data: string[]): DropdownItemProps[] => {
+    if (!data) {
+        return [];
+    }
+
+    const opts = data.map((value) => ({ value, text: value }));
+    return [{ text: 'all' }].concat(opts);
 };
 
 class AnsibleHostList extends React.Component<Props, State> {
@@ -70,6 +87,7 @@ class AnsibleHostList extends React.Component<Props, State> {
 
     renderHostItem(host: string, duration: number, idx: number) {
         const { hostEventsFn } = this.props;
+        const { hostGroupFilter } = this.state;
         return (
             <Modal
                 key={idx}
@@ -85,29 +103,41 @@ class AnsibleHostList extends React.Component<Props, State> {
                     </Table.Row>
                 }>
                 <Modal.Content>
-                    <AnsibleTaskList title={host} events={hostEventsFn(host)} />
+                    <AnsibleTaskList title={host} events={hostEventsFn(host, hostGroupFilter)} />
                 </Modal.Content>
             </Modal>
         );
     }
 
     render() {
-        const { hosts, selectedStatus } = this.props;
-        const { filter } = this.state;
+        const { hosts, hostGroups, selectedStatus } = this.props;
+        const { hostFilter, hostGroupFilter } = this.state;
 
         return (
             <>
-                <Menu attached="top" borderless={true} tabular={true}>
-                    <Menu.Item position={'right'}>
+                <Grid columns={2} style={{ marginBottom: '5px' }}>
+                    <Grid.Column>
                         <Input
+                            fluid={true}
                             type="text"
                             icon="filter"
-                            size="small"
                             placeholder="Host"
-                            onChange={(e, { value }) => this.setState({ filter: value })}
+                            onChange={(e, { value }) => this.setState({ hostFilter: value })}
                         />
-                    </Menu.Item>
-                </Menu>
+                    </Grid.Column>
+                    <Grid.Column>
+                        <Dropdown
+                            fluid={true}
+                            placeholder="Host group"
+                            search={true}
+                            selection={true}
+                            options={makeHostGroupOptions(hostGroups)}
+                            onChange={(e, { value }) =>
+                                this.setState({ hostGroupFilter: value as string })
+                            }
+                        />
+                    </Grid.Column>
+                </Grid>
 
                 <Table celled={true} attached="bottom" selectable={true}>
                     <Table.Header>
@@ -120,8 +150,8 @@ class AnsibleHostList extends React.Component<Props, State> {
                     </Table.Header>
 
                     <Table.Body>
-                        {applyFilter(hosts, selectedStatus, filter).map((host, idx) =>
-                            this.renderHostItem(host.host, host.duration, idx)
+                        {applyFilter(hosts, selectedStatus, hostFilter, hostGroupFilter).map(
+                            (host, idx) => this.renderHostItem(host.host, host.duration, idx)
                         )}
                     </Table.Body>
                 </Table>

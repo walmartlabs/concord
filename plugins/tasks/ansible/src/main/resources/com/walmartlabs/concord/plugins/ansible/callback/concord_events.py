@@ -92,6 +92,7 @@ class CallbackModule(CallbackBase):
             'status': "RUNNING",
             'playbook': self.playbook._file_name,
             'host': host.name,
+            'hostGroup': self.play.get_name(),
             'task': task.get_name(),
             'correlationId': host.name + task._uuid,
             'phase': "pre"
@@ -104,6 +105,7 @@ class CallbackModule(CallbackBase):
             'status': 'SKIPPED',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
+            'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
@@ -123,6 +125,7 @@ class CallbackModule(CallbackBase):
             'status': "FAILED",
             'playbook': self.playbook._file_name,
             'host': result._host.name,
+            'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
@@ -137,6 +140,7 @@ class CallbackModule(CallbackBase):
             'status': 'OK',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
+            'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
@@ -150,6 +154,7 @@ class CallbackModule(CallbackBase):
             'status': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
+            'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
@@ -163,6 +168,7 @@ class CallbackModule(CallbackBase):
             'status': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
+            'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
@@ -179,3 +185,6 @@ class CallbackModule(CallbackBase):
 
     def v2_runner_item_on_skipped(self, result):
         self._on_task_skipped(result)
+
+    def v2_playbook_on_play_start(self, play):
+        self.play = play

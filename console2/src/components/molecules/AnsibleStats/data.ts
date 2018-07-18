@@ -22,18 +22,37 @@ import { AnsibleEvent, AnsibleStatus, ProcessEventEntry } from '../../../api/pro
 import { AnsibleHostListEntry } from '../AnsibleHostList';
 import { AnsibleStatChartEntry } from '../AnsibleStatChart';
 
+const addUniqueItem = (items: string[], item: string): string[] => {
+    if (items.indexOf(item) === -1) {
+        items.push(item);
+    }
+    return items;
+};
+
 export const makeHostList = (
     events: Array<ProcessEventEntry<AnsibleEvent>>
 ): AnsibleHostListEntry[] => {
     const result: { [id: string]: AnsibleHostListEntry } = {};
     events.forEach((e) => {
         const data = e.data;
-        const hostDuration =
-            ((result[data.host] && result[data.host].duration) || 0) + (e.duration || 0);
-        result[data.host] = { host: data.host, status: data.status!, duration: hostDuration };
+        const resultItem = result[data.host];
+        const hostDuration = ((resultItem && resultItem.duration) || 0) + (e.duration || 0);
+        const hostGroups = addUniqueItem(resultItem ? resultItem.hostGroups : [], e.data.hostGroup);
+        result[data.host] = {
+            host: data.host,
+            hostGroups,
+            status: data.status!,
+            duration: hostDuration
+        };
     });
 
     return Object.keys(result).map((k) => result[k]);
+};
+
+export const makeHostGroups = (events: Array<ProcessEventEntry<AnsibleEvent>>): string[] => {
+    const groups = events.filter(({ data }) => !!data.hostGroup).map(({ data }) => data.hostGroup);
+
+    return Array.from(new Set(groups));
 };
 
 const hostsByStatus = (

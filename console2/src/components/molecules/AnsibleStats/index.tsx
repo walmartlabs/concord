@@ -23,7 +23,7 @@ import { Grid, Tab } from 'semantic-ui-react';
 import { AnsibleEvent, AnsibleStatus, ProcessEventEntry } from '../../../api/process/event';
 
 import { AnsibleHostList, AnsibleStatChart, AnsibleTaskList } from '../../molecules';
-import { countUniqueHosts, getFailures, makeHostList, makeStats } from './data';
+import { countUniqueHosts, getFailures, makeHostList, makeHostGroups, makeStats } from './data';
 
 interface State {
     selectedStatus?: AnsibleStatus;
@@ -44,6 +44,7 @@ class AnsibleStats extends React.Component<Props, State> {
 
         // TODO calculate the data on update
         const hosts = makeHostList(events);
+        const hostGroups = makeHostGroups(events);
         const stats = makeStats(events);
         const failures = getFailures(events);
 
@@ -67,8 +68,14 @@ class AnsibleStats extends React.Component<Props, State> {
                                     <Grid.Column>
                                         <AnsibleHostList
                                             hosts={hosts}
-                                            hostEventsFn={(host) =>
-                                                events.filter((e) => e.data.host === host)
+                                            hostGroups={hostGroups}
+                                            hostEventsFn={(host, hostGroup?) =>
+                                                events.filter(
+                                                    (e) =>
+                                                        e.data.host === host &&
+                                                        (hostGroup === undefined ||
+                                                            e.data.hostGroup === hostGroup)
+                                                )
                                             }
                                             selectedStatus={this.state.selectedStatus}
                                         />

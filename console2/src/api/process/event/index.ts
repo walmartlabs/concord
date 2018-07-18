@@ -84,6 +84,7 @@ export const getStatusColor = (status: AnsibleStatus) => {
 
 export interface AnsibleEvent {
     host: string;
+    hostGroup: string;
     playbook: string;
     status: AnsibleStatus;
     task: string;
