@@ -4,7 +4,8 @@
 
 ### Added
 
-- concord-server: optionally encrypt sensitive data in the process state;
+- concord-server: optionally encrypt sensitive data in the process
+state;
 - project-model: allow expressions to be used in flow calls;
 - plugins: new built-in task `throw`;
 - concord-console: ability to filter Ansible hosts by their inventory
