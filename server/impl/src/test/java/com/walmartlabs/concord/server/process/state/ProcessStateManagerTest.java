@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.state;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,10 @@ package com.walmartlabs.concord.server.process.state;
  */
 
 import com.google.common.base.Charsets;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
+import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -36,6 +39,7 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 @Ignore("requires a local DB instance")
 public class ProcessStateManagerTest extends AbstractDaoTest {
@@ -48,8 +52,9 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         writeTempFile(baseDir.resolve("file-1"), "123".getBytes());
         writeTempFile(baseDir.resolve("file-2"), "456".getBytes());
 
-        // ---
-        ProcessStateManager stateManager = new ProcessStateManagerImpl(getConfiguration());
+        //
+        ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Arrays.asList(Constants.Files.REQUEST_DATA_FILE_NAME));
+        ProcessStateManager stateManager = new ProcessStateManagerImpl(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(instanceId, null, baseDir);
 
         Path tmpDir = Files.createTempDirectory("testExport");
@@ -91,7 +96,8 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
             }
         }
 
-        ProcessStateManager stateManager = new ProcessStateManagerImpl(getConfiguration());
+        ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Arrays.asList(Constants.Files.REQUEST_DATA_FILE_NAME));
+        ProcessStateManager stateManager = new ProcessStateManagerImpl(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(UUID.randomUUID(), "/", baseDir);
     }
 

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.state;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.process.state;
 
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
+import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -48,9 +50,19 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_ST
 @Named
 public class ProcessStateManagerImpl extends AbstractDao implements ProcessStateManager {
 
+    private final StreamProcessors importProcessors = new StreamProcessors();
+    private final StreamProcessors exportProcessors = new StreamProcessors();
+
     @Inject
-    protected ProcessStateManagerImpl(@Named("app") Configuration cfg) {
+    protected ProcessStateManagerImpl(@Named("app") Configuration cfg,
+                                      SecretStoreConfiguration secretCfg,
+                                      ProcessStateConfiguration stateCfg) {
         super(cfg);
+
+        stateCfg.getSecureFiles().forEach(s -> {
+            this.importProcessors.add(s, new EncryptStreamProcessor(secretCfg));
+            this.exportProcessors.add(s, new DecryptStreamProcessor(secretCfg));
+        });
     }
 
     @Override
@@ -77,8 +89,9 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
                         return Optional.empty();
                     }
 
-                    try (InputStream in = rs.getBinaryStream(1)) {
-                        return converter.apply(in);
+                    try (InputStream in = rs.getBinaryStream(1);
+                         InputStream processed = exportProcessors.process(path, in)) {
+                        return converter.apply(processed);
                     }
                 }
             }
@@ -103,8 +116,9 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
-                            try (InputStream in = rs.getBinaryStream(1)) {
-                                Optional<T> o = converter.apply(in);
+                            try (InputStream in = rs.getBinaryStream(1);
+                                 InputStream processed = exportProcessors.process(path, in)) {
+                                Optional<T> o = converter.apply(processed);
                                 o.ifPresent(result::add);
                             }
                         }
@@ -240,12 +254,14 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
                             ps.setObject(1, instanceId);
                             ps.setString(2, n);
                             ps.setInt(3, unixMode);
-                            try (InputStream in = Files.newInputStream(file)) {
-                                ps.setBinaryStream(4, in);
+                            try (InputStream in = Files.newInputStream(file);
+                                 InputStream processed = importProcessors.process(n, in)) {
+                                ps.setBinaryStream(4, processed);
                             }
                             ps.setInt(5, unixMode);
-                            try (InputStream in = Files.newInputStream(file)) {
-                                ps.setBinaryStream(6, in);
+                            try (InputStream in = Files.newInputStream(file);
+                                 InputStream processed = importProcessors.process(n, in)) {
+                                ps.setBinaryStream(6, processed);
                             }
                             ps.addBatch();
 
@@ -293,8 +309,9 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
                             String n = rs.getString(1);
                             int unixMode = rs.getInt(2);
-                            try (InputStream in = rs.getBinaryStream(3)) {
-                                consumer.accept(n, unixMode, in);
+                            try (InputStream in = rs.getBinaryStream(3);
+                                 InputStream processed = exportProcessors.process(n, in)) {
+                                consumer.accept(n, unixMode, processed);
                             }
                         }
                     }
@@ -329,8 +346,9 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
                             String n = relativize(dir, rs.getString(1));
                             int unixMode = rs.getInt(2);
-                            try (InputStream in = rs.getBinaryStream(3)) {
-                                consumer.accept(n, unixMode, in);
+                            try (InputStream in = rs.getBinaryStream(3);
+                                 InputStream processed = exportProcessors.process(n, in)) {
+                                consumer.accept(n, unixMode, processed);
                             }
                         }
                     }
