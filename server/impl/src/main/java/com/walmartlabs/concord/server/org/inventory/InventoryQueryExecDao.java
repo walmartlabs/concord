@@ -82,7 +82,7 @@ public class InventoryQueryExecDao extends AbstractDao {
             // TODO we should probably inspect the query to determine whether we need to bind the params or not
 
             QueryPart[] args;
-            if (params == null || params.isEmpty()) {
+            if (params == null) {
                 args = new QueryPart[]{val(q.getInventoryId())};
             } else {
                 args = new QueryPart[]{val(serialize(params)), val(q.getInventoryId())};

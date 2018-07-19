@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
@@ -199,7 +200,11 @@ public class InventoryQueryResource implements Resource {
 
         UUID inventoryId = inventory.getId();
         UUID queryId = assertQuery(inventoryId, queryName);
-        return inventoryQueryExecDao.exec(queryId, params);
+        try {
+            return inventoryQueryExecDao.exec(queryId, params);
+        } catch (Exception e) {
+            throw new ConcordApplicationException("Error while execution query: " + e.getMessage(), e);
+        }
     }
 
     private UUID assertQuery(UUID inventoryId, String queryName) {

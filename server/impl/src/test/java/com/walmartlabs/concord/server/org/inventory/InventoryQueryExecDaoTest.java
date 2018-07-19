@@ -44,8 +44,9 @@ public class InventoryQueryExecDaoTest extends AbstractDaoTest {
 
         for(String sql : queries) {
             UUID queryId = UUID.randomUUID();
-            Map<String, Object> params = new HashMap<>();
+            Map<String, Object> params = null;
             if (sql.contains("?::jsonb")) {
+                params = new HashMap<>();
                 params.put("k", "v");
             }
             when(qd.get(eq(queryId))).thenReturn(createInventoryQueryEntry(sql));

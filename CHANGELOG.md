@@ -11,6 +11,10 @@ group;
 - concord-server: RBAC checks for process kill and status update
 operations.
 
+### Changed
+
+- concord-server: fix handling of empty inventory query params.
+
 
 
 ## [0.79.2]
