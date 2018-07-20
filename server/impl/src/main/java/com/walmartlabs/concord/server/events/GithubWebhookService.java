@@ -101,7 +101,7 @@ public class GithubWebhookService implements BackgroundTask {
 
     private void unregister(UUID projectId, String repoName, String repoUrl) {
         if (!needWebhookForRepository(repoUrl)) {
-            log.info("unregister ['{}', '{}', '{}'] -> not a GitHub url", projectId, repoName, repoUrl);
+            log.info("unregister ['{}', '{}', '{}'] -> not a GitHub URL", projectId, repoName, repoUrl);
             return;
         }
 
@@ -114,7 +114,7 @@ public class GithubWebhookService implements BackgroundTask {
     }
 
     private boolean needWebhookForRepository(String repoUrl) {
-        return repoUrl.contains(cfg.getGithubUrl());
+        return repoUrl.contains(cfg.getGithubDomain());
     }
 
     private class HookRefresher implements Runnable {

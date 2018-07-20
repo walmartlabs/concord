@@ -268,7 +268,7 @@ public class CrudIT extends AbstractServerIT {
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repositoryName, new RepositoryEntry()
                         .setName(repositoryName)
-                        .setUrl("http://localhost"))));
+                        .setUrl("http://test"))));
 
         // --- create
         LandingEntry entry = new LandingEntry()
@@ -394,7 +394,7 @@ public class CrudIT extends AbstractServerIT {
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
-                        .setUrl("git@localhost:/test")
+                        .setUrl("git@test:/test")
                         .setSecretName(secretName))));
 
         // ---

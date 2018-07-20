@@ -51,8 +51,8 @@ public class GithubConfiguration {
     private String webhookUrl;
 
     @Inject
-    @Config("github.githubUrl")
-    private String githubUrl;
+    @Config("github.githubDomain")
+    private String githubDomain;
 
     @Inject
     @Config("github.refreshInterval")
@@ -86,8 +86,8 @@ public class GithubConfiguration {
         return webhookUrl;
     }
 
-    public String getGithubUrl() {
-        return githubUrl;
+    public String getGithubDomain() {
+        return githubDomain;
     }
 
     public long getRefreshInterval() {

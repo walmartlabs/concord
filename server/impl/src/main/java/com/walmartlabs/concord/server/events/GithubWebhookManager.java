@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.events;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import org.kohsuke.github.*;
@@ -42,29 +44,23 @@ public class GithubWebhookManager {
 
     private static final Set<GHEvent> EVENTS = ImmutableSet.of(GHEvent.PUSH);
 
-    private final GitHub gh;
-
+    private final Supplier<GitHub> client;
     private final GithubConfiguration cfg;
 
     @Inject
-    public GithubWebhookManager(GithubConfiguration cfg) throws IOException {
+    public GithubWebhookManager(GithubConfiguration cfg) {
         this.cfg = cfg;
-        if(cfg.isEnabled()) {
-            log.info("init -> connecting to the GitHub API '{}'", cfg.getApiUrl());
-            this.gh = GitHub.connectToEnterprise(cfg.getApiUrl(), cfg.getOauthAccessToken());
-        } else {
-            log.warn("init -> the GitHub API URL is not configured, skipping");
-            this.gh = null;
-        }
+        this.client = Suppliers.memoize(this::connect);
     }
 
     public Long register(String githubRepoName) {
+        if (client.get() == null) {
+            log.warn("register ['{}'] -> not configured, ignored", githubRepoName);
+            return null;
+        }
+
         try {
-            if (gh == null) {
-                log.warn("register ['{}'] -> not configured, ignored", githubRepoName);
-                return null;
-            }
-            GHRepository repo = gh.getRepository(githubRepoName);
+            GHRepository repo = client.get().getRepository(githubRepoName);
 
             final Map<String, String> config = new HashMap<>();
             config.put("url", cfg.getWebhookUrl());
@@ -85,13 +81,13 @@ public class GithubWebhookManager {
     }
 
     public void unregister(String githubRepoName) {
-        try {
-            if (gh == null) {
-                log.warn("unregister ['{}'] -> not configured, ignored", githubRepoName);
-                return;
-            }
+        if (client.get() == null) {
+            log.warn("unregister ['{}'] -> not configured, ignored", githubRepoName);
+            return;
+        }
 
-            GHRepository repo = gh.getRepository(githubRepoName);
+        try {
+            GHRepository repo = client.get().getRepository(githubRepoName);
 
             List<GHHook> hooks = repo.getHooks().stream()
                     .filter(h -> h.getConfig() != null)
@@ -106,6 +102,21 @@ public class GithubWebhookManager {
             log.warn("unregister ['{}'] -> webhook not found", githubRepoName);
         } catch (IOException e) {
             log.error("unregister ['{}'] -> error: {}", githubRepoName, e.getMessage());
+        }
+    }
+
+    private GitHub connect() {
+        if (!cfg.isEnabled()) {
+            log.warn("init -> the GitHub API URL is not configured, skipping");
+            return null;
+        }
+
+        log.info("init -> connecting to the GitHub API '{}'", cfg.getApiUrl());
+        try {
+            return GitHub.connectToEnterprise(cfg.getApiUrl(), cfg.getOauthAccessToken());
+        } catch (IOException e) {
+            log.error("error -> connecting to the GitHub API '{}'", cfg.getApiUrl(), e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 

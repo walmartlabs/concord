@@ -16,6 +16,8 @@ operations.
 ### Changed
 
 - concord-server: fix handling of empty inventory query params.
+- concord-server: fixed the repository webhook registration when
+project or repository is created or updated.
 
 
 

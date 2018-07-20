@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -23,6 +24,7 @@
         <docker.host.addr>localhost</docker.host.addr>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <it.server.port>8001</it.server.port>
+        <it.webhook.trigger.enabled>false</it.webhook.trigger.enabled>
     </properties>
 
     <dependencies>
@@ -164,6 +166,10 @@
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                         <IT_DOCKER_ANSIBLE_IMAGE>${ansible.image}</IT_DOCKER_ANSIBLE_IMAGE>
+
+                        <!-- TODO: should be moved into a separate module -->
+                        <!--<IT_GIT_WEBHOOK_MOCK_PORT>${github.mock.port}</IT_GIT_WEBHOOK_MOCK_PORT>-->
+                        <!--<IT_WEBHOOK_TRIGGER_ENABLED>${it.webhook.trigger.enabled}</IT_WEBHOOK_TRIGGER_ENABLED>-->
                     </environmentVariables>
                 </configuration>
             </plugin>
@@ -259,8 +265,31 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
+            <properties>
+                <it.webhook.trigger.enabled>true</it.webhook.trigger.enabled>
+            </properties>
             <build>
                 <plugins>
+                    <!-- TODO: (github related) should be moved into a separate module
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>reserve-ports</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>reserve-network-port</goal>
+                                </goals>
+                                <configuration>
+                                    <portNames>
+                                        <portName>github.mock.port</portName>
+                                    </portNames>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    -->
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
@@ -314,6 +343,7 @@
                                                 <volume>${deps.dir}:${deps.dir}:ro</volume>
                                                 <volume>${settings.localRepository}:/home/concord/.m2/repository:ro
                                                 </volume>
+                                                <volum>${project.build.outputDirectory}/conf:/conf</volum>
                                             </bind>
                                         </volumes>
                                         <env>
@@ -322,6 +352,11 @@
                                             <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
                                             <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
+
+                                            <!-- TODO: should be moved into a separate module -->
+                                            <!--<CONCORD_CFG_FILE>/conf/server.conf</CONCORD_CFG_FILE>-->
+                                            <!--<GITHUB_API_URL>http://localhost:${github.mock.port}</GITHUB_API_URL>-->
+                                            <!--<GITHUB_DOMAIN>localhost</GITHUB_DOMAIN>-->
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->

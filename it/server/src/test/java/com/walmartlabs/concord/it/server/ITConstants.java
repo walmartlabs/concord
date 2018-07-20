@@ -30,6 +30,7 @@ public final class ITConstants {
     public static final String GIT_SERVER_URL_PATTERN;
     public static final String SMTP_SERVER_HOST;
     public static final String DOCKER_ANSIBLE_IMAGE;
+    public static final Integer GIT_WEBHOOK_MOCK_PORT;
 
     static {
         PROJECT_VERSION = env("IT_PROJECT_VERSION", "LATEST");
@@ -44,6 +45,8 @@ public final class ITConstants {
         SMTP_SERVER_HOST = dockerAddr;
 
         DOCKER_ANSIBLE_IMAGE = env("IT_DOCKER_ANSIBLE_IMAGE", "walmartlabs/concord-ansible");
+
+        GIT_WEBHOOK_MOCK_PORT = Integer.parseInt(env("IT_GIT_WEBHOOK_MOCK_PORT", "4567"));
     }
 
     private static String env(String k, String def) {

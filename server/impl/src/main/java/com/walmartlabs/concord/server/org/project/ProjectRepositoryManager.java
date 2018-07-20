@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,13 +22,10 @@ package com.walmartlabs.concord.server.org.project;
 
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.server.events.ExternalEventResource;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.org.secret.SecretEntry;
 import com.walmartlabs.concord.server.events.Events;
+import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
@@ -37,7 +34,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -86,8 +82,7 @@ public class ProjectRepositoryManager {
 
         UUID secretId = entry.getSecretId();
         if (secretId == null && entry.getSecretName() != null) {
-            SecretEntry e = secretManager.assertAccess(project.getOrgId(), null, entry.getSecretName(), ResourceAccessLevel.READER, false);
-            secretId = e.getId();
+            secretManager.assertAccess(project.getOrgId(), null, entry.getSecretName(), ResourceAccessLevel.READER, false);
         }
 
         UUID repoId = entry.getId();
@@ -95,25 +90,11 @@ public class ProjectRepositoryManager {
             repoId = repositoryDao.getId(projectId, entry.getName());
         }
 
-        Map<String, Object> ev;
-
         if (repoId == null) {
-            repositoryDao.insert(tx, projectId,
-                    entry.getName(), entry.getUrl(),
-                    trim(entry.getBranch()), trim(entry.getCommitId()),
-                    trim(entry.getPath()), secretId, false);
-
-            ev = Events.Repository.repositoryUpdated(project.getOrgName(), project.getName(), entry.getName());
+            insert(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), entry);
         } else {
-            repositoryDao.update(tx, repoId,
-                    entry.getName(), entry.getUrl(),
-                    trim(entry.getBranch()), trim(entry.getCommitId()),
-                    trim(entry.getPath()), secretId);
-
-            ev = Events.Repository.repositoryUpdated(project.getOrgName(), project.getName(), entry.getName());
+            update(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), repoId, entry);
         }
-
-        externalEventResource.event(Events.CONCORD_EVENT, ev);
 
         // TODO audit log
     }
@@ -148,8 +129,24 @@ public class ProjectRepositoryManager {
         externalEventResource.event(Events.CONCORD_EVENT, ev);
     }
 
-    public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) throws IOException
-    {
+    private void update(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, UUID repoId, RepositoryEntry entry) {
+        UUID secretId = entry.getSecretId();
+        if (secretId == null && entry.getSecretName() != null) {
+            secretId = secretDao.getId(orgId, entry.getSecretName());
+        }
+
+        repositoryDao.update(tx, repoId,
+                entry.getName(), entry.getUrl(),
+                trim(entry.getBranch()), trim(entry.getCommitId()),
+                trim(entry.getPath()), secretId);
+
+        githubWebhookService.register(projectId, entry.getName(), entry.getUrl());
+
+        Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
+        externalEventResource.event(Events.CONCORD_EVENT, ev);
+    }
+
+    public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) throws IOException {
         Path srcPath = repositoryManager.fetch(projectId, repositoryEntry);
         ProjectDefinition pd = loader.load(srcPath);
         repositoryValidator.validate(pd);
