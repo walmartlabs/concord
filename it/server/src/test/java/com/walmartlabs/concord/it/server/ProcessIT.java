@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -122,7 +123,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*120123.*", ab);
         assertLog(".*redColor.*", ab);
 
-        assertTrue(pir.getStatus() == ProcessEntry.StatusEnum.FINISHED);
+        assertTrue(pir.getStatus() == StatusEnum.FINISHED);
     }
 
     @Test(timeout = 60000)
@@ -138,12 +139,12 @@ public class ProcessIT extends AbstractServerIT {
         } catch (ApiException e) {
             String s = e.getResponseBody();
             ProcessEntry pir = getApiClient().getJSON().deserialize(s, ProcessEntry.class);
-            assertEquals(ProcessEntry.StatusEnum.RUNNING, pir.getStatus());
+            assertTrue(StatusEnum.RUNNING.equals(pir.getStatus()) || StatusEnum.ENQUEUED.equals(pir.getStatus()));
         }
 
         processApi.kill(spr.getInstanceId());
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.CANCELLED, ProcessEntry.StatusEnum.FAILED, ProcessEntry.StatusEnum.FINISHED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED, StatusEnum.FAILED, StatusEnum.FINISHED);
     }
 
     @Test(timeout = 60000)
@@ -191,7 +192,7 @@ public class ProcessIT extends AbstractServerIT {
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*gaaarbage.*", ab);
@@ -218,7 +219,7 @@ public class ProcessIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FINISHED);
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*x=123.*", ab);
@@ -235,7 +236,7 @@ public class ProcessIT extends AbstractServerIT {
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Hello!", ab);
         assertLog(".*Bye!", ab);
@@ -252,7 +253,7 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
+        pir = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FINISHED);
         ab = getLog(pir.getLogFileName());
         assertLogAtLeast(".*Hello!", 2, ab);
         assertLogAtLeast(".*Bye!", 2, ab);
@@ -514,15 +515,15 @@ public class ProcessIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
         ProcessApi processApi = new ProcessApi(getApiClient());
 
-        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, ProcessEntry.StatusEnum.RUNNING);
+        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, StatusEnum.RUNNING);
 
         processApi.killCascade(spr.getInstanceId());
 
-        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, ProcessEntry.StatusEnum.CANCELLED, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.FAILED);
+        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, StatusEnum.CANCELLED, StatusEnum.FINISHED, StatusEnum.FAILED);
 
         List<ProcessEntry> processEntryList = processApi.listSubprocesses(spr.getInstanceId(), null);
         for (ProcessEntry pe : processEntryList) {
-            assertEquals(ProcessEntry.StatusEnum.CANCELLED, pe.getStatus());
+            assertEquals(StatusEnum.CANCELLED, pe.getStatus());
         }
     }
 }
