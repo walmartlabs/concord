@@ -90,6 +90,6 @@ public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
         }
 
         throw new IllegalArgumentException("'" + keys + "' are not form supported options. Supported options are only:"
-                + SUPPORTED_FORM_OPTIONS + ". Error in form step @:" + opts);
+                + SUPPORTED_FORM_OPTIONS + ". Error in form step @:" + loc);
     }
 }
