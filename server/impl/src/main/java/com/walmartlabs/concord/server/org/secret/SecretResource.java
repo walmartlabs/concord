@@ -185,7 +185,7 @@ public class SecretResource implements Resource {
         try {
             entry = secretManager.getRaw(org.getId(), secretName, password);
             if (entry == null) {
-                return null;
+                throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
             }
         } catch (SecurityException e) {
             log.warn("fetchSecret -> error: {}", e.getMessage());

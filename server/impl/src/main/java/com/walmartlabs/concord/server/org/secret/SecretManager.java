@@ -46,6 +46,8 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -94,14 +96,14 @@ public class SecretManager {
         if (secretId != null) {
             e = secretDao.get(secretId);
             if (e == null) {
-                throw new ValidationErrorsException("Secret not found: " + secretId);
+                throw new WebApplicationException("Secret not found: " + secretId, Status.NOT_FOUND);
             }
         }
 
         if (e == null) {
             e = secretDao.getByName(orgId, secretName);
             if (e == null) {
-                throw new ValidationErrorsException("Secret not found: " + secretName);
+                throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
             }
         }
 
