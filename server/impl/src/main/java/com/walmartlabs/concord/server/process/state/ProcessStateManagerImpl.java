@@ -30,6 +30,7 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
@@ -48,6 +49,7 @@ import java.util.stream.Stream;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 
 @Named
+@Singleton
 public class ProcessStateManagerImpl extends AbstractDao implements ProcessStateManager {
 
     private final StreamProcessors importProcessors = new StreamProcessors();
@@ -173,6 +175,11 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
     @Override
     public void delete(UUID instanceId, String path) {
         tx(tx -> delete(tx, instanceId, path));
+    }
+
+    @Override
+    public void delete(UUID instanceId) {
+        tx(tx -> delete(tx, instanceId));
     }
 
     private void delete(DSLContext tx, UUID instanceId, String path) {

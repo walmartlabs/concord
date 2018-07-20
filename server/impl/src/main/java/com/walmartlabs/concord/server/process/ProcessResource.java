@@ -38,13 +38,13 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
@@ -75,7 +75,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
-import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 @Singleton
@@ -93,6 +92,7 @@ public class ProcessResource implements Resource {
     private final UserDao userDao;
     private final SecretManager secretManager;
     private final SecretStoreConfiguration secretStoreCfg;
+    private final ProcessStateArchiver stateArchiver;
 
     @Inject
     public ProcessResource(ProcessManager processManager,
@@ -102,7 +102,8 @@ public class ProcessResource implements Resource {
                            ProcessStateManager stateManager,
                            UserDao userDao,
                            SecretManager secretManager,
-                           SecretStoreConfiguration secretStoreCfg) {
+                           SecretStoreConfiguration secretStoreCfg,
+                           ProcessStateArchiver stateArchiver) {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
@@ -112,6 +113,7 @@ public class ProcessResource implements Resource {
         this.userDao = userDao;
         this.secretManager = secretManager;
         this.secretStoreCfg = secretStoreCfg;
+        this.stateArchiver = stateArchiver;
     }
 
     /**
@@ -716,12 +718,7 @@ public class ProcessResource implements Resource {
 
         assertProcessStateAccess(p);
 
-        StreamingOutput out = output -> {
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(output)) {
-                stateManager.export(instanceId, zipTo(zip));
-            }
-        };
-
+        StreamingOutput out = output -> stateArchiver.export(instanceId, output);
         return Response.ok(out, "application/zip")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + instanceId + ".zip\"")
                 .build();

@@ -18,4 +18,29 @@
             <column name="USER_ID">${concordAgentUserId}</column>
         </insert>
     </changeSet>
+
+    <changeSet id="80100" author="ibodrov@gmail.com">
+        <createTable tableName="PROCESS_STATE_ARCHIVE">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="STATUS" type="varchar(64)" defaultValue="IN_PROGRESS">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LAST_UPDATED_AT" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_STATE_ARCHIVE"
+                                 baseColumnNames="INSTANCE_ID"
+                                 constraintName="FK_PSA_PQ_ID"
+                                 referencedTableName="PROCESS_QUEUE"
+                                 referencedColumnNames="INSTANCE_ID"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="PROCESS_STATE_ARCHIVE" indexName="IDX_PSA_LAST_UPD">
+            <column name="LAST_UPDATED_AT"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

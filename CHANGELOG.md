@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: support for archiving of process state into
+S3-compatible object storages;
 - concord-server: optionally encrypt sensitive data in the process
 state;
 - project-model: allow expressions to be used in flow calls;

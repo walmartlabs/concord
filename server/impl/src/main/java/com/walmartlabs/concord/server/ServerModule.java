@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,8 @@ import com.walmartlabs.concord.server.metrics.MetricsModule;
 import com.walmartlabs.concord.server.org.triggers.TriggerScheduler;
 import com.walmartlabs.concord.server.process.ProcessCleaner;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueWatchdog;
+import com.walmartlabs.concord.server.process.state.archive.StalledUploadHandler;
+import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyCleaner;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyExpirationNotifier;
 
@@ -49,5 +51,7 @@ public class ServerModule extends AbstractModule {
         tasks.addBinding().to(ProcessCleaner.class);
         tasks.addBinding().to(ProcessQueueWatchdog.class);
         tasks.addBinding().to(TriggerScheduler.class);
+        tasks.addBinding().to(ProcessStateArchiver.class);
+        tasks.addBinding().to(StalledUploadHandler.class);
     }
 }

@@ -74,6 +74,11 @@ public interface ProcessStateManager {
     void delete(UUID instanceId, String path);
 
     /**
+     * Removes all process data.
+     */
+    void delete(UUID instanceId);
+
+    /**
      * Replaces a single value.
      */
     void replace(UUID instanceId, String path, byte[] data);

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -31,7 +32,7 @@
             <id>team</id>
             <name>Concord Development Team</name>
             <roles>
-              <role>Project Lead</role>
+                <role>Project Lead</role>
             </roles>
             <timezone>-5</timezone>
         </developer>
@@ -88,6 +89,7 @@
         <javax.mail.version>1.6.0</javax.mail.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.0.Final</javax.ws.rs.version>
+        <jclouds.version>2.1.0</jclouds.version>
         <jetty.version>9.4.8.v20171121</jetty.version>
         <jgit.version>4.9.1.201712030800-r</jgit.version>
         <jooq.version>3.10.2</jooq.version>
@@ -95,7 +97,8 @@
         <jsqlparser.version>1.2</jsqlparser.version>
         <junit.version>4.12</junit.version>
         <launcher.version>0.128</launcher.version>
-        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <liquibase.version>3.5.1
+        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <logback.version>1.2.3</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
@@ -538,6 +541,26 @@
                 <groupId>com.github.jsqlparser</groupId>
                 <artifactId>jsqlparser</artifactId>
                 <version>${jsqlparser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jclouds</groupId>
+                <artifactId>jclouds-core</artifactId>
+                <version>${jclouds.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jclouds</groupId>
+                <artifactId>jclouds-blobstore</artifactId>
+                <version>${jclouds.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jclouds.provider</groupId>
+                <artifactId>aws-s3</artifactId>
+                <version>${jclouds.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-assistedinject</artifactId>
+                <version>${guice.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

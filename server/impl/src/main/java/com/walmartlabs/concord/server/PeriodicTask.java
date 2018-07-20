@@ -64,7 +64,7 @@ public abstract class PeriodicTask implements BackgroundTask {
                 performTask();
                 sleep(interval);
             } catch (Exception e) {
-                log.warn("run -> task error: {}. Will retry in {}ms...", e.getMessage(), errorDelay);
+                log.warn("run -> task error: {}. Will retry in {}ms...", e.getMessage(), errorDelay, e);
                 sleep(errorDelay);
             }
         }
