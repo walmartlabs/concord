@@ -282,7 +282,7 @@ public class ProjectIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     public void testRepositoryValidation() throws Exception{
         Path tmpDir = createTempDir();
 
@@ -312,8 +312,6 @@ public class ProjectIT extends AbstractServerIT {
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
         RepositoryValidationResponse result =  repositoriesApi.validateRepository("Default",projectName,repoName);
         assertTrue(result.isOk());
-
-
     }
 
 
