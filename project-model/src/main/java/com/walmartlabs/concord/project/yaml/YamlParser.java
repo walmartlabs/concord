@@ -48,11 +48,11 @@ public class YamlParser {
         this.objectMapper = om;
     }
 
-    public YamlProject parseProject(Path path) throws IOException {
+    public YamlProject parseProject(Path file) throws IOException {
         try {
-            return objectMapper.readValue(path.toFile(), YamlProject.class);
+            return objectMapper.readValue(file.toFile(), YamlProject.class);
         } catch (IOException e) {
-            throw new IOException("Error while loading a project file: " + path, e);
+            throw new IOException("Error while loading a project file: " + file, e);
         }
     }
 

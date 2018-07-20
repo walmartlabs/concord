@@ -60,7 +60,7 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
         }
 
         try {
-            ProjectDefinition pd = loader.load(workspace);
+            ProjectDefinition pd = loader.loadProject(workspace);
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
             return chain.process(payload);
         } catch (IOException e) {

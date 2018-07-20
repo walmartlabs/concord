@@ -165,7 +165,7 @@ public class TriggerResource extends AbstractDao implements Resource {
 
         ProjectDefinition pd;
         try {
-            pd = projectLoader.load(repoPath);
+            pd = projectLoader.loadProject(repoPath);
         } catch (Exception e) {
             log.error("refresh ['{}'] -> project load error", r.getId(), e);
             throw new ConcordApplicationException("Refresh failed (repository ID: " + r.getId() + "): " + e.getMessage(), e);

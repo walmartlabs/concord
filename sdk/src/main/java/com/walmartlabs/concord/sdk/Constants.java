@@ -164,14 +164,14 @@ public class Constants {
         public static final String LIBRARIES_DIR_NAME = "lib";
 
         /**
-         * (Default) directory which contains process definitions of a payload.
-         */
-        public static final String DEFINITIONS_DIR_NAME = "flows";
-
-        /**
          * Directories which contain process definitions of a payload.
          */
         public static final String[] DEFINITIONS_DIR_NAMES = {"flows", "processes"};
+
+        /**
+         * Directory with Concord project definitions.
+         */
+        public static final String PROJECT_FILES_DIR_NAME = "concord";
 
         /**
          * Directory containing process profiles.

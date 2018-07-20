@@ -2301,7 +2301,7 @@ public class YamlParserTest {
 
         private ProjectDefinition loadWorkflow(String resource) {
             try (InputStream in = ClassLoader.getSystemResourceAsStream(resource)) {
-                return projectLoader.load(in);
+                return projectLoader.loadProject(in);
             } catch (IOException e) {
                 throw new RuntimeException("Error while loading a definition", e);
             }

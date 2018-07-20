@@ -106,7 +106,7 @@ public class ProcessIT extends AbstractServerIT {
 
         // wait for completion
 
-        ProcessEntry pir = processApi.get(spr.getInstanceId());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         // get the name of the agent's log file
 

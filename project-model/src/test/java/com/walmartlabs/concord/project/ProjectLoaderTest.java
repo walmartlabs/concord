@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -35,7 +36,7 @@ public class ProjectLoaderTest {
         ProjectLoader loader = new ProjectLoader();
 
         URI uri = ClassLoader.getSystemResource("simple").toURI();
-        ProjectDefinition pd = loader.load(Paths.get(uri));
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri));
 
         assertNotNull(pd);
 
@@ -50,7 +51,7 @@ public class ProjectLoaderTest {
         ProjectLoader loader = new ProjectLoader();
 
         URI uri = ClassLoader.getSystemResource("emptyField").toURI();
-        ProjectDefinition pd = loader.load(Paths.get(uri));
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri));
 
         assertNotNull(pd);
 
@@ -66,7 +67,7 @@ public class ProjectLoaderTest {
 
         URI uri = ClassLoader.getSystemResource("duplicateConfiguration").toURI();
         try {
-            loader.load(Paths.get(uri));
+            loader.loadProject(Paths.get(uri));
             fail("exception expected");
         } catch (Exception e) {
             assertNotNull(e.getCause());
@@ -80,7 +81,7 @@ public class ProjectLoaderTest {
 
         URI uri = ClassLoader.getSystemResource("duplicateConfigurationVariable").toURI();
         try {
-            loader.load(Paths.get(uri));
+            loader.loadProject(Paths.get(uri));
             fail("exception expected");
         } catch (Exception e) {
             assertNotNull(e.getCause());
@@ -93,10 +94,29 @@ public class ProjectLoaderTest {
         ProjectLoader loader = new ProjectLoader();
 
         URI uri = ClassLoader.getSystemResource("complex").toURI();
-        ProjectDefinition pd = loader.load(Paths.get(uri));
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri));
         assertNotNull(pd);
 
         assertNotNull(pd.getTriggers());
         assertEquals(2, pd.getTriggers().size());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMultiProjectFiles() throws Exception {
+        ProjectLoader loader = new ProjectLoader();
+
+        URI uri = ClassLoader.getSystemResource("multiProjectFile").toURI();
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri));
+        assertNotNull(pd);
+
+        assertNotNull(pd.getFlows().get("default"));
+        assertNotNull(pd.getForms().get("myForm"));
+        assertFalse(pd.getTriggers().isEmpty());
+
+        Map<String, Object> cfg = pd.getConfiguration();
+        assertNotNull(cfg);
+        assertEquals("ttt", ((Map<String, Object>) cfg.get("arguments")).get("abc"));
+        assertEquals("234", ((Map<String, Object>) ((Map<String, Object>) cfg.get("arguments")).get("nested")).get("value"));
     }
 }

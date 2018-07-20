@@ -1,0 +1,3 @@
+configuration:
+  arguments:
+    name: "${resource.asString('test.txt')}"

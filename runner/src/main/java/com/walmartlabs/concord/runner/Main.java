@@ -180,7 +180,7 @@ public class Main {
 
     private static ProjectDefinition loadProject(Path baseDir) throws ExecutionException {
         try {
-            return new ProjectLoader().load(baseDir);
+            return new ProjectLoader().loadProject(baseDir);
         } catch (IOException e) {
             throw new ExecutionException("Error while loading a project", e);
         }
