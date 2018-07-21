@@ -21,6 +21,7 @@ docker run -d \
 --link db \
 --name server \
 -p 8001:8001 \
+-v /tmp:/tmp \
 -v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
 -e "CONCORD_CFG_FILE=$CONCORD_CFG_FILE" \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
