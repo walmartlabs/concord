@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,6 +72,7 @@ public class MultipleProjectFilesIT extends AbstractServerIT {
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(dst))) {
             IOUtils.zip(zip, src);
         }
+        Files.setPosixFilePermissions(dst, Collections.singleton(PosixFilePermission.OTHERS_READ));
         return dst;
     }
 }

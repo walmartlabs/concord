@@ -15,6 +15,7 @@ library/postgres:latest
 
 docker run -d \
 --name server \
+-v /tmp:/tmp \
 -v ${HOME}:${HOME}:ro \
 -v ${HOME}/.m2/repository:/home/concord/.m2/repository:ro \
 -v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
