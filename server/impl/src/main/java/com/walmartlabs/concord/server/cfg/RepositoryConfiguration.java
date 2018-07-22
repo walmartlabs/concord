@@ -39,30 +39,38 @@ public class RepositoryConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryConfiguration.class);
 
-    private final Path repoCacheDir;
-    private final Path repoMetaDir;
+    private final Path cacheDir;
+    private final Path metaDir;
 
     @Inject
     @Config("repositoryCache.concordFileValidationEnabled")
     private boolean concordFileValidationEnabled;
 
     @Inject
-    public RepositoryConfiguration(@Config("repositoryCache.cacheDir") @Nullable String repoCacheDir,
-                                   @Config("repositoryCache.metaDir") @Nullable String repoMetaDir) throws IOException {
+    @Config("repositoryCache.lockTimeout")
+    private long lockTimeout;
 
-        this.repoCacheDir = getPath(repoCacheDir, "repoCache");
-        log.info("init -> using {} to cache repositories", this.repoCacheDir);
+    @Inject
+    public RepositoryConfiguration(@Config("repositoryCache.cacheDir") @Nullable String cacheDir,
+                                   @Config("repositoryCache.metaDir") @Nullable String metaDir) throws IOException {
 
-        this.repoMetaDir = getPath(repoMetaDir, "repoMeta");
-        log.info("init -> using {} to store repository metadata", this.repoMetaDir);
+        this.cacheDir = getPath(cacheDir, "repoCache");
+        log.info("init -> using {} to cache repositories", this.cacheDir);
+
+        this.metaDir = getPath(metaDir, "repoMeta");
+        log.info("init -> using {} to store repository metadata", this.metaDir);
     }
 
-    public Path getRepoCacheDir() {
-        return repoCacheDir;
+    public Path getCacheDir() {
+        return cacheDir;
     }
 
-    public Path getRepoMetaDir() {
-        return repoMetaDir;
+    public Path getMetaDir() {
+        return metaDir;
+    }
+
+    public long getLockTimeout() {
+        return lockTimeout;
     }
 
     public boolean isConcordFileValidationEnabled() {

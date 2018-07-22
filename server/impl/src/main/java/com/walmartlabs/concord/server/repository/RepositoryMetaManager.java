@@ -96,7 +96,7 @@ public class RepositoryMetaManager {
             branch = Optional.ofNullable(repository.getBranch()).orElse(DEFAULT_BRANCH);
         }
 
-        return cfg.getRepoMetaDir()
+        return cfg.getMetaDir()
                 .resolve(String.valueOf(projectId))
                 .resolve(repository.getName())
                 .resolve(branch);

@@ -44,8 +44,6 @@ public class RepositoryManagerImpl implements RepositoryManager {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryManagerImpl.class);
 
-    private static final long LOCK_TIMEOUT = 30000;
-
     private final Striped<Lock> locks = Striped.lock(32);
 
     private final RepositoryConfiguration cfg;
@@ -123,7 +121,7 @@ public class RepositoryManagerImpl implements RepositoryManager {
     public <T> T withLock(UUID projectId, String repoName, Callable<T> f) {
         Lock l = locks.get(projectId + "/" + repoName);
         try {
-            l.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS);
+            l.tryLock(cfg.getLockTimeout(), TimeUnit.MILLISECONDS);
             return f.call();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -182,7 +180,7 @@ public class RepositoryManagerImpl implements RepositoryManager {
             branch = Optional.ofNullable(repository.getBranch()).orElse(DEFAULT_BRANCH);
         }
 
-        return cfg.getRepoCacheDir()
+        return cfg.getCacheDir()
                 .resolve(String.valueOf(projectId))
                 .resolve(repository.getName())
                 .resolve(branch);

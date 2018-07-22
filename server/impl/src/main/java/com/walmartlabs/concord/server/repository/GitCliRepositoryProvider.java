@@ -146,7 +146,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
      * Without the trailing whitespace character in the pattern, too many matches are found.
      */
     /* Package protected for testing */
-    final static String SUBMODULE_REMOTE_PATTERN_STRING = SUBMODULE_REMOTE_PATTERN_CONFIG_KEY + "\\b\\s";
+    private final static String SUBMODULE_REMOTE_PATTERN_STRING = SUBMODULE_REMOTE_PATTERN_CONFIG_KEY + "\\b\\s";
 
     private void submoduleUpdate(Path dest, Secret secret) {
         List<String> args = new ArrayList<>();
@@ -163,7 +163,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         // submodules, just the ones for this super project. Thus,
         // loop through the config output and parse it for configured
         // modules.
-        String cfgOutput = null;
+        String cfgOutput;
         try {
             // We might fail if we have no modules, so catch this
             // exception and just return.
@@ -183,9 +183,8 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             String sModuleName = matcher.group(1);
 
             // Find the URL for this submodule
-            URIish urIish = null;
             try {
-                urIish = new URIish(getSubmoduleUrl(dest, sModuleName));
+                new URIish(getSubmoduleUrl(dest, sModuleName));
             } catch (URISyntaxException e) {
                 log.error("Invalid repository for " + sModuleName);
                 throw new RepositoryException("Invalid repository for " + sModuleName);
@@ -202,13 +201,13 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     private String getSubmoduleUrl(Path dest, String name) {
         String result = launchCommand(dest, "config", "--get", "submodule." + name + ".url");
         String s = firstLine(result);
-        return s != null ? s.trim() : s;
+        return s != null ? s.trim() : null;
     }
 
     private String getSubmodulePath(Path dest, String name) {
         String result = launchCommand(dest, "config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
         String s = firstLine(result);
-        return s != null ? s.trim() : s;
+        return s != null ? s.trim() : null;
     }
 
     private String firstLine(String result) {
@@ -216,10 +215,12 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         String line;
         try {
             line = reader.readLine();
-            if (line == null)
+            if (line == null) {
                 return null;
-            if (reader.readLine() != null)
+            }
+            if (reader.readLine() != null) {
                 throw new RepositoryException("Unexpected multiple lines: " + result);
+            }
         } catch (IOException e) {
             throw new RepositoryException("Error parsing result", e);
         }
