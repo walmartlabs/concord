@@ -25,6 +25,9 @@ import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.s3.reference.S3Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,6 +46,8 @@ import java.util.stream.Collectors;
 @Named
 @Singleton
 public class MultiStoreConnector {
+
+    private static final Logger log = LoggerFactory.getLogger(MultiStoreConnector.class);
 
     private final List<Connector> clients;
 
@@ -90,8 +95,10 @@ public class MultiStoreConnector {
         String bucketName = (String) cfg.get("bucketName");
 
         Supplier<BlobStore> client = () -> {
+            log.info("createClient -> connecting to {}...", url);
+
             Properties props = new Properties();
-            props.put("jclouds.s3.virtual-host-buckets", false);
+            props.put(S3Constants.PROPERTY_S3_VIRTUAL_HOST_BUCKETS, false);
 
             BlobStoreContext ctx = ContextBuilder.newBuilder("aws-s3")
                     .endpoint(url)
