@@ -7,7 +7,7 @@
 - project-model: support for multiple Concord project files in
 `concord/*.yml`;
 - concord-server: support for archiving of process state into
-S3-compatible object storages;
+S3-compatible object stores;
 - concord-server: optionally encrypt sensitive data in the process
 state;
 - project-model: allow expressions to be used in flow calls;

@@ -20,12 +20,16 @@ package com.walmartlabs.concord.server.process.state.archive;
  * =====
  */
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.walmartlabs.concord.server.cfg.ProcessStateArchiveConfiguration;
-import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.BlobStore;
-import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.s3.reference.S3Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +43,6 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -74,18 +77,18 @@ public class MultiStoreConnector {
     }
 
     public InputStream get(String name) throws IOException {
-        IOException lastError = null;
+        Exception lastError = null;
 
         // iterate over the stores until we get a response
         for (Connector c : clients) {
             try {
                 return c.get(name);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 lastError = e;
             }
         }
 
-        throw lastError != null ? lastError : new IOException("No response for " + name);
+        throw lastError != null ? new IOException(lastError) : new IOException("No response for " + name);
     }
 
     private static Connector createClient(Map<String, Object> cfg) {
@@ -94,54 +97,60 @@ public class MultiStoreConnector {
         String secretKey = (String) cfg.get("secretKey");
         String bucketName = (String) cfg.get("bucketName");
 
-        Supplier<BlobStore> client = () -> {
+        Supplier<AmazonS3> client = () -> {
             log.info("createClient -> connecting to {}...", url);
 
-            Properties props = new Properties();
-            props.put(S3Constants.PROPERTY_S3_VIRTUAL_HOST_BUCKETS, false);
+            AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
+            AmazonS3 s3 = AmazonS3ClientBuilder.standard()
+                    .withClientConfiguration(new ClientConfiguration())
+                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(url, "other-v2-signature"))
+                    .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                    .enablePathStyleAccess()
+                    .build();
 
-            BlobStoreContext ctx = ContextBuilder.newBuilder("aws-s3")
-                    .endpoint(url)
-                    .credentials(accessKey, secretKey)
-                    .overrides(props)
-                    .buildView(BlobStoreContext.class);
-
-            BlobStore store = ctx.getBlobStore();
-
-            if (!store.containerExists(bucketName)) {
-                store.createContainerInLocation(null, bucketName);
+            try {
+                createBucket(s3, bucketName);
+            } catch (Exception e) {
+                log.error("createClient -> error while creating buckets", e);
+                throw e;
             }
 
-            return store;
+            return s3;
         };
 
         return new Connector(client, bucketName);
     }
 
+    private static synchronized void createBucket(AmazonS3 s3, String bucketName) {
+        List<Bucket> buckets = s3.listBuckets();
+        if (buckets.stream().anyMatch(b -> bucketName.equals(b.getName()))) {
+            return;
+        }
+
+        s3.createBucket(bucketName);
+    }
+
     private static class Connector {
 
+        private final Supplier<AmazonS3> client;
         private final String bucketName;
-        private final Supplier<BlobStore> client;
 
-        private Connector(Supplier<BlobStore> client, String bucketName) {
+        private Connector(Supplier<AmazonS3> client, String bucketName) {
             this.bucketName = bucketName;
             this.client = client;
         }
 
         public void put(String name, InputStream in, String contentType, long size, Date expires) {
-            Blob blob = client.get().blobBuilder(name)
-                    .payload(in)
-                    .contentType(contentType)
-                    .contentLength(size)
-                    .expires(expires)
-                    .build();
+            ObjectMetadata meta = new ObjectMetadata();
+            meta.setContentLength(size);
+            meta.setContentType(contentType);
+            meta.setExpirationTime(expires);
 
-            client.get().putBlob(bucketName, blob);
+            client.get().putObject(bucketName, name, in, meta);
         }
 
-        public InputStream get(String name) throws IOException {
-            Blob blob = client.get().getBlob(bucketName, name);
-            return blob.getPayload().openStream();
+        public InputStream get(String name) {
+            return client.get().getObject(bucketName, name).getObjectContent();
         }
     }
 }

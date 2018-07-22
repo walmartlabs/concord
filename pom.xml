@@ -62,6 +62,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <aopalliance.version>1.0</aopalliance.version>
+        <aws.version>1.11.341</aws.version>
         <bpm.version>0.46.0</bpm.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
         <commons.compress.version>1.15</commons.compress.version>
@@ -89,7 +90,6 @@
         <javax.mail.version>1.6.0</javax.mail.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.0.Final</javax.ws.rs.version>
-        <jclouds.version>2.1.0</jclouds.version>
         <jetty.version>9.4.8.v20171121</jetty.version>
         <jgit.version>4.9.1.201712030800-r</jgit.version>
         <jooq.version>3.10.2</jooq.version>
@@ -541,26 +541,6 @@
                 <groupId>com.github.jsqlparser</groupId>
                 <artifactId>jsqlparser</artifactId>
                 <version>${jsqlparser.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.jclouds</groupId>
-                <artifactId>jclouds-core</artifactId>
-                <version>${jclouds.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.jclouds</groupId>
-                <artifactId>jclouds-blobstore</artifactId>
-                <version>${jclouds.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.jclouds.provider</groupId>
-                <artifactId>aws-s3</artifactId>
-                <version>${jclouds.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.inject.extensions</groupId>
-                <artifactId>guice-assistedinject</artifactId>
-                <version>${guice.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
