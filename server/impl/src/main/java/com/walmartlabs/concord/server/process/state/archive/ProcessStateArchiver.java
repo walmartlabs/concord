@@ -112,50 +112,53 @@ public class ProcessStateArchiver extends PeriodicTask {
 
     @Override
     protected void performTask() throws Exception {
-        List<UUID> ids = dao.grabNext(ALLOWED_STATUSES, 10);
-        if (ids.isEmpty()) {
-            log.info("performTask -> nothing to do");
-            return;
-        }
+        while (!Thread.currentThread().isInterrupted()) {
+            List<UUID> ids = dao.grabNext(ALLOWED_STATUSES, 10);
 
-        log.info("performTask -> processing {} entries...", ids.size());
+            if (ids.isEmpty()) {
+                log.info("performTask -> nothing to do");
+                break;
+            }
 
-        ForkJoinTask<?> t = forkJoinPool.submit(() -> ids.parallelStream().forEach(id -> {
+            log.info("performTask -> processing {} entries...", ids.size());
 
-            Path tmp = null;
-            try {
-                tmp = IOUtils.createTempFile("archive", ".zip");
-                try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-                    log.info("performTask -> exporting {}...", id);
-                    stateManager.export(id, ProcessStateManager.zipTo(zip));
-                }
+            ForkJoinTask<?> t = forkJoinPool.submit(() -> ids.parallelStream().forEach(id -> {
 
-                long size = Files.size(tmp);
-                log.info("performTask -> uploading {} ({} bytes)...", id, size);
+                Path tmp = null;
+                try {
+                    tmp = IOUtils.createTempFile("archive", ".zip");
+                    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
+                        log.info("performTask -> exporting {}...", id);
+                        stateManager.export(id, ProcessStateManager.zipTo(zip));
+                    }
 
-                long t1 = System.currentTimeMillis();
-                store.put(tmp, name(id), ARCHIVE_CONTENT_TYPE, size, getExpirationDate());
+                    long size = Files.size(tmp);
+                    log.info("performTask -> uploading {} ({} bytes)...", id, size);
 
-                dao.markAsDone(id);
-                stateManager.delete(id);
+                    long t1 = System.currentTimeMillis();
+                    store.put(tmp, name(id), ARCHIVE_CONTENT_TYPE, size, getExpirationDate());
 
-                long t2 = System.currentTimeMillis();
-                log.info("performTask -> {} done ({} ms)", id, (t2 - t1));
-            } catch (Exception e) {
-                // the entry will be retried, see StalledUploadHandler
-                log.warn("performTask -> {} failed with: {}", id, e.getMessage(), e);
-            } finally {
-                if (tmp != null) {
-                    try {
-                        Files.delete(tmp);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    dao.markAsDone(id);
+                    stateManager.delete(id);
+
+                    long t2 = System.currentTimeMillis();
+                    log.info("performTask -> {} done ({} ms)", id, (t2 - t1));
+                } catch (Exception e) {
+                    // the entry will be retried, see StalledUploadHandler
+                    log.warn("performTask -> {} failed with: {}", id, e.getMessage(), e);
+                } finally {
+                    if (tmp != null) {
+                        try {
+                            Files.delete(tmp);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
-            }
-        }));
+            }));
 
-        t.get();
+            t.get();
+        }
     }
 
     private Date getExpirationDate() {

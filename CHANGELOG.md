@@ -6,6 +6,11 @@
 
 - concord-server: option to disable the process state archiving task.
 
+### Changed
+
+- concord-server: make the process state archiving task to pick up
+next items as soon it's done with the current work.
+
 
 
 ## [0.80.0] - 2018-07-22
