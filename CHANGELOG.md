@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Added
-
+ 
 - concord-server: initial integration with Prometheus;
 - concord-server: option to disable the process state archiving task.
 

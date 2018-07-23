@@ -87,6 +87,7 @@ class ProcessFormActivity extends React.PureComponent<Props> {
             formInstanceId,
             validationErrors,
             submitting,
+            submitError,
             completed
         } = this.props;
 
@@ -106,6 +107,7 @@ class ProcessFormActivity extends React.PureComponent<Props> {
             <ProcessForm
                 form={form}
                 submitting={submitting}
+                submitError={submitError}
                 completed={completed}
                 errors={validationErrors}
                 onSubmit={(values) =>

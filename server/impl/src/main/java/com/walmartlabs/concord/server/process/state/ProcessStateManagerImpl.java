@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -53,19 +54,18 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_ST
 @Singleton
 public class ProcessStateManagerImpl extends AbstractDao implements ProcessStateManager {
 
-    private final StreamProcessors importProcessors = new StreamProcessors();
-    private final StreamProcessors exportProcessors = new StreamProcessors();
+    private final SecretStoreConfiguration secretCfg;
+
+    private final Set<String> secureFiles = new HashSet<>();
 
     @Inject
     protected ProcessStateManagerImpl(@Named("app") Configuration cfg,
                                       SecretStoreConfiguration secretCfg,
                                       ProcessStateConfiguration stateCfg) {
         super(cfg);
+        this.secretCfg = secretCfg;
 
-        stateCfg.getSecureFiles().forEach(s -> {
-            this.importProcessors.add(s, new EncryptStreamProcessor(secretCfg));
-            this.exportProcessors.add(s, new DecryptStreamProcessor(secretCfg));
-        });
+        this.secureFiles.addAll(stateCfg.getSecureFiles());
     }
 
     @Override
@@ -76,7 +76,7 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
     }
 
     private <T> Optional<T> get(DSLContext tx, UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
-        String sql = tx.select(PROCESS_STATE.ITEM_DATA)
+        String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                 .from(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
                         .and(PROCESS_STATE.ITEM_PATH.eq((String) null)))
@@ -91,9 +91,9 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
                     if (!rs.next()) {
                         return Optional.empty();
                     }
-
-                    try (InputStream in = rs.getBinaryStream(1);
-                         InputStream processed = exportProcessors.process(path, in)) {
+                    boolean encrypted = rs.getBoolean(1);
+                    try (InputStream in = rs.getBinaryStream(2);
+                         InputStream processed = encrypted ? decrypt(in) : in) {
                         return converter.apply(processed);
                     }
                 }
@@ -104,7 +104,7 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
     @Override
     public <T> List<T> forEach(UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
-            String sql = tx.select(PROCESS_STATE.ITEM_DATA)
+            String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
                             .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
@@ -119,8 +119,9 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
-                            try (InputStream in = rs.getBinaryStream(1);
-                                 InputStream processed = exportProcessors.process(path, in)) {
+                            boolean encrypted = rs.getBoolean(1);
+                            try (InputStream in = rs.getBinaryStream(2);
+                                 InputStream processed = encrypted ? decrypt(in) : in) {
                                 Optional<T> o = converter.apply(processed);
                                 o.ifPresent(result::add);
                             }
@@ -204,10 +205,15 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
         tx(tx -> insert(tx, instanceId, path, data));
     }
 
-    private void insert(DSLContext tx, UUID instanceId, String path, byte[] data) {
+    private void insert(DSLContext tx, UUID instanceId, String path, byte[] in) {
+        boolean needEncrypt = secureFiles.contains(path);
+        byte[] data = in;
+        if (needEncrypt) {
+            data = encrypt(in);
+        }
         tx.insertInto(PROCESS_STATE)
-                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA)
-                .values(instanceId, path, data)
+                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
+                .values(instanceId, path, data, needEncrypt)
                 .execute();
     }
 
@@ -233,8 +239,8 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
         String prefix = fixPath(path);
 
         String sql = tx.insertInto(PROCESS_STATE)
-                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA)
-                .values((UUID) null, null, null, null)
+                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
+                .values((UUID) null, null, null, null, null)
                 .onConflict(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.ITEM_PATH)
                 .doUpdate().set(PROCESS_STATE.UNIX_MODE, (Short) null).set(PROCESS_STATE.ITEM_DATA, (byte[]) null)
                 .getSQL();
@@ -259,19 +265,21 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
                         Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file);
                         int unixMode = Posix.unixMode(permissions);
+                        boolean needEncrypt = secureFiles.contains(n);
 
                         try {
                             ps.setObject(1, instanceId);
                             ps.setString(2, n);
                             ps.setInt(3, unixMode);
                             try (InputStream in = Files.newInputStream(file);
-                                 InputStream processed = importProcessors.process(n, in)) {
+                                 InputStream processed = needEncrypt ? encrypt(in) : in) {
                                 ps.setBinaryStream(4, processed);
                             }
-                            ps.setInt(5, unixMode);
+                            ps.setBoolean(5, needEncrypt);
+                            ps.setInt(6, unixMode);
                             try (InputStream in = Files.newInputStream(file);
-                                 InputStream processed = importProcessors.process(n, in)) {
-                                ps.setBinaryStream(6, processed);
+                                 InputStream processed = needEncrypt ? encrypt(in) : in) {
+                                ps.setBinaryStream(7, processed);
                             }
                             ps.addBatch();
 
@@ -303,7 +311,7 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
     public boolean export(UUID instanceId, ItemConsumer consumer) {
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx
-                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA)
+                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null))
                     .getSQL();
@@ -319,8 +327,9 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
                             String n = rs.getString(1);
                             int unixMode = rs.getInt(2);
-                            try (InputStream in = rs.getBinaryStream(3);
-                                 InputStream processed = exportProcessors.process(n, in)) {
+                            boolean encrypted = rs.getBoolean(3);
+                            try (InputStream in = rs.getBinaryStream(4);
+                                 InputStream processed = encrypted ? decrypt(in) : in) {
                                 consumer.accept(n, unixMode, processed);
                             }
                         }
@@ -338,7 +347,7 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx
-                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA)
+                    .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
                             .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
@@ -356,8 +365,9 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
 
                             String n = relativize(dir, rs.getString(1));
                             int unixMode = rs.getInt(2);
-                            try (InputStream in = rs.getBinaryStream(3);
-                                 InputStream processed = exportProcessors.process(n, in)) {
+                            boolean encrypted = rs.getBoolean(3);
+                            try (InputStream in = rs.getBinaryStream(4);
+                                 InputStream processed = encrypted ? decrypt(in) : in) {
                                 consumer.accept(n, unixMode, processed);
                             }
                         }
@@ -367,6 +377,18 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
                 }
             });
         }
+    }
+
+    private InputStream decrypt(InputStream in) {
+        return SecretUtils.decrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
+    }
+
+    private InputStream encrypt(InputStream in) {
+        return SecretUtils.encrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
+    }
+
+    private byte[] encrypt(byte[] in) {
+        return SecretUtils.encrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
     }
 
     private static String fixPath(String p) {

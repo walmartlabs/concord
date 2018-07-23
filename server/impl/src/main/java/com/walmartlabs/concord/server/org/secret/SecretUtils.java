@@ -20,9 +20,15 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -31,8 +37,16 @@ public final class SecretUtils {
 
     public static byte[] encrypt(byte[] input, byte[] password, byte[] salt) {
         try {
+            return IOUtils.toByteArray(encrypt(new ByteArrayInputStream(input), password, salt));
+        } catch (IOException e) {
+            throw new SecurityException("Error encrypting a secret: " + e);
+        }
+    }
+
+    public static InputStream encrypt(InputStream input, byte[] password, byte[] salt) {
+        try {
             Cipher c = init(password, salt, Cipher.ENCRYPT_MODE);
-            return c.doFinal(input);
+            return new CipherInputStream(input, c);
         } catch (GeneralSecurityException e) {
             throw new SecurityException("Error encrypting a secret: " + e);
         }
@@ -40,8 +54,16 @@ public final class SecretUtils {
 
     public static byte[] decrypt(byte[] input, byte[] password, byte[] salt) {
         try {
+            return IOUtils.toByteArray(decrypt(new ByteArrayInputStream(input), password, salt));
+        } catch (IOException e) {
+            throw new SecurityException("Error decrypting a secret: " + e.getMessage());
+        }
+    }
+
+    public static InputStream decrypt(InputStream input, byte[] password, byte[] salt) {
+        try {
             Cipher c = init(password, salt, Cipher.DECRYPT_MODE);
-            return c.doFinal(input);
+            return new CipherInputStream(input, c);
         } catch (BadPaddingException e) {
             throw new SecurityException("Error decrypting a secret: " + e.getMessage() + ". Invalid input data and/or a password.");
         } catch (GeneralSecurityException e) {

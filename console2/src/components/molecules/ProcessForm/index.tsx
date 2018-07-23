@@ -30,6 +30,7 @@ import {
     CheckboxProps,
     DropdownProps
 } from 'semantic-ui-react';
+import { RequestError } from '../../../api/common';
 
 import {
     Cardinality,
@@ -37,6 +38,7 @@ import {
     FormFieldType,
     FormInstanceEntry
 } from '../../../api/process/form';
+import { RequestErrorMessage } from '../index';
 
 interface State {
     [name: string]: any;
@@ -48,6 +50,7 @@ interface Props {
         [name: string]: string;
     };
     submitting?: boolean;
+    submitError?: RequestError;
     completed?: boolean;
     wizard?: boolean;
     onSubmit: (values: State) => void;
@@ -315,11 +318,12 @@ class ProcessForm extends React.Component<Props, State> {
     }
 
     render() {
-        const { form, submitting, completed } = this.props;
+        const { form, submitting, submitError, completed } = this.props;
 
         return (
             <>
                 <Header as="h2">{form.name}</Header>
+                {submitError && <RequestErrorMessage error={submitError} />}
                 <Form loading={submitting} onSubmit={(ev) => this.handleSubmit(ev)}>
                     {form.fields.map((f) => this.renderField(f))}
                     {completed ? (
