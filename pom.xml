@@ -114,6 +114,7 @@
         <ollie.version>0.0.18</ollie.version>
         <parc.version>0.1.2</parc.version>
         <postgres.version>42.2.2</postgres.version>
+        <prometheus.simpleclient.version>0.4.0</prometheus.simpleclient.version>
         <protobuf.version>3.5.0</protobuf.version>
         <resteasy.version>3.1.4.Final</resteasy.version>
         <servlet.version>3.1.0</servlet.version>
@@ -540,6 +541,16 @@
                 <groupId>com.github.jsqlparser</groupId>
                 <artifactId>jsqlparser</artifactId>
                 <version>${jsqlparser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.prometheus</groupId>
+                <artifactId>simpleclient_dropwizard</artifactId>
+                <version>${prometheus.simpleclient.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.prometheus</groupId>
+                <artifactId>simpleclient_servlet</artifactId>
+                <version>${prometheus.simpleclient.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

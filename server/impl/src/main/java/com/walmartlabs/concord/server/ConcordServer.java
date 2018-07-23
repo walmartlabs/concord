@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.security.ldap.LdapRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import com.walmartlabs.ollie.OllieServer;
 import com.walmartlabs.ollie.guice.OllieServerBuilder;
+import io.prometheus.client.exporter.MetricsServlet;
 import org.eclipse.jetty.servlet.DefaultServlet;
 
 import javax.servlet.RequestDispatcher;
@@ -63,6 +64,7 @@ public class ConcordServer {
                 .filterChain("/events/github/*", GithubAuthenticatingFilter.class)
                 .serve("/forms/*").with(DefaultServlet.class, formsServletParams())
                 .serve("/logs/*").with(LogServlet.class) // backward compatibility
+                .serve("/metrics").with(MetricsServlet.class) // prometheus integration
                 .serve("/concord/*").with(new ServiceInitServlet()) // only to start the background services
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)

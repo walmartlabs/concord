@@ -23,6 +23,8 @@ package com.walmartlabs.concord.server.metrics;
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
@@ -39,6 +41,8 @@ public class MetricsInterceptor implements MethodInterceptor {
 
         JmxReporter reporter = JmxReporter.forRegistry(metrics).build();
         reporter.start();
+
+        CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
     }
 
     @Override

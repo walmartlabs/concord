@@ -32,9 +32,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -72,7 +73,13 @@ public class MultipleProjectFilesIT extends AbstractServerIT {
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(dst))) {
             IOUtils.zip(zip, src);
         }
-        Files.setPosixFilePermissions(dst, Collections.singleton(PosixFilePermission.OTHERS_READ));
+
+        Set<PosixFilePermission> s = new HashSet<>();
+        s.add(PosixFilePermission.OWNER_READ);
+        s.add(PosixFilePermission.GROUP_READ);
+        s.add(PosixFilePermission.OTHERS_READ);
+        Files.setPosixFilePermissions(dst, s);
+
         return dst;
     }
 }

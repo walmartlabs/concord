@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -178,6 +179,7 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
     }
 
     @Override
+    @WithTimer
     public void delete(UUID instanceId) {
         tx(tx -> delete(tx, instanceId));
     }
@@ -210,6 +212,7 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
     }
 
     @Override
+    @WithTimer
     public void importPath(UUID instanceId, String path, Path src) {
         tx(tx -> importPath(tx, instanceId, path, src, f -> true));
     }

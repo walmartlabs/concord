@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -475,6 +476,7 @@ public class ProcessResource implements Resource {
     @ApiOperation("Get status of a process")
     @javax.ws.rs.Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId) {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
@@ -695,6 +697,7 @@ public class ProcessResource implements Resource {
     @POST
     @javax.ws.rs.Path("{id}/log")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    @WithTimer
     public void appendLog(@PathParam("id") UUID instanceId, InputStream data) {
         assertProcess(instanceId);
 
@@ -812,6 +815,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("{id}/decrypt")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @WithTimer
     public Response decrypt(@PathParam("id") UUID instanceId, InputStream data) {
         ProcessEntry p = assertProcess(instanceId);
 
