@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: option to disable the process state archiving task.
+
+
+
 ## [0.80.0] - 2018-07-22
 
 ### Added

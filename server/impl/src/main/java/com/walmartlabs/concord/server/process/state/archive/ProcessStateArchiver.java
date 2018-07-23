@@ -101,6 +101,16 @@ public class ProcessStateArchiver extends PeriodicTask {
     }
 
     @Override
+    public void start() {
+        if (!cfg.isEnabled()) {
+            log.info("start -> state archiving is disabled");
+            return;
+        }
+
+        super.start();
+    }
+
+    @Override
     protected void performTask() throws Exception {
         List<UUID> ids = dao.grabNext(ALLOWED_STATUSES, 10);
         if (ids.isEmpty()) {
