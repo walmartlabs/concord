@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [0.80.0] - 2018-07-22
 
 ### Added
 
@@ -26,7 +26,7 @@ project or repository is created or updated.
 
 
 
-## [0.79.2]
+## [0.79.2] - 2018-07-16
 
 ### Changed
 
