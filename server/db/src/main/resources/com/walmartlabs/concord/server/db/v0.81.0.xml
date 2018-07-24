@@ -11,4 +11,29 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="81100" author="ibodrov@gmail.com">
+        <createTable tableName="TASK_LOCKS">
+            <column name="LOCK_KEY" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="LOCKED" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LOCKED_AT" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+            <column name="LOCK_COUNTER" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <insert tableName="TASK_LOCKS">
+            <column name="LOCK_KEY" value="apiKeyNotifier"/>
+        </insert>
+
+        <insert tableName="TASK_LOCKS">
+            <column name="LOCK_KEY" value="githubWebhookService"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

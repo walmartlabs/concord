@@ -47,7 +47,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
-import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS_NOTIFIER_LOCK;
 import static org.jooq.impl.DSL.currentTimestamp;
 import static org.jooq.impl.DSL.trunc;
 
@@ -57,19 +56,25 @@ public class ApiKeyExpirationNotifier extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyExpirationNotifier.class);
 
+    private static final String TASK_LOCK_KEY = "apiKeyNotifier";
     private static final String EMAIL_SUBJECT = "Your Concord API Token Is Expiring";
     private static final long POLL_INTERVAL = TimeUnit.DAYS.toMillis(1);
     private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
+    private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> new SimpleDateFormat("YYYY-MM-dd"));
 
     private final ApiKeyConfiguration cfg;
     private final ExclusiveLock exclusiveLock;
     private final ExpiredKeysDao dao;
     private final UserDao userDao;
     private final EmailNotifier notifier;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd");
 
     @Inject
-    public ApiKeyExpirationNotifier(ApiKeyConfiguration cfg, ExclusiveLock exclusiveLock, ExpiredKeysDao dao, UserDao userDao, EmailNotifier notifier) {
+    public ApiKeyExpirationNotifier(ApiKeyConfiguration cfg,
+                                    ExclusiveLock exclusiveLock,
+                                    ExpiredKeysDao dao,
+                                    UserDao userDao,
+                                    EmailNotifier notifier) {
+
         super(POLL_INTERVAL, RETRY_INTERVAL);
         this.cfg = cfg;
         this.exclusiveLock = exclusiveLock;
@@ -90,7 +95,7 @@ public class ApiKeyExpirationNotifier extends PeriodicTask {
 
     @Override
     protected void performTask() {
-        exclusiveLock.withTryLock(API_KEYS_NOTIFIER_LOCK, this::processKeys);
+        exclusiveLock.withTryLock(TASK_LOCK_KEY, this::processKeys);
     }
 
     private void processKeys() {
@@ -132,7 +137,7 @@ public class ApiKeyExpirationNotifier extends PeriodicTask {
             ctx.put("keys", keys.stream().map(e -> {
                 Map<String, String> r = new HashMap<>();
                 r.put("name", e.getName());
-                r.put("expiredAt", dateFormat.format(e.getExpiredAt()));
+                r.put("expiredAt", DATE_FORMAT.get().format(e.getExpiredAt()));
                 return r;
             }).collect(Collectors.toList()));
 

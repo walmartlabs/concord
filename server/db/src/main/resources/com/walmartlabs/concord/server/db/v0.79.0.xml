@@ -52,6 +52,7 @@
         </addColumn>
     </changeSet>
 
+    <!-- removed in 0.81.0+
     <changeSet id="79140" author="ybrigo@gmail.com">
         <createTable tableName="API_KEYS_NOTIFIER_LOCK">
             <column name="ID" type="int">
@@ -73,6 +74,7 @@
             <column name="LOCKED" value="false"/>
         </insert>
     </changeSet>
+    -->
 
     <changeSet id="79200" author="ibodrov@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">

@@ -21,7 +21,8 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.BackgroundTask;
+import com.walmartlabs.concord.server.ExclusiveLock;
+import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -42,122 +43,87 @@ import static org.jooq.impl.DSL.value;
 
 @Named
 @Singleton
-public class GithubWebhookService implements BackgroundTask {
+public class GithubWebhookService extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(GithubWebhookService.class);
 
+    private static final String TASK_LOCK_KEY = "githubWebhookService";
     private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
 
     private final GithubConfiguration cfg;
     private final GithubWebhookManager webhookManager;
     private final RefresherDao refresherDao;
-
-    private Thread worker;
+    private final ExclusiveLock exclusiveLock;
 
     @Inject
     public GithubWebhookService(GithubConfiguration cfg,
                                 GithubWebhookManager webhookManager,
-                                RefresherDao refresherDao) {
+                                RefresherDao refresherDao,
+                                ExclusiveLock exclusiveLock) {
+
+        super(cfg.getRefreshInterval(), RETRY_INTERVAL);
         this.cfg = cfg;
         this.webhookManager = webhookManager;
         this.refresherDao = refresherDao;
-    }
-
-    @Override
-    public void start() {
-        if (!this.cfg.isEnabled() || this.cfg.getRefreshInterval() <= 0) {
-            log.info("init -> the webhook refresh is disabled");
-            return;
-        }
-
-        HookRefresher w = new HookRefresher(refresherDao);
-
-        this.worker = new Thread(w, "webhook-refresher");
-        this.worker.start();
-    }
-
-    @Override
-    public void stop() {
-        if (this.worker != null) {
-            this.worker.interrupt();
-        }
+        this.exclusiveLock = exclusiveLock;
     }
 
     public boolean register(UUID projectId, String repoName, String repoUrl) {
-        if (!needWebhookForRepository(repoUrl)) {
+        if (!needsWebhook(repoUrl)) {
             log.info("register ['{}', '{}', '{}'] -> not a GitHub URL", projectId, repoName, repoUrl);
             return false;
         }
 
         String githubRepoName = GithubUtils.getRepositoryName(repoUrl);
-
         Long id = webhookManager.register(githubRepoName);
-
         log.info("register ['{}', '{}', '{}'] -> {} (git repo: '{}')",
                 projectId, repoName, repoUrl, id, githubRepoName);
 
         return id != null;
     }
 
+    @Override
+    public void start() {
+        if (!this.cfg.isEnabled() || this.cfg.getRefreshInterval() <= 0) {
+            log.info("start -> the webhook refresh is disabled");
+            return;
+        }
+        super.start();
+    }
+
+    @Override
+    protected void performTask() {
+        exclusiveLock.withTryLock(TASK_LOCK_KEY, () -> {
+            List<Entry> repositories = refresherDao.list();
+            repositories.forEach(r -> refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoName(), r.getRepoUrl()));
+            log.info("performTask -> {} repositories processed", repositories.size());
+        });
+    }
+
+    private void refreshWebhook(UUID projectId, UUID repoId, String repoName, String repoUrl) {
+        try {
+            unregister(projectId, repoName, repoUrl);
+            boolean success = register(projectId, repoName, repoUrl);
+            refresherDao.update(repoId, success);
+        } catch (Exception e) {
+            log.warn("refreshWebhook ['{}', '{}', '{}'] -> failed: {}", projectId, repoName, repoUrl, e.getMessage());
+        }
+    }
+
     private void unregister(UUID projectId, String repoName, String repoUrl) {
-        if (!needWebhookForRepository(repoUrl)) {
+        if (!needsWebhook(repoUrl)) {
             log.info("unregister ['{}', '{}', '{}'] -> not a GitHub URL", projectId, repoName, repoUrl);
             return;
         }
 
         String githubRepoName = GithubUtils.getRepositoryName(repoUrl);
-
         webhookManager.unregister(githubRepoName);
-
         log.info("unregister ['{}', '{}', '{}'] -> ok (git repo: '{}')",
                 projectId, repoName, repoUrl, githubRepoName);
     }
 
-    private boolean needWebhookForRepository(String repoUrl) {
+    private boolean needsWebhook(String repoUrl) {
         return repoUrl.contains(cfg.getGithubDomain());
-    }
-
-    private class HookRefresher implements Runnable {
-
-        private final RefresherDao dao;
-
-        private HookRefresher(RefresherDao dao) {
-            this.dao = dao;
-        }
-
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    List<Entity> repositories = dao.list();
-                    repositories.forEach(r -> refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoName(), r.getRepoUrl()));
-                    log.info("run -> {} repositories processed", repositories.size());
-
-                    sleep(cfg.getRefreshInterval());
-                } catch (Exception e) {
-                    log.warn("run -> hook refresh error: {}. Will retry in {}ms...", e.getMessage(), RETRY_INTERVAL);
-                    sleep(RETRY_INTERVAL);
-                }
-            }
-        }
-
-        private void refreshWebhook(UUID projectId, UUID repoId, String repoName, String repoUrl) {
-            try {
-                unregister(projectId, repoName, repoUrl);
-                boolean success = register(projectId, repoName, repoUrl);
-                dao.update(repoId, success);
-            } catch (Exception e) {
-                log.warn("refreshWebhook ['{}', '{}', '{}'] -> failed: {}", projectId, repoName, repoUrl, e.getMessage());
-            }
-        }
-
-        private void sleep(long ms) {
-            try {
-                Thread.sleep(ms);
-            } catch (InterruptedException e) {
-                Thread.currentThread().isInterrupted();
-            }
-        }
     }
 
     @Named
@@ -168,7 +134,7 @@ public class GithubWebhookService implements BackgroundTask {
             super(cfg);
         }
 
-        public List<Entity> list() {
+        public List<Entry> list() {
             try (DSLContext tx = DSL.using(cfg)) {
                 return tx.select(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_ID, REPOSITORIES.REPO_NAME, REPOSITORIES.REPO_URL)
                         .from(REPOSITORIES)
@@ -177,29 +143,28 @@ public class GithubWebhookService implements BackgroundTask {
         }
 
         public void update(UUID repoId, boolean hasWebHook) {
-            tx(tx ->
-                    tx.update(REPOSITORIES)
-                            .set(REPOSITORIES.HAS_WEBHOOK, value(hasWebHook))
-                            .where(REPOSITORIES.REPO_ID.eq(repoId))
-                            .execute());
+            tx(tx -> tx.update(REPOSITORIES)
+                    .set(REPOSITORIES.HAS_WEBHOOK, value(hasWebHook))
+                    .where(REPOSITORIES.REPO_ID.eq(repoId))
+                    .execute());
         }
 
-        private static Entity toEntry(Record4<UUID, UUID, String, String> r) {
-            return new Entity(r.get(REPOSITORIES.PROJECT_ID),
+        private static Entry toEntry(Record4<UUID, UUID, String, String> r) {
+            return new Entry(r.get(REPOSITORIES.PROJECT_ID),
                     r.get(REPOSITORIES.REPO_ID),
                     r.get(REPOSITORIES.REPO_NAME),
                     r.get(REPOSITORIES.REPO_URL));
         }
     }
 
-    private static class Entity {
+    private static class Entry {
 
         private final UUID projectId;
         private final UUID repoId;
         private final String repoName;
         private final String repoUrl;
 
-        private Entity(UUID projectId, UUID repoId, String repoName, String repoUrl) {
+        private Entry(UUID projectId, UUID repoId, String repoName, String repoUrl) {
             this.projectId = projectId;
             this.repoId = repoId;
             this.repoName = repoName;

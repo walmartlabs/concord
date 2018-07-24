@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,17 +21,18 @@ package com.walmartlabs.concord.server;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.jooq.tables.records.TaskLocksRecord;
 import org.jooq.Configuration;
-import org.jooq.Record4;
-import org.jooq.Table;
+import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.sql.Timestamp;
-import java.util.Date;
+import java.util.concurrent.ThreadLocalRandom;
 
+import static com.walmartlabs.concord.server.jooq.tables.TaskLocks.TASK_LOCKS;
 import static org.jooq.impl.DSL.currentTimestamp;
 
 @Named
@@ -46,97 +47,83 @@ public class ExclusiveLock {
         this.dao = dao;
     }
 
-    public LockInfo withTryLock(Table<? extends Record4<Integer, Boolean, String, Timestamp>> lockTable, Runnable f) {
-        return withTryLock(null, lockTable, f);
-    }
-
-    public LockInfo withTryLock(String lockedBy, Table<? extends Record4<Integer, Boolean, String, Timestamp>> lockTable, Runnable f) {
-        LockInfo lockInfo = dao.tryLock(lockedBy, lockTable);
-        if (lockInfo != null) {
-            log.info("withTryLock ['{}', '{}'] -> already locked by {} at {}", lockedBy, lockTable.getName(), lockInfo.getLockedBy(), lockInfo.getLockedAt());
-            return lockInfo;
+    public void withTryLock(String lockKey, Runnable f) {
+        Lock lock = dao.tryLock(lockKey);
+        if (lock == null) {
+            log.info("withTryLock ['{}'] -> already locked", lockKey);
+            return;
         }
 
         try {
             f.run();
-            return null;
         } finally {
-            dao.unlock(lockTable);
+            dao.unlock(lock);
         }
     }
 
-    public static class LockInfo {
-        private final String lockedBy;
-        private final Date lockedAt;
+    private static class Lock {
 
-        public LockInfo(String lockedBy, Date lockedAt) {
-            this.lockedBy = lockedBy;
-            this.lockedAt = lockedAt;
-        }
+        private final String key;
+        private final int cnt;
 
-        public String getLockedBy() {
-            return lockedBy;
-        }
-
-        public Date getLockedAt() {
-            return lockedAt;
-        }
-
-        @Override
-        public String toString() {
-            return "LockInfo{" +
-                    "lockedBy='" + lockedBy + '\'' +
-                    ", lockedAt=" + lockedAt +
-                    '}';
+        public Lock(String key, int cnt) {
+            this.key = key;
+            this.cnt = cnt;
         }
     }
 
     @Named
-    static class ExclusiveLockDao extends AbstractDao {
-
-        private static final int LOCK_ID = 1;
+    private static class ExclusiveLockDao extends AbstractDao {
 
         @Inject
         public ExclusiveLockDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 
-        public LockInfo tryLock(String lockedBy, Table<? extends Record4<Integer, Boolean, String, Timestamp>> lockTable) {
+        public Lock tryLock(String lockKey) {
             return txResult(tx -> {
-                Record4<Integer, Boolean, String, Timestamp> r = tx.selectFrom(lockTable)
-                        .where(lockTable.field(0, Integer.class).eq(LOCK_ID))
+                TaskLocksRecord r = tx.selectFrom(TASK_LOCKS)
+                        .where(TASK_LOCKS.LOCK_KEY.eq(lockKey))
                         .limit(1)
                         .forUpdate()
                         .skipLocked()
                         .fetchOne();
 
                 if (r == null) {
-                    throw new RuntimeException("lock table without record");
+                    throw new RuntimeException("Lock table without a record: " + lockKey);
                 }
 
-                // locked?
-                if (r.value2()) {
-                    return new LockInfo(r.value3(), r.value4());
+                if (Boolean.TRUE.equals(r.getLocked())) {
+                    return null;
                 }
 
-                tx.update(lockTable)
-                    .set(lockTable.field(1, Boolean.class), true)
-                    .set(lockTable.field(2, String.class), lockedBy)
-                    .set(lockTable.field(3, Timestamp.class), currentTimestamp())
-                    .where(lockTable.field(0, Integer.class).eq(LOCK_ID))
-                    .execute();
+                int cnt = ThreadLocalRandom.current().nextInt();
 
-                return null;
+                tx.update(TASK_LOCKS)
+                        .set(TASK_LOCKS.LOCKED, true)
+                        .set(TASK_LOCKS.LOCKED_AT, currentTimestamp())
+                        .set(TASK_LOCKS.LOCK_COUNTER, cnt)
+                        .where(TASK_LOCKS.LOCK_KEY.eq(lockKey))
+                        .execute();
+
+                return new Lock(lockKey, cnt);
             });
         }
 
-        public void unlock(Table<? extends Record4<Integer, Boolean, String, Timestamp>> lockTable) {
-            tx(tx -> tx.update(lockTable)
-                    .set(lockTable.field(1, Boolean.class), false)
-                    .set(lockTable.field(2, String.class), (String)null)
-                    .set(lockTable.field(3, Timestamp.class), (Timestamp)null)
-                    .where(lockTable.field(0, Integer.class).eq(LOCK_ID))
-                    .execute());
+        public void unlock(Lock lock) {
+            tx(tx -> {
+                int i = tx.update(TASK_LOCKS)
+                        .set(TASK_LOCKS.LOCKED, false)
+                        .set(TASK_LOCKS.LOCKED_AT, (Timestamp) null)
+                        .set(TASK_LOCKS.LOCK_COUNTER, 0)
+                        .where(TASK_LOCKS.LOCK_KEY.eq(lock.key).and(TASK_LOCKS.LOCK_COUNTER.eq(lock.cnt)))
+                        .execute();
+
+                if (i != 1) {
+                    throw new DataAccessException("Invalid number of rows updated: " + i + ". Possible " +
+                            "incorrect usage of TASK_LOCKS. Lock key: " + lock.key);
+                }
+            });
         }
     }
 }
