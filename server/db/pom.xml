@@ -172,9 +172,8 @@
                         <password>${db.password}</password>
                     </jdbc>
                     <generator>
-                        <name>org.jooq.util.DefaultGenerator</name>
                         <database>
-                            <name>org.jooq.util.postgres.PostgresDatabase</name>
+                            <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <inputSchema>public</inputSchema>
                             <includes>.*</includes>
                             <excludes>DATABASECHANGELOG.*</excludes>

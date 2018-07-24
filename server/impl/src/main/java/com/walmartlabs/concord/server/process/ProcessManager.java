@@ -34,6 +34,7 @@ import com.walmartlabs.concord.server.process.pipelines.ProcessPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
@@ -151,7 +152,7 @@ public class ProcessManager {
 
         assertKillRights(e);
 
-        List<ProcessEntry> l = null;
+        List<IdAndStatus> l = null;
         boolean updated = false;
         while (!updated) {
             l = queueDao.getCascade(instanceId);
@@ -322,10 +323,10 @@ public class ProcessManager {
                 "to update the process status: " + instanceId);
     }
 
-    private static List<UUID> filterProcessIds(List<ProcessEntry> l, List<ProcessStatus> expected) {
+    private static List<UUID> filterProcessIds(List<IdAndStatus> l, List<ProcessStatus> expected) {
         return l.stream()
                 .filter(r -> expected.contains(r.getStatus()))
-                .map(ProcessEntry::getInstanceId)
+                .map(IdAndStatus::getInstanceId)
                 .collect(Collectors.toList());
     }
 

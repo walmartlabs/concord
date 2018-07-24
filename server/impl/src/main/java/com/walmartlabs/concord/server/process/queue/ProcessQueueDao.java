@@ -232,26 +232,19 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public List<ProcessEntry> getCascade(UUID parentInstanceId) {
-
+    public List<IdAndStatus> getCascade(UUID parentInstanceId) {
         try (DSLContext tx = DSL.using(cfg)) {
-
-            List<VProcessQueueRecord> res = tx.withRecursive("children").as(
-                    select()
-                            .from(V_PROCESS_QUEUE)
+            return tx.withRecursive("children").as(
+                    select(V_PROCESS_QUEUE.INSTANCE_ID, V_PROCESS_QUEUE.CURRENT_STATUS).from(V_PROCESS_QUEUE)
                             .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
                             .unionAll(
-                                    select()
-                                            .from(V_PROCESS_QUEUE)
+                                    select(V_PROCESS_QUEUE.INSTANCE_ID, V_PROCESS_QUEUE.CURRENT_STATUS).from(V_PROCESS_QUEUE)
                                             .join(name("children"))
                                             .on(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
-                                                    field(name("children", "INSTANCE_ID"), UUID.class))
-                                            )))
+                                                    field(name("children", "INSTANCE_ID"), UUID.class)))))
                     .select()
                     .from(name("children"))
-                    .fetchInto(VProcessQueueRecord.class);
-
-            return toEntryList(res);
+                    .fetch(r -> new IdAndStatus(r.get(0, UUID.class), ProcessStatus.valueOf(r.get(1, String.class))));
         }
     }
 
@@ -373,6 +366,14 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    private String serialize(Object details) {
+        try {
+            return objectMapper.writeValueAsString(details);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static ProcessEntry toEntry(VProcessQueueRecord r) {
         ProcessKind kind;
         String s = r.getProcessKind();
@@ -432,11 +433,22 @@ public class ProcessQueueDao extends AbstractDao {
         return s.toArray(new String[0]);
     }
 
-    private String serialize(Object details) {
-        try {
-            return objectMapper.writeValueAsString(details);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public static class IdAndStatus {
+
+        private final UUID instanceId;
+        private final ProcessStatus status;
+
+        public IdAndStatus(UUID instanceId, ProcessStatus status) {
+            this.instanceId = instanceId;
+            this.status = status;
+        }
+
+        public UUID getInstanceId() {
+            return instanceId;
+        }
+
+        public ProcessStatus getStatus() {
+            return status;
         }
     }
 }
