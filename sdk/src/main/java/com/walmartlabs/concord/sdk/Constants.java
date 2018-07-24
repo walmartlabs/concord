@@ -204,9 +204,14 @@ public class Constants {
         public static final String CONCORD_SYSTEM_DIR_NAME = ".concord";
 
         /**
-         * File wgich contains process session token.
+         * File which contains process session token.
          */
         public static final String SESSION_TOKEN_FILE_NAME = ".session_token";
+
+        /**
+         * File which contains custom error messages for forms.
+         */
+        public static final String ERROR_MESSAGES_FILE_NAME = "locale.properties";
     }
 
     public static class Flows {

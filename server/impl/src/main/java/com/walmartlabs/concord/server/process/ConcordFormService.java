@@ -55,7 +55,6 @@ public class ConcordFormService {
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final FormAccessManager formAccessManager;
-    private final FormValidator validator;
     private final Chain resumePipeline;
 
     @Inject
@@ -69,19 +68,6 @@ public class ConcordFormService {
         this.stateManager = stateManager;
         this.formAccessManager = formAccessManager;
         this.resumePipeline = resumePipeline;
-
-        this.validator = createFormValidator();
-    }
-
-    private static FormValidator createFormValidator() {
-        FormValidatorLocale locale = new DefaultFormValidatorLocale();
-        List<DefaultFormValidator.FieldValidator> vs = new ArrayList<>();
-        vs.add(new DefaultFormValidator.StringFieldValidator(locale));
-        vs.add(new DefaultFormValidator.IntegerFieldValidator(locale));
-        vs.add(new DefaultFormValidator.DecimalFieldValidator(locale));
-        vs.add(new DefaultFormValidator.BooleanFieldValidator(locale));
-        vs.add(new FileFieldValidator());
-        return new DefaultFormValidator(vs, locale);
     }
 
     public Form get(UUID processInstanceId, String formInstanceId) {
@@ -169,7 +155,9 @@ public class ConcordFormService {
 
         Map<String, Object> merged = merge(form, data);
         try {
-            return toResult(processInstanceId, form, DefaultFormService.submit(resumeHandler, validator, form, merged));
+            String formName = form.getFormDefinition().getName();
+            return toResult(processInstanceId, form,
+                    DefaultFormService.submit(resumeHandler, createFormValidator(processInstanceId, formName), form, merged));
         } catch (ExecutionException e) {
             throw new ProcessException(processInstanceId, "Form submit error: " + e.getMessage(), e);
         }
@@ -264,6 +252,17 @@ public class ConcordFormService {
         }
 
         return (Boolean) v;
+    }
+
+    private FormValidator createFormValidator(UUID processInstanceId, String formName) {
+        FormValidatorLocale locale = new ExternalFileFormValidatorLocale(processInstanceId, formName, stateManager);
+        List<DefaultFormValidator.FieldValidator> vs = new ArrayList<>();
+        vs.add(new DefaultFormValidator.StringFieldValidator(locale));
+        vs.add(new DefaultFormValidator.IntegerFieldValidator(locale));
+        vs.add(new DefaultFormValidator.DecimalFieldValidator(locale));
+        vs.add(new DefaultFormValidator.BooleanFieldValidator(locale));
+        vs.add(new FileFieldValidator());
+        return new DefaultFormValidator(vs, locale);
     }
 
     @SuppressWarnings("unchecked")

@@ -29,18 +29,13 @@ import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
-import com.walmartlabs.concord.server.process.ConcordFormService;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
-import com.walmartlabs.concord.server.process.FormUtils;
 import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
-import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
-import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import io.takari.bpm.model.form.FormField.Cardinality;
@@ -76,8 +71,7 @@ public class CustomFormService implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(CustomFormService.class);
 
-    public static final String FORMS_PATH_PREFIX = "/forms/";
-
+    private static final String FORMS_PATH_PREFIX = "/forms/";
     private static final String FORM_DIR_NAME = "form";
     private static final String SHARED_DIR_NAME = "shared";
     private static final String FORMS_PATH_TEMPLATE = FORMS_PATH_PREFIX + "%s/%s/" + FORM_DIR_NAME + "/";
@@ -93,7 +87,6 @@ public class CustomFormService implements Resource {
     private final ProcessStateManager stateManager;
     private final ProcessQueueDao queueDao;
     private final ObjectMapper objectMapper;
-    private final FormValidatorLocale validatorLocale;
 
     @Inject
     public CustomFormService(CustomFormConfiguration cfg,
@@ -108,8 +101,6 @@ public class CustomFormService implements Resource {
 
         this.objectMapper = new ObjectMapper()
                 .enable(SerializationFeature.INDENT_OUTPUT);
-
-        this.validatorLocale = new DefaultFormValidatorLocale();
     }
 
     @POST
@@ -197,11 +188,12 @@ public class CustomFormService implements Resource {
                 .resolve(formInstanceId);
 
         Path formDir = dst.resolve(FORM_DIR_NAME);
+        String formName = form.getFormDefinition().getName();
 
         try {
             Map<String, Object> m = new HashMap<>();
             try {
-                m = FormUtils.convert(validatorLocale, form, data);
+                m = FormUtils.convert(new ExternalFileFormValidatorLocale(processInstanceId, formName, stateManager), form, data);
 
                 FormSubmitResult r = formService.submit(processInstanceId, formInstanceId, m);
                 if (r.isValid()) {
