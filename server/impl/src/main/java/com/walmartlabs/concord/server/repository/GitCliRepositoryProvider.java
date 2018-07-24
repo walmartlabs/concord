@@ -26,6 +26,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -58,10 +59,12 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     private static final String DEFAULT_BRANCH = "master";
 
     private final SecretManager secretManager;
+    private final GitConfiguration cfg;
 
     @Inject
-    public GitCliRepositoryProvider(SecretManager secretManager) {
+    public GitCliRepositoryProvider(SecretManager secretManager, GitConfiguration cfg) {
         this.secretManager = secretManager;
+        this.cfg = cfg;
     }
 
     @Override
@@ -93,7 +96,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     }
 
     private void fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
-        boolean shallow = commitId == null;
+        boolean shallow = commitId == null && cfg.isShallowClone();
 
         if (!hasGitRepo(dest)) {
             cloneCommand(dest, uri, secret, shallow);
@@ -120,9 +123,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
 
     private void fetchSubmodules(Path dest, Secret secret) {
         launchCommand(dest, "submodule", "init");
-
         launchCommand(dest, "submodule", "sync");
-
         submoduleUpdate(dest, secret);
     }
 

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.GithubConfiguration;
+import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 
 import javax.inject.Inject;
@@ -32,22 +32,22 @@ import javax.inject.Singleton;
 @Named
 public class RepositoryDataProvider implements Provider<RepositoryProvider> {
 
-    private final GithubConfiguration githubConfiguration;
+    private final GitConfiguration cfg;
     private final SecretManager secretManager;
 
     @Inject
-    public RepositoryDataProvider(GithubConfiguration githubConfiguration,
+    public RepositoryDataProvider(GitConfiguration githubConfiguration,
                                   SecretManager secretManager) {
-        this.githubConfiguration = githubConfiguration;
+        this.cfg = githubConfiguration;
         this.secretManager = secretManager;
     }
 
     @Override
     public RepositoryProvider get() {
-        if (githubConfiguration.isUseJGit()) {
+        if (cfg.isUseJGit()) {
             return new JGitRepositoryProvider(secretManager);
         } else {
-            return new GitCliRepositoryProvider(secretManager);
+            return new GitCliRepositoryProvider(secretManager, cfg);
         }
     }
 }

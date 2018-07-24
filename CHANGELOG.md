@@ -4,6 +4,7 @@
 
 ### Added
  
+- concord-server: option to disable GIT's "shallow clone";
 - concord-server: initial integration with Prometheus;
 - concord-server: option to disable the process state archiving task.
 

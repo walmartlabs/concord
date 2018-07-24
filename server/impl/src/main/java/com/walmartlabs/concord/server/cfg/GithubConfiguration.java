@@ -62,10 +62,6 @@ public class GithubConfiguration {
     @Config("github.cacheEnabled")
     private boolean cacheEnabled;
 
-    @Inject
-    @Config("github.useJGit")
-    private boolean useJGit;
-
     public boolean isEnabled() {
         return enabled;
     }
@@ -96,9 +92,5 @@ public class GithubConfiguration {
 
     public boolean isCacheEnabled() {
         return cacheEnabled;
-    }
-
-    public boolean isUseJGit() {
-        return useJGit;
     }
 }
