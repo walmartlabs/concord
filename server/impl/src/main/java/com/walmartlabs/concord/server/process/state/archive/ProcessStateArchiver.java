@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -113,7 +114,8 @@ public class ProcessStateArchiver extends PeriodicTask {
     @Override
     protected void performTask() throws Exception {
         while (!Thread.currentThread().isInterrupted()) {
-            List<UUID> ids = dao.grabNext(ALLOWED_STATUSES, 10);
+            Timestamp ageCutoff = new Timestamp(System.currentTimeMillis() - cfg.getProcessAge());
+            List<UUID> ids = dao.grabNext(ALLOWED_STATUSES, ageCutoff, 10);
 
             if (ids.isEmpty()) {
                 log.info("performTask -> nothing to do");
@@ -191,11 +193,12 @@ public class ProcessStateArchiver extends PeriodicTask {
             }
         }
 
-        public List<UUID> grabNext(ProcessStatus[] statuses, int limit) {
+        public List<UUID> grabNext(ProcessStatus[] statuses, Timestamp ageCutoff, int limit) {
             return txResult(tx -> {
                 List<UUID> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
                         .from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.CURRENT_STATUS.in(Utils.toString(statuses))
+                                .and(PROCESS_QUEUE.LAST_UPDATED_AT.lessOrEqual(ageCutoff))
                                 .andNotExists(selectFrom(PROCESS_STATE_ARCHIVE)
                                         .where(PROCESS_STATE_ARCHIVE.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID))))
                         .limit(limit)

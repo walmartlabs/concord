@@ -3,7 +3,8 @@
 ## [Unreleased]
 
 ### Added
- 
+
+- concord-server: delay before processes are moved into the archive; 
 - concord-server: support for custom form validation messages;
 - concord-server: option to disable GIT's "shallow clone";
 - concord-server: initial integration with Prometheus;

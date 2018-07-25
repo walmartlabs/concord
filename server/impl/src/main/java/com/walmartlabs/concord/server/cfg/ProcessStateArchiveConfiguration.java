@@ -48,6 +48,10 @@ public class ProcessStateArchiveConfiguration implements Serializable {
     private long stalledAge;
 
     @Inject
+    @Config("process.archive.processAge")
+    private long processAge;
+
+    @Inject
     @Config("process.archive.uploadThreads")
     private int uploadThreads;
 
@@ -70,6 +74,10 @@ public class ProcessStateArchiveConfiguration implements Serializable {
 
     public long getStalledAge() {
         return stalledAge;
+    }
+
+    public long getProcessAge() {
+        return processAge;
     }
 
     public long getPeriod() {
