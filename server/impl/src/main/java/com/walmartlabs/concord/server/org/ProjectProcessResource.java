@@ -93,7 +93,6 @@ public class ProjectProcessResource implements Resource {
         this.repositoryDao = repositoryDao;
     }
 
-
     @GET
     @ApiOperation("List processes for the specified organization")
     @Path("/{orgName}/process")

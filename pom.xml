@@ -121,7 +121,7 @@
         <sisu.version>0.3.3</sisu.version>
         <slf4j.version>1.7.25</slf4j.version>
         <sshd.version>1.6.0</sshd.version>
-        <swagger.version>1.5.199</swagger.version>
+        <swagger.version>1.5.20</swagger.version>
         <threetenbp.version>1.3.5</threetenbp.version>
         <wiremock.version>2.18.0</wiremock.version>
     </properties>

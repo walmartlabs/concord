@@ -33,7 +33,7 @@ triggers:
 tools:
   jdk: 8
   maven: 3.5.2
-  # sonarscanner: 3.0.3.778
+  sonarscanner: 3.0.3.778
 
 flows:
   buildImages:
@@ -102,7 +102,7 @@ flows:
 
   runsonar:
   - sonar("Sonar"):
-    # - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
+     - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
     - echo "Temporarily disabled"
 
   # poor man's .m2 cache
