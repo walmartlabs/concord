@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.agent;
  */
 
 import com.walmartlabs.concord.server.CommandType;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -52,6 +53,7 @@ public class CommandQueueResource implements Resource {
     @ApiOperation(value = "Take command from queue")
     @Path("/take/{agentId}")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public CommandEntry take(@PathParam("agentId") String agentId) {
         AgentCommand c = commandsDao.poll(agentId).orElse(null);
         if (c == null) {

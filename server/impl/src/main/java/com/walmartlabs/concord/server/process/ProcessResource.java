@@ -567,6 +567,7 @@ public class ProcessResource implements Resource {
     @GET
     @ApiOperation(value = "List processes for all user's organizations", responseContainer = "list", response = ProcessEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public List<ProcessEntry> list(@ApiParam @QueryParam("projectId") UUID projectId,
                                    @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                                    @ApiParam @QueryParam("tags") Set<String> tags,
@@ -612,6 +613,7 @@ public class ProcessResource implements Resource {
     @ApiOperation("Update process status")
     @javax.ws.rs.Path("{id}/status")
     @Consumes(MediaType.TEXT_PLAIN)
+    @WithTimer
     public void updateStatus(@ApiParam @PathParam("id") UUID instanceId,
                              @ApiParam(required = true) @QueryParam("agentId") String agentId,
                              @ApiParam(required = true) ProcessStatus status) {

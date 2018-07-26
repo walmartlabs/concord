@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.security.github;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationException;
@@ -72,6 +73,7 @@ public class GithubRealm extends AuthorizingRealm {
     }
 
     @Override
+    @WithTimer
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         UserPrincipal p = (UserPrincipal) principals.getPrimaryPrincipal();
         if (!REALM_NAME.equals(p.getRealm())) {

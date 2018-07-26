@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.DatabaseConfiguration;
 import com.walmartlabs.concord.db.DatabaseModule;
@@ -44,7 +45,7 @@ public abstract class AbstractDaoTest {
                 "postgres", "q1", "inventory", "q1", 3);
 
         DatabaseModule db = new DatabaseModule();
-        this.dataSource = db.appDataSource(cfg);
+        this.dataSource = db.appDataSource(cfg, new MetricRegistry());
 
         this.cfg = db.appJooqConfiguration(this.dataSource);
     }

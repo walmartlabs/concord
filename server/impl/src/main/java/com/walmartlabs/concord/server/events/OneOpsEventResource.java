@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -80,6 +81,7 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
     @POST
     @Path("/oneops")
     @Consumes(MediaType.APPLICATION_JSON)
+    @WithTimer
     public Response event(Map<String, Object> event) {
         if (event == null || event.isEmpty()) {
             return Response.status(Status.BAD_REQUEST).build();
@@ -98,6 +100,7 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
     @POST
     @Path("/oneops")
     @Consumes(MediaType.WILDCARD)
+    @WithTimer
     @SuppressWarnings("unchecked")
     public Response event(InputStream in) {
         Map<String, Object> m;

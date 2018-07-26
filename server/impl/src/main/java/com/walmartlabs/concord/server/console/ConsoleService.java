@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.console;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -243,6 +244,7 @@ public class ConsoleService implements Resource {
     @Path("/search/users")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @WithTimer
     public List<UserSearchResult> searchUsers(@QueryParam("filter") @Size(min = 5, max = 128) String filter) {
         if (filter == null) {
             return Collections.emptyList();

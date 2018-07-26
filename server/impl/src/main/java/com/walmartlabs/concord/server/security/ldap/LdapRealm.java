@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.audit.AuditAction;
@@ -89,6 +90,7 @@ public class LdapRealm extends AbstractLdapRealm {
     }
 
     @Override
+    @WithTimer
     @SuppressWarnings("deprecation")
     protected AuthenticationInfo queryForAuthenticationInfo(AuthenticationToken token, LdapContextFactory ldapContextFactory) throws NamingException {
         if (this.url == null) {

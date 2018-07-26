@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -91,6 +92,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     @Path("/push")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
+    @WithTimer
     @SuppressWarnings("unchecked")
     public String push(@ApiParam Map<String, Object> event) {
 

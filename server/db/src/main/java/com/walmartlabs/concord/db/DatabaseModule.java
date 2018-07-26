@@ -20,6 +20,7 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.zaxxer.hikari.HikariDataSource;
@@ -61,8 +62,8 @@ public class DatabaseModule extends AbstractModule {
     @Provides
     @Named("app")
     @Singleton
-    public DataSource appDataSource(DatabaseConfiguration cfg) {
-        DataSource ds = createDataSource(cfg, cfg.getAppUsername(), cfg.getAppPassword());
+    public DataSource appDataSource(DatabaseConfiguration cfg, MetricRegistry metricRegistry) {
+        DataSource ds = createDataSource(cfg, "app", cfg.getAppUsername(), cfg.getAppPassword(), metricRegistry);
 
         int retries = MIGRATION_MAX_RETRIES;
         for (int i = 0; i < retries; i++) {
@@ -92,8 +93,8 @@ public class DatabaseModule extends AbstractModule {
     @Provides
     @Named("inventory")
     @Singleton
-    public DataSource inventoryDataSource(DatabaseConfiguration cfg) {
-        return createDataSource(cfg, cfg.getInventoryUsername(), cfg.getInventoryPassword());
+    public DataSource inventoryDataSource(DatabaseConfiguration cfg, MetricRegistry metricRegistry) {
+        return createDataSource(cfg, "inventory", cfg.getInventoryUsername(), cfg.getInventoryPassword(), metricRegistry);
     }
 
     @Provides
@@ -110,8 +111,14 @@ public class DatabaseModule extends AbstractModule {
         return createJooqConfiguration(ds);
     }
 
-    private static DataSource createDataSource(DatabaseConfiguration cfg, String username, String password) {
+    private static DataSource createDataSource(DatabaseConfiguration cfg,
+                                               String poolName,
+                                               String username,
+                                               String password,
+                                               MetricRegistry metricRegistry) {
+
         HikariDataSource ds = new HikariDataSource();
+        ds.setPoolName(poolName);
         ds.setJdbcUrl(cfg.getUrl());
         ds.setDriverClassName(cfg.getDriverClassName());
         ds.setUsername(username);
@@ -121,6 +128,7 @@ public class DatabaseModule extends AbstractModule {
         ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(cfg.getMaxPoolSize());
         ds.setLeakDetectionThreshold(10000);
+        ds.setMetricRegistry(metricRegistry);
         return ds;
     }
 

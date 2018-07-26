@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: additional metrics (JVM, memory, JDBC, etc).
+
+
+
 ## [0.81.0] - 2018-07-24
 
 ### Added

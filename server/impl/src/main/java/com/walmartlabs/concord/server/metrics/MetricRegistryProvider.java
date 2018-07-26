@@ -20,18 +20,29 @@ package com.walmartlabs.concord.server.metrics;
  * =====
  */
 
-import com.google.inject.AbstractModule;
-import com.google.inject.matcher.Matchers;
+import com.codahale.metrics.MetricRegistry;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.hotspot.DefaultExports;
 
 import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
 @Named
-public class MetricsModule extends AbstractModule {
+@Singleton
+public class MetricRegistryProvider implements Provider<MetricRegistry> {
 
     @Override
-    protected void configure() {
-        MetricInterceptor i = new MetricInterceptor();
-        requestInjection(i);
-        bindInterceptor(Matchers.any(), Matchers.annotatedWith(WithTimer.class), i);
+    public MetricRegistry get() {
+        MetricRegistry registry = new MetricRegistry();
+
+        // prometheus integration
+        CollectorRegistry.defaultRegistry.register(new DropwizardExports(registry));
+
+        // initialize standard prometheus exports (hotspot, memory, etc)
+        DefaultExports.initialize();
+
+        return registry;
     }
 }

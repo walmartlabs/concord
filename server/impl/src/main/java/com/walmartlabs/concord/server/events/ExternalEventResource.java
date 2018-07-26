@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -30,6 +31,7 @@ import io.swagger.annotations.Authorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -63,11 +65,12 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
     @ApiOperation("Handles an external event")
     @Path("/{eventName:.*}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @WithTimer
     public Response event(@ApiParam @PathParam("eventName") String eventName,
                           @ApiParam Map<String, Object> event) {
 
         if (event == null || event.isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            throw new ValidationErrorsException("Emptry event data");
         }
 
         String eventId = (String) event.get("id");

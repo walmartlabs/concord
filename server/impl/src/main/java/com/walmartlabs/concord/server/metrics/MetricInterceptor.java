@@ -20,34 +20,24 @@ package com.walmartlabs.concord.server.metrics;
  * =====
  */
 
-import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.dropwizard.DropwizardExports;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
+import javax.inject.Inject;
 import java.lang.reflect.Method;
 
-public class MetricsInterceptor implements MethodInterceptor {
+public class MetricInterceptor implements MethodInterceptor {
 
     private static final String SHARED_PREFIX = "com.walmartlabs.concord.";
 
-    private final MetricRegistry metrics;
-
-    public MetricsInterceptor() {
-        this.metrics = new MetricRegistry();
-
-        JmxReporter reporter = JmxReporter.forRegistry(metrics).build();
-        reporter.start();
-
-        CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
-    }
+    @Inject
+    private MetricRegistry registry;
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        Timer t = metrics.timer(timerName(invocation.getMethod()));
+        Timer t = registry.timer(timerName(invocation.getMethod()));
         Timer.Context ctx = t.time();
         try {
             return invocation.proceed();

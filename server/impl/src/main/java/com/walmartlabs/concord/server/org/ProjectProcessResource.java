@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
@@ -97,6 +98,7 @@ public class ProjectProcessResource implements Resource {
     @ApiOperation("List processes for the specified organization")
     @Path("/{orgName}/process")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         return queueDao.list(Collections.singleton(org.getId()), false, null, null, null, DEFAULT_LIST_LIMIT);
@@ -106,6 +108,7 @@ public class ProjectProcessResource implements Resource {
     @ApiOperation("List processes for the specified project")
     @Path("/{orgName}/project/{projectName}/process")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
 

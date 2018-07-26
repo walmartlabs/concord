@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.sessionkey;
  */
 
 import com.google.common.collect.ImmutableSet;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
@@ -70,6 +71,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
     }
 
     @Override
+    @WithTimer
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         SessionKey t = (SessionKey) token;
 

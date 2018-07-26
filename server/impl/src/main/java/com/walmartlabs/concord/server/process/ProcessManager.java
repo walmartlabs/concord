@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.agent.AgentManager;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
@@ -166,7 +165,6 @@ public class ProcessManager {
         }
     }
 
-    @WithTimer
     public void updateStatus(UUID instanceId, String agentId, ProcessStatus status) {
         assertUpdateRights(instanceId);
 
