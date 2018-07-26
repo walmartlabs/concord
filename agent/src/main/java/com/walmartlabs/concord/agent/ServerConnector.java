@@ -20,15 +20,12 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.squareup.okhttp.OkHttpClient;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.client.CommandQueueApi;
-import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessQueueApi;
-import com.walmartlabs.concord.common.IOUtils;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -98,8 +95,7 @@ public class ServerConnector implements MaintenanceModeListener {
 
         if (cfg.isDockerOrphanSweeperEnabled()) {
             long t = cfg.getDockerOrphanSweeperPeriod();
-            orphanSweeper = new Thread(new OrphanSweeper(executionManager, t),
-                    "docker-sweeper");
+            orphanSweeper = new Thread(new OrphanSweeper(executionManager, t), "docker-sweeper");
             orphanSweeper.start();
         }
 
