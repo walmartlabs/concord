@@ -21,7 +21,7 @@ server {
 	proxy_read_timeout      600;
     client_max_body_size    32M;
 
-	location ~ ^/(api|logs|forms|events|swagger)/ {
+	location ~ ^/(api|logs|forms|events|swagger|metrics)/ {
         expires             off;
 	    proxy_pass          http://SERVER_ADDR:SERVER_PORT;
 	    proxy_redirect      off;
