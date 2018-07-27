@@ -102,8 +102,7 @@ flows:
 
   runsonar:
   - sonar("Sonar"):
-     - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
-    - echo "Temporarily disabled"
+    - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
 
   # poor man's .m2 cache
   fetchDeps:
