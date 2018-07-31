@@ -70,8 +70,8 @@ public class TriggerScheduler implements BackgroundTask {
 
     @Override
     public void start() {
-        this.worker = new Thread(new SchedulerWorker(scheduleDao, processManager, processSecurityContext, triggerCfg),
-                "cron-trigger-worker");
+        Runnable w = new SchedulerWorker(scheduleDao, processManager, processSecurityContext, triggerCfg);
+        this.worker = new Thread(w, "cron-trigger-worker");
         this.worker.start();
     }
 
@@ -94,6 +94,7 @@ public class TriggerScheduler implements BackgroundTask {
                                 ProcessManager processManager,
                                 ProcessSecurityContext processSecurityContext,
                                 TriggersConfiguration triggerCfg) {
+
             this.schedulerDao = schedulerDao;
             this.processManager = processManager;
             this.processSecurityContext = processSecurityContext;
@@ -103,12 +104,11 @@ public class TriggerScheduler implements BackgroundTask {
 
         @Override
         public void run() {
-            while (!Thread.interrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     TriggerSchedulerEntry e = schedulerDao.findNext();
 
                     if (e != null && e.getFireAt().after(startedAt)) {
-                        log.info("run -> starting {}...", e);
                         startProcess(e);
                     } else {
                         long now = System.currentTimeMillis();
@@ -123,10 +123,12 @@ public class TriggerScheduler implements BackgroundTask {
         }
 
         private void startProcess(TriggerSchedulerEntry t) {
-            if (isDisabled(triggerCfg, EVENT_SOURCE)) {
+            if (isDisabled(EVENT_SOURCE)) {
                 log.warn("startProcess ['{}'] -> disabled, skipping", t);
                 return;
             }
+
+            log.info("run -> starting {}...", t);
 
             Map<String, Object> args = new HashMap<>();
             if (t.getArguments() != null) {
@@ -160,8 +162,7 @@ public class TriggerScheduler implements BackgroundTask {
             }
 
             try {
-                processSecurityContext.runAs(REALM, INITIATOR,
-                        () -> processManager.start(payload, false));
+                processSecurityContext.runAs(REALM, INITIATOR, () -> processManager.start(payload, false));
             } catch (Exception e) {
                 log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error starting process",
                         triggerId, orgId, projectId, repoId, flowName, e);
@@ -178,7 +179,7 @@ public class TriggerScheduler implements BackgroundTask {
             }
         }
 
-        private boolean isDisabled(TriggersConfiguration triggerCfg, String eventName) {
+        private boolean isDisabled(String eventName) {
             return triggerCfg.isDisableAll() || triggerCfg.getDisabled().contains(eventName);
         }
     }
