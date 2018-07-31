@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: the Prometheus metrics endpoint now proxied by the
+console's nginx.
+
+
+
 ## [0.82.0] - 2018-07-29
 
 ### Added
