@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.server;
+package com.walmartlabs.concord.it.webhook;
 
 /*-
  * *****
@@ -20,13 +20,14 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import com.walmartlabs.concord.client.ProjectEntry;
-import com.walmartlabs.concord.client.ProjectsApi;
-import com.walmartlabs.concord.client.RepositoriesApi;
-import com.walmartlabs.concord.client.RepositoryEntry;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.it.common.GitUtils;
+import com.walmartlabs.concord.it.common.MockGitSshServer;
+import com.walmartlabs.concord.it.common.ServerClient;
 import org.junit.*;
 
 import java.nio.file.Path;
@@ -34,18 +35,19 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static java.util.Collections.singletonMap;
 
-@Ignore("should be moved into a separate module")
-public class GithubWebhookIT extends AbstractServerIT {
+public class GithubWebhookIT {
 
     private static MockGitSshServer gitServer;
     private static int gitPort;
 
+    private ServerClient serverClient;
+
     @ClassRule
     public static WireMockClassRule wireMockClassRule = new WireMockClassRule(WireMockConfiguration.options()
-            .port(ITConstants.GIT_WEBHOOK_MOCK_PORT)
-            .notifier(new Slf4jNotifier(true)));
+            .port(ITConstants.GIT_WEBHOOK_MOCK_PORT));
 
     @Rule
     public WireMockClassRule rule = wireMockClassRule;
@@ -58,6 +60,8 @@ public class GithubWebhookIT extends AbstractServerIT {
 
     @Before
     public void setUp() throws Exception {
+        serverClient = new ServerClient(ITConstants.SERVER_URL);
+
         Path data = Paths.get(GithubWebhookIT.class.getResource("githubWebHook").toURI());
         Path repo = GitUtils.createBareRepository(data);
 
@@ -199,5 +203,13 @@ public class GithubWebhookIT extends AbstractServerIT {
                                 "  \"id\": 1\n" +
                                 "}"))
         );
+    }
+
+    private SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) throws ApiException {
+        return serverClient.generateKeyPair(orgName, name, generatePassword, storePassword);
+    }
+
+    private ApiClient getApiClient() {
+        return serverClient.getClient();
     }
 }

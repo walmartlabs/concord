@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.server;
+package com.walmartlabs.concord.it.common;
 
 /*-
  * *****
