@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: option to disable triggers (specific or all);
 - concord-server: the Prometheus metrics endpoint now proxied by the
 console's nginx.
 

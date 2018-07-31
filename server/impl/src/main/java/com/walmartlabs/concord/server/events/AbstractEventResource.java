@@ -21,12 +21,12 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
+import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadBuilder;
-import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.SecurityUtils;
@@ -50,21 +50,24 @@ public abstract class AbstractEventResource {
     private final TriggersDao triggersDao;
     private final ProjectDao projectDao;
     private final TriggerDefinitionEnricher triggerDefinitionEnricher;
+    private final TriggersConfiguration triggersCfg;
 
     public AbstractEventResource(ProcessManager processManager,
-                                 TriggersDao triggersDao, ProjectDao projectDao) {
-        this(processManager, triggersDao, projectDao, AS_IS_ENRICHER);
+                                 TriggersDao triggersDao, ProjectDao projectDao, TriggersConfiguration triggersCfg) {
+        this(processManager, triggersDao, projectDao, AS_IS_ENRICHER, triggersCfg);
     }
 
     public AbstractEventResource(ProcessManager processManager,
                                  TriggersDao triggersDao, ProjectDao projectDao,
-                                 TriggerDefinitionEnricher enricher) {
+                                 TriggerDefinitionEnricher enricher,
+                                 TriggersConfiguration triggersCfg) {
 
         this.processManager = processManager;
         this.triggersDao = triggersDao;
         this.projectDao = projectDao;
         this.triggerDefinitionEnricher = enricher;
         this.log = LoggerFactory.getLogger(this.getClass());
+        this.triggersCfg = triggersCfg;
     }
 
     protected int process(String eventId, String eventName, Map<String, Object> conditions, Map<String, Object> event) {
@@ -74,6 +77,11 @@ public abstract class AbstractEventResource {
                 .collect(Collectors.toList());
 
         for (TriggerEntry t : triggers) {
+            if (isDisabled(eventName)) {
+                log.warn("process ['{}'] - disabled, skipping (triggered by {})", event, t);
+                continue;
+            }
+
             Map<String, Object> args = new HashMap<>();
             if (t.getArguments() != null) {
                 args.putAll(t.getArguments());
@@ -90,6 +98,10 @@ public abstract class AbstractEventResource {
         }
 
         return triggers.size();
+    }
+
+    private boolean isDisabled(String eventName) {
+        return triggersCfg.isDisableAll() || triggersCfg.getDisabled().contains(eventName);
     }
 
     private boolean filter(Map<String, Object> conditions, TriggerEntry t) {

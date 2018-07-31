@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -77,9 +78,10 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                RepositoryDao repositoryDao,
                                RepositoryCacheDao repositoryCacheDao,
                                ProcessManager processManager,
-                               GithubWebhookManager webhookManager) {
+                               GithubWebhookManager webhookManager,
+                               TriggersConfiguration triggersConfiguration) {
 
-        super(processManager, triggersDao, projectDao, new ProjectOrgEnricher(projectDao));
+        super(processManager, triggersDao, projectDao, new ProjectOrgEnricher(projectDao), triggersConfiguration);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;

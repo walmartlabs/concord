@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.BackgroundTask;
+import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadBuilder;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -44,28 +45,32 @@ public class TriggerScheduler implements BackgroundTask {
 
     private static final String INITIATOR = "cron";
     private static final String REALM = "cron";
+    private static final String EVENT_SOURCE = "cron";
 
     private static final long ERROR_DELAY = TimeUnit.MINUTES.toMillis(5);
 
     private final TriggerScheduleDao scheduleDao;
     private final ProcessManager processManager;
     private final ProcessSecurityContext processSecurityContext;
+    private final TriggersConfiguration triggerCfg;
 
     private Thread worker;
 
     @Inject
     public TriggerScheduler(TriggerScheduleDao scheduleDao,
                             ProcessManager processManager,
-                            ProcessSecurityContext processSecurityContext) {
+                            ProcessSecurityContext processSecurityContext,
+                            TriggersConfiguration triggerCfg) {
 
         this.scheduleDao = scheduleDao;
         this.processManager = processManager;
         this.processSecurityContext = processSecurityContext;
+        this.triggerCfg = triggerCfg;
     }
 
     @Override
     public void start() {
-        this.worker = new Thread(new SchedulerWorker(scheduleDao, processManager, processSecurityContext),
+        this.worker = new Thread(new SchedulerWorker(scheduleDao, processManager, processSecurityContext, triggerCfg),
                 "cron-trigger-worker");
         this.worker.start();
     }
@@ -83,12 +88,17 @@ public class TriggerScheduler implements BackgroundTask {
         private final ProcessManager processManager;
         private final ProcessSecurityContext processSecurityContext;
         private final Date startedAt;
+        private final TriggersConfiguration triggerCfg;
 
-        private SchedulerWorker(TriggerScheduleDao schedulerDao, ProcessManager processManager, ProcessSecurityContext processSecurityContext) {
+        private SchedulerWorker(TriggerScheduleDao schedulerDao,
+                                ProcessManager processManager,
+                                ProcessSecurityContext processSecurityContext,
+                                TriggersConfiguration triggerCfg) {
             this.schedulerDao = schedulerDao;
             this.processManager = processManager;
             this.processSecurityContext = processSecurityContext;
             this.startedAt = new Date();
+            this.triggerCfg = triggerCfg;
         }
 
         @Override
@@ -113,6 +123,11 @@ public class TriggerScheduler implements BackgroundTask {
         }
 
         private void startProcess(TriggerSchedulerEntry t) {
+            if (isDisabled(triggerCfg, EVENT_SOURCE)) {
+                log.warn("startProcess ['{}'] -> disabled, skipping", t);
+                return;
+            }
+
             Map<String, Object> args = new HashMap<>();
             if (t.getArguments() != null) {
                 args.putAll(t.getArguments());
@@ -161,6 +176,10 @@ public class TriggerScheduler implements BackgroundTask {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+
+        private boolean isDisabled(TriggersConfiguration triggerCfg, String eventName) {
+            return triggerCfg.isDisableAll() || triggerCfg.getDisabled().contains(eventName);
         }
     }
 

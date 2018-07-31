@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
@@ -56,9 +57,10 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
     @Inject
     public ExternalEventResource(ProcessManager processManager,
                                  TriggersDao triggersDao,
-                                 ProjectDao projectDao) {
+                                 ProjectDao projectDao,
+                                 TriggersConfiguration triggersCfg) {
 
-        super(processManager, triggersDao, projectDao);
+        super(processManager, triggersDao, projectDao, triggersCfg);
     }
 
     @POST
