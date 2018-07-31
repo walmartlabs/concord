@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.google.common.base.Strings;
 import com.walmartlabs.ollie.config.Config;
+import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,6 +46,7 @@ public class KeywhizSecretStoreConfiguration {
 
     @Inject
     @Config("secretStore.keywhiz.trustStorePassword")
+    @Nullable
     private String trustStorePassword;
 
     @Inject
@@ -52,6 +55,7 @@ public class KeywhizSecretStoreConfiguration {
 
     @Inject
     @Config("secretStore.keywhiz.keyStorePassword")
+    @Nullable
     private String keyStorePassword;
 
     @Inject
@@ -65,6 +69,21 @@ public class KeywhizSecretStoreConfiguration {
     @Inject
     @Config("secretStore.keywhiz.connectionRequestTimeout")
     private int connectionRequestTimeout;
+
+    @Inject
+    public KeywhizSecretStoreConfiguration() {
+        if (!enabled) {
+            return;
+        }
+
+        if (Strings.isNullOrEmpty(trustStorePassword)) {
+            throw new IllegalArgumentException("secretStore.keywhiz.trustStorePassword is required");
+        }
+
+        if (Strings.isNullOrEmpty(keyStorePassword)) {
+            throw new IllegalArgumentException("secretStore.keywhiz.keyStorePassword");
+        }
+    }
 
     public boolean isEnabled() {
         return enabled;

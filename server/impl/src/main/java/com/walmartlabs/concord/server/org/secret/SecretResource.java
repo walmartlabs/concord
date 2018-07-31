@@ -317,8 +317,16 @@ public class SecretResource implements Resource {
             throw new ConcordApplicationException("Can't get a password from the request", e);
         }
 
+        if (password != null) {
+            try {
+                PasswordChecker.check(password);
+            } catch (PasswordChecker.CheckerException e) {
+                throw new ConcordApplicationException("Invalid password: " + e.getMessage());
+            }
+        }
+
         if (password == null && generatePassword) {
-            return secretManager.generatePassword();
+            return PasswordGenerator.generate();
         }
 
         return password;

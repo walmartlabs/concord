@@ -19,7 +19,7 @@
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <dind.image>docker:stable-dind</dind.image>
-        <deps.dir>${java.io.tmpdir}/deps</deps.dir>
+        <deps.dir>${project.basedir}/target/deps</deps.dir>
         <docker.host.addr>localhost</docker.host.addr>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <it.server.port>8001</it.server.port>
@@ -312,11 +312,12 @@
                                                 <volume>/tmp:/tmp</volume>
                                                 <!-- allows the server to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}:ro</volume>
-                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro
-                                                </volume>
+                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
+                                                <volume>${basedir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
+                                            <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
                                             <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>

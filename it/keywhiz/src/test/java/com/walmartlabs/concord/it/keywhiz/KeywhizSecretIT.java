@@ -51,7 +51,7 @@ public class KeywhizSecretIT {
 
         String secretName = "secret_" + ITUtils.randomString();
         byte[] content = "secret-content".getBytes();
-        SecretOperationResponse r = addPlainSecret(orgName, secretName, true, "iddqd", content);
+        SecretOperationResponse r = addPlainSecret(orgName, secretName, true, ITUtils.randomString() + "A!", content);
 
         SecretsApi secretsApi = new SecretsApi(serverClient.getClient());
         List<SecretEntry> secrets = secretsApi.list(orgName);
@@ -88,7 +88,7 @@ public class KeywhizSecretIT {
 
         String secretName = "secret_" + ITUtils.randomString();
         byte[] content = "secret-content".getBytes();
-        SecretOperationResponse r = addPlainSecret(orgName, secretName, true, "iddqd", content);
+        SecretOperationResponse r = addPlainSecret(orgName, secretName, true, ITUtils.randomString() + "A!", content);
 
         SecretsApi secretsApi = new SecretsApi(serverClient.getClient());
         secretsApi.delete(orgName, secretName);

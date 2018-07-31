@@ -43,7 +43,7 @@ public class CryptoIT extends AbstractServerIT {
 
         String secretName = "secret@" + randomString();
         String secretValue = "value@" + randomString();
-        String storePassword = "store@" + randomString();
+        String storePassword = "store1A@" + randomString();
 
         addPlainSecret(orgName, secretName, false, storePassword, secretValue.getBytes());
 
@@ -61,7 +61,7 @@ public class CryptoIT extends AbstractServerIT {
         String secretName = "secret@" + randomString();
         String secretUsername = "username@" + randomString();
         String secretPassword = "password@" + randomString();
-        String storePassword = "store@" + randomString();
+        String storePassword = "store1A@" + randomString();
 
         addUsernamePassword(orgName, secretName, false, storePassword, secretUsername, secretPassword);
 
@@ -78,7 +78,7 @@ public class CryptoIT extends AbstractServerIT {
 
         String secretName = "secret@" + randomString();
         String secretValue = "value@" + randomString();
-        String storePassword = "store@" + randomString();
+        String storePassword = "store1A@" + randomString();
 
         addPlainSecret(orgName, secretName, false, storePassword, secretValue.getBytes());
 
@@ -98,7 +98,7 @@ public class CryptoIT extends AbstractServerIT {
 
         String secretName = "secret@" + randomString();
         String secretValue = "value@" + randomString();
-        String storePassword = "store@" + randomString();
+        String storePassword = "store1A@" + randomString();
 
         addPlainSecret(orgName, secretName, false, storePassword, secretValue.getBytes());
 
@@ -300,7 +300,7 @@ public class CryptoIT extends AbstractServerIT {
         String secretName = "secret@" + randomString();
         String secretUsername = "username@" + randomString();
         String secretPassword = "password@" + randomString();
-        String storePassword = "store@" + randomString();
+        String storePassword = "store1A@" + randomString();
 
         addUsernamePassword(orgName, projectName, secretName, false, storePassword, secretUsername, secretPassword);
 

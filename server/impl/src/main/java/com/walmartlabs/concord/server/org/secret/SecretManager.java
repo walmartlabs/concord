@@ -58,9 +58,6 @@ import java.util.function.Function;
 @Named
 public class SecretManager {
 
-    private static final int SECRET_PASSWORD_LENGTH = 12;
-    private static final String SECRET_PASSWORD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~`!@#$%^&*()-_=+[{]}|,<.>/?\\";
-
     private final AuditLog auditLog;
     private final OrganizationManager orgManager;
     private final ProcessQueueDao processQueueDao;
@@ -223,10 +220,6 @@ public class SecretManager {
                 .field("orgId", e.getId())
                 .field("name", e.getName())
                 .log();
-    }
-
-    public String generatePassword() {
-        return RandomStringUtils.random(SECRET_PASSWORD_LENGTH, SECRET_PASSWORD_CHARS);
     }
 
     public DecryptedSecret getSecret(UUID orgId, String name, String password, SecretType expectedType) {

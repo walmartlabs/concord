@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.google.common.base.Strings;
 import com.walmartlabs.ollie.config.Config;
+import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,10 +42,12 @@ public class GithubConfiguration {
 
     @Inject
     @Config("github.secret")
+    @Nullable
     private String secret;
 
     @Inject
     @Config("github.oauthAccessToken")
+    @Nullable
     private String oauthAccessToken;
 
     @Inject
@@ -61,6 +65,21 @@ public class GithubConfiguration {
     @Inject
     @Config("github.cacheEnabled")
     private boolean cacheEnabled;
+
+    @Inject
+    public GithubConfiguration() {
+        if (!enabled) {
+            return;
+        }
+
+        if (Strings.isNullOrEmpty(secret)) {
+            throw new IllegalArgumentException("github.secret is required");
+        }
+
+        if (Strings.isNullOrEmpty(oauthAccessToken)) {
+            throw new IllegalArgumentException("github.oauthAccessToken is required");
+        }
+    }
 
     public boolean isEnabled() {
         return enabled;

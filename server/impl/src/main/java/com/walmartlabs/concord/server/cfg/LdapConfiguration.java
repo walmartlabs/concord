@@ -61,6 +61,7 @@ public class LdapConfiguration implements Serializable {
 
     @Inject
     @Config("ldap.systemPassword")
+    @Nullable
     private String systemPassword;
 
     @Inject

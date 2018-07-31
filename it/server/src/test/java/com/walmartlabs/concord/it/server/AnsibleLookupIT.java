@@ -41,7 +41,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
 
         String secretName = "mySecret";
         String secretValue = "value_" + randomString();
-        String secretPwd = "pwd_" + randomString();
+        String secretPwd = randomPwd();
         addPlainSecret(orgName, secretName, false, secretPwd, secretValue.getBytes());
 
         String projectName = "project_" + randomString();
@@ -87,7 +87,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
 
         String secretName = "mySecret";
         String secretValue = "value_" + randomString();
-        String secretPwd = "pwd_" + randomString();
+        String secretPwd = randomPwd();
         addPlainSecret(orgName, secretName, false, secretPwd, secretValue.getBytes());
 
         String projectName = "project_" + randomString();

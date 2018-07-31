@@ -142,6 +142,10 @@ public abstract class AbstractServerIT {
         return ITUtils.randomString();
     }
 
+    protected String randomPwd() {
+        return "pwd_" + ITUtils.randomString() + "A!";
+    }
+
     protected static Path createTempDir() throws IOException {
         Path tmpDir = Files.createTempDirectory("test");
         Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rwxr-xr-x"));

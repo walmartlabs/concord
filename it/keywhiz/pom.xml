@@ -159,12 +159,12 @@
                                             <mode>host</mode>
                                         </network>
                                         <env>
+                                            <CONCORD_CFG_FILE>/keywhiz/server.conf</CONCORD_CFG_FILE>
                                             <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
-                                            <DB_DIALECT>POSTGRES</DB_DIALECT>
-                                            <DB_DRIVER>org.postgresql.Driver</DB_DRIVER>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
-                                            <CONCORD_CFG_FILE>/keywhiz/server.conf</CONCORD_CFG_FILE>
+                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
+                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
                                         </env>
                                         <volumes>
                                             <bind>
