@@ -34,13 +34,6 @@ exec java \
 -server \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
--Dlogback.configurationFile=com/walmartlabs/concord/server/logback.xml \
--Dcom.sun.management.jmxremote \
--Dcom.sun.management.jmxremote.port=5555 \
--Dcom.sun.management.jmxremote.ssl=false \
--Dcom.sun.management.jmxremote.authenticate=true \
--Dcom.sun.management.jmxremote.access.file=${APP_DIR}/jmx/jmx.access \
--Dcom.sun.management.jmxremote.password.file=${APP_DIR}/jmx/jmx.password \
 $CFG_FILE \
 -cp "${APP_DIR}/*" \
 "${MAIN_CLASS}"
