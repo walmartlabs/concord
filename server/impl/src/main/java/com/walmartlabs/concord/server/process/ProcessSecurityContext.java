@@ -112,10 +112,10 @@ public class ProcessSecurityContext {
         return runAs(principals, c);
     }
 
-    public <T> T runAs(String realmName, String userName, Callable<T> c) throws Exception {
-        UserEntry u = userManager.getByName(userName).orElse(null);
+    public <T> T runAs(String realmName, String username, Callable<T> c) throws Exception {
+        UserEntry u = userManager.getByName(username).orElse(null);
         if (u == null) {
-            throw new UnauthorizedException("user '" + userName + "'not found");
+            throw new UnauthorizedException("user '" + username + "'not found");
         }
 
         UserPrincipal p = new UserPrincipal(realmName, u);

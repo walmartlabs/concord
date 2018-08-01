@@ -306,17 +306,17 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        String userName = "user_" + randomString();
+        String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
         usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userName)
+                .setUsername(username)
                 .setType(CreateUserRequest.TypeEnum.LOCAL)
                 .setAdmin(false));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
         CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
-                .setUsername(userName));
+                .setUsername(username));
 
         // ---
 

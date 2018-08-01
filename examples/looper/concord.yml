@@ -1,0 +1,11 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:looper-task:0.52.0"
+
+flows:
+  default:
+    - task: looper
+      in:
+        username: "${initiator.username}"
+        apiToken: "LOOPER_API_TOKEN"
+        jobName: "my-job"

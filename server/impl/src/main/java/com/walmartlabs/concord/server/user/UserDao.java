@@ -103,12 +103,12 @@ public class UserDao extends AbstractDao {
         }
     }
 
-    public UserEntry getByName(String userName) {
+    public UserEntry getByName(String username) {
         try (DSLContext tx = DSL.using(cfg)) {
             Record5<UUID, String, String, Boolean, String> r =
                     tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_EMAIL)
                             .from(USERS)
-                            .where(USERS.USERNAME.eq(userName))
+                            .where(USERS.USERNAME.eq(username))
                             .fetchOne();
 
             if (r == null) {

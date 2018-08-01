@@ -615,20 +615,20 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        String userName = "user_" + randomString();
+        String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
         usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userName)
+                .setUsername(username)
                 .setType(CreateUserRequest.TypeEnum.LOCAL));
 
         // ---
 
         teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userName)
+                .setUsername(username)
                 .setRole(TeamUserEntry.RoleEnum.MEMBER)));
         teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userName)
+                .setUsername(username)
                 .setRole(TeamUserEntry.RoleEnum.MAINTAINER)));
     }
 
@@ -651,15 +651,15 @@ public class TeamRbacIT extends AbstractServerIT {
 
         // ---
 
-        String userName = "user_" + randomString();
+        String username = "user_" + randomString();
 
         UsersApi usersApi = new UsersApi(getApiClient());
         usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userName)
+                .setUsername(username)
                 .setType(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userName));
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest().setUsername(username));
 
         // ---
 
@@ -683,7 +683,7 @@ public class TeamRbacIT extends AbstractServerIT {
         teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
 
         teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userName)
+                .setUsername(username)
                 .setRole(TeamUserEntry.RoleEnum.MEMBER)));
 
         // ---

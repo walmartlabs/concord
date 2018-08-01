@@ -170,12 +170,12 @@ public class RunAsIT extends AbstractServerIT {
         assertTrue(r.isOk());
     }
 
-    private UUID createTeam(String orgName, String teamName, String userName) throws Exception {
+    private UUID createTeam(String orgName, String teamName, String username) throws Exception {
         TeamsApi teamsApi = new TeamsApi(getApiClient());
         CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
 
         teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(userName)
+                .setUsername(username)
                 .setRole(TeamUserEntry.RoleEnum.MEMBER)));
 
         return ctr.getId();

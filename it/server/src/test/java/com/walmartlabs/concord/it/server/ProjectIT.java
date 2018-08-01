@@ -57,7 +57,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         String projectName = "myProject_" + randomString();
-        String userName = "myUser_" + randomString();
+        String username = "myUser_" + randomString();
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
@@ -68,7 +68,7 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, false);
+        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*" + greeting + ".*", ab);
@@ -90,14 +90,14 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         String projectName = "myProject_" + randomString();
-        String userName = "myUser_" + randomString();
+        String username = "myUser_" + randomString();
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
 
         // ---
 
-        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, null, Collections.emptyMap(), false);
+        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, null, Collections.emptyMap(), false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*Hello, Concord.*", ab);
@@ -134,7 +134,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         String projectName = "myProject_" + randomString();
-        String userName = "myUser_" + randomString();
+        String username = "myUser_" + randomString();
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
@@ -144,7 +144,7 @@ public class ProjectIT extends AbstractServerIT {
                 Collections.singletonMap("greeting", greeting));
 
         // ---
-        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
+        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, commitId, null, false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
@@ -184,7 +184,7 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
         String projectName = "myProject_" + randomString();
-        String userName = "myUser_" + randomString();
+        String username = "myUser_" + randomString();
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
@@ -194,7 +194,7 @@ public class ProjectIT extends AbstractServerIT {
                 Collections.singletonMap("greeting", greeting));
 
         // ---
-        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, null, tag, false);
+        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, null, tag, false);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
@@ -216,7 +216,7 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         String projectName = "myProject_" + randomString();
-        String userName = "myUser_" + randomString();
+        String username = "myUser_" + randomString();
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
@@ -234,7 +234,7 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry psr = doTest(projectName, userName, permissions, repoName, repoUrl, entryPoint, args, true);
+        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, true);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*110123.*", ab);
@@ -262,12 +262,12 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         String projectName = "myProject_" + randomString();
-        String userName = "myUser_" + randomString();
+        String username = "myUser_" + randomString();
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
 
-        createProjectAndRepo(projectName, userName, permissions, repoName, repoUrl, null, null);
+        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
 
         TriggersApi triggersApi = new TriggersApi(getApiClient());
         while (true) {
@@ -298,14 +298,14 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         String projectName = "myProject_" + randomString();
-        String userName = "myUser_" + randomString();
+        String username = "myUser_" + randomString();
         Set<String> permissions = Collections.emptySet();
         String repoName = "myRepo_" + randomString();
         String repoUrl = gitUrl;
 
         // ---
 
-        createProjectAndRepo(projectName, userName, permissions, repoName,repoUrl, null, null);
+        createProjectAndRepo(projectName, username, permissions, repoName,repoUrl, null, null);
 
         // ---
 
@@ -334,14 +334,14 @@ public class ProjectIT extends AbstractServerIT {
     }
 
     protected void createProjectAndRepo(String projectName,
-                                        String userName,
+                                        String username,
                                         Set<String> permissions,
                                         String repoName, String repoUrl,
                                         String commitId, String tag) throws Exception {
 
         UsersApi usersApi = new UsersApi(getApiClient());
         CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
-                .setUsername(userName)
+                .setUsername(username)
                 .setType(CreateUserRequest.TypeEnum.LOCAL));
         assertTrue(cur.isOk());
 
@@ -372,16 +372,16 @@ public class ProjectIT extends AbstractServerIT {
     }
 
     protected ProcessEntry doTest(String projectName,
-                                  String userName, Set<String> permissions,
+                                  String username, Set<String> permissions,
                                   String repoName, String repoUrl,
                                   String entryPoint, Map<String, Object> args,
                                   boolean sync) throws Exception {
-        return doTest(projectName, userName, permissions, repoName, repoUrl,
+        return doTest(projectName, username, permissions, repoName, repoUrl,
                 entryPoint, args, null, null, sync);
     }
 
     protected ProcessEntry doTest(String projectName,
-                                  String userName, Set<String> permissions,
+                                  String username, Set<String> permissions,
                                   String repoName, String repoUrl,
                                   String entryPoint, Map<String, Object> args,
                                   String commitId, String tag,
@@ -389,7 +389,7 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        createProjectAndRepo(projectName, userName, permissions, repoName, repoUrl, commitId, tag);
+        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, commitId, tag);
 
         // ---
 
