@@ -22,6 +22,7 @@ package com.walmartlabs.concord.sdk;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Process execution context.
@@ -94,7 +95,26 @@ public interface Context {
      */
     void suspend(String eventName);
 
+    /**
+     * Returns the ID of a current process definition (flow).
+     *
+     * @return
+     */
     String getProcessDefinitionId();
 
+    /**
+     * Returns the ID of a current process element (flow step).
+     *
+     * @return
+     */
     String getElementId();
+
+    /**
+     * Returns the ID of the parent process event. Can be {@code null}.
+     *
+     * @return
+     */
+    default UUID getEventCorrelationId() {
+        throw new IllegalStateException("Not supported");
+    }
 }

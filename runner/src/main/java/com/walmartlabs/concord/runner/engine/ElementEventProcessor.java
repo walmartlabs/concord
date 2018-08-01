@@ -88,7 +88,7 @@ public class ElementEventProcessor {
             e.putAll(builder.build(element));
 
             ProcessEventRequest req = new ProcessEventRequest();
-            req.setEventType(ProcessEventRequest.EventTypeEnum.ELEMENT);
+            req.setEventType("ELEMENT"); // TODO should it be in the constants?
             req.setData(e);
 
             ProcessEventsApi client = new ProcessEventsApi(apiClientFactory.create(event.getSessionToken()));

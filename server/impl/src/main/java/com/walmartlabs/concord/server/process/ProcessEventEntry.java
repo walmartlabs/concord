@@ -30,7 +30,7 @@ import java.util.UUID;
 public class ProcessEventEntry implements Serializable {
 
     private final UUID id;
-    private final ProcessEventType eventType;
+    private final String eventType;
     private final Object data;
 
     /**
@@ -41,7 +41,7 @@ public class ProcessEventEntry implements Serializable {
 
     @JsonCreator
     public ProcessEventEntry(@JsonProperty("id") UUID id,
-                             @JsonProperty("eventType") ProcessEventType eventType,
+                             @JsonProperty("eventType") String eventType,
                              @JsonProperty("eventDate") Date eventDate,
                              @JsonProperty("data") Object data) {
 
@@ -55,7 +55,7 @@ public class ProcessEventEntry implements Serializable {
         return id;
     }
 
-    public ProcessEventType getEventType() {
+    public String getEventType() {
         return eventType;
     }
 

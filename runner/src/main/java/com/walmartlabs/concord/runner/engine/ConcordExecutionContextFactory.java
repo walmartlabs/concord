@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionContextFactory;
@@ -29,6 +30,7 @@ import io.takari.bpm.context.ExecutionContextImpl;
 import io.takari.bpm.el.ExpressionManager;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class ConcordExecutionContextFactory implements ExecutionContextFactory<ConcordExecutionContextFactory.ConcordExecutionContext> {
 
@@ -64,6 +66,11 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
                                        ExpressionManager expressionManager, Variables source,
                                        String processDefinitionId, String elementId) {
             super(ctxFactory, expressionManager, source, processDefinitionId, elementId);
+        }
+
+        @Override
+        public UUID getEventCorrelationId() {
+            return (UUID) getVariable(InternalConstants.Context.EVENT_CORRELATION_KEY);
         }
     }
 

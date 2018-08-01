@@ -38,8 +38,6 @@ import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
-import static com.walmartlabs.concord.project.InternalConstants.Context.EVENT_CORRELATION_KEY;
-
 @Named("ansible2")
 public class RunPlaybookTask2 implements Task {
 
@@ -164,7 +162,7 @@ public class RunPlaybookTask2 implements Task {
         processStrategy(tmpDir);
 
         final Map<String, String> env = addExtraEnv(defaultEnv(workDir), args);
-        UUID eventCorrelationId = (UUID) context.getVariable(EVENT_CORRELATION_KEY);
+        UUID eventCorrelationId = context.getEventCorrelationId();
         if (eventCorrelationId != null) {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
         }

@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process.event;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.process.ProcessEventEntry;
-import com.walmartlabs.concord.server.process.ProcessEventType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -67,24 +66,24 @@ public class EventDao extends AbstractDao {
         }
     }
 
-    public void insert(UUID instanceId, ProcessEventType eventType, String eventData) {
+    public void insert(UUID instanceId, String eventType, String eventData) {
         tx(tx -> insert(tx, instanceId, eventType, eventData));
     }
 
-    public void insert(DSLContext tx, UUID instanceId, ProcessEventType eventType, String eventData) {
+    public void insert(DSLContext tx, UUID instanceId, String eventType, String eventData) {
         tx.insertInto(PROCESS_EVENTS)
                 .columns(PROCESS_EVENTS.INSTANCE_ID,
                         PROCESS_EVENTS.EVENT_TYPE,
                         PROCESS_EVENTS.EVENT_DATE,
                         PROCESS_EVENTS.EVENT_DATA)
                 .values(value(instanceId),
-                        value(eventType.name()),
+                        value(eventType),
                         currentTimestamp(),
                         field("?::jsonb", eventData))
                 .execute();
     }
 
     private static ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
-        return new ProcessEventEntry(r.value1(), ProcessEventType.valueOf(r.value2()), r.value3(), r.value4());
+        return new ProcessEventEntry(r.value1(), r.value2(), r.value3(), r.value4());
     }
 }
