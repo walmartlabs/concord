@@ -4,6 +4,7 @@
 
 ### Added
 
+- http: support for `DELETE` method;
 - project-model: support for `activeProfiles` in trigger definitions;
 - concord-server: option to disable triggers (specific or all);
 - concord-server: the Prometheus metrics endpoint now proxied by the

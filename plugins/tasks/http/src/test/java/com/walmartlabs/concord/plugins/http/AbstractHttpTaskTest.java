@@ -66,7 +66,7 @@ public abstract class AbstractHttpTaskTest {
         stubForGetRequestForResponseTypeStringFile();
         stubForGetRequestForResponseTypeJSONFile();
         stubForUnsuccessfulResponse();
-
+        stubForDeleteRequest();
     }
 
     @After
@@ -187,6 +187,18 @@ public abstract class AbstractHttpTaskTest {
                 .willReturn(aResponse()
                         .withStatus(400)
                         .withBody("Error string"))
+        );
+    }
+
+    protected void stubForDeleteRequest() {
+        rule.stubFor(delete(urlEqualTo("/delete"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withHeader("Accept", "application/json")
+                        .withBody("{\n" +
+                                "  \"message\": \"Success\"\n" +
+                                "}"))
         );
     }
 }

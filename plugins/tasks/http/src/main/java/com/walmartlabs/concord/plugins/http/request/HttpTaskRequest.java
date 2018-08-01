@@ -24,10 +24,7 @@ import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.*;
 
 import javax.ws.rs.core.MediaType;
 import java.util.Map;
@@ -44,12 +41,22 @@ public class HttpTaskRequest implements Request {
     }
 
     /**
+     * Method to create {@link HttpDelete} request
+     *
+     * @param url Endpoint
+     * @return HttpTaskRequest
+     */
+    public static HttpTaskRequest delete(String url) {
+        return new HttpTaskRequest(new HttpDelete(url));
+    }
+
+    /**
      * Method to create {@link HttpPost} request
      *
      * @param url Endpoint
      * @return HttpTaskRequest
      */
-    public static HttpTaskRequest Post(String url) {
+    public static HttpTaskRequest post(String url) {
         return new HttpTaskRequest(new HttpPost(url));
     }
 
@@ -59,7 +66,7 @@ public class HttpTaskRequest implements Request {
      * @param url Endpoint
      * @return HttpTaskRequest
      */
-    public static HttpTaskRequest Get(String url) {
+    public static HttpTaskRequest get(String url) {
         return new HttpTaskRequest(new HttpGet(url));
     }
 

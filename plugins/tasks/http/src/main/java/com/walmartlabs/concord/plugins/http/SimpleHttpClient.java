@@ -217,22 +217,43 @@ public class SimpleHttpClient {
         return new PoolingHttpClientConnectionManager(registry);
     }
 
-    private HttpUriRequest buildHttpUriRequest(Configuration config) throws Exception {
+    private HttpUriRequest buildHttpUriRequest(Configuration cfg) throws Exception {
         HttpUriRequest request;
-        switch (config.getMethodType()) {
-            case POST:
-                request = buildPostRequest(config);
+        switch (cfg.getMethodType()) {
+            case DELETE: {
+                request = buildDeleteRequest(cfg);
                 break;
-            case GET:
-                request = buildGetRequest(config);
+            }
+            case POST: {
+                request = buildPostRequest(cfg);
                 break;
-            case PUT:
-                request = buildPutRequest(config);
+            }
+            case GET: {
+                request = buildGetRequest(cfg);
                 break;
+            }
+            case PUT: {
+                request = buildPutRequest(cfg);
+                break;
+            }
             default:
-                throw new IllegalArgumentException("Unsupported method type: " + config.getMethodType());
+                throw new IllegalArgumentException("Unsupported method type: " + cfg.getMethodType());
         }
         return request;
+    }
+
+    /**
+     * Method to build the delete request using the given configuration
+     *
+     * @param cfg {@link Configuration}
+     * @return HttpUriRequest
+     */
+    private HttpUriRequest buildDeleteRequest(Configuration cfg) {
+        return HttpTaskRequest.delete(cfg.getUrl())
+                .withBasicAuth(cfg.getEncodedAuthToken())
+                .withResponseType(ResponseType.ANY)
+                .withHeaders(cfg.getRequestHeaders())
+                .get();
     }
 
     /**
@@ -243,7 +264,7 @@ public class SimpleHttpClient {
      * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, HttpTask.RequestType)} method
      */
     private HttpUriRequest buildPostRequest(Configuration cfg) throws Exception {
-        return HttpTaskRequest.Post(cfg.getUrl())
+        return HttpTaskRequest.post(cfg.getUrl())
                 .withBasicAuth(cfg.getEncodedAuthToken())
                 .withRequestType(cfg.getRequestType())
                 .withResponseType(ResponseType.ANY)
@@ -259,7 +280,7 @@ public class SimpleHttpClient {
      * @return HttpUriRequest
      */
     private HttpUriRequest buildGetRequest(Configuration cfg) {
-        return HttpTaskRequest.Get(cfg.getUrl())
+        return HttpTaskRequest.get(cfg.getUrl())
                 .withBasicAuth(cfg.getEncodedAuthToken())
                 .withRequestType(cfg.getRequestType())
                 .withResponseType(ResponseType.ANY)

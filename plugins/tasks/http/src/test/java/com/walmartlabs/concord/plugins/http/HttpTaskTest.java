@@ -24,6 +24,7 @@ import com.walmartlabs.concord.sdk.Context;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
@@ -184,5 +185,13 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         task.execute(mockContext);
     }
 
-
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testDelete() throws Exception {
+        initCxtForRequest(mockContext, "DELETE", "string", "json", "http://localhost:" + rule.port() + "/delete");
+        task.execute(mockContext);
+        verify(deleteRequestedFor(urlEqualTo("/delete")));
+        assertNotNull(response);
+        assertEquals("Success", ((Map<String, Object>) response.get("content")).get("message"));
+    }
 }

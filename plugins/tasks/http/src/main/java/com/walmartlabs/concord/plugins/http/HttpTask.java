@@ -96,15 +96,17 @@ public class HttpTask implements Task {
     }
 
     public enum RequestMethodType {
+        DELETE,
         GET,
         POST,
         PUT;
 
-        public static boolean isMember(String aName) {
-            RequestMethodType[] requestMethodTypes = RequestMethodType.values();
-            for (RequestMethodType requestMethodType : requestMethodTypes)
-                if (requestMethodType.name().equalsIgnoreCase(aName))
+        public static boolean isMember(String name) {
+            for (RequestMethodType t : values()) {
+                if (t.name().equalsIgnoreCase(name)) {
                     return true;
+                }
+            }
             return false;
         }
     }
