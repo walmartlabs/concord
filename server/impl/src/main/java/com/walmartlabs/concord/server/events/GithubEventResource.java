@@ -217,6 +217,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                     entry.getRepositoryName(),
                     entry.getEventSource(),
                     entry.getEntryPoint(),
+                    entry.getActiveProfiles(),
                     entry.getArguments(),
                     conditions);
         }

@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+
 public class TriggerIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
@@ -81,6 +83,26 @@ public class TriggerIT extends AbstractServerIT {
 
         waitForProcs(porA.getId(), 1, StatusEnum.FAILED);
         waitForProcs(porB.getId(), 1, StatusEnum.FINISHED);
+    }
+
+    @Test(timeout = 60000)
+    public void testTriggerProfiles() throws Exception {
+        String orgName = "org_" + randomString();
+        String projectName = "project_" + randomString();
+        ProjectOperationResponse por = register(orgName, projectName, "triggerActiveProfiles", 1);
+
+        // ---
+
+        ExternalEventsApi eventResource = new ExternalEventsApi(getApiClient());
+        eventResource.event("testTrigger", Collections.emptyMap());
+
+        // ---
+
+        List<ProcessEntry> l = waitForProcs(por.getId(), 1, StatusEnum.FINISHED);
+        ProcessEntry pe = l.get(0);
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Hello, Concord.*", ab);
     }
 
     private ProjectOperationResponse register(String orgName, String projectName, String repoResource, int expectedTriggerCount) throws Exception {

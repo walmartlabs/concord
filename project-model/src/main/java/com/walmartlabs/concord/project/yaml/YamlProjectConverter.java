@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;
@@ -28,6 +27,7 @@ import com.walmartlabs.concord.project.yaml.model.YamlFormField;
 import com.walmartlabs.concord.project.yaml.model.YamlProfile;
 import com.walmartlabs.concord.project.yaml.model.YamlProject;
 import com.walmartlabs.concord.project.yaml.model.YamlStep;
+import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
@@ -61,9 +61,10 @@ public final class YamlProjectConverter {
             Map.Entry<String, Map<String, Object>> e = t.entrySet().iterator().next();
             String name = e.getKey();
             Map<String, Object> params = e.getValue();
-            String entryPoint = (String) params.remove(InternalConstants.Request.ENTRY_POINT_KEY);
-            Map<String, Object> arguments = (Map<String, Object>) params.remove(InternalConstants.Request.ARGUMENTS_KEY);
-            result.add(new Trigger(name, entryPoint, arguments, params));
+            String entryPoint = (String) params.remove(Constants.Request.ENTRY_POINT_KEY);
+            List<String> activeProfiles = (List<String>) params.remove(Constants.Request.ACTIVE_PROFILES_KEY);
+            Map<String, Object> arguments = (Map<String, Object>) params.remove(Constants.Request.ARGUMENTS_KEY);
+            result.add(new Trigger(name, entryPoint, activeProfiles, arguments, params));
         }
         return result;
     }

@@ -90,7 +90,7 @@ public abstract class AbstractEventResource {
 
             try {
                 UUID orgId = projectDao.getOrgId(t.getProjectId());
-                UUID instanceId = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), args);
+                UUID instanceId = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), t.getActiveProfiles(), args);
                 log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, instanceId, t);
             } catch (Exception e) {
                 log.error("process ['{}', '{}', '{}'] -> error", event, eventName, t.getId(), e);
@@ -113,20 +113,25 @@ public abstract class AbstractEventResource {
         }
     }
 
-    private UUID startProcess(UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) throws IOException {
+    private UUID startProcess(UUID orgId, UUID projectId, UUID repoId, String entryPoint, List<String> activeProfiles, Map<String, Object> args) throws IOException {
         UUID instanceId = UUID.randomUUID();
 
         String initiator = getInitiator();
 
         Map<String, Object> request = new HashMap<>();
-        request.put(Constants.Request.ARGUMENTS_KEY, args);
+        if (activeProfiles != null) {
+            request.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
+        }
+        if (args != null) {
+            request.put(Constants.Request.ARGUMENTS_KEY, args);
+        }
 
         Payload payload = new PayloadBuilder(instanceId)
                     .initiator(initiator)
                     .organization(orgId)
                     .project(projectId)
                     .repository(repoId)
-                    .entryPoint(flowName)
+                .entryPoint(entryPoint)
                     .configuration(request)
                     .build();
 

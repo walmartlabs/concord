@@ -1,0 +1,28 @@
+flows:
+  default:
+  - log: "whoops"
+
+  onTrigger:
+  - log: "${msg}, ${name}"
+
+  onInvalidTrigger:
+  - log: "Oh no"
+
+triggers:
+  - testTrigger:
+      entryPoint: onTrigger
+      activeProfiles:
+      - testProfile
+      arguments:
+        name: "Concord"
+
+profiles:
+  testProfile:
+    configuration:
+      arguments:
+        msg: "Hello"
+        name: "stranger"
+
+configuration:
+  arguments:
+    msg: "Bye"

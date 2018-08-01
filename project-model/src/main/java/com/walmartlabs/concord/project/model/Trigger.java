@@ -21,21 +21,21 @@ package com.walmartlabs.concord.project.model;
  */
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 public class Trigger implements Serializable {
 
     private final String name;
-
     private final String entryPoint;
-
+    private final List<String> activeProfiles;
     private final Map<String, Object> arguments;
-
     private final Map<String, Object> params;
 
-    public Trigger(String name, String entryPoint, Map<String, Object> arguments, Map<String, Object> params) {
+    public Trigger(String name, String entryPoint, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> params) {
         this.name = name;
         this.entryPoint = entryPoint;
+        this.activeProfiles = activeProfiles;
         this.arguments = arguments;
         this.params = params;
     }
@@ -52,6 +52,10 @@ public class Trigger implements Serializable {
         return entryPoint;
     }
 
+    public List<String> getActiveProfiles() {
+        return activeProfiles;
+    }
+
     public Map<String, Object> getArguments() {
         return arguments;
     }
@@ -61,6 +65,7 @@ public class Trigger implements Serializable {
         return "Trigger{" +
                 "name='" + name + '\'' +
                 ", entryPoint='" + entryPoint + '\'' +
+                ", activeProfiles=" + activeProfiles +
                 ", arguments=" + arguments +
                 ", params=" + params +
                 '}';

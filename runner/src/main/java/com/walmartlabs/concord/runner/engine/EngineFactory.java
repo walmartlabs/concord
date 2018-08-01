@@ -46,6 +46,8 @@ import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.task.JavaDelegateHandler;
 import io.takari.bpm.task.UserTaskHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -60,6 +62,8 @@ import java.util.Map;
 @Named
 public class EngineFactory {
 
+    private static final Logger log = LoggerFactory.getLogger(EngineFactory.class);
+
     private final ApiClientFactory apiClientFactory;
     private final NamedTaskRegistry taskRegistry;
 
@@ -71,6 +75,8 @@ public class EngineFactory {
 
     @SuppressWarnings("deprecation")
     public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles) {
+        log.info("create -> using profiles: {}", activeProfiles);
+
         Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
         Path stateDir = attachmentsDir.resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
 

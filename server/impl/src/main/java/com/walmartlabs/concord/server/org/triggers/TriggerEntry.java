@@ -28,6 +28,7 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -53,6 +54,8 @@ public class TriggerEntry implements Serializable {
     @NotNull
     private final String entryPoint;
 
+    private final List<String> activeProfiles;
+
     private final Map<String, Object> arguments;
 
     private final Map<String, Object> conditions;
@@ -65,6 +68,7 @@ public class TriggerEntry implements Serializable {
                         @JsonProperty("repositoryName") String repositoryName,
                         @JsonProperty("eventSource") String eventSource,
                         @JsonProperty("entryPoint") String entryPoint,
+                        @JsonProperty("activeProfiles") List<String> activeProfiles,
                         @JsonProperty("arguments") Map<String, Object> arguments,
                         @JsonProperty("conditions") Map<String, Object> conditions) {
 
@@ -75,6 +79,7 @@ public class TriggerEntry implements Serializable {
         this.projectName = projectName;
         this.eventSource = eventSource;
         this.entryPoint = entryPoint;
+        this.activeProfiles = activeProfiles;
         this.arguments = arguments;
         this.conditions = conditions;
     }
@@ -107,6 +112,10 @@ public class TriggerEntry implements Serializable {
         return entryPoint;
     }
 
+    public List<String> getActiveProfiles() {
+        return activeProfiles;
+    }
+
     public Map<String, Object> getArguments() {
         return arguments;
     }
@@ -125,6 +134,7 @@ public class TriggerEntry implements Serializable {
                 ", projectName='" + projectName + '\'' +
                 ", eventSource='" + eventSource + '\'' +
                 ", entryPoint='" + entryPoint + '\'' +
+                ", activeProfiles=" + activeProfiles +
                 ", arguments=" + arguments +
                 ", conditions=" + conditions +
                 '}';

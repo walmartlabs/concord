@@ -32,7 +32,6 @@ import io.swagger.annotations.Authorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,6 +42,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -71,8 +71,8 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
     public Response event(@ApiParam @PathParam("eventName") String eventName,
                           @ApiParam Map<String, Object> event) {
 
-        if (event == null || event.isEmpty()) {
-            throw new ValidationErrorsException("Emptry event data");
+        if (event == null) {
+            event = Collections.emptyMap();
         }
 
         String eventId = (String) event.get("id");

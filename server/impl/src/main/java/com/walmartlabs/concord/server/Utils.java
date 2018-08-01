@@ -20,7 +20,16 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import java.util.List;
+
 public final class Utils {
+
+    public static String[] toArray(List<String> l) {
+        if (l == null) {
+            return null;
+        }
+        return l.toArray(new String[0]);
+    }
 
     public static String[] toString(Enum<?>... e) {
         String[] as = new String[e.length];
