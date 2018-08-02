@@ -13,6 +13,9 @@ console's nginx.
 
 ### Changed
 
+- concord-console: fix duplicate form events;
+- concord-console: replace automatic redirect to a custom form with a
+link;
 - concord-console: escape HTML in process logs.
 
 

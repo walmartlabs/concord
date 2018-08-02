@@ -35,7 +35,6 @@ import { sagas as Triggers } from '../state/data/triggers';
 export default function* root() {
     yield all([
         fork(Forms),
-        fork(Forms),
         fork(Login),
         fork(Organizations),
         fork(Processes),

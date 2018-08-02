@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { push as pushHistory } from 'react-router-redux';
-import { Loader } from 'semantic-ui-react';
+import { Loader, Segment } from 'semantic-ui-react';
 import { ConcordId, RequestError } from '../../../api/common';
 import { FormInstanceEntry, FormSubmitErrors } from '../../../api/process/form';
 import { actions } from '../../../state/data/forms';
@@ -104,17 +104,29 @@ class ProcessFormActivity extends React.PureComponent<Props> {
         }
 
         return (
-            <ProcessForm
-                form={form}
-                submitting={submitting}
-                submitError={submitError}
-                completed={completed}
-                errors={validationErrors}
-                onSubmit={(values) =>
-                    onSubmit(processInstanceId, formInstanceId, values, form.yield)
-                }
-                onReturn={() => onReturn(processInstanceId)}
-            />
+            <>
+                {form.custom && (
+                    <Segment>
+                        This form has a{' '}
+                        <a href={`/forms/${processInstanceId}/${formInstanceId}/form`}>
+                            {' '}
+                            custom view.
+                        </a>
+                    </Segment>
+                )}
+
+                <ProcessForm
+                    form={form}
+                    submitting={submitting}
+                    submitError={submitError}
+                    completed={completed}
+                    errors={validationErrors}
+                    onSubmit={(values) =>
+                        onSubmit(processInstanceId, formInstanceId, values, form.yield)
+                    }
+                    onReturn={() => onReturn(processInstanceId)}
+                />
+            </>
         );
     }
 }
