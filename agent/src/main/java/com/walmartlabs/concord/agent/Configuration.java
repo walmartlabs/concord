@@ -53,8 +53,6 @@ public class Configuration {
 
     public static final String DOCKER_ORPHAN_SWEEPER_ENABLED_KEY = "DOCKER_ORPHAN_SWEEPER_ENABLED";
     public static final String DOCKER_ORPHAN_SWEEPER_PERIOD_KEY = "DOCKER_ORPHAN_SWEEPER_PERIOD";
-    public static final String DOCKER_OLD_IMAGE_SWEEPER_ENABLED_KEY = "DOCKER_OLD_IMAGE_SWEEPER_ENABLED";
-    public static final String DOCKER_OLD_IMAGE_SWEEPER_PERIOD_KEY = "DOCKER_OLD_IMAGE_SWEEPER_PERIOD";
 
     public static final String RUNNER_SECURITY_MANAGER_ENABLED_KEY = "RUNNER_SECURITY_MANAGER_ENABLED";
 
@@ -87,8 +85,6 @@ public class Configuration {
     private final int maxPreforkCount;
     private final boolean dockerOrphanSweeperEnabled;
     private final long dockerOrphanSweeperPeriod;
-    private final boolean dockerOldImageSweeperEnabled;
-    private final long dockerOldImageSweeperPeriod;
     private final boolean runnerSecurityManagerEnabled;
 
     private final String apiKey;
@@ -134,9 +130,6 @@ public class Configuration {
 
             this.dockerOrphanSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_ORPHAN_SWEEPER_ENABLED_KEY, "false"));
             this.dockerOrphanSweeperPeriod = Long.parseLong(getEnv(DOCKER_ORPHAN_SWEEPER_PERIOD_KEY, "900000")); // 15 min
-
-            this.dockerOldImageSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_OLD_IMAGE_SWEEPER_ENABLED_KEY, "false"));
-            this.dockerOldImageSweeperPeriod = Long.parseLong(getEnv(DOCKER_OLD_IMAGE_SWEEPER_PERIOD_KEY, "3600000")); // 1 hour
 
             this.runnerSecurityManagerEnabled = Boolean.parseBoolean(getEnv(RUNNER_SECURITY_MANAGER_ENABLED_KEY, "false"));
 
@@ -212,14 +205,6 @@ public class Configuration {
 
     public long getDockerOrphanSweeperPeriod() {
         return dockerOrphanSweeperPeriod;
-    }
-
-    public boolean isDockerOldImageSweeperEnabled() {
-        return dockerOldImageSweeperEnabled;
-    }
-
-    public long getDockerOldImageSweeperPeriod() {
-        return dockerOldImageSweeperPeriod;
     }
 
     public boolean isRunnerSecurityManagerEnabled() {

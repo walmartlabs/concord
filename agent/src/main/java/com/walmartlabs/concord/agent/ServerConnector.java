@@ -21,7 +21,6 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.agent.docker.OldImageSweeper;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.client.CommandQueueApi;
 import com.walmartlabs.concord.client.ProcessApi;
@@ -42,7 +41,6 @@ public class ServerConnector implements MaintenanceModeListener {
     private Thread commandHandlerThread;
 
     private Thread orphanSweeper;
-    private Thread oldImageSweeper;
 
     private MaintenanceModeNotifier maintenanceModeNotifier;
 
@@ -98,20 +96,9 @@ public class ServerConnector implements MaintenanceModeListener {
             orphanSweeper = new Thread(new OrphanSweeper(executionManager, t), "docker-sweeper");
             orphanSweeper.start();
         }
-
-        if (cfg.isDockerOldImageSweeperEnabled()) {
-            long t = cfg.getDockerOldImageSweeperPeriod();
-            oldImageSweeper = new Thread(new OldImageSweeper(t));
-            oldImageSweeper.start();
-        }
     }
 
     public synchronized void stop() {
-        if (oldImageSweeper != null) {
-            oldImageSweeper.interrupt();
-            oldImageSweeper = null;
-        }
-
         if (orphanSweeper != null) {
             orphanSweeper.interrupt();
             orphanSweeper = null;
