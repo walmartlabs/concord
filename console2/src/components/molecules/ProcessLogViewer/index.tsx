@@ -23,7 +23,8 @@ import { Button, Header, Icon, Menu, Radio, Sticky, Transition } from 'semantic-
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
-import { RequestErrorMessage, Highlighter } from '../../molecules';
+import { escapeHtml } from '../../../utils';
+import { Highlighter, RequestErrorMessage } from '../../molecules';
 
 import './styles.css';
 
@@ -73,9 +74,10 @@ class ProcessLogViewer extends React.Component<Props, State> {
         const { instanceId, startPolling, stopPolling, data } = this.props;
         const { scrollAnchorRef } = this.state;
 
-        if (prevProps.data !== data && scrollAnchorRef === true) {
+        if (prevProps.data !== data && scrollAnchorRef) {
             this.scrollToBottom();
         }
+
         if (instanceId !== prevProps.instanceId) {
             stopPolling();
             startPolling();
@@ -160,7 +162,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                 {data.map((value, idx) => (
                     <pre className="logEntry" key={idx}>
                         <Highlighter
-                            value={value}
+                            value={escapeHtml(value)}
                             config={[
                                 { string: 'INFO ', style: 'color: #00B5F0' },
                                 { string: 'WARN ', style: 'color: #ffae42' },

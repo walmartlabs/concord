@@ -48,6 +48,7 @@ class Highlighter extends React.PureComponent<HighlighterProps> {
                 () => `<span style="${cfg.style}"><b>${cfg.string}</b></span>`
             );
         }
+
         return <div dangerouslySetInnerHTML={{ __html: txt }} />;
     }
 }

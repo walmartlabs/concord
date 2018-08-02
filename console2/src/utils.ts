@@ -121,3 +121,11 @@ export const timestampDiffMs = (
 
     return moment(t1).diff(moment(t2));
 };
+
+export const escapeHtml = (s: string): string =>
+    s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');

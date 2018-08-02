@@ -83,7 +83,8 @@ class ProcessElementList extends React.PureComponent<Props> {
                         <Table.HeaderCell width={1} />
                         <Table.HeaderCell>Step</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true} singleLine={true}>
-                            <Icon name="time" />Timestamp
+                            <Icon name="time" />
+                            Timestamp
                         </Table.HeaderCell>
                         <Table.HeaderCell collapsing={true} singleLine={true}>
                             Duration

@@ -11,6 +11,10 @@
 - concord-server: the Prometheus metrics endpoint now proxied by the
 console's nginx.
 
+### Changed
+
+- concord-console: escape HTML in process logs.
+
 
 
 ## [0.82.0] - 2018-07-29

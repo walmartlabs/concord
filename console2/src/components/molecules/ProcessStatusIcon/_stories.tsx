@@ -59,7 +59,9 @@ storiesOf('molecules/Process Status Icon', module).add('Inverted', () => (
         {status.map((value, i) => (
             <div key={i}>
                 <h3>{value}</h3>
-                {sizes.map((size, j) => <ProcessStatusIcon key={j} status={value} size={size} />)}
+                {sizes.map((size, j) => (
+                    <ProcessStatusIcon key={j} status={value} size={size} />
+                ))}
             </div>
         ))}
     </>
