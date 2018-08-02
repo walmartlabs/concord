@@ -1,0 +1,6 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "Hello from ansible"
+      verbosity: 0

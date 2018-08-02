@@ -1,6 +1,7 @@
 import ujson as json
 import os
 from ansible.plugins.callback import CallbackBase
+from concord_ansible_stats import ConcordAnsibleStats
 
 try:
     from __main__ import cli
@@ -32,12 +33,16 @@ class CallbackModule(CallbackBase):
         result = dict()
 
         all_vars = self.var_manager._nonpersistent_fact_cache
+
         for fact in self.out_vars:
             fact_by_host = dict()
             for host, vars in all_vars.items():
                 if fact in vars:
                     fact_by_host[host] = vars[fact]
             result[fact] = fact_by_host
+
+        if '_stats' in self.out_vars:
+            result['_stats'] = ConcordAnsibleStats.build_stats_data(stats)
 
         target_file = open(self.out_vars_file_name, "w")
         target_file.write(json.dumps(result, indent=2))

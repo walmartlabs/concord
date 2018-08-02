@@ -155,13 +155,14 @@ public class RunPlaybookTask2 implements Task {
         if (disableConcordCallbacks) {
             log.warn("Concord-specific Ansible callbacks are disabled.");
         } else {
-            processCallback(workDir, tmpDir);
+            Resources.copyCallback(tmpDir.resolve(CALLBACK_PLUGINS_DIR));
         }
 
-        processLookups(workDir, tmpDir);
-        processStrategy(tmpDir);
+        Resources.copyLibs(tmpDir.resolve(PYTHON_LIB_DIR));
+        Resources.copyLookups(tmpDir.resolve(LOOKUP_PLUGINS_DIR));
+        Resources.copyStrategy(tmpDir.resolve(STRATEGY_PLUGINS_DIR));
 
-        final Map<String, String> env = addExtraEnv(defaultEnv(workDir), args);
+        final Map<String, String> env = addExtraEnv(defaultEnv(workDir, tmpDir), args);
         UUID eventCorrelationId = context.getEventCorrelationId();
         if (eventCorrelationId != null) {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
@@ -229,9 +230,9 @@ public class RunPlaybookTask2 implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, String> defaultEnv(Path ws) {
+    private Map<String, String> defaultEnv(Path ws, Path tmpDir) {
         final Map<String, String> env = new HashMap<>();
-        env.put("PYTHONPATH", PYTHON_LIB_DIR);
+        env.put("PYTHONPATH", ws.relativize(tmpDir.resolve(PYTHON_LIB_DIR)).toString());
         env.put("CONCORD_INSTANCE_ID", (String) context.getVariable(Constants.Context.TX_ID_KEY));
         env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
 
@@ -248,44 +249,6 @@ public class RunPlaybookTask2 implements Task {
         }
 
         return env;
-    }
-
-    private void processCallback(Path workDir, Path tmpDir) throws IOException {
-        Path libDir = workDir.resolve(PYTHON_LIB_DIR);
-        Files.createDirectories(libDir);
-
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lib/task_policy.py", libDir.resolve("task_policy.py"));
-
-        Path callbackDir = tmpDir.resolve(CALLBACK_PLUGINS_DIR);
-        Files.createDirectories(callbackDir);
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_events.py", callbackDir.resolve("concord_events.py"));
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_trace.py", callbackDir.resolve("concord_trace.py"));
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_protectdata.py", callbackDir.resolve("concord_protectdata.py"));
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_strategy_enforce.py", callbackDir.resolve("concord_strategy_enforce.py"));
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/callback/concord_out_vars.py", callbackDir.resolve("concord_out_vars.py"));
-    }
-
-    private void processStrategy(Path tmpDir) throws IOException {
-        Path strategyDir = tmpDir.resolve(STRATEGY_PLUGINS_DIR);
-        Files.createDirectories(strategyDir);
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/strategy/concord_free.py", strategyDir.resolve("concord_free.py"));
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/strategy/concord_linear.py", strategyDir.resolve("concord_linear.py"));
-    }
-
-    private void processLookups(Path workDir, Path tmpDir) throws IOException {
-        Path lookupDir = tmpDir.resolve(LOOKUP_PLUGINS_DIR);
-        Files.createDirectories(lookupDir);
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_inventory.py", lookupDir.resolve("concord_inventory.py"));
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_public_key_secret.py", lookupDir.resolve("concord_public_key_secret.py"));
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_data_secret.py", lookupDir.resolve("concord_data_secret.py"));
-        // For backward compatibility
-        copyResourceToFile("/com/walmartlabs/concord/plugins/ansible/lookup/concord_secret.py", lookupDir.resolve("concord_secret.py"));
-    }
-
-    private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
-        try (InputStream is = RunPlaybookTask2.class.getResourceAsStream(resourceName)) {
-            Files.copy(is, dest, StandardCopyOption.REPLACE_EXISTING);
-        }
     }
 
     private static Path createTmpDir(Path workDir) throws IOException {

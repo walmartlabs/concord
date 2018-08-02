@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible: option to save Ansible host statistics as a flow variable;
 - http: support for `DELETE` method;
 - project-model: support for `activeProfiles` in trigger definitions;
 - concord-server: option to disable triggers (specific or all);

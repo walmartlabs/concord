@@ -1,0 +1,25 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.82.1-SNAPSHOT"
+
+flows:
+  default:
+  - task: ansible
+    in:
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        greetings: "Hi there!"
+      debug: true
+      outVars:
+        - "_stats"    # register variable for concord ansible stats
+
+  - log: "${ _stats }" # will print {failures=[], skipped=[], changed=[], ok=[127.0.0.1], unreachable=[]}
+
+
+
