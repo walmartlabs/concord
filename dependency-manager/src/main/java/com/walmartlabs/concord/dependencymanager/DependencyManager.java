@@ -43,10 +43,7 @@ import org.eclipse.aether.util.artifact.JavaScopes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.file.Files;
@@ -64,15 +61,12 @@ public class DependencyManager {
     private static final Logger log = LoggerFactory.getLogger(DependencyManager.class);
 
     public static final String MAVEN_SCHEME = "mvn";
-    public static final String CFG_FILE_KEY = "CONCORD_MAVEN_CFG";
 
+    private static final String CFG_FILE_KEY = "CONCORD_MAVEN_CFG";
     private static final String FILES_CACHE_DIR = "files";
-    private static final String MAVEN_CACHE_DIR = "maven";
 
-    private static final MavenRepository WALMART_WARM = new MavenRepository("warm", "default", "https://repository.walmart.com/nexus/content/groups/public/", false);
     private static final MavenRepository MAVEN_CENTRAL = new MavenRepository("central", "default", "https://repo.maven.apache.org/maven2/", false);
-    private static final MavenRepository LOCAL_M2 = new MavenRepository("local", "default", "file://" + System.getProperty("user.home") + "/.m2/repository", true);
-    private static final List<MavenRepository> DEFAULT_REPOS = Arrays.asList(LOCAL_M2, WALMART_WARM, MAVEN_CENTRAL);
+    private static final List<MavenRepository> DEFAULT_REPOS = Collections.singletonList(MAVEN_CENTRAL);
 
     private final Path cacheDir;
     private final List<RemoteRepository> repositories;
@@ -243,12 +237,8 @@ public class DependencyManager {
         session.setCache(mavenCache);
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
 
-        Path baseDir = cacheDir.resolve(MAVEN_CACHE_DIR);
-        if (!Files.exists(baseDir)) {
-            Files.createDirectories(baseDir);
-        }
-
-        LocalRepository localRepo = new LocalRepository(baseDir.toFile());
+        File localCacheDir = new File(System.getProperty("user.home") + "/.m2/repository");
+        LocalRepository localRepo = new LocalRepository(localCacheDir);
         session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
         session.setTransferListener(new AbstractTransferListener() {
             @Override

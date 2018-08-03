@@ -244,6 +244,12 @@
                                     <artifactId>bpm-engine-api</artifactId>
                                     <version>0.10.0</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>io.takari.bpm</groupId>
+                                    <artifactId>bpm-engine-api</artifactId>
+                                    <version>0.10.0</version>
+                                    <type>pom</type>
+                                </artifactItem>
                             </artifactItems>
                             <outputDirectory>${java.io.tmpdir}</outputDirectory>
                         </configuration>
