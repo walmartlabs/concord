@@ -80,6 +80,7 @@ public class ProjectAccessManager {
         }
 
         if (orgMembersOnly && e.getVisibility() == ProjectVisibility.PUBLIC
+                && level == ResourceAccessLevel.READER
                 && userDao.isInOrganization(p.getId(), e.getOrgId())) {
             // organization members can access any public project in the same organization
             return e;

@@ -123,6 +123,7 @@ public class SecretManager {
         }
 
         if (orgMembersOnly && e.getVisibility() == SecretVisibility.PUBLIC
+                && level == ResourceAccessLevel.READER
                 && userDao.isInOrganization(p.getId(), e.getOrgId())) {
             // organization members can access any public secret in the same organization
             return e;

@@ -136,6 +136,7 @@ public class InventoryManager {
         }
 
         if (orgMembersOnly && e.getVisibility() == InventoryVisibility.PUBLIC
+                && level == ResourceAccessLevel.READER
                 && userDao.isInOrganization(p.getId(), e.getOrgId())) {
             // organization members can access any public inventory in the same organization
             return e;
