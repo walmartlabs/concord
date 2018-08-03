@@ -18,14 +18,14 @@
  * =====
  */
 
-import { parse as parseQueryString, stringify as stringifyQueryString } from 'query-string';
+import { parse as parseQueryString } from 'query-string';
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { replace as pushHistory } from 'react-router-redux';
 import { Button, Input, Menu } from 'semantic-ui-react';
 
-import { RequestError } from '../../../api/common';
+import { queryParams, RequestError } from '../../../api/common';
 import { SearchFilter } from '../../../api/org/process';
 import { ProcessEntry, ProcessStatus } from '../../../api/process';
 import { actions, Processes, State } from '../../../state/data/processes';
@@ -187,7 +187,7 @@ const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     load: (orgName?, projectName?, filters?) => {
         if (filters) {
-            dispatch(pushHistory({ search: stringifyQueryString(filters) }));
+            dispatch(pushHistory({ search: queryParams(filters) }));
         }
         dispatch(actions.listProjectProcesses(orgName, projectName, filters));
     }
