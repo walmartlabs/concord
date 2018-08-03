@@ -131,6 +131,7 @@ public class ProcessResource implements Resource {
     @ApiOperation("Start a new process instance using the supplied payload archive")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer(suffix = "_octetstream")
     @Deprecated
     public StartProcessResponse start(@ApiParam InputStream in,
                                       @ApiParam @QueryParam("parentId") UUID parentInstanceId,
@@ -165,6 +166,7 @@ public class ProcessResource implements Resource {
     @ApiOperation("Start a new process using the specified entry point")
     @javax.ws.rs.Path("/{entryPoint}")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer(suffix = "_queryparams")
     @Deprecated
     public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                       @ApiParam @QueryParam("parentId") UUID parentInstanceId,
@@ -189,6 +191,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer(suffix = "_json")
     @Deprecated
     public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                       @ApiParam Map<String, Object> req,
@@ -226,6 +229,7 @@ public class ProcessResource implements Resource {
     @ApiOperation("Start a new process using multipart request data")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public StartProcessResponse start(@ApiParam MultipartInput input,
                                       @ApiParam @Deprecated @QueryParam("parentId") UUID parentInstanceId,
                                       @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
@@ -264,6 +268,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer(suffix = "_with_entrypoint")
     @Deprecated
     public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                       @ApiParam MultipartInput input,
@@ -304,6 +309,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer(suffix = "_octetstream_and_entrypoint")
     @Deprecated
     public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                       @ApiParam InputStream in,
@@ -347,6 +353,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}/resume/{eventName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public ResumeProcessResponse resume(@ApiParam @PathParam("id") UUID instanceId,
                                         @ApiParam @PathParam("eventName") @NotNull String eventName,
                                         @ApiParam Map<String, Object> req) {
@@ -376,6 +383,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}/fork")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public StartProcessResponse fork(@ApiParam @PathParam("id") UUID parentInstanceId,
                                      @ApiParam Map<String, Object> req,
                                      @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
@@ -451,6 +459,7 @@ public class ProcessResource implements Resource {
     @DELETE
     @ApiOperation("Forcefully stops a process")
     @javax.ws.rs.Path("/{id}")
+    @WithTimer
     public void kill(@ApiParam @PathParam("id") UUID instanceId) {
         processManager.kill(instanceId);
     }
@@ -463,6 +472,7 @@ public class ProcessResource implements Resource {
     @DELETE
     @ApiOperation("Forcefully stops a process and its all children")
     @javax.ws.rs.Path("/{id}/cascade")
+    @WithTimer
     public void killCascade(@ApiParam @PathParam("id") UUID instanceId) {
         processManager.killCascade(instanceId);
     }
@@ -546,6 +556,7 @@ public class ProcessResource implements Resource {
     @ApiOperation(value = "List attachments", responseContainer = "list", response = String.class)
     @javax.ws.rs.Path("/{id}/attachment")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public List<String> listAttachments(@ApiParam @PathParam("id") UUID instanceId) {
         assertInstanceId(instanceId);
 
@@ -612,6 +623,7 @@ public class ProcessResource implements Resource {
     @ApiOperation(value = "List subprocesses of a parent process", responseContainer = "list", response = ProcessEntry.class)
     @javax.ws.rs.Path("/{id}/subprocess")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public List<ProcessEntry> listSubprocesses(@ApiParam @PathParam("id") UUID parentInstanceId,
                                                @ApiParam @QueryParam("tags") Set<String> tags) {
 
@@ -648,6 +660,7 @@ public class ProcessResource implements Resource {
     @ApiOperation(value = "Retrieve the log")
     @javax.ws.rs.Path("/{id}/log")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @WithTimer
     public Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                            @HeaderParam("range") String range) {
 

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -190,6 +191,7 @@ public class InventoryQueryResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}/exec")
+    @WithTimer
     public List<Object> exec(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                              @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
                              @ApiParam @PathParam("queryName") @ConcordKey String queryName,

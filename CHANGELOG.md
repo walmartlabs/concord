@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: more metrics;
 - concord-console: new process list filters - `Status` and
 `Initiator`;
 - concord-console: new default page `Activity`;

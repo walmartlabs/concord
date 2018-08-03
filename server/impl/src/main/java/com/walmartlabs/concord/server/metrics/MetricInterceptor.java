@@ -27,10 +27,14 @@ import org.aopalliance.intercept.MethodInvocation;
 
 import javax.inject.Inject;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MetricInterceptor implements MethodInterceptor {
 
     private static final String SHARED_PREFIX = "com.walmartlabs.concord.";
+
+    private final Map<Method, String> timerNameCache = new HashMap<>();
 
     @Inject
     private MetricRegistry registry;
@@ -46,11 +50,14 @@ public class MetricInterceptor implements MethodInterceptor {
         }
     }
 
-    private static String timerName(Method m) {
-        String n = m.getDeclaringClass().getName();
-        if (n.startsWith(SHARED_PREFIX)) {
-            n = n.substring(SHARED_PREFIX.length());
-        }
-        return "timer," + n + "." + m.getName();
+    private String timerName(Method m) {
+        return timerNameCache.computeIfAbsent(m, k -> {
+            String n = m.getDeclaringClass().getName();
+            if (n.startsWith(SHARED_PREFIX)) {
+                n = n.substring(SHARED_PREFIX.length());
+            }
+            WithTimer t = m.getAnnotation(WithTimer.class);
+            return "timer," + n + "." + m.getName() + t.suffix();
+        });
     }
 }

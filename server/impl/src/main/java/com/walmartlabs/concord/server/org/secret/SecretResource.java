@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryData;
@@ -158,6 +159,7 @@ public class SecretResource implements Resource {
     @ApiOperation("Get an existing secret")
     @Path("/{orgName}/secret/{secretName}")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public SecretEntry get(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                            @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
 
@@ -174,6 +176,7 @@ public class SecretResource implements Resource {
     @Path("/{orgName}/secret/{secretName}/data")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @WithTimer
     public Response getData(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                             @ApiParam @PathParam("secretName") @ConcordKey String secretName,
                             @ApiParam MultipartInput input) {
@@ -211,6 +214,7 @@ public class SecretResource implements Resource {
     @Path("/{orgName}/secret/{secretName}/public")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
+    @WithTimer
     public PublicKeyResponse getPublicKey(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                           @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
 

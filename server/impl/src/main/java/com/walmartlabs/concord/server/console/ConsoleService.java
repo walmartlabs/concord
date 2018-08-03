@@ -133,6 +133,7 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/org/{orgName}/project/{projectName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public boolean isProjectExists(@PathParam("orgName") @ConcordKey String orgName,
                                    @PathParam("projectName") String projectName) {
 
@@ -143,6 +144,7 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/org/{orgName}/secret/{secretName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public boolean isSecretExists(@PathParam("orgName") @ConcordKey String orgName,
                                   @PathParam("secretName") String secretName) {
         try {
@@ -156,6 +158,7 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/org/{orgName}/project/{projectName}/repo/{repoName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public boolean isRepositoryExists(@PathParam("orgName") @ConcordKey String orgName,
                                       @PathParam("projectName") @ConcordKey String projectName,
                                       @PathParam("repoName") String repoName) {
@@ -174,6 +177,7 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/org/{orgName}/team/{teamName}/exists")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public boolean isTeamExists(@PathParam("orgName") @ConcordKey String orgName,
                                 @PathParam("teamName") @ConcordKey String teamName) {
         try {
@@ -187,6 +191,7 @@ public class ConsoleService implements Resource {
     @GET
     @Path("/apikey/{name}/exists")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public boolean isApiTokenExists(@PathParam("name") @ConcordKey String tokenName) {
         UserPrincipal currentUser = UserPrincipal.getCurrent();
         if (currentUser == null) {
@@ -201,6 +206,7 @@ public class ConsoleService implements Resource {
     @Path("/repository/test")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public boolean testRepository(RepositoryTestRequest req) {
         OrganizationEntry org = orgManager.assertAccess(req.getOrgId(), req.getOrgName(), false);
 
