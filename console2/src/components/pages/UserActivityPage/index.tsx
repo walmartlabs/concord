@@ -18,33 +18,22 @@
  * =====
  */
 
-html {
-  height: 100% !important;
-  min-height: 100% !important;
-}
+import * as React from 'react';
+import { Breadcrumb } from 'semantic-ui-react';
 
-body {
-  min-height: 100% !important;
-}
+import { BreadcrumbSegment } from '../../molecules';
+import { UserProcessActivity } from '../../organisms';
 
-#root {
-  height: 100% !important;
-  min-height: 100% !important;
-  margin-top: 5px;
-}
+export default class extends React.PureComponent {
+    render() {
+        return (
+            <>
+                <BreadcrumbSegment>
+                    <Breadcrumb.Section active={true}>Activity</Breadcrumb.Section>
+                </BreadcrumbSegment>
 
-.maxHeight {
-  height: 100% !important;
-  min-height: 100% !important;
-}
-
-/* TODO should be fixed in semantic-ui-react or semantic-ui-css */
-.ui.basic.red.label {
-  color: #ffffff !important;
-}
-
-.ellipsis {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+                <UserProcessActivity />
+            </>
+        );
+    }
 }

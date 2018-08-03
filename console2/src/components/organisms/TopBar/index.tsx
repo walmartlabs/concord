@@ -27,7 +27,9 @@ import { actions, State as SessionState } from '../../../state/session';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
 
 const pathToTab = (s: string): GlobalNavTab => {
-    if (s.startsWith('/process')) {
+    if (s.startsWith('/activity')) {
+        return 'activity';
+    } else if (s.startsWith('/process')) {
         return 'process';
     } else if (s.startsWith('/org')) {
         return 'org';

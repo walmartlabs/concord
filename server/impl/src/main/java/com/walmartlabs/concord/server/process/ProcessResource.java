@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
+import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
@@ -561,6 +562,8 @@ public class ProcessResource implements Resource {
      * @param projectId
      * @param beforeCreatedAt
      * @param tags
+     * @param processStatus
+     * @param initiator
      * @param limit
      * @return
      */
@@ -571,6 +574,8 @@ public class ProcessResource implements Resource {
     public List<ProcessEntry> list(@ApiParam @QueryParam("projectId") UUID projectId,
                                    @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                                    @ApiParam @QueryParam("tags") Set<String> tags,
+                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
+                                   @ApiParam @QueryParam("initiator") String initiator,
                                    @ApiParam @QueryParam("limit") @DefaultValue("30") int limit) {
 
         if (limit <= 0) {
@@ -582,7 +587,18 @@ public class ProcessResource implements Resource {
             // non-admin users can see only their org's processes or processes w/o projects
             orgIds = getCurrentUserOrgIds();
         }
-        return queueDao.list(orgIds, true, projectId, toTimestamp(beforeCreatedAt), tags, limit);
+
+        ProcessFilter filter = ProcessFilter.builder()
+                .projectId(projectId)
+                .includeWithoutProjects(true)
+                .ordIds(orgIds)
+                .beforeCreatedAt(toTimestamp(beforeCreatedAt))
+                .tags(tags)
+                .status(processStatus)
+                .initiator(initiator)
+                .build();
+
+        return queueDao.list(filter, limit);
     }
 
     /**

@@ -18,10 +18,23 @@
  * =====
  */
 
-import { ConcordKey, fetchJson } from '../../common';
-import { ProcessEntry } from '../../process';
+import { ConcordId, ConcordKey, fetchJson, queryParams } from '../../common';
+import { ProcessEntry, ProcessStatus } from '../../process';
 
-export const list = (orgName?: ConcordKey, projectName?: ConcordKey): Promise<ProcessEntry[]> => {
+export interface SearchFilter {
+    projectId?: ConcordId;
+    beforeCreatedAt?: string;
+    tags?: string[];
+    status?: ProcessStatus;
+    initiator?: string;
+    limit?: number;
+}
+
+export const list = (
+    orgName?: ConcordKey,
+    projectName?: ConcordKey,
+    filters?: SearchFilter
+): Promise<ProcessEntry[]> => {
     let baseUri = '/api/v1';
 
     if (orgName) {
@@ -31,7 +44,9 @@ export const list = (orgName?: ConcordKey, projectName?: ConcordKey): Promise<Pr
         }
     }
 
-    return fetchJson(`${baseUri}/process`);
+    const qp = filters ? '?' + queryParams(filters) : '';
+
+    return fetchJson(`${baseUri}/process${qp}`);
 };
 
 export interface StartProcessResponse {

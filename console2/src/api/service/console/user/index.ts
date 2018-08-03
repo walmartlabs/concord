@@ -18,33 +18,25 @@
  * =====
  */
 
-html {
-  height: 100% !important;
-  min-height: 100% !important;
+import { ConcordKey, fetchJson } from '../../../common';
+import { ProcessEntry, ProcessStatus } from '../../../process';
+
+export interface ProjectProcesses {
+    projectName: ConcordKey;
+    running: number;
 }
 
-body {
-  min-height: 100% !important;
+export interface UserActivity {
+    processStats: {
+        status: ProcessStatus;
+        count: number;
+    };
+    orgProcesses?: {
+        orgName: ConcordKey;
+        processes: ProjectProcesses[];
+    };
+    processes: ProcessEntry[];
 }
 
-#root {
-  height: 100% !important;
-  min-height: 100% !important;
-  margin-top: 5px;
-}
-
-.maxHeight {
-  height: 100% !important;
-  min-height: 100% !important;
-}
-
-/* TODO should be fixed in semantic-ui-react or semantic-ui-css */
-.ui.basic.red.label {
-  color: #ffffff !important;
-}
-
-.ellipsis {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+export const getActivity = (maxProjectsPerOrg: number): Promise<UserActivity> =>
+    fetchJson(`/api/service/console/user/activity?maxProjectsPerOrg=` + maxProjectsPerOrg);

@@ -17,8 +17,8 @@
  * limitations under the License.
  * =====
  */
-export { default as APITokenList } from './APITokenList';
 export { default as APITokenDeleteActivity } from './APITokenDeleteActivity';
+export { default as APITokenList } from './APITokenList';
 export { default as CancelProcessPopup } from './CancelProcessPopup';
 export { default as DeleteRepositoryPopup } from './DeleteRepositoryPopup';
 export { default as EditProjectActivity } from './EditProjectActivity';
@@ -32,7 +32,7 @@ export { default as NewTeamActivity } from './NewTeamActivity';
 export { default as OrganizationList } from './OrganizationList';
 export { default as ProcessActivity } from './ProcessActivity';
 export { default as ProcessFormActivity } from './ProcessFormActivity';
-export { default as ProcessList } from './ProcessList';
+export { default as ProcessListActivity } from './ProcessListActivity';
 export { default as ProcessLogActivity } from './ProcessLogActivity';
 export { default as ProcessStatusActivity } from './ProcessStatusActivity';
 export { default as ProcessWizard } from './ProcessWizard';
@@ -63,4 +63,5 @@ export { default as TeamList } from './TeamList';
 export { default as TeamMemberListActivity } from './TeamMemberListActivity';
 export { default as TeamRenameActivity } from './TeamRenameActivity';
 export { default as TopBar } from './TopBar';
+export { default as UserProcessActivity } from './UserProcessActivity';
 export { default as ValidateRepositoryPopup } from './ValidateRepositoryPopup';

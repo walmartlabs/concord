@@ -32,6 +32,10 @@ import { reducers as sessionReducers, State as SessionState } from '../state/ses
 import { reducers as tokensReducers, State as TokensState } from '../state/data/apiTokens';
 import { reducers as teamReducers, State as TeamsState } from '../state/data/teams';
 import { reducers as triggersReducer, State as TriggersState } from '../state/data/triggers';
+import {
+    reducers as userActivityReducer,
+    State as UserActivityState
+} from '../state/data/userActivity';
 
 export interface State {
     forms: FormsState;
@@ -46,6 +50,7 @@ export interface State {
     teams: TeamsState;
     tokens: TokensState;
     triggers: TriggersState;
+    userActivity: UserActivityState;
 }
 
 const reducers: Reducer<State> = combineReducers({
@@ -60,7 +65,8 @@ const reducers: Reducer<State> = combineReducers({
     session: sessionReducers,
     teams: teamReducers,
     tokens: tokensReducers,
-    triggers: triggersReducer
+    triggers: triggersReducer,
+    userActivity: userActivityReducer
 });
 
 export default reducers;

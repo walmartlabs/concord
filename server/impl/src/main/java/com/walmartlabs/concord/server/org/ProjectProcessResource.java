@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
+import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
@@ -98,9 +99,15 @@ public class ProjectProcessResource implements Resource {
     @Path("/{orgName}/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName) {
+    // TODO replace with /api/v1/process?orgName=...&status=...
+    public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                   @ApiParam @QueryParam("status") ProcessStatus processStatus) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return queueDao.list(Collections.singleton(org.getId()), false, null, null, null, DEFAULT_LIST_LIMIT);
+        ProcessFilter filter = ProcessFilter.builder()
+                .ordIds(Collections.singleton(org.getId()))
+                .status(processStatus)
+                .build();
+        return queueDao.list(filter, DEFAULT_LIST_LIMIT);
     }
 
     @GET
@@ -118,7 +125,10 @@ public class ProjectProcessResource implements Resource {
             throw new ConcordApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
         }
 
-        return queueDao.list(null, false, projectId, null, null, DEFAULT_LIST_LIMIT);
+        ProcessFilter filter = ProcessFilter.builder()
+                .projectId(projectId)
+                .build();
+        return queueDao.list(filter, DEFAULT_LIST_LIMIT);
     }
 
     /**
@@ -303,15 +313,6 @@ public class ProjectProcessResource implements Resource {
             throw new ValidationErrorsException("Repository not found: " + repoName);
         }
         return id;
-    }
-
-    private ProcessEntry getProcess(UUID instanceId) {
-        ProcessEntry e = queueDao.get(instanceId);
-        if (e == null) {
-            log.warn("getProcess ['{}'] -> not found", instanceId);
-            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
-        }
-        return e;
     }
 
     private Response processFinished(UUID instanceId) {

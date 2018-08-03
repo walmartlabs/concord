@@ -25,7 +25,7 @@ import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';
 import {
-    ProcessList,
+    ProcessListActivity,
     ProjectListActivity,
     RedirectButton,
     SecretList,
@@ -96,7 +96,7 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
                     </Route>
                     <Route path={`${url}/project`}>{this.renderProjects()}</Route>
                     <Route path={`${url}/process`}>
-                        <ProcessList orgName={orgName} />
+                        <ProcessListActivity orgName={orgName} />
                     </Route>
                     <Route path={`${url}/secret`} exact={true}>
                         {this.renderSecrets()}

@@ -31,6 +31,7 @@ import { sagas as Session } from '../state/session';
 import { sagas as Teams } from '../state/data/teams';
 import { sagas as Tokens } from '../state/data/apiTokens';
 import { sagas as Triggers } from '../state/data/triggers';
+import { sagas as UserActivity } from '../state/data/userActivity';
 
 export default function* root() {
     yield all([
@@ -44,6 +45,7 @@ export default function* root() {
         fork(Session),
         fork(Teams),
         fork(Tokens),
-        fork(Triggers)
+        fork(Triggers),
+        fork(UserActivity)
     ]);
 }

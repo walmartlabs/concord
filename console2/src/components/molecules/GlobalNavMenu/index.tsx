@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown, Image, Menu } from 'semantic-ui-react';
 
-export type GlobalNavTab = 'process' | 'org' | null;
+export type GlobalNavTab = 'activity' | 'process' | 'org' | null;
 
 interface Props {
     activeTab: GlobalNavTab;
@@ -48,6 +48,9 @@ class GlobalNavMenu extends React.PureComponent<Props> {
             <Menu fluid={true} inverted={true} size="small" secondary={true}>
                 <Menu.Item>
                     <Image src="/images/logo.svg" size="small" />
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'activity'}>
+                    <Link to="/activity">Activity</Link>
                 </Menu.Item>
                 <Menu.Item active={activeTab === 'process'}>
                     <Link to="/process">Processes</Link>

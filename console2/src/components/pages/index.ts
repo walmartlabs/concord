@@ -38,3 +38,4 @@ export { default as ProfilePage } from './ProfilePage';
 export { default as ProjectPage } from './ProjectPage';
 export { default as SecretPage } from './SecretPage';
 export { default as TeamPage } from './TeamPage';
+export { default as UserActivityPage } from './UserActivityPage';

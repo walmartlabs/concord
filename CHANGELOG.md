@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-console: new process list filters - `Status` and
+`Initiator`;
+- concord-console: new default page `Activity`;
 - concord-console: allow updating of project visibility and
 description;
 - concord-server: improved support for multi-select fields in custom

@@ -48,7 +48,7 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
                 </Link>
             </Table.Cell>
             <Table.Cell>
-                <GitHubLink url={row.url} />
+                <GitHubLink url={row.url} text={row.url} />
             </Table.Cell>
             <Table.Cell>{getSource(row)}</Table.Cell>
             <Table.Cell>{row.path}</Table.Cell>

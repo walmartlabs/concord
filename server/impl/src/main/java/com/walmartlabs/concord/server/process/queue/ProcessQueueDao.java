@@ -296,16 +296,16 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public List<ProcessEntry> list(Set<UUID> orgIds, boolean includeWoProjects, UUID projectId, Timestamp beforeCreatedAt, Set<String> tags, int limit) {
+    public List<ProcessEntry> list(ProcessFilter filter, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectWhereStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE);
 
-            if (orgIds != null && !orgIds.isEmpty()) {
+            if (filter.getOrgIds() != null && !filter.getOrgIds().isEmpty()) {
                 SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
                         .from(PROJECTS)
-                        .where(PROJECTS.ORG_ID.in(orgIds));
+                        .where(PROJECTS.ORG_ID.in(filter.getOrgIds()));
 
-                if (includeWoProjects) {
+                if (filter.isIncludeWoProjects()) {
                     s.where(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds)
                             .or(V_PROCESS_QUEUE.PROJECT_ID.isNull()));
                 } else {
@@ -313,15 +313,23 @@ public class ProcessQueueDao extends AbstractDao {
                 }
             }
 
-            if (projectId != null) {
-                s.where(V_PROCESS_QUEUE.PROJECT_ID.eq(projectId));
+            if (filter.getProjectId() != null) {
+                s.where(V_PROCESS_QUEUE.PROJECT_ID.eq(filter.getProjectId()));
             }
 
-            if (beforeCreatedAt != null) {
-                s.where(V_PROCESS_QUEUE.CREATED_AT.lessThan(beforeCreatedAt));
+            if (filter.getBeforeCreatedAt() != null) {
+                s.where(V_PROCESS_QUEUE.CREATED_AT.lessThan(filter.getBeforeCreatedAt()));
             }
 
-            filterByTags(s, tags);
+            if (filter.getInitiator() != null) {
+                s.where(V_PROCESS_QUEUE.INITIATOR.startsWith(filter.getInitiator()));
+            }
+
+            if (filter.getProcessStatus() != null) {
+                s.where(V_PROCESS_QUEUE.CURRENT_STATUS.eq(filter.getProcessStatus().name()));
+            }
+
+            filterByTags(s, filter.getTags());
 
             return s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
                     .limit(limit)

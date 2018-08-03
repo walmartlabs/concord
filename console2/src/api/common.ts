@@ -18,6 +18,8 @@
  * =====
  */
 
+import { stringify } from 'query-string';
+
 export type ConcordId = string;
 export type ConcordKey = string;
 
@@ -122,13 +124,7 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
     return response;
 };
 
-export const queryParams = (params: object): string => {
-    const esc = encodeURIComponent;
-    return Object.keys(params)
-        .filter((k) => !!params[k])
-        .map((k) => esc(k) + '=' + esc(params[k]))
-        .join('&');
-};
+export const queryParams = (params: object): string => stringify(params);
 
 export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {
     const response = await managedFetch(uri, init);

@@ -32,7 +32,7 @@ import { RepositoryList, RequestErrorMessage } from '../../molecules';
 import { EncryptValueActivity } from '../../organisms';
 import { NotFoundPage } from '../../pages';
 import {
-    ProcessList,
+    ProcessListActivity,
     ProjectDeleteActivity,
     ProjectRawPayloadActivity,
     ProjectRenameActivity,
@@ -183,7 +183,7 @@ class ProjectActivity extends React.PureComponent<Props> {
                     </Route>
 
                     <Route path={`${baseUrl}/process`} exact={true}>
-                        <ProcessList orgName={orgName} projectName={projectName} />
+                        <ProcessListActivity orgName={orgName} projectName={projectName} />
                     </Route>
                     <Route path={`${baseUrl}/repository`} exact={true}>
                         {ProjectActivity.renderRepositories(data)}

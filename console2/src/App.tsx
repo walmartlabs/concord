@@ -41,7 +41,8 @@ import {
     SecretPage,
     TeamPage,
     AboutPage,
-    ProfilePage
+    ProfilePage,
+    UserActivityPage
 } from './components/pages';
 import { Layout } from './components/templates';
 import { actions as session } from './state/session';
@@ -56,13 +57,19 @@ class App extends React.Component {
                 <ConnectedRouter history={history}>
                     <Switch>
                         <Route exact={true} path="/">
-                            <Redirect to="/process" />
+                            <Redirect to="/activity" />
                         </Route>
 
                         <Route path="/login" component={LoginPage} />
 
                         <Layout>
                             <Switch>
+                                <ProtectedRoute
+                                    path="/activity"
+                                    exact={true}
+                                    component={UserActivityPage}
+                                />
+
                                 <ProtectedRoute path="/org">
                                     <Switch>
                                         <Route

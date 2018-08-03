@@ -21,7 +21,7 @@
 import { Action } from 'redux';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import { StartProcessResponse } from '../../../api/org/process';
+import { SearchFilter, StartProcessResponse } from '../../../api/org/process';
 import { ProcessEntry } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as LogState } from './logs/types';
@@ -34,6 +34,7 @@ export interface GetProcessRequest extends Action {
 export interface ListProjectProcessesRequest extends Action {
     orgName?: ConcordKey;
     projectName?: ConcordKey;
+    filters?: SearchFilter;
 }
 
 export interface ProcessDataResponse extends Action {

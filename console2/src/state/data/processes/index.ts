@@ -19,10 +19,10 @@
  */
 
 import { Action, combineReducers, Reducer } from 'redux';
-import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
+import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
-import { list as apiOrgList } from '../../../api/org/process';
+import { list as apiOrgList, SearchFilter } from '../../../api/org/process';
 import { get as apiGet, kill as apiKill, start as apiStart } from '../../../api/process';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
@@ -65,11 +65,13 @@ export const actions = {
 
     listProjectProcesses: (
         orgName?: ConcordKey,
-        projectName?: ConcordKey
+        projectName?: ConcordKey,
+        filters?: SearchFilter
     ): ListProjectProcessesRequest => ({
         type: actionTypes.LIST_PROJECT_PROCESSES_REQUEST,
         orgName,
-        projectName
+        projectName,
+        filters
     }),
 
     startProcess: (
@@ -181,9 +183,9 @@ function* onGetProcess({ instanceId }: GetProcessRequest) {
     }
 }
 
-function* onProjectList({ orgName, projectName }: ListProjectProcessesRequest) {
+function* onProjectList({ orgName, projectName, filters }: ListProjectProcessesRequest) {
     try {
-        const response = yield call(apiOrgList, orgName, projectName);
+        const response = yield call(apiOrgList, orgName, projectName, filters);
         yield put({
             type: actionTypes.PROCESS_DATA_RESPONSE,
             items: response
@@ -219,7 +221,7 @@ function* onCancelProcess({ instanceId }: CancelProcessRequest) {
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_PROCESS_REQUEST, onGetProcess),
-        takeLatest(actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProjectList),
+        throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProjectList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
         takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),
         fork(logSagas),
