@@ -299,6 +299,7 @@ public class ProcessManager {
         if (e.getProjectId() != null) {
             // only org members with WRITER rights can kill the process
             projectAccessManager.assertProjectAccess(e.getProjectId(), ResourceAccessLevel.WRITER, true);
+            return;
         }
 
         throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have permissions " +
