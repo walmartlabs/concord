@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: allow updating of project visibility and
+description;
 - concord-server: improved support for multi-select fields in custom
 forms;
 - ansible: option to save Ansible host statistics as a flow variable;

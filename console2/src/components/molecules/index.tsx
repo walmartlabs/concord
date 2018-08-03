@@ -26,6 +26,7 @@ export { default as BreadcrumbSegment } from './BreadcrumbSegment';
 export { default as ButtonWithConfirmation } from './ButtonWithConfirmation';
 export { default as DonutChart } from './DonutChart';
 export { default as EntityRenameForm } from './EntityRenameForm';
+export { default as EditProjectForm, EditProjectFormValues } from './EditProjectForm';
 export { default as GitHubLink } from './GitHubLink';
 export { default as GlobalNavMenu, GlobalNavTab } from './GlobalNavMenu';
 export { default as Highlighter } from './Highlighter';

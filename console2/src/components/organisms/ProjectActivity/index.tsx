@@ -36,7 +36,8 @@ import {
     ProjectDeleteActivity,
     ProjectRawPayloadActivity,
     ProjectRenameActivity,
-    RedirectButton
+    RedirectButton,
+    EditProjectActivity
 } from '../index';
 
 export type TabLink = 'process' | 'repository' | 'settings' | null;
@@ -104,6 +105,10 @@ class ProjectActivity extends React.PureComponent<Props> {
                 <Segment>
                     <Header as="h4">Encrypt a value</Header>
                     <EncryptValueActivity orgName={p.orgName} projectName={p.name} />
+                </Segment>
+
+                <Segment>
+                    <EditProjectActivity orgName={p.orgName} projectEntry={p} />
                 </Segment>
 
                 <Divider horizontal={true} content="Danger Zone" />

@@ -30,7 +30,8 @@ import {
     rename as apiRename,
     deleteProject as apiDeleteProject,
     setAcceptsRawPayload as apiSetAcceptsRawPayload,
-    NewProjectEntry
+    NewProjectEntry,
+    UpdateProjectEntry
 } from '../../../api/org/project';
 import {
     createOrUpdate as apiRepoCreateOrUpdate,
@@ -68,7 +69,9 @@ import {
     UpdateRepositoryRequest,
     UpdateRepositoryState,
     ValidateRepositoryState,
-    ValidateRepositoryRequest
+    ValidateRepositoryRequest,
+    updateProjectState,
+    UpdateProjectRequest
 } from './types';
 
 export { State };
@@ -106,7 +109,10 @@ const actionTypes = {
     VALIDATE_REPOSITORY_REQUEST: `${NAMESPACE}/repo/validate/request`,
     VALIDATE_REPOSITORY_RESPONSE: `${NAMESPACE}/repo/validate/response`,
 
-    RESET_REPOSITORY: `${NAMESPACE}/repo/reset`
+    RESET_REPOSITORY: `${NAMESPACE}/repo/reset`,
+
+    UPDATE_PROJECT_REQUEST: `${NAMESPACE}/updateproject/request`,
+    UPDATE_PROJECT_RESPONSE: `${NAMESPACE}/updateproject/response`
 };
 
 export const actions = {
@@ -123,6 +129,12 @@ export const actions = {
 
     createProject: (orgName: ConcordKey, entry: NewProjectEntry): CreateProjectRequest => ({
         type: actionTypes.CREATE_PROJECT_REQUEST,
+        orgName,
+        entry
+    }),
+
+    updateProject: (orgName: ConcordKey, entry: UpdateProjectEntry): UpdateProjectRequest => ({
+        type: actionTypes.UPDATE_PROJECT_REQUEST,
         orgName,
         entry
     }),
@@ -253,6 +265,21 @@ const errorMsg = makeErrorReducer(
     [actionTypes.PROJECT_DATA_RESPONSE]
 );
 
+const updateProjectReducers = combineReducers<updateProjectState>({
+    running: makeLoadingReducer(
+        [actionTypes.UPDATE_PROJECT_REQUEST],
+        [actionTypes.UPDATE_PROJECT_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.UPDATE_PROJECT_REQUEST],
+        [actionTypes.UPDATE_PROJECT_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.UPDATE_PROJECT_REQUEST,
+        actionTypes.UPDATE_PROJECT_RESPONSE
+    )
+});
+
 const renameReducers = combineReducers<RenameProjectState>({
     running: makeLoadingReducer(
         [actionTypes.RENAME_PROJECT_REQUEST],
@@ -378,6 +405,7 @@ export const reducers = combineReducers<State>({
     rename: renameReducers,
     acceptRawPayload: acceptsRawPayloadReducers,
     deleteProject: deleteProjectReducers,
+    updateProject: updateProjectReducers,
 
     createRepository: createRepositoryReducers,
     updateRepository: updateRepositoryReducers,
@@ -453,6 +481,17 @@ function* onRename({ orgName, projectId, projectName }: RenameProjectRequest) {
         yield put(pushHistory(`/org/${orgName}/project/${projectName}`));
     } catch (e) {
         yield handleErrors(actionTypes.RENAME_PROJECT_RESPONSE, e);
+    }
+}
+
+function* onUpdateProject({ orgName, entry }: UpdateProjectRequest) {
+    try {
+        yield call(apiCreateOrUpdate, orgName, entry);
+        yield put({
+            type: actionTypes.UPDATE_PROJECT_RESPONSE
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.UPDATE_PROJECT_RESPONSE, e);
     }
 }
 
@@ -540,6 +579,7 @@ export const sagas = function*() {
         takeLatest(actionTypes.CREATE_PROJECT_REQUEST, onCreate),
         takeLatest(actionTypes.RENAME_PROJECT_REQUEST, onRename),
         takeLatest(actionTypes.DELETE_PROJECT_REQUEST, onDelete),
+        takeLatest(actionTypes.UPDATE_PROJECT_REQUEST, onUpdateProject),
         throttle(2000, actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST, onSetAcceptsRawPayload),
         takeLatest(actionTypes.ADD_REPOSITORY_REQUEST, onAddRepository),
         takeLatest(actionTypes.UPDATE_REPOSITORY_REQUEST, onUpdateRepository),

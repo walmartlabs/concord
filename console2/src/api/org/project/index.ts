@@ -58,6 +58,14 @@ export interface NewProjectEntry {
     acceptsRawPayload?: boolean;
 }
 
+export interface UpdateProjectEntry {
+    id?: ConcordId;
+    name?: ConcordKey;
+    description?: string;
+    visibility?: ProjectVisibility;
+    acceptsRawPayload?: boolean;
+}
+
 export const get = (orgName: ConcordKey, projectName: ConcordKey): Promise<ProjectEntry> => {
     return fetchJson<ProjectEntry>(`/api/v1/org/${orgName}/project/${projectName}`);
 };
@@ -74,7 +82,7 @@ export interface ProjectOperationResult {
 // TODO response type
 export const createOrUpdate = (
     orgName: ConcordKey,
-    entry: NewProjectEntry
+    entry: NewProjectEntry | UpdateProjectEntry
 ): Promise<ProjectOperationResult> => {
     const opts = {
         method: 'POST',
@@ -83,7 +91,6 @@ export const createOrUpdate = (
         },
         body: JSON.stringify(entry)
     };
-
     return fetchJson(`/api/v1/org/${orgName}/project`, opts);
 };
 

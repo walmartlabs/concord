@@ -65,6 +65,7 @@ class EncryptValueActivity extends React.PureComponent<ExternalProps, State> {
 
     reset() {
         this.setState({
+            data: '',
             result: undefined,
             success: undefined
         });
@@ -122,13 +123,13 @@ class EncryptValueActivity extends React.PureComponent<ExternalProps, State> {
 
                 <p>
                     The encrypted value can be later decrypted in flows using{' '}
-                    <span className="codeSnippet">{`\${crypto.decryptString("value")`}</span>{' '}
+                    <span className="codeSnippet">{`\${crypto.decryptString("value")}`}</span>{' '}
                     expression.
                 </p>
                 <p>The value is valid for the current project only.</p>
 
                 {result && (
-                    <Message success={success} error={!success} onDismiss={this.reset}>
+                    <Message success={success} error={!success} onDismiss={() => this.reset()}>
                         <Message.Header>{success ? 'Success' : 'Failure'}</Message.Header>
                         <br />
                         <Message.Content>

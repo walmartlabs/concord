@@ -61,13 +61,13 @@ const makeOptions = (data: ConcordKey[]): DropdownItemProps[] => {
         return [];
     }
 
-    const opts = data.map((s) => ({ value: s, text: s }));
-    return [{ text: 'any' }].concat(opts);
+    const opts = data.map((s) => ({ key: s, value: s, text: s }));
+    return [{ key: '', text: 'any' }].concat(opts);
 };
 
 const mapStateToProps = (
     { projects }: { projects: State },
-    { orgName, required }: ExternalProps
+    { orgName }: ExternalProps
 ): StateProps => ({
     loading: projects.loading,
     options: makeOptions(selectors.projectNames(projects, orgName))
