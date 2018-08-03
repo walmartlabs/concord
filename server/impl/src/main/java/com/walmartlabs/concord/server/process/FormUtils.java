@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,10 +35,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.project.InternalConstants.Files.FORM_FILES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -87,6 +84,15 @@ public final class FormUtils {
             String k = f.getName();
 
             Object v = m.get(k);
+
+            /*
+             * Use cardinality as an indicator to convert single value (coming as a string) into an array
+             * for the scenario when only one value was provided by the user
+             */
+            if (v instanceof String && (f.getCardinality() == FormField.Cardinality.ANY || f.getCardinality() == FormField.Cardinality.AT_LEAST_ONE)) {
+                v = Collections.singletonList(v);
+            }
+
             v = convert(locale, fd.getName(), f, null, v);
 
             boolean isOptional = f.getCardinality() == FormField.Cardinality.ONE_OR_NONE || f.getCardinality() == FormField.Cardinality.ANY;
@@ -96,7 +102,7 @@ public final class FormUtils {
 
             if (f.getType().equals(ConcordFormFields.FileField.TYPE)) {
                 String wsFileName = "_form_files/" + form.getFormDefinition().getName() + "/" + f.getName();
-                tmpFiles.put(wsFileName, (String)v);
+                tmpFiles.put(wsFileName, (String) v);
                 m2.put(k, wsFileName);
             } else {
                 m2.put(k, v);
@@ -170,7 +176,7 @@ public final class FormUtils {
             return ll;
         } else if (v instanceof InputStream) {
             if (f.getType().equals(ConcordFormFields.FileField.TYPE)) {
-                try (InputStream is = (InputStream) v){
+                try (InputStream is = (InputStream) v) {
                     Path tmp = IOUtils.createTempFile(f.getName(), ".tmp");
                     Files.copy(is, tmp, REPLACE_EXISTING);
                     return tmp.toString();

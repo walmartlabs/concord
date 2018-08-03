@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
@@ -272,5 +273,41 @@ public class FormIT extends AbstractServerIT {
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*We got " + fieldValue + ".*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testMultiValueInput() throws Exception {
+        byte[] payload = archive(FormIT.class.getResource("formMultiValue").toURI());
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // ---
+
+        ProcessFormsApi formResource = new ProcessFormsApi(getApiClient());
+
+        List<FormListEntry> forms = formResource.list(spr.getInstanceId());
+
+        FormListEntry f0 = forms.get(0);
+        String formId = f0.getFormInstanceId();
+
+        List<String> skills = new ArrayList<>();
+        skills.add("angular");
+        skills.add("react");
+        Map<String, Object> data = Collections.singletonMap("skills", skills);
+        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);
+        assertTrue(fsr.isOk());
+
+        // ---
+
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*(Skills ->) \\[(angular|react), (react|angular)\\].*", ab);
     }
 }

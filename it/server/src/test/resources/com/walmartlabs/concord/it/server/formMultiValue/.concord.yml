@@ -1,0 +1,9 @@
+flows:
+  default:
+  - form: myForm
+  - log: "Skills -> ${myForm.skills}"
+
+forms:
+  myForm:
+  - skills: { type: "string*", allow: ["css", "react", "angular"] }
+

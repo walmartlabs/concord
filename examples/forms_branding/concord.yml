@@ -17,6 +17,11 @@ flows:
 
   - log: "Hello, ${myForm.firstName} ${myForm.lastName}"
   - log: "We got your file and stored it as ${myForm.aFile}"
+  - log: "You have following skills"
+  - task: log
+    in:
+      msg: "Skill -> ${item}"
+    withItems: ${myForm.skills}
   - if: ${myForm.tosAgree}
     then:
       - log: "${myForm.firstName} says: I have agreed to the Terms and Conditions"
@@ -29,4 +34,5 @@ forms:
   - color: { label: "Favorite color", type: "string", allow: ["red", "green", "blue"] }
   - aFile: { label: "A file", type: "file?" }
   - tosAgree: { label: "Terms and conditions read", type: "boolean" }
+  - skills: { type: "string*", allow: ["css", "design", "angular"]}
 

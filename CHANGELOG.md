@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: improved support for multi-select fields in custom
+forms;
 - ansible: option to save Ansible host statistics as a flow variable;
 - http: support for `DELETE` method;
 - project-model: support for `activeProfiles` in trigger definitions;

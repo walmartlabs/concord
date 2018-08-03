@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,10 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,8 +61,8 @@ public final class MultipartUtils {
                     Object v = objectMapper.readValue(p.getBodyAsString(), Object.class);
                     result.put(name, v);
                 } else if (p.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE)) {
-                    String v = p.getBodyAsString().trim();
-                    result.put(name, v);
+                    String currentValue = p.getBodyAsString().trim();
+                    result.compute(name, (k, oldValue) -> computeStringMultipartEntry(oldValue, currentValue));
                 } else {
                     result.put(name, p.getBody(InputStream.class, null));
                 }
@@ -67,6 +71,20 @@ public final class MultipartUtils {
         } catch (IOException e) {
             throw new ConcordApplicationException("Error parsing the request", e);
         }
+    }
+
+    private static Object computeStringMultipartEntry(Object oldValue, String currentValue) {
+        if (Objects.isNull(oldValue)) {
+            return currentValue;
+        } else if (oldValue instanceof String) {
+            return new ArrayList<>(Arrays.asList((String) oldValue, currentValue));
+        } else if (oldValue instanceof List) {
+            List<String> out = (ArrayList) oldValue;
+            out.add(currentValue);
+            return out;
+        }
+
+        return null;
     }
 
     public static String extractName(InputPart p) {
