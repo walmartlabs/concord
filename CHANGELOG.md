@@ -1,5 +1,16 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: fix the process status filter on the project
+processes page;
+- concord-console: limit `Activity` data to the current user's
+organizations.
+
+
+
 ## [0.83.0] - 2018-08-05
 
 ### Added

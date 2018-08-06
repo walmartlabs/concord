@@ -104,12 +104,12 @@ class UserProcesses extends React.PureComponent<SessionProps & StateProps & Disp
         return (
             <>
                 <Header dividing={true} as="h3">
-                    Your processes (today):
+                    Your processes:
                 </Header>
                 <UserProcessStats items={makeProcessStatsList(processStats)} />
 
                 <Header dividing={true} as="h3">
-                    Running in your organizations:
+                    Running projects:
                 </Header>
                 <UserProcessByOrgCards items={makeProcessByOrgList(orgProcesses)} />
 

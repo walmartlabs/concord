@@ -29,7 +29,7 @@ export default class extends React.PureComponent {
         return (
             <>
                 <BreadcrumbSegment>
-                    <Breadcrumb.Section active={true}>Activity</Breadcrumb.Section>
+                    <Breadcrumb.Section active={true}>Activity today</Breadcrumb.Section>
                 </BreadcrumbSegment>
 
                 <UserProcessActivity />

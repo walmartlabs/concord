@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.console.UserActivityResponse.ProjectProcesses;
 import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.process.ProcessStatus.*;
 import static org.jooq.impl.DSL.*;
 
@@ -56,7 +57,7 @@ import static org.jooq.impl.DSL.*;
 @Path("/api/service/console/user")
 public class UserActivityResource implements Resource {
 
-    private final Set<ProcessStatus> ORG_VISIBLE_STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.RUNNING, ProcessStatus.ENQUEUED));
+    private final Set<ProcessStatus> ORG_VISIBLE_STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.RUNNING));
 
     private final UserDao userDao;
     private final ProcessQueueDao processDao;
@@ -78,12 +79,16 @@ public class UserActivityResource implements Resource {
 
         UserPrincipal user = UserPrincipal.assertCurrent();
         Set<UUID> orgIds = userDao.getOrgIds(user.getId());
+        Timestamp t = new Timestamp(startOfDay(new Date()).getTime());
 
-        Map<String, List<ProjectProcesses>> orgProcesses = processStatsDao.processByOrgs(maxProjectsPerOrg, orgIds, ORG_VISIBLE_STATUSES);
-        Map<String, Integer> stats = processStatsDao.getCountByStatuses(new Timestamp(startOfDay(new Date()).getTime()), user.getUsername());
+        Map<String, List<ProjectProcesses>> orgProcesses = processStatsDao.processByOrgs(maxProjectsPerOrg, orgIds, ORG_VISIBLE_STATUSES, t);
+
+        Map<String, Integer> stats = processStatsDao.getCountByStatuses(orgIds, t, user.getUsername());
+
         ProcessFilter filter = ProcessFilter.builder()
                 .includeWithoutProjects(true)
                 .initiator(user.getUsername())
+                .ordIds(orgIds)
                 .build();
         List<ProcessEntry> lastProcesses = processDao.list(filter, maxOwnProcesses);
 
@@ -104,8 +109,12 @@ public class UserActivityResource implements Resource {
             super(cfg);
         }
 
-        public Map<String, Integer> getCountByStatuses(Timestamp fromUpdatedAt, String initiator) {
+        public Map<String, Integer> getCountByStatuses(Set<UUID> orgIds, Timestamp fromUpdatedAt, String initiator) {
             try (DSLContext tx = DSL.using(cfg)) {
+                SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
+                        .from(PROJECTS)
+                        .where(PROJECTS.ORG_ID.in(orgIds));
+
                 SelectConditionStep<Record5<Integer, Integer, Integer, Integer, Integer>> q = tx.select(
                         when(PROCESS_QUEUE.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
                         when(PROCESS_QUEUE.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
@@ -113,7 +122,9 @@ public class UserActivityResource implements Resource {
                         when(PROCESS_QUEUE.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
                         when(PROCESS_QUEUE.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
                         .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INITIATOR.eq(initiator).and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt)));
+                        .where(PROCESS_QUEUE.INITIATOR.eq(initiator)
+                                .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
+                                .and(or(PROCESS_QUEUE.PROJECT_ID.in(projectIds), PROCESS_QUEUE.PROJECT_ID.isNull())));
 
                 Record5<BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal> r = tx.select(
                         sum(q.field(RUNNING.name(), Integer.class)),
@@ -134,9 +145,11 @@ public class UserActivityResource implements Resource {
             }
         }
 
-        public Map<String, List<ProjectProcesses>> processByOrgs(
-                int maxProjectRows,
-                Set<UUID> orgIds, Set<ProcessStatus> processStatuses) {
+        public Map<String, List<ProjectProcesses>> processByOrgs(int maxProjectRows,
+                                                                 Set<UUID> orgIds,
+                                                                 Set<ProcessStatus> processStatuses,
+                                                                 Timestamp fromUpdatedAt) {
+
             Set<String> statuses = processStatuses.stream().map(Enum::name).collect(Collectors.toSet());
 
             try (DSLContext tx = DSL.using(cfg)) {
@@ -145,7 +158,9 @@ public class UserActivityResource implements Resource {
                 SelectHavingStep<Record4<String, String, Integer, Integer>> a =
                         tx.select(V_PROCESS_QUEUE.ORG_NAME, V_PROCESS_QUEUE.PROJECT_NAME, count(), rnField)
                             .from(V_PROCESS_QUEUE)
-                            .where(V_PROCESS_QUEUE.ORG_ID.in(orgIds).and(V_PROCESS_QUEUE.CURRENT_STATUS.in(statuses)))
+                                .where(V_PROCESS_QUEUE.ORG_ID.in(orgIds)
+                                        .and(V_PROCESS_QUEUE.CURRENT_STATUS.in(statuses))
+                                        .and(V_PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt)))
                             .groupBy(V_PROCESS_QUEUE.ORG_NAME, V_PROCESS_QUEUE.PROJECT_NAME);
 
                 Result<Record3<String, String, Integer>> r = tx.select(a.field(0, String.class), a.field(1, String.class), a.field(2, Integer.class))

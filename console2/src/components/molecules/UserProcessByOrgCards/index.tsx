@@ -41,7 +41,10 @@ const renderProject = (orgName: ConcordKey, project: ProjectProcesses) => {
         <div className="item" key={project.projectName}>
             <div className="right floated content">{project.running}</div>
             <div className="content ellipsis">
-                <Link to={`/org/${orgName}/project/${project.projectName}`}>
+                <Link
+                    to={`/org/${orgName}/project/${project.projectName}/process?${queryParams({
+                        status: ProcessStatus.RUNNING
+                    })}`}>
                     {project.projectName}
                 </Link>
             </div>
@@ -54,7 +57,11 @@ const renderCard = (orgName: ConcordKey, projects: ProjectProcesses[]) => {
         <div className="card" key={orgName}>
             <div className="extra content">
                 <div className="header ellipsis">
-                    <Link className="ui" to={`/org/${orgName}`}>
+                    <Link
+                        className="ui"
+                        to={`/org/${orgName}/process?${queryParams({
+                            status: ProcessStatus.RUNNING
+                        })}`}>
                         {orgName}
                     </Link>
                 </div>

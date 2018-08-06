@@ -116,7 +116,8 @@ public class ProjectProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
+                                   @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                   @ApiParam @QueryParam("status") ProcessStatus processStatus) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -127,6 +128,7 @@ public class ProjectProcessResource implements Resource {
 
         ProcessFilter filter = ProcessFilter.builder()
                 .projectId(projectId)
+                .status(processStatus)
                 .build();
         return queueDao.list(filter, DEFAULT_LIST_LIMIT);
     }
