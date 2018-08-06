@@ -135,8 +135,9 @@ public class InventoryManager {
             return e;
         }
 
+        // TODO research the case for publicly writable inventories
         if (orgMembersOnly && e.getVisibility() == InventoryVisibility.PUBLIC
-                && level == ResourceAccessLevel.READER
+                // && level == ResourceAccessLevel.READER
                 && userDao.isInOrganization(p.getId(), e.getOrgId())) {
             // organization members can access any public inventory in the same organization
             return e;

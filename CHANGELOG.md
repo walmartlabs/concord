@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: revert inventory RBAC changes, allow publicly
+writable inventories;
 - concord-console: fix the process status filter on the project
 processes page;
 - concord-console: limit `Activity` data to the current user's
