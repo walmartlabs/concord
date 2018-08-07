@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, policy-engine: support for "max concurrent
+processes" policy.
+
+
+
 ## [0.83.1] - 2018-08-06
 
 ### Changed

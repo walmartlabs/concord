@@ -25,6 +25,8 @@ import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.client.CommandQueueApi;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessQueueApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -34,16 +36,15 @@ import java.util.stream.Stream;
 
 public class ServerConnector implements MaintenanceModeListener {
 
+    private static final Logger log = LoggerFactory.getLogger(ServerConnector.class);
+
     private Worker[] workers;
     private Thread[] workerThreads;
     private Thread executionCleanup;
     private CommandHandler commandHandler;
     private Thread commandHandlerThread;
-
     private Thread orphanSweeper;
-
     private MaintenanceModeNotifier maintenanceModeNotifier;
-
     private CountDownLatch doneSignal;
 
     public void start(Configuration cfg) throws IOException {
@@ -54,8 +55,12 @@ public class ServerConnector implements MaintenanceModeListener {
 
         ExecutionManager executionManager = new ExecutionManager(cfg, processApi);
 
-        maintenanceModeNotifier = new MaintenanceModeNotifier(this);
-        maintenanceModeNotifier.start();
+        try {
+            maintenanceModeNotifier = new MaintenanceModeNotifier(this);
+            maintenanceModeNotifier.start();
+        } catch (IOException e) {
+            log.warn("start -> can't start the maintenance mode notifier: {}", e.getMessage());
+        }
 
         executionCleanup = new Thread(new ExecutionStatusCleanup(executionManager),
                 "execution-status-cleanup");

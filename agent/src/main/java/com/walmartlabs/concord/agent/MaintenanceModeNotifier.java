@@ -43,13 +43,11 @@ public class MaintenanceModeNotifier {
 
     public void start() {
         server.start();
-
         log.info("start -> done");
     }
 
     public void stop() {
         server.stop(0);
-
         log.info("stop -> done");
     }
 

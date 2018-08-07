@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.policy;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,31 +72,34 @@ public class PolicyDao extends AbstractDao {
 
     public PolicyEntry getLinked(UUID orgId, UUID projectId) {
         try (DSLContext tx = DSL.using(cfg)) {
-
-            SelectOnConditionStep<Record5<UUID, String, String, UUID, UUID>> q =
-                    tx.select(POLICIES.POLICY_ID,
-                            POLICIES.POLICY_NAME,
-                            POLICIES.RULES.cast(String.class),
-                            POLICY_LINKS.ORG_ID,
-                            POLICY_LINKS.PROJECT_ID)
-                            .from(POLICY_LINKS)
-                            .leftOuterJoin(POLICIES).on(POLICY_LINKS.POLICY_ID.eq(POLICIES.POLICY_ID));
-
-            // system policy
-            Condition c = (POLICY_LINKS.ORG_ID.isNull().and(POLICY_LINKS.PROJECT_ID.isNull()));
-
-            if (projectId != null) {
-                c = c.or(POLICY_LINKS.PROJECT_ID.eq(projectId));
-            }
-
-            if (orgId != null) {
-                c = c.or(POLICY_LINKS.ORG_ID.eq(orgId).and(POLICY_LINKS.PROJECT_ID.isNull()));
-            }
-
-            q.where(c);
-
-            return findPolicyEntry(q.fetch(this::toRule));
+            return getLinked(tx, orgId, projectId);
         }
+    }
+
+    public PolicyEntry getLinked(DSLContext tx, UUID orgId, UUID projectId) {
+        SelectOnConditionStep<Record5<UUID, String, String, UUID, UUID>> q =
+                tx.select(POLICIES.POLICY_ID,
+                        POLICIES.POLICY_NAME,
+                        POLICIES.RULES.cast(String.class),
+                        POLICY_LINKS.ORG_ID,
+                        POLICY_LINKS.PROJECT_ID)
+                        .from(POLICY_LINKS)
+                        .leftOuterJoin(POLICIES).on(POLICY_LINKS.POLICY_ID.eq(POLICIES.POLICY_ID));
+
+        // system policy
+        Condition c = (POLICY_LINKS.ORG_ID.isNull().and(POLICY_LINKS.PROJECT_ID.isNull()));
+
+        if (projectId != null) {
+            c = c.or(POLICY_LINKS.PROJECT_ID.eq(projectId));
+        }
+
+        if (orgId != null) {
+            c = c.or(POLICY_LINKS.ORG_ID.eq(orgId).and(POLICY_LINKS.PROJECT_ID.isNull()));
+        }
+
+        q.where(c);
+
+        return findPolicyEntry(q.fetch(this::toRule));
     }
 
     public UUID insert(String name, Map<String, Object> rules) {

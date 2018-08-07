@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.ProcessStatus;
@@ -33,6 +34,7 @@ import org.junit.Test;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 @Ignore("requires a local DB instance")
 public class ProcessQueueDaoTest extends AbstractDaoTest {
@@ -42,7 +44,7 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     @Before
     public void setUp() throws Exception {
-        queueDao = new ProcessQueueDao(getConfiguration());
+        queueDao = new ProcessQueueDao(getConfiguration(), mock(PolicyDao.class));
         projectDao = new ProjectDao(getConfiguration());
     }
 
