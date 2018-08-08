@@ -32,8 +32,6 @@ import java.util.Map;
 
 public class MetricInterceptor implements MethodInterceptor {
 
-    private static final String SHARED_PREFIX = "com.walmartlabs.concord.";
-
     private final Map<Method, String> timerNameCache = new HashMap<>();
 
     @Inject
@@ -52,12 +50,8 @@ public class MetricInterceptor implements MethodInterceptor {
 
     private String timerName(Method m) {
         return timerNameCache.computeIfAbsent(m, k -> {
-            String n = m.getDeclaringClass().getName();
-            if (n.startsWith(SHARED_PREFIX)) {
-                n = n.substring(SHARED_PREFIX.length());
-            }
             WithTimer t = m.getAnnotation(WithTimer.class);
-            return "timer," + n + "." + m.getName() + t.suffix();
+            return MetricUtils.createFqn("timer", m.getDeclaringClass(), m.getName(), t.suffix());
         });
     }
 }

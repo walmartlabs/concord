@@ -26,7 +26,7 @@ import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.server.agent.AgentCommandWatchdog;
 import com.walmartlabs.concord.server.audit.AuditLogCleaner;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
-import com.walmartlabs.concord.server.metrics.MetricsModule;
+import com.walmartlabs.concord.server.metrics.MetricModule;
 import com.walmartlabs.concord.server.org.triggers.TriggerScheduler;
 import com.walmartlabs.concord.server.process.ProcessCleaner;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueWatchdog;
@@ -39,7 +39,7 @@ public class ServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new MetricsModule());
+        install(new MetricModule());
         install(new DatabaseModule());
 
         Multibinder<BackgroundTask> tasks = Multibinder.newSetBinder(binder(), BackgroundTask.class);

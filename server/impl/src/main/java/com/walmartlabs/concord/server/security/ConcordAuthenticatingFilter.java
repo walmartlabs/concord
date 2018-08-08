@@ -20,7 +20,9 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.codahale.metrics.Meter;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.metrics.InjectMeter;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
@@ -28,6 +30,7 @@ import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.util.WebUtils;
@@ -63,10 +66,22 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     private final ApiKeyDao apiKeyDao;
     private final SecretStoreConfiguration secretCfg;
 
+    @InjectMeter
+    private final Meter successAuths;
+
+    @InjectMeter
+    private final Meter failedAuths;
+
     @Inject
-    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao, SecretStoreConfiguration secretCfg) {
+    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao,
+                                       SecretStoreConfiguration secretCfg,
+                                       Meter successAuths,
+                                       Meter failedAuths) {
+
         this.apiKeyDao = apiKeyDao;
         this.secretCfg = secretCfg;
+        this.successAuths = successAuths;
+        this.failedAuths = failedAuths;
     }
 
     @Override
@@ -115,8 +130,15 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     }
 
     @Override
+    protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
+        successAuths.mark();
+        return super.onLoginSuccess(token, subject, request, response);
+    }
+
+    @Override
     protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
         log.warn("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
+        failedAuths.mark();
         return super.onLoginFailure(token, e, request, response);
     }
 
