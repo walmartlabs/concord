@@ -45,6 +45,11 @@ export interface StartProcessWizard extends Action {
     processInstanceId: ConcordId;
 }
 
+export interface StartProcessForm extends Action {
+    processInstanceId: ConcordId;
+    formInstanceId: string;
+}
+
 export type GetProcessFormState = RequestState<FormInstanceEntry>;
 export type SubmitProcessFormState = RequestState<FormSubmitResponse>;
 

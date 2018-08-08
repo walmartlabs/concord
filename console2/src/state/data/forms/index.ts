@@ -23,8 +23,13 @@ import { delay } from 'redux-saga';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../api/common';
-import { get as apiGetProcess, isFinal } from '../../../api/process';
-import { get as apiGet, list as apiList, submit as apiSubmit } from '../../../api/process/form';
+import { FormListEntry, get as apiGetProcess, isFinal } from '../../../api/process';
+import {
+    FormInstanceEntry,
+    get as apiGet,
+    list as apiList,
+    submit as apiSubmit
+} from '../../../api/process/form';
 import { startSession as apiStartSession } from '../../../api/service/custom_form';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import {
@@ -32,6 +37,7 @@ import {
     GetProcessFormRequest,
     GetProcessFormState,
     ProcessWizardState,
+    StartProcessForm,
     StartProcessWizard,
     State,
     SubmitProcessFormRequest,
@@ -51,6 +57,8 @@ const actionTypes = {
 
     START_PROCESS_WIZARD: `${NAMESPACE}/wizard/start`,
     STOP_PROCESS_WIZARD: `${NAMESPACE}/wizard/stop`,
+
+    START_PROCESS_FORM: `${NAMESPACE}/form/start`,
 
     RESET_PROCESS_FORMS: `${NAMESPACE}/reset`
 };
@@ -83,6 +91,12 @@ export const actions = {
     startWizard: (processInstanceId: ConcordId): StartProcessWizard => ({
         type: actionTypes.START_PROCESS_WIZARD,
         processInstanceId
+    }),
+
+    startForm: (processInstanceId: ConcordId, formInstanceId: string): StartProcessForm => ({
+        type: actionTypes.START_PROCESS_FORM,
+        processInstanceId,
+        formInstanceId
     }),
 
     reset: () => ({
@@ -185,7 +199,7 @@ function* onSubmitProcessForm({
 
 function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
     try {
-        let forms;
+        let forms: FormListEntry[];
 
         while (true) {
             forms = yield call(apiList, processInstanceId);
@@ -205,29 +219,41 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
             yield call(delay, 1000);
         }
 
-        const { formInstanceId, custom } = forms[0];
-        const yieldFlow = forms[0].yield;
-
-        if (custom) {
-            // a form with branding
-            let { uri } = yield call(apiStartSession, processInstanceId, formInstanceId);
-
-            // we can't proxy html resources using create-react-app
-            // so we have to use another server to serve our custom forms
-            // this is only for the development
-            uri = updateForDev(uri);
-
-            window.location.replace(uri);
-        } else {
-            // regular form
-            const path = {
-                pathname: `/process/${processInstanceId}/form/${formInstanceId}/wizard`,
-                search: `fullScreen=true&yieldFlow=${yieldFlow}`
-            };
-            yield put(replaceHistory(path));
-        }
+        const f = forms[0];
+        yield startProcessForm(processInstanceId, f.formInstanceId, f.custom, f.yield);
     } catch (e) {
         yield handleErrors(actionTypes.STOP_PROCESS_WIZARD, e);
+    }
+}
+
+function* onStartProcessForm({ processInstanceId, formInstanceId }: StartProcessForm) {
+    const form: FormInstanceEntry = yield call(apiGet, processInstanceId, formInstanceId);
+    yield startProcessForm(form.processInstanceId, form.formInstanceId, form.custom, form.yield);
+}
+
+function* startProcessForm(
+    processInstanceId: ConcordId,
+    formInstanceId: string,
+    custom: boolean,
+    yieldFlow: boolean
+) {
+    if (custom) {
+        // a form with branding
+        let { uri } = yield call(apiStartSession, processInstanceId, formInstanceId);
+
+        // we can't proxy html resources using create-react-app
+        // so we have to use another server to serve our custom forms
+        // this is only for the development
+        uri = updateForDev(uri);
+
+        window.location.replace(uri);
+    } else {
+        // regular form
+        const path = {
+            pathname: `/process/${processInstanceId}/form/${formInstanceId}/wizard`,
+            search: `fullScreen=true&yieldFlow=${yieldFlow}`
+        };
+        yield put(replaceHistory(path));
     }
 }
 
@@ -235,6 +261,7 @@ export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_PROCESS_FORM_REQUEST, onGetProcessForm),
         takeLatest(actionTypes.SUBMIT_PROCESS_FORM_REQUEST, onSubmitProcessForm),
-        takeLatest(actionTypes.START_PROCESS_WIZARD, onStartProcessWizard)
+        takeLatest(actionTypes.START_PROCESS_WIZARD, onStartProcessWizard),
+        takeLatest(actionTypes.START_PROCESS_FORM, onStartProcessForm)
     ]);
 };

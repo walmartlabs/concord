@@ -53,6 +53,7 @@ interface DispatchProps {
         yieldFlow: boolean
     ) => void;
     onReturn: (processInstanceId: ConcordId) => void;
+    onStartForm: (processInstanceId: ConcordId, formInstanceId: string) => void;
 }
 
 type Props = ExternalProps & StateProps & DispatchProps;
@@ -88,7 +89,8 @@ class ProcessFormActivity extends React.PureComponent<Props> {
             validationErrors,
             submitting,
             submitError,
-            completed
+            completed,
+            onStartForm
         } = this.props;
 
         if (loading) {
@@ -108,10 +110,10 @@ class ProcessFormActivity extends React.PureComponent<Props> {
                 {form.custom && (
                     <Segment>
                         This form has a{' '}
-                        <a href={`/forms/${processInstanceId}/${formInstanceId}/form`}>
-                            {' '}
-                            custom view.
+                        <a href="#" onClick={() => onStartForm(processInstanceId, formInstanceId)}>
+                            custom view
                         </a>
+                        .
                     </Segment>
                 )}
 
@@ -152,7 +154,10 @@ const mapDispatchToProps = (dispatch: Dispatch<{}>, { wizard }: ExternalProps): 
             actions.submitProcessForm(processInstanceId, formInstanceId, wizard, yieldFlow, data)
         ),
 
-    onReturn: (processInstanceId) => dispatch(pushHistory(`/process/${processInstanceId}`))
+    onReturn: (processInstanceId) => dispatch(pushHistory(`/process/${processInstanceId}`)),
+
+    onStartForm: (processInstanceId, formInstanceId) =>
+        dispatch(actions.startForm(processInstanceId, formInstanceId))
 });
 
 export default connect(

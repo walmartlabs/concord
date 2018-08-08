@@ -9,6 +9,7 @@ processes" policy.
 
 ### Changed
 
+- concord-console: fix the custom view link on the process form page;
 - concord-console: fixed retieval of "Last 10 processes" on the
 Activity page;
 - concord-server: fixed a bug causing `onFailure` handler processes

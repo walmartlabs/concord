@@ -131,7 +131,7 @@ public abstract class AbstractEventResource {
                     .organization(orgId)
                     .project(projectId)
                     .repository(repoId)
-                .entryPoint(entryPoint)
+                    .entryPoint(entryPoint)
                     .configuration(request)
                     .build();
 
