@@ -155,7 +155,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
                 return (List<String>) o;
             } else {
                 throw new IllegalArgumentException("Invalid '" + InternalConstants.Request.ACTIVE_PROFILES_KEY +
-                        "' value. Expected a JSON array or a comma-delimeted list of profiles, got: " + o);
+                        "' value. Expected a JSON array or a comma-delimited list of profiles, got: " + o);
             }
         }
 

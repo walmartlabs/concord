@@ -146,7 +146,7 @@ public class InventoryManager {
         if (orgMembersOnly || e.getVisibility() != InventoryVisibility.PUBLIC) {
             if (!inventoryDao.hasAccessLevel(inventoryId, p.getId(), ResourceAccessLevel.atLeast(level))) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
-                        "the necessary access level (" + level + ") to the inveitory: " + e.getName());
+                        "the necessary access level (" + level + ") to the inventory: " + e.getName());
             }
         }
 

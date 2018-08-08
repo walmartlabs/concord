@@ -256,7 +256,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                 for (UUID id : ids) {
                     queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
                     logManager.warn(id, "Process failed to start");
-                    log.info("processStartFaulures -> marked as failed: {}", id);
+                    log.info("processStartFailures -> marked as failed: {}", id);
                 }
             });
         }
