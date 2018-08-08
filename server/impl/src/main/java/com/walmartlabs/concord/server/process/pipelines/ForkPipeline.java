@@ -38,6 +38,8 @@ public class ForkPipeline extends Pipeline {
                 InitialQueueEntryProcessor.class,
                 ForkCleanupProcessor.class,
                 DefaultVariablesProcessor.class,
+                ProjectInfoProcessor.class,
+                ProcessInfoProcessor.class,
                 ForkDataMergingProcessor.class,
                 TagsExtractingProcessor.class,
                 OutVariablesSettingProcessor.class,

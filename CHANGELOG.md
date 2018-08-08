@@ -7,6 +7,11 @@
 - concord-server, policy-engine: support for "max concurrent
 processes" policy.
 
+### Changed
+
+- concord-server: fixed a bug causing `onFailure` handler processes
+to fail due to missing session keys and `projectInfo` variables. 
+
 
 
 ## [0.83.1] - 2018-08-06

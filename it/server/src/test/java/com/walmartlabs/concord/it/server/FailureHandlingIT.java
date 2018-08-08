@@ -22,13 +22,17 @@ package com.walmartlabs.concord.it.server;
 
 
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class FailureHandlingIT extends AbstractServerIT {
 
@@ -43,6 +47,20 @@ public class FailureHandlingIT extends AbstractServerIT {
         // start the process and wait for it to fail
 
         StartProcessResponse spr = start(payload);
+
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // ---
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        assertEquals(1, forms.size());
+
+        Map<String, Object> data = Collections.singletonMap("firstName", "first-name");
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), forms.get(0).getFormInstanceId(), data);
+        assertTrue(fsr.isOk());
+
         ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // check the logs for the error message
@@ -57,7 +75,8 @@ public class FailureHandlingIT extends AbstractServerIT {
         // check the logs for the successful message
 
         ab = getLog(child.getLogFileName());
-        assertLog(".*hello!.*", ab);
+        assertLog(".*projectInfo: \\{.*orgName=Default.*\\}.*", ab);
+        assertLog(".*processInfo: \\{.*sessionKey=.*\\}.*", ab);
     }
 
     @Test(timeout = 60000)

@@ -1,9 +1,15 @@
 flows:
   main:
+  - form: myForm1
   - ${misc.throwBpmnError("boom!")}
 
   onFailure:
-  - log: "hello!"
+  - log: "projectInfo: ${projectInfo}"
+  - log: "processInfo: ${processInfo}"
+
+forms:
+  myForm1:
+  - firstName: { label: "First Name", type: "string" }
 
 variables:
   entryPoint: main
