@@ -9,8 +9,10 @@ processes" policy.
 
 ### Changed
 
+- concord-console: fixed retieval of "Last 10 processes" on the
+Activity page;
 - concord-server: fixed a bug causing `onFailure` handler processes
-to fail due to missing session keys and `projectInfo` variables. 
+to fail due to missing session keys and `projectInfo` variables.
 
 
 

@@ -74,9 +74,9 @@ export const reducers = combineReducers<State>({
     getUserActivity: getUserActivityReducer
 });
 
-function* onGet({ maxProjectsPerOrg }: UserActivityDataRequest) {
+function* onGet({ maxProjectsPerOrg, maxOwnProcesses }: UserActivityDataRequest) {
     try {
-        const response = yield call(apiGetActivity, maxProjectsPerOrg);
+        const response = yield call(apiGetActivity, maxProjectsPerOrg, maxOwnProcesses);
         yield put({
             type: actionTypes.USER_ACTIVITY_RESPONSE,
             activity: response

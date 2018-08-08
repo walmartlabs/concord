@@ -18,7 +18,7 @@
  * =====
  */
 
-import { ConcordKey, fetchJson } from '../../../common';
+import { ConcordKey, fetchJson, queryParams } from '../../../common';
 import { ProcessEntry, ProcessStatus } from '../../../process';
 
 export interface ProjectProcesses {
@@ -38,5 +38,10 @@ export interface UserActivity {
     processes: ProcessEntry[];
 }
 
-export const getActivity = (maxProjectsPerOrg: number): Promise<UserActivity> =>
-    fetchJson(`/api/service/console/user/activity?maxProjectsPerOrg=` + maxProjectsPerOrg);
+export const getActivity = (
+    maxProjectsPerOrg: number,
+    maxOwnProcesses: number
+): Promise<UserActivity> =>
+    fetchJson(
+        `/api/service/console/user/activity?${queryParams({ maxProjectsPerOrg, maxOwnProcesses })}`
+    );

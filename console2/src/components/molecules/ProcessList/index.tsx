@@ -71,7 +71,9 @@ const renderTableRow = (row: ProcessEntry, hideColumns?: Column[]) => {
                     </Link>
                 </Table.Cell>
             )}
-            {showColumn(Column.INITIATOR, hideColumns) && <Table.Cell>{row.initiator}</Table.Cell>}
+            {showColumn(Column.INITIATOR, hideColumns) && (
+                <Table.Cell singleLine={true}>{row.initiator}</Table.Cell>
+            )}
             {showColumn(Column.CREATED_AT, hideColumns) && (
                 <Table.Cell>
                     <LocalTimestamp value={row.createdAt} />
@@ -113,7 +115,9 @@ class ProcessList extends React.PureComponent<StateProps & ExternalProps> {
                             <Table.HeaderCell>Project</Table.HeaderCell>
                         )}
                         {showColumn(Column.INITIATOR, hideColumns) && (
-                            <Table.HeaderCell collapsing={true}>Initiator</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true} singleLine={true}>
+                                Initiator
+                            </Table.HeaderCell>
                         )}
                         {showColumn(Column.CREATED_AT, hideColumns) && (
                             <Table.HeaderCell>Created</Table.HeaderCell>
