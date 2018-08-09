@@ -108,7 +108,7 @@ class ProjectActivity extends React.PureComponent<Props> {
                 </Segment>
 
                 <Segment>
-                    <EditProjectActivity orgName={p.orgName} projectEntry={p} />
+                    <EditProjectActivity orgName={p.orgName} projectName={p.name} />
                 </Segment>
 
                 <Divider horizontal={true} content="Danger Zone" />
