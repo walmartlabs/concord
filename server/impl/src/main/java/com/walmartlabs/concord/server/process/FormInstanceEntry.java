@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 public class FormInstanceEntry implements Serializable {
 
     private final String processInstanceId;
-    private final String formInstanceId;
     private final String name;
     private final List<Field> fields;
     private final boolean custom;
@@ -44,14 +43,12 @@ public class FormInstanceEntry implements Serializable {
 
     @JsonCreator
     public FormInstanceEntry(@JsonProperty("processInstanceId") String processInstanceId,
-                             @JsonProperty("formInstanceId") String formInstanceId,
                              @JsonProperty("name") String name,
                              @JsonProperty("fields") List<Field> fields,
                              @JsonProperty("custom") boolean custom,
                              @JsonProperty("yield") boolean yield) {
 
         this.processInstanceId = processInstanceId;
-        this.formInstanceId = formInstanceId;
         this.name = name;
         this.fields = fields;
         this.custom = custom;
@@ -60,10 +57,6 @@ public class FormInstanceEntry implements Serializable {
 
     public String getProcessInstanceId() {
         return processInstanceId;
-    }
-
-    public String getFormInstanceId() {
-        return formInstanceId;
     }
 
     public String getName() {
@@ -86,7 +79,6 @@ public class FormInstanceEntry implements Serializable {
     public String toString() {
         return "FormInstanceEntry{" +
                 "processInstanceId='" + processInstanceId + '\'' +
-                ", formInstanceId='" + formInstanceId + '\'' +
                 ", name='" + name + '\'' +
                 ", fields=" + fields +
                 ", custom=" + custom +

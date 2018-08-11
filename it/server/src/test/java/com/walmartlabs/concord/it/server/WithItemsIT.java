@@ -81,7 +81,7 @@ public class WithItemsIT extends AbstractServerIT {
         List<FormListEntry> forms = formResource.list(spr.getInstanceId());
         assertEquals(1, forms.size());
 
-        formResource.submit(spr.getInstanceId(), forms.get(0).getFormInstanceId(), Collections.emptyMap());
+        formResource.submit(spr.getInstanceId(), forms.get(0).getName(), Collections.emptyMap());
 
         ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
         byte[] ab = getLog(pir.getLogFileName());
@@ -92,7 +92,7 @@ public class WithItemsIT extends AbstractServerIT {
         forms = formResource.list(spr.getInstanceId());
         assertEquals(1, forms.size());
 
-        formResource.submit(spr.getInstanceId(), forms.get(0).getFormInstanceId(), Collections.emptyMap());
+        formResource.submit(spr.getInstanceId(), forms.get(0).getName(), Collections.emptyMap());
 
         pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FINISHED);
         ab = getLog(pir.getLogFileName());

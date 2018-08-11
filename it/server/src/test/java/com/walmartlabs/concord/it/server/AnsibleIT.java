@@ -152,7 +152,7 @@ public class AnsibleIT extends AbstractServerIT {
         List<FormListEntry> forms = formsApi.list(pir.getInstanceId());
         assertEquals(1, forms.size());
 
-        formsApi.submit(pir.getInstanceId(), forms.get(0).getFormInstanceId(), Collections.singletonMap("msg", "Hello!"));
+        formsApi.submit(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("msg", "Hello!"));
 
         // ---
 
@@ -194,7 +194,7 @@ public class AnsibleIT extends AbstractServerIT {
         List<FormListEntry> forms = formsApi.list(pir.getInstanceId());
         assertEquals(1, forms.size());
 
-        formsApi.submit(pir.getInstanceId(), forms.get(0).getFormInstanceId(), Collections.singletonMap("msg", "Hello!"));
+        formsApi.submit(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("msg", "Hello!"));
 
         // ---
 

@@ -58,7 +58,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertEquals(1, forms.size());
 
         Map<String, Object> data = Collections.singletonMap("firstName", "first-name");
-        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), forms.get(0).getFormInstanceId(), data);
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), forms.get(0).getName(), data);
         assertTrue(fsr.isOk());
 
         ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);

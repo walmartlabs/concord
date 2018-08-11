@@ -62,10 +62,10 @@ public class FormIT extends AbstractServerIT {
         FormListEntry f0 = forms.get(0);
         assertFalse(f0.isCustom());
 
-        String formId = f0.getFormInstanceId();
+        String formName = f0.getName();
 
         Map<String, Object> data = Collections.singletonMap("firstName", firstName);
-        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formId, data);
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, data);
         assertTrue(fsr.isOk());
 
         ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
@@ -80,14 +80,14 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        formId = forms.get(0).getFormInstanceId();
+        formName = forms.get(0).getName();
 
         data = new HashMap<>();
         data.put("lastName", lastName);
         data.put("rememberMe", true);
         data.put("file", "file-content");
 
-        fsr = formsApi.submit(spr.getInstanceId(), formId, data);
+        fsr = formsApi.submit(spr.getInstanceId(), formName, data);
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
@@ -130,10 +130,10 @@ public class FormIT extends AbstractServerIT {
         FormListEntry f0 = forms.get(0);
         assertFalse(f0.isCustom());
 
-        String formId = f0.getFormInstanceId();
+        String formName = f0.getName();
 
         Map<String, Object> data = Collections.singletonMap("firstName", firstName);
-        FormSubmitResponse fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formId, data, FormSubmitResponse.class);
+        FormSubmitResponse fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formName, data, FormSubmitResponse.class);
         assertTrue(fsr.isOk());
 
         ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
@@ -148,14 +148,14 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        formId = forms.get(0).getFormInstanceId();
+        formName = forms.get(0).getName();
 
         data = new HashMap<>();
         data.put("lastName", lastName);
         data.put("rememberMe", true);
         data.put("file", "file-content".getBytes());
 
-        fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formId, data, FormSubmitResponse.class);
+        fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formName, data, FormSubmitResponse.class);
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
@@ -190,10 +190,10 @@ public class FormIT extends AbstractServerIT {
         List<FormListEntry> forms = formResource.list(spr.getInstanceId());
 
         FormListEntry f0 = forms.get(0);
-        String formId = f0.getFormInstanceId();
+        String formName = f0.getName();
 
         Map<String, Object> data = Collections.singletonMap("name", "Concord");
-        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);
+        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formName, data);
         assertTrue(fsr.isOk());
 
         // ---
@@ -221,9 +221,9 @@ public class FormIT extends AbstractServerIT {
 
         List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
         FormListEntry f0 = forms.get(0);
-        String formId = f0.getFormInstanceId();
+        String formName = f0.getName();
 
-        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formId, Collections.emptyMap());
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, Collections.emptyMap());
         assertTrue(fsr.isOk());
 
         // ---
@@ -263,10 +263,10 @@ public class FormIT extends AbstractServerIT {
         FormListEntry f0 = forms.get(0);
         assertFalse(f0.isCustom());
 
-        String formId = f0.getFormInstanceId();
+        String formName = f0.getName();
 
         Map<String, Object> data = Collections.singletonMap("myField", fieldValue);
-        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formId, data);
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, data);
         assertTrue(fsr.isOk());
 
         ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
@@ -293,13 +293,13 @@ public class FormIT extends AbstractServerIT {
         List<FormListEntry> forms = formResource.list(spr.getInstanceId());
 
         FormListEntry f0 = forms.get(0);
-        String formId = f0.getFormInstanceId();
+        String formName = f0.getName();
 
         List<String> skills = new ArrayList<>();
         skills.add("angular");
         skills.add("react");
         Map<String, Object> data = Collections.singletonMap("skills", skills);
-        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formId, data);
+        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formName, data);
         assertTrue(fsr.isOk());
 
         // ---

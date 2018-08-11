@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
@@ -104,18 +103,18 @@ public class CustomFormService implements Resource {
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formInstanceId}/start")
+    @javax.ws.rs.Path("{processInstanceId}/{formName}/start")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     public FormSessionResponse startSession(@PathParam("processInstanceId") UUID processInstanceId,
-                                            @PathParam("formInstanceId") @ConcordId String formInstanceId) {
+                                            @PathParam("formName") String formName) {
 
         // TODO locking
-        Form form = assertForm(processInstanceId, formInstanceId);
+        Form form = assertForm(processInstanceId, formName);
 
         Path dst = cfg.getBaseDir()
                 .resolve(processInstanceId.toString())
-                .resolve(formInstanceId);
+                .resolve(formName);
 
         try {
             Path formDir = dst.resolve(FORM_DIR_NAME);
@@ -128,7 +127,7 @@ public class CustomFormService implements Resource {
             boolean branded = stateManager.exportDirectory(processInstanceId, resource, copyTo(formDir));
             if (!branded) {
                 // not branded, redirect to the default wizard
-                String uri = String.format(NON_BRANDED_FORM_URL_TEMPLATE, processInstanceId, formInstanceId);
+                String uri = String.format(NON_BRANDED_FORM_URL_TEMPLATE, processInstanceId, formName);
                 return new FormSessionResponse(uri);
             }
 
@@ -136,48 +135,48 @@ public class CustomFormService implements Resource {
             writeData(formDir, initialData(form));
 
             // copy shared resources (if present)
-            copySharedResources(processInstanceId, formInstanceId, dst);
+            copySharedResources(processInstanceId, dst);
         } catch (IOException e) {
             log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}",
-                    processInstanceId, formInstanceId, e);
+                    processInstanceId, formName, e);
             throw new ConcordApplicationException("Error while preparing a custom form", e);
         }
 
-        return new FormSessionResponse(formPath(processInstanceId, formInstanceId));
+        return new FormSessionResponse(formPath(processInstanceId, formName));
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formInstanceId}/continue")
+    @javax.ws.rs.Path("{processInstanceId}/{formName}/continue")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     public Response continueSession(@Context UriInfo uriInfo,
                                     @Context HttpHeaders headers,
                                     @PathParam("processInstanceId") UUID processInstanceId,
-                                    @PathParam("formInstanceId") @ConcordId String formInstanceId,
+                                    @PathParam("formName") String formName,
                                     MultivaluedMap<String, String> data) {
 
-        return continueSession(uriInfo, headers, processInstanceId, formInstanceId, FormUtils.convert(data));
+        return continueSession(uriInfo, headers, processInstanceId, formName, FormUtils.convert(data));
     }
 
     @POST
-    @javax.ws.rs.Path("{processInstanceId}/{formInstanceId}/continue")
+    @javax.ws.rs.Path("{processInstanceId}/{formName}/continue")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public Response continueSession(@Context UriInfo uriInfo,
                                     @Context HttpHeaders headers,
                                     @PathParam("processInstanceId") UUID processInstanceId,
-                                    @PathParam("formInstanceId") @ConcordId String formInstanceId,
+                                    @PathParam("formName") String formName,
                                     MultipartInput data) {
 
-        return continueSession(uriInfo, headers, processInstanceId, formInstanceId, MultipartUtils.toMap(data));
+        return continueSession(uriInfo, headers, processInstanceId, formName, MultipartUtils.toMap(data));
     }
 
     private Response continueSession(UriInfo uriInfo, HttpHeaders headers,
-                                     UUID processInstanceId, String formInstanceId,
+                                     UUID processInstanceId, String formName,
                                      Map<String, Object> data) {
         // TODO locking
-        Form form = assertForm(processInstanceId, formInstanceId);
+        Form form = assertForm(processInstanceId, formName);
 
         // TODO constants
         Map<String, Object> opts = form.getOptions();
@@ -185,17 +184,16 @@ public class CustomFormService implements Resource {
 
         Path dst = cfg.getBaseDir()
                 .resolve(processInstanceId.toString())
-                .resolve(formInstanceId);
+                .resolve(formName);
 
         Path formDir = dst.resolve(FORM_DIR_NAME);
-        String formName = form.getFormDefinition().getName();
 
         try {
             Map<String, Object> m = new HashMap<>();
             try {
                 m = FormUtils.convert(new ExternalFileFormValidatorLocale(processInstanceId, formName, stateManager), form, data);
 
-                FormSubmitResult r = formService.submit(processInstanceId, formInstanceId, m);
+                FormSubmitResult r = formService.submit(processInstanceId, formName, m);
                 if (r.isValid()) {
                     if (yield) {
                         // this was the last "interactive" form. The process will continue in "background"
@@ -243,13 +241,13 @@ public class CustomFormService implements Resource {
             throw new ConcordApplicationException("Error while submitting a form", e);
         }
 
-        return redirectToForm(uriInfo, headers, processInstanceId, formInstanceId);
+        return redirectToForm(uriInfo, headers, processInstanceId, formName);
     }
 
-    private Form assertForm(UUID processInstanceId, String formInstanceId) {
-        Form form = formService.get(processInstanceId, formInstanceId);
+    private Form assertForm(UUID processInstanceId, String formName) {
+        Form form = formService.get(processInstanceId, formName);
         if (form == null) {
-            log.warn("assertForm ['{}', '{}'] -> not found", processInstanceId, formInstanceId);
+            log.warn("assertForm ['{}', '{}'] -> not found", processInstanceId, formName);
             throw new ConcordApplicationException("Form not found", Status.NOT_FOUND);
         }
         return form;
@@ -278,9 +276,9 @@ public class CustomFormService implements Resource {
                                  List<ValidationError> errors) {
 
         String processInstanceId = form.getProcessBusinessKey();
-        String formInstanceId = form.getFormInstanceId().toString();
+        String formName = form.getFormDefinition().getName();
 
-        String submitUrl = String.format(FORM_WIZARD_CONTINUE_URL_TEMPLATE, processInstanceId, formInstanceId);
+        String submitUrl = String.format(FORM_WIZARD_CONTINUE_URL_TEMPLATE, processInstanceId, formName);
 
         // TODO merge with FormResource
         Map<String, FormDataDefinition> _definitions = new HashMap<>();
@@ -349,7 +347,7 @@ public class CustomFormService implements Resource {
         Files.write(dst, s.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    private void copySharedResources(UUID processInstanceId, String formInstanceId, Path dst) throws IOException {
+    private void copySharedResources(UUID processInstanceId, Path dst) throws IOException {
         Path sharedDir = dst.resolve(SHARED_DIR_NAME);
         if (!Files.exists(sharedDir)) {
             Files.createDirectories(sharedDir);
@@ -360,7 +358,7 @@ public class CustomFormService implements Resource {
     }
 
     private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,
-                                           UUID processInstanceId, String formInstanceId) {
+                                           UUID processInstanceId, String formName) {
 
         String scheme = uriInfo.getBaseUri().getScheme();
 
@@ -376,7 +374,7 @@ public class CustomFormService implements Resource {
 
         UriBuilder b = UriBuilder.fromUri(uriInfo.getBaseUri())
                 .scheme(scheme)
-                .path(formPath(processInstanceId, formInstanceId));
+                .path(formPath(processInstanceId, formName));
 
         return redirectTo(b.build().toString());
     }
@@ -387,8 +385,8 @@ public class CustomFormService implements Resource {
                 .build();
     }
 
-    private static String formPath(UUID processInstanceId, String formInstanceId) {
-        return String.format(FORMS_PATH_TEMPLATE, processInstanceId, formInstanceId);
+    private static String formPath(UUID processInstanceId, String formName) {
+        return String.format(FORMS_PATH_TEMPLATE, processInstanceId, formName);
     }
 
     @JsonInclude(Include.NON_EMPTY)

@@ -70,8 +70,8 @@ public class ConcordFormService {
         this.resumePipeline = resumePipeline;
     }
 
-    public Form get(UUID processInstanceId, String formInstanceId) {
-        return formAccessManager.assertFormAccess(processInstanceId, formInstanceId);
+    public Form get(UUID processInstanceId, String formName) {
+        return formAccessManager.assertFormAccess(processInstanceId, formName);
     }
 
     private static Optional<Form> deserialize(InputStream data) {
@@ -99,7 +99,7 @@ public class ConcordFormService {
             boolean yield = getBoolean(opts, "yield", false);
             Map<String, Object> runAs = getMap(opts, InternalConstants.Forms.RUN_AS_KEY, null);
 
-            return new FormListEntry(f.getFormInstanceId().toString(), name, branding, yield, runAs);
+            return new FormListEntry(name, branding, yield, runAs);
         }).collect(Collectors.toList());
     }
 
@@ -123,17 +123,17 @@ public class ConcordFormService {
         return o.orElse(null);
     }
 
-    public FormSubmitResult submit(UUID processInstanceId, String formInstanceId, Map<String, Object> data) {
-        Form form = get(processInstanceId, formInstanceId);
+    public FormSubmitResult submit(UUID processInstanceId, String formName, Map<String, Object> data) {
+        Form form = get(processInstanceId, formName);
         if (form == null) {
-            throw new ProcessException(processInstanceId, "Form not found: " + formInstanceId);
+            throw new ProcessException(processInstanceId, "Form not found: " + formName);
         }
 
         ResumeHandler resumeHandler = (f, args) -> {
             String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                     InternalConstants.Files.JOB_STATE_DIR_NAME,
                     InternalConstants.Files.JOB_FORMS_DIR_NAME,
-                    formInstanceId);
+                    formName);
 
             stateManager.delete(processInstanceId, resource);
 
@@ -155,7 +155,6 @@ public class ConcordFormService {
 
         Map<String, Object> merged = merge(form, data);
         try {
-            String formName = form.getFormDefinition().getName();
             return toResult(processInstanceId, form,
                     DefaultFormService.submit(resumeHandler, createFormValidator(processInstanceId, formName), form, merged));
         } catch (ExecutionException e) {
@@ -180,7 +179,7 @@ public class ConcordFormService {
         for (FormListEntry f : forms) {
             Map<String, Object> args = (Map<String, Object>) data.get(f.getName());
 
-            lastResult = submit(processInstanceId, f.getFormInstanceId(), args);
+            lastResult = submit(processInstanceId, f.getName(), args);
             if (!lastResult.isValid()) {
                 return lastResult;
             }
@@ -281,6 +280,14 @@ public class ConcordFormService {
         }
 
         return (Map<String, Object>) v;
+    }
+
+    private static UUID parseFormInstanceId(String s) {
+        try {
+            return UUID.fromString(s);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static final class FormSubmitResult implements Serializable {

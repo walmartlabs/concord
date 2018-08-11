@@ -136,7 +136,7 @@ class App extends React.Component {
                                         />
 
                                         <Route
-                                            path="/process/:processInstanceId/form/:formInstanceId/:mode"
+                                            path="/process/:processInstanceId/form/:formName/:mode"
                                             component={ProcessFormPage}
                                         />
 

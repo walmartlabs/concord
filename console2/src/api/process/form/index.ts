@@ -29,7 +29,6 @@ export interface FormRunAs {
 }
 
 export interface FormListEntry {
-    formInstanceId: string;
     name: string;
     custom: boolean;
     yield: boolean;
@@ -65,7 +64,6 @@ export interface FormField {
 
 export interface FormInstanceEntry {
     processInstanceId: ConcordId;
-    formInstanceId: string;
     name: string;
     fields: FormField[];
     custom: boolean;
@@ -85,15 +83,12 @@ export interface FormSubmitResponse {
 export const list = (processInstanceId: ConcordId): Promise<FormListEntry[]> =>
     fetchJson(`/api/v1/process/${processInstanceId}/form`);
 
-export const get = (
-    processInstanceId: ConcordId,
-    formInstanceId: string
-): Promise<FormInstanceEntry> =>
-    fetchJson(`/api/v1/process/${processInstanceId}/form/${formInstanceId}`);
+export const get = (processInstanceId: ConcordId, formName: string): Promise<FormInstanceEntry> =>
+    fetchJson(`/api/v1/process/${processInstanceId}/form/${formName}`);
 
 export const submit = (
     processInstanceId: ConcordId,
-    formInstanceId: string,
+    formName: string,
     values: {}
 ): Promise<FormSubmitResponse> => {
     const body = new FormData();
@@ -118,5 +113,5 @@ export const submit = (
         body
     };
 
-    return fetchJson(`/api/v1/process/${processInstanceId}/form/${formInstanceId}`, opts);
+    return fetchJson(`/api/v1/process/${processInstanceId}/form/${formName}`, opts);
 };

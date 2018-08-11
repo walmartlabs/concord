@@ -57,7 +57,7 @@ public class SerializationIT extends AbstractServerIT {
         assertEquals(1, forms.size());
 
         FormListEntry f = forms.get(0);
-        formsApi.submit(spr.getInstanceId(), f.getFormInstanceId(),
+        formsApi.submit(spr.getInstanceId(), f.getName(),
                 Collections.singletonMap("y", "hello"));
 
         // ---

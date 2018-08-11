@@ -45,13 +45,12 @@ public class FileFormStorage implements FormStorage {
     @Override
     public void save(Form form) throws ExecutionException {
         UUID id = form.getFormInstanceId();
-        Path p = dir.resolve(id.toString());
+        Path p = dir.resolve(form.getFormDefinition().getName());
         try {
             Path tmp = IOUtils.createTempFile(id.toString(), "form");
             try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(tmp))) {
                 out.writeObject(form);
             }
-
             Files.move(tmp, p, REPLACE_EXISTING);
         } catch (IOException e) {
             throw new ExecutionException("Error while saving a form", e);
@@ -59,7 +58,7 @@ public class FileFormStorage implements FormStorage {
     }
 
     @Override
-    public void complete(UUID formInstanceId) throws ExecutionException {
+    public void complete(UUID formInstanceId) {
         throw new IllegalStateException("Shouldn't be called from the runner's side");
     }
 

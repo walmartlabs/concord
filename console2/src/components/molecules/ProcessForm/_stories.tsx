@@ -30,7 +30,6 @@ storiesOf('molecules/ProcessForm', module).add('example', () => (
         onReturn={() => console.log('onReturn')}
         form={{
             processInstanceId: 'dd88bb86-4d52-11e8-bd2c-7b7285a1cc4d',
-            formInstanceId: 'e3dd39c6-4d52-11e8-ac68-bf7f4919ea9c',
             name: 'story',
             fields: [
                 {

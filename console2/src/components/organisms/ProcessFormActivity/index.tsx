@@ -30,7 +30,7 @@ import { ProcessForm, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
     processInstanceId: ConcordId;
-    formInstanceId: string;
+    formName: string;
     wizard: boolean;
 }
 
@@ -45,15 +45,15 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    load: (processInstanceId: ConcordId, formInstanceId: string) => void;
+    load: (processInstanceId: ConcordId, formName: string) => void;
     onSubmit: (
         processInstanceId: ConcordId,
-        formInstanceId: string,
+        formName: string,
         data: FormDataType,
         yieldFlow: boolean
     ) => void;
     onReturn: (processInstanceId: ConcordId) => void;
-    onStartForm: (processInstanceId: ConcordId, formInstanceId: string) => void;
+    onStartForm: (processInstanceId: ConcordId, formName: string) => void;
 }
 
 type Props = ExternalProps & StateProps & DispatchProps;
@@ -66,15 +66,15 @@ class ProcessFormActivity extends React.PureComponent<Props> {
     componentDidUpdate(prevProps: Props) {
         if (
             this.props.processInstanceId !== prevProps.processInstanceId ||
-            this.props.formInstanceId !== prevProps.formInstanceId
+            this.props.formName !== prevProps.formName
         ) {
             this.init();
         }
     }
 
     init() {
-        const { load, processInstanceId, formInstanceId } = this.props;
-        load(processInstanceId, formInstanceId);
+        const { load, processInstanceId, formName } = this.props;
+        load(processInstanceId, formName);
     }
 
     render() {
@@ -85,7 +85,7 @@ class ProcessFormActivity extends React.PureComponent<Props> {
             onSubmit,
             onReturn,
             processInstanceId,
-            formInstanceId,
+            formName,
             validationErrors,
             submitting,
             submitError,
@@ -110,7 +110,7 @@ class ProcessFormActivity extends React.PureComponent<Props> {
                 {form.custom && (
                     <Segment>
                         This form has a{' '}
-                        <a href="#" onClick={() => onStartForm(processInstanceId, formInstanceId)}>
+                        <a href="#" onClick={() => onStartForm(processInstanceId, formName)}>
                             custom view
                         </a>
                         .
@@ -123,9 +123,7 @@ class ProcessFormActivity extends React.PureComponent<Props> {
                     submitError={submitError}
                     completed={completed}
                     errors={validationErrors}
-                    onSubmit={(values) =>
-                        onSubmit(processInstanceId, formInstanceId, values, form.yield)
-                    }
+                    onSubmit={(values) => onSubmit(processInstanceId, formName, values, form.yield)}
                     onReturn={() => onReturn(processInstanceId)}
                 />
             </>
@@ -144,20 +142,18 @@ const mapStateToProps = ({ forms }: { forms: State }): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>, { wizard }: ExternalProps): DispatchProps => ({
-    load: (processInstanceId, formInstanceId) => {
+    load: (processInstanceId, formName) => {
         dispatch(actions.reset());
-        dispatch(actions.getProcessForm(processInstanceId, formInstanceId));
+        dispatch(actions.getProcessForm(processInstanceId, formName));
     },
 
-    onSubmit: (processInstanceId, formInstanceId, data, yieldFlow) =>
-        dispatch(
-            actions.submitProcessForm(processInstanceId, formInstanceId, wizard, yieldFlow, data)
-        ),
+    onSubmit: (processInstanceId, formName, data, yieldFlow) =>
+        dispatch(actions.submitProcessForm(processInstanceId, formName, wizard, yieldFlow, data)),
 
     onReturn: (processInstanceId) => dispatch(pushHistory(`/process/${processInstanceId}`)),
 
-    onStartForm: (processInstanceId, formInstanceId) =>
-        dispatch(actions.startForm(processInstanceId, formInstanceId))
+    onStartForm: (processInstanceId, formName) =>
+        dispatch(actions.startForm(processInstanceId, formName))
 });
 
 export default connect(

@@ -128,7 +128,7 @@ public class SmtpTask implements Task {
             return null;
         }
 
-        String template = (String) mailParams.get("template");
+        String template = getTemplateName(mailParams);
         if (template == null) {
             return mailParams;
         }
@@ -146,13 +146,42 @@ public class SmtpTask implements Task {
             MustacheFactory mf = new DefaultMustacheFactory();
             Mustache mustache = mf.compile(in, template);
 
-            Object scope = ctx != null ? ctx.toMap() : Collections.emptyMap();
+            Object scope = getScope(ctx, mailParams);
             mustache.execute(out, scope);
         }
 
         Map<String, Object> m = new HashMap<>(mailParams);
         m.put("message", out.toString());
         return m;
+    }
+
+    private static Object getScope(Context ctx, Map<String,Object> mailParams) {
+        Map<String, Object> templateParams = getTemplateParams(mailParams);
+        Map<String, Object> ctxParams = ctx != null ? ctx.toMap() : Collections.emptyMap();
+        Map<String, Object> result = new HashMap<>();
+        result.putAll(ctxParams);
+        result.putAll(templateParams);
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String,Object> getTemplateParams(Map<String,Object> mailParams) {
+        Object templateParam = mailParams.get("template");
+        if (templateParam instanceof Map) {
+            Map<String, Object> params = (Map<String, Object>) ((Map) templateParam).get("params");
+            return params != null ? params : Collections.emptyMap();
+        }
+        return Collections.emptyMap();
+    }
+
+    private static String getTemplateName(Map<String, Object> mailParams) {
+        Object templateParam = mailParams.get("template");
+        if (templateParam instanceof String) {
+            return (String)templateParam;
+        } else if (templateParam instanceof Map) {
+            return (String) ((Map)templateParam).get("name");
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

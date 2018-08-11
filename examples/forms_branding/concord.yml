@@ -34,5 +34,5 @@ forms:
   - color: { label: "Favorite color", type: "string", allow: ["red", "green", "blue"] }
   - aFile: { label: "A file", type: "file?" }
   - tosAgree: { label: "Terms and conditions read", type: "boolean" }
-  - skills: { type: "string*", allow: ["css", "design", "angular"]}
+  - skills: { label: "Skills", type: "string*", allow: ["css", "design", "angular"]}
 

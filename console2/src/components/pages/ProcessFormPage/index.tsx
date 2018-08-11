@@ -29,13 +29,13 @@ import { ProcessFormActivity } from '../../organisms';
 
 interface Props {
     processInstanceId: ConcordId;
-    formInstanceId: string;
+    formName: string;
     mode: string;
 }
 
 class ProcessFormPage extends React.PureComponent<RouteComponentProps<Props>> {
     render() {
-        const { processInstanceId, formInstanceId, mode } = this.props.match.params;
+        const { processInstanceId, formName, mode } = this.props.match.params;
 
         return (
             <>
@@ -53,7 +53,7 @@ class ProcessFormPage extends React.PureComponent<RouteComponentProps<Props>> {
 
                 <ProcessFormActivity
                     processInstanceId={processInstanceId}
-                    formInstanceId={formInstanceId}
+                    formName={formName}
                     wizard={mode === 'wizard'}
                 />
             </>

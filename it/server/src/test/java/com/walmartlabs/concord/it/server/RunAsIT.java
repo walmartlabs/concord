@@ -83,7 +83,7 @@ public class RunAsIT extends AbstractServerIT {
         byte[] ab = getLog(pe.getLogFileName());
         assertLog(".*username=" + userAName + ".*==.*username=" + userAName + ".*", ab);
 
-        String formId = findForm(p.getInstanceId());
+        String formName = findForm(p.getInstanceId());
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
@@ -92,7 +92,7 @@ public class RunAsIT extends AbstractServerIT {
         // try submit as a wrong user
 
         try {
-            formsApi.submit(p.getInstanceId(), formId, data);
+            formsApi.submit(p.getInstanceId(), formName, data);
             fail("exception expected");
         } catch (ApiException e) {
             // ignore
@@ -102,7 +102,7 @@ public class RunAsIT extends AbstractServerIT {
 
         resetApiKey();
 
-        FormSubmitResponse fsr = formsApi.submit(p.getInstanceId(), formId, data);
+        FormSubmitResponse fsr = formsApi.submit(p.getInstanceId(), formName, data);
         assertTrue(fsr.isOk());
 
         pe = waitForCompletion(processApi, p.getInstanceId());
@@ -147,11 +147,11 @@ public class RunAsIT extends AbstractServerIT {
 
         setApiKey(apiKeyB.getKey());
 
-        String formId = findForm(pe.getInstanceId());
+        String formName = findForm(pe.getInstanceId());
 
         ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
         Map<String, Object> data = Collections.singletonMap("msg", "Hello!");
-        formsApi.submit(pe.getInstanceId(), formId, data);
+        formsApi.submit(pe.getInstanceId(), formName, data);
 
         // wait for the process to finish
 
@@ -210,6 +210,6 @@ public class RunAsIT extends AbstractServerIT {
         FormListEntry f0 = forms.get(0);
         assertFalse(f0.isCustom());
 
-        return f0.getFormInstanceId();
+        return f0.getName();
     }
 }

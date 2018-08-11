@@ -31,28 +31,21 @@ import java.util.Map;
 @JsonInclude(Include.NON_NULL)
 public class FormListEntry implements Serializable {
 
-    private final String formInstanceId;
-    private final String name;
+     private final String name;
     private final boolean custom;
     private final boolean yield;
     private final Map<String, Object> runAs;
 
     @JsonCreator
-    public FormListEntry(@JsonProperty("formInstanceId") String formInstanceId,
-                         @JsonProperty("name") String name,
+    public FormListEntry(@JsonProperty("name") String name,
                          @JsonProperty("custom") boolean custom,
                          @JsonProperty("yield") boolean yield,
                          @JsonProperty("runAs") Map<String, Object> runAs) {
 
-        this.formInstanceId = formInstanceId;
         this.name = name;
         this.custom = custom;
         this.yield = yield;
         this.runAs = runAs;
-    }
-
-    public String getFormInstanceId() {
-        return formInstanceId;
     }
 
     public String getName() {
@@ -74,8 +67,7 @@ public class FormListEntry implements Serializable {
     @Override
     public String toString() {
         return "FormListEntry{" +
-                "formInstanceId='" + formInstanceId + '\'' +
-                ", name='" + name + '\'' +
+                "name='" + name + '\'' +
                 ", custom=" + custom +
                 ", yield=" + yield +
                 ", runAs=" + runAs +

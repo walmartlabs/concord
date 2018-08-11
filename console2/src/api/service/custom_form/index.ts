@@ -26,8 +26,8 @@ export interface FormSessionResponse {
 
 export const startSession = (
     processInstanceId: ConcordId,
-    formInstanceId: string
+    formName: string
 ): Promise<FormSessionResponse> =>
-    fetchJson(`/api/service/custom_form/${processInstanceId}/${formInstanceId}/start`, {
+    fetchJson(`/api/service/custom_form/${processInstanceId}/${formName}/start`, {
         method: 'POST'
     });

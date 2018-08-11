@@ -43,6 +43,15 @@ interface DispatchProps {
 
 type Props = ExternalProps & StateProps & DispatchProps;
 
+const toUpdateProjectEntry = (p?: ProjectEntry): UpdateProjectEntry => {
+    return {
+        id: p!.id,
+        name: p!.name,
+        visibility: p!.visibility,
+        description: p!.description
+    };
+};
+
 class EditProjectActivity extends React.PureComponent<Props> {
     render() {
         const { error, submitting, update, orgName, initial } = this.props;
@@ -60,15 +69,6 @@ class EditProjectActivity extends React.PureComponent<Props> {
         );
     }
 }
-
-const toUpdateProjectEntry = (p?: ProjectEntry): UpdateProjectEntry => {
-    return {
-        id: p!.id,
-        name: p!.name,
-        visibility: p!.visibility,
-        description: p!.description
-    };
-};
 
 const mapStateToProps = (
     { projects }: { projects: State },

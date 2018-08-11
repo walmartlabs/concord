@@ -26,7 +26,7 @@ import { RequestState } from '../common';
 
 export interface GetProcessFormRequest extends Action {
     processInstanceId: ConcordId;
-    formInstanceId: string;
+    formName: string;
 }
 
 export interface FormDataType {
@@ -35,7 +35,7 @@ export interface FormDataType {
 
 export interface SubmitProcessFormRequest extends Action {
     processInstanceId: ConcordId;
-    formInstanceId: string;
+    formName: string;
     wizard: boolean;
     yieldFlow: boolean;
     data: FormDataType;
@@ -47,7 +47,7 @@ export interface StartProcessWizard extends Action {
 
 export interface StartProcessForm extends Action {
     processInstanceId: ConcordId;
-    formInstanceId: string;
+    formName: string;
 }
 
 export type GetProcessFormState = RequestState<FormInstanceEntry>;

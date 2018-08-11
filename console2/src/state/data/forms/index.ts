@@ -64,25 +64,22 @@ const actionTypes = {
 };
 
 export const actions = {
-    getProcessForm: (
-        processInstanceId: ConcordId,
-        formInstanceId: string
-    ): GetProcessFormRequest => ({
+    getProcessForm: (processInstanceId: ConcordId, formName: string): GetProcessFormRequest => ({
         type: actionTypes.GET_PROCESS_FORM_REQUEST,
         processInstanceId,
-        formInstanceId
+        formName
     }),
 
     submitProcessForm: (
         processInstanceId: ConcordId,
-        formInstanceId: string,
+        formName: string,
         wizard: boolean,
         yieldFlow: boolean,
         data: FormDataType
     ): SubmitProcessFormRequest => ({
         type: actionTypes.SUBMIT_PROCESS_FORM_REQUEST,
         processInstanceId,
-        formInstanceId,
+        formName,
         wizard,
         yieldFlow,
         data
@@ -93,10 +90,10 @@ export const actions = {
         processInstanceId
     }),
 
-    startForm: (processInstanceId: ConcordId, formInstanceId: string): StartProcessForm => ({
+    startForm: (processInstanceId: ConcordId, formName: string): StartProcessForm => ({
         type: actionTypes.START_PROCESS_FORM,
         processInstanceId,
-        formInstanceId
+        formName
     }),
 
     reset: () => ({
@@ -151,9 +148,9 @@ const updateForDev = (uri: string) => {
     return uri;
 };
 
-function* onGetProcessForm({ processInstanceId, formInstanceId }: GetProcessFormRequest) {
+function* onGetProcessForm({ processInstanceId, formName }: GetProcessFormRequest) {
     try {
-        const response = yield call(apiGet, processInstanceId, formInstanceId);
+        const response = yield call(apiGet, processInstanceId, formName);
         yield put({
             type: actionTypes.GET_PROCESS_FORM_RESPONSE,
             ...response
@@ -165,13 +162,13 @@ function* onGetProcessForm({ processInstanceId, formInstanceId }: GetProcessForm
 
 function* onSubmitProcessForm({
     processInstanceId,
-    formInstanceId,
+    formName,
     wizard,
     yieldFlow,
     data
 }: SubmitProcessFormRequest) {
     try {
-        const response = yield call(apiSubmit, processInstanceId, formInstanceId, data);
+        const response = yield call(apiSubmit, processInstanceId, formName, data);
         yield put({
             type: actionTypes.SUBMIT_PROCESS_FORM_RESPONSE,
             ...response
@@ -220,26 +217,26 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
         }
 
         const f = forms[0];
-        yield startProcessForm(processInstanceId, f.formInstanceId, f.custom, f.yield);
+        yield startProcessForm(processInstanceId, f.name, f.custom, f.yield);
     } catch (e) {
         yield handleErrors(actionTypes.STOP_PROCESS_WIZARD, e);
     }
 }
 
-function* onStartProcessForm({ processInstanceId, formInstanceId }: StartProcessForm) {
-    const form: FormInstanceEntry = yield call(apiGet, processInstanceId, formInstanceId);
-    yield startProcessForm(form.processInstanceId, form.formInstanceId, form.custom, form.yield);
+function* onStartProcessForm({ processInstanceId, formName }: StartProcessForm) {
+    const form: FormInstanceEntry = yield call(apiGet, processInstanceId, formName);
+    yield startProcessForm(form.processInstanceId, form.name, form.custom, form.yield);
 }
 
 function* startProcessForm(
     processInstanceId: ConcordId,
-    formInstanceId: string,
+    formName: string,
     custom: boolean,
     yieldFlow: boolean
 ) {
     if (custom) {
         // a form with branding
-        let { uri } = yield call(apiStartSession, processInstanceId, formInstanceId);
+        let { uri } = yield call(apiStartSession, processInstanceId, formName);
 
         // we can't proxy html resources using create-react-app
         // so we have to use another server to serve our custom forms
@@ -250,7 +247,7 @@ function* startProcessForm(
     } else {
         // regular form
         const path = {
-            pathname: `/process/${processInstanceId}/form/${formInstanceId}/wizard`,
+            pathname: `/process/${processInstanceId}/form/${formName}/wizard`,
             search: `fullScreen=true&yieldFlow=${yieldFlow}`
         };
         yield put(replaceHistory(path));

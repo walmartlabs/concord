@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.validation.ConcordId;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
@@ -79,20 +78,20 @@ public class FormResource implements Resource {
     /**
      * Return the current state of a form instance.
      *
-     * @param formInstanceId
+     * @param formName
      * @return
      */
     @GET
     @ApiOperation("Get the current state of a form")
-    @Path("/{processInstanceId}/form/{formInstanceId}")
+    @Path("/{processInstanceId}/form/{formName}")
     @Produces(MediaType.APPLICATION_JSON)
     @SuppressWarnings("unchecked")
     public FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                                 @ApiParam @PathParam("formInstanceId") @ConcordId String formInstanceId) {
+                                 @ApiParam @PathParam("formName") String formName) {
 
-        Form form = formService.get(processInstanceId, formInstanceId);
+        Form form = formService.get(processInstanceId, formName);
         if (form == null) {
-            throw new ConcordApplicationException("Form " + formInstanceId + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Form " + formName + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
         }
 
         FormDefinition fd = form.getFormDefinition();
@@ -135,33 +134,32 @@ public class FormResource implements Resource {
         }
 
         String pbk = form.getProcessBusinessKey();
-        String fiid = form.getFormInstanceId().toString();
         String name = fd.getName();
         String resourcePath = FORMS_RESOURCES_PATH + "/" + name;
         boolean isCustomForm = formService.exists(processInstanceId, resourcePath);
 
-        return new FormInstanceEntry(pbk, fiid, name, fields, isCustomForm, yield);
+        return new FormInstanceEntry(pbk, name, fields, isCustomForm, yield);
     }
 
     /**
      * Submit form instance's data, potentially resuming a suspended process.
      *
-     * @param formInstanceId
+     * @param formName
      * @param data
      * @return
      */
     @POST
     @ApiOperation("Submit JSON form data")
-    @Path("/{processInstanceId}/form/{formInstanceId}")
+    @Path("/{processInstanceId}/form/{formName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public FormSubmitResponse submit(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
-                                     @ApiParam @PathParam("formInstanceId") @ConcordId String formInstanceId,
+                                     @ApiParam @PathParam("formName") String formName,
                                      @ApiParam Map<String, Object> data) {
 
-        Form form = formService.get(processInstanceId, formInstanceId);
+        Form form = formService.get(processInstanceId, formName);
         if (form == null) {
-            throw new ConcordApplicationException("Form " + formInstanceId + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Form " + formName + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
         }
 
         try {
@@ -171,7 +169,7 @@ public class FormResource implements Resource {
             return new FormSubmitResponse(processInstanceId, errors);
         }
 
-        FormSubmitResult result = formService.submit(processInstanceId, formInstanceId, data);
+        FormSubmitResult result = formService.submit(processInstanceId, formName, data);
 
         Map<String, String> errors = mergeErrors(result.getErrors());
         return new FormSubmitResponse(result.getProcessInstanceId(), errors);
@@ -181,19 +179,19 @@ public class FormResource implements Resource {
      * Submit form instance's data, potentially resuming a suspended process.
      * It's not annotated with Swagger's {@link ApiOperation} to avoid conflicts.
      *
-     * @param formInstanceId
+     * @param formName
      * @param data
      * @return
      */
     @POST
-    @Path("/{processInstanceId}/form/{formInstanceId}")
+    @Path("/{processInstanceId}/form/{formName}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public FormSubmitResponse submit(@PathParam("processInstanceId") UUID processInstanceId,
-                                     @PathParam("formInstanceId") @ConcordId String formInstanceId,
+                                     @PathParam("formName") String formName,
                                      MultipartInput data) {
 
-        return submit(processInstanceId, formInstanceId, MultipartUtils.toMap(data));
+        return submit(processInstanceId, formName, MultipartUtils.toMap(data));
     }
 
     private static FormInstanceEntry.Cardinality map(FormField.Cardinality c) {

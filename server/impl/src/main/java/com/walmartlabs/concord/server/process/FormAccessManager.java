@@ -29,7 +29,6 @@ import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -49,8 +48,8 @@ public class FormAccessManager {
     }
 
     @SuppressWarnings("unchecked")
-    public Form assertFormAccess(UUID processInstanceId, String formInstanceId) {
-        Form f = getForm(processInstanceId, formInstanceId);
+    public Form assertFormAccess(UUID processInstanceId, String formName) {
+        Form f = getForm(processInstanceId, formName);
         if (f == null) {
             return null;
         }
@@ -97,11 +96,11 @@ public class FormAccessManager {
         return f;
     }
 
-    private Form getForm(UUID processInstanceId, String formInstanceId) {
+    private Form getForm(UUID processInstanceId, String formName) {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 InternalConstants.Files.JOB_STATE_DIR_NAME,
                 InternalConstants.Files.JOB_FORMS_DIR_NAME,
-                formInstanceId);
+                formName);
 
         Optional<Form> o = stateManager.get(processInstanceId, resource, FormAccessManager::deserialize);
         return o.orElse(null);

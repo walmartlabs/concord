@@ -248,7 +248,7 @@ public class ProcessIT extends AbstractServerIT {
         assertEquals(1, forms.size());
 
         FormListEntry f = forms.get(0);
-        FormSubmitResponse fsr = formResource.submit(pir.getInstanceId(), f.getFormInstanceId(), Collections.singletonMap("name", "test"));
+        FormSubmitResponse fsr = formResource.submit(pir.getInstanceId(), f.getName(), Collections.singletonMap("name", "test"));
         assertNull(fsr.getErrors());
 
         // ---

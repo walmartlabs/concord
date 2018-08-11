@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-runner: new utility task `forms` to create links to process
+forms and the form wizard;
 - concord-server, concord-agent, project-model, concord-runner:
 initial support for process checkpoints;
 - concord-server, policy-engine: support for "max concurrent
@@ -16,6 +18,11 @@ processes" policy.
 Activity page;
 - concord-server: fixed a bug causing `onFailure` handler processes
 to fail due to missing session keys and `projectInfo` variables.
+
+### Breaking
+
+- concord-server: form API endpoints now accept form names instead of
+IDs. E.g. `/api/v1/process/PROCESS_ID/form/FORM_NAME`.
 
 
 
