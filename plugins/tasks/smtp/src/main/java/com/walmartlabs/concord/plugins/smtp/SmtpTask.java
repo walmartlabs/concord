@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.smtp;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.Task;
 import org.apache.commons.mail.Email;
+import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,9 +89,19 @@ public class SmtpTask implements Task {
         Collection<String> replyTo = zeroOrManyStrings(mail, "replyTo", "mail");
         String subject = (String) mail.get("subject");
         String msg = assertString(mail, "message", "mail");
+        boolean isHtml = isHtml(mail);
 
         try {
-            Email email = new SimpleEmail();
+            Email email;
+            if (isHtml) {
+                HtmlEmail h = new HtmlEmail();
+                h.setHtmlMsg(msg);
+                email = h;
+            } else {
+                email = new SimpleEmail();
+                email.setMsg(msg);
+            }
+
             email.setHostName(host);
             email.setSmtpPort(port);
 
@@ -113,7 +124,6 @@ public class SmtpTask implements Task {
             }
 
             email.setSubject(subject);
-            email.setMsg(msg);
 
             String msgId = email.send();
             log.info("send [{}, {}] -> done, msgId: {}", smtp, mail, msgId);
@@ -155,7 +165,15 @@ public class SmtpTask implements Task {
         return m;
     }
 
-    private static Object getScope(Context ctx, Map<String,Object> mailParams) {
+    private static boolean isHtml(Map<String, Object> mailParams) {
+        String template = (String) mailParams.get("template");
+        if (template == null) {
+            return false;
+        }
+        return template.trim().endsWith(".html");
+    }
+
+    private static Object getScope(Context ctx, Map<String, Object> mailParams) {
         Map<String, Object> templateParams = getTemplateParams(mailParams);
         Map<String, Object> ctxParams = ctx != null ? ctx.toMap() : Collections.emptyMap();
         Map<String, Object> result = new HashMap<>();
@@ -165,7 +183,7 @@ public class SmtpTask implements Task {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String,Object> getTemplateParams(Map<String,Object> mailParams) {
+    private static Map<String, Object> getTemplateParams(Map<String, Object> mailParams) {
         Object templateParam = mailParams.get("template");
         if (templateParam instanceof Map) {
             Map<String, Object> params = (Map<String, Object>) ((Map) templateParam).get("params");
@@ -177,9 +195,9 @@ public class SmtpTask implements Task {
     private static String getTemplateName(Map<String, Object> mailParams) {
         Object templateParam = mailParams.get("template");
         if (templateParam instanceof String) {
-            return (String)templateParam;
+            return (String) templateParam;
         } else if (templateParam instanceof Map) {
-            return (String) ((Map)templateParam).get("name");
+            return (String) ((Map) templateParam).get("name");
         }
         return null;
     }
@@ -224,7 +242,7 @@ public class SmtpTask implements Task {
         if (v instanceof String) {
             String s = (String) v;
             return Arrays.stream(s.split(","))
-                    .map(x -> x.trim())
+                    .map(String::trim)
                     .collect(Collectors.toList());
         }
 

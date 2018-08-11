@@ -1,0 +1,23 @@
+configuration:
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:0.84.0"
+
+flows:
+  default:
+  - task: smtp
+    in:
+      # a custom SMTP server can be specified here.
+      # Otherwise, the task will use the global SMTP configuration.
+
+      # smtp:
+      #  host: "localhost"
+      #  port: 25
+
+      mail:
+        from: ${initiator.attributes.mail}
+        to: ${initiator.attributes.mail}
+        subject: "Howdy!"
+        template: "mail.mustache.html"
+  - log: mail sent to ${initiator.attributes.mail}
+
+
