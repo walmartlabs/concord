@@ -163,6 +163,11 @@ public class ContextUtilsTest {
         }
 
         @Override
+        public void suspend(String eventName, Object payload) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public String getProcessDefinitionId() {
             throw new UnsupportedOperationException();
         }

@@ -26,7 +26,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
@@ -36,7 +35,6 @@ import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,10 +65,11 @@ public class DefaultJobExecutor implements JobExecutor {
     private final ObjectMapper objectMapper;
     private final ProcessPool pool;
     private final ExecutorService executor;
-    private final ProcessApiClient processApiClient;
+    private final List<JobPostProcessor> postProcessors;
 
     public DefaultJobExecutor(Configuration cfg, LogManager logManager,
-                              DependencyManager dependencyManager, ProcessApiClient processApiClient) {
+                              DependencyManager dependencyManager,
+                              List<JobPostProcessor> postProcessors) {
 
         this.cfg = cfg;
         this.defaultDependencies = new DefaultDependencies();
@@ -79,7 +78,7 @@ public class DefaultJobExecutor implements JobExecutor {
         this.objectMapper = new ObjectMapper();
         this.pool = new ProcessPool(cfg.getMaxPreforkAge(), cfg.getMaxPreforkCount());
         this.executor = Executors.newCachedThreadPool();
-        this.processApiClient = processApiClient;
+        this.postProcessors = postProcessors;
     }
 
     private void logDependencies(UUID instanceId, Collection<?> deps) {
@@ -202,7 +201,9 @@ public class DefaultJobExecutor implements JobExecutor {
             return code;
         } finally {
             try {
-                postProcess(instanceId, payloadDir);
+                for (JobPostProcessor p : postProcessors) {
+                    p.process(instanceId, payloadDir);
+                }
             } catch (ExecutionException e) {
                 log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
                 handleError(instanceId, workDir, proc, e.getMessage());
@@ -457,36 +458,6 @@ public class DefaultJobExecutor implements JobExecutor {
         }
 
         return result;
-    }
-
-    private void postProcess(UUID instanceId, Path payloadDir) throws ExecutionException {
-        Path attachmentsDir = payloadDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
-        if (!Files.exists(attachmentsDir)) {
-            return;
-        }
-
-        // send attachments
-
-        Path tmp = null;
-        try {
-            tmp = IOUtils.createTempFile("attachments", ".zip");
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-                IOUtils.zip(zip, attachmentsDir);
-            }
-
-            processApiClient.uploadAttachments(instanceId, tmp);
-        } catch (IOException | ApiException e) {
-            throw new ExecutionException("Error while processing the attachments: " + instanceId, e);
-        } finally {
-            if (tmp != null) {
-                try {
-                    Files.delete(tmp);
-                } catch (IOException e) {
-                    log.warn("postProcess ['{}', '{}'] -> error while removing a temporary file: {}",
-                            instanceId, payloadDir, tmp, e);
-                }
-            }
-        }
     }
 
     @SuppressWarnings("unchecked")

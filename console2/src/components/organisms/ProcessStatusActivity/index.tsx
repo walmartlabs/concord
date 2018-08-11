@@ -157,12 +157,17 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
                     </>
                 )}
 
-                {events.length > 0 && (
-                    <>
-                        <Divider content="Flow Events" horizontal={true} />
-                        <ProcessElementList events={events} />
-                    </>
-                )}
+                {process &&
+                    events.length > 0 && (
+                        <>
+                            <Divider content="Flow Events" horizontal={true} />
+                            <ProcessElementList
+                                instanceId={instanceId}
+                                events={events}
+                                processStatus={process.status}
+                            />
+                        </>
+                    )}
 
                 {ansibleEvents.length > 0 && (
                     <>

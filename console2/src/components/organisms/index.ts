@@ -35,6 +35,7 @@ export { default as ProcessFormActivity } from './ProcessFormActivity';
 export { default as ProcessListActivity } from './ProcessListActivity';
 export { default as ProcessLogActivity } from './ProcessLogActivity';
 export { default as ProcessStatusActivity } from './ProcessStatusActivity';
+export { default as ProcessRestoreActivity } from './ProcessRestoreActivity';
 export { default as ProcessWizard } from './ProcessWizard';
 export { default as ProjectActivity } from './ProjectActivity';
 export { default as ProjectDeleteActivity } from './ProjectDeleteActivity';

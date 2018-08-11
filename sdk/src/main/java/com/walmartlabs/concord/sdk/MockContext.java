@@ -77,6 +77,11 @@ public class MockContext implements Context {
     }
 
     @Override
+    public void suspend(String eventName, Object payload) {
+        throw new IllegalStateException("Not supported");
+    }
+
+    @Override
     public String getProcessDefinitionId() {
         throw new IllegalStateException("Not supported");
     }

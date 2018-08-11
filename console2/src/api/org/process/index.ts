@@ -53,3 +53,7 @@ export interface StartProcessResponse {
     ok: boolean;
     instanceId: string;
 }
+
+export interface RestoreProcessResponse {
+    ok: boolean;
+}

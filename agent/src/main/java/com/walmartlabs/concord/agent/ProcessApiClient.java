@@ -70,6 +70,15 @@ public class ProcessApiClient {
         });
     }
 
+    public void uploadCheckpoints(UUID instanceId, Path data) throws ApiException {
+        String path = "/api/v1/process/" + instanceId + "/checkpoint";
+
+        ClientUtils.withRetry(retryCount, retryInterval, () -> {
+            ClientUtils.postData(processApi.getApiClient(), path, data.toFile());
+            return null;
+        });
+    }
+
     public File downloadState(UUID instanceId) throws ApiException {
         return processApi.downloadState(instanceId);
     }

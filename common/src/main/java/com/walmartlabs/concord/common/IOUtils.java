@@ -55,12 +55,20 @@ public final class IOUtils {
         }
     }
 
+    public static TemporaryPath tempFile(String prefix, String suffix) throws IOException {
+        return new TemporaryPath(IOUtils.createTempFile(prefix, suffix));
+    }
+
     public static Path createTempFile(String prefix, String suffix) throws IOException {
         return Files.createTempFile(TMP_DIR, prefix, suffix);
     }
 
     public static Path createTempDir(Path dir, String prefix) throws IOException {
         return Files.createTempDirectory(dir, prefix);
+    }
+
+    public static TemporaryPath tempDir(String prefix) throws IOException {
+        return new TemporaryPath(IOUtils.createTempDir(prefix));
     }
 
     public static Path createTempDir(String prefix) throws IOException {
@@ -97,7 +105,7 @@ public final class IOUtils {
     public static void zip(ZipArchiveOutputStream zip, String dstPrefix, Path srcDir, String... filters) throws IOException {
         Files.walkFileTree(srcDir, new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                 if (dir.toAbsolutePath().equals(srcDir)) {
                     return FileVisitResult.CONTINUE;
                 }
@@ -125,6 +133,13 @@ public final class IOUtils {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    public static void unzip(InputStream in, Path targetDir, CopyOption... options) throws IOException {
+        try (TemporaryPath tmpZip = new TemporaryPath(IOUtils.createTempFile("unzip", "zip"))) {
+            Files.copy(in, tmpZip.path(), StandardCopyOption.REPLACE_EXISTING);
+            IOUtils.unzip(tmpZip.path(), targetDir, options);
+        }
     }
 
     public static void unzip(Path in, Path targetDir, CopyOption... options) throws IOException {

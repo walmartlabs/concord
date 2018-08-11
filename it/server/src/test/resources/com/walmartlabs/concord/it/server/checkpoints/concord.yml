@@ -1,0 +1,7 @@
+flows:
+  default:
+    - log: "Start"
+    - checkpoint: "ONE"
+    - log: "Middle"
+    - checkpoint: "TWO"
+    - log: "End"

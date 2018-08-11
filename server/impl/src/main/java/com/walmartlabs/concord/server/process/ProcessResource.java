@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
@@ -30,6 +31,8 @@ import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
@@ -39,6 +42,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -86,15 +90,20 @@ public class ProcessResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessResource.class);
 
+    private static final Set<ProcessStatus> RESTORE_ALLOWED_STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.FAILED, ProcessStatus.FINISHED, ProcessStatus.SUSPENDED));
+
     private final ProcessManager processManager;
     private final ProcessQueueDao queueDao;
     private final ProcessLogsDao logsDao;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
+    private final ProcessCheckpointManager checkpointManager;
     private final UserDao userDao;
+    private final ProcessQueueDao processQueueDao;
     private final SecretManager secretManager;
     private final SecretStoreConfiguration secretStoreCfg;
     private final ProcessStateArchiver stateArchiver;
+    private final ProjectAccessManager projectAccessManager;
 
     @Inject
     public ProcessResource(ProcessManager processManager,
@@ -102,20 +111,25 @@ public class ProcessResource implements Resource {
                            ProcessLogsDao logsDao,
                            PayloadManager payloadManager,
                            ProcessStateManager stateManager,
+                           ProcessCheckpointManager checkpointManager,
                            UserDao userDao,
-                           SecretManager secretManager,
+                           ProcessQueueDao processQueueDao, SecretManager secretManager,
                            SecretStoreConfiguration secretStoreCfg,
-                           ProcessStateArchiver stateArchiver) {
+                           ProcessStateArchiver stateArchiver,
+                           ProjectAccessManager projectAccessManager) {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
         this.logsDao = logsDao;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
+        this.checkpointManager = checkpointManager;
         this.userDao = userDao;
+        this.processQueueDao = processQueueDao;
         this.secretManager = secretManager;
         this.secretStoreCfg = secretStoreCfg;
         this.stateArchiver = stateArchiver;
+        this.projectAccessManager = projectAccessManager;
     }
 
     /**
@@ -836,6 +850,69 @@ public class ProcessResource implements Resource {
     }
 
     /**
+     * Restore process checkpoint
+     */
+    @POST
+    @ApiOperation(value = "Restore process form checkpoint")
+    @javax.ws.rs.Path("{id}/checkpoint/{checkpointId}/restore")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public ResumeProcessResponse restore(@PathParam("id") UUID instanceId, @PathParam("checkpointId") UUID checkpointId) {
+        ProcessEntry process = assertProcess(instanceId);
+
+        assertProcessCheckpointAccess(process);
+
+        ProcessStatus status = process.getStatus();
+        if (!RESTORE_ALLOWED_STATUSES.contains(status)) {
+            throw new ConcordApplicationException("Unable to restore a checkpoint, the process is " + status);
+        }
+
+        String eventName = checkpointManager.restoreCheckpoint(instanceId, checkpointId);
+        if (eventName == null) {
+            throw new ConcordApplicationException("Checkpoint " + checkpointId + " not found");
+        }
+
+        Payload payload;
+        try {
+            payload = payloadManager.createResumePayload(instanceId, eventName, null);
+        } catch (IOException e) {
+            log.error("restore ['{}', '{}'] -> error creating a payload: {}", instanceId, eventName, e);
+            throw new ConcordApplicationException("Error creating a payload", e);
+        }
+
+        processQueueDao.update(instanceId, ProcessStatus.SUSPENDED);
+
+        processManager.resume(payload);
+        return new ResumeProcessResponse();
+    }
+
+    /**
+     * Upload process checkpoints.
+     *
+     * @param instanceId
+     * @param in
+     */
+    @POST
+    @javax.ws.rs.Path("{id}/checkpoint/{checkpointId}")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    public void uploadCheckpoint(@PathParam("id") UUID instanceId,
+                                 @PathParam("checkpointId") UUID checkpointId,
+                                 InputStream in) {
+        assertProcess(instanceId);
+
+        try (TemporaryPath tmpIn = IOUtils.tempFile("checkpoint", ".zip")) {
+            Files.copy(in, tmpIn.path(), StandardCopyOption.REPLACE_EXISTING);
+
+            checkpointManager.importCheckpoint(instanceId, checkpointId, tmpIn.path());
+        } catch (IOException e) {
+            log.error("uploadCheckpoint ['{}'] -> error", instanceId, e);
+            throw new ConcordApplicationException("upload error: " + e.getMessage());
+        }
+
+        log.info("uploadCheckpoint ['{}'] -> done", instanceId);
+    }
+
+    /**
      * Decrypt string.
      *
      * @param instanceId
@@ -896,6 +973,28 @@ public class ProcessResource implements Resource {
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
                 "the necessary permissions to the download the process state: " + p.getInstanceId());
+    }
+
+    private void assertProcessCheckpointAccess(ProcessEntry p) {
+        UserPrincipal principal = UserPrincipal.assertCurrent();
+
+        String initiator = p.getInitiator();
+        if (principal.getUsername().equals(initiator)) {
+            // process owners should be able to restore the process from checkpoint
+            return;
+        }
+
+        if (principal.isAdmin()) {
+            return;
+        }
+
+        if (p.getProjectId() != null) {
+            projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.WRITER, true);
+            return;
+        }
+
+        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+                "the necessary permissions to restore the process using a checkpoint: " + p.getInstanceId());
     }
 
     private ProcessEntry assertProcess(UUID instanceId) {

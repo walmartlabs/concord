@@ -30,8 +30,9 @@ import com.walmartlabs.concord.server.metrics.MetricModule;
 import com.walmartlabs.concord.server.org.triggers.TriggerScheduler;
 import com.walmartlabs.concord.server.process.ProcessCleaner;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueWatchdog;
-import com.walmartlabs.concord.server.process.state.archive.StalledUploadHandler;
 import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
+import com.walmartlabs.concord.server.process.state.archive.StalledCheckpointUploadHandler;
+import com.walmartlabs.concord.server.process.state.archive.StalledStateUploadHandler;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyCleaner;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyExpirationNotifier;
 
@@ -52,6 +53,7 @@ public class ServerModule extends AbstractModule {
         tasks.addBinding().to(ProcessQueueWatchdog.class);
         tasks.addBinding().to(TriggerScheduler.class);
         tasks.addBinding().to(ProcessStateArchiver.class);
-        tasks.addBinding().to(StalledUploadHandler.class);
+        tasks.addBinding().to(StalledStateUploadHandler.class);
+        tasks.addBinding().to(StalledCheckpointUploadHandler.class);
     }
 }

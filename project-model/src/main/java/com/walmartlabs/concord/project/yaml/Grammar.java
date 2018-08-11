@@ -275,6 +275,11 @@ public class Grammar {
     private static final Parser<Atom, YamlStep> callProc = label("Process call",
             satisfyToken(JsonToken.VALUE_STRING).map(a -> new YamlCall(a.location, (String) a.value, null)));
 
+    // checkPoint := VALUE_STRING
+    private static final Parser<Atom, YamlStep> checkpoint = label("Checkpoint",
+            satisfyField("checkpoint").then(satisfyToken(JsonToken.VALUE_STRING))
+                    .map(a -> new YamlCheckpoint(a.location, (String) a.value)));
+
     // exit := VALUE_STRING
     private static final Parser<Atom, YamlStep> exit = label("Exit call",
             satisfy((Atom a) -> a.token == JsonToken.VALUE_STRING && "exit".equals(a.value))
@@ -321,10 +326,10 @@ public class Grammar {
                                     DockerOptionsConverter.convert(options),
                                     (String) options.get("stdout")))));
 
-    // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | event | script | taskShort | vars END_OBJECT
+    // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | checkpoint | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(docker, group, switchExpr, ifExpr, exprFull, formCall, vars), taskFull, callFull, event, errorReturn, script, taskShort)));
+                    choice(choice(docker, group, switchExpr, ifExpr, exprFull, formCall, vars), choice(taskFull, callFull, checkpoint, event, errorReturn, script), taskShort)));
 
     // step := returnExpr | exprShort | callProc | stepObject
     private static final Parser<Atom, YamlStep> step = choice(returnExpr, exprShort, exit, callProc, stepObject);

@@ -83,7 +83,6 @@ public class ProjectLoader {
     }
 
     private static class ProjectDefinitionBuilder {
-
         private final YamlParser parser;
 
         private Map<String, ProcessDefinition> flows;
@@ -144,7 +143,7 @@ public class ProjectLoader {
 
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                     if (isYaml(file)) {
                         files.add(file);
                     }

@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
@@ -52,6 +51,6 @@ public abstract class AbstractMainTest {
         Path idPath = tmpDir.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
         Files.write(idPath, instanceId.getBytes());
 
-        return new Main(engineFactory, mock(ProcessHeartbeat.class));
+        return new Main(engineFactory, mock(ProcessHeartbeat.class), mock(ApiClientFactoryImpl.class));
     }
 }

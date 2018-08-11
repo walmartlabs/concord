@@ -29,7 +29,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.walmartlabs.concord.server.cfg.ProcessStateArchiveConfiguration;
+import com.walmartlabs.concord.server.cfg.S3Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +55,7 @@ public class MultiStoreConnector {
     private final List<Connector> clients;
 
     @Inject
-    public MultiStoreConnector(ProcessStateArchiveConfiguration cfg) {
+    public MultiStoreConnector(S3Configuration cfg) {
         List<Map<String, Object>> dst = cfg.getDestinations();
         if (cfg.isEnabled() && (dst == null || dst.isEmpty())) {
             throw new IllegalStateException("Archive destinations must contain at least one entry");

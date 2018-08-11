@@ -23,8 +23,13 @@ import { Icon, Table } from 'semantic-ui-react';
 import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
 import { formatTimestamp } from '../../../utils';
 import { HumanizedDuration } from '../../molecules';
+import { ConcordId } from '../../../api/common';
+import { ProcessRestoreActivity } from '../../organisms';
+import { ProcessStatus } from '../../../api/process';
 
 interface Props {
+    instanceId: ConcordId;
+    processStatus: ProcessStatus;
     events: Array<ProcessEventEntry<ProcessElementEvent>>;
 }
 
@@ -54,7 +59,46 @@ const renderTimestamp = (
     return s;
 };
 
+const getParam = (p: {} | undefined, name: string, index: number) => {
+    if (p === undefined) {
+        return undefined;
+    }
+    if (p instanceof Array && p[index]) {
+        const { target, resolved } = p[index];
+        if (target === name) {
+            return resolved;
+        }
+    }
+    return undefined;
+};
+
+const renderRestoreCheckpoint = (
+    instanceId: ConcordId,
+    processStatus: ProcessStatus,
+    outParams: {} | undefined
+) => {
+    const id = getParam(outParams, 'checkpointId', 0);
+    if (id === undefined) {
+        return;
+    }
+    const checkpoint = getParam(outParams, 'checkpointName', 1);
+    if (checkpoint === undefined) {
+        return;
+    }
+
+    return (
+        <ProcessRestoreActivity
+            instanceId={instanceId}
+            checkpointId={id}
+            checkpoint={checkpoint}
+            processStatus={processStatus}
+        />
+    );
+};
+
 const renderElementRow = (
+    instanceId: ConcordId,
+    processStatus: ProcessStatus,
     ev: ProcessEventEntry<ProcessElementEvent>,
     idx: number,
     arr: Array<ProcessEventEntry<ProcessElementEvent>>
@@ -62,7 +106,10 @@ const renderElementRow = (
     return (
         <Table.Row key={idx}>
             <Table.Cell textAlign="right">{renderDefinitionId(ev, idx, arr)}</Table.Cell>
-            <Table.Cell>{ev.data.description}</Table.Cell>
+            <Table.Cell verticalAlign={'middle'}>
+                {ev.data.description}
+                {renderRestoreCheckpoint(instanceId, processStatus, ev.data.out)}
+            </Table.Cell>
             <Table.Cell singleLine={true}>{renderTimestamp(ev, idx, arr)}</Table.Cell>
             <Table.Cell singleLine={true}>
                 <HumanizedDuration value={ev.duration} />
@@ -75,7 +122,7 @@ const renderElementRow = (
 
 class ProcessElementList extends React.PureComponent<Props> {
     render() {
-        const { events } = this.props;
+        const { instanceId, processStatus, events } = this.props;
         return (
             <Table celled={true} definition={true}>
                 <Table.Header>
@@ -95,7 +142,9 @@ class ProcessElementList extends React.PureComponent<Props> {
                 </Table.Header>
 
                 <Table.Body>
-                    {events.map((e, idx, arr) => renderElementRow(e, idx, arr))}
+                    {events.map((e, idx, arr) =>
+                        renderElementRow(instanceId, processStatus, e, idx, arr)
+                    )}
                 </Table.Body>
             </Table>
         );

@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-agent, project-model, concord-runner:
+initial support for process checkpoints;
 - concord-server, policy-engine: support for "max concurrent
 processes" policy.
 

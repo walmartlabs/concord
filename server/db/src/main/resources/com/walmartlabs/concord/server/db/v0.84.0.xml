@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="84000" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_CHECKPOINTS">
+            <column name="CHECKPOINT_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CHECKPOINT_DATA" type="blob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_CHECKPOINTS"
+                                 baseColumnNames="INSTANCE_ID"
+                                 constraintName="FK_PCHECKP_PQ_ID"
+                                 referencedTableName="PROCESS_QUEUE"
+                                 referencedColumnNames="INSTANCE_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="84100" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_CHECKPOINT_ARCHIVE">
+            <column name="CHECKPOINT_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="STATUS" type="varchar(64)" defaultValue="IN_PROGRESS">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LAST_UPDATED_AT" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_CHECKPOINT_ARCHIVE"
+                                 baseColumnNames="CHECKPOINT_ID"
+                                 constraintName="FK_PCA_PC_ID"
+                                 referencedTableName="PROCESS_CHECKPOINTS"
+                                 referencedColumnNames="CHECKPOINT_ID"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="PROCESS_CHECKPOINT_ARCHIVE" indexName="IDX_PCA_LAST_UPD">
+            <column name="LAST_UPDATED_AT"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

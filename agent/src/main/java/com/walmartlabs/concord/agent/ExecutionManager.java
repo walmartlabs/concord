@@ -26,12 +26,16 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.project.InternalConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -61,7 +65,8 @@ public class ExecutionManager {
         this.cfg = cfg;
 
         DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
-        this.jobExecutor = new DefaultJobExecutor(cfg, logManager, dependencyManager, new ProcessApiClient(cfg, processApi));
+        ProcessApiClient client = new ProcessApiClient(cfg, processApi);
+        this.jobExecutor = new DefaultJobExecutor(cfg, logManager, dependencyManager, createPostProcessors(client));
     }
 
     public JobInstance start(UUID instanceId, String entryPoint, Path payload) throws ExecutionException {
@@ -160,6 +165,13 @@ public class ExecutionManager {
             statuses.cleanUp();
             instances.cleanUp();
         }
+    }
+
+    private static List<JobPostProcessor> createPostProcessors(ProcessApiClient client) {
+        return Collections.singletonList(
+                new JobFileUploadPostProcessor(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                        "attachments", client::uploadAttachments)
+        );
     }
 
     private Path extract(Path in) throws ExecutionException {

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -138,6 +139,14 @@ public final class MultipartUtils {
         return null;
     }
 
+    public static String assertString(MultipartInput input, String key) {
+        String s = getString(input, key);
+        if (s == null) {
+            throw new ValidationErrorsException("Value not found: " + key);
+        }
+        return s;
+    }
+
     public static boolean getBoolean(MultipartInput input, String key, boolean defaultValue) {
         String s = getString(input, key);
         if (s == null) {
@@ -170,6 +179,14 @@ public final class MultipartUtils {
             throw new ConcordApplicationException("Error parsing the request", e);
         }
         return null;
+    }
+
+    public static InputStream assertStream(MultipartInput input, String key) {
+        InputStream in = getStream(input, key);
+        if (in == null) {
+            throw new ValidationErrorsException("Value not found: " + key);
+        }
+        return in;
     }
 
     private MultipartUtils() {

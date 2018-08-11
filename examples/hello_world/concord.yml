@@ -1,9 +1,8 @@
 flows:
   default:
-  - log: "Hello, ${a.concat(b).concat(c)}"
+  - log: "A"
+  - checkpoint: "first"
+  - log: "B"
+  - checkpoint: "second"
+  - log: "C"
 
-configuration:
-  arguments:
-    a: "Hello "
-    b: "Concord"
-    c: "!"

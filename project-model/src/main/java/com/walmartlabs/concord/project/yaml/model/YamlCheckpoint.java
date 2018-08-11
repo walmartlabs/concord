@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.state.archive;
+package com.walmartlabs.concord.project.yaml.model;
 
 /*-
  * *****
@@ -20,27 +20,27 @@ package com.walmartlabs.concord.server.process.state.archive;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.ProcessStateArchiveConfiguration;
+import com.fasterxml.jackson.core.JsonLocation;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import java.util.concurrent.ForkJoinPool;
+import java.util.Map;
 
-@Named("processStateUpload")
-@Singleton
-public class ForkJoinPoolProvider implements Provider<ForkJoinPool> {
+public class YamlCheckpoint extends YamlStep {
 
-    private final ProcessStateArchiveConfiguration cfg;
+    private final String key;
 
-    @Inject
-    public ForkJoinPoolProvider(ProcessStateArchiveConfiguration cfg) {
-        this.cfg = cfg;
+    public YamlCheckpoint(JsonLocation location, String key) {
+        super(location);
+        this.key = key;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     @Override
-    public ForkJoinPool get() {
-        return new ForkJoinPool(cfg.getUploadThreads());
+    public String toString() {
+        return "YamlCheckpoint{" +
+                "key='" + key + '\'' +
+                '}';
     }
 }

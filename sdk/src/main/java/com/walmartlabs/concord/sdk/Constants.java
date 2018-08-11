@@ -189,6 +189,11 @@ public class Constants {
         public static final String JOB_ATTACHMENTS_DIR_NAME = "_attachments";
 
         /**
+         * Directory which contains job "checkpoints": reports, stats, etc.
+         */
+        public static final String JOB_CHECKPOINTS_DIR_NAME = "_checkpoints";
+
+        /**
          * Directory which contains process' state.
          */
         public static final String JOB_STATE_DIR_NAME = "_state";
@@ -212,6 +217,11 @@ public class Constants {
          * File which contains custom error messages for forms.
          */
         public static final String ERROR_MESSAGES_FILE_NAME = "locale.properties";
+
+        /**
+         * File which contains checkpoint metadata
+         */
+        public static final String CHECKPOINT_META_FILE_NAME = ".checkpoint";
     }
 
     public static class Flows {

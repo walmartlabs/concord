@@ -20,14 +20,12 @@ package com.walmartlabs.concord.server.process.state.archive;
  * =====
  */
 
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.PeriodicTask;
-import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.cfg.ProcessStateArchiveConfiguration;
-import com.walmartlabs.concord.server.process.ProcessStatus;
-import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import com.walmartlabs.concord.server.cfg.ProcessCheckpointArchiveConfiguration;
+import com.walmartlabs.concord.server.process.state.CheckpointDao;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -39,10 +37,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Timestamp;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -51,59 +48,58 @@ import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_CHECKPOINTS;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_CHECKPOINT_ARCHIVE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStateArchive.PROCESS_STATE_ARCHIVE;
-import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 import static org.jooq.impl.DSL.*;
 
 @Named
 @Singleton
-public class ProcessStateArchiver extends PeriodicTask {
+public class ProcessCheckpointArchiver extends PeriodicTask {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessStateArchiver.class);
+    private static final Logger log = LoggerFactory.getLogger(ProcessCheckpointArchiver.class);
 
-    private static final ProcessStatus[] ALLOWED_STATUSES = {ProcessStatus.CANCELLED, ProcessStatus.FAILED, ProcessStatus.FINISHED};
     private static final String ARCHIVE_CONTENT_TYPE = "application/zip";
 
-    private final ProcessStateArchiveConfiguration cfg;
-    private final ProcessStateManager stateManager;
+    private final ProcessCheckpointArchiveConfiguration cfg;
     private final MultiStoreConnector store;
+    private final CheckpointDao checkpointDao;
     private final ArchiverDao dao;
     private final ForkJoinPool forkJoinPool;
 
     @Inject
-    public ProcessStateArchiver(ProcessStateArchiveConfiguration cfg,
-                                ProcessStateManager stateManager,
-                                MultiStoreConnector store,
-                                ArchiverDao dao) {
+    public ProcessCheckpointArchiver(ProcessCheckpointArchiveConfiguration cfg,
+                                     MultiStoreConnector store,
+                                     CheckpointDao checkpointDao,
+                                     ArchiverDao dao) {
 
         super(cfg.getPeriod(), 30000);
 
         this.cfg = cfg;
+        this.checkpointDao = checkpointDao;
         this.dao = dao;
-        this.stateManager = stateManager;
         this.store = store;
         this.forkJoinPool = new ForkJoinPool(cfg.getUploadThreads());
     }
 
-    public void export(UUID instanceId, OutputStream out) throws IOException {
-        String name = name(instanceId);
+    public boolean isArchived(UUID checkpointId) {
+        return cfg.isEnabled() && dao.isArchived(checkpointId);
+    }
 
-        if (cfg.isEnabled() && dao.isArchived(instanceId)) {
-            try (InputStream in = store.get(name)) {
-                IOUtils.copy(in, out);
-            }
-        } else {
-            try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(out)) {
-                stateManager.export(instanceId, zipTo(dst));
-            }
+    public boolean export(UUID checkpointId, Path dest) throws IOException {
+        String name = name(checkpointId);
+
+        try (InputStream in = store.get(name)) {
+            Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
         }
+        return true;
     }
 
     @Override
     public void start() {
         if (!cfg.isEnabled()) {
-            log.info("start -> state archiving is disabled");
+            log.info("start -> checkpoint archiving is disabled");
             return;
         }
 
@@ -113,8 +109,7 @@ public class ProcessStateArchiver extends PeriodicTask {
     @Override
     protected void performTask() throws Exception {
         while (!Thread.currentThread().isInterrupted()) {
-            Timestamp ageCutoff = new Timestamp(System.currentTimeMillis() - cfg.getProcessAge());
-            List<UUID> ids = dao.grabNext(ALLOWED_STATUSES, ageCutoff, 10);
+            List<UUID> ids = dao.grabNext(10);
 
             if (ids.isEmpty()) {
                 log.info("performTask -> nothing to do");
@@ -125,36 +120,24 @@ public class ProcessStateArchiver extends PeriodicTask {
 
             ForkJoinTask<?> t = forkJoinPool.submit(() -> ids.parallelStream().forEach(id -> {
 
-                Path tmp = null;
-                try {
-                    tmp = IOUtils.createTempFile("archive", ".zip");
-                    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-                        log.info("performTask -> exporting {}...", id);
-                        stateManager.export(id, ProcessStateManager.zipTo(zip));
-                    }
+                try (TemporaryPath tmp = IOUtils.tempFile("checkpoint", ".zip")) {
+                    log.info("performTask -> exporting {}...", id);
+                    checkpointDao.export(id, tmp.path());
 
-                    long size = Files.size(tmp);
+                    long size = Files.size(tmp.path());
                     log.info("performTask -> uploading {} ({} bytes)...", id, size);
 
                     long t1 = System.currentTimeMillis();
-                    store.put(tmp, name(id), ARCHIVE_CONTENT_TYPE, size, getExpirationDate());
+                    store.put(tmp.path(), name(id), ARCHIVE_CONTENT_TYPE, size, getExpirationDate());
 
                     dao.markAsDone(id);
-                    stateManager.delete(id);
+                    checkpointDao.delete(id);
 
                     long t2 = System.currentTimeMillis();
                     log.info("performTask -> {} done ({} ms)", id, (t2 - t1));
                 } catch (Exception e) {
                     // the entry will be retried, see StalledUploadHandler
                     log.warn("performTask -> {} failed with: {}", id, e.getMessage(), e);
-                } finally {
-                    if (tmp != null) {
-                        try {
-                            Files.delete(tmp);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
                 }
             }));
 
@@ -172,8 +155,8 @@ public class ProcessStateArchiver extends PeriodicTask {
         return Date.from(i.plus(age, ChronoUnit.MILLIS));
     }
 
-    private static String name(UUID instanceId) {
-        return instanceId + ".zip";
+    private static String name(UUID checkpointId) {
+        return checkpointId + ".zip";
     }
 
     @Named
@@ -192,14 +175,13 @@ public class ProcessStateArchiver extends PeriodicTask {
             }
         }
 
-        public List<UUID> grabNext(ProcessStatus[] statuses, Timestamp ageCutoff, int limit) {
+        public List<UUID> grabNext(int limit) {
             return txResult(tx -> {
-                List<UUID> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.CURRENT_STATUS.in(Utils.toString(statuses))
-                                .and(PROCESS_QUEUE.LAST_UPDATED_AT.lessOrEqual(ageCutoff))
-                                .andNotExists(selectFrom(PROCESS_STATE_ARCHIVE)
-                                        .where(PROCESS_STATE_ARCHIVE.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID))))
+                List<UUID> ids = tx.select(PROCESS_CHECKPOINTS.CHECKPOINT_ID)
+                        .from(PROCESS_CHECKPOINTS)
+                        .where(notExists(
+                                selectFrom(PROCESS_CHECKPOINT_ARCHIVE)
+                                        .where(PROCESS_CHECKPOINT_ARCHIVE.CHECKPOINT_ID.eq(PROCESS_CHECKPOINTS.CHECKPOINT_ID))))
                         .limit(limit)
                         .forUpdate()
                         .skipLocked()
@@ -210,8 +192,8 @@ public class ProcessStateArchiver extends PeriodicTask {
                 }
 
                 for (UUID id : ids) {
-                    tx.insertInto(PROCESS_STATE_ARCHIVE)
-                            .columns(PROCESS_STATE_ARCHIVE.INSTANCE_ID, PROCESS_STATE_ARCHIVE.LAST_UPDATED_AT, PROCESS_STATE_ARCHIVE.STATUS)
+                    tx.insertInto(PROCESS_CHECKPOINT_ARCHIVE)
+                            .columns(PROCESS_CHECKPOINT_ARCHIVE.CHECKPOINT_ID, PROCESS_CHECKPOINT_ARCHIVE.LAST_UPDATED_AT, PROCESS_CHECKPOINT_ARCHIVE.STATUS)
                             .values(value(id), currentTimestamp(), value(ArchivalStatus.IN_PROGRESS.toString()))
                             .execute();
                 }
@@ -220,16 +202,16 @@ public class ProcessStateArchiver extends PeriodicTask {
             });
         }
 
-        public void markAsDone(UUID instanceId) {
+        public void markAsDone(UUID checkpointId) {
             tx(tx -> {
-                int i = tx.update(PROCESS_STATE_ARCHIVE)
-                        .set(PROCESS_STATE_ARCHIVE.STATUS, ArchivalStatus.DONE.toString())
-                        .set(PROCESS_STATE_ARCHIVE.LAST_UPDATED_AT, currentTimestamp())
-                        .where(PROCESS_STATE_ARCHIVE.INSTANCE_ID.eq(instanceId))
+                int i = tx.update(PROCESS_CHECKPOINT_ARCHIVE)
+                        .set(PROCESS_CHECKPOINT_ARCHIVE.STATUS, ArchivalStatus.DONE.toString())
+                        .set(PROCESS_CHECKPOINT_ARCHIVE.LAST_UPDATED_AT, currentTimestamp())
+                        .where(PROCESS_CHECKPOINT_ARCHIVE.CHECKPOINT_ID.eq(checkpointId))
                         .execute();
 
                 if (i != 1) {
-                    throw new IllegalStateException("Invalid number of rows updated: " + i + " (instanceId: " + instanceId + ")");
+                    throw new IllegalStateException("Invalid number of rows updated: " + i + " (checkpointId: " + checkpointId + ")");
                 }
             });
         }

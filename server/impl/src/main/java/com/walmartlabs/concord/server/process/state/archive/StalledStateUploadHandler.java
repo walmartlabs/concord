@@ -36,16 +36,16 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessStateArchive.PRO
 
 @Named
 @Singleton
-public class StalledUploadHandler extends PeriodicTask {
+public class StalledStateUploadHandler extends PeriodicTask {
 
-    private static final Logger log = LoggerFactory.getLogger(StalledUploadHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(StalledStateUploadHandler.class);
 
     private final ProcessStateArchiveConfiguration cfg;
     private final CleanupDao cleanupDao;
 
     @Inject
-    public StalledUploadHandler(ProcessStateArchiveConfiguration cfg, CleanupDao cleanupDao) {
-        super(60000, 30000);
+    public StalledStateUploadHandler(ProcessStateArchiveConfiguration cfg, CleanupDao cleanupDao) {
+        super(cfg.isEnabled() ? 60000 : 0, 30000);
         this.cfg = cfg;
         this.cleanupDao = cleanupDao;
     }

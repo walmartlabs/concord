@@ -29,30 +29,26 @@ import java.io.Serializable;
 
 @Named
 @Singleton
-public class ProcessStateArchiveConfiguration implements Serializable {
+public class ProcessCheckpointArchiveConfiguration implements Serializable {
 
     @Inject
-    @Config("process.archive.enabled")
+    @Config("process.checkpoints.archive.enabled")
     private boolean enabled;
 
     @Inject
-    @Config("process.archive.period")
+    @Config("process.checkpoints.archive.period")
     private long period;
 
     @Inject
-    @Config("process.archive.stalledAge")
+    @Config("process.checkpoints.archive.stalledAge")
     private long stalledAge;
 
     @Inject
-    @Config("process.archive.processAge")
-    private long processAge;
-
-    @Inject
-    @Config("process.archive.uploadThreads")
+    @Config("process.checkpoints.archive.uploadThreads")
     private int uploadThreads;
 
     @Inject
-    @Config("process.archive.maxArchiveAge")
+    @Config("process.checkpoints.archive.maxArchiveAge")
     private long maxArchiveAge;
 
     public boolean isEnabled() {
@@ -61,10 +57,6 @@ public class ProcessStateArchiveConfiguration implements Serializable {
 
     public long getStalledAge() {
         return stalledAge;
-    }
-
-    public long getProcessAge() {
-        return processAge;
     }
 
     public long getPeriod() {

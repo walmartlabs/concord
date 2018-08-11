@@ -20,62 +20,39 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.typesafe.config.ConfigObject;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
-public class ProcessStateArchiveConfiguration implements Serializable {
+public class S3Configuration implements Serializable {
 
     @Inject
-    @Config("process.archive.enabled")
+    @Config("s3.enabled")
     private boolean enabled;
 
-    @Inject
-    @Config("process.archive.period")
-    private long period;
+    private final List<Map<String, Object>> destinations;
 
     @Inject
-    @Config("process.archive.stalledAge")
-    private long stalledAge;
-
-    @Inject
-    @Config("process.archive.processAge")
-    private long processAge;
-
-    @Inject
-    @Config("process.archive.uploadThreads")
-    private int uploadThreads;
-
-    @Inject
-    @Config("process.archive.maxArchiveAge")
-    private long maxArchiveAge;
+    public S3Configuration(@Config("s3.destinations") List<ConfigObject> destinations) {
+        this.destinations = destinations.stream()
+                .map(ConfigObject::unwrapped)
+                .collect(Collectors.toList());
+    }
 
     public boolean isEnabled() {
         return enabled;
     }
 
-    public long getStalledAge() {
-        return stalledAge;
-    }
-
-    public long getProcessAge() {
-        return processAge;
-    }
-
-    public long getPeriod() {
-        return period;
-    }
-
-    public int getUploadThreads() {
-        return uploadThreads;
-    }
-
-    public long getMaxArchiveAge() {
-        return maxArchiveAge;
+    public List<Map<String, Object>> getDestinations() {
+        return destinations;
     }
 }

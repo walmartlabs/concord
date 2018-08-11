@@ -95,6 +95,8 @@ public interface Context {
      */
     void suspend(String eventName);
 
+    void suspend(String messageRef, Object payload);
+
     /**
      * Returns the ID of a current process definition (flow).
      *

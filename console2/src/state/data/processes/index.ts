@@ -23,10 +23,16 @@ import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { list as apiOrgList, SearchFilter } from '../../../api/org/process';
-import { get as apiGet, kill as apiKill, start as apiStart } from '../../../api/process';
+import {
+    get as apiGet,
+    kill as apiKill,
+    start as apiStart,
+    restoreProcess as apiRestore
+} from '../../../api/process';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
 import { reducers as pollReducers, sagas as pollSagas } from './poll';
+import { actions as pollActions } from './poll';
 import {
     CancelProcessRequest,
     CancelProcessState,
@@ -34,6 +40,8 @@ import {
     ListProjectProcessesRequest,
     ProcessDataResponse,
     Processes,
+    RestoreProcessRequest,
+    RestoreProcessState,
     StartProcessRequest,
     StartProcessState,
     State
@@ -53,6 +61,9 @@ const actionTypes = {
 
     CANCEL_PROCESS_REQUEST: `${NAMESPACE}/cancel/request`,
     CANCEL_PROCESS_RESPONSE: `${NAMESPACE}/cancel/response`,
+
+    RESTORE_PROCESS_REQUEST: `${NAMESPACE}/restore/request`,
+    RESTORE_PROCESS_RESPONSE: `${NAMESPACE}/restore/response`,
 
     RESET_PROCESS: `${NAMESPACE}/reset`
 };
@@ -83,6 +94,12 @@ export const actions = {
         orgName,
         projectName,
         repoName
+    }),
+
+    restoreProcess: (instanceId: ConcordKey, checkpointId: ConcordKey): RestoreProcessRequest => ({
+        type: actionTypes.RESTORE_PROCESS_REQUEST,
+        instanceId,
+        checkpointId
     }),
 
     cancel: (instanceId: ConcordId): CancelProcessRequest => ({
@@ -137,6 +154,18 @@ const startProcessReducers = combineReducers<StartProcessState>({
     response: makeResponseReducer(actionTypes.START_PROCESS_RESPONSE, actionTypes.RESET_PROCESS)
 });
 
+const restoreProcessReducers = combineReducers<RestoreProcessState>({
+    running: makeLoadingReducer(
+        [actionTypes.RESTORE_PROCESS_REQUEST],
+        [actionTypes.RESTORE_PROCESS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.RESET_PROCESS, actionTypes.RESTORE_PROCESS_REQUEST],
+        [actionTypes.RESTORE_PROCESS_RESPONSE]
+    ),
+    response: makeResponseReducer(actionTypes.RESTORE_PROCESS_RESPONSE, actionTypes.RESET_PROCESS)
+});
+
 const cancelProcessReducers = combineReducers<CancelProcessState>({
     running: makeLoadingReducer(
         [actionTypes.CANCEL_PROCESS_REQUEST],
@@ -166,6 +195,7 @@ export const reducers = combineReducers<State>({
 
     startProcess: startProcessReducers,
     cancelProcess: cancelProcessReducers,
+    restoreProcess: restoreProcessReducers,
 
     log: logReducers,
     poll: pollReducers
@@ -218,12 +248,27 @@ function* onCancelProcess({ instanceId }: CancelProcessRequest) {
     }
 }
 
+function* onRestoreProcess({ instanceId, checkpointId }: RestoreProcessRequest) {
+    try {
+        const response = yield call(apiRestore, instanceId, checkpointId);
+        yield put({
+            type: actionTypes.RESTORE_PROCESS_RESPONSE,
+            ...response
+        });
+
+        yield put(pollActions.startProcessPolling(instanceId));
+    } catch (e) {
+        yield handleErrors(actionTypes.RESTORE_PROCESS_RESPONSE, e);
+    }
+}
+
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_PROCESS_REQUEST, onGetProcess),
         throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProjectList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
         takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),
+        takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),
         fork(logSagas),
         fork(pollSagas)
     ]);

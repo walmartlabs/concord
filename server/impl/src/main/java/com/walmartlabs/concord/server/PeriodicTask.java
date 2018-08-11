@@ -39,14 +39,14 @@ public abstract class PeriodicTask implements BackgroundTask {
 
     @Override
     public void start() {
-        if (interval < 0) {
-            log.warn("start -> task is disabled");
+        if (interval <= 0) {
+            log.warn("start -> task is disabled: {}", taskName());
             return;
         }
 
-        this.worker = new Thread(this::run, this.getClass().getName());
+        this.worker = new Thread(this::run, taskName());
         this.worker.start();
-        log.info("start -> done");
+        log.info("start -> done: {}", this.getClass());
     }
 
     @Override
@@ -55,7 +55,7 @@ public abstract class PeriodicTask implements BackgroundTask {
             worker.interrupt();
             worker = null;
         }
-        log.info("stop -> done");
+        log.info("stop -> done: {}", taskName());
     }
 
     private void run() {
@@ -64,10 +64,14 @@ public abstract class PeriodicTask implements BackgroundTask {
                 performTask();
                 sleep(interval);
             } catch (Exception e) {
-                log.warn("run -> task error: {}. Will retry in {}ms...", e.getMessage(), errorDelay, e);
+                log.warn("run -> task {} error: {}. Will retry in {}ms...", taskName(), e.getMessage(), errorDelay, e);
                 sleep(errorDelay);
             }
         }
+    }
+
+    private String taskName() {
+        return this.getClass().getSimpleName();
     }
 
     protected abstract void performTask() throws Exception;

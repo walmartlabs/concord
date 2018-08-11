@@ -35,6 +35,7 @@ public class ConverterContext implements Serializable {
     static {
         converters.put(YamlExpressionStep.class, new YamlExpressionStepConverter());
         converters.put(YamlCall.class, new YamlCallConverter());
+        converters.put(YamlCheckpoint.class, new YamlCheckpointConverter());
         converters.put(YamlReturn.class, new YamlReturnConverter());
         converters.put(YamlGroup.class, new YamlGroupConverter());
         converters.put(YamlTaskStep.class, new YamlTaskStepConverter());

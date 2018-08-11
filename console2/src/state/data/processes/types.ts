@@ -21,7 +21,11 @@
 import { Action } from 'redux';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import { SearchFilter, StartProcessResponse } from '../../../api/org/process';
+import {
+    RestoreProcessResponse,
+    SearchFilter,
+    StartProcessResponse
+} from '../../../api/org/process';
 import { ProcessEntry } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as LogState } from './logs/types';
@@ -49,6 +53,11 @@ export interface StartProcessRequest extends Action {
     repoName: ConcordKey;
 }
 
+export interface RestoreProcessRequest extends Action {
+    instanceId: ConcordKey;
+    checkpointId: ConcordKey;
+}
+
 export interface CancelProcessRequest extends Action {
     instanceId: ConcordId;
 }
@@ -59,6 +68,7 @@ export interface Processes {
 
 export type StartProcessState = RequestState<StartProcessResponse>;
 export type CancelProcessState = RequestState<boolean>;
+export type RestoreProcessState = RequestState<RestoreProcessResponse>;
 
 export interface State {
     processById: Processes;
@@ -69,6 +79,7 @@ export interface State {
 
     startProcess: StartProcessState;
     cancelProcess: CancelProcessState;
+    restoreProcess: RestoreProcessState;
 
     log: LogState;
     poll: PollState;

@@ -25,6 +25,7 @@ import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
+import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
@@ -65,12 +66,14 @@ public class Main {
 
     private final EngineFactory engineFactory;
     private final ProcessHeartbeat heartbeat;
+    private final ApiClientFactory apiClientFactory;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public Main(EngineFactory engineFactory, ProcessHeartbeat heartbeat) {
+    public Main(EngineFactory engineFactory, ProcessHeartbeat heartbeat, ApiClientFactory apiClientFactory) {
         this.engineFactory = engineFactory;
         this.heartbeat = heartbeat;
+        this.apiClientFactory = apiClientFactory;
     }
 
     public void run() throws Exception {
@@ -83,7 +86,8 @@ public class Main {
             // TODO replace with WatchService
             Thread.sleep(100);
         }
-        String instanceId = new String(Files.readAllBytes(idPath));
+
+        UUID instanceId = UUID.fromString(new String(Files.readAllBytes(idPath)));
 
         Map<String, Object> policy = readPolicyRules(baseDir);
         if (policy.isEmpty()) {
@@ -93,17 +97,15 @@ public class Main {
         }
 
         String sessionToken = getSessionToken(baseDir);
-        heartbeat.start(UUID.fromString(instanceId), sessionToken);
+        heartbeat.start(instanceId, sessionToken);
 
-        String eventName = readResumeEvent(baseDir);
-        if (eventName == null) {
-            start(instanceId, baseDir);
-        } else {
-            resume(instanceId, baseDir, eventName);
-        }
+        ProcessApiClient processApiClient = new ProcessApiClient(apiClientFactory.create(sessionToken));
+        CheckpointManager checkpointManager = new CheckpointManager(instanceId, processApiClient);
+
+        executeProcess(instanceId.toString(), checkpointManager, baseDir);
     }
 
-    private void start(String instanceId, Path baseDir) throws ExecutionException {
+    private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir) throws ExecutionException {
         // read the request data
         Map<String, Object> req = readRequest(baseDir);
 
@@ -113,6 +115,40 @@ public class Main {
         // load the project
         ProjectDefinition project = loadProject(baseDir);
 
+        Engine engine = engineFactory.create(project, baseDir, activeProfiles);
+
+        while (true) {
+            Collection<Event> resultEvents;
+            String eventName = readResumeEvent(baseDir);
+            if (eventName == null) {
+                resultEvents = start(engine, req, instanceId, baseDir);
+            } else {
+                resultEvents = resume(engine, req, instanceId, baseDir, eventName);
+            }
+
+            Event checkpointEvent = resultEvents.stream()
+                    .filter(e -> e.getPayload() instanceof Map)
+                    .filter(e -> getCheckpointId(e) != null)
+                    .findFirst()
+                    .orElse(null);
+
+            if (checkpointEvent != null) {
+                checkpointManager.process(getCheckpointId(checkpointEvent), checkpointEvent.getName(), baseDir);
+            } else {
+                return;
+            }
+        }
+    }
+
+    private static UUID getCheckpointId(Event e) {
+        String s = (String) ((Map)e.getPayload()).get("checkpointId");
+        if (s == null) {
+            return null;
+        }
+        return UUID.fromString(s);
+    }
+
+    private Collection<Event> start(Engine e, Map<String, Object> req, String instanceId, Path baseDir) throws ExecutionException {
         // get the entry point
         String entryPoint = (String) req.get(InternalConstants.Request.ENTRY_POINT_KEY);
         if (entryPoint == null) {
@@ -130,17 +166,14 @@ public class Main {
 
         // start the process
         log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
-        Engine e = engineFactory.create(project, baseDir, activeProfiles);
+
         e.start(instanceId, entryPoint, args);
 
         // save the suspended state marker if needed
-        finalizeState(e, instanceId, baseDir);
+        return finalizeState(e, instanceId, baseDir);
     }
 
-    private void resume(String instanceId, Path baseDir, String eventName) throws ExecutionException {
-        // read the request data
-        Map<String, Object> req = readRequest(baseDir);
-
+    private Collection<Event> resume(Engine e, Map<String, Object> req, String instanceId, Path baseDir, String eventName) throws ExecutionException {
         Map<String, Object> args = createArgs(instanceId, baseDir, req);
 
         Object currentUser = req.get(InternalConstants.Request.CURRENT_USER_KEY);
@@ -150,18 +183,11 @@ public class Main {
 
         log.debug("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
 
-        // get active profiles from the request data
-        Collection<String> activeProfiles = getActiveProfiles(req);
-
-        // load the project
-        ProjectDefinition project = loadProject(baseDir);
-
         // start the process
-        Engine e = engineFactory.create(project, baseDir, activeProfiles);
         e.resume(instanceId, eventName, args);
 
         // save the suspended state marker if needed
-        finalizeState(e, instanceId, baseDir);
+        return finalizeState(e, instanceId, baseDir);
     }
 
     @SuppressWarnings("unchecked")
@@ -186,7 +212,7 @@ public class Main {
         }
     }
 
-    private static String readResumeEvent(Path baseDir) throws IOException {
+    private static String readResumeEvent(Path baseDir) throws ExecutionException {
         Path p = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME)
                 .resolve(InternalConstants.Files.RESUME_MARKER_FILE_NAME);
@@ -195,7 +221,11 @@ public class Main {
             return null;
         }
 
-        return new String(Files.readAllBytes(p));
+        try {
+            return new String(Files.readAllBytes(p));
+        } catch (IOException e) {
+            throw new ExecutionException("Read resume event error", e);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -249,7 +279,7 @@ public class Main {
         return m;
     }
 
-    private static void finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {
+    private static Collection<Event> finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {
         Path stateDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
 
@@ -285,6 +315,7 @@ public class Main {
                 Files.write(marker, eventNames);
                 log.debug("finalizeState ['{}'] -> created the suspended marker", instanceId);
             }
+            return events;
         } catch (IOException e) {
             throw new ExecutionException("State saving error", e);
         }
