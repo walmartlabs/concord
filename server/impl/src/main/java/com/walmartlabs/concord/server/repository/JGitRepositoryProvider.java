@@ -253,12 +253,14 @@ public class JGitRepositoryProvider implements RepositoryProvider {
         try (SubmoduleWalk walk = SubmoduleWalk.forIndex(repo)) {
             while (walk.next()) {
                 // Skip submodules not registered in .gitmodules file
-                if (walk.getModulesPath() == null)
+                if (walk.getModulesPath() == null) {
                     continue;
+                }
                 // Skip submodules not registered in parent repository's config
                 String url = walk.getConfigUrl();
-                if (url == null)
+                if (url == null) {
                     continue;
+                }
 
                 Repository submoduleRepo = walk.getRepository();
                 // Clone repository if not present

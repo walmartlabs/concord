@@ -35,7 +35,7 @@ public class EncryptValueResponse implements Serializable {
     private final byte[] data;
 
     @JsonCreator
-    public EncryptValueResponse(@JsonProperty("data") byte[] data) { //NOSONAR
+    public EncryptValueResponse(@JsonProperty("data") byte[] data) { // NOSONAR
         this.data = data;
     }
 

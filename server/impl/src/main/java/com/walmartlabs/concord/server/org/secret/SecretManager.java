@@ -468,7 +468,7 @@ public class SecretManager {
         private final UUID id;
         private final byte[] data;
 
-        public DecryptedKeyPair(UUID id, byte[] data) { //NOSONAR
+        public DecryptedKeyPair(UUID id, byte[] data) { // NOSONAR
             this.id = id;
             this.data = data;
         }

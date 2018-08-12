@@ -296,14 +296,14 @@ public class SecretDao extends AbstractDao {
 
         private final byte[] data;
 
-        public SecretDataEntry(SecretEntry s, byte[] data) { //NOSONAR
+        public SecretDataEntry(SecretEntry s, byte[] data) { // NOSONAR
             this(s.getId(), s.getName(), s.getOrgId(), s.getOrgName(), s.getProjectId(), s.getProjectName(),
                     s.getType(), s.getEncryptedBy(), s.getStoreType(), s.getVisibility(), s.getOwner(), data);
         }
 
         public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, UUID projectId, String projectName, SecretType type,
                                SecretEncryptedByType encryptedByType, SecretStoreType storeType, SecretVisibility visibility,
-                               SecretOwner owner, byte[] data) { //NOSONAR
+                               SecretOwner owner, byte[] data) { // NOSONAR
 
             super(id, name, orgId, orgName, projectId, projectName, type, encryptedByType, storeType, visibility, owner);
             this.data = data;

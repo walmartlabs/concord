@@ -118,9 +118,11 @@ public class HttpTask implements Task {
 
         public static boolean isMember(String aName) {
             RequestType[] requestTypes = RequestType.values();
-            for (RequestType requestType : requestTypes)
-                if (requestType.name().equalsIgnoreCase(aName))
+            for (RequestType requestType : requestTypes) {
+                if (requestType.name().equalsIgnoreCase(aName)) {
                     return true;
+                }
+            }
             return false;
         }
     }
@@ -133,9 +135,11 @@ public class HttpTask implements Task {
 
         public static boolean isMember(String aName) {
             ResponseType[] responseTypes = ResponseType.values();
-            for (ResponseType responseType : responseTypes)
-                if (responseType.name().equalsIgnoreCase(aName))
+            for (ResponseType responseType : responseTypes) {
+                if (responseType.name().equalsIgnoreCase(aName)) {
                     return true;
+                }
+            }
             return false;
         }
     }

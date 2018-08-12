@@ -379,8 +379,9 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         String arg = revName + "^{commit}";
         String result = launchCommand(dest, "rev-parse", arg);
         String line = result.trim();
-        if (line.isEmpty())
+        if (line.isEmpty()) {
             throw new RepositoryException("rev-parse no content returned for " + revName);
+        }
         return ObjectId.fromString(line);
     }
 

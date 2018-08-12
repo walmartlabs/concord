@@ -31,7 +31,7 @@ public class Chain {
         this(processors, 0);
     }
 
-    private Chain(PayloadProcessor[] processors, int current) { //NOSONAR
+    private Chain(PayloadProcessor[] processors, int current) { // NOSONAR
         this.processors = processors;
         this.current = current;
     }

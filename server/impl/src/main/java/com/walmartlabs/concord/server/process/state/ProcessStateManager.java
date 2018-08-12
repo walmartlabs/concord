@@ -176,7 +176,7 @@ public interface ProcessStateManager {
         private final String[] ignored;
         private final OpenOption[] options;
 
-        private CopyConsumer(Path dst, String[] ignored, OpenOption[] options) { //NOSONAR
+        private CopyConsumer(Path dst, String[] ignored, OpenOption[] options) { // NOSONAR
             this.dst = dst;
             this.ignored = ignored;
             this.options = options;

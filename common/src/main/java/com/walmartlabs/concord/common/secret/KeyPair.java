@@ -71,7 +71,7 @@ public class KeyPair implements Secret {
     private final byte[] publicKey;
     private final byte[] privateKey;
 
-    public KeyPair(byte[] publicKey, byte[] privateKey) { //NOSONAR
+    public KeyPair(byte[] publicKey, byte[] privateKey) { // NOSONAR
         this.publicKey = publicKey;
         this.privateKey = privateKey;
     }
