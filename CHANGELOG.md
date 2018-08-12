@@ -13,6 +13,7 @@ processes" policy.
 
 ### Changed
 
+- docker: increased the default API proxy timeout to 180 seconds;
 - concord-console: fix the custom view link on the process form page;
 - concord-console: fixed retieval of "Last 10 processes" on the
 Activity page;

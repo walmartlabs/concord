@@ -8,7 +8,7 @@ server {
 	server_name             _;
 	root                    /opt/concord/console/dist;
 
-	proxy_read_timeout      600;
+	proxy_read_timeout      1800;
     client_max_body_size    32M;
 
 	location ~ ^/(api/|logs/|forms/|events/|swagger/|metrics) {
