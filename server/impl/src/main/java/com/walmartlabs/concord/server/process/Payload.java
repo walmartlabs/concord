@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 
@@ -41,7 +40,7 @@ public class Payload {
     public static final HeaderKey<Map> REQUEST_DATA_MAP = HeaderKey.register("_meta", Map.class);
     public static final HeaderKey<String> RESUME_EVENT_NAME = HeaderKey.register("_resumeEventName", String.class);
     public static final HeaderKey<ProjectDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProjectDefinition.class);
-    public static final HeaderKey<Collection<String>> ACTIVE_PROFILES = HeaderKey.registerCollection("_activeProfiles");
+    public static final HeaderKey<List<String>> ACTIVE_PROFILES = HeaderKey.registerList("_activeProfiles");
     public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
     public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
     public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");

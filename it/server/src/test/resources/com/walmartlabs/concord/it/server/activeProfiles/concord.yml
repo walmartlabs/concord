@@ -1,0 +1,15 @@
+flows:
+  default:
+  - log: "Hello from ${x}+${y}"
+  - log: "We got ${processInfo.activeProfiles}"
+
+profiles:
+  profileA:
+    configuration:
+      arguments:
+        x: "A"
+        y: "oops"
+  profileB:
+    configuration:
+      arguments:
+        y: "B"

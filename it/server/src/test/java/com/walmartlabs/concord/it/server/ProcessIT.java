@@ -526,4 +526,27 @@ public class ProcessIT extends AbstractServerIT {
             assertEquals(StatusEnum.CANCELLED, pe.getStatus());
         }
     }
+
+    @Test(timeout = 60000)
+    public void testActiveProfiles() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("activeProfiles").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("activeProfiles", "profileA,profileB");
+
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(StatusEnum.FINISHED, pe.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Hello from A\\+B.*", ab);
+        assertLog(".*We got \\[profileA, profileB].*", ab);
+    }
 }

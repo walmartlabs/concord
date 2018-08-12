@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.keys;
  */
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,8 +35,8 @@ public class HeaderKey<T> extends Key<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> HeaderKey<Collection<T>> registerCollection(String name) {
-        return (HeaderKey<Collection<T>>) index.register(name, Collection.class);
+    public static <T> HeaderKey<List<T>> registerList(String name) {
+        return (HeaderKey<List<T>>) index.register(name, Collection.class);
     }
 
     @SuppressWarnings("unchecked")

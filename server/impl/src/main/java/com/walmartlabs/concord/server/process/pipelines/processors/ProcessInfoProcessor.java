@@ -33,10 +33,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 public class ProcessInfoProcessor implements PayloadProcessor {
@@ -69,6 +66,12 @@ public class ProcessInfoProcessor implements PayloadProcessor {
         String token = createSessionKey(payload.getInstanceId());
         Map<String, Object> m = new HashMap<>();
         m.put("sessionKey", token);
+
+        Collection<String> activeProfiles = payload.getHeader(Payload.ACTIVE_PROFILES);
+        if (activeProfiles == null) {
+            activeProfiles = Collections.emptyList();
+        }
+        m.put("activeProfiles", activeProfiles);
 
         args.put(Constants.Request.PROCESS_INFO_KEY, m);
 

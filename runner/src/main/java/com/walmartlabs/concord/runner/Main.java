@@ -271,6 +271,7 @@ public class Main {
         m.put(InternalConstants.Context.LOCAL_PATH_KEY, dir);
         m.put(InternalConstants.Context.WORK_DIR_KEY, dir);
 
+        // out variables
         Object outExpr = cfg.get(InternalConstants.Request.OUT_EXPRESSIONS_KEY);
         if (outExpr != null) {
             m.put(InternalConstants.Context.OUT_EXPRESSIONS_KEY, outExpr);
@@ -347,7 +348,9 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private static String getSessionToken(Path baseDir) throws ExecutionException {
-        Path p = baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME);
+        Path p = baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
+                .resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME);
+
         try {
             return new String(Files.readAllBytes(p));
         } catch (IOException e) {

@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: `${processInfo.activeProfiles}` variable;
 - concord-runner: new utility task `forms` to create links to process
 forms and the form wizard;
 - concord-server, concord-agent, project-model, concord-runner:
