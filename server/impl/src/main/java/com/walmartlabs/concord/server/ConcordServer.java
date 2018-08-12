@@ -30,7 +30,7 @@ import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.ldap.LdapRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import com.walmartlabs.ollie.OllieServer;
-import com.walmartlabs.ollie.guice.OllieServerBuilder;
+import com.walmartlabs.ollie.OllieServerBuilder;
 import io.prometheus.client.exporter.MetricsServlet;
 import org.eclipse.jetty.servlet.DefaultServlet;
 

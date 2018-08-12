@@ -24,9 +24,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.db.DatabaseModule;
-import com.walmartlabs.ollie.config.ConfigurationModule;
 import com.walmartlabs.ollie.config.ConfigurationProcessor;
 import com.walmartlabs.ollie.config.EnvironmentSelector;
+import com.walmartlabs.ollie.config.OllieConfigurationModule;
 import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
@@ -51,7 +51,7 @@ public class MigrateDB {
         Injector injector = Guice.createInjector(
                 new WireModule(
                         new SpaceModule(new URLClassSpace(MigrateDB.class.getClassLoader()), BeanScanning.CACHE),
-                        ConfigurationModule.fromConfigWithPackage(cfg, "com.walmartlabs.concord.server"),
+                        new OllieConfigurationModule("com.walmartlabs.concord.server", cfg),
                         new DatabaseModule()));
 
         new MigrateDB().run(injector);
