@@ -60,7 +60,7 @@ public class StalledStateUploadHandler extends PeriodicTask {
     private static class CleanupDao extends AbstractDao {
 
         @Inject
-        public CleanupDao(Configuration cfg) {
+        public CleanupDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 

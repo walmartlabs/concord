@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fix missing `@Named` annotations for JOOQ
+configuration. Causes the wrong datasource to be injected.
+
+
+
 ## [0.84.0] - 2018-08-12
 
 ### Added
