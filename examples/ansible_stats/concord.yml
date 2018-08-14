@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.82.1-SNAPSHOT"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.84.1"
 
 flows:
   default:
