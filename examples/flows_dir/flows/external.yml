@@ -1,7 +1,0 @@
-# note that the top-level syntax is different from concord.yml
-
-myFlow:
-- form: myForm
-
-form (myForm):
-- myField: {type: "string"}

@@ -1,8 +1,7 @@
 flows:
   default:
-  - log: "A"
-  - checkpoint: "first"
-  - log: "B"
-  - checkpoint: "second"
-  - log: "C"
+  - log: "Hello, ${name}!"
 
+configuration:
+  arguments:
+    name: "Concord"
