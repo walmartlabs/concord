@@ -21,9 +21,7 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.common.PrivilegedAction;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -36,7 +34,6 @@ public class PlaybookArgsBuilder {
     private final Path tmpDir;
 
     private String attachmentsDir;
-    private String cfgFile;
     private Map<String, Object> extraVars;
     private String user;
     private String tags;
@@ -52,11 +49,6 @@ public class PlaybookArgsBuilder {
         this.inventory = inventory;
         this.workDir = workDir;
         this.tmpDir = tmpDir;
-    }
-
-    public PlaybookArgsBuilder withCfgFile(String cfgFile) {
-        this.cfgFile = cfgFile;
-        return this;
     }
 
     public PlaybookArgsBuilder withExtraVars(Map<String, Object> extraVars) {
@@ -165,9 +157,6 @@ public class PlaybookArgsBuilder {
 
     public Map<String, String> buildEnv() {
         Map<String, String> env = new HashMap<>();
-        if (cfgFile != null) {
-            env.put("ANSIBLE_CONFIG", cfgFile);
-        }
         if (attachmentsDir != null) {
             env.put("_CONCORD_ATTACHMENTS_DIR", attachmentsDir);
         }

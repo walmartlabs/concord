@@ -35,7 +35,7 @@ public class OutVarsProcessor {
     private Path outVarsFile;
 
     public void prepare(Map<String, Object> args, Map<String, String> env, Path workDir, Path tmpDir) {
-        String outVars = ArgUtils.getListAsString(args, AnsibleConstants.OUT_VARS_KEY);
+        String outVars = ArgUtils.getListAsString(args, TaskParams.OUT_VARS_KEY);
         if (outVars == null) {
             return;
         }

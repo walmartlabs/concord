@@ -84,6 +84,7 @@
         <http.request.version>6.0</http.request.version>
         <httpclient.version>4.5.6</httpclient.version>
         <httpcore.version>4.4.10</httpcore.version>
+        <ini4j.version>0.5.4</ini4j.version>
         <jackson.version>2.9.6</jackson.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.mail.version>1.6.0</javax.mail.version>
@@ -524,6 +525,11 @@
                 <groupId>com.github.jsqlparser</groupId>
                 <artifactId>jsqlparser</artifactId>
                 <version>${jsqlparser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ini4j</groupId>
+                <artifactId>ini4j</artifactId>
+                <version>${ini4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

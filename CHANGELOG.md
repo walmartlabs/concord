@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- ansible: initial support for external roles.
+
+
+
 ## [0.84.1] - 2018-08-12
 
 ### Changed

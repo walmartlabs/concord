@@ -20,29 +20,25 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 
-public final class Resources {
+import static org.junit.Assert.assertEquals;
 
-    public static void copy(String resourcesLocation, String[] files, Path dest) throws IOException {
-        Files.createDirectories(dest);
+public abstract class AbstractTest {
 
-        for (String f : files) {
-            copyResourceToFile(Paths.get(resourcesLocation, f).toString(), dest.resolve(f));
-        }
+    protected void assertFile(String resource, Path actual) throws Exception {
+        assertEquals(read(resource), new String(Files.readAllBytes(actual.toAbsolutePath())));
     }
 
-    private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
-        try (InputStream is = RunPlaybookTask2.class.getResourceAsStream(resourceName)) {
-            Files.copy(is, dest, StandardCopyOption.REPLACE_EXISTING);
-        }
+    protected Path tempDir(String prefix) throws Exception {
+        return Files.createTempDirectory(Paths.get(System.getProperty("java.io.tmpdir")), prefix);
     }
 
-    private Resources() {
+    protected String read(String f) throws Exception {
+        URI uri = getClass().getResource(f).toURI();
+        return new String(Files.readAllBytes(Paths.get(uri)));
     }
 }

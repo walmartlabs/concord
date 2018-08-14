@@ -20,10 +20,32 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public final class ArgUtils {
+
+    public static Path getPath(Map<String, Object> args, String key, Path workDir) {
+        Path p = null;
+
+        Object v = args.get(key);
+        if (v instanceof String) {
+            p = workDir.resolve((String) v);
+        } else if (v instanceof Path) {
+            p = workDir.resolve((Path) v);
+        } else if (v != null) {
+            throw new IllegalArgumentException("'" + key + "' should be either a relative path: " + v);
+        }
+
+        if (p != null && !Files.exists(p)) {
+            throw new IllegalArgumentException("File not found: " + workDir.relativize(p));
+        }
+
+        return p;
+    }
 
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> assertMap(Map<String, Object> args, String key) {
@@ -39,13 +61,17 @@ public final class ArgUtils {
         return (Map<K, V>) v;
     }
 
+    public static <K, V> Map<K, V> getMap(Map<String, Object> args, TaskParams c) {
+        return getMap(args, c.getKey());
+    }
+
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> getMap(Map<String, Object> args, String key) {
         return (Map<K, V>) args.get(key);
     }
 
-    public static boolean getBoolean(Map<String, Object> args, String key, boolean defaultValue) {
-        Object v = args.get(key);
+    public static boolean getBoolean(Map<String, Object> args, TaskParams c, boolean defaultValue) {
+        Object v = args.get(c.getKey());
         if (v == null) {
             return defaultValue;
         }
@@ -55,12 +81,16 @@ public final class ArgUtils {
         } else if (v instanceof String) {
             return Boolean.parseBoolean((String) v);
         } else {
-            throw new IllegalArgumentException("Invalid boolean value '" + v + "' for key '" + key + "'");
+            throw new IllegalArgumentException("Invalid boolean value '" + v + "' for key '" + c.getKey() + "'");
         }
     }
 
-    public static int getInt(Map<String, Object> args, String key, int defaultValue) {
-        Object v = args.get(key);
+    public static int getInt(Map<String, Object> args, TaskParams c, int defaultValue) {
+        return getInt(args, c.getKey(), defaultValue);
+    }
+
+    public static int getInt(Map<String, Object> args, String c, int defaultValue) {
+        Object v = args.get(c);
         if (v == null) {
             return defaultValue;
         }
@@ -73,7 +103,19 @@ public final class ArgUtils {
             return ((Long) v).intValue();
         }
 
-        throw new IllegalArgumentException("'" + key + "' should be an integer: " + v);
+        throw new IllegalArgumentException("'" + c + "' should be an integer: " + v);
+    }
+
+    public static String assertString(String assertionMessage, Map<String, Object> args, String key) {
+        String v = getString(args, key);
+        if (v == null) {
+            throw new IllegalArgumentException(assertionMessage);
+        }
+        return v;
+    }
+
+    public static String getString(Map<String, Object> args, TaskParams c) {
+        return getString(args, c.getKey());
     }
 
     public static String getString(Map<String, Object> args, String key) {
@@ -90,9 +132,28 @@ public final class ArgUtils {
         return ((String) v).trim();
     }
 
+    public static <E> List<E> getList(Map<String, Object> args, TaskParams p) {
+        return getList(args, p.getKey());
+    }
+
     @SuppressWarnings("unchecked")
-    public static String getListAsString(Map<String, Object> args, String key) {
+    public static <E> List<E> getList(Map<String, Object> args, String key) {
         Object v = args.get(key);
+
+        if (v == null) {
+            return null;
+        }
+
+        if (!(v instanceof List)) {
+            throw new IllegalArgumentException("Expected a list value '" + key + "', got: " + v);
+        }
+
+        return (List<E>) v;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static String getListAsString(Map<String, Object> args, TaskParams c) {
+        Object v = args.get(c.getKey());
         if (v == null) {
             return null;
         }
@@ -105,7 +166,7 @@ public final class ArgUtils {
             return String.join(", ", (Collection<String>) v);
         }
 
-        throw new IllegalArgumentException("unexpected '" + key + "' type: " + v);
+        throw new IllegalArgumentException("unexpected '" + c.getKey() + "' type: " + v);
     }
 
     private ArgUtils() {

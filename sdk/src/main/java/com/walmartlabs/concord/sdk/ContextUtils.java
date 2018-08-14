@@ -33,6 +33,10 @@ public final class ContextUtils {
         return getVariable(ctx, name, defaultValue, Number.class);
     }
 
+    public static String getString(Context ctx, String name) {
+        return getString(ctx, name, null);
+    }
+
     public static String getString(Context ctx, String name, String defaultValue) {
         return getVariable(ctx, name, defaultValue, String.class);
     }

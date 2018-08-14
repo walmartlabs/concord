@@ -55,7 +55,7 @@ public class GroupVarsProcessor {
             return;
         }
 
-        String playbook = (String) args.get(AnsibleConstants.PLAYBOOK_KEY);
+        String playbook = (String) args.get(TaskParams.PLAYBOOK_KEY.getKey());
         Path playbookPath = workDir.resolve(playbook);
 
         Path groupVarsBase = playbookPath.getParent().resolve("group_vars");
@@ -92,13 +92,13 @@ public class GroupVarsProcessor {
 
     @SuppressWarnings("unchecked")
     private static Collection<Ref> toRefs(Map<String, Object> args) {
-        Object v = args.get(AnsibleConstants.GROUP_VARS_KEY);
+        Object v = args.get(TaskParams.GROUP_VARS_KEY.getKey());
         if (v == null) {
             return null;
         }
 
         if (!(v instanceof Collection)) {
-            throw new IllegalArgumentException("'" + AnsibleConstants.GROUP_VARS_KEY + "' must be a list of group_vars references");
+            throw new IllegalArgumentException("'" + TaskParams.GROUP_VARS_KEY.getKey() + "' must be a list of group_vars references");
         }
 
         Collection<Object> refs = (Collection<Object>) v;
@@ -114,12 +114,12 @@ public class GroupVarsProcessor {
     @SuppressWarnings("unchecked")
     private static Ref toRef(Object o) {
         if (!(o instanceof Map)) {
-            throw new IllegalArgumentException("Unsupported object type in '" + AnsibleConstants.GROUP_VARS_KEY + "', got: " + o);
+            throw new IllegalArgumentException("Unsupported object type in '" + TaskParams.GROUP_VARS_KEY.getKey() + "', got: " + o);
         }
 
         Map<String, Object> r = (Map<String, Object>) o;
         if (r.size() != 1) {
-            throw new IllegalArgumentException("Invalid reference format in '" + AnsibleConstants.GROUP_VARS_KEY + "', expected a single value, got: " + r);
+            throw new IllegalArgumentException("Invalid reference format in '" + TaskParams.GROUP_VARS_KEY.getKey() + "', expected a single value, got: " + r);
         }
 
         Map.Entry<String, Object> e = r.entrySet().iterator().next();
@@ -128,7 +128,7 @@ public class GroupVarsProcessor {
 
         Object v = e.getValue();
         if (!(v instanceof Map)) {
-            throw new IllegalArgumentException("Invalid reference value in '" + AnsibleConstants.GROUP_VARS_KEY + "', expected an object, got: " + v);
+            throw new IllegalArgumentException("Invalid reference value in '" + TaskParams.GROUP_VARS_KEY.getKey() + "', expected an object, got: " + v);
         }
 
         Map<String, Object> params = (Map<String, Object>) v;

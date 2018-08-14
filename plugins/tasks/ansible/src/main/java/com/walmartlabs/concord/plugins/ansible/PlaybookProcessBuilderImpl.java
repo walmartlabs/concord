@@ -29,10 +29,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @deprecated prefer {@link DockerPlaybookProcessBuilder}
- */
-@Deprecated
 public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(PlaybookProcessBuilderImpl.class);

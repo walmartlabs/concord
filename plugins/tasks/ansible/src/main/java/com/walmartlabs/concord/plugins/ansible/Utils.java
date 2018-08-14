@@ -21,28 +21,24 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-public final class Resources {
+public final class Utils {
 
-    public static void copy(String resourcesLocation, String[] files, Path dest) throws IOException {
-        Files.createDirectories(dest);
-
-        for (String f : files) {
-            copyResourceToFile(Paths.get(resourcesLocation, f).toString(), dest.resolve(f));
-        }
+    public static void updateScriptPermissions(Path p) throws IOException {
+        // ensure that the file has the executable bit set
+        Set<PosixFilePermission> perms = new HashSet<>();
+        perms.add(PosixFilePermission.OWNER_READ);
+        perms.add(PosixFilePermission.OWNER_EXECUTE);
+        perms.add(PosixFilePermission.OWNER_WRITE);
+        Files.setPosixFilePermissions(p, perms);
     }
 
-    private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
-        try (InputStream is = RunPlaybookTask2.class.getResourceAsStream(resourceName)) {
-            Files.copy(is, dest, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
-    private Resources() {
+    private Utils() {
     }
 }

@@ -209,6 +209,11 @@ public class Constants {
         public static final String CONCORD_SYSTEM_DIR_NAME = ".concord";
 
         /**
+         * Concord TMP files.
+         */
+        public static final String CONCORD_TMP_DIR_NAME = ".concord_tmp";
+
+        /**
          * File which contains process session token.
          */
         public static final String SESSION_TOKEN_FILE_NAME = ".session_token";

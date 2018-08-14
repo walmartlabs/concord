@@ -20,29 +20,28 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import java.io.IOException;
-import java.io.InputStream;
+import org.junit.Test;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 
-public final class Resources {
+public class AnsibleConfigTest extends AbstractTest {
 
-    public static void copy(String resourcesLocation, String[] files, Path dest) throws IOException {
-        Files.createDirectories(dest);
+    @Test
+    public void testDefaultConfig() throws Exception {
+        Path workDir = tempDir("ansible-config-workdir");
+        Path tmpDir = workDir.resolve("tmp");
+        Files.createDirectories(tmpDir);
 
-        for (String f : files) {
-            copyResourceToFile(Paths.get(resourcesLocation, f).toString(), dest.resolve(f));
-        }
-    }
+        AnsibleConfig cfg = new AnsibleConfig(workDir, tmpDir, true);
+        cfg.parse(new HashMap<>());
 
-    private static void copyResourceToFile(String resourceName, Path dest) throws IOException {
-        try (InputStream is = RunPlaybookTask2.class.getResourceAsStream(resourceName)) {
-            Files.copy(is, dest, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
+        new AnsibleCallbacks(tmpDir).enrich(cfg);
+        new AnsibleLookup(tmpDir).enrich(cfg);
+        new AnsibleStrategy(tmpDir).enrich(cfg);
 
-    private Resources() {
+        Path cfgPath = cfg.write();
+        assertFile("ansible.cfg", workDir.resolve(cfgPath));
     }
 }
