@@ -32,12 +32,6 @@ import java.util.Set;
 
 public class YamlCheckpointConverter implements StepConverter<YamlCheckpoint> {
 
-    /**
-     * @param ctx
-     * @param s
-     * @return
-     * @throws YamlConverterException
-     */
     @Override
     public Chunk convert(ConverterContext ctx, YamlCheckpoint s) throws YamlConverterException {
         Chunk c = new Chunk();
@@ -62,7 +56,7 @@ public class YamlCheckpointConverter implements StepConverter<YamlCheckpoint> {
 
     private static String assertCheckpoint(YamlCheckpoint s) {
         if (!s.getKey().matches(ConcordKey.PATTERN)) {
-            throw new IllegalArgumentException("Invalid checkpoint name: " + s.getKey() + ". Error in @:" + s.getLocation());
+            throw new IllegalArgumentException("Invalid checkpoint name: " + s.getKey() + ". " + ConcordKey.MESSAGE + " Error @:" + s.getLocation());
         }
         return s.getKey();
     }

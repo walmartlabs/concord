@@ -343,7 +343,7 @@ public class SecretResource implements Resource {
         }
 
         if (!s.matches(ConcordKey.PATTERN)) {
-            throw new ValidationErrorsException("Invalid secret name: " + s);
+            throw new ValidationErrorsException("Invalid secret name: " + s + ". " + ConcordKey.MESSAGE);
         }
 
         return s;

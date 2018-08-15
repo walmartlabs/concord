@@ -35,9 +35,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Constraint(validatedBy = {})
 public @interface ConcordKey {
 
-    static final String PATTERN = "^[0-9a-zA-Z][0-9a-zA-Z_@.\\-~]{2,128}$";
+    String PATTERN = "^[0-9a-zA-Z][0-9a-zA-Z_@.\\-~]{2,128}$";
 
-    String message() default "{concord.validation.constraints.ConcordKey.message}";
+    String MESSAGE = "Must contain only alphanumeric characters, digits, underscore, @, dot (.) or a minus (-). " +
+            "Must start with an alphanumeric character or a digit. " +
+            "Must be between 2 and 128 characters in length.";
+
+    String message() default MESSAGE;
 
     Class<?>[] groups() default {};
 
