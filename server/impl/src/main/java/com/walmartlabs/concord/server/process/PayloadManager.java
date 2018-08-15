@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -66,6 +67,7 @@ public class PayloadManager {
         this.repositoryDao = repositoryDao;
     }
 
+    @WithTimer
     public Payload createPayload(MultipartInput input) throws IOException {
         UUID instanceId = UUID.randomUUID();
         UUID parentInstanceId = MultipartUtils.getUuid(input, Constants.Multipart.PARENT_INSTANCE_ID);

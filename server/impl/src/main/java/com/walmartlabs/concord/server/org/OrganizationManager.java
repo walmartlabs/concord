@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.audit.AuditAction;
@@ -125,6 +126,7 @@ public class OrganizationManager {
         return assertAccess(null, orgName, orgMembersOnly);
     }
 
+    @WithTimer
     public OrganizationEntry assertAccess(UUID orgId, String name, boolean orgMembersOnly) {
         OrganizationEntry e = assertExisting(orgId, name);
 

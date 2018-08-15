@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.ProjectOwner;
@@ -53,6 +54,7 @@ public class ProjectAccessManager {
         projectDao.upsertAccessLevel(projectId, teamId, level);
     }
 
+    @WithTimer
     public ProjectEntry assertProjectAccess(UUID projectId, ResourceAccessLevel level, boolean orgMembersOnly) {
         ProjectEntry e = projectDao.get(projectId);
         if (e == null) {

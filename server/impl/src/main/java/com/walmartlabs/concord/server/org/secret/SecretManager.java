@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
@@ -83,6 +84,7 @@ public class SecretManager {
         this.processQueueDao = processQueueDao;
     }
 
+    @WithTimer
     public SecretEntry assertAccess(UUID orgId, UUID secretId, String secretName, ResourceAccessLevel level, boolean orgMembersOnly) {
         if (secretId == null && (orgId == null || secretName == null)) {
             throw new ValidationErrorsException("Secret ID or an organization ID and a secret name is required");

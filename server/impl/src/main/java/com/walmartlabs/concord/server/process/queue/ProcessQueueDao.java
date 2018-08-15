@@ -348,6 +348,14 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public int count(ProcessStatus status) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.selectCount().from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(status.toString()))
+                    .fetchOne(0, int.class);
+        }
+    }
+
     private Select<VProcessQueueRecord> filterByTags(SelectWhereStep<VProcessQueueRecord> q, Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return q;

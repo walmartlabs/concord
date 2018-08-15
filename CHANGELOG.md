@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: additional metrics, process queue gauges;
 - resource-tasks: new method to read YAML files. Optional support for
 string interpolation in JSON and YAML files;
 - ansible: initial support for external roles.

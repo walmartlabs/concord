@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.inventory.InventoryEntry;
 import com.walmartlabs.concord.server.org.inventory.InventoryOwner;
@@ -111,6 +112,7 @@ public class InventoryManager {
         return assertInventoryAccess(inventoryId, level, orgMembersOnly);
     }
 
+    @WithTimer
     public InventoryEntry assertInventoryAccess(UUID inventoryId, ResourceAccessLevel level, boolean orgMembersOnly) {
         InventoryEntry e = inventoryDao.get(inventoryId);
         if (e == null) {
