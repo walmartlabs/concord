@@ -56,6 +56,13 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     private static final String BEARER_AUTH_PREFIX = "Bearer ";
 
     /**
+     * List of URLs on which 'WWW-Authenticate: Basic' is not returned.
+     */
+    private static final String[] DO_NOT_FORCE_BASIC_AUTH_URLS = {
+            "/api/service/console/whoami"
+    };
+
+    /**
      * List of URLs which do not require authentication or authorization.
      */
     private static final String[] ANON_URLS = {
@@ -188,6 +195,13 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private static void reportAuthSchemes(ServletRequest request, ServletResponse response) {
         HttpServletRequest req = WebUtils.toHttp(request);
+        String p = req.getRequestURI();
+        for (String s : DO_NOT_FORCE_BASIC_AUTH_URLS) {
+            if (p.matches(s)) {
+                return;
+            }
+        }
+
         HttpServletResponse resp = WebUtils.toHttp(response);
 
         String authHeader = req.getHeader(HttpHeaders.AUTHORIZATION);
