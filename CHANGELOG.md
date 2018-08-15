@@ -6,6 +6,11 @@
 
 - ansible: initial support for external roles.
 
+### Changed
+
+- runner: upgrade the BPM engine version to `0.47.1` to fix a bug
+preventing correct handling of IN variable evaluation errors.
+
 
 
 ## [0.84.1] - 2018-08-12
