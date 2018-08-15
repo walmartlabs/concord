@@ -134,6 +134,8 @@ public class GroupVarsProcessor {
         Map<String, Object> params = (Map<String, Object>) v;
 
         String orgName = (String) params.get("orgName");
+        orgName = (String) params.getOrDefault("org", orgName); // alternative parameter name
+
         String secretName = (String) params.get("secretName");
         String password = (String) params.get("password");
         String type = (String) params.getOrDefault("type", "yml");

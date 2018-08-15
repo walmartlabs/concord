@@ -51,8 +51,8 @@ public class AnsibleLibs {
         try {
             Resources.copy(LIB_LOCATION, LIBS, tmpDir.resolve(PYTHON_LIB_DIR));
         } catch (IOException e) {
-            log.error("write libs error: {}", e.getMessage() );
-            throw new RuntimeException("write libs error: " + e.getMessage());
+            log.error("Error while adding Concord-specific libraries: {}", e.getMessage(), e);
+            throw new RuntimeException("Error while adding Concord-specific libraries: " + e.getMessage());
         }
 
         return this;

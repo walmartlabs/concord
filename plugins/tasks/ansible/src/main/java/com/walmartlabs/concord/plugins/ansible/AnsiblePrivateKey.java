@@ -58,11 +58,12 @@ public class AnsiblePrivateKey {
     public AnsiblePrivateKey parse(Map<String, Object> args) {
         try {
             keyPath = getPrivateKeyPath(args);
-            return this;
         } catch (Exception e) {
-            log.error("parse private key error: {}", e.getMessage());
-            throw new RuntimeException("parse private key error: " + e.getMessage());
+            log.error("Error while fetching the private key: {}", e.getMessage(), e);
+            throw new RuntimeException("Error while fetching the private key: " + e.getMessage());
         }
+
+        return this;
     }
 
     public Path getKeyPath() {

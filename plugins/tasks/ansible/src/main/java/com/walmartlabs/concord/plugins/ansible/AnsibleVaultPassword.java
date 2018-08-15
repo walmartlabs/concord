@@ -52,8 +52,8 @@ public class AnsibleVaultPassword {
             vaultPassword = getVaultPasswordFilePath(args);
             return this;
         } catch (IOException e) {
-            log.error("parse vault password error: {}", e.getMessage());
-            throw new RuntimeException("parse vault password error: " + e.getMessage());
+            log.error("Error while fetching the vault password: {}", e.getMessage());
+            throw new RuntimeException("Error while fetching the vault password: " + e.getMessage());
         }
     }
 

@@ -42,14 +42,11 @@ public class AnsibleRoles {
     private static final Logger log = LoggerFactory.getLogger(AnsibleRoles.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
-
-    private static final String REQ_FILE_NAME = "requirements.yml";
     private static final String ROLE_DIR = "_roles";
 
     private final Path workDir;
     private final Path tmpDir;
     private final Map<String, Object> defaults;
-
     private final boolean debug;
 
     private List<Map<String, String>> roles = Collections.emptyList();
@@ -75,6 +72,7 @@ public class AnsibleRoles {
         roles = in.stream()
                 .map(this::assertRole)
                 .collect(Collectors.toList());
+
         return this;
     }
 
@@ -114,8 +112,8 @@ public class AnsibleRoles {
 
         int code = p.waitFor();
         if (code != SUCCESS_EXIT_CODE) {
-            log.warn("Git is finished with code {}", code);
-            throw new IllegalStateException("Git process finished with exit code " + code);
+            log.warn("GIT finished with a non-zero exit code: {}", code);
+            throw new IllegalStateException("GIT finished with exit code " + code);
         }
     }
 
@@ -131,7 +129,7 @@ public class AnsibleRoles {
     }
 
     private String getDefaultSrc() {
-        String src =  assertString("'roleSrc' required in default ansible params", defaults, "roleSrc");
+        String src =  assertString("'roleSrc' is required in default 'ansibleParams'", defaults, "roleSrc");
         if (!src.endsWith("/")) {
             src += "/";
         }
@@ -139,7 +137,7 @@ public class AnsibleRoles {
     }
 
     private Map<String, String> assertRole(Map<String,Object> r) {
-        String name = assertString("Role name required", r, "name");
+        String name = assertString("Role 'name' is required", r, "name");
         String src = getString(r, "src");
         if (src == null || src.isEmpty()) {
             src = getDefaultSrc() + name;
@@ -162,6 +160,5 @@ public class AnsibleRoles {
             return name;
         }
         return name.substring(pos + 1);
-
     }
 }

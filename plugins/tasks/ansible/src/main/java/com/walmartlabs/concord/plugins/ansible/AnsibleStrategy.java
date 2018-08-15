@@ -32,7 +32,6 @@ public class AnsibleStrategy {
 
     private static final String STRATEGY_LOCATION = "/com/walmartlabs/concord/plugins/ansible/strategy";
     private static final String[] STRATEGIES = new String[]{"concord_free.py", "concord_linear.py"};
-
     private static final String STRATEGY_PLUGINS_DIR = "_strategy";
 
     private final Path tmpDir;
@@ -49,8 +48,8 @@ public class AnsibleStrategy {
         try {
             Resources.copy(STRATEGY_LOCATION, STRATEGIES, getDir());
         } catch (IOException e) {
-            log.error("write lookups error: {}", e.getMessage() );
-            throw new RuntimeException("write lookups error: " + e.getMessage());
+            log.error("Error while adding Concord lookup plugins: {}", e.getMessage(), e);
+            throw new RuntimeException("Error while adding Concord lookup plugins " + e.getMessage());
         }
 
         return this;

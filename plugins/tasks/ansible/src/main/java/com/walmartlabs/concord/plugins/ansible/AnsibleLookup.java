@@ -50,8 +50,8 @@ public class AnsibleLookup {
         try {
             Resources.copy(LOOKUP_LOCATION, LOOKUPS, getDir());
         } catch (IOException e) {
-            log.error("write lookups error: {}", e.getMessage() );
-            throw new RuntimeException("write lookups error: " + e.getMessage());
+            log.error("Error while adding Concord lookup plugins: {}", e.getMessage(), e);
+            throw new RuntimeException("Error while adding Concord lookup plugins: " + e.getMessage());
         }
 
         return this;

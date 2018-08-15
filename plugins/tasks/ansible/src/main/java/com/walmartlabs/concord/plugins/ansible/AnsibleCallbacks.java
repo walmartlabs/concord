@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,10 +34,9 @@ public class AnsibleCallbacks {
     private static final Logger log = LoggerFactory.getLogger(AnsibleCallbacks.class);
 
     private static final String CALLBACK_LOCATION = "/com/walmartlabs/concord/plugins/ansible/callback";
+    private static final String CALLBACK_PLUGINS_DIR = "_callbacks";
     private static final String[] CALLBACKS = new String[]{"concord_events.py",
             "concord_trace.py", "concord_protectdata.py", "concord_strategy_enforce.py", "concord_out_vars.py"};
-
-    private static final String CALLBACK_PLUGINS_DIR = "_callbacks";
 
     private final Path tmpDir;
 
@@ -64,8 +63,8 @@ public class AnsibleCallbacks {
         try {
             Resources.copy(CALLBACK_LOCATION, CALLBACKS, getDir());
         } catch (IOException e) {
-            log.error("write callbacks error: {}", e.getMessage() );
-            throw new RuntimeException("write callbacks error: " + e.getMessage());
+            log.error("Error while adding Concord callback plugins: {}", e.getMessage(), e);
+            throw new RuntimeException("Error while adding Concord callback plugins: " + e.getMessage());
         }
     }
 
@@ -77,6 +76,7 @@ public class AnsibleCallbacks {
         config.getDefaults()
                 .prependPath("callback_plugins", CALLBACK_PLUGINS_DIR)
                 .put("stdout_callback", "concord_protectdata");
+
         return this;
     }
 
