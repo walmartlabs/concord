@@ -1,0 +1,4 @@
+flows:
+  default:
+  # use a local file and a process argument to create the message
+  - log: "${resource.asString('file.txt')}, ${name}!"

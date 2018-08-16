@@ -1,0 +1,11 @@
+flows:
+  default:
+  # uses the specified directory as the process payload
+  - task: concord
+    in:
+      action: start
+      payload: example
+      arguments:
+        name: "Concord"
+      sync: true
+  - log: "Done! ${jobs[0]} is completed"
