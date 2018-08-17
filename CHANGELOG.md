@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: store project keys (used in `encrypt/decryptString`
+methods) in the DB;
+
+
+
 ## [0.85.0] - 2018-08-15
 
 ### Added

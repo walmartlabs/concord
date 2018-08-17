@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
+import com.walmartlabs.concord.server.org.secret.SecretVisibility;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -47,11 +48,11 @@ public class SecretDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration());
-        UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null, true);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null, true, new byte[0]);
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration());
-        UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, SecretStoreType.CONCORD,null);
+        UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, SecretStoreType.CONCORD, SecretVisibility.PUBLIC);
         secretDao.updateData(secretId, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();

@@ -56,9 +56,9 @@ public class ProjectResource implements Resource {
     private final ProjectDao projectDao;
     private final ProjectManager projectManager;
     private final ProjectAccessManager accessManager;
-    private final SecretManager secretManager;
     private final OrganizationDao orgDao;
     private final TeamDao teamDao;
+    private final EncryptedProjectValueManager encryptedValueManager;
 
     @Inject
     public ProjectResource(OrganizationManager orgManager,
@@ -67,13 +67,14 @@ public class ProjectResource implements Resource {
                            ProjectAccessManager accessManager,
                            SecretManager secretManager,
                            OrganizationDao orgDao,
-                           TeamDao teamDao) {
+                           TeamDao teamDao,
+                           EncryptedProjectValueManager encryptedValueManager) {
 
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.projectManager = projectManager;
         this.accessManager = accessManager;
-        this.secretManager = secretManager;
+        this.encryptedValueManager = encryptedValueManager;
         this.orgDao = orgDao;
         this.teamDao = teamDao;
     }
@@ -323,7 +324,7 @@ public class ProjectResource implements Resource {
         accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
 
         byte[] input = value.getBytes();
-        byte[] result = secretManager.encryptData(projectName, input);
+        byte[] result = encryptedValueManager.encrypt(projectId, input);
 
         return new EncryptValueResponse(result);
     }

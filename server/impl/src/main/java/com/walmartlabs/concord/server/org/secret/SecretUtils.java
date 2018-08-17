@@ -54,7 +54,8 @@ public final class SecretUtils {
 
     public static byte[] decrypt(byte[] input, byte[] password, byte[] salt) {
         try {
-            return IOUtils.toByteArray(decrypt(new ByteArrayInputStream(input), password, salt));
+            InputStream out = decrypt(new ByteArrayInputStream(input), password, salt);
+            return IOUtils.toByteArray(out);
         } catch (IOException e) {
             throw new SecurityException("Error decrypting a secret: " + e.getMessage());
         }
@@ -74,7 +75,7 @@ public final class SecretUtils {
     public static byte[] hash(byte[] in, byte[] salt) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("MD5");
         digest.update(salt);
-        return digest.digest(in);
+        return in != null ? digest.digest(in) : digest.digest();
     }
 
     private static Cipher init(byte[] password, byte[] salt, int mode) throws GeneralSecurityException {

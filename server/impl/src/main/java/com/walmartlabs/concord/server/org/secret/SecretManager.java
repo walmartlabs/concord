@@ -41,7 +41,6 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -73,7 +72,8 @@ public class SecretManager {
                          ProcessQueueDao processQueueDao,
                          SecretDao secretDao,
                          SecretStoreConfiguration secretCfg,
-                         SecretStoreProvider secretStoreProvider, UserDao userDao) {
+                         SecretStoreProvider secretStoreProvider,
+                         UserDao userDao) {
 
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
@@ -341,21 +341,6 @@ public class SecretManager {
                 .log();
 
         return id;
-    }
-
-    public byte[] encryptData(String projectName, byte[] data) {
-        byte[] pwd = projectName.getBytes();
-        return SecretUtils.encrypt(data, pwd, secretCfg.getProjectSecretsSalt());
-    }
-
-    public byte[] decryptData(String projectName, byte[] data) {
-        if (data.length > secretCfg.getMaxEncryptedStringLength()) {
-            throw new ValidationErrorsException("Value too big. Limit: " + secretCfg.getMaxEncryptedStringLength()
-                    + ", the data's size: " + data.length);
-        }
-
-        byte[] pwd = projectName.getBytes();
-        return SecretUtils.decrypt(data, pwd, secretCfg.getProjectSecretsSalt());
     }
 
     public Collection<SecretStore> getActiveSecretStores() {

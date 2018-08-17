@@ -29,13 +29,12 @@ import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import org.jooq.*;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
@@ -50,8 +49,6 @@ import static org.jooq.impl.DSL.*;
 
 @Named
 public class ProjectDao extends AbstractDao {
-
-    private static final Logger log = LoggerFactory.getLogger(ProjectDao.class);
 
     private final ObjectMapper objectMapper;
 
@@ -184,13 +181,13 @@ public class ProjectDao extends AbstractDao {
     }
 
     public UUID insert(UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
-                       ProjectVisibility visibility, boolean acceptsRawPayload) {
+                       ProjectVisibility visibility, boolean acceptsRawPayload, byte[] encryptedKey) {
 
-        return txResult(tx -> insert(tx, orgId, name, description, ownerId, cfg, visibility, acceptsRawPayload));
+        return txResult(tx -> insert(tx, orgId, name, description, ownerId, cfg, visibility, acceptsRawPayload, encryptedKey));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
-                       ProjectVisibility visibility, boolean acceptsRawPayload) {
+                       ProjectVisibility visibility, boolean acceptsRawPayload, byte[] encryptedKey) {
 
         if (visibility == null) {
             visibility = ProjectVisibility.PUBLIC;
@@ -203,14 +200,16 @@ public class ProjectDao extends AbstractDao {
                         PROJECTS.PROJECT_CFG,
                         PROJECTS.VISIBILITY,
                         PROJECTS.OWNER_ID,
-                        PROJECTS.ACCEPTS_RAW_PAYLOAD)
+                        PROJECTS.ACCEPTS_RAW_PAYLOAD,
+                        PROJECTS.SECRET_KEY)
                 .values(value(name),
                         value(description),
                         value(orgId),
                         field("?::jsonb", serialize(cfg)),
                         value(visibility.toString()),
                         value(ownerId),
-                        value(acceptsRawPayload))
+                        value(acceptsRawPayload),
+                        value(encryptedKey))
                 .returning(PROJECTS.PROJECT_ID)
                 .fetchOne()
                 .getProjectId();
@@ -366,6 +365,36 @@ public class ProjectDao extends AbstractDao {
                 .onDuplicateKeyUpdate()
                 .set(PROJECT_TEAM_ACCESS.ACCESS_LEVEL, level.toString())
                 .execute();
+    }
+
+    public byte[] getOrUpdateSecretKey(UUID projectId, Supplier<byte[]> keySupplier) {
+        return txResult(tx -> {
+            byte[] data = tx.select(PROJECTS.SECRET_KEY).from(PROJECTS)
+                    .where(PROJECTS.PROJECT_ID.eq(projectId))
+                    .fetchOne(PROJECTS.SECRET_KEY);
+
+            // fast path
+            if (data != null) {
+                return data;
+            }
+
+            // add the key if not exists
+            data = tx.select(PROJECTS.SECRET_KEY).from(PROJECTS)
+                    .where(PROJECTS.PROJECT_ID.eq(projectId))
+                    .forUpdate()
+                    .fetchOne(PROJECTS.SECRET_KEY);
+
+            if (data == null) {
+                data = keySupplier.get();
+
+                tx.update(PROJECTS)
+                        .set(PROJECTS.SECRET_KEY, data)
+                        .where(PROJECTS.PROJECT_ID.eq(projectId))
+                        .execute();
+            }
+
+            return data;
+        });
     }
 
     private String serialize(Map<String, Object> m) {

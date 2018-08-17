@@ -32,9 +32,9 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.secret.SecretException;
-import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
@@ -100,10 +100,10 @@ public class ProcessResource implements Resource {
     private final ProcessCheckpointManager checkpointManager;
     private final UserDao userDao;
     private final ProcessQueueDao processQueueDao;
-    private final SecretManager secretManager;
     private final SecretStoreConfiguration secretStoreCfg;
     private final ProcessStateArchiver stateArchiver;
     private final ProjectAccessManager projectAccessManager;
+    private final EncryptedProjectValueManager encryptedValueManager;
 
     @Inject
     public ProcessResource(ProcessManager processManager,
@@ -113,10 +113,11 @@ public class ProcessResource implements Resource {
                            ProcessStateManager stateManager,
                            ProcessCheckpointManager checkpointManager,
                            UserDao userDao,
-                           ProcessQueueDao processQueueDao, SecretManager secretManager,
+                           ProcessQueueDao processQueueDao,
                            SecretStoreConfiguration secretStoreCfg,
                            ProcessStateArchiver stateArchiver,
-                           ProjectAccessManager projectAccessManager) {
+                           ProjectAccessManager projectAccessManager,
+                           EncryptedProjectValueManager encryptedValueManager) {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
@@ -126,10 +127,10 @@ public class ProcessResource implements Resource {
         this.checkpointManager = checkpointManager;
         this.userDao = userDao;
         this.processQueueDao = processQueueDao;
-        this.secretManager = secretManager;
         this.secretStoreCfg = secretStoreCfg;
         this.stateArchiver = stateArchiver;
         this.projectAccessManager = projectAccessManager;
+        this.encryptedValueManager = encryptedValueManager;
     }
 
     /**
@@ -945,7 +946,7 @@ public class ProcessResource implements Resource {
 
         byte[] result;
         try {
-            result = secretManager.decryptData(p.getProjectName(), baos.toByteArray());
+            result = encryptedValueManager.decrypt(p.getProjectId(), baos.toByteArray());
         } catch (SecurityException e) {
             log.error("decrypt ['{}'] -> error", instanceId, e);
             throw new SecretException("Decrypt error: " + e.getMessage());

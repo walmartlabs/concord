@@ -20,13 +20,10 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
-import com.walmartlabs.concord.server.events.GithubWebhookService;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 
@@ -47,6 +44,7 @@ public class ProjectManager {
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
     private final AuditLog auditLog;
+    private final EncryptedProjectValueManager encryptedValueManager;
 
     @Inject
     public ProjectManager(ProjectDao projectDao,
@@ -54,7 +52,8 @@ public class ProjectManager {
                           ProjectRepositoryManager projectRepositoryManager,
                           ProjectAccessManager accessManager,
                           SecretManager secretManager,
-                          AuditLog auditLog) {
+                          AuditLog auditLog,
+                          EncryptedProjectValueManager encryptedValueManager) {
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -62,6 +61,7 @@ public class ProjectManager {
         this.accessManager = accessManager;
         this.secretManager = secretManager;
         this.auditLog = auditLog;
+        this.encryptedValueManager = encryptedValueManager;
     }
 
     public ProjectEntry get(UUID projectId) {
@@ -77,8 +77,10 @@ public class ProjectManager {
 
         UUID id = projectDao.txResult(tx -> {
             boolean acceptsRawPayload = entry.getAcceptsRawPayload() != null ? entry.getAcceptsRawPayload() : false;
+            byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
+
             UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), ownerId, entry.getCfg(),
-                    entry.getVisibility(), acceptsRawPayload);
+                    entry.getVisibility(), acceptsRawPayload, encryptedKey);
 
             if (repos != null) {
                 repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v));
