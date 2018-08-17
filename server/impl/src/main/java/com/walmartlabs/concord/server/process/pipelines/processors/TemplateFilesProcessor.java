@@ -42,11 +42,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Named
-@Singleton
 /**
  * Extracts template files into the workspace.
  */
+@Named
+@Singleton
 public class TemplateFilesProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(TemplateFilesProcessor.class);
@@ -79,7 +79,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         try {
             URI uri = getUri(instanceId, s);
             Path template = dependencyManager.resolveSingle(uri).getPath();
-            payload = process(payload, template);
+            extract(payload, template);
 
             return chain.process(payload);
         } catch (URISyntaxException | IOException e) {
@@ -113,7 +113,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         return new URI(o.get());
     }
 
-    private Payload process(Payload payload, Path template) throws IOException {
+    private void extract(Payload payload, Path template) throws IOException {
         UUID instanceId = payload.getInstanceId();
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
@@ -121,6 +121,5 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         IOUtils.unzip(template, workspacePath, true);
 
         log.debug("process ['{}', '{}'] -> done", instanceId, template);
-        return payload;
     }
 }

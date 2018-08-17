@@ -24,13 +24,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @JsonInclude(Include.NON_EMPTY)
 public class UserActivityResponse implements Serializable {

@@ -39,6 +39,7 @@ import java.util.Map;
 public class ResumeDataMergingProcessor implements PayloadProcessor {
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         // configuration from the user's request
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());

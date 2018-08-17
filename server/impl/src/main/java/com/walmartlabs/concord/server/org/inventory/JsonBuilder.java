@@ -30,7 +30,7 @@ import java.util.*;
 
 public final class JsonBuilder {
 
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public static Object build(List<InventoryDataItem> dataItems) throws IOException {
         ObjectNode root = mapper.createObjectNode();

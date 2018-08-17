@@ -63,7 +63,7 @@ public class AgentCommandsDao extends AbstractDao {
         tx(tx -> {
             BatchBindStep q = tx.batch(tx.insertInto(AGENT_COMMANDS, AGENT_COMMANDS.COMMAND_ID, AGENT_COMMANDS.AGENT_ID,
                     AGENT_COMMANDS.COMMAND_STATUS, AGENT_COMMANDS.CREATED_AT,
-                    AGENT_COMMANDS.COMMAND_DATA).values((UUID) null, (String) null, (String) null, (Timestamp) null, (byte[]) null));
+                    AGENT_COMMANDS.COMMAND_DATA).values((UUID) null, null, null, null, null));
 
             for (AgentCommand ac : ace) {
                 q.bind(value(ac.getCommandId()), value(ac.getAgentId()),

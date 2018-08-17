@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.*;
-import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -65,7 +64,6 @@ public class ProjectResource implements Resource {
                            ProjectDao projectDao,
                            ProjectManager projectManager,
                            ProjectAccessManager accessManager,
-                           SecretManager secretManager,
                            OrganizationDao orgDao,
                            TeamDao teamDao,
                            EncryptedProjectValueManager encryptedValueManager) {
@@ -195,7 +193,7 @@ public class ProjectResource implements Resource {
         }
 
         String[] ps = cfgPath(path);
-        if (ps == null || ps.length < 1) {
+        if (ps.length < 1) {
             if (!(data instanceof Map)) {
                 throw new ValidationErrorsException("Expected a JSON object: " + data);
             }
@@ -247,7 +245,7 @@ public class ProjectResource implements Resource {
         }
 
         String[] ps = cfgPath(path);
-        if (ps == null || ps.length == 0) {
+        if (ps.length == 0) {
             cfg = null;
         } else {
             ConfigurationUtils.delete(cfg, ps);

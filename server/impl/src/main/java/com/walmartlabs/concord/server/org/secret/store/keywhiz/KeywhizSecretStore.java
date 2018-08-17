@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.secretStore.keywhiz;
+package com.walmartlabs.concord.server.org.secret.store.keywhiz;
 
 /*-
  * *****

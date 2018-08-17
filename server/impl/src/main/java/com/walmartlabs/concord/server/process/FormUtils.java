@@ -62,7 +62,9 @@ public final class FormUtils {
                 int size = v.size();
                 if (size == 0) {
                     return;
-                } else if (size == 1) {
+                }
+
+                if (size == 1) {
                     m.put(k, v.get(0));
                 } else {
                     m.put(k, v);

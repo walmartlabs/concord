@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
@@ -35,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Named
@@ -50,7 +50,7 @@ public class GithubWebhookManager {
     @Inject
     public GithubWebhookManager(GithubConfiguration cfg) {
         this.cfg = cfg;
-        this.client = Suppliers.memoize(this::connect);
+        this.client = Suppliers.memoize(this::connect)::get;
     }
 
     public Long register(String githubRepoName) {

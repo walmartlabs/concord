@@ -58,6 +58,7 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
@@ -90,8 +91,8 @@ public class TemplateScriptProcessor implements PayloadProcessor {
             b.put(INPUT_REQUEST_DATA_KEY, meta != null ? meta : Collections.emptyMap());
 
             result = scriptEngine.eval(r, b);
-            if (result == null || !(result instanceof Map)) {
-                throw new ProcessException(instanceId, "Invalid template result. Expected a Java Map, got " + result);
+            if (!(result instanceof Map)) {
+                throw new ProcessException(instanceId, "Invalid template result. Expected a Java Map instance, got " + result);
             }
         } catch (IOException | ScriptException e) {
             logManager.error(instanceId, "Template script execution error", e);

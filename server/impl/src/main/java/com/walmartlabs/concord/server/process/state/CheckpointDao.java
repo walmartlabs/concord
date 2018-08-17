@@ -47,7 +47,7 @@ public class CheckpointDao extends AbstractDao {
         tx(tx -> {
             String sql = tx.insertInto(PROCESS_CHECKPOINTS)
                     .columns(PROCESS_CHECKPOINTS.INSTANCE_ID, PROCESS_CHECKPOINTS.CHECKPOINT_ID, PROCESS_CHECKPOINTS.CHECKPOINT_DATA)
-                    .values((UUID) null, (UUID) null, null)
+                    .values((UUID) null, null, null)
                     .getSQL();
 
             tx.connection(conn -> {

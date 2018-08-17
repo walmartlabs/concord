@@ -221,7 +221,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         String username = s.substring(0, idx).trim();
-        String password = s.substring(idx + 1, s.length());
+        String password = s.substring(idx + 1);
 
         return new UsernamePasswordToken(username, password);
     }

@@ -74,6 +74,7 @@ public final class MultipartUtils {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static Object computeStringMultipartEntry(Object oldValue, String currentValue) {
         if (Objects.isNull(oldValue)) {
             return currentValue;

@@ -57,7 +57,7 @@ import static org.jooq.impl.DSL.*;
 @Path("/api/service/console/user")
 public class UserActivityResource implements Resource {
 
-    private final Set<ProcessStatus> ORG_VISIBLE_STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.RUNNING));
+    private final Set<ProcessStatus> ORG_VISIBLE_STATUSES = new HashSet<>(Collections.singletonList(ProcessStatus.RUNNING));
 
     private final UserDao userDao;
     private final ProcessQueueDao processDao;

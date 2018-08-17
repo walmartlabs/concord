@@ -129,6 +129,7 @@ public final class PayloadBuilder {
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public PayloadBuilder configuration(Map<String, Object> cfg) {
         if (cfg == null) {
             cfg = Collections.emptyMap();

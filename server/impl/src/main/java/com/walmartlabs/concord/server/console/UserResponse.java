@@ -25,11 +25,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
-import com.walmartlabs.concord.server.org.team.TeamEntry;
 
 import java.io.Serializable;
 import java.util.Set;
-import java.util.UUID;
 
 @JsonInclude(Include.NON_EMPTY)
 public class UserResponse implements Serializable {
