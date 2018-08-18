@@ -28,6 +28,7 @@ import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -55,8 +56,9 @@ public class Grammar {
     private static Object toValue(KV<String, Object> kv) {
         Object v = kv.getValue();
         if (v == null && kv.getKey() != null) {
-            return false;
+            return null;
         }
+
         return v;
     }
 
@@ -65,8 +67,9 @@ public class Grammar {
             return Collections.emptyMap();
         }
 
-        return values.stream()
-                .collect(Collectors.toMap(Entry::getKey, Grammar::toValue));
+        Map<String, Object> m = new HashMap<>();
+        values.stream().forEach(kv -> m.put(kv.getKey(), Grammar.toValue(kv)));
+        return m;
     }
 
     // Grammar rules

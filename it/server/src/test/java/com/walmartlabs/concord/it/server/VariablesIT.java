@@ -151,4 +151,23 @@ public class VariablesIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*" + varA + ".*" + varB + ".*", ab);
     }
+
+    @Test(timeout = 60000)
+    public void testSetVar() throws Exception {
+        byte[] payload = archive(VariablesIT.class.getResource("setVar").toURI(),
+                ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*shouldBeNull: $", ab);
+        assertLog(".*nested\\.var: nested\\.var.*", ab);
+    }
 }

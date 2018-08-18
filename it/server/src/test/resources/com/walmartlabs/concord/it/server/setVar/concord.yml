@@ -1,0 +1,9 @@
+flows:
+  default:
+  - set:
+      shouldBeNull: null
+      nested:
+        var: "nested.var"
+
+  - log: "shouldBeNull: ${shouldBeNull}"
+  - log: "nested.var: ${nested.var}"

@@ -5,7 +5,11 @@
 ### Added
 
 - concord-server: store project keys (used in `encrypt/decryptString`
-methods) in the DB;
+methods) in the DB.
+
+### Changed
+
+- project-model: fix handling of `null` values in `set` step.
 
 
 

@@ -35,12 +35,12 @@ public class VariablesTask implements Task {
 
     private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
 
-    public Object get(Context ctx, String key, Object defaultValue) {
+    public Object get(@InjectVariable("context") Context ctx, String key, Object defaultValue) {
         Object v = ctx.getVariable(key);
         return v != null ? v : defaultValue;
     }
 
-    public void set(Context ctx, String targetKey, String sourceKey, String defaultKey) {
+    public void set(@InjectVariable("context") Context ctx, String targetKey, String sourceKey, String defaultKey) {
         Object v = ctx.getVariable(sourceKey);
         if (v == null) {
             v = ctx.getVariable(defaultKey);
@@ -48,7 +48,7 @@ public class VariablesTask implements Task {
         ctx.setVariable(targetKey, v);
     }
 
-    public void set(@InjectVariable("context") Context ctx1, Context ctx, Map<String, Object> vars) {
+    public void set(@InjectVariable("context") Context ctx, Map<String, Object> vars) {
         vars.forEach((k, v) -> {
             if (isNestedVariable(k)) {
                 evalNestedVariable(ctx, k, v);
@@ -82,21 +82,17 @@ public class VariablesTask implements Task {
     }
 
     private void evalNestedVariable(Context ctx, String expr, Object value) {
-        try {
-            ELResolver r = new VariablesResolver(ctx);
+        ELResolver r = new VariablesResolver(ctx);
 
-            StandardELContext sc = new StandardELContext(expressionFactory);
-            sc.putContext(ExpressionFactory.class, expressionFactory);
-            sc.addELResolver(r);
+        StandardELContext sc = new StandardELContext(expressionFactory);
+        sc.putContext(ExpressionFactory.class, expressionFactory);
+        sc.addELResolver(r);
 
-            VariableMapper vm = sc.getVariableMapper();
-            vm.setVariable(InternalConstants.Context.CONTEXT_KEY, expressionFactory.createValueExpression(ctx, Context.class));
+        VariableMapper vm = sc.getVariableMapper();
+        vm.setVariable(InternalConstants.Context.CONTEXT_KEY, expressionFactory.createValueExpression(ctx, Context.class));
 
-            ValueExpression x = expressionFactory.createValueExpression(sc, "${" + expr + "}", Object.class);
-            x.setValue(sc, value);
-        } catch (Exception e) {
-            throw e;
-        }
+        ValueExpression x = expressionFactory.createValueExpression(sc, "${" + expr + "}", Object.class);
+        x.setValue(sc, value);
     }
 
     private static class VariablesResolver extends ELResolver {
