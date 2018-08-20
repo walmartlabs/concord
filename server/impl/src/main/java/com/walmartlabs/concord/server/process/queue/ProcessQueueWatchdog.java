@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.state.ProcessMetadataManager;
+import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +105,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
     private final ProcessQueueDao queueDao;
     private final LogManager logManager;
     private final WatchdogDao watchdogDao;
+    private final UserDao userDao;
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
 
@@ -116,6 +118,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                                 ProcessQueueDao queueDao,
                                 LogManager logManager,
                                 WatchdogDao watchdogDao,
+                                UserDao userDao,
                                 PayloadManager payloadManager,
                                 ProcessManager processManager) {
         this.cfg = cfg;
@@ -123,6 +126,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         this.queueDao = queueDao;
         this.logManager = logManager;
         this.watchdogDao = watchdogDao;
+        this.userDao = userDao;
         this.payloadManager = payloadManager;
         this.processManager = processManager;
     }
@@ -218,7 +222,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                         req.put(InternalConstants.Request.TAGS_KEY, null); // clear tags
 
                         Payload payload = payloadManager.createFork(childId, parent.instanceId, e.handlerKind,
-                                parent.initiator, parent.projectId, req, null);
+                                parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null);
 
                         processManager.startFork(payload, false);
 
@@ -294,7 +298,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         public List<ProcessEntry> poll(DSLContext tx, PollEntry entry, Field<Timestamp> maxAge, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
-            return tx.select(q.INSTANCE_ID, q.PROJECT_ID, q.INITIATOR)
+            return tx.select(q.INSTANCE_ID, q.PROJECT_ID, q.INITIATOR_ID)
                     .from(q)
                     .where(q.PROCESS_KIND.in(Utils.toString(HANDLED_PROCESS_KINDS))
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
@@ -349,10 +353,10 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .and(PROCESS_STATE.ITEM_PATH.eq(marker))));
         }
 
-        private static ProcessEntry toEntry(Record3<UUID, UUID, String> r) {
+        private static ProcessEntry toEntry(Record3<UUID, UUID, UUID> r) {
             return new ProcessEntry(r.get(PROCESS_QUEUE.INSTANCE_ID),
                     r.get(PROCESS_QUEUE.PROJECT_ID),
-                    r.get(PROCESS_QUEUE.INITIATOR));
+                    r.get(PROCESS_QUEUE.INITIATOR_ID));
         }
     }
 
@@ -360,12 +364,12 @@ public class ProcessQueueWatchdog implements BackgroundTask {
 
         private final UUID instanceId;
         private final UUID projectId;
-        private final String initiator;
+        private final UUID initiatorId;
 
-        private ProcessEntry(UUID instanceId, UUID projectId, String initiator) {
+        private ProcessEntry(UUID instanceId, UUID projectId, UUID initiatorId) {
             this.instanceId = instanceId;
             this.projectId = projectId;
-            this.initiator = initiator;
+            this.initiatorId = initiatorId;
         }
     }
 }

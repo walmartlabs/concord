@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,6 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -95,7 +94,7 @@ public class PayloadManager {
                 .repository(repoId)
                 .entryPoint(entryPoint)
                 .outExpressions(out)
-                .initiator(initiator.getUsername())
+                .initiator(initiator.getId(), initiator.getUsername())
                 .build();
     }
 
@@ -105,20 +104,21 @@ public class PayloadManager {
      *
      * @param instanceId
      * @param parentInstanceId
+     * @param initiatorId
      * @param initiator
      * @param input
-     * @deprecated prefer {@link #createPayload(MultipartInput)}
      * @return
+     * @deprecated prefer {@link #createPayload(MultipartInput)}
      */
     @Deprecated
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, MultipartInput input, String[] out) throws IOException {
 
         return new PayloadBuilder(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .with(input)
                 .apply(p(entryPoint))
-                .initiator(initiator)
+                .initiator(initiatorId, initiator)
                 .outExpressions(out)
                 .build();
     }
@@ -128,18 +128,19 @@ public class PayloadManager {
      *
      * @param instanceId
      * @param parentInstanceId
+     * @param initiatorId
      * @param initiator
      * @param request
-     * @deprecated prefer {@link #createPayload(MultipartInput)}
      * @return
+     * @deprecated prefer {@link #createPayload(MultipartInput)}
      */
     @Deprecated
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, Map<String, Object> request, String[] out) throws IOException {
 
         return new PayloadBuilder(instanceId)
                 .parentInstanceId(parentInstanceId)
-                .initiator(initiator)
+                .initiator(initiatorId, initiator)
                 .apply(p(entryPoint))
                 .configuration(request)
                 .outExpressions(out)
@@ -151,18 +152,19 @@ public class PayloadManager {
      *
      * @param instanceId
      * @param parentInstanceId
+     * @param initiatorId
      * @param initiator
      * @param in
-     * @deprecated prefer {@link #createPayload(MultipartInput)}
      * @return
+     * @deprecated prefer {@link #createPayload(MultipartInput)}
      */
     @Deprecated
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, InputStream in, String[] out) throws IOException {
 
         return new PayloadBuilder(instanceId)
                 .parentInstanceId(parentInstanceId)
-                .initiator(initiator)
+                .initiator(initiatorId, initiator)
                 .apply(p(entryPoint))
                 .workspace(in)
                 .outExpressions(out)
@@ -174,18 +176,19 @@ public class PayloadManager {
      *
      * @param instanceId
      * @param parentInstanceId
+     * @param initiatorId
      * @param initiator
      * @param in
-     * @deprecated prefer {@link #createPayload(MultipartInput)}
      * @return
+     * @deprecated prefer {@link #createPayload(MultipartInput)}
      */
     @Deprecated
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, String initiator,
+    public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  InputStream in, String[] out) throws IOException {
 
         return new PayloadBuilder(instanceId)
                 .parentInstanceId(parentInstanceId)
-                .initiator(initiator)
+                .initiator(initiatorId, initiator)
                 .workspace(in)
                 .outExpressions(out)
                 .build();
@@ -218,12 +221,14 @@ public class PayloadManager {
      *
      * @param instanceId
      * @param parentInstanceId
+     * @param initiatorId
+     * @param initiator
      * @param projectId
      * @param req
      * @return
      */
     public Payload createFork(UUID instanceId, UUID parentInstanceId, ProcessKind kind,
-                              String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
+                              UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
 
         Path tmpDir = IOUtils.createTempDir("payload");
         if (!stateManager.export(parentInstanceId, copyTo(tmpDir))) {
@@ -233,7 +238,7 @@ public class PayloadManager {
         return new PayloadBuilder(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .kind(kind)
-                .initiator(initiator)
+                .initiator(initiatorId, initiator)
                 .project(projectId)
                 .configuration(req)
                 .outExpressions(out)

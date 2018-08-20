@@ -51,9 +51,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.subject.Subject;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,10 +154,11 @@ public class ProcessResource implements Resource {
         assertInstanceId(parentInstanceId);
 
         UUID instanceId = UUID.randomUUID();
+        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), in, out);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), in, out);
         } catch (IOException e) {
             log.error("start -> error creating a payload: {}", e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -220,10 +219,11 @@ public class ProcessResource implements Resource {
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
         EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
+        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, req, out);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, req, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -297,10 +297,11 @@ public class ProcessResource implements Resource {
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
         EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
+        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, input, out);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, input, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -343,10 +344,11 @@ public class ProcessResource implements Resource {
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
         EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
+        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, getInitiator(), ep, in, out);
+            payload = payloadManager.createPayload(instanceId, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, in, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -411,11 +413,12 @@ public class ProcessResource implements Resource {
 
         UUID instanceId = UUID.randomUUID();
         UUID projectId = parent.getProjectId();
+        UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
             payload = payloadManager.createFork(instanceId, parentInstanceId, ProcessKind.DEFAULT,
-                    getInitiator(), projectId, req, out);
+                    userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out);
         } catch (IOException e) {
             log.error("fork ['{}', '{}'] -> error creating a payload: {}", instanceId, parentInstanceId, e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -962,8 +965,8 @@ public class ProcessResource implements Resource {
     private void assertProcessStateAccess(ProcessEntry p) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
 
-        String initiator = p.getInitiator();
-        if (principal.getUsername().equals(initiator)) {
+        UUID initiatorId = p.getInitiatorId();
+        if (principal.getId().equals(initiatorId)) {
             // process owners should be able to download the process' state
             return;
         }
@@ -979,8 +982,8 @@ public class ProcessResource implements Resource {
     private void assertProcessCheckpointAccess(ProcessEntry p) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
 
-        String initiator = p.getInitiator();
-        if (principal.getUsername().equals(initiator)) {
+        UUID initiatorId = p.getInitiatorId();
+        if (principal.getId().equals(initiatorId)) {
             // process owners should be able to restore the process from checkpoint
             return;
         }
@@ -1037,16 +1040,6 @@ public class ProcessResource implements Resource {
 
         Calendar c = p.getValue();
         return new Timestamp(c.getTimeInMillis());
-    }
-
-    private static String getInitiator() {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject == null || !subject.isAuthenticated()) {
-            return null;
-        }
-
-        UserPrincipal p = (UserPrincipal) subject.getPrincipal();
-        return p.getUsername();
     }
 
     private static boolean isEmpty(InputStream in) {

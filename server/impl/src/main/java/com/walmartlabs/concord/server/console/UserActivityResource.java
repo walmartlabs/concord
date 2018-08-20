@@ -83,7 +83,7 @@ public class UserActivityResource implements Resource {
 
         Map<String, List<ProjectProcesses>> orgProcesses = processStatsDao.processByOrgs(maxProjectsPerOrg, orgIds, ORG_VISIBLE_STATUSES, t);
 
-        Map<String, Integer> stats = processStatsDao.getCountByStatuses(orgIds, t, user.getUsername());
+        Map<String, Integer> stats = processStatsDao.getCountByStatuses(orgIds, t, user.getId());
 
         ProcessFilter filter = ProcessFilter.builder()
                 .includeWithoutProjects(true)
@@ -109,22 +109,22 @@ public class UserActivityResource implements Resource {
             super(cfg);
         }
 
-        public Map<String, Integer> getCountByStatuses(Set<UUID> orgIds, Timestamp fromUpdatedAt, String initiator) {
+        public Map<String, Integer> getCountByStatuses(Set<UUID> orgIds, Timestamp fromUpdatedAt, UUID initiatorId) {
             try (DSLContext tx = DSL.using(cfg)) {
                 SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
                         .from(PROJECTS)
                         .where(PROJECTS.ORG_ID.in(orgIds));
 
                 SelectConditionStep<Record5<Integer, Integer, Integer, Integer, Integer>> q = tx.select(
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(FINISHED.name()), 1).otherwise(0).as(FINISHED.name()),
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
-                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INITIATOR.eq(initiator)
-                                .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
-                                .and(or(PROCESS_QUEUE.PROJECT_ID.in(projectIds), PROCESS_QUEUE.PROJECT_ID.isNull())));
+                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
+                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
+                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(FINISHED.name()), 1).otherwise(0).as(FINISHED.name()),
+                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
+                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
+                        .from(V_PROCESS_QUEUE)
+                        .where(V_PROCESS_QUEUE.INITIATOR_ID.eq(initiatorId)
+                                .and(V_PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
+                                .and(or(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds), V_PROCESS_QUEUE.PROJECT_ID.isNull())));
 
                 Record5<BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal> r = tx.select(
                         sum(q.field(RUNNING.name(), Integer.class)),

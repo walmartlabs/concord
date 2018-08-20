@@ -46,9 +46,9 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
         ProcessKind kind = payload.getHeader(Payload.PROCESS_KIND, ProcessKind.DEFAULT);
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
-        String initiator = payload.getHeader(Payload.INITIATOR);
+        UUID initiatorId = payload.getHeader(Payload.INITIATOR_ID);
 
-        queueDao.insertInitial(instanceId, kind, parentInstanceId, projectId, initiator);
+        queueDao.insertInitial(instanceId, kind, parentInstanceId, projectId, initiatorId);
 
         return chain.process(payload);
     }

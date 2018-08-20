@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.events;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,8 +29,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadBuilder;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +114,7 @@ public abstract class AbstractEventResource {
     private UUID startProcess(UUID orgId, UUID projectId, UUID repoId, String entryPoint, List<String> activeProfiles, Map<String, Object> args) throws IOException {
         UUID instanceId = UUID.randomUUID();
 
-        String initiator = getInitiator();
+        UserPrincipal initiator = UserPrincipal.assertCurrent();
 
         Map<String, Object> request = new HashMap<>();
         if (activeProfiles != null) {
@@ -127,26 +125,16 @@ public abstract class AbstractEventResource {
         }
 
         Payload payload = new PayloadBuilder(instanceId)
-                    .initiator(initiator)
-                    .organization(orgId)
-                    .project(projectId)
-                    .repository(repoId)
-                    .entryPoint(entryPoint)
-                    .configuration(request)
-                    .build();
+                .initiator(initiator.getId(), initiator.getUsername())
+                .organization(orgId)
+                .project(projectId)
+                .repository(repoId)
+                .entryPoint(entryPoint)
+                .configuration(request)
+                .build();
 
         processManager.start(payload, false);
         return instanceId;
-    }
-
-    private static String getInitiator() {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject == null || !subject.isAuthenticated()) {
-            return null;
-        }
-
-        UserPrincipal p = (UserPrincipal) subject.getPrincipal();
-        return p != null ? p.getUsername() : null;
     }
 
     public interface TriggerDefinitionEnricher {

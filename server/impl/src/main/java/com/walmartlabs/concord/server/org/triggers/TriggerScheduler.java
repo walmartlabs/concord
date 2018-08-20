@@ -43,7 +43,9 @@ public class TriggerScheduler implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerScheduler.class);
 
+    private static final UUID INITIATOR_ID = UUID.fromString("1f9ae527-e7ab-42c0-b0e5-0092f9285f22");
     private static final String INITIATOR = "cron";
+
     private static final String REALM = "cron";
     private static final String EVENT_SOURCE = "cron";
 
@@ -148,7 +150,7 @@ public class TriggerScheduler implements BackgroundTask {
             Payload payload;
             try {
                 payload = new PayloadBuilder(instanceId)
-                        .initiator(INITIATOR)
+                        .initiator(INITIATOR_ID, INITIATOR)
                         .organization(orgId)
                         .project(projectId)
                         .repository(repoId)

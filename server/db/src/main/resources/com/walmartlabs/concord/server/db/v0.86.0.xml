@@ -11,4 +11,105 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="86200" author="muhammad.wasi@walmart.com">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="PROCESS_QUEUE" columnName="INITIATOR"/>
+        </preConditions>
+
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="INITIATOR_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_QUEUE"
+                                 baseColumnNames="INITIATOR_ID"
+                                 constraintName="FK_PQ_INITIATOR_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="SET NULL"/>
+
+        <createProcedure>
+            create or replace function UPDATE_PROCESS_QUEUE_INITIATOR()
+            returns trigger as
+            $$
+            BEGIN
+                if NEW.INITIATOR is null then
+                    NEW.INITIATOR := (select U.USERNAME from USERS U where U.USER_ID = new.initiator_id);
+                end if;
+                return new;
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+
+        <createProcedure>
+            create or replace function UPDATE_PROCESS_QUEUE_INITIATOR_ID()
+            returns trigger as
+            $$
+            begin
+                if NEW.INITIATOR_ID is null then
+                    NEW.INITIATOR_ID := (select U.USER_ID from USERS U where U.USERNAME = new.initiator);
+                end if;
+                return NEW;
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+
+        <!-- temporary triggers to mitigate data inconsistency during blue-green deployment -->
+        <sql>
+            drop trigger if exists UPDATE_PROCESS_QUEUE_INITIATOR on PROCESS_QUEUE;
+            drop trigger if exists UPDATE_PROCESS_QUEUE_INITIATOR_ID on PROCESS_QUEUE;
+            create trigger UPDATE_PROCESS_QUEUE_INITIATOR_ID before insert on PROCESS_QUEUE for each row execute procedure UPDATE_PROCESS_QUEUE_INITIATOR_ID();
+        </sql>
+
+        <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
+            select
+                q1.INSTANCE_ID,
+                q1.PROCESS_KIND,
+                q1.PARENT_INSTANCE_ID,
+                prj.ORG_ID,
+                prj.ORG_NAME,
+                prj.PROJECT_ID,
+                prj.PROJECT_NAME,
+                q1.REPO_ID,
+                repos.REPO_NAME,
+                q1.REPO_URL,
+                q1.REPO_PATH,
+                q1.COMMIT_ID,
+                q1.COMMIT_MSG,
+                q1.CREATED_AT,
+                users.username as INITIATOR,
+                q1.INITIATOR_ID,
+                q1.CURRENT_STATUS,
+                q1.LAST_AGENT_ID,
+                q1.LAST_UPDATED_AT,
+                q1.PROCESS_TAGS,
+                array(select q2.INSTANCE_ID from PROCESS_QUEUE as q2 where q2.PARENT_INSTANCE_ID = q1.INSTANCE_ID) as CHILDREN_IDS
+
+            from PROCESS_QUEUE as q1
+
+            left join
+                (select
+                PROJECT_ID,
+                PROJECT_NAME,
+                ORG_ID,
+                (select ORG_NAME from ORGANIZATIONS where ORGANIZATIONS.ORG_ID = PROJECTS.ORG_ID)
+                from PROJECTS) prj
+                on prj.PROJECT_ID = q1.PROJECT_ID
+
+            left join
+                REPOSITORIES repos on repos.REPO_ID = q1.REPO_ID
+
+            left join
+                USERS users on users.user_id = q1.INITIATOR_ID
+        </createView>
+
+        <sql>
+            update process_queue p
+            set initiator_id = u.user_id
+            from users u
+            where u.username = p.initiator
+        </sql>
+    </changeSet>
 </databaseChangeLog>

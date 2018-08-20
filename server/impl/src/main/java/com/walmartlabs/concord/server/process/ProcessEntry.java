@@ -48,6 +48,7 @@ public class ProcessEntry implements Serializable {
     private final String commitId;
     private final String commitMsg;
     private final String initiator;
+    private final UUID initiatorId;
     private final ProcessStatus status;
     private final String lastAgentId;
     private final String logFileName;
@@ -75,6 +76,7 @@ public class ProcessEntry implements Serializable {
                         @JsonProperty("commitMsg") String commitMsg,
                         @JsonProperty("createdAt") Date createdAt,
                         @JsonProperty("initiator") String initiator,
+                        @JsonProperty("initiatorId") UUID initiatorId,
                         @JsonProperty("lastUpdatedAt") Date lastUpdatedAt,
                         @JsonProperty("status") ProcessStatus status,
                         @JsonProperty("lastAgentId") String lastAgentId,
@@ -96,6 +98,7 @@ public class ProcessEntry implements Serializable {
         this.commitMsg = commitMsg;
         this.createdAt = createdAt;
         this.initiator = initiator;
+        this.initiatorId = initiatorId;
         this.lastUpdatedAt = lastUpdatedAt;
         this.status = status;
         this.lastAgentId = lastAgentId;
@@ -167,6 +170,10 @@ public class ProcessEntry implements Serializable {
         return initiator;
     }
 
+    public UUID getInitiatorId() {
+        return initiatorId;
+    }
+
     public ProcessStatus getStatus() {
         return status;
     }
@@ -208,6 +215,7 @@ public class ProcessEntry implements Serializable {
                 ", commitId='" + commitId + '\'' +
                 ", commitMsg='" + commitMsg + '\'' +
                 ", initiator='" + initiator + '\'' +
+                ", initiatorId='" + initiatorId + '\'' +
                 ", status=" + status +
                 ", lastAgentId='" + lastAgentId + '\'' +
                 ", logFileName='" + logFileName + '\'' +

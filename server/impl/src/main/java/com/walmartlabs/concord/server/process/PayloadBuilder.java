@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.process.ProcessKind;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 
@@ -144,10 +143,15 @@ public final class PayloadBuilder {
         return this;
     }
 
-    public PayloadBuilder initiator(String initiator) {
+    public PayloadBuilder initiator(UUID initiatorId, String initiator) {
+        if (initiatorId != null) {
+            payload = payload.putHeader(Payload.INITIATOR_ID, initiatorId);
+        }
+
         if (initiator != null) {
             payload = payload.putHeader(Payload.INITIATOR, initiator);
         }
+
         return this;
     }
 

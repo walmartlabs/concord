@@ -76,13 +76,13 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void insertInitial(UUID instanceId, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, String initiator) {
+                              UUID projectId, UUID initiatorId) {
 
-        tx(tx -> insertInitial(tx, instanceId, kind, parentInstanceId, projectId, initiator));
+        tx(tx -> insertInitial(tx, instanceId, kind, parentInstanceId, projectId, initiatorId));
     }
 
     public void insertInitial(DSLContext tx, UUID instanceId, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, String initiator) {
+                              UUID projectId, UUID initiatorId) {
 
         tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
@@ -90,7 +90,7 @@ public class ProcessQueueDao extends AbstractDao {
                         PROCESS_QUEUE.PARENT_INSTANCE_ID,
                         PROCESS_QUEUE.PROJECT_ID,
                         PROCESS_QUEUE.CREATED_AT,
-                        PROCESS_QUEUE.INITIATOR,
+                        PROCESS_QUEUE.INITIATOR_ID,
                         PROCESS_QUEUE.CURRENT_STATUS,
                         PROCESS_QUEUE.LAST_UPDATED_AT)
                 .values(value(instanceId),
@@ -98,7 +98,7 @@ public class ProcessQueueDao extends AbstractDao {
                         value(parentInstanceId),
                         value(projectId),
                         currentTimestamp(),
-                        value(initiator),
+                        value(initiatorId),
                         value(ProcessStatus.PREPARING.toString()),
                         currentTimestamp())
                 .execute();
@@ -524,6 +524,7 @@ public class ProcessQueueDao extends AbstractDao {
                 r.getCommitMsg(),
                 r.getCreatedAt(),
                 r.getInitiator(),
+                r.getInitiatorId(),
                 r.getLastUpdatedAt(),
                 ProcessStatus.valueOf(r.getCurrentStatus()),
                 r.getLastAgentId(),

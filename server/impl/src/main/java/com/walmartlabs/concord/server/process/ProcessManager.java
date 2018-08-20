@@ -291,7 +291,7 @@ public class ProcessManager {
             return;
         }
 
-        if (p.getUsername().equals(e.getInitiator())) {
+        if (p.getId().equals(e.getInitiatorId())) {
             // process owners can kill their own processes
             return;
         }

@@ -37,8 +37,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -183,13 +181,14 @@ public class ProjectProcessResource implements Resource {
             UUID orgId = getOrgId(orgName);
             UUID projectId = getProjectId(orgId, projectName);
             UUID repoId = getRepoId(projectId, repoName);
+            UserPrincipal initiator = UserPrincipal.assertCurrent();
 
             Payload payload = new PayloadBuilder(instanceId)
                     .organization(orgId)
                     .project(projectId)
                     .repository(repoId)
                     .entryPoint(entryPoint)
-                    .initiator(getInitiator())
+                    .initiator(initiator.getId(), initiator.getUsername())
                     .configuration(req)
                     .build();
 
@@ -332,15 +331,5 @@ public class ProjectProcessResource implements Resource {
 
         return responseTemplates.processError(Response.status(Status.INTERNAL_SERVER_ERROR), args)
                 .build();
-    }
-
-    private static String getInitiator() {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject == null || !subject.isAuthenticated()) {
-            return null;
-        }
-
-        UserPrincipal p = (UserPrincipal) subject.getPrincipal();
-        return p.getUsername();
     }
 }

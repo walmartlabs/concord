@@ -81,7 +81,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
             return null;
         }
 
-        if (process.getInitiator() == null) {
+        if (process.getInitiatorId() == null) {
             log.warn("doGetAuthenticationInfo -> initiator not found: {}", t.getInstanceId());
             return null;
         }
