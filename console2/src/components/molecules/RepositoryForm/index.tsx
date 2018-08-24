@@ -20,13 +20,14 @@
 
 import { InjectedFormikProps, withFormik } from 'formik';
 import * as React from 'react';
-import { Button, Divider, Form, Popup } from 'semantic-ui-react';
+import { Button, Divider, Form, Popup, Segment } from 'semantic-ui-react';
+import { Error } from 'tslint/lib/error';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { isRepositoryExists } from '../../../api/service/console';
 import { notEmpty } from '../../../utils';
 import { repository as validation, repositoryAlreadyExistsError } from '../../../validation';
-import { FormikDropdown, FormikInput } from '../../atoms';
+import { FormikCheckbox, FormikDropdown, FormikInput } from '../../atoms';
 import { SecretDropdown } from '../../organisms';
 
 export enum RepositorySourceType {
@@ -42,6 +43,7 @@ interface FormValues {
     branch?: string;
     commitId?: string;
     path?: string;
+    withSecret?: boolean;
     secretId?: string;
 }
 
@@ -90,6 +92,10 @@ const sanitize = (data: FormValues): FormValues => {
         v.commitId = undefined;
     }
 
+    if (v.withSecret === false) {
+        v.secretId = undefined;
+    }
+
     return v;
 };
 
@@ -134,6 +140,8 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
         const hasErrors = notEmpty(errors);
         const testConnectionDisabled = dirty && (!isValid || hasErrors);
 
+        const withSecret = values.withSecret || !!values.secretId;
+
         return (
             <>
                 <Form onSubmit={handleSubmit}>
@@ -144,7 +152,28 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         required={true}
                     />
 
-                    <FormikInput name="url" label="URL" placeholder="Git URL" required={true} />
+                    <Segment>
+                        <Form.Group>
+                            <FormikCheckbox name="withSecret" label="" toggle={true} />
+                            <p>
+                                Personal repositories require additional authentication - a SSH key
+                                or a username/password pair.
+                            </p>
+                        </Form.Group>
+
+                        {withSecret && (
+                            <SecretDropdown
+                                orgName={orgName}
+                                name="secretId"
+                                label="Credentials"
+                                required={false}
+                                fluid={true}
+                                disabled={!withSecret}
+                            />
+                        )}
+
+                        <FormikInput name="url" label="URL" placeholder="Git URL" required={true} />
+                    </Segment>
 
                     <Form.Group widths="equal">
                         <FormikDropdown
@@ -164,14 +193,6 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                     </Form.Group>
 
                     <FormikInput name="path" label="Path" placeholder="Repository path" />
-
-                    <SecretDropdown
-                        orgName={orgName}
-                        name="secretId"
-                        label="Credentials"
-                        required={true}
-                        fluid={true}
-                    />
 
                     <Divider />
 
@@ -262,9 +283,18 @@ const validator = async (values: FormValues, props: Props) => {
         throw { path: e };
     }
 
-    e = validation.secretId(values.secretId);
-    if (e) {
-        throw { secret: e };
+    if (!values.withSecret) {
+        if (!values.url.startsWith('https://')) {
+            throw {
+                url:
+                    "Invalid repository URL: must begin with 'https://'. SSH repository URLs require additional credentials to be specified."
+            };
+        }
+    } else {
+        e = validation.secretId(values.secretId);
+        if (e) {
+            throw { secret: e };
+        }
     }
 
     return {};

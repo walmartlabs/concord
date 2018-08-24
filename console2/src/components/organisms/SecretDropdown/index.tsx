@@ -34,6 +34,7 @@ interface ExternalProps {
     label?: string;
     required?: boolean;
     fluid?: boolean;
+    disabled?: boolean;
 }
 
 interface StateProps {

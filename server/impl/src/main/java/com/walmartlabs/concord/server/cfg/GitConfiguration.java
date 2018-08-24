@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.cfg;
  */
 
 import com.walmartlabs.ollie.config.Config;
+import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,18 +33,19 @@ import java.io.Serializable;
 public class GitConfiguration implements Serializable {
 
     @Inject
-    @Config("git.useJGit")
-    private boolean useJGit;
+    @Config("git.oauth")
+    @Nullable
+    private String oauthToken;
 
     @Inject
     @Config("git.shallowClone")
     private boolean shallowClone;
 
-    public boolean isUseJGit() {
-        return useJGit;
-    }
-
     public boolean isShallowClone() {
         return shallowClone;
+    }
+
+    public String getOauthToken() {
+        return oauthToken;
     }
 }

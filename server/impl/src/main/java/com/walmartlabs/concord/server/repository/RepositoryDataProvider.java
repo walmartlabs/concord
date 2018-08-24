@@ -44,10 +44,6 @@ public class RepositoryDataProvider implements Provider<RepositoryProvider> {
 
     @Override
     public RepositoryProvider get() {
-        if (cfg.isUseJGit()) {
-            return new JGitRepositoryProvider(secretManager);
-        } else {
-            return new GitCliRepositoryProvider(secretManager, cfg);
-        }
+        return new GitCliRepositoryProvider(secretManager, cfg);
     }
 }

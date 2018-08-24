@@ -79,9 +79,7 @@ class ProcessActionList extends React.PureComponent<Props> {
                     {forms.map(({ name, runAs }) => (
                         <Table.Row key={name}>
                             <Table.Cell singleLine={true}>
-                                <Link to={`/process/${instanceId}/form/${name}/step`}>
-                                    {name}
-                                </Link>
+                                <Link to={`/process/${instanceId}/form/${name}/step`}>{name}</Link>
                             </Table.Cell>
                             <Table.Cell>
                                 Form

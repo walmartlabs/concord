@@ -91,6 +91,7 @@ export interface RepositoryTestRequest {
     branch?: string;
     commitId?: string;
     path?: string;
+    withSecret?: boolean;
     secretId?: string;
     secretName?: string;
 }

@@ -61,10 +61,13 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     private final SecretManager secretManager;
     private final GitConfiguration cfg;
 
+    private final List<String> sensitiveData;
+
     @Inject
     public GitCliRepositoryProvider(SecretManager secretManager, GitConfiguration cfg) {
         this.secretManager = secretManager;
         this.cfg = cfg;
+        this.sensitiveData = cfg.getOauthToken() != null ? Collections.singletonList(cfg.getOauthToken()) : Collections.emptyList();
     }
 
     @Override
@@ -349,6 +352,13 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         }
     }
 
+    private String processUrl(String url, Secret secret) {
+        if (secret == null && url.trim().startsWith("https://") && cfg.getOauthToken() != null) {
+            return "https://" + cfg.getOauthToken() + "@" + url.substring("https://".length());
+        }
+        return url;
+    }
+
     private void fetchCommand(Path dest, String url, List<RefSpec> refspecs, Secret secret, boolean shallow) {
         log.info("Fetching upstream changes from '{}'", url);
 
@@ -360,7 +370,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
 
         args.add("--tags");
 
-        args.add(url);
+        args.add(processUrl(url, secret));
 
         for (RefSpec r : refspecs) {
             args.add(r.toString());
@@ -456,7 +466,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             env.put("GIT_ASKPASS", "echo");
         }
 
-        log.info("> {}", String.join(" ", cmd));
+        log.info("> {}", hideSensitiveData(String.join(" ", cmd)));
 
         try {
             Process p = pb.start();
@@ -465,7 +475,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                log.info("GIT: {}", line);
+                log.info("GIT: {}", hideSensitiveData(line));
                 out.append(line).append("\n");
             }
 
@@ -555,5 +565,16 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         }
 
         return s.getSecret();
+    }
+
+    private String hideSensitiveData(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        for (String p : sensitiveData) {
+            s = s.replaceAll(p, "******");
+        }
+        return s;
     }
 }

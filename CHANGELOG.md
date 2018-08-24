@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: option to use a service account to
+retrieve GIT repositories instead of user keys;
 - concord-server: store project keys (used in `encrypt/decryptString`
 methods) in the DB.
 
