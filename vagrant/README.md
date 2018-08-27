@@ -10,6 +10,7 @@
 - Docker, up and running on the host machine. Necessary
   to build and export Concord images;
 - locally-built Concord images: `mvn clean install -Pdocker`
+  (or `mvn clean install -Pdocker -Pwalmart`).
 
 ## Usage
 
