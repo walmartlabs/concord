@@ -20,15 +20,15 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
@@ -137,7 +137,9 @@ public class LdapRealm extends AbstractLdapRealm {
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(user.getId())
-                .field("realm", REALM_NAME);
+                .field("username", user.getName())
+                .field("realm", REALM_NAME)
+                .log();
 
         return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t, getName());
     }

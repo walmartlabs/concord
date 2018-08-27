@@ -11,6 +11,7 @@ methods) in the DB.
 
 ### Changed
 
+- concord-server: fixed audit logging for AD/LDAP authentication;
 - concord-server: improved audit logging for projects and
 repositories;
 - concord-server: store `initiatorId` instead of `initiator` username
