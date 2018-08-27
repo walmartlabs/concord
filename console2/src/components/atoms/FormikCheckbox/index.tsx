@@ -29,7 +29,7 @@ interface Props {
 
 export default class extends React.PureComponent<FormCheckboxProps & Props> {
     render() {
-        const { name: fieldName, label, required, ...rest } = this.props;
+        const { name: fieldName, label, required, inline, ...rest } = this.props;
 
         return (
             <Field
@@ -43,7 +43,7 @@ export default class extends React.PureComponent<FormCheckboxProps & Props> {
                         form.setFieldValue(fieldName, checked);
 
                     return (
-                        <Form.Field error={invalid} required={required}>
+                        <Form.Field error={invalid} required={required} inline={inline}>
                             <label>{label}</label>
                             <Checkbox {...rest} onChange={handleChanges} checked={field.value} />
                             {invalid &&

@@ -153,13 +153,20 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                     />
 
                     <Segment>
-                        <Form.Group>
-                            <FormikCheckbox name="withSecret" label="" toggle={true} />
-                            <p>
+                        <Popup
+                            trigger={
+                                <FormikCheckbox
+                                    name="withSecret"
+                                    label="Custom authentication"
+                                    toggle={true}
+                                    inline={true}
+                                />
+                            }>
+                            <Popup.Content>
                                 Personal repositories require additional authentication - a SSH key
                                 or a username/password pair.
-                            </p>
-                        </Form.Group>
+                            </Popup.Content>
+                        </Popup>
 
                         {withSecret && (
                             <SecretDropdown
@@ -192,7 +199,15 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                         )}
                     </Form.Group>
 
-                    <FormikInput name="path" label="Path" placeholder="Repository path" />
+                    <Popup
+                        trigger={
+                            <FormikInput name="path" label="Path" placeholder="Repository path" />
+                        }>
+                        <Popup.Content>
+                            (Optional) Path in the repository that will be used as the root
+                            directory.
+                        </Popup.Content>
+                    </Popup>
 
                     <Divider />
 
