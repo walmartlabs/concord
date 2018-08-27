@@ -11,6 +11,8 @@ methods) in the DB.
 
 ### Changed
 
+- concord-server: improved audit logging for projects and
+repositories;
 - concord-server: store `initiatorId` instead of `initiator` username
 in the process queue table;
 - project-model: fix handling of `null` values in `set` step.

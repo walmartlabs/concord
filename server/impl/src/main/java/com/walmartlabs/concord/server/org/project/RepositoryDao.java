@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -67,12 +66,14 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public RepositoryEntry get(UUID projectId, UUID repoId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return selectRepositoryEntry(tx)
-                    .where(REPOSITORIES.PROJECT_ID.eq(projectId)
-                            .and(REPOSITORIES.REPO_ID.eq(repoId)))
-                    .fetchOne(RepositoryDao::toEntry);
-        }
+        return txResult(tx -> get(tx, projectId, repoId));
+    }
+
+    public RepositoryEntry get(DSLContext tx, UUID projectId, UUID repoId) {
+        return selectRepositoryEntry(tx)
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId)
+                        .and(REPOSITORIES.REPO_ID.eq(repoId)))
+                .fetchOne(RepositoryDao::toEntry);
     }
 
     public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean hasWebHook) {
@@ -144,7 +145,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> list(DSLContext tx, UUID projectId, Field<?> sortField, boolean asc) {
-        SelectConditionStep<Record10<UUID, UUID, String, String, String, String, String, Boolean, UUID, String>> query = selectRepositoryEntry(tx)
+        SelectConditionStep<Record11<UUID, UUID, String, String, String, String, String, Boolean, UUID, String, String>> query = selectRepositoryEntry(tx)
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId));
 
         if (sortField != null) {
@@ -162,7 +163,7 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    private static SelectJoinStep<Record10<UUID, UUID, String, String, String, String, String, Boolean, UUID, String>> selectRepositoryEntry(DSLContext tx) {
+    private static SelectJoinStep<Record11<UUID, UUID, String, String, String, String, String, Boolean, UUID, String, String>> selectRepositoryEntry(DSLContext tx) {
         return tx.select(REPOSITORIES.REPO_ID,
                 REPOSITORIES.PROJECT_ID,
                 REPOSITORIES.REPO_NAME,
@@ -172,12 +173,13 @@ public class RepositoryDao extends AbstractDao {
                 REPOSITORIES.REPO_PATH,
                 REPOSITORIES.HAS_WEBHOOK,
                 SECRETS.SECRET_ID,
-                SECRETS.SECRET_NAME)
+                SECRETS.SECRET_NAME,
+                SECRETS.STORE_TYPE)
                 .from(REPOSITORIES)
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
     }
 
-    private static RepositoryEntry toEntry(Record10<UUID, UUID, String, String, String, String, String, Boolean, UUID, String> r) {
+    private static RepositoryEntry toEntry(Record11<UUID, UUID, String, String, String, String, String, Boolean, UUID, String, String> r) {
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
                 r.get(REPOSITORIES.PROJECT_ID),
                 r.get(REPOSITORIES.REPO_NAME),
@@ -188,6 +190,6 @@ public class RepositoryDao extends AbstractDao {
                 r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(REPOSITORIES.HAS_WEBHOOK),
-                null);
+                r.get(SECRETS.STORE_TYPE));
     }
 }

@@ -22,6 +22,9 @@ package com.walmartlabs.concord.server.org.project;
 
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.events.GithubWebhookService;
@@ -36,6 +39,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,6 +54,7 @@ public class ProjectRepositoryManager {
     private final ExternalEventResource externalEventResource;
     private final GithubWebhookService githubWebhookService;
     private final RepositoryValidator repositoryValidator;
+    private final AuditLog auditLog;
 
     private final ProjectLoader loader = new ProjectLoader();
 
@@ -61,7 +66,8 @@ public class ProjectRepositoryManager {
                                     RepositoryDao repositoryDao,
                                     ExternalEventResource externalEventResource,
                                     GithubWebhookService githubWebhookService,
-                                    RepositoryValidator repositoryValidator) {
+                                    RepositoryValidator repositoryValidator,
+                                    AuditLog auditLog) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
@@ -71,6 +77,7 @@ public class ProjectRepositoryManager {
         this.externalEventResource = externalEventResource;
         this.githubWebhookService = githubWebhookService;
         this.repositoryValidator = repositoryValidator;
+        this.auditLog = auditLog;
     }
 
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
@@ -91,16 +98,14 @@ public class ProjectRepositoryManager {
         }
 
         if (repoId == null) {
-            insert(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), entry);
+            insert(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), entry, true);
         } else {
-            update(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), repoId, entry);
+            update(tx, project.getOrgId(), project.getOrgName(), projectId, project.getName(), repoId, entry, true);
         }
-
-        // TODO audit log
     }
 
     public void delete(UUID projectId, String repoName) {
-        projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
+        ProjectEntry projEntry = projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
 
         UUID repoId = repositoryDao.getId(projectId, repoName);
         if (repoId == null) {
@@ -108,17 +113,22 @@ public class ProjectRepositoryManager {
         }
 
         repositoryDao.delete(repoId);
-
-        // TODO audit log
+        addAuditLog(
+                projEntry.getOrgId(),
+                projEntry.getOrgName(),
+                projEntry.getId(),
+                projEntry.getName(),
+                projEntry.getRepositories().get(repoName),
+                null);
     }
 
-    public void insert(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry entry) {
+    public void insert(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry entry, boolean doAuditLog) {
         UUID secretId = entry.getSecretId();
         if (secretId == null && entry.getSecretName() != null) {
             secretId = secretDao.getId(orgId, entry.getSecretName());
         }
 
-        repositoryDao.insert(tx, projectId,
+        UUID repoId = repositoryDao.insert(tx, projectId,
                 entry.getName(), entry.getUrl(),
                 trim(entry.getBranch()), trim(entry.getCommitId()),
                 trim(entry.getPath()), secretId, false);
@@ -127,9 +137,23 @@ public class ProjectRepositoryManager {
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
+
+        if (doAuditLog) {
+            RepositoryEntry newEntry = repositoryDao.get(tx, projectId, repoId);
+            addAuditLog(
+                    orgId,
+                    orgName,
+                    projectId,
+                    projectName,
+                    null,
+                    newEntry
+            );
+        }
     }
 
-    private void update(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, UUID repoId, RepositoryEntry entry) {
+    private void update(DSLContext tx, UUID orgId, String orgName, UUID projectId, String projectName, UUID repoId, RepositoryEntry entry, boolean doAuditLog) {
+        RepositoryEntry prevEntry = repositoryDao.get(tx, projectId, repoId);
+
         UUID secretId = entry.getSecretId();
         if (secretId == null && entry.getSecretName() != null) {
             secretId = secretDao.getId(orgId, entry.getSecretName());
@@ -144,6 +168,18 @@ public class ProjectRepositoryManager {
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
+
+        if (doAuditLog) {
+            RepositoryEntry newEntry = repositoryDao.get(tx, projectId, repoId);
+            addAuditLog(
+                    orgId,
+                    orgName,
+                    projectId,
+                    projectName,
+                    prevEntry,
+                    newEntry
+            );
+        }
     }
 
     public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) throws IOException {
@@ -164,5 +200,27 @@ public class ProjectRepositoryManager {
         }
 
         return s;
+    }
+
+    private void addAuditLog(UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry prevRepoEntry, RepositoryEntry newRepoEntry) {
+        ProjectEntry prevEntry = new ProjectEntry(null, new HashMap<>());
+        if(prevRepoEntry != null) {
+            prevEntry.getRepositories().put(prevRepoEntry.getName(), prevRepoEntry);
+        }
+
+        ProjectEntry newEntry = new ProjectEntry(null, new HashMap<>());
+        if(newRepoEntry != null) {
+            newEntry.getRepositories().put(newRepoEntry.getName(), newRepoEntry);
+        }
+
+        Map<String, Object> changes = DiffUtils.compare(prevEntry, newEntry);
+
+        auditLog.add(AuditObject.PROJECT, AuditAction.UPDATE)
+                .field("orgId", orgId)
+                .field("orgName", orgName)
+                .field("projectName", projectName)
+                .field("projectId", projectId)
+                .field("changes", changes)
+                .log();
     }
 }

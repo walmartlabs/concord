@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,18 +83,20 @@ public class ProjectManager {
                     entry.getVisibility(), acceptsRawPayload, encryptedKey);
 
             if (repos != null) {
-                repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v));
+                repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v, false));
             }
 
             return pId;
         });
 
-        // TODO more details?
-        auditLog.add(AuditObject.PROJECT, AuditAction.CREATE)
-                .field("id", id)
-                .field("orgId", orgId)
-                .field("name", entry.getName())
-                .log();
+        Map<String, Object> changes = DiffUtils.compare(null, entry);
+        addAuditLog(
+                AuditAction.CREATE,
+                orgId,
+                orgName,
+                id,
+                entry.getName(),
+                changes);
 
         return id;
     }
@@ -112,14 +114,20 @@ public class ProjectManager {
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);
-                repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, prevEntry.getOrgName(), projectId, prevEntry.getName(), v));
+                repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, prevEntry.getOrgName(), projectId, prevEntry.getName(), v, false));
             }
         });
 
-        // TODO more details, delta?
-        auditLog.add(AuditObject.PROJECT, AuditAction.UPDATE)
-                .field("id", projectId)
-                .log();
+        ProjectEntry newEntry = projectDao.get(projectId);
+
+        Map<String, Object> changes = DiffUtils.compare(prevEntry, newEntry);
+        addAuditLog(
+                AuditAction.UPDATE,
+                prevEntry.getOrgId(),
+                prevEntry.getOrgName(),
+                prevEntry.getId(),
+                prevEntry.getName(),
+                changes);
     }
 
     public void delete(UUID projectId) {
@@ -127,11 +135,13 @@ public class ProjectManager {
 
         projectDao.delete(projectId);
 
-        auditLog.add(AuditObject.PROJECT, AuditAction.DELETE)
-                .field("id", projectId)
-                .field("orgId", e.getOrgId())
-                .field("name", e.getName())
-                .log();
+        addAuditLog(
+                AuditAction.DELETE,
+                e.getOrgId(),
+                e.getOrgName(),
+                e.getId(),
+                e.getName(),
+                null);
     }
 
     public List<ProjectEntry> list(UUID orgId) {
@@ -151,11 +161,21 @@ public class ProjectManager {
         }
 
         for (Map.Entry<String, RepositoryEntry> r : repos.entrySet()) {
-            String secretName = r.getValue().getSecretName();
-            if (secretName == null) {
+            String n = r.getValue().getSecretName();
+            if (n == null) {
                 continue;
             }
-            secretManager.assertAccess(orgId, null, secretName, ResourceAccessLevel.READER, false);
+            secretManager.assertAccess(orgId, null, n, ResourceAccessLevel.READER, false);
         }
+    }
+
+    private void addAuditLog(AuditAction auditAction, UUID orgId, String orgName, UUID projectId, String projectName, Map<String, Object> changes) {
+        auditLog.add(AuditObject.PROJECT, auditAction)
+                .field("orgId", orgId)
+                .field("orgName", orgName)
+                .field("projectId", projectId)
+                .field("projectName", projectName)
+                .field("changes", changes)
+                .log();
     }
 }
