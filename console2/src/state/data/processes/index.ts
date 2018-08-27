@@ -26,13 +26,12 @@ import { list as apiOrgList, SearchFilter } from '../../../api/org/process';
 import {
     get as apiGet,
     kill as apiKill,
-    start as apiStart,
-    restoreProcess as apiRestore
+    restoreProcess as apiRestore,
+    start as apiStart
 } from '../../../api/process';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
-import { reducers as pollReducers, sagas as pollSagas } from './poll';
-import { actions as pollActions } from './poll';
+import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } from './poll';
 import {
     CancelProcessRequest,
     CancelProcessState,
