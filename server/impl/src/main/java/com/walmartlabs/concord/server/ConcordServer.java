@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
+import com.walmartlabs.concord.server.cfg.ServerConfiguration;
 import com.walmartlabs.concord.server.security.ConcordAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
@@ -68,6 +69,7 @@ public class ConcordServer {
                 .serve("/concord/*").with(new ServiceInitServlet()) // only to start the background services
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
+                .secureCookiesEnabled(ServerConfiguration.secureCookies)
                 .sessionsEnabled(true);
 
         OllieServer server = builder.build();
