@@ -21,8 +21,14 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.common.IOUtils;
+import org.eclipse.jgit.api.Git;
 import org.junit.Test;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -68,5 +74,96 @@ public class TriggersRefreshIT extends AbstractServerIT {
         TriggersApi triggerResource = new TriggersApi(getApiClient());
         List<TriggerEntry> list = triggerResource.list(orgName, projectName, repoName);
         assertFalse(list.isEmpty());
+    }
+
+    @Test(timeout = 60000)
+    public void testTriggerRepoRefresh() throws Exception {
+        Path tmpDir = createTempDir();
+
+        File src = new File(TriggersRefreshIT.class.getResource("triggerRepo").toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.toAbsolutePath().toString();
+
+        // ---
+
+        String orgName = "org_" + randomString();
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+        String username = "user_" + randomString();
+
+        // ---
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LOCAL)
+                .setAdmin(false));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
+                .setUsername(username));
+
+        // ---
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        if (orgApi.get(orgName) == null) {
+            orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+        }
+
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+        teamsApi.addUsers(orgName, "default", false, Collections.singletonList(new TeamUserEntry()
+                .setUsername(username)
+                .setRole(TeamUserEntry.RoleEnum.MEMBER)
+                .setUserType(TeamUserEntry.UserTypeEnum.LOCAL)));
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setUrl(gitUrl))));
+
+        // ---
+
+        List<TriggerEntry> l = waitForTriggers(orgName, projectName, repoName, 1);
+        assertEquals("onTrigger", l.get(0).getEntryPoint());
+
+        // ---
+
+        Files.copy(tmpDir.resolve("new_concord.yml"), tmpDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("update").call();
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        // ---
+
+        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        repositoriesApi.refreshRepository(orgName, projectName, repoName);
+
+        // ---
+
+        l = waitForTriggers(orgName, projectName, repoName, 2);
+        assertEquals("onTrigger", l.get(0).getEntryPoint());
+        assertEquals("onTrigger2", l.get(1).getEntryPoint());
+    }
+
+    private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {
+        TriggersApi triggerResource = new TriggersApi(getApiClient());
+        while (true) {
+            List<TriggerEntry> l = triggerResource.list(orgName, projectName, repoName);
+            if (l != null && l.size() == expectedCount) {
+                return l;
+            }
+
+            Thread.sleep(1000);
+        }
     }
 }

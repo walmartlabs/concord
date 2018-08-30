@@ -152,7 +152,9 @@ public class TriggerResource extends AbstractDao implements Resource {
                             @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        ProjectEntry p = assertProject(org.getId(), projectName, ResourceAccessLevel.WRITER, true);
+
+        // allow READERs to refresh triggers - it helps with troubleshooting
+        ProjectEntry p = assertProject(org.getId(), projectName, ResourceAccessLevel.READER, true);
         RepositoryEntry r = assertRepository(p, repositoryName);
 
         refresh(r);

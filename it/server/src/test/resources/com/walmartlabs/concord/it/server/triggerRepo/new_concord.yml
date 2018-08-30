@@ -1,0 +1,15 @@
+flows:
+  default:
+  - log: "default"
+
+  onTrigger:
+  - log: "onTrigger"
+
+  onTrigger2:
+  - log: "onTrigger2"
+
+triggers:
+  - testTrigger:
+      entryPoint: onTrigger
+  - testTrigger:
+      entryPoint: onTrigger2

@@ -11,6 +11,8 @@ methods) in the DB.
 
 ### Changed
 
+- concord-server: require `READER` access level to refresh triggers
+(instead of `WRITER`);
 - concord-server: process-level variables are now correctly override
 the system-wide defaults;
 - concord-server: fixed audit logging for AD/LDAP authentication;

@@ -135,7 +135,7 @@ public class TriggerIT extends AbstractServerIT {
     private ProjectOperationResponse createProject(String orgName, String projectName, String repoName, String repoResource) throws Exception {
         Path tmpDir = createTempDir();
 
-        File src = new File(ProjectIT.class.getResource(repoResource).toURI());
+        File src = new File(TriggerIT.class.getResource(repoResource).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
 
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
