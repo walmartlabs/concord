@@ -26,6 +26,8 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.cfg.DefaultVariablesConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -47,15 +49,20 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     public static final List<String> DEFAULT_PROFILES = Collections.singletonList("default");
 
     private final ProjectDao projectDao;
+    private final DefaultVariablesConfiguration defaultVars;
 
     @Inject
-    public RequestDataMergingProcessor(ProjectDao projectDao) {
+    public RequestDataMergingProcessor(ProjectDao projectDao, DefaultVariablesConfiguration defaultVars) {
         this.projectDao = projectDao;
+        this.defaultVars = defaultVars;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        // system-level default variables
+        Map<String, Object> defVars = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, new HashMap<>(defaultVars.getVars()));
+
         // configuration from the user's request
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
 
@@ -76,7 +83,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(projectCfg, profileCfg, workspaceCfg, attachedCfg, req);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(defVars, projectCfg, profileCfg, workspaceCfg, attachedCfg, req);
         m.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
