@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
-import { Divider, Header, Icon, Loader, Menu, Segment, Table } from 'semantic-ui-react';
+import { Divider, Header, Icon, Loader, Menu, Segment, Table, Grid } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
@@ -74,40 +74,61 @@ class SecretActivity extends React.PureComponent<Props> {
 
     static renderInfo(data: SecretEntry) {
         return (
-            <>
-                <Table collapsing={true} definition={true}>
-                    <Table.Body>
-                        <Table.Row>
-                            <Table.Cell>Name</Table.Cell>
-                            <Table.Cell>{data.name}</Table.Cell>
-                        </Table.Row>
-                        <Table.Row>
-                            <Table.Cell>Visibility</Table.Cell>
-                            <Table.Cell>{visibilityToText(data.visibility)}</Table.Cell>
-                        </Table.Row>
-                        <Table.Row>
-                            <Table.Cell>Type</Table.Cell>
-                            <Table.Cell>{typeToText(data.type)}</Table.Cell>
-                        </Table.Row>
-                        <Table.Row>
-                            <Table.Cell>Protected by</Table.Cell>
-                            <Table.Cell>{encryptedByToText(data.encryptedBy)}</Table.Cell>
-                        </Table.Row>
-                        <Table.Row>
-                            <Table.Cell>Project</Table.Cell>
-                            <Table.Cell>{data.projectName}</Table.Cell>
-                        </Table.Row>
-                        <Table.Row>
-                            <Table.Cell>Owner</Table.Cell>
-                            <Table.Cell>{data.owner ? data.owner.username : '-'}</Table.Cell>
-                        </Table.Row>
-                    </Table.Body>
-                </Table>
-
-                {data.type === SecretType.KEY_PAIR &&
-                    data.encryptedBy === SecretEncryptedByType.SERVER_KEY &&
-                    SecretActivity.renderPublicKey(data)}
-            </>
+            <Grid columns={2}>
+                <Grid.Column>
+                    <Table definition={true}>
+                        <Table.Body>
+                            <Table.Row>
+                                <Table.Cell>Name</Table.Cell>
+                                <Table.Cell>{data.name}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Type</Table.Cell>
+                                <Table.Cell>{typeToText(data.type)}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Owner</Table.Cell>
+                                <Table.Cell>{data.owner ? data.owner.username : '-'}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Actions</Table.Cell>
+                                <Table.Cell>
+                                    {data.type === SecretType.KEY_PAIR &&
+                                        data.encryptedBy === SecretEncryptedByType.SERVER_KEY &&
+                                        SecretActivity.renderPublicKey(data)}
+                                </Table.Cell>
+                            </Table.Row>
+                        </Table.Body>
+                    </Table>
+                </Grid.Column>
+                <Grid.Column>
+                    <Table definition={true}>
+                        <Table.Body>
+                            <Table.Row>
+                                <Table.Cell>Visibility</Table.Cell>
+                                <Table.Cell>{visibilityToText(data.visibility)}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Protected by</Table.Cell>
+                                <Table.Cell>{encryptedByToText(data.encryptedBy)}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Restricted to a project</Table.Cell>
+                                <Table.Cell>
+                                    {data.projectName ? (
+                                        <Link
+                                            to={`/org/${data.orgName}/project/${data.projectName}`}>
+                                            {data.projectName}
+                                        </Link>
+                                    ) : (
+                                        ' - '
+                                    )}
+                                </Table.Cell>
+                            </Table.Row>
+                        </Table.Body>
+                    </Table>
+                </Grid.Column>
+            </Grid>
         );
     }
 
