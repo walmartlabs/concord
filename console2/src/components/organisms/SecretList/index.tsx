@@ -29,14 +29,15 @@ import { actions, State } from '../../../state/data/secrets';
 import { comparators } from '../../../utils';
 import { RequestErrorMessage } from '../../molecules';
 
+interface ExternalProps {
+    orgName: string;
+    filter?: string;
+}
+
 interface StateProps {
     secrets: SecretEntry[];
     loading: boolean;
     error: RequestError;
-}
-
-interface ExternalProps {
-    orgName: string;
 }
 
 interface DispatchProps {
@@ -114,13 +115,17 @@ class SecretList extends React.PureComponent<Props> {
 }
 
 // TODO refactor as a selector?
-const makeSecretList = (data: { [id: string]: SecretEntry }): SecretEntry[] =>
+const makeSecretList = (data: { [id: string]: SecretEntry }, filter?: string): SecretEntry[] =>
     Object.keys(data)
         .map((k) => data[k])
+        .filter((e) => (filter ? e.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 : true))
         .sort(comparators.byName);
 
-const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
-    secrets: makeSecretList(secrets.secretById),
+const mapStateToProps = (
+    { secrets }: { secrets: State },
+    { filter }: ExternalProps
+): StateProps => ({
+    secrets: makeSecretList(secrets.secretById, filter),
     loading: secrets.listSecrets.running,
     error: secrets.listSecrets.error
 });

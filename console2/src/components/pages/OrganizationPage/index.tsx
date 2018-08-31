@@ -27,9 +27,8 @@ import { BreadcrumbSegment } from '../../molecules';
 import {
     ProcessListActivity,
     ProjectListActivity,
-    RedirectButton,
-    SecretList,
-    TeamList
+    SecretListActivity,
+    TeamListActivity
 } from '../../organisms';
 import { NotFoundPage } from '../index';
 
@@ -94,66 +93,21 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
                     <Route path={url} exact={true}>
                         <Redirect to={`${url}/project`} />
                     </Route>
-                    <Route path={`${url}/project`}>{this.renderProjects()}</Route>
+                    <Route path={`${url}/project`}>
+                        <ProjectListActivity orgName={orgName} />
+                    </Route>
                     <Route path={`${url}/process`}>
                         <ProcessListActivity orgName={orgName} />
                     </Route>
                     <Route path={`${url}/secret`} exact={true}>
-                        {this.renderSecrets()}
+                        <SecretListActivity orgName={orgName} />
                     </Route>
                     <Route path={`${url}/team`} exact={true}>
-                        {this.renderTeams()}
+                        <TeamListActivity orgName={orgName} />
                     </Route>
 
                     <Route component={NotFoundPage} />
                 </Switch>
-            </>
-        );
-    }
-
-    renderProjects() {
-        const { orgName } = this.props.match.params;
-        return <ProjectListActivity orgName={orgName} />;
-    }
-
-    renderSecrets() {
-        const { orgName } = this.props.match.params;
-        return (
-            <>
-                <Menu secondary={true}>
-                    <Menu.Item position={'right'}>
-                        <RedirectButton
-                            icon="plus"
-                            positive={true}
-                            labelPosition="left"
-                            content="New secret"
-                            location={`/org/${orgName}/secret/_new`}
-                        />
-                    </Menu.Item>
-                </Menu>
-
-                <SecretList orgName={orgName} />
-            </>
-        );
-    }
-
-    renderTeams() {
-        const { orgName } = this.props.match.params;
-        return (
-            <>
-                <Menu secondary={true}>
-                    <Menu.Item position={'right'}>
-                        <RedirectButton
-                            icon="plus"
-                            positive={true}
-                            labelPosition="left"
-                            content="New team"
-                            location={`/org/${orgName}/team/_new`}
-                        />
-                    </Menu.Item>
-                </Menu>
-
-                <TeamList orgName={orgName} />
             </>
         );
     }

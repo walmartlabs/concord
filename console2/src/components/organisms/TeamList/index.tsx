@@ -32,6 +32,7 @@ import { RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
+    filter?: string;
 }
 
 interface StateProps {
@@ -100,18 +101,14 @@ class TeamList extends React.PureComponent<Props> {
 }
 
 // TODO refactor as a selector?
-const makeTeamList = (data: Teams): TeamEntry[] => {
-    if (!data) {
-        return [];
-    }
-
-    return Object.keys(data)
+const makeTeamList = (data: Teams, filter?: string): TeamEntry[] =>
+    Object.keys(data)
         .map((k) => data[k])
+        .filter((e) => (filter ? e.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 : true))
         .sort(comparators.byName);
-};
 
-const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
-    data: makeTeamList(teams.teamById),
+const mapStateToProps = ({ teams }: { teams: State }, { filter }: ExternalProps): StateProps => ({
+    data: makeTeamList(teams.teamById, filter),
     loading: teams.list.running,
     error: teams.list.error
 });
