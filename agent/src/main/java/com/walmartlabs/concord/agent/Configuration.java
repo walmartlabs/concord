@@ -57,6 +57,7 @@ public class Configuration {
     public static final String RUNNER_SECURITY_MANAGER_ENABLED_KEY = "RUNNER_SECURITY_MANAGER_ENABLED";
 
     public static final String API_KEY = "API_KEY";
+    public static final String API_VERIFY_SSL_KEY = "API_VERIFY_SSL";
     public static final String CONNECT_TIMEOUT_KEY = "API_CONNECT_TIMEOUT";
     public static final String READ_TIMEOUT_KEY = "API_READ_TIMEOUT";
     public static final String RETRY_COUNT_KEY = "API_RETRY_COUNT";
@@ -88,6 +89,7 @@ public class Configuration {
     private final boolean runnerSecurityManagerEnabled;
 
     private final String apiKey;
+    private final boolean apiVerifySsl;
     private final int readTimeout;
     private final int connectTimeout;
     private final int retryCount;
@@ -134,6 +136,7 @@ public class Configuration {
             this.runnerSecurityManagerEnabled = Boolean.parseBoolean(getEnv(RUNNER_SECURITY_MANAGER_ENABLED_KEY, "false"));
 
             this.apiKey = getEnv(API_KEY, DEFAULT_AGENT_API_KEY);
+            this.apiVerifySsl = Boolean.parseBoolean(getEnv(API_VERIFY_SSL_KEY, "true"));
             this.connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "30000"));
             this.readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "60000"));
             this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "5"));
@@ -213,6 +216,10 @@ public class Configuration {
 
     public String getApiKey() {
         return apiKey;
+    }
+
+    public boolean isApiVerifySsl() {
+        return apiVerifySsl;
     }
 
     public int getReadTimeout() {

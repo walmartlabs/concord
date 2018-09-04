@@ -51,6 +51,7 @@ public final class ApiClientFactory {
         client.setTempFolderPath(IOUtils.createTempDir("agent-client").toString());
         client.setApiKey(cfg.getApiKey());
         client.setUserAgent(cfg.getUserAgent());
+        client.setVerifyingSsl(cfg.isApiVerifySsl());
         return client;
     }
 

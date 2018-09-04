@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-agent: option to ignore SSL certificate errors for API
+calls;
 - concord-console: add filtering to the secret list and the team list
 pages;
 - concord-server, concord-console: option to use a service account to
