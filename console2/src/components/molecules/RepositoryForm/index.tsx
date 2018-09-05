@@ -140,8 +140,6 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
         const hasErrors = notEmpty(errors);
         const testConnectionDisabled = dirty && (!isValid || hasErrors);
 
-        const withSecret = values.withSecret || !!values.secretId;
-
         return (
             <>
                 <Form onSubmit={handleSubmit}>
@@ -168,14 +166,14 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                             </Popup.Content>
                         </Popup>
 
-                        {withSecret && (
+                        {values.withSecret && (
                             <SecretDropdown
                                 orgName={orgName}
                                 name="secretId"
                                 label="Credentials"
                                 required={false}
                                 fluid={true}
-                                disabled={!withSecret}
+                                disabled={!values.withSecret}
                             />
                         )}
 
@@ -320,7 +318,8 @@ export default withFormik<Props, FormValues>({
         bag.props.onSubmit(sanitize(values));
     },
     mapPropsToValues: (props) => ({
-        ...props.initial
+        ...props.initial,
+        withSecret: !!props.initial.secretId
     }),
     validate: validator,
     enableReinitialize: true

@@ -58,23 +58,35 @@ class SecretDropdown extends React.PureComponent<ExternalProps & StateProps & Di
     }
 }
 
-const makeOptions = (data: Secrets): DropdownItemProps[] => {
+const makeOptions = (data: Secrets, required?: boolean): DropdownItemProps[] => {
     if (!data) {
         return [];
     }
 
-    return Object.keys(data)
+    const options = Object.keys(data)
         .map((k) => data[k])
         .sort(comparators.byName)
         .map(({ name, id }) => ({
             value: id,
             text: name
         }));
+
+    if (!required) {
+        options.unshift({
+            value: '',
+            text: ''
+        });
+    }
+
+    return options;
 };
 
-const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
+const mapStateToProps = (
+    { secrets }: { secrets: State },
+    { required }: ExternalProps
+): StateProps => ({
     loading: secrets.listSecrets.running,
-    options: makeOptions(secrets.secretById)
+    options: makeOptions(secrets.secretById, required)
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps): DispatchProps => ({

@@ -487,8 +487,9 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
 
             int code = p.waitFor();
             if (code != SUCCESS_EXIT_CODE) {
-                log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'", cmd, code, error.toString());
-                throw new RepositoryException(error.toString());
+                String msg = hideSensitiveData(error.toString());
+                log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'", cmd, code, msg);
+                throw new RepositoryException(msg);
             }
 
             return out.toString();
