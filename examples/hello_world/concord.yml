@@ -1,6 +1,9 @@
 flows:
   default:
+  - checkpoint: first
   - log: "Hello, ${name}!"
+  - checkpoint: second
+  - log: "Hello again!"
 
 configuration:
   arguments:

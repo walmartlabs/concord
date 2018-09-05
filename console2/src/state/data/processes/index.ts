@@ -23,12 +23,8 @@ import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { list as apiOrgList, SearchFilter } from '../../../api/org/process';
-import {
-    get as apiGet,
-    kill as apiKill,
-    restoreProcess as apiRestore,
-    start as apiStart
-} from '../../../api/process';
+import { get as apiGet, kill as apiKill, start as apiStart } from '../../../api/process';
+import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
 import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } from './poll';

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.state;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.state;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.state.archive.ProcessCheckpointArchiver;
 
 import javax.inject.Inject;
@@ -30,6 +31,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.sdk.Constants.Files.CHECKPOINT_META_FILE_NAME;
@@ -45,6 +47,7 @@ public class ProcessCheckpointManager {
     protected ProcessCheckpointManager(ProcessCheckpointArchiver archiver,
                                        CheckpointDao checkpointDao,
                                        ProcessStateManager stateManager) {
+
         this.archiver = archiver;
         this.checkpointDao = checkpointDao;
         this.stateManager = stateManager;
@@ -53,12 +56,13 @@ public class ProcessCheckpointManager {
     /**
      * Import checkpoints data from the specified directory or a file.
      *
-     * @param instanceId process instance ID
-     * @param checkpointId process checkpoint ID
-     * @param data       checkpoint data file
+     * @param instanceId     process instance ID
+     * @param checkpointId   process checkpoint ID
+     * @param checkpointName process checkpoint name
+     * @param data           checkpoint data file
      */
-    public void importCheckpoint(UUID instanceId, UUID checkpointId, Path data) {
-        checkpointDao.importCheckpoint(instanceId, checkpointId, data);
+    public void importCheckpoint(UUID instanceId, UUID checkpointId, String checkpointName, Path data) {
+        checkpointDao.importCheckpoint(instanceId, checkpointId, checkpointName, data);
     }
 
     /**
@@ -69,7 +73,6 @@ public class ProcessCheckpointManager {
      * @return
      */
     public String restoreCheckpoint(UUID instanceId, UUID checkpointId) {
-
         try (TemporaryPath checkpointArchive = IOUtils.tempFile("checkpoint", ".zip")) {
 
             boolean hasCheckpoint = export(checkpointId, checkpointArchive.path());
@@ -91,6 +94,16 @@ public class ProcessCheckpointManager {
         } catch (Exception e) {
             throw new RuntimeException("Restore checkpoint '" + checkpointId + "' error", e);
         }
+    }
+
+    /**
+     * List checkpoints of a given instanceId
+     *
+     * @param instanceId process instance ID
+     * @return {@link ProcessCheckpointEntry}
+     */
+    public List<ProcessCheckpointEntry> list(UUID instanceId) {
+        return checkpointDao.list(instanceId);
     }
 
     private String readCheckpointName(Path checkpointDir) throws IOException {

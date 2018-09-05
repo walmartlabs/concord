@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.api.ExecutionException;
@@ -29,9 +29,12 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class CheckpointManager {
@@ -64,7 +67,14 @@ public class CheckpointManager {
                     IOUtils.zipFile(zip, checkpointMeta, Constants.Files.CHECKPOINT_META_FILE_NAME);
                 }
 
-                processApiClient.uploadCheckpoints(instanceId, checkpointId, checkpointName, checkpointFile.path());
+                try (InputStream in = Files.newInputStream(checkpointFile.path())) {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("id", checkpointId);
+                    data.put("name", checkpointName);
+                    data.put("data", in);
+
+                    processApiClient.uploadCheckpoint(instanceId, data);
+                }
             }
 
             Files.delete(checkpointMeta);

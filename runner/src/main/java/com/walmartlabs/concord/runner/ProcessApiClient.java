@@ -22,16 +22,8 @@ package com.walmartlabs.concord.runner;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
 
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -52,11 +44,11 @@ public class ProcessApiClient {
         this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "5000"));
     }
 
-    public void uploadCheckpoints(UUID instanceId, UUID checkpointId, String checkpointName, Path data) throws ApiException {
-        String path = "/api/v1/process/" + instanceId + "/checkpoint/" + checkpointId;
+    public void uploadCheckpoint(UUID instanceId, Map<String, Object> data) throws ApiException {
+        String path = "/api/v1/process/" + instanceId + "/checkpoint";
 
         ClientUtils.withRetry(retryCount, retryInterval, () -> {
-            ClientUtils.postData(apiClient, path, data.toFile(), null);
+            ClientUtils.postData(apiClient, path, data, null);
             return null;
         });
     }

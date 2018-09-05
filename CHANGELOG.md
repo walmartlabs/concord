@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: new API method to list process checkpoints;
 - concord-agent: option to ignore SSL certificate errors for API
 calls;
 - concord-console: add filtering to the secret list and the team list
@@ -11,7 +12,7 @@ pages;
 - concord-server, concord-console: option to use a service account to
 retrieve GIT repositories instead of user keys;
 - concord-server: store project keys (used in `encrypt/decryptString`
-methods) in the DB.
+methods) in the DB. 
 
 ### Changed
 

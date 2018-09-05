@@ -112,4 +112,15 @@
             where u.username = p.initiator
         </sql>
     </changeSet>
+
+    <changeSet id="86300" author="muhammad.wasi@walmart.com">
+        <addColumn tableName="PROCESS_CHECKPOINTS">
+            <column name="CHECKPOINT_NAME" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CHECKPOINT_DATE" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

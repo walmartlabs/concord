@@ -125,6 +125,8 @@ public final class ClientUtils {
                 mpb.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, v.toString()));
             } else if (v instanceof String[]) {
                 mpb.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, String.join(",", (String[]) v)));
+            } else if (v instanceof UUID) {
+                mpb.addFormDataPart(k, v.toString());
             } else {
                 throw new IllegalArgumentException("Unknown input type: " + v);
             }

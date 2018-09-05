@@ -110,11 +110,3 @@ export const get = (instanceId: ConcordId): Promise<ProcessEntry> =>
 
 export const kill = (instanceId: ConcordId): Promise<{}> =>
     managedFetch(`/api/v1/process/${instanceId}`, { method: 'DELETE' });
-
-export const restoreProcess = (
-    instanceId: ConcordId,
-    checkpointId: ConcordId
-): Promise<ProcessEntry> =>
-    fetchJson(`/api/v1/process/${instanceId}/checkpoint/${checkpointId}/restore`, {
-        method: 'POST'
-    });
