@@ -112,7 +112,14 @@ public class LdapRealm extends AbstractLdapRealm {
             throw new AuthenticationException("LDAP data not found: " + username);
         }
 
-        String principalName = ldapPrincipal.getNameInNamespace();
+        String principalName = ldapPrincipal.getUserPrincipalName();
+        if (principalName == null) {
+            principalName = ldapPrincipal.getNameInNamespace();
+        }
+
+        if (principalName == null) {
+            throw new NamingException("Can't determine the principal name of '" + username + "'");
+        }
 
         LdapContext ctx = null;
         try {

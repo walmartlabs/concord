@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.ldap;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,6 +43,7 @@ public class LdapManager {
 
     private static final String MEMBER_OF_ATTR = "memberOf"; // TODO move to cfg
     private static final String DISPLAY_NAME_ATTR = "displayName"; // TODO move to cfg
+    private static final String USER_PRINCIPAL_NAME_ATTR = "userPrincipalName"; // TODO move to cfg
 
     private final LdapConfiguration cfg;
     private final LdapContextFactory ctxFactory;
@@ -60,7 +61,7 @@ public class LdapManager {
 
             SearchControls searchCtls = new SearchControls();
             searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            searchCtls.setReturningAttributes(new String[] { cfg.getUsernameProperty(), DISPLAY_NAME_ATTR });
+            searchCtls.setReturningAttributes(new String[]{cfg.getUsernameProperty(), DISPLAY_NAME_ATTR});
             searchCtls.setCountLimit(10);
             Object[] args = new Object[]{filter};
 
@@ -158,6 +159,10 @@ public class LdapManager {
                 b.displayName(attr.get().toString());
                 break;
             }
+            case USER_PRINCIPAL_NAME_ATTR: {
+                b.userPrincipalName(attr.get().toString());
+                break;
+            }
             default: {
                 Set<String> exposedAttr = cfg.getExposeAttributes();
                 if (exposedAttr == null || exposedAttr.isEmpty() || exposedAttr.contains(id)) {
@@ -171,6 +176,7 @@ public class LdapManager {
 
         private String username;
         private String nameInNamespace;
+        private String userPrincipalName;
         private String displayName;
         private String email;
         private Set<String> groups;
@@ -183,6 +189,11 @@ public class LdapManager {
 
         public LdapPrincipalBuilder nameInNamespace(String nameInNamespace) {
             this.nameInNamespace = nameInNamespace;
+            return this;
+        }
+
+        public LdapPrincipalBuilder userPrincipalName(String userPrincipalName) {
+            this.userPrincipalName = userPrincipalName;
             return this;
         }
 
@@ -220,7 +231,7 @@ public class LdapManager {
                 attributes = Collections.emptyMap();
             }
 
-            return new LdapPrincipal(username, nameInNamespace, displayName, email, groups, attributes);
+            return new LdapPrincipal(username, nameInNamespace, userPrincipalName, displayName, email, groups, attributes);
         }
     }
 }

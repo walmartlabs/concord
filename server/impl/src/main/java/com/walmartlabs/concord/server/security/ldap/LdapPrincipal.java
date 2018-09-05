@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.ldap;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,14 +30,23 @@ public class LdapPrincipal implements Serializable {
 
     private final String username;
     private final String nameInNamespace;
+    private final String userPrincipalName;
     private final String displayName;
     private final String email;
     private final Set<String> groups;
     private final Map<String, String> attributes;
 
-    public LdapPrincipal(String username, String nameInNamespace, String displayName, String email, Set<String> groups, Map<String, String> attributes) {
+    public LdapPrincipal(String username,
+                         String nameInNamespace,
+                         String userPrincipalName,
+                         String displayName,
+                         String email,
+                         Set<String> groups,
+                         Map<String, String> attributes) {
+
         this.username = username;
         this.nameInNamespace = nameInNamespace;
+        this.userPrincipalName = userPrincipalName;
         this.displayName = displayName;
         this.email = email;
         this.groups = groups;
@@ -54,6 +63,10 @@ public class LdapPrincipal implements Serializable {
 
     public String getNameInNamespace() {
         return nameInNamespace;
+    }
+
+    public String getUserPrincipalName() {
+        return userPrincipalName;
     }
 
     public String getDisplayName() {
@@ -77,6 +90,7 @@ public class LdapPrincipal implements Serializable {
         return "LdapPrincipal{" +
                 "username='" + username + '\'' +
                 ", nameInNamespace='" + nameInNamespace + '\'' +
+                ", userPrincipalName='" + userPrincipalName + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", email='" + email + '\'' +
                 ", groups=" + groups +

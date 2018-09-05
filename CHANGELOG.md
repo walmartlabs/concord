@@ -16,6 +16,7 @@ methods) in the DB.
 
 ### Changed
 
+- concord-server: in LDAP auth try `userPrincipalName` first;
 - concord-server: require `READER` access level to refresh triggers
 (instead of `WRITER`);
 - concord-server: process-level variables are now correctly override
