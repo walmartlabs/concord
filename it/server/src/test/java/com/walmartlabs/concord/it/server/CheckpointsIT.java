@@ -71,7 +71,7 @@ public class CheckpointsIT extends AbstractServerIT {
         // restore from TWO checkpoint
         String checkpointId = assertCheckpoint("TWO", processEvents);
 
-        ResumeProcessResponse resp = checkpointApi.restore(pir.getInstanceId(), UUID.fromString(checkpointId));
+        ResumeProcessResponse resp = checkpointApi.restore(pir.getInstanceId(), new RestoreCheckpointRequest().setId(UUID.fromString(checkpointId)));
         assertNotNull(resp);
 
         waitForCompletion(processApi, spr.getInstanceId());
@@ -84,7 +84,7 @@ public class CheckpointsIT extends AbstractServerIT {
         // restore from ONE checkpoint
         checkpointId = assertCheckpoint("ONE", processEvents);
 
-        resp = checkpointApi.restore(pir.getInstanceId(), UUID.fromString(checkpointId));
+        resp = checkpointApi.restore(pir.getInstanceId(), new RestoreCheckpointRequest().setId(UUID.fromString(checkpointId)));
         assertNotNull(resp);
 
         waitForCompletion(processApi, spr.getInstanceId());
