@@ -16,6 +16,7 @@ methods) in the DB.
 
 ### Changed
 
+- concord-console: fix handling of process statup errors;  
 - concord-server: in LDAP auth try `userPrincipalName` first;
 - concord-server: require `READER` access level to refresh triggers
 (instead of `WRITER`);
