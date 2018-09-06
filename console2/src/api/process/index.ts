@@ -84,6 +84,7 @@ export interface ProcessEntry {
     initiator: string;
     createdAt: string;
     lastUpdatedAt: string;
+    meta?: {};
 }
 
 export const start = (

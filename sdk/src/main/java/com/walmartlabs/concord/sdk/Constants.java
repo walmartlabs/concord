@@ -151,6 +151,11 @@ public class Constants {
          * Requirements.
          */
         public static final String REQUIREMENTS = "requirements";
+
+        /**
+         * Process metadata.
+         */
+        public static final String META = "meta";
     }
 
     /**
@@ -285,5 +290,7 @@ public class Constants {
         public static final String REPO_NAME = "repo";
 
         public static final String SYNC = "sync";
+
+        public static final String META = "meta";
     }
 }

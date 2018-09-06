@@ -20,7 +20,7 @@
 
 import { Action } from 'redux';
 
-import { RequestError } from '../../../api/common';
+import { ConcordKey, RequestError } from '../../../api/common';
 import { OrganizationEntry } from '../../../api/org';
 
 export interface ListOrganizationsRequest extends Action {
@@ -30,6 +30,10 @@ export interface ListOrganizationsRequest extends Action {
 export interface ListOrganizationsResponse extends Action {
     error: RequestError;
     items?: OrganizationEntry[];
+}
+
+export interface GetOrganizationRequest extends Action {
+    orgName: ConcordKey;
 }
 
 export interface Organizations {

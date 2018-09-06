@@ -22,9 +22,11 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -151,6 +153,34 @@ public final class PayloadBuilder {
         if (initiator != null) {
             payload = payload.putHeader(Payload.INITIATOR, initiator);
         }
+
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public PayloadBuilder meta(Map<String, Object> meta) {
+        if (meta == null) {
+            meta = Collections.emptyMap();
+        }
+
+        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        if (cfg == null) {
+            cfg = new HashMap<>();
+        }
+
+        Object v = cfg.getOrDefault(Constants.Request.META, Collections.emptyMap());
+        if (!(v instanceof Map)) {
+            throw new ValidationErrorsException("Expected a JSON object in '" + Constants.Request.META + "', got: " + v);
+        }
+
+        Map<String, Object> prev = (Map<String, Object>) v;
+        meta = ConfigurationUtils.deepMerge(prev, meta);
+
+        if (!meta.isEmpty()) {
+            cfg.put(Constants.Request.META, meta);
+        }
+
+        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, cfg);
 
         return this;
     }

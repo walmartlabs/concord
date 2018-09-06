@@ -23,79 +23,113 @@ import { Link } from 'react-router-dom';
 import { Table } from 'semantic-ui-react';
 import { ProcessEntry } from '../../../api/process';
 import { LocalTimestamp, ProcessActionDropdown, ProcessStatusIcon } from '../../molecules';
+import { ColumnDefinition } from '../../../api/org';
 
 interface StateProps {
     processes: ProcessEntry[];
     reload?: () => void;
 }
 
-export enum Column {
-    STATUS,
-    INSTANCE_ID,
-    PROJECT,
-    INITIATOR,
-    CREATED_AT,
-    UPDATED_AT,
-    ACTIONS
-}
+export const INSTANCE_ID_COLUMN: ColumnDefinition = {
+    caption: 'Instance ID',
+    source: 'instanceId',
+    render: 'process-link'
+};
+
+export const PROJECT_COLUMN: ColumnDefinition = {
+    caption: 'Project',
+    source: 'projectName',
+    render: 'project-link'
+};
+
+export const INITIATOR_COLUMN: ColumnDefinition = {
+    caption: 'Initiator',
+    source: 'initiator'
+};
+
+export const CREATED_AT_COLUMN: ColumnDefinition = {
+    caption: 'Created',
+    source: 'createdAt',
+    render: 'timestamp'
+};
+
+export const UPDATED_AT_COLUMN: ColumnDefinition = {
+    caption: 'Updated',
+    source: 'lastUpdatedAt',
+    render: 'timestamp'
+};
 
 interface ExternalProps {
     orgName?: string;
-    hideColumns?: Column[];
+    columns: ColumnDefinition[];
 }
 
-const renderProcessLink = (row: ProcessEntry) => {
-    const { instanceId } = row;
-    return <Link to={`/process/${instanceId}`}>{instanceId}</Link>;
+const getValue = (source: string, e: ProcessEntry) => {
+    if (e === undefined) {
+        return {};
+    }
+
+    const result = {};
+    Object.keys(e).forEach((k) => {
+        const v = e[k];
+        if (v !== undefined && v !== null) {
+            result[k] = v;
+        }
+    });
+
+    if (e.meta !== undefined) {
+        const meta = e.meta;
+        Object.keys(meta).forEach((k) => {
+            const v = meta[k];
+            if (v !== undefined && v !== null) {
+                result[k] = v;
+            }
+        });
+    }
+
+    return result[source];
 };
 
-const showColumn = (column: Column, hideColumns?: Column[]): boolean => {
-    return !hideColumns || hideColumns.indexOf(column) < 0;
+const renderColumnContent = (e: ProcessEntry, c: ColumnDefinition) => {
+    const v = getValue(c.source, e);
+
+    if (c.render === 'process-link') {
+        const caption = v || e.instanceId;
+        return <Link to={`/process/${e.instanceId}`}>{caption}</Link>;
+    } else if (c.render === 'timestamp') {
+        return <LocalTimestamp value={v} />;
+    } else if (c.render === 'project-link') {
+        return <Link to={`/org/${e.orgName}/project/${e.projectName}`}>{v}</Link>;
+    }
+
+    return v;
 };
 
-const renderTableRow = (row: ProcessEntry, hideColumns?: Column[]) => {
+const renderColumn = (e: ProcessEntry, c: ColumnDefinition) => {
+    return <Table.Cell key={e.instanceId}>{renderColumnContent(e, c)}</Table.Cell>;
+};
+
+const renderColumnCaption = (c: ColumnDefinition) => {
+    return <Table.HeaderCell key={c.caption}>{c.caption}</Table.HeaderCell>;
+};
+
+const renderTableRow = (row: ProcessEntry, columns: ColumnDefinition[]) => {
     return (
         <Table.Row key={row.instanceId}>
-            {showColumn(Column.STATUS, hideColumns) && (
-                <Table.Cell textAlign="center">
-                    <ProcessStatusIcon status={row.status} />
-                </Table.Cell>
-            )}
-            {showColumn(Column.INSTANCE_ID, hideColumns) && (
-                <Table.Cell>{renderProcessLink(row)}</Table.Cell>
-            )}
-            {showColumn(Column.PROJECT, hideColumns) && (
-                <Table.Cell>
-                    <Link to={`/org/${row.orgName}/project/${row.projectName}`}>
-                        {row.projectName}
-                    </Link>
-                </Table.Cell>
-            )}
-            {showColumn(Column.INITIATOR, hideColumns) && (
-                <Table.Cell singleLine={true}>{row.initiator}</Table.Cell>
-            )}
-            {showColumn(Column.CREATED_AT, hideColumns) && (
-                <Table.Cell>
-                    <LocalTimestamp value={row.createdAt} />
-                </Table.Cell>
-            )}
-            {showColumn(Column.UPDATED_AT, hideColumns) && (
-                <Table.Cell>
-                    <LocalTimestamp value={row.lastUpdatedAt} />
-                </Table.Cell>
-            )}
-            {showColumn(Column.ACTIONS, hideColumns) && (
-                <Table.Cell>
-                    <ProcessActionDropdown instanceId={row.instanceId} status={row.status} />
-                </Table.Cell>
-            )}
+            <Table.Cell textAlign="center">
+                <ProcessStatusIcon status={row.status} />
+            </Table.Cell>
+            {columns.map((c) => renderColumn(row, c))}
+            <Table.Cell>
+                <ProcessActionDropdown instanceId={row.instanceId} status={row.status} />
+            </Table.Cell>
         </Table.Row>
     );
 };
 
 class ProcessList extends React.PureComponent<StateProps & ExternalProps> {
     render() {
-        const { hideColumns, processes } = this.props;
+        const { columns, processes } = this.props;
 
         if (!processes) {
             return <p>No processes found.</p>;
@@ -105,33 +139,13 @@ class ProcessList extends React.PureComponent<StateProps & ExternalProps> {
             <Table celled={true} attached="bottom">
                 <Table.Header>
                     <Table.Row>
-                        {showColumn(Column.STATUS, hideColumns) && (
-                            <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
-                        )}
-                        {showColumn(Column.INSTANCE_ID, hideColumns) && (
-                            <Table.HeaderCell>Instance ID</Table.HeaderCell>
-                        )}
-                        {showColumn(Column.PROJECT, hideColumns) && (
-                            <Table.HeaderCell>Project</Table.HeaderCell>
-                        )}
-                        {showColumn(Column.INITIATOR, hideColumns) && (
-                            <Table.HeaderCell collapsing={true} singleLine={true}>
-                                Initiator
-                            </Table.HeaderCell>
-                        )}
-                        {showColumn(Column.CREATED_AT, hideColumns) && (
-                            <Table.HeaderCell>Created</Table.HeaderCell>
-                        )}
-                        {showColumn(Column.UPDATED_AT, hideColumns) && (
-                            <Table.HeaderCell>Updated</Table.HeaderCell>
-                        )}
-                        {showColumn(Column.ACTIONS, hideColumns) && (
-                            <Table.HeaderCell collapsing={true} />
-                        )}
+                        <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
+                        {columns.map((c) => renderColumnCaption(c))}
+                        <Table.HeaderCell collapsing={true} />
                     </Table.Row>
                 </Table.Header>
 
-                <Table.Body>{processes.map((p) => renderTableRow(p, hideColumns))}</Table.Body>
+                <Table.Body>{processes.map((p) => renderTableRow(p, columns))}</Table.Body>
             </Table>
         );
     }

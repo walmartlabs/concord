@@ -28,13 +28,16 @@ import io.takari.bpm.model.ExpressionType;
 import io.takari.bpm.model.ServiceTask;
 
 import java.util.Collections;
+import java.util.UUID;
 
 public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
 
     private final ElementEventProcessor eventProcessor;
+    private final ProcessMetadataProcessor processMetadataProcessor;
 
-    public ProcessElementInterceptor(ElementEventProcessor eventProcessor) {
+    public ProcessElementInterceptor(ElementEventProcessor eventProcessor, ProcessMetadataProcessor processMetadataProcessor) {
         this.eventProcessor = eventProcessor;
+        this.processMetadataProcessor = processMetadataProcessor;
     }
 
     @Override
@@ -45,5 +48,7 @@ public class ProcessElementInterceptor extends ExecutionInterceptorAdapter {
         eventProcessor.process(event,
                 element -> Collections.emptyMap(),
                 element -> !(element instanceof ServiceTask) || ((ServiceTask) element).getType() != ExpressionType.DELEGATE);
+
+        processMetadataProcessor.process(UUID.fromString(ev.getProcessBusinessKey()), ev.getVariables());
     }
 }

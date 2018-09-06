@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -115,7 +115,9 @@ public class Main {
         // load the project
         ProjectDefinition project = loadProject(baseDir);
 
-        Engine engine = engineFactory.create(project, baseDir, activeProfiles);
+        Set<String> metaVariables = getMetaVariables(req);
+
+        Engine engine = engineFactory.create(project, baseDir, activeProfiles, metaVariables);
 
         while (true) {
             Collection<Event> resultEvents;
@@ -141,7 +143,7 @@ public class Main {
     }
 
     private static UUID getCheckpointId(Event e) {
-        String s = (String) ((Map)e.getPayload()).get("checkpointId");
+        String s = (String) ((Map) e.getPayload()).get("checkpointId");
         if (s == null) {
             return null;
         }
@@ -278,6 +280,15 @@ public class Main {
         }
 
         return m;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<String> getMetaVariables(Map<String, Object> cfg) {
+        Map<String, Object> meta = (Map<String, Object>) cfg.get(InternalConstants.Request.META);
+        if (meta != null) {
+            return meta.keySet();
+        }
+        return Collections.emptySet();
     }
 
     private static Collection<Event> finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {

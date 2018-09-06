@@ -19,10 +19,17 @@
  */
 
 import { combineReducers, Reducer } from 'redux';
-import { call, put, takeLatest } from 'redux-saga/effects';
-import { list as apiList } from '../../../api/org';
+import { all, call, put, takeLatest } from 'redux-saga/effects';
+import { list as apiList, get as apiGet } from '../../../api/org';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../common';
-import { ListOrganizationsRequest, ListOrganizationsResponse, Organizations, State } from './types';
+import {
+    GetOrganizationRequest,
+    ListOrganizationsRequest,
+    ListOrganizationsResponse,
+    Organizations,
+    State
+} from './types';
+import { ConcordKey } from '../../../api/common';
 
 export { State };
 
@@ -30,13 +37,20 @@ const NAMESPACE = 'orgs';
 
 const actionTypes = {
     LIST_ORGANIZATIONS_REQUEST: `${NAMESPACE}/list/request`,
-    LIST_ORGANIZATIONS_RESPONSE: `${NAMESPACE}/list/response`
+    LIST_ORGANIZATIONS_RESPONSE: `${NAMESPACE}/list/response`,
+
+    GET_ORGANIZATION_REQUEST: `${NAMESPACE}/get/request`,
+    GET_ORGANIZATION_RESPONSE: `${NAMESPACE}/get/response`
 };
 
 export const actions = {
     listOrgs: (onlyCurrent: boolean): ListOrganizationsRequest => ({
         type: actionTypes.LIST_ORGANIZATIONS_REQUEST,
         onlyCurrent
+    }),
+    getOrg: (orgName: ConcordKey): GetOrganizationRequest => ({
+        type: actionTypes.GET_ORGANIZATION_REQUEST,
+        orgName
     })
 };
 
@@ -61,12 +75,12 @@ const orgById: Reducer<Organizations> = (
 };
 
 const loading = makeLoadingReducer(
-    [actionTypes.LIST_ORGANIZATIONS_REQUEST],
+    [actionTypes.LIST_ORGANIZATIONS_REQUEST, actionTypes.GET_ORGANIZATION_REQUEST],
     [actionTypes.LIST_ORGANIZATIONS_RESPONSE]
 );
 
 const listError = makeErrorReducer(
-    [actionTypes.LIST_ORGANIZATIONS_REQUEST],
+    [actionTypes.LIST_ORGANIZATIONS_REQUEST, actionTypes.GET_ORGANIZATION_REQUEST],
     [actionTypes.LIST_ORGANIZATIONS_RESPONSE]
 );
 
@@ -75,6 +89,19 @@ export const reducers = combineReducers<State>({
     loading,
     error: listError
 });
+
+export const selectors = {
+    orgByName: (state: State, orgName: ConcordKey) => {
+        for (const id of Object.keys(state.orgById)) {
+            const p = state.orgById[id];
+            if (p.name === orgName) {
+                return p;
+            }
+        }
+
+        return;
+    }
+};
 
 function* onList({ onlyCurrent }: ListOrganizationsRequest) {
     try {
@@ -88,6 +115,21 @@ function* onList({ onlyCurrent }: ListOrganizationsRequest) {
     }
 }
 
+function* onGet({ orgName }: GetOrganizationRequest) {
+    try {
+        const response = yield call(apiGet, orgName);
+        yield put({
+            type: actionTypes.LIST_ORGANIZATIONS_RESPONSE,
+            items: [response] // normalizing the data
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.LIST_ORGANIZATIONS_RESPONSE, e);
+    }
+}
+
 export const sagas = function*() {
-    yield takeLatest(actionTypes.LIST_ORGANIZATIONS_REQUEST, onList);
+    yield all([
+        takeLatest(actionTypes.GET_ORGANIZATION_REQUEST, onGet),
+        takeLatest(actionTypes.LIST_ORGANIZATIONS_REQUEST, onList)
+    ]);
 };

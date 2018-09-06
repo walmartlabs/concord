@@ -884,6 +884,26 @@ public class ProcessResource implements Resource {
                 .build();
     }
 
+    /**
+     * Update process metadata.
+     *
+     * @param instanceId
+     * @param meta
+     * @return
+     */
+    @POST
+    @ApiOperation(value = "Update process metadata")
+    @javax.ws.rs.Path("{id}/meta")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public Response metadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
+        if (!queueDao.update(instanceId, meta)) {
+            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+        return Response.ok().build();
+    }
+
     private void assertProcessStateAccess(ProcessEntry p) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
 

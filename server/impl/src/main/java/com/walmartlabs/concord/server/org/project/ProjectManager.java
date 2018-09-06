@@ -80,7 +80,7 @@ public class ProjectManager {
             byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
 
             UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), ownerId, entry.getCfg(),
-                    entry.getVisibility(), acceptsRawPayload, encryptedKey);
+                    entry.getVisibility(), acceptsRawPayload, encryptedKey, entry.getMeta());
 
             if (repos != null) {
                 repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v, false));
@@ -110,7 +110,7 @@ public class ProjectManager {
 
         projectDao.tx(tx -> {
             projectDao.update(tx, orgId, projectId, entry.getVisibility(), entry.getName(),
-                    entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload());
+                    entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload(), entry.getMeta());
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);

@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -86,6 +87,11 @@ public class PayloadManager {
 
         String[] out = getOutExpressions(input);
 
+        Map<String, Object> meta = MultipartUtils.getMap(input, Constants.Multipart.META);
+        if (meta == null) {
+            meta = Collections.emptyMap();
+        }
+
         return new PayloadBuilder(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .with(input)
@@ -95,6 +101,7 @@ public class PayloadManager {
                 .entryPoint(entryPoint)
                 .outExpressions(out)
                 .initiator(initiator.getId(), initiator.getUsername())
+                .meta(meta)
                 .build();
     }
 

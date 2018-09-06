@@ -26,6 +26,7 @@ import {
     OperationResult
 } from '../../common';
 import { RepositoryEntry } from './repository';
+import { ColumnDefinition } from '../index';
 
 export enum ProjectVisibility {
     PUBLIC = 'PUBLIC',
@@ -34,6 +35,14 @@ export enum ProjectVisibility {
 
 export interface Repositories {
     [name: string]: RepositoryEntry;
+}
+
+export interface ProjectEntryMetaUI {
+    processList?: ColumnDefinition[];
+}
+
+export interface ProjectEntryMeta {
+    ui?: ProjectEntryMetaUI;
 }
 
 export interface ProjectEntry {
@@ -49,6 +58,8 @@ export interface ProjectEntry {
     repositories?: Repositories;
 
     acceptsRawPayload: boolean;
+
+    meta?: ProjectEntryMeta;
 }
 
 export interface NewProjectEntry {

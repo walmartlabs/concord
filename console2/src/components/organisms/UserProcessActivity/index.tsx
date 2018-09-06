@@ -28,10 +28,16 @@ import { ProjectProcesses, UserActivity } from '../../../api/service/console/use
 import { Header, Loader } from 'semantic-ui-react';
 import { MAX_CARD_ITEMS, OrgProjects } from '../../molecules/UserProcessByOrgCards';
 import { ProcessList } from '../../molecules/index';
-import { Column } from '../../molecules/ProcessList';
 import { StatusCount } from '../../molecules/UserProcessStats';
 import { ProcessStatus } from '../../../api/process';
 import { comparators } from '../../../utils';
+import {
+    CREATED_AT_COLUMN,
+    INITIATOR_COLUMN,
+    INSTANCE_ID_COLUMN,
+    PROJECT_COLUMN,
+    UPDATED_AT_COLUMN
+} from '../../molecules/ProcessList';
 
 const MAX_OWN_PROCESSES = 10;
 
@@ -116,7 +122,16 @@ class UserProcesses extends React.PureComponent<SessionProps & StateProps & Disp
                 <Header dividing={true} as="h3">
                     Your last {MAX_OWN_PROCESSES} processes:
                 </Header>
-                <ProcessList processes={processes} hideColumns={[Column.INITIATOR]} />
+                <ProcessList
+                    processes={processes}
+                    columns={[
+                        INSTANCE_ID_COLUMN,
+                        PROJECT_COLUMN,
+                        INITIATOR_COLUMN,
+                        CREATED_AT_COLUMN,
+                        UPDATED_AT_COLUMN
+                    ]}
+                />
             </>
         );
     }

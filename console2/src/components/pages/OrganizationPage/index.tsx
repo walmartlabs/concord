@@ -19,24 +19,17 @@
  */
 
 import * as React from 'react';
-import { Redirect, Route, RouteComponentProps, Switch, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Breadcrumb, Icon, Menu } from 'semantic-ui-react';
+import { Breadcrumb } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';
-import {
-    ProcessListActivity,
-    ProjectListActivity,
-    SecretListActivity,
-    TeamListActivity
-} from '../../organisms';
-import { NotFoundPage } from '../index';
+import { TabLink } from '../../organisms/OrganizationActivity';
+import { OrganizationActivity } from '../../organisms';
 
 interface RouteProps {
     orgName: string;
 }
-
-type TabLink = 'process' | 'project' | 'secret' | 'team' | null;
 
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/process')) {
@@ -55,11 +48,9 @@ const pathToTab = (s: string): TabLink => {
 class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProps>> {
     render() {
         const { orgName } = this.props.match.params;
-        const { url } = this.props.match;
 
         const activeTab = pathToTab(this.props.location.pathname);
 
-        // TODO move into OrganizationActivity
         return (
             <>
                 <BreadcrumbSegment>
@@ -70,44 +61,7 @@ class OrganizationPage extends React.PureComponent<RouteComponentProps<RouteProp
                     <Breadcrumb.Section active={true}>{orgName}</Breadcrumb.Section>
                 </BreadcrumbSegment>
 
-                <Menu tabular={true}>
-                    <Menu.Item active={activeTab === 'project'}>
-                        <Icon name="sitemap" />
-                        <Link to={`${url}/project`}>Projects</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'process'}>
-                        <Icon name="tasks" />
-                        <Link to={`${url}/process`}>Processes</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'secret'}>
-                        <Icon name="lock" />
-                        <Link to={`${url}/secret`}>Secrets</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'team'}>
-                        <Icon name="users" />
-                        <Link to={`${url}/team`}>Teams</Link>
-                    </Menu.Item>
-                </Menu>
-
-                <Switch>
-                    <Route path={url} exact={true}>
-                        <Redirect to={`${url}/project`} />
-                    </Route>
-                    <Route path={`${url}/project`}>
-                        <ProjectListActivity orgName={orgName} />
-                    </Route>
-                    <Route path={`${url}/process`}>
-                        <ProcessListActivity orgName={orgName} />
-                    </Route>
-                    <Route path={`${url}/secret`} exact={true}>
-                        <SecretListActivity orgName={orgName} />
-                    </Route>
-                    <Route path={`${url}/team`} exact={true}>
-                        <TeamListActivity orgName={orgName} />
-                    </Route>
-
-                    <Route component={NotFoundPage} />
-                </Switch>
+                <OrganizationActivity activeTab={activeTab} orgName={orgName} />
             </>
         );
     }

@@ -48,7 +48,7 @@ public class SecretDaoTest extends AbstractDaoTest {
         String projectName = "project#" + System.currentTimeMillis();
 
         ProjectDao projectDao = new ProjectDao(getConfiguration());
-        UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null, true, new byte[0]);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, null, null, true, new byte[0], null);
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration());

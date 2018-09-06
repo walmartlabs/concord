@@ -574,7 +574,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         }
 
         for (String p : sensitiveData) {
-            s = s.replaceAll(p, "******");
+            s = s.replaceAll(p, "***");
         }
         return s;
     }

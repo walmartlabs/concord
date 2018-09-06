@@ -52,7 +52,7 @@ public class SuspendTest {
                 new SequenceFlow("f2", "ev1", "end"),
                 new EndEvent("end")));
 
-        Engine engine = new EngineFactory(mock(ApiClientFactoryImpl.class), taskRegistry).create(project, baseDir, Collections.emptySet());
+        Engine engine = new EngineFactory(mock(ApiClientFactoryImpl.class), taskRegistry).create(project, baseDir, Collections.emptySet(), Collections.emptySet());
 
         // ---
 

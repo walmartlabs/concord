@@ -37,7 +37,7 @@ public class ProjectEntry implements Serializable {
 
     public static ProjectEntry replace(ProjectEntry e, Map<String, RepositoryEntry> repos) {
         return new ProjectEntry(e.id, e.name, e.description, e.orgId, e.orgName, repos,
-                e.cfg, e.visibility, e.owner, e.acceptsRawPayload);
+                e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.meta);
     }
 
     private final UUID id;
@@ -65,16 +65,22 @@ public class ProjectEntry implements Serializable {
 
     private final Boolean acceptsRawPayload;
 
+    private final Map<String, Object> meta;
+
     public ProjectEntry(String name) {
-        this(null, name, null, null, null, null, null, null, null, true);
+        this(null, name, null, null, null, null, null, null, null, true, null);
     }
 
     public ProjectEntry(String name, ProjectVisibility visibility) {
-        this(null, name, null, null, null, null, null, visibility, null, true);
+        this(null, name, null, null, null, null, null, visibility, null, true, null);
     }
 
     public ProjectEntry(String name, Map<String, RepositoryEntry> repositories) {
-        this(null, name, null, null, null, repositories, null, null, null, true);
+        this(null, name, null, null, null, repositories, null, null, null, true, null);
+    }
+
+    public ProjectEntry(String name, UUID id) {
+        this(id, name, null, null, null, null, null, null, null, true, null);
     }
 
     @JsonCreator
@@ -87,7 +93,8 @@ public class ProjectEntry implements Serializable {
                         @JsonProperty("cfg") Map<String, Object> cfg,
                         @JsonProperty("visibility") ProjectVisibility visibility,
                         @JsonProperty("owner") ProjectOwner owner,
-                        @JsonProperty("acceptsRawPayload") Boolean acceptsRawPayload) {
+                        @JsonProperty("acceptsRawPayload") Boolean acceptsRawPayload,
+                        @JsonProperty("meta") Map<String, Object> meta) {
 
         this.id = id;
         this.name = name;
@@ -99,6 +106,7 @@ public class ProjectEntry implements Serializable {
         this.visibility = visibility;
         this.owner = owner;
         this.acceptsRawPayload = acceptsRawPayload;
+        this.meta = meta;
     }
 
     public UUID getId() {
@@ -145,6 +153,10 @@ public class ProjectEntry implements Serializable {
         return acceptsRawPayload;
     }
 
+    public Map<String, Object> getMeta() {
+        return meta;
+    }
+
     @Override
     public String toString() {
         return "ProjectEntry{" +
@@ -158,10 +170,7 @@ public class ProjectEntry implements Serializable {
                 ", visibility=" + visibility +
                 ", owner=" + owner +
                 ", acceptsRawPayload=" + acceptsRawPayload +
+                ", meta=" + meta +
                 '}';
-    }
-
-    public ProjectEntry(String name, UUID id) {
-        this(id, name, null, null, null, null, null, null, null, true);
     }
 }

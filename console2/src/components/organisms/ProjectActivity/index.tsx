@@ -61,6 +61,18 @@ interface DispatchProps {
 type Props = ExternalProps & StateProps & DispatchProps;
 
 class ProjectActivity extends React.PureComponent<Props> {
+    static renderProcesses(p: ProjectEntry) {
+        if (
+            p.meta !== undefined &&
+            p.meta.ui !== undefined &&
+            p.meta.ui.processList !== undefined
+        ) {
+            return <ProcessListActivity orgName={p.orgName} columns={p.meta.ui.processList} />;
+        } else {
+            return <ProcessListActivity orgName={p.orgName} />;
+        }
+    }
+
     static renderRepositories(p: ProjectEntry) {
         const repos = p.repositories;
         if (!repos) {
@@ -183,7 +195,7 @@ class ProjectActivity extends React.PureComponent<Props> {
                     </Route>
 
                     <Route path={`${baseUrl}/process`} exact={true}>
-                        <ProcessListActivity orgName={orgName} projectName={projectName} />
+                        {ProjectActivity.renderProcesses(data)}
                     </Route>
                     <Route path={`${baseUrl}/repository`} exact={true}>
                         {ProjectActivity.renderRepositories(data)}

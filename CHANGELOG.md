@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: initial support for process-,
+organization- and project-level metadata.
+
+
+
 ## [0.86.0] - 2018-09-05
 
 ### Added

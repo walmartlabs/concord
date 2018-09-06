@@ -30,7 +30,14 @@ import { SearchFilter } from '../../../api/org/process';
 import { ProcessEntry, ProcessStatus } from '../../../api/process';
 import { actions, Processes, State } from '../../../state/data/processes';
 import { ProcessList, ProcessStatusDropdown, RequestErrorMessage } from '../../molecules';
-import { Column } from '../../molecules/ProcessList';
+import {
+    CREATED_AT_COLUMN,
+    INITIATOR_COLUMN,
+    INSTANCE_ID_COLUMN,
+    PROJECT_COLUMN,
+    UPDATED_AT_COLUMN
+} from '../../molecules/ProcessList';
+import { ColumnDefinition } from '../../../api/org';
 
 interface RouteProps {
     status?: string;
@@ -54,9 +61,25 @@ interface ExternalProps {
 
     // TODO remove when we migrate to the common process search endpoint
     showInitiatorFilter?: boolean;
+
+    columns?: ColumnDefinition[];
 }
 
 type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
+
+const defaultColumns = [
+    INSTANCE_ID_COLUMN,
+    PROJECT_COLUMN,
+    INITIATOR_COLUMN,
+    CREATED_AT_COLUMN,
+    UPDATED_AT_COLUMN
+];
+const withoutProjectColumns = [
+    INSTANCE_ID_COLUMN,
+    INITIATOR_COLUMN,
+    CREATED_AT_COLUMN,
+    UPDATED_AT_COLUMN
+];
 
 const parseSearchFilter = (s: string): SearchFilter => {
     const v: any = parseQueryString(s);
@@ -121,7 +144,14 @@ class ProcessListActivity extends React.Component<Props> {
     }
 
     render() {
-        const { loading, error, processes, projectName, showInitiatorFilter = false } = this.props;
+        const {
+            loading,
+            error,
+            processes,
+            showInitiatorFilter = false,
+            columns,
+            projectName
+        } = this.props;
 
         if (error) {
             return <RequestErrorMessage error={error} />;
@@ -131,6 +161,7 @@ class ProcessListActivity extends React.Component<Props> {
         }
 
         const showProjectColumn = !projectName;
+        const cols = columns || (showProjectColumn ? defaultColumns : withoutProjectColumns);
 
         return (
             <>
@@ -162,10 +193,7 @@ class ProcessListActivity extends React.Component<Props> {
                     )}
                 </Menu>
 
-                <ProcessList
-                    processes={processes}
-                    hideColumns={showProjectColumn ? [] : [Column.PROJECT]}
-                />
+                <ProcessList processes={processes} columns={cols} />
             </>
         );
     }

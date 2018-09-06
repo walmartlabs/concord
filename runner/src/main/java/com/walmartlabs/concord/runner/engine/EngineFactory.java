@@ -54,10 +54,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Named
 public class EngineFactory {
@@ -74,7 +71,7 @@ public class EngineFactory {
     }
 
     @SuppressWarnings("deprecation")
-    public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles) {
+    public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles, Set<String> metaVariables) {
         log.info("create -> using profiles: {}", activeProfiles);
 
         Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
@@ -115,6 +112,7 @@ public class EngineFactory {
         cfg.setCopyAllCallActivityOutVariables(true);
 
         ElementEventProcessor eventProcessor = new ElementEventProcessor(apiClientFactory, adapter.processes());
+        ProcessOutVariables outVariables = new ProcessOutVariables(contextFactory);
 
         Engine engine = new EngineBuilder()
                 .withContextFactory(contextFactory)
@@ -127,11 +125,11 @@ public class EngineFactory {
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
                 .withConfiguration(cfg)
-                .withListener(new ProcessOutVariablesListener(contextFactory, attachmentsDir))
+                .withListener(new ProcessOutVariablesListener(attachmentsDir, outVariables))
                 .withResourceResolver(new ResourceResolverImpl(baseDir))
                 .build();
 
-        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor));
+        engine.addInterceptor(new ProcessElementInterceptor(eventProcessor, new ProcessMetadataProcessor(apiClientFactory, metaVariables)));
         return engine;
     }
 

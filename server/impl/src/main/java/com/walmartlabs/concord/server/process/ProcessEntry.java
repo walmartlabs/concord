@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -54,6 +55,7 @@ public class ProcessEntry implements Serializable {
     private final String logFileName;
     private final Set<String> tags;
     private final Set<UUID> childrenIds;
+    private final Map<String, Object> meta;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private final Date createdAt;
@@ -81,7 +83,8 @@ public class ProcessEntry implements Serializable {
                         @JsonProperty("status") ProcessStatus status,
                         @JsonProperty("lastAgentId") String lastAgentId,
                         @JsonProperty("tags") Set<String> tags,
-                        @JsonProperty("childrenIds") Set<UUID> childrenIds) {
+                        @JsonProperty("childrenIds") Set<UUID> childrenIds,
+                        @JsonProperty("meta") Map<String, Object> meta) {
 
         this.instanceId = instanceId;
         this.kind = kind;
@@ -108,6 +111,7 @@ public class ProcessEntry implements Serializable {
 
         this.tags = tags;
         this.childrenIds = childrenIds;
+        this.meta = meta;
     }
 
     public UUID getInstanceId() {
@@ -198,6 +202,10 @@ public class ProcessEntry implements Serializable {
         return childrenIds;
     }
 
+    public Map<String, Object> getMeta() {
+        return meta;
+    }
+
     @Override
     public String toString() {
         return "ProcessEntry{" +
@@ -223,6 +231,7 @@ public class ProcessEntry implements Serializable {
                 ", childrenIds=" + childrenIds +
                 ", createdAt=" + createdAt +
                 ", lastUpdatedAt=" + lastUpdatedAt +
+                ", meta=" + meta +
                 '}';
     }
 }

@@ -57,7 +57,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(orgId, projectName, "test", null, cfg, null, true, new byte[0]);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, cfg, null, true, new byte[0], null);
 
         // ---
         Map<String, Object> actualCfg = projectDao.getConfiguration(projectId);
@@ -78,7 +78,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         // ---
         Map<String, Object> newCfg2 = ImmutableMap.of("a2", "a2-v");
-        tx(tx -> projectDao.update(tx, orgId, projectId, ProjectVisibility.PRIVATE, projectName, "new-description", newCfg2, null));
+        tx(tx -> projectDao.update(tx, orgId, projectId, ProjectVisibility.PRIVATE, projectName, "new-description", newCfg2, null, null));
 
         actualCfg = projectDao.getConfiguration(projectId);
         assertEquals(newCfg2, actualCfg);
@@ -107,8 +107,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String aName = "aProject#" + System.currentTimeMillis();
         String bName = "bProject#" + System.currentTimeMillis();
 
-        projectDao.insert(orgId, aName, "test", null, null, null, true, new byte[0]);
-        projectDao.insert(orgId, bName, "test", null, null, null, true, new byte[0]);
+        projectDao.insert(orgId, aName, "test", null, null, null, true, new byte[0], null);
+        projectDao.insert(orgId, bName, "test", null, null, null, true, new byte[0], null);
 
         // ---
 

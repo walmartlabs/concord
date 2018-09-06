@@ -30,13 +30,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Arrays;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -140,14 +134,6 @@ public final class MultipartUtils {
         return null;
     }
 
-    public static String assertString(MultipartInput input, String key) {
-        String s = getString(input, key);
-        if (s == null) {
-            throw new ValidationErrorsException("Value not found: " + key);
-        }
-        return s;
-    }
-
     public static boolean getBoolean(MultipartInput input, String key, boolean defaultValue) {
         String s = getString(input, key);
         if (s == null) {
@@ -182,12 +168,24 @@ public final class MultipartUtils {
         return null;
     }
 
-    public static InputStream assertStream(MultipartInput input, String key) {
-        InputStream in = getStream(input, key);
-        if (in == null) {
-            throw new ValidationErrorsException("Value not found: " + key);
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> getMap(MultipartInput input, String key) {
+        try {
+            for (InputPart p : input.getParts()) {
+                String n = MultipartUtils.extractName(p);
+                if (key.equalsIgnoreCase(n)) {
+                    String v = p.getBodyAsString().trim();
+                    if (v.isEmpty()) {
+                        return Collections.emptyMap();
+                    } else {
+                        return objectMapper.readValue(v, Map.class);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new ConcordApplicationException("Error parsing the request", e);
         }
-        return in;
+        return null;
     }
 
     private MultipartUtils() {

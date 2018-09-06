@@ -111,9 +111,10 @@ public class ProjectDao extends AbstractDao {
         Field<String> cfgField = p.PROJECT_CFG.cast(String.class);
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME).from(ORGANIZATIONS).where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID)).asField();
         Field<String> ownerUsernameField = select(USERS.USERNAME).from(USERS).where(USERS.USER_ID.eq(p.OWNER_ID)).asField();
+        Field<String> metaField = p.META.cast(String.class);
 
         try (DSLContext tx = DSL.using(cfg)) {
-            Record10<UUID, String, String, UUID, String, String, String, UUID, String, Boolean> r = tx.select(
+            Record11<UUID, String, String, UUID, String, String, String, UUID, String, Boolean, String> r = tx.select(
                     p.PROJECT_ID,
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
@@ -123,7 +124,8 @@ public class ProjectDao extends AbstractDao {
                     p.VISIBILITY,
                     p.OWNER_ID,
                     ownerUsernameField,
-                    p.ACCEPTS_RAW_PAYLOAD)
+                    p.ACCEPTS_RAW_PAYLOAD,
+                    metaField)
                     .from(p)
                     .where(p.PROJECT_ID.eq(projectId))
                     .fetchOne();
@@ -176,18 +178,19 @@ public class ProjectDao extends AbstractDao {
                     cfg,
                     ProjectVisibility.valueOf(r.get(p.VISIBILITY)),
                     toOwner(r.get(p.OWNER_ID), r.get(ownerUsernameField)),
-                    r.get(p.ACCEPTS_RAW_PAYLOAD));
+                    r.get(p.ACCEPTS_RAW_PAYLOAD),
+                    deserialize(r.get(metaField)));
         }
     }
 
     public UUID insert(UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
-                       ProjectVisibility visibility, boolean acceptsRawPayload, byte[] encryptedKey) {
+                       ProjectVisibility visibility, boolean acceptsRawPayload, byte[] encryptedKey, Map<String, Object> meta) {
 
-        return txResult(tx -> insert(tx, orgId, name, description, ownerId, cfg, visibility, acceptsRawPayload, encryptedKey));
+        return txResult(tx -> insert(tx, orgId, name, description, ownerId, cfg, visibility, acceptsRawPayload, encryptedKey, meta));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
-                       ProjectVisibility visibility, boolean acceptsRawPayload, byte[] encryptedKey) {
+                       ProjectVisibility visibility, boolean acceptsRawPayload, byte[] encryptedKey, Map<String, Object> meta) {
 
         if (visibility == null) {
             visibility = ProjectVisibility.PUBLIC;
@@ -201,7 +204,8 @@ public class ProjectDao extends AbstractDao {
                         PROJECTS.VISIBILITY,
                         PROJECTS.OWNER_ID,
                         PROJECTS.ACCEPTS_RAW_PAYLOAD,
-                        PROJECTS.SECRET_KEY)
+                        PROJECTS.SECRET_KEY,
+                        PROJECTS.META)
                 .values(value(name),
                         value(description),
                         value(orgId),
@@ -209,14 +213,16 @@ public class ProjectDao extends AbstractDao {
                         value(visibility.toString()),
                         value(ownerId),
                         value(acceptsRawPayload),
-                        value(encryptedKey))
+                        value(encryptedKey),
+                        field("?::jsonb", serialize(meta)))
                 .returning(PROJECTS.PROJECT_ID)
                 .fetchOne()
                 .getProjectId();
     }
 
     public void update(DSLContext tx, UUID orgId, UUID id, ProjectVisibility visibility,
-                       String name, String description, Map<String, Object> cfg, Boolean acceptsRawPayload) {
+                       String name, String description, Map<String, Object> cfg, Boolean acceptsRawPayload,
+                       Map<String, Object> meta) {
         UpdateSetFirstStep<ProjectsRecord> q = tx.update(PROJECTS);
 
         if (name != null) {
@@ -237,6 +243,10 @@ public class ProjectDao extends AbstractDao {
 
         if (acceptsRawPayload != null) {
             q.set(PROJECTS.ACCEPTS_RAW_PAYLOAD, acceptsRawPayload);
+        }
+
+        if (meta != null) {
+            q.set(PROJECTS.META, field("?::jsonb", String.class, serialize(meta)));
         }
 
         q.set(PROJECTS.ORG_ID, orgId)
@@ -432,7 +442,8 @@ public class ProjectDao extends AbstractDao {
                 null,
                 ProjectVisibility.valueOf(r.get(PROJECTS.VISIBILITY)),
                 toOwner(r.get(PROJECTS.OWNER_ID), r.value8()),
-                r.get(PROJECTS.ACCEPTS_RAW_PAYLOAD));
+                r.get(PROJECTS.ACCEPTS_RAW_PAYLOAD),
+                null);
     }
 
     private static ProjectOwner toOwner(UUID id, String username) {

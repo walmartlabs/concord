@@ -76,13 +76,13 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void insertInitial(UUID instanceId, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, UUID initiatorId) {
+                              UUID projectId, UUID initiatorId, Map<String, Object> meta) {
 
-        tx(tx -> insertInitial(tx, instanceId, kind, parentInstanceId, projectId, initiatorId));
+        tx(tx -> insertInitial(tx, instanceId, kind, parentInstanceId, projectId, initiatorId, meta));
     }
 
     public void insertInitial(DSLContext tx, UUID instanceId, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, UUID initiatorId) {
+                              UUID projectId, UUID initiatorId, Map<String, Object> meta) {
 
         tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
@@ -92,7 +92,8 @@ public class ProcessQueueDao extends AbstractDao {
                         PROCESS_QUEUE.CREATED_AT,
                         PROCESS_QUEUE.INITIATOR_ID,
                         PROCESS_QUEUE.CURRENT_STATUS,
-                        PROCESS_QUEUE.LAST_UPDATED_AT)
+                        PROCESS_QUEUE.LAST_UPDATED_AT,
+                        PROCESS_QUEUE.META)
                 .values(value(instanceId),
                         value(kind.toString()),
                         value(parentInstanceId),
@@ -100,7 +101,8 @@ public class ProcessQueueDao extends AbstractDao {
                         currentTimestamp(),
                         value(initiatorId),
                         value(ProcessStatus.PREPARING.toString()),
-                        currentTimestamp())
+                        currentTimestamp(),
+                        field("?::jsonb", serialize(meta)))
                 .execute();
     }
 
@@ -197,6 +199,17 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
+    public boolean update(UUID instanceId, Map<String, Object> meta) {
+        return txResult(tx -> {
+            int i = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta)))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .execute();
+
+            return i == 1;
+        });
+    }
+
     public boolean update(List<UUID> instanceIds, ProcessStatus status, List<ProcessStatus> expected) {
         return txResult(tx -> {
             UpdateConditionStep q = tx.update(PROCESS_QUEUE)
@@ -233,7 +246,7 @@ public class ProcessQueueDao extends AbstractDao {
             return tx.selectFrom(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
-                    .fetchOne(ProcessQueueDao::toEntry);
+                    .fetchOne(this::toEntry);
         }
     }
 
@@ -242,7 +255,6 @@ public class ProcessQueueDao extends AbstractDao {
             List<VProcessQueueRecord> r = tx.selectFrom(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.INSTANCE_ID.in(instanceId))
                     .fetch();
-
 
             if (r == null) {
                 return null;
@@ -332,7 +344,7 @@ public class ProcessQueueDao extends AbstractDao {
 
             return s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
                     .limit(limit)
-                    .fetch(ProcessQueueDao::toEntry);
+                    .fetch(this::toEntry);
         }
     }
 
@@ -344,7 +356,7 @@ public class ProcessQueueDao extends AbstractDao {
             filterByTags(s, tags);
 
             return s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
-                    .fetch(ProcessQueueDao::toEntry);
+                    .fetch(this::toEntry);
         }
     }
 
@@ -412,7 +424,7 @@ public class ProcessQueueDao extends AbstractDao {
 
             return FindResult.done(tx.selectFrom(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(id))
-                    .fetchOne(ProcessQueueDao::toEntry));
+                    .fetchOne(this::toEntry));
         });
     }
 
@@ -493,7 +505,20 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    private static ProcessEntry toEntry(VProcessQueueRecord r) {
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> deserialize(String o) {
+        if (o == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(o, Map.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ProcessEntry toEntry(VProcessQueueRecord r) {
         ProcessKind kind;
         String s = r.getProcessKind();
         if (s != null) {
@@ -529,7 +554,8 @@ public class ProcessQueueDao extends AbstractDao {
                 ProcessStatus.valueOf(r.getCurrentStatus()),
                 r.getLastAgentId(),
                 tags,
-                toSet(r.getChildrenIds()));
+                toSet(r.getChildrenIds()),
+                deserialize(r.getMeta()));
     }
 
     private static Set<UUID> toSet(UUID[] arr) {
@@ -539,9 +565,9 @@ public class ProcessQueueDao extends AbstractDao {
         return new HashSet<>(Arrays.asList(arr));
     }
 
-    private static List<ProcessEntry> toEntryList(List<VProcessQueueRecord> records) {
+    private List<ProcessEntry> toEntryList(List<VProcessQueueRecord> records) {
         return records.stream()
-                .map(ProcessQueueDao::toEntry)
+                .map(this::toEntry)
                 .collect(Collectors.toList());
     }
 

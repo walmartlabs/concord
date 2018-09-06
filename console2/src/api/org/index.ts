@@ -18,18 +18,36 @@
  * =====
  */
 
-import * as common from '../common';
+import { fetchJson, ConcordKey } from '../common';
 
 export enum OrganizationVisibility {
     PUBLIC = 'PUBLIC',
     PRIVATE = 'PRIVATE'
 }
 
+export interface ColumnDefinition {
+    caption: string;
+    source: string;
+    render?: 'process-link' | 'project-link' | 'timestamp';
+}
+
+export interface OrganizationEntryMetaUI {
+    processList?: ColumnDefinition[];
+}
+
+export interface OrganizationEntryMeta {
+    ui?: OrganizationEntryMetaUI;
+}
+
 export interface OrganizationEntry {
     id: string;
     name: string;
     visibility: OrganizationVisibility;
+    meta?: OrganizationEntryMeta;
 }
 
 export const list = (onlyCurrent: boolean): Promise<OrganizationEntry[]> =>
-    common.fetchJson(`/api/v1/org?onlyCurrent=${onlyCurrent}`);
+    fetchJson(`/api/v1/org?onlyCurrent=${onlyCurrent}`);
+
+export const get = (orgName: ConcordKey): Promise<OrganizationEntry> =>
+    fetchJson<OrganizationEntry>(`/api/v1/org/${orgName}`);

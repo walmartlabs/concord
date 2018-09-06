@@ -29,6 +29,7 @@ export { default as Login } from './Login';
 export { default as NewProjectActivity } from './NewProjectActivity';
 export { default as NewSecretActivity } from './NewSecretActivity';
 export { default as NewTeamActivity } from './NewTeamActivity';
+export { default as OrganizationActivity } from './OrganizationActivity';
 export { default as OrganizationList } from './OrganizationList';
 export { default as ProcessActivity } from './ProcessActivity';
 export { default as ProcessFormActivity } from './ProcessFormActivity';
