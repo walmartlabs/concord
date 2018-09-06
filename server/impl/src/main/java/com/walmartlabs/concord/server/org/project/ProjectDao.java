@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
+import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -152,7 +153,7 @@ public class ProjectDao extends AbstractDao {
                     .fetch();
 
             Map<String, RepositoryEntry> m = new HashMap<>();
-            for (Record11<UUID, UUID, String, String, String, String, String, Boolean, UUID, String,String> repo : repos) {
+            for (Record11<UUID, UUID, String, String, String, String, String, Boolean, UUID, String, String> repo : repos) {
                 m.put(repo.get(REPOSITORIES.REPO_NAME),
                         new RepositoryEntry(
                                 repo.get(REPOSITORIES.REPO_ID),
@@ -405,6 +406,38 @@ public class ProjectDao extends AbstractDao {
 
             return data;
         });
+    }
+
+    public List<ResourceAccessEntry> getAccessLevel(UUID projectId) {
+        List<ResourceAccessEntry> resourceAccessList = new ArrayList<>();
+        try (DSLContext tx = DSL.using(cfg)) {
+            Result<Record5<UUID, UUID, String, String, String>> teamsAccess = tx.select(
+                    PROJECT_TEAM_ACCESS.TEAM_ID,
+                    PROJECT_TEAM_ACCESS.PROJECT_ID,
+                    TEAMS.TEAM_NAME,
+                    ORGANIZATIONS.ORG_NAME,
+                    PROJECT_TEAM_ACCESS.ACCESS_LEVEL)
+                    .from(PROJECT_TEAM_ACCESS)
+                    .leftOuterJoin(TEAMS).on(TEAMS.TEAM_ID.eq(PROJECT_TEAM_ACCESS.TEAM_ID))
+                    .leftOuterJoin(PROJECTS).on(PROJECTS.PROJECT_ID.eq(projectId))
+                    .leftOuterJoin(ORGANIZATIONS).on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID))
+                    .where(PROJECT_TEAM_ACCESS.PROJECT_ID.eq(projectId))
+                    .fetch();
+
+            for (Record5<UUID, UUID, String, String, String> t : teamsAccess) {
+                resourceAccessList.add(new ResourceAccessEntry(t.get(PROJECT_TEAM_ACCESS.TEAM_ID),
+                        t.get(ORGANIZATIONS.ORG_NAME),
+                        t.get(TEAMS.TEAM_NAME),
+                        ResourceAccessLevel.valueOf(t.get(PROJECT_TEAM_ACCESS.ACCESS_LEVEL))));
+            }
+        }
+        return resourceAccessList;
+    }
+
+    public void deleteTeamAccess(DSLContext tx, UUID projectId) {
+        tx.deleteFrom(PROJECT_TEAM_ACCESS)
+                .where(PROJECT_TEAM_ACCESS.PROJECT_ID.eq(projectId))
+                .execute();
     }
 
     private String serialize(Map<String, Object> m) {

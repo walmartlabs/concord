@@ -29,7 +29,7 @@ import { ProjectEntry } from '../../../api/org/project';
 import { actions, selectors, State } from '../../../state/data/projects';
 import { comparators } from '../../../utils';
 import { RepositoryList, RequestErrorMessage } from '../../molecules';
-import { EncryptValueActivity } from '../../organisms';
+import { EncryptValueActivity, ProjectTeamAccessActivity } from '../../organisms';
 import { NotFoundPage } from '../../pages';
 import {
     ProcessListActivity,
@@ -40,7 +40,7 @@ import {
     EditProjectActivity
 } from '../index';
 
-export type TabLink = 'process' | 'repository' | 'settings' | null;
+export type TabLink = 'process' | 'repository' | 'settings' | 'access' | null;
 
 interface ExternalProps {
     activeTab: TabLink;
@@ -100,6 +100,10 @@ class ProjectActivity extends React.PureComponent<Props> {
                 <RepositoryList orgName={p.orgName} projectName={p.name} data={l} />
             </>
         );
+    }
+
+    static renderTeamAccess(p: ProjectEntry) {
+        return <ProjectTeamAccessActivity orgName={p.orgName} projectName={p.name} />;
     }
 
     static renderSettings(p: ProjectEntry) {
@@ -183,6 +187,10 @@ class ProjectActivity extends React.PureComponent<Props> {
                         <Icon name="code" />
                         <Link to={`${baseUrl}/repository`}>Repositories</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'access'}>
+                        <Icon name="key" />
+                        <Link to={`${baseUrl}/access`}>Access</Link>
+                    </Menu.Item>
                     <Menu.Item active={activeTab === 'settings'}>
                         <Icon name="setting" />
                         <Link to={`${baseUrl}/settings`}>Settings</Link>
@@ -200,7 +208,9 @@ class ProjectActivity extends React.PureComponent<Props> {
                     <Route path={`${baseUrl}/repository`} exact={true}>
                         {ProjectActivity.renderRepositories(data)}
                     </Route>
-
+                    <Route path={`${baseUrl}/access`} exact={true}>
+                        {ProjectActivity.renderTeamAccess(data)}
+                    </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
                         {ProjectActivity.renderSettings(data)}
                     </Route>

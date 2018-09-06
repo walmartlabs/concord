@@ -18,6 +18,7 @@
  * =====
  */
 
+import { ColumnDefinition, ResourceAccessEntry } from '../';
 import {
     ConcordId,
     ConcordKey,
@@ -26,7 +27,6 @@ import {
     OperationResult
 } from '../../common';
 import { RepositoryEntry } from './repository';
-import { ColumnDefinition } from '../index';
 
 export enum ProjectVisibility {
     PUBLIC = 'PUBLIC',
@@ -162,4 +162,27 @@ export const encrypt = (
     };
 
     return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/encrypt`, opts);
+};
+
+export const getProjectAccess = (
+    orgName: ConcordKey,
+    projectName: ConcordKey
+): Promise<GenericOperationResult> => {
+    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access`);
+};
+
+export const updateProjectAccess = (
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    entries: ResourceAccessEntry[]
+): Promise<GenericOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(entries)
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access/bulk`, opts);
 };

@@ -26,10 +26,12 @@ import { ConcordId, ConcordKey } from '../../../api/common';
 import {
     create as apiCreate,
     deleteSecret as apiDelete,
+    getSecretAccess,
     get as apiGet,
     list as apiList,
     NewSecretEntry,
     renameSecret as apiRenameSecret,
+    updateSecretAccess,
     updateSecretVisibility as apiUpdateSecretVisibility,
     SecretVisibility
 } from '../../../api/org/secret';
@@ -47,17 +49,22 @@ import {
     DeleteSecretRequest,
     DeleteSecretState,
     GetSecretRequest,
+    SecretTeamAccessRequest,
     ListSecretsRequest,
     ListSecretsState,
     RenameSecretRequest,
     RenameSecretState,
     SecretDataResponse,
     Secrets,
+    secretTeamAccessState,
     State,
+    updateSecretTeamAccessState,
     UpdateSecretVisibilityResponse,
     UpdateSecretVisiblityRequest,
     UpdateSecretVisiblityState
 } from './types';
+import { UpdateSecretTeamAccessRequest } from '../secrets/types';
+import { ResourceAccessEntry } from '../../../api/org';
 
 export { State };
 
@@ -79,6 +86,12 @@ const actionTypes = {
 
     UPDATE_SECRET_VISIBLITY_REQUEST: `${NAMESPACE}/visibility/request`,
     UPDATE_SECRET_VISIBLITY_RESPONSE: `${NAMESPACE}/visibility/response`,
+
+    SECRET_TEAM_ACCESS_REQUEST: `${NAMESPACE}/secret/teamaccess/request`,
+    SECRET_TEAM_ACCESS_RESPONSE: `${NAMESPACE}/secret/teamaccess/response`,
+
+    UPDATE_SECRET_TEAM_ACCESS_REQUEST: `${NAMESPACE}/secret/team/access/update/request`,
+    UPDATE_SECRET_TEAM_ACCESS_RESPONSE: `${NAMESPACE}/secret/team/access/update/response`,
 
     RESET_SECRET: `${NAMESPACE}/reset`
 };
@@ -127,6 +140,23 @@ export const actions = {
         orgName,
         secretId,
         visibility
+    }),
+
+    SecretTeamAccess: (orgName: ConcordKey, secretName: ConcordKey): SecretTeamAccessRequest => ({
+        type: actionTypes.SECRET_TEAM_ACCESS_REQUEST,
+        orgName,
+        secretName
+    }),
+
+    updateSecretTeamAccess: (
+        orgName: ConcordKey,
+        secretName: ConcordKey,
+        teams: ResourceAccessEntry[]
+    ): UpdateSecretTeamAccessRequest => ({
+        type: actionTypes.UPDATE_SECRET_TEAM_ACCESS_REQUEST,
+        orgName,
+        secretName,
+        teams
     }),
 
     reset: (): Action => ({
@@ -231,6 +261,30 @@ const updateSecretVisibilityReducers = combineReducers<UpdateSecretVisiblityStat
     )
 });
 
+const secretTeamAccessReducers = combineReducers<secretTeamAccessState>({
+    running: makeLoadingReducer(
+        [actionTypes.SECRET_TEAM_ACCESS_REQUEST],
+        [actionTypes.SECRET_TEAM_ACCESS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.SECRET_TEAM_ACCESS_REQUEST],
+        [actionTypes.SECRET_TEAM_ACCESS_RESPONSE]
+    ),
+    response: makeResponseReducer(actionTypes.SECRET_TEAM_ACCESS_RESPONSE)
+});
+
+const updateSecretTeamAccessReducers = combineReducers<updateSecretTeamAccessState>({
+    running: makeLoadingReducer(
+        [actionTypes.UPDATE_SECRET_TEAM_ACCESS_REQUEST],
+        [actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.UPDATE_SECRET_TEAM_ACCESS_REQUEST],
+        [actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE]
+    ),
+    response: makeResponseReducer(actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE)
+});
+
 export const reducers = combineReducers<State>({
     secretById, // TODO use makeEntityByIdReducer
 
@@ -238,7 +292,9 @@ export const reducers = combineReducers<State>({
     createSecret: createSecretReducer,
     deleteSecret: deleteSecretReducers,
     renameSecret: renameSecretReducers,
-    updateSecretVisibility: updateSecretVisibilityReducers
+    updateSecretVisibility: updateSecretVisibilityReducers,
+    secretTeamAccess: secretTeamAccessReducers,
+    updateSecretTeamAccess: updateSecretTeamAccessReducers
 });
 
 export const selectors = {
@@ -251,6 +307,10 @@ export const selectors = {
         }
 
         return;
+    },
+    secretAccesTeams: (state: State, orgName: ConcordKey, projectName: ConcordKey) => {
+        const p = state.secretTeamAccess.response ? state.secretTeamAccess.response.items : [];
+        return p ? p : [];
     }
 };
 
@@ -328,6 +388,28 @@ function* onUpdateVisibility({ orgName, secretId, visibility }: UpdateSecretVisi
     }
 }
 
+function* onGetSecretTeamAccess({ orgName, secretName }: SecretTeamAccessRequest) {
+    try {
+        const response = yield call(getSecretAccess, orgName, secretName);
+        yield put({
+            type: actionTypes.SECRET_TEAM_ACCESS_RESPONSE,
+            items: response
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.SECRET_TEAM_ACCESS_RESPONSE, e);
+    }
+}
+
+function* onUpdateSecretTeamAccess({ orgName, secretName, teams }: UpdateSecretTeamAccessRequest) {
+    try {
+        const response = yield call(updateSecretAccess, orgName, secretName, teams);
+        yield put(genericResult(actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE, response));
+        yield put(actions.SecretTeamAccess(orgName, secretName));
+    } catch (e) {
+        yield handleErrors(actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE, e);
+    }
+}
+
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.LIST_SECRETS_REQUEST, onList),
@@ -335,6 +417,8 @@ export const sagas = function*() {
         takeLatest(actionTypes.CREATE_SECRET_REQUEST, onCreate),
         takeLatest(actionTypes.DELETE_SECRET_REQUEST, onDelete),
         takeLatest(actionTypes.RENAME_SECRET_REQUEST, onRename),
-        takeLatest(actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST, onUpdateVisibility)
+        takeLatest(actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST, onUpdateVisibility),
+        takeLatest(actionTypes.SECRET_TEAM_ACCESS_REQUEST, onGetSecretTeamAccess),
+        takeLatest(actionTypes.UPDATE_SECRET_TEAM_ACCESS_REQUEST, onUpdateSecretTeamAccess)
     ]);
 };

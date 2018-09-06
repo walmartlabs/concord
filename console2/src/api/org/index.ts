@@ -18,7 +18,7 @@
  * =====
  */
 
-import { fetchJson, ConcordKey } from '../common';
+import { fetchJson, ConcordKey, ConcordId } from '../common';
 
 export enum OrganizationVisibility {
     PUBLIC = 'PUBLIC',
@@ -44,6 +44,18 @@ export interface OrganizationEntry {
     name: string;
     visibility: OrganizationVisibility;
     meta?: OrganizationEntryMeta;
+}
+
+export enum ResourceAccessLevel {
+    OWNER = 'OWNER',
+    WRITER = 'WRITER',
+    READER = 'READER'
+}
+
+export interface ResourceAccessEntry {
+    teamId: ConcordId;
+    teamName: ConcordKey;
+    level: ResourceAccessLevel;
 }
 
 export const list = (onlyCurrent: boolean): Promise<OrganizationEntry[]> =>

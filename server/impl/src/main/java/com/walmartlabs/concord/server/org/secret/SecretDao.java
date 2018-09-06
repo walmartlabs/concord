@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,15 +23,16 @@ package com.walmartlabs.concord.server.org.secret;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.secret.*;
 import com.walmartlabs.concord.server.jooq.tables.records.SecretsRecord;
+import com.walmartlabs.concord.server.org.ResourceAccessEntry;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,6 +40,7 @@ import static com.walmartlabs.concord.server.jooq.Tables.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.SecretTeamAccess.SECRET_TEAM_ACCESS;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
+import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.select;
@@ -50,6 +52,11 @@ public class SecretDao extends AbstractDao {
     @Inject
     public SecretDao(@Named("app") Configuration cfg) {
         super(cfg);
+    }
+
+    @Override
+    public void tx(Tx t) {
+        super.tx(t);
     }
 
     public UUID getId(UUID orgId, String name) {
@@ -210,6 +217,36 @@ public class SecretDao extends AbstractDao {
         tx(tx -> tx.deleteFrom(SECRETS)
                 .where(SECRETS.SECRET_ID.eq(id))
                 .execute());
+    }
+
+    public List<ResourceAccessEntry> getAccessLevel(UUID orgId, String name) {
+        List<ResourceAccessEntry> resourceAccessList = new ArrayList<>();
+        try (DSLContext tx = DSL.using(cfg)) {
+            Result<Record4<UUID, UUID, String, String>> teamAccess = tx.select(
+                    SECRET_TEAM_ACCESS.TEAM_ID,
+                    SECRET_TEAM_ACCESS.SECRET_ID,
+                    TEAMS.TEAM_NAME,
+                    SECRET_TEAM_ACCESS.ACCESS_LEVEL)
+                    .from(SECRET_TEAM_ACCESS)
+                    .leftOuterJoin(TEAMS).on(TEAMS.TEAM_ID.eq(SECRET_TEAM_ACCESS.TEAM_ID))
+                    .where(SECRET_TEAM_ACCESS.SECRET_ID.eq(getByName(orgId, name).getId()))
+                    .fetch();
+
+            for (Record4<UUID, UUID, String, String> t : teamAccess) {
+                resourceAccessList.add(new ResourceAccessEntry(t.get(SECRET_TEAM_ACCESS.TEAM_ID),
+                        null,
+                        t.get(TEAMS.TEAM_NAME),
+                        ResourceAccessLevel.valueOf(t.get(SECRET_TEAM_ACCESS.ACCESS_LEVEL))));
+            }
+
+        }
+        return resourceAccessList;
+    }
+
+    public void deleteTeamAccess(DSLContext tx, UUID secretId) {
+        tx.deleteFrom(SECRET_TEAM_ACCESS)
+                .where(SECRET_TEAM_ACCESS.SECRET_ID.eq(secretId))
+                .execute();
     }
 
     public boolean hasAccessLevel(UUID secretId, UUID userId, ResourceAccessLevel... levels) {

@@ -20,6 +20,7 @@
 
 import { CreateSecretResponse } from '../../../state/data/secrets/types';
 import { ConcordId, ConcordKey, fetchJson, GenericOperationResult, Owner } from '../../common';
+import { ResourceAccessEntry } from '../';
 
 export enum SecretVisibility {
     PUBLIC = 'PUBLIC',
@@ -213,6 +214,29 @@ export const create = (
 
 export const getPublicKey = (orgName: string, secretName: string): Promise<PublicKeyResponse> =>
     fetchJson(`/api/v1/org/${orgName}/secret/${secretName}/public`);
+
+export const getSecretAccess = (
+    orgName: ConcordKey,
+    secretName: ConcordKey
+): Promise<GenericOperationResult> => {
+    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}/access`);
+};
+
+export const updateSecretAccess = (
+    orgName: ConcordKey,
+    secretName: ConcordKey,
+    entries: ResourceAccessEntry[]
+): Promise<GenericOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(entries)
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}/access/bulk`, opts);
+};
 
 export const typeToText = (t: SecretType) => {
     switch (t) {

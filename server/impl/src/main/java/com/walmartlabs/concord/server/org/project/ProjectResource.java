@@ -275,6 +275,23 @@ public class ProjectResource implements Resource {
         return new GenericOperationResult(OperationResult.DELETED);
     }
 
+    @GET
+    @ApiOperation("Get project team access")
+    @Path("/{orgName}/project/{projectName}/access")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public List<ResourceAccessEntry> getAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+
+        UUID projectId = projectDao.getId(org.getId(), projectName);
+        if (projectId == null) {
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+        }
+        return accessManager.getResourceAccess(projectId);
+    }
+
     @POST
     @ApiOperation("Updates the access level for the specified project and team")
     @Path("/{orgName}/project/{projectName}/access")
@@ -295,6 +312,28 @@ public class ProjectResource implements Resource {
         UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
 
         accessManager.updateAccessLevel(projectId, teamId, entry.getLevel());
+        return new GenericOperationResult(OperationResult.UPDATED);
+    }
+
+    @POST
+    @ApiOperation("Updates the access level for the specified project and team")
+    @Path("/{orgName}/project/{projectName}/access/bulk")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName,
+                                                    @ApiParam @Valid Collection<ResourceAccessEntry> entries) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+
+        UUID projectId = projectDao.getId(org.getId(), projectName);
+        if (projectId == null) {
+            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
+        }
+
+        accessManager.updateAccessLevel(projectId, entries, true);
+
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 

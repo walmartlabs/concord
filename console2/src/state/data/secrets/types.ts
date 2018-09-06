@@ -23,6 +23,7 @@ import { Action } from 'redux';
 import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
 import { NewSecretEntry, SecretEntry, SecretVisibility } from '../../../api/org/secret';
 import { RequestState } from '../common';
+import { ResourceAccessEntry } from '../../../api/org';
 
 export interface GetSecretRequest extends Action {
     orgName: ConcordKey;
@@ -73,6 +74,22 @@ export interface UpdateSecretVisibilityResponse extends Action {
     visibility: SecretVisibility;
 }
 
+export interface SecretTeamAccessRequest extends Action {
+    orgName: ConcordKey;
+    secretName: ConcordKey;
+}
+
+export interface SecretTeamAccessResponse extends Action {
+    error?: RequestError;
+    items?: ResourceAccessEntry[];
+}
+
+export interface UpdateSecretTeamAccessRequest extends Action {
+    orgName: ConcordKey;
+    secretName: ConcordKey;
+    teams: ResourceAccessEntry[];
+}
+
 export interface Secrets {
     [id: string]: SecretEntry;
 }
@@ -82,6 +99,8 @@ export type CreateSecretState = RequestState<CreateSecretResponse>;
 export type DeleteSecretState = RequestState<GenericOperationResult>;
 export type RenameSecretState = RequestState<GenericOperationResult>;
 export type UpdateSecretVisiblityState = RequestState<GenericOperationResult>;
+export type secretTeamAccessState = RequestState<SecretTeamAccessResponse>;
+export type updateSecretTeamAccessState = RequestState<GenericOperationResult>;
 
 export interface State {
     secretById: Secrets;
@@ -91,4 +110,7 @@ export interface State {
     deleteSecret: DeleteSecretState;
     renameSecret: RenameSecretState;
     updateSecretVisibility: UpdateSecretVisiblityState;
+
+    secretTeamAccess: secretTeamAccessState;
+    updateSecretTeamAccess: updateSecretTeamAccessState;
 }

@@ -34,7 +34,6 @@ export interface SearchUsersResponse extends Action {
 }
 
 export type SearchUsersState = RequestState<SearchUsersResponse>;
-
 export interface State {
     users: SearchUsersState;
 }

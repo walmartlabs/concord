@@ -31,6 +31,7 @@ import {
     EditRepositoryEntry,
     RepositoryValidationResponse
 } from '../../../api/org/project/repository';
+import { ResourceAccessEntry } from '../../../api/org';
 import { RequestState } from '../common';
 
 export interface GetProjectRequest extends Action {
@@ -104,6 +105,22 @@ export interface ValidateRepositoryRequest extends Action {
     repoName: ConcordKey;
 }
 
+export interface ProjectTeamAccessRequest extends Action {
+    orgName: ConcordKey;
+    projectName: ConcordKey;
+}
+
+export interface UpdateProjectTeamAccessRequest extends Action {
+    orgName: ConcordKey;
+    projectName: ConcordKey;
+    teams: ResourceAccessEntry[];
+}
+
+export interface ProjectTeamAccessResponse extends Action {
+    error?: RequestError;
+    items?: ResourceAccessEntry[];
+}
+
 export interface Projects {
     [id: string]: ProjectEntry;
 }
@@ -117,6 +134,8 @@ export type DeleteRepositoryState = RequestState<GenericOperationResult>;
 export type RefreshRepositoryState = RequestState<GenericOperationResult>;
 export type ValidateRepositoryState = RequestState<RepositoryValidationResponse>;
 export type updateProjectState = RequestState<ProjectOperationResult>;
+export type ProjectTeamAccessState = RequestState<ProjectTeamAccessResponse>;
+export type UpdateProjectTeamAccessState = RequestState<ProjectTeamAccessResponse>;
 
 export interface State {
     projectById: Projects;
@@ -129,6 +148,8 @@ export interface State {
     acceptRawPayload: SetAcceptsRawPayloadState;
     deleteProject: DeleteProjectState;
     updateProject: updateProjectState;
+    projectTeamAccess: ProjectTeamAccessState;
+    updateProjectTeamAccess: UpdateProjectTeamAccessState;
 
     createRepository: CreateRepositoryState;
     updateRepository: UpdateRepositoryState;

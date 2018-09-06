@@ -19,7 +19,6 @@
  */
 
 import { throttle } from 'lodash';
-
 import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
 
 export interface UserResponse {

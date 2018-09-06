@@ -50,7 +50,9 @@ export { default as RepositoryForm, RepositoryFormValues } from './RepositoryFor
 export { default as RepositoryList } from './RepositoryList';
 export { default as RequestErrorMessage } from './RequestErrorMessage';
 export { default as SingleOperationPopup } from './SingleOperationPopup';
+export { default as TeamAccessList } from './TeamAccessList';
 export { default as TeamMemberList } from './TeamMemberList';
 export { default as TeamRoleDropdown } from './TeamRoleDropdown';
+export { default as TeamAccessDropdown } from './TeamAccessDropdown';
 export { default as UserProcessStats } from './UserProcessStats';
 export { default as UserProcessByOrgCards } from './UserProcessByOrgCards';

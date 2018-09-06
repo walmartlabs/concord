@@ -54,6 +54,7 @@ import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -266,6 +267,40 @@ public class SecretResource implements Resource {
         UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
 
         secretManager.updateAccessLevel(secretId, teamId, entry.getLevel());
+        return new GenericOperationResult(OperationResult.UPDATED);
+    }
+
+    @GET
+    @ApiOperation("Get secret team access")
+    @Path("/{orgName}/secret/{secretName}/access")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public List<ResourceAccessEntry> getAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                    @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, false);
+        return secretManager.getAccessLevel(org.getId(), secretName);
+    }
+
+    @POST
+    @ApiOperation("Updates the access level for the specified secret and team")
+    @Path("/{orgName}/secret/{secretName}/access/bulk")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public GenericOperationResult updateAccessLevel(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                    @ApiParam @PathParam("secretName") @ConcordKey String secretName,
+                                                    @ApiParam @Valid Collection<ResourceAccessEntry> entries) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+
+        UUID secretId = secretDao.getId(org.getId(), secretName);
+        if (secretId == null) {
+            throw new ConcordApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
+        }
+
+        secretManager.updateAccessLevel(secretId, entries, true);
+
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 

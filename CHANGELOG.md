@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: UI for managing access to projects and secrets;
 - concord-server, concord-console: initial support for process-,
 organization- and project-level metadata.
 

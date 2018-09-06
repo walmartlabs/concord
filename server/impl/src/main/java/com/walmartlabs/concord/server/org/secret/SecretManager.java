@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
@@ -52,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -345,6 +347,25 @@ public class SecretManager {
 
     public Collection<SecretStore> getActiveSecretStores() {
         return secretStoreProvider.getActiveSecretStores();
+    }
+
+    public List<ResourceAccessEntry> getAccessLevel(UUID orgId, String secretName) {
+        assertAccess(orgId, null, secretName, ResourceAccessLevel.READER, false);
+        return secretDao.getAccessLevel(orgId, secretName);
+    }
+
+    public void updateAccessLevel(UUID secretId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
+        assertAccess(null, secretId, null, ResourceAccessLevel.OWNER, true);
+
+        secretDao.tx(tx -> {
+            if (isReplace) {
+                secretDao.deleteTeamAccess(tx, secretId);
+            }
+
+            for (ResourceAccessEntry e : entries) {
+                secretDao.upsertAccessLevel(tx, secretId, e.getTeamId(), e.getLevel());
+            }
+        });
     }
 
     private byte[] getPwd(String pwd) {

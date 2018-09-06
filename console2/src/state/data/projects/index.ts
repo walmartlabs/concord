@@ -29,9 +29,11 @@ import {
     list as apiList,
     rename as apiRename,
     deleteProject as apiDeleteProject,
+    getProjectAccess,
     setAcceptsRawPayload as apiSetAcceptsRawPayload,
     NewProjectEntry,
-    UpdateProjectEntry
+    UpdateProjectEntry,
+    updateProjectAccess
 } from '../../../api/org/project';
 import {
     createOrUpdate as apiRepoCreateOrUpdate,
@@ -58,6 +60,8 @@ import {
     GetProjectRequest,
     ListProjectsRequest,
     ProjectDataResponse,
+    ProjectTeamAccessRequest,
+    ProjectTeamAccessState,
     Projects,
     RefreshRepositoryRequest,
     RefreshRepositoryState,
@@ -71,8 +75,11 @@ import {
     ValidateRepositoryState,
     ValidateRepositoryRequest,
     updateProjectState,
-    UpdateProjectRequest
+    UpdateProjectRequest,
+    UpdateProjectTeamAccessRequest,
+    UpdateProjectTeamAccessState
 } from './types';
+import { ResourceAccessEntry } from '../../../api/org';
 
 export { State };
 
@@ -112,7 +119,14 @@ const actionTypes = {
     RESET_REPOSITORY: `${NAMESPACE}/repo/reset`,
 
     UPDATE_PROJECT_REQUEST: `${NAMESPACE}/updateproject/request`,
-    UPDATE_PROJECT_RESPONSE: `${NAMESPACE}/updateproject/response`
+    UPDATE_PROJECT_RESPONSE: `${NAMESPACE}/updateproject/response`,
+
+    PROJECT_TEAM_ACCESS_REQUEST: `${NAMESPACE}/project/teamaccess/request`,
+    PROJECT_TEAM_ACCESS_RESPONSE: `${NAMESPACE}/project/teamaccess/response`,
+
+    UPDATE_PROJECT_TEAM_ACCESS_REQUEST: `${NAMESPACE}/project/teamaccess/update/request`,
+    UPDATE_PROJECT_TEAM_ACCESS_RESPONSE: `${NAMESPACE}/project/teamaccess/update/response`,
+    RESET_PROJECT_TEAM_ACCESS: `${NAMESPACE}/project/teamaccess/reset`
 };
 
 export const actions = {
@@ -222,8 +236,28 @@ export const actions = {
         repoName
     }),
 
+    getTeamAccess: (orgName: ConcordKey, projectName: ConcordKey): ProjectTeamAccessRequest => ({
+        type: actionTypes.PROJECT_TEAM_ACCESS_REQUEST,
+        orgName,
+        projectName
+    }),
+
+    updateTeamAccess: (
+        orgName: ConcordKey,
+        projectName: ConcordKey,
+        teams: ResourceAccessEntry[]
+    ): UpdateProjectTeamAccessRequest => ({
+        type: actionTypes.UPDATE_PROJECT_TEAM_ACCESS_REQUEST,
+        orgName,
+        projectName,
+        teams
+    }),
+
     resetRepository: (): Action => ({
         type: actionTypes.RESET_REPOSITORY
+    }),
+    reset: () => ({
+        type: actionTypes.RESET_PROJECT_TEAM_ACCESS
     })
 };
 
@@ -397,6 +431,30 @@ const validateRepositoryReducers = combineReducers<ValidateRepositoryState>({
     )
 });
 
+const getTeamAccessReducers = combineReducers<ProjectTeamAccessState>({
+    running: makeLoadingReducer(
+        [actionTypes.PROJECT_TEAM_ACCESS_REQUEST],
+        [actionTypes.PROJECT_TEAM_ACCESS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.PROJECT_TEAM_ACCESS_REQUEST],
+        [actionTypes.PROJECT_TEAM_ACCESS_RESPONSE]
+    ),
+    response: makeResponseReducer(actionTypes.PROJECT_TEAM_ACCESS_RESPONSE)
+});
+
+const updateTeamAccessReducers = combineReducers<UpdateProjectTeamAccessState>({
+    running: makeLoadingReducer(
+        [actionTypes.UPDATE_PROJECT_TEAM_ACCESS_REQUEST],
+        [actionTypes.UPDATE_PROJECT_TEAM_ACCESS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.UPDATE_PROJECT_TEAM_ACCESS_REQUEST],
+        [actionTypes.UPDATE_PROJECT_TEAM_ACCESS_RESPONSE]
+    ),
+    response: makeResponseReducer(actionTypes.UPDATE_PROJECT_TEAM_ACCESS_RESPONSE)
+});
+
 export const reducers = combineReducers<State>({
     projectById, // TODO use makeEntityByIdReducer
     loading,
@@ -406,6 +464,8 @@ export const reducers = combineReducers<State>({
     acceptRawPayload: acceptsRawPayloadReducers,
     deleteProject: deleteProjectReducers,
     updateProject: updateProjectReducers,
+    projectTeamAccess: getTeamAccessReducers,
+    updateProjectTeamAccess: updateTeamAccessReducers,
 
     createRepository: createRepositoryReducers,
     updateRepository: updateRepositoryReducers,
@@ -431,6 +491,11 @@ export const selectors = {
         }
 
         return;
+    },
+
+    projectAccesTeams: (state: State, orgName: ConcordKey, projectName: ConcordKey) => {
+        const p = state.projectTeamAccess.response ? state.projectTeamAccess.response.items : [];
+        return p ? p : [];
     }
 };
 
@@ -573,6 +638,27 @@ function* onValidateRepository({ orgName, projectName, repoName }: ValidateRepos
         yield handleErrors(actionTypes.VALIDATE_REPOSITORY_RESPONSE, e);
     }
 }
+function* onGetTeamAccess({ orgName, projectName }: ProjectTeamAccessRequest) {
+    try {
+        const response = yield call(getProjectAccess, orgName, projectName);
+        yield put({
+            type: actionTypes.PROJECT_TEAM_ACCESS_RESPONSE,
+            items: response
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.PROJECT_TEAM_ACCESS_RESPONSE, e);
+    }
+}
+
+function* onUpdateTeamAccess({ orgName, projectName, teams }: UpdateProjectTeamAccessRequest) {
+    try {
+        const response = yield call(updateProjectAccess, orgName, projectName, teams);
+        yield put(genericResult(actionTypes.UPDATE_PROJECT_TEAM_ACCESS_RESPONSE, response));
+        yield put(actions.getTeamAccess(orgName, projectName));
+    } catch (e) {
+        yield handleErrors(actionTypes.UPDATE_PROJECT_TEAM_ACCESS_RESPONSE, e);
+    }
+}
 
 export const sagas = function*() {
     yield all([
@@ -587,6 +673,8 @@ export const sagas = function*() {
         takeLatest(actionTypes.UPDATE_REPOSITORY_REQUEST, onUpdateRepository),
         takeLatest(actionTypes.DELETE_REPOSITORY_REQUEST, onDeleteRepository),
         takeLatest(actionTypes.REFRESH_REPOSITORY_REQUEST, onRefreshRepository),
-        takeLatest(actionTypes.VALIDATE_REPOSITORY_REQUEST, onValidateRepository)
+        takeLatest(actionTypes.VALIDATE_REPOSITORY_REQUEST, onValidateRepository),
+        takeLatest(actionTypes.PROJECT_TEAM_ACCESS_REQUEST, onGetTeamAccess),
+        takeLatest(actionTypes.UPDATE_PROJECT_TEAM_ACCESS_REQUEST, onUpdateTeamAccess)
     ]);
 };

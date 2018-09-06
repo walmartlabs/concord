@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,11 +21,9 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.org.project.ProjectOwner;
-import com.walmartlabs.concord.server.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessEntry;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -33,6 +31,8 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Named
@@ -98,5 +98,24 @@ public class ProjectAccessManager {
         }
 
         return e;
+    }
+
+    public List<ResourceAccessEntry> getResourceAccess(UUID projectId) {
+        assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
+        return projectDao.getAccessLevel(projectId);
+    }
+
+    public void updateAccessLevel(UUID projectId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
+        assertProjectAccess(projectId, ResourceAccessLevel.OWNER, true);
+
+        projectDao.tx(tx -> {
+            if (isReplace) {
+                projectDao.deleteTeamAccess(tx, projectId);
+            }
+
+            for (ResourceAccessEntry e : entries) {
+                projectDao.upsertAccessLevel(tx, projectId, e.getTeamId(), e.getLevel());
+            }
+        });
     }
 }

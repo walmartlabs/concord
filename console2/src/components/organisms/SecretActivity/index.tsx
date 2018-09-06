@@ -37,11 +37,12 @@ import {
     PublicKeyPopup,
     SecretDeleteActivity,
     SecretRenameActivity,
-    SecretVisibilityActivity
+    SecretVisibilityActivity,
+    SecretTeamAccessActivity
 } from '../../organisms';
 import { NotFoundPage } from '../../pages';
 
-export type TabLink = 'info' | 'settings' | null;
+export type TabLink = 'info' | 'settings' | 'access' | null;
 
 interface ExternalProps {
     activeTab: TabLink;
@@ -161,6 +162,10 @@ class SecretActivity extends React.PureComponent<Props> {
         );
     }
 
+    static renderTeamAccess(data: SecretEntry) {
+        return <SecretTeamAccessActivity orgName={data.orgName} secretName={data.name} />;
+    }
+
     componentDidMount() {
         this.init();
     }
@@ -181,7 +186,6 @@ class SecretActivity extends React.PureComponent<Props> {
 
     render() {
         const { error, loading, data } = this.props;
-
         if (error) {
             return <RequestErrorMessage error={error} />;
         }
@@ -200,6 +204,10 @@ class SecretActivity extends React.PureComponent<Props> {
                         <Icon name="file" />
                         <Link to={`${baseUrl}/info`}>Info</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'access'}>
+                        <Icon name="key" />
+                        <Link to={`${baseUrl}/access`}>Access</Link>
+                    </Menu.Item>
                     <Menu.Item active={activeTab === 'settings'}>
                         <Icon name="setting" />
                         <Link to={`${baseUrl}/settings`}>Settings</Link>
@@ -213,6 +221,10 @@ class SecretActivity extends React.PureComponent<Props> {
 
                     <Route path={`${baseUrl}/info`} exact={true}>
                         {SecretActivity.renderInfo(data)}
+                    </Route>
+
+                    <Route path={`${baseUrl}/access`} exact={true}>
+                        {SecretActivity.renderTeamAccess(data)}
                     </Route>
 
                     <Route path={`${baseUrl}/settings`} exact={true}>
