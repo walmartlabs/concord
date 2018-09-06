@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security.github;
 
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -31,6 +32,8 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,6 +42,8 @@ import java.util.UUID;
 
 @Named
 public class GithubRealm extends AuthorizingRealm {
+
+    private static final Logger log = LoggerFactory.getLogger(GithubRealm.class);
 
     private static final String REALM_NAME = "github";
     private static final String USER = "github";
@@ -59,17 +64,22 @@ public class GithubRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         GithubKey t = (GithubKey) token;
 
-        UUID userId = userManager.getId(USER).orElse(null);
-        if (userId == null) {
-            return null;
-        }
+        try {
+            UUID userId = userManager.getId(USER).orElse(null);
+            if (userId == null) {
+                return null;
+            }
 
-        return userManager.get(userId)
-                .map(u -> {
-                    UserPrincipal p = new UserPrincipal(REALM_NAME, u);
-                    return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
-                })
-                .orElse(null);
+            return userManager.get(userId)
+                    .map(u -> {
+                        UserPrincipal p = new UserPrincipal(REALM_NAME, u);
+                        return new SimpleAccount(Arrays.asList(p, t), t.getKey(), getName());
+                    })
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("doGetAuthenticationInfo -> error", e);
+            throw e;
+        }
     }
 
     @Override

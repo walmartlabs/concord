@@ -75,24 +75,29 @@ public class SessionKeyRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         SessionKey t = (SessionKey) token;
 
-        ProcessEntry process = processQueueDao.get(t.getInstanceId());
-        if (process == null) {
-            log.warn("doGetAuthenticationInfo -> process not found: {}", t.getInstanceId());
-            return null;
-        }
+        try {
+            ProcessEntry process = processQueueDao.get(t.getInstanceId());
+            if (process == null) {
+                log.warn("doGetAuthenticationInfo -> process not found: {}", t.getInstanceId());
+                return null;
+            }
 
-        if (process.getInitiatorId() == null) {
-            log.warn("doGetAuthenticationInfo -> initiator not found: {}", t.getInstanceId());
-            return null;
-        }
+            if (process.getInitiatorId() == null) {
+                log.warn("doGetAuthenticationInfo -> initiator not found: {}", t.getInstanceId());
+                return null;
+            }
 
-        if (isFinished(process)) {
-            log.warn("doGetAuthenticationInfo -> process is finished: {}", t.getInstanceId());
-            return null;
-        }
+            if (isFinished(process)) {
+                log.warn("doGetAuthenticationInfo -> process is finished: {}", t.getInstanceId());
+                return null;
+            }
 
-        PrincipalCollection principals = getPrincipals(t.getInstanceId());
-        return new SimpleAccount(principals, t.getInstanceId(), getName());
+            PrincipalCollection principals = getPrincipals(t.getInstanceId());
+            return new SimpleAccount(principals, t.getInstanceId(), getName());
+        } catch (Exception e) {
+            log.error("doGetAuthenticationInfo ['{}'] -> error", t.getInstanceId(), e);
+            throw e;
+        }
     }
 
     private PrincipalCollection getPrincipals(UUID instanceId) {
