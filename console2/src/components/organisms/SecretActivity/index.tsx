@@ -136,6 +136,10 @@ class SecretActivity extends React.PureComponent<Props> {
     static renderSettings(data: SecretEntry) {
         return (
             <>
+                <Header as="h5" disabled={true}>
+                    ID: {data.id}
+                </Header>
+
                 <Segment>
                     <Header as="h4">Visibility</Header>
                     <SecretVisibilityActivity

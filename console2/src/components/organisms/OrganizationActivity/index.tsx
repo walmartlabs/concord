@@ -22,7 +22,8 @@ import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { Redirect, Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Icon, Loader, Menu } from 'semantic-ui-react';
+import { Header, Icon, Loader, Menu } from 'semantic-ui-react';
+
 import { ConcordKey, RequestError } from '../../../api/common';
 import { OrganizationEntry } from '../../../api/org';
 import { actions, selectors, State } from '../../../state/data/orgs';
@@ -36,7 +37,7 @@ import {
 
 import { NotFoundPage } from '../../pages';
 
-export type TabLink = 'process' | 'project' | 'secret' | 'team' | null;
+export type TabLink = 'process' | 'project' | 'secret' | 'team' | 'settings' | null;
 
 interface ExternalProps {
     activeTab: TabLink;
@@ -78,6 +79,14 @@ class OrganizationActivity extends React.PureComponent<Props> {
 
     static renderTeams(orgName: string) {
         return <TeamListActivity orgName={orgName} />;
+    }
+
+    static renderSettings(e: OrganizationEntry) {
+        return (
+            <Header as="h5" disabled={true}>
+                ID: {e.id}
+            </Header>
+        );
     }
 
     componentDidMount() {
@@ -132,6 +141,10 @@ class OrganizationActivity extends React.PureComponent<Props> {
                         <Icon name="users" />
                         <Link to={`${baseUrl}/team`}>Teams</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'settings'}>
+                        <Icon name="setting" />
+                        <Link to={`${baseUrl}/settings`}>Settings</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
@@ -149,6 +162,9 @@ class OrganizationActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/team`} exact={true}>
                         {OrganizationActivity.renderTeams(data.name)}
+                    </Route>
+                    <Route path={`${baseUrl}/settings`} exact={true}>
+                        {OrganizationActivity.renderSettings(data)}
                     </Route>
 
                     <Route component={NotFoundPage} />

@@ -109,6 +109,10 @@ class ProjectActivity extends React.PureComponent<Props> {
     static renderSettings(p: ProjectEntry) {
         return (
             <>
+                <Header as="h5" disabled={true}>
+                    ID: {p.id}
+                </Header>
+
                 <Segment>
                     <Header as="h4">Allow payload archives</Header>
                     <ProjectRawPayloadActivity
