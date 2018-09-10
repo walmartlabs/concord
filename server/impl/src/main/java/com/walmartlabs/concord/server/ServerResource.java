@@ -20,16 +20,21 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 
 @Named
@@ -40,7 +45,10 @@ public class ServerResource implements Resource {
     private final String version;
     private final String env;
 
-    public ServerResource() {
+    private final List<BackgroundTask> tasks;
+
+    @Inject
+    public ServerResource(List<BackgroundTask> tasks) {
         Properties props = new Properties();
 
         try (InputStream in = ServerResource.class.getResourceAsStream("version.properties")) {
@@ -51,6 +59,8 @@ public class ServerResource implements Resource {
 
         this.version = props.getProperty("version");
         this.env = Utils.getEnv("CONCORD_ENV", "n/a");
+
+        this.tasks = tasks;
     }
 
     @GET
@@ -65,5 +75,16 @@ public class ServerResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     public VersionResponse version() {
         return new VersionResponse(version, env);
+    }
+
+    @POST
+    @Path("maintenance-mode")
+    public void maintenanceMode() {
+        UserPrincipal p = UserPrincipal.assertCurrent();
+        if (!p.isAdmin()) {
+            throw new UnauthorizedException("Only admins can trigger the maintenance mode.);
+        }
+
+        tasks.forEach(BackgroundTask::stop);
     }
 }
