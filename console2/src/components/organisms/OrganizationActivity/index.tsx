@@ -19,23 +19,22 @@
  */
 
 import * as React from 'react';
+import { connect, Dispatch } from 'react-redux';
 import { Redirect, Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
 import { Icon, Loader, Menu } from 'semantic-ui-react';
-
-import { NotFoundPage } from '../../pages';
+import { ConcordKey, RequestError } from '../../../api/common';
+import { OrganizationEntry } from '../../../api/org';
+import { actions, selectors, State } from '../../../state/data/orgs';
 import { RequestErrorMessage } from '../../molecules';
 import {
     ProcessListActivity,
     ProjectListActivity,
-    RedirectButton,
-    SecretList,
-    TeamList
+    SecretListActivity,
+    TeamListActivity
 } from '../../organisms';
-import { ConcordKey, RequestError } from '../../../api/common';
-import { OrganizationEntry } from '../../../api/org';
-import { actions, selectors, State } from '../../../state/data/orgs';
-import { connect, Dispatch } from 'react-redux';
+
+import { NotFoundPage } from '../../pages';
 
 export type TabLink = 'process' | 'project' | 'secret' | 'team' | null;
 
@@ -74,43 +73,11 @@ class OrganizationActivity extends React.PureComponent<Props> {
     }
 
     static renderSecrets(orgName: string) {
-        return (
-            <>
-                <Menu secondary={true}>
-                    <Menu.Item position={'right'}>
-                        <RedirectButton
-                            icon="plus"
-                            positive={true}
-                            labelPosition="left"
-                            content="New secret"
-                            location={`/org/${orgName}/secret/_new`}
-                        />
-                    </Menu.Item>
-                </Menu>
-
-                <SecretList orgName={orgName} />
-            </>
-        );
+        return <SecretListActivity orgName={orgName} />;
     }
 
     static renderTeams(orgName: string) {
-        return (
-            <>
-                <Menu secondary={true}>
-                    <Menu.Item position={'right'}>
-                        <RedirectButton
-                            icon="plus"
-                            positive={true}
-                            labelPosition="left"
-                            content="New team"
-                            location={`/org/${orgName}/team/_new`}
-                        />
-                    </Menu.Item>
-                </Menu>
-
-                <TeamList orgName={orgName} />
-            </>
-        );
+        return <TeamListActivity orgName={orgName} />;
     }
 
     componentDidMount() {

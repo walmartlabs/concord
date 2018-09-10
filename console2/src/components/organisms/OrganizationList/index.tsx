@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Icon, List, Loader, Menu, Radio } from 'semantic-ui-react';
+import { Icon, List, Loader } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';
 import { OrganizationEntry, OrganizationVisibility } from '../../../api/org';
@@ -30,7 +30,8 @@ import { Organizations } from '../../../state/data/orgs/types';
 import { comparators } from '../../../utils';
 import { RequestErrorMessage } from '../../molecules';
 
-interface OwnState {
+interface ExternalProps {
+    filter?: string;
     onlyCurrent: boolean;
 }
 
@@ -44,27 +45,22 @@ interface DispatchProps {
     load: (onlyCurrent: boolean) => void;
 }
 
-type Props = StateProps & DispatchProps;
+type Props = ExternalProps & StateProps & DispatchProps;
 
-class OrganizationList extends React.Component<Props, OwnState> {
-    constructor(props: Props) {
-        super(props);
-        this.state = { onlyCurrent: true };
-    }
-
+class OrganizationList extends React.PureComponent<Props> {
     componentDidMount() {
         this.update();
     }
 
-    componentDidUpdate(prepProps: Props, prevState: OwnState) {
-        if (this.state.onlyCurrent !== prevState.onlyCurrent) {
+    componentDidUpdate(prepProps: Props) {
+        if (this.props.onlyCurrent !== prepProps.onlyCurrent) {
             this.update();
         }
     }
 
     update() {
-        const { load } = this.props;
-        load(this.state.onlyCurrent);
+        const { load, onlyCurrent } = this.props;
+        load(onlyCurrent);
     }
 
     render() {
@@ -74,58 +70,47 @@ class OrganizationList extends React.Component<Props, OwnState> {
             return <RequestErrorMessage error={error} />;
         }
 
+        if (loading) {
+            return <Loader active={true} />;
+        }
+
+        if (data.length === 0) {
+            return <h3>No organizations found</h3>;
+        }
+
         return (
-            <>
-                <Menu secondary={true}>
-                    <Menu.Item position="right">
-                        <Radio
-                            label="Show only user's organizations"
-                            toggle={true}
-                            checked={this.state.onlyCurrent}
-                            onChange={(ev, { checked }) => this.setState({ onlyCurrent: checked! })}
+            <List divided={true} relaxed={true} size="large">
+                {data.map((org: OrganizationEntry, index: number) => (
+                    <List.Item key={index}>
+                        <Icon
+                            name={
+                                org.visibility === OrganizationVisibility.PRIVATE
+                                    ? 'lock'
+                                    : 'unlock'
+                            }
+                            color="grey"
                         />
-                    </Menu.Item>
-                </Menu>
-
-                {loading && <Loader active={true} />}
-
-                <List divided={true} relaxed={true} size="large">
-                    {data.map((org: OrganizationEntry, index: number) => (
-                        <List.Item key={index}>
-                            <Icon
-                                name={
-                                    org.visibility === OrganizationVisibility.PRIVATE
-                                        ? 'lock'
-                                        : 'unlock'
-                                }
-                                color="grey"
-                            />
-                            <List.Content>
-                                <List.Header>
-                                    <Link to={`/org/${org.name}`}>{org.name}</Link>
-                                </List.Header>
-                            </List.Content>
-                        </List.Item>
-                    ))}
-                </List>
-            </>
+                        <List.Content>
+                            <List.Header>
+                                <Link to={`/org/${org.name}`}>{org.name}</Link>
+                            </List.Header>
+                        </List.Content>
+                    </List.Item>
+                ))}
+            </List>
         );
     }
 }
 
 // TODO refactor as a selector?
-const makeOrgList = (data: Organizations): OrganizationEntry[] => {
-    if (!data) {
-        return [];
-    }
-
-    return Object.keys(data)
+const makeOrgList = (data: Organizations, filter?: string): OrganizationEntry[] =>
+    Object.keys(data)
         .map((k) => data[k])
+        .filter((e) => (filter ? e.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 : true))
         .sort(comparators.byName);
-};
 
-const mapStateToProps = ({ orgs }: { orgs: State }): StateProps => ({
-    data: makeOrgList(orgs.orgById),
+const mapStateToProps = ({ orgs }: { orgs: State }, { filter }: ExternalProps): StateProps => ({
+    data: makeOrgList(orgs.orgById, filter),
     loading: orgs.loading,
     error: orgs.error
 });

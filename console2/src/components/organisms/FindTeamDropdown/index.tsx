@@ -44,7 +44,6 @@ interface DispatchProps {
 }
 
 class FindTeamDropdown extends React.PureComponent<ExternalProps & StateProps & DispatchProps> {
-
     componentDidMount() {
         this.props.load();
     }
@@ -59,7 +58,7 @@ class FindTeamDropdown extends React.PureComponent<ExternalProps & StateProps & 
 
         const { onSelect } = this.props;
         onSelect(i);
-    };
+    }
 
     render() {
         const { orgName, load, ...rest } = this.props;
