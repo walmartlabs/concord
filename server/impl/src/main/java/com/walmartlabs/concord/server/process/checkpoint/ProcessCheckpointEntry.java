@@ -44,9 +44,9 @@ public class ProcessCheckpointEntry implements Serializable {
 
 
     @JsonCreator
-    public ProcessCheckpointEntry(@JsonProperty("checkpointId") UUID id,
-                                  @JsonProperty("checkpointName") String name,
-                                  @JsonProperty("checkpointDate") Date createdAt) {
+    public ProcessCheckpointEntry(@JsonProperty("id") UUID id,
+                                  @JsonProperty("name") String name,
+                                  @JsonProperty("createdAt") Date createdAt) {
 
         this.id = id;
         this.name = name;
