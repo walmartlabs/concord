@@ -82,7 +82,7 @@ public class ServerResource implements Resource {
     public void maintenanceMode() {
         UserPrincipal p = UserPrincipal.assertCurrent();
         if (!p.isAdmin()) {
-            throw new UnauthorizedException("Only admins can trigger the maintenance mode.);
+            throw new UnauthorizedException("Only admins can trigger the maintenance mode.");
         }
 
         tasks.forEach(BackgroundTask::stop);
