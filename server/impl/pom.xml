@@ -202,6 +202,11 @@
             <artifactId>metrics-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-jetty9</artifactId>
+            <version>${metrics.version}</version>
+        </dependency>
+        <dependency>
             <groupId>aopalliance</groupId>
             <artifactId>aopalliance</artifactId>
         </dependency>

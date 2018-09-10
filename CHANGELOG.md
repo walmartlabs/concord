@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: expose Jetty statistics;
 - concord-console: add filtering to the organization list;
 - concord-console: UI for managing access to projects and secrets;
 - concord-server, concord-console: initial support for process-,

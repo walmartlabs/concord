@@ -70,7 +70,8 @@ public class ConcordServer {
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
                 .secureCookiesEnabled(ServerConfiguration.secureCookies)
-                .sessionsEnabled(true);
+                .sessionsEnabled(true)
+                .jmxEnabled(true);
 
         OllieServer server = builder.build();
         server.start();
