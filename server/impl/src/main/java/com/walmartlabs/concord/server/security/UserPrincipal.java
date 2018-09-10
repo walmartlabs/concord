@@ -28,6 +28,10 @@ import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * <b>Note:</b> this class is serialized when user principals are stored in
+ * the process state. It must maintain backward compatibility.
+ */
 public class UserPrincipal implements Serializable {
 
     public UserPrincipal(String realm, UserEntry user) {

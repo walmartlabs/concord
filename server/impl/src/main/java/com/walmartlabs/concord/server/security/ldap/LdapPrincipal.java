@@ -26,6 +26,10 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * <b>Note:</b> this class is serialized when user principals are stored in
+ * the process state. It must maintain backward compatibility.
+ */
 public class LdapPrincipal implements Serializable {
 
     private final String username;
