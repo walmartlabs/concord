@@ -27,7 +27,6 @@ import com.walmartlabs.concord.sdk.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,7 +56,7 @@ public class AnsibleEnv {
     }
 
     public AnsibleEnv parse(Map<String, Object> args) {
-        env = addExtraEnv(defaultEnv(), args);
+        env = mergeEnv(defaultEnv(), concordEnv(), args);
         UUID eventCorrelationId = context.getEventCorrelationId();
         if (eventCorrelationId != null) {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
@@ -77,8 +76,22 @@ public class AnsibleEnv {
         return env;
     }
 
+    /**
+     * Overridable environment variables.
+     * @return
+     */
     private Map<String, String> defaultEnv() {
-        final Map<String, String> env = new HashMap<>();
+        Map<String, String> env = new HashMap<>();
+        env.put("ANSIBLE_FORCE_COLOR", "true");
+        return env;
+    }
+
+    /**
+     * Non-overridable environment variables.
+     * @return
+     */
+    private Map<String, String> concordEnv() {
+        Map<String, String> env = new HashMap<>();
         env.put("CONCORD_INSTANCE_ID", txId);
         env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
 
@@ -96,14 +109,20 @@ public class AnsibleEnv {
         return env;
     }
 
-    private static Map<String, String> addExtraEnv(Map<String, String> env, Map<String, Object> args) {
-        Map<String, String> extraEnv = ArgUtils.getMap(args, TaskParams.EXTRA_ENV_KEY);
+    private static Map<String, String> mergeEnv(Map<String, String> defaultEnv, Map<String, String> concordEnv, Map<String, Object> args) {
+        Map<String, Object> extraEnv = ArgUtils.getMap(args, TaskParams.EXTRA_ENV_KEY);
         if (extraEnv == null || extraEnv.isEmpty()) {
-            return env;
+            return concordEnv;
         }
 
-        Map<String, String> result = new HashMap<>(extraEnv);
-        result.putAll(env);
+        Map<String, String> result = new HashMap<>(defaultEnv.size() + concordEnv.size() + extraEnv.size());
+        result.putAll(defaultEnv);
+
+        extraEnv.forEach((k, v) -> {
+            result.put(k, v.toString());
+        });
+
+        result.putAll(concordEnv);
         return result;
     }
 

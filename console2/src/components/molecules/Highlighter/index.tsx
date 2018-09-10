@@ -18,6 +18,7 @@
  * =====
  */
 import * as React from 'react';
+import { default as AnsiUp } from 'ansi_up';
 
 interface HighlighterProps {
     config: Config[];
@@ -30,6 +31,9 @@ interface Config {
     string: string;
     style: string;
 }
+
+const ansiUp = new AnsiUp();
+ansiUp.escape_for_html = false;
 
 class Highlighter extends React.PureComponent<HighlighterProps> {
     constructor(props: HighlighterProps) {
@@ -48,6 +52,8 @@ class Highlighter extends React.PureComponent<HighlighterProps> {
                 () => `<span style="${cfg.style}"><b>${cfg.string}</b></span>`
             );
         }
+
+        txt = ansiUp.ansi_to_html(txt);
 
         return <div dangerouslySetInnerHTML={{ __html: txt }} />;
     }

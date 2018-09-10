@@ -47,6 +47,7 @@
         "typescript": "3.0.1"
     },
     "dependencies": {
+        "ansi_up": "3.0.0",
         "copy-to-clipboard": "3.0.8",
         "d3": "5.7.0",
         "formik": "1.1.1",
