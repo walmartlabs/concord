@@ -30,10 +30,8 @@ import io.takari.parc.Seq;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static io.takari.parc.Combinators.*;
 
@@ -365,6 +363,12 @@ public class Grammar {
             formName.bind(name ->
                     formFields.map(fields -> new YamlFormDefinition(name, fields))));
 
+    // triggerDef := START_OBJECT FIELD_NAME object END_OBJECT
+    private static final Parser<Atom, YamlTrigger> triggerDef = label("Trigger",
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    satisfyToken(JsonToken.FIELD_NAME).bind(a ->
+                            object.map(options -> new YamlTrigger(a.location, a.name, options)))));
+
     // defs := START_OBJECT (formDef | procDef)+ END_OBJECT
     private static final Parser<Atom, Seq<YamlDefinition>> defs = label("Process and form definitions",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
@@ -380,6 +384,10 @@ public class Grammar {
 
     public static Parser<Atom, Seq<YamlDefinition>> getDefinitions() {
         return defs;
+    }
+
+    public static Parser<Atom, YamlTrigger> getTrigger() {
+        return triggerDef;
     }
 
     private Grammar() {

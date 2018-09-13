@@ -20,15 +20,15 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;
-import com.walmartlabs.concord.project.yaml.model.YamlFormField;
-import com.walmartlabs.concord.project.yaml.model.YamlProfile;
-import com.walmartlabs.concord.project.yaml.model.YamlProject;
-import com.walmartlabs.concord.project.yaml.model.YamlStep;
+import com.walmartlabs.concord.project.yaml.converter.StepConverter;
+import com.walmartlabs.concord.project.yaml.model.*;
 import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.model.ProcessDefinition;
+import io.takari.bpm.model.SourceMap;
 import io.takari.bpm.model.form.FormDefinition;
 
 import java.util.ArrayList;
@@ -43,29 +43,36 @@ public final class YamlProjectConverter {
         Map<String, FormDefinition> forms = convertForms(project.getForms());
         Map<String, Object> cfg = project.getConfiguration();
         Map<String, Profile> profiles = convertProfiles(project.getProfiles());
-        return new ProjectDefinition(flows, forms, cfg, profiles, convertTriggers(project.getTriggers()));
+        List<Trigger> triggers = convertTriggers(project.getTriggers());
+        return new ProjectDefinition(flows, forms, cfg, profiles, triggers);
     }
 
     @SuppressWarnings("unchecked")
-    private static List<Trigger> convertTriggers(List<Map<String, Map<String, Object>>> triggers) {
+    private static List<Trigger> convertTriggers(List<YamlTrigger> triggers) {
         if (triggers == null || triggers.isEmpty()) {
             return null;
         }
 
         List<Trigger> result = new ArrayList<>();
-        for (Map<String, Map<String, Object>> t : triggers) {
-            if (t.isEmpty()) {
-                continue;
-            }
+        for (YamlTrigger t : triggers) {
+            String name = t.getName();
 
-            Map.Entry<String, Map<String, Object>> e = t.entrySet().iterator().next();
-            String name = e.getKey();
-            Map<String, Object> params = e.getValue();
-            String entryPoint = (String) params.remove(Constants.Request.ENTRY_POINT_KEY);
-            List<String> activeProfiles = (List<String>) params.remove(Constants.Request.ACTIVE_PROFILES_KEY);
-            Map<String, Object> arguments = (Map<String, Object>) params.remove(Constants.Request.ARGUMENTS_KEY);
-            result.add(new Trigger(name, entryPoint, activeProfiles, arguments, params));
+            Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(t.getOptions());
+
+            String entryPoint = (String) opts.remove(Constants.Request.ENTRY_POINT_KEY);
+            List<String> activeProfiles = (List<String>) opts.remove(Constants.Request.ACTIVE_PROFILES_KEY);
+            Map<String, Object> arguments = (Map<String, Object>) opts.remove(Constants.Request.ARGUMENTS_KEY);
+
+            JsonLocation l = t.getLocation();
+            SourceMap sourceMap = new SourceMap(SourceMap.Significance.HIGH,
+                    String.valueOf(l.getSourceRef()),
+                    l.getLineNr(),
+                    l.getColumnNr(),
+                    "Trigger: " + name);
+
+            result.add(new Trigger(name, entryPoint, activeProfiles, arguments, opts, sourceMap));
         }
+
         return result;
     }
 

@@ -42,6 +42,7 @@ public class YamlParser {
         module.addDeserializer(YamlStep.class, YamlDeserializers.getYamlStepDeserializer());
         module.addDeserializer(YamlFormField.class, YamlDeserializers.getYamlFormFieldDeserializer());
         module.addDeserializer(YamlDefinitionFile.class, YamlDeserializers.getYamlDefinitionFileDeserializer());
+        module.addDeserializer(YamlTrigger.class, YamlDeserializers.getYamlTriggerDeserializer());
 
         om.registerModule(module);
 

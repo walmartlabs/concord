@@ -8,6 +8,7 @@
     <logger name="com.walmartlabs.ollie" level="WARN"/>
     <logger name="org.apache.shiro" level="ERROR"/>
     <logger name="org.eclipse.jetty.server" level="WARN"/>
+    <logger name="org.javers.core" level="WARN"/>
     <logger name="org.jooq" level="WARN"/>
 
     <root level="INFO">

@@ -20,14 +20,14 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.walmartlabs.concord.project.yaml.model.YamlDefinition;
-import com.walmartlabs.concord.project.yaml.model.YamlDefinitionFile;
-import com.walmartlabs.concord.project.yaml.model.YamlFormField;
-import com.walmartlabs.concord.project.yaml.model.YamlStep;
+import com.walmartlabs.concord.project.yaml.model.*;
 import io.takari.parc.Input;
 import io.takari.parc.Parser;
 import io.takari.parc.Result;
@@ -45,6 +45,7 @@ public final class YamlDeserializers {
     private static final JsonDeserializer<YamlStep> yamlStepDeserializer = new YamlStepDeserializer();
     private static final JsonDeserializer<YamlFormField> yamlFormFieldDeserializer = new YamlFormFieldDeserializer();
     private static final JsonDeserializer<YamlDefinitionFile> yamlDefinitionFileDeserializer = new YamlDefinitionFileDeserializer();
+    private static final JsonDeserializer<YamlTrigger> yamlTriggerDeserializer = new YamlTriggerDeserializer();
 
     public static JsonDeserializer<YamlStep> getYamlStepDeserializer() {
         return yamlStepDeserializer;
@@ -56,6 +57,10 @@ public final class YamlDeserializers {
 
     public static JsonDeserializer<YamlDefinitionFile> getYamlDefinitionFileDeserializer() {
         return yamlDefinitionFileDeserializer;
+    }
+
+    public static JsonDeserializer<YamlTrigger> getYamlTriggerDeserializer() {
+        return yamlTriggerDeserializer;
     }
 
     private static final class YamlStepDeserializer extends StdDeserializer<YamlStep> {
@@ -99,6 +104,18 @@ public final class YamlDeserializers {
             }
 
             return new YamlDefinitionFile(m);
+        }
+    }
+
+    private static final class YamlTriggerDeserializer extends StdDeserializer<YamlTrigger> {
+
+        public YamlTriggerDeserializer() {
+            super(YamlTrigger.class);
+        }
+
+        @Override
+        public YamlTrigger deserialize(JsonParser json, DeserializationContext ctx) throws IOException {
+            return parse(json, Grammar.getTrigger());
         }
     }
 
@@ -153,7 +170,7 @@ public final class YamlDeserializers {
             loc = a.location;
         }
 
-        return new JsonParseException(p, "Expected: " + f.getMessage(), loc);
+        return new JsonParseException(p, "Expected: " + f.getMessage() + ". Got " + atoms, loc);
     }
 
     private YamlDeserializers() {

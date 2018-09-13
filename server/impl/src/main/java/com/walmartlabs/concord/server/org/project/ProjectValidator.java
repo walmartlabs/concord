@@ -27,25 +27,24 @@ import com.google.common.base.Strings;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;
 import io.takari.bpm.model.ProcessDefinition;
+import io.takari.bpm.model.SourceMap;
 import org.sonatype.siesta.ValidationErrorsException;
 
-import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-@Named
-public class RepositoryValidator {
+public class ProjectValidator {
 
     private static final CronParser parser =
             new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
 
-    public void validate(ProjectDefinition projectDefinition) {
+    public static void validate(ProjectDefinition pd) {
         List<String> errors = new ArrayList<>();
-        for (Trigger trigger : projectDefinition.getTriggers()) {
-            validateTrigger(errors, trigger, projectDefinition);
+        for (Trigger t : pd.getTriggers()) {
+            validateTrigger(t, errors, pd);
         }
 
         if (!errors.isEmpty()) {
@@ -53,69 +52,71 @@ public class RepositoryValidator {
         }
     }
 
-    private static void validateTrigger(List<String> errors, Trigger trigger, ProjectDefinition projectDefinition) {
-        validateEntryPoint(errors, trigger, projectDefinition.getFlows());
+    private static void validateTrigger(Trigger t, List<String> errors, ProjectDefinition pd) {
+        validateEntryPoint(t, errors, pd.getFlows());
 
-        validateSpec(errors, trigger);
+        validateSpec(t, errors);
 
-        if (Objects.isNull(trigger.getParams())) {
+        if (Objects.isNull(t.getParams())) {
             return;
         }
 
-        trigger.getParams().entrySet().stream()
+        t.getParams().entrySet().stream()
                 .filter(v -> v.getValue() instanceof String)
-                .forEach(v -> validateRegex(errors, v, trigger.getName()));
+                .forEach(v -> validateRegex(t, errors, v));
     }
 
-    private static void validateEntryPoint(List<String> errors, Trigger trigger, Map<String, ProcessDefinition> flows) {
-        String triggerName = trigger.getName();
-
-        if (Strings.isNullOrEmpty(trigger.getEntryPoint())) {
-            errors.add(makeErrorMessage(triggerName, "entryPoint", "is missing"));
+    private static void validateEntryPoint(Trigger t, List<String> errors, Map<String, ProcessDefinition> flows) {
+        if (Strings.isNullOrEmpty(t.getEntryPoint())) {
+            errors.add(makeErrorMessage(t, "entryPoint", "is missing"));
             return;
         }
 
-        if (Objects.isNull(flows) || !flows.containsKey(trigger.getEntryPoint())) {
-            errors.add(makeErrorMessage(triggerName, "entryPoint", "does not point to valid flow"));
+        if (Objects.isNull(flows) || !flows.containsKey(t.getEntryPoint())) {
+            errors.add(makeErrorMessage(t, "entryPoint", "does not point to valid flow"));
         }
     }
 
-    private static void validateSpec(List<String> errors, Trigger trigger) {
-        String triggerName = trigger.getName();
-        String specParamKey = "spec";
-
+    private static void validateSpec(Trigger t, List<String> errors) {
+        String triggerName = t.getName();
         if (!triggerName.equals("cron")) {
             return;
         }
 
-        if (Objects.isNull(trigger.getParams())) {
-            errors.add(makeErrorMessage(triggerName, specParamKey, "is missing"));
+        String specParamKey = "spec";
+
+        if (Objects.isNull(t.getParams())) {
+            errors.add(makeErrorMessage(t, specParamKey, "is missing"));
             return;
         }
 
-        Object spec = trigger.getParams().get(specParamKey);
+        Object spec = t.getParams().get(specParamKey);
         if (Objects.isNull(spec)) {
-            errors.add(makeErrorMessage(triggerName, specParamKey, "is missing"));
+            errors.add(makeErrorMessage(t, specParamKey, "is missing"));
             return;
         }
 
         try {
             parser.parse((String) spec);
         } catch (ValidationErrorsException e) {
-            errors.add(makeErrorMessage(triggerName, specParamKey, "is not valid: " + e.getMessage()));
+            errors.add(makeErrorMessage(t, specParamKey, "is not valid: " + e.getMessage()));
         }
     }
 
-    private static void validateRegex(List<String> errors, Map.Entry<String, Object> entry, String triggerName) {
+    private static void validateRegex(Trigger t, List<String> errors, Map.Entry<String, Object> entry) {
         try {
             Pattern.compile(entry.getValue().toString());
         } catch (Exception e) {
-            errors.add(makeErrorMessage(triggerName, entry.getKey(), "is not a valid regular expression: " + e.getMessage()));
+            errors.add(makeErrorMessage(t, entry.getKey(), "is not a valid regular expression: " + e.getMessage()));
         }
     }
 
-    private static String makeErrorMessage(String triggerName, String property, String message) {
-        return triggerName + " -> " + property + " " + (message);
+    private static String location(SourceMap m) {
+        return "@ src: " + m.getSource() + ", line: " + m.getLine() + ", col: " + m.getColumn();
+    }
+
+    private static String makeErrorMessage(Trigger t, String property, String message) {
+        return t.getName() + " -> " + property + " " + (message) + " " + location(t.getSourceMap());
     }
 }
 

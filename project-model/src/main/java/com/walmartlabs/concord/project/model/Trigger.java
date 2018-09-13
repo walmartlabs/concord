@@ -20,6 +20,8 @@ package com.walmartlabs.concord.project.model;
  * =====
  */
 
+import io.takari.bpm.model.SourceMap;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -31,13 +33,15 @@ public class Trigger implements Serializable {
     private final List<String> activeProfiles;
     private final Map<String, Object> arguments;
     private final Map<String, Object> params;
+    private final SourceMap sourceMap;
 
-    public Trigger(String name, String entryPoint, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> params) {
+    public Trigger(String name, String entryPoint, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> params, SourceMap sourceMap) {
         this.name = name;
         this.entryPoint = entryPoint;
         this.activeProfiles = activeProfiles;
         this.arguments = arguments;
         this.params = params;
+        this.sourceMap = sourceMap;
     }
 
     public String getName() {
@@ -60,6 +64,10 @@ public class Trigger implements Serializable {
         return arguments;
     }
 
+    public SourceMap getSourceMap() {
+        return sourceMap;
+    }
+
     @Override
     public String toString() {
         return "Trigger{" +
@@ -68,6 +76,7 @@ public class Trigger implements Serializable {
                 ", activeProfiles=" + activeProfiles +
                 ", arguments=" + arguments +
                 ", params=" + params +
+                ", sourceMap=" + sourceMap +
                 '}';
     }
 }

@@ -29,8 +29,7 @@ import java.util.Map;
 public class YamlProject extends YamlProfile {
 
     private final Map<String, YamlProfile> profiles;
-
-    private final List<Map<String, Map<String, Object>>> triggers;
+    private final List<YamlTrigger> triggers;
 
     @JsonCreator
     public YamlProject(@JsonProperty("flows") Map<String, List<YamlStep>> flows,
@@ -38,7 +37,7 @@ public class YamlProject extends YamlProfile {
                        @JsonProperty("configuration") Map<String, Object> configuration,
                        @JsonProperty("variables") Map<String, Object> variables,
                        @JsonProperty("profiles") Map<String, YamlProfile> profiles,
-                       @JsonProperty("triggers") List<Map<String, Map<String, Object>>> triggers) {
+                       @JsonProperty("triggers") List<YamlTrigger> triggers) {
 
         super(flows, forms, configuration, variables);
         this.profiles = profiles;
@@ -49,7 +48,7 @@ public class YamlProject extends YamlProfile {
         return profiles;
     }
 
-    public List<Map<String, Map<String, Object>>> getTriggers() {
+    public List<YamlTrigger> getTriggers() {
         return triggers;
     }
 

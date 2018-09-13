@@ -53,7 +53,6 @@ public class ProjectRepositoryManager {
     private final RepositoryDao repositoryDao;
     private final ExternalEventResource externalEventResource;
     private final GithubWebhookService githubWebhookService;
-    private final RepositoryValidator repositoryValidator;
     private final AuditLog auditLog;
 
     private final ProjectLoader loader = new ProjectLoader();
@@ -66,7 +65,6 @@ public class ProjectRepositoryManager {
                                     RepositoryDao repositoryDao,
                                     ExternalEventResource externalEventResource,
                                     GithubWebhookService githubWebhookService,
-                                    RepositoryValidator repositoryValidator,
                                     AuditLog auditLog) {
 
         this.projectAccessManager = projectAccessManager;
@@ -76,7 +74,6 @@ public class ProjectRepositoryManager {
         this.repositoryDao = repositoryDao;
         this.externalEventResource = externalEventResource;
         this.githubWebhookService = githubWebhookService;
-        this.repositoryValidator = repositoryValidator;
         this.auditLog = auditLog;
     }
 
@@ -185,7 +182,7 @@ public class ProjectRepositoryManager {
     public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) throws IOException {
         Path srcPath = repositoryManager.fetch(projectId, repositoryEntry);
         ProjectDefinition pd = loader.loadProject(srcPath);
-        repositoryValidator.validate(pd);
+        ProjectValidator.validate(pd);
     }
 
     private static String trim(String s) {
