@@ -39,22 +39,6 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 public class TriggerIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
-    public void testInvalidConditionals() throws Exception {
-        String orgName = "org_" + randomString();
-        String projectName = "project_" + randomString();
-        ProjectOperationResponse por = register(orgName, projectName, "invalidTriggers", 2);
-
-        // ---
-
-        ExternalEventsApi eventResource = new ExternalEventsApi(getApiClient());
-        eventResource.event("testTrigger", Collections.singletonMap("x", "abc"));
-
-        // ---
-
-        waitForProcs(por.getId(), 1, null);
-    }
-
-    @Test(timeout = 60000)
     public void testTriggerProcessStartupFailure() throws Exception {
         String orgName = "org_" + randomString();
         String projectAName = "projectA_" + randomString();
@@ -118,6 +102,10 @@ public class TriggerIT extends AbstractServerIT {
         ProjectOperationResponse por = createProject(orgName, projectName, repoName, repoResource);
 
         // ---
+
+        if (expectedTriggerCount < 0) {
+            return por;
+        }
 
         TriggersApi triggerResource = new TriggersApi(getApiClient());
         while (true) {
