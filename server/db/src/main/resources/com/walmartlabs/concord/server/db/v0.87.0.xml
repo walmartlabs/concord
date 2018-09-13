@@ -64,4 +64,13 @@
                 USERS users on users.user_id = q1.INITIATOR_ID
         </createView>
     </changeSet>
+
+    <changeSet id="87300" author="muhammad.wasi@walmart.com">
+        <sql>
+            drop trigger if exists UPDATE_PROCESS_QUEUE_INITIATOR_ID on PROCESS_QUEUE;
+            drop function if exists UPDATE_PROCESS_QUEUE_INITIATOR;
+            drop function if exists UPDATE_PROCESS_QUEUE_INITIATOR_ID;
+        </sql>
+        <dropColumn tableName="PROCESS_QUEUE" columnName="INITIATOR"/>
+    </changeSet>
 </databaseChangeLog>
