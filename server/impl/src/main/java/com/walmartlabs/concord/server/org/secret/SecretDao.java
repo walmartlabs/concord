@@ -45,6 +45,9 @@ import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.selectFrom;
+import static org.jooq.impl.DSL.selectOne;
+import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.or;
 
 @Named
 public class SecretDao extends AbstractDao {
@@ -197,9 +200,23 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public List<SecretEntry> list(UUID orgId, Field<?> sortField, boolean asc) {
+    public List<SecretEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField, boolean asc) {
+
+        SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
+                .from(TEAMS)
+                .where(TEAMS.ORG_ID.eq(orgId));
+
+        Condition filterByTeamMember = exists(selectOne().from(USER_TEAMS)
+                .where(USER_TEAMS.USER_ID.eq(currentUserId)
+                        .and(USER_TEAMS.TEAM_ID.in(teamIds))));
+
         try (DSLContext tx = DSL.using(cfg)) {
             SelectJoinStep<Record12<UUID, String, UUID, String, UUID, String, UUID, String, String, String, String, String>> query = selectEntry(tx);
+
+            if (currentUserId != null) {
+                query.where(or(SECRETS.VISIBILITY.eq(SecretVisibility.PUBLIC.toString()), filterByTeamMember));
+            }
+
 
             if (orgId != null) {
                 query.where(SECRETS.ORG_ID.eq(orgId));

@@ -57,6 +57,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
+import static com.walmartlabs.concord.server.jooq.Tables.SECRETS;
+
 @Named
 public class SecretManager {
 
@@ -294,6 +296,16 @@ public class SecretManager {
 
         Secret s = e.getSecret();
         return (KeyPair) s;
+    }
+
+    public List<SecretEntry> list(UUID orgId) {
+        UserPrincipal p = UserPrincipal.assertCurrent();
+        UUID userId = p.getId();
+        if (p.isAdmin() || p.isGlobalReader() || p.isGlobalWriter()) {
+            userId = null;
+        }
+
+        return secretDao.list(orgId, userId, SECRETS.SECRET_NAME, true);
     }
 
     public void updateAccessLevel(UUID secretId, UUID teamId, ResourceAccessLevel level) {

@@ -231,7 +231,7 @@ public class SecretResource implements Resource {
     @Validate
     public List<SecretEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return secretDao.list(org.getId(), SECRETS.SECRET_NAME, true);
+        return secretManager.list(org.getId());
     }
 
     @DELETE
