@@ -26,7 +26,7 @@ public class ServerConfiguration implements Serializable {
 
     private static final String SECURE_COOKIES_KEY = "SECURE_COOKIES";
 
-    public static boolean secureCookies;
+    public static final boolean secureCookies;
     static {
         secureCookies = Boolean.parseBoolean(System.getenv(SECURE_COOKIES_KEY));
     }
