@@ -282,6 +282,10 @@
             <artifactId>simpleclient_hotspot</artifactId>
             <version>${prometheus.simpleclient.version}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.javers</groupId>

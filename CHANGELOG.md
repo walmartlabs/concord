@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: support for email form fields
+(`inputType: "email"`);
 - concord-server: expose Jetty statistics;
 - concord-console: add filtering to the organization list;
 - concord-console: UI for managing access to projects and secrets;

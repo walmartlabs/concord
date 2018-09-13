@@ -7,6 +7,7 @@ flows:
   - log: "And your height is: ${myForm.money}"
   - log: "'Remember me' checked: ${myForm.rememberMe}"
   - log: "File ${myForm.file} content: ${resource.asString(myForm.file)}"
+  - log: "Email: ${myForm.email}"
   - log: "Skills -> ${myForm.skills}"
   - task: log
     in:
@@ -23,4 +24,4 @@ forms:
   - rememberMe: { label: "Remember me", type: "boolean", value: true }
   - file: { label: "File", type: "file"}
   - skills: { label: "Skills", type: "string*", allow: ["css", "design", "angular"] }
-
+  - email: { label: "Email", type: "string", inputType: "email" }

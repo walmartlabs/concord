@@ -32,6 +32,7 @@ import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
 import io.takari.bpm.model.form.FormField;
 
+import org.apache.commons.validator.routines.EmailValidator;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -256,7 +257,7 @@ public class ConcordFormService {
     private FormValidator createFormValidator(UUID processInstanceId, String formName) {
         FormValidatorLocale locale = new ExternalFileFormValidatorLocale(processInstanceId, formName, stateManager);
         List<DefaultFormValidator.FieldValidator> vs = new ArrayList<>();
-        vs.add(new DefaultFormValidator.StringFieldValidator(locale));
+        vs.add(new StringFieldValidator(locale));
         vs.add(new DefaultFormValidator.IntegerFieldValidator(locale));
         vs.add(new DefaultFormValidator.DecimalFieldValidator(locale));
         vs.add(new DefaultFormValidator.BooleanFieldValidator(locale));
@@ -336,6 +337,36 @@ public class ConcordFormService {
                 throw new IllegalArgumentException("Expected a file value: " + fieldName);
             }
 
+            return null;
+        }
+    }
+
+    public static final class StringFieldValidator implements DefaultFormValidator.FieldValidator {
+
+        private final DefaultFormValidator.StringFieldValidator delegate;
+
+        public StringFieldValidator(FormValidatorLocale locale) {
+            this.delegate = new DefaultFormValidator.StringFieldValidator(locale);
+        }
+
+        @Override
+        public String[] allowedTypes() {
+            return delegate.allowedTypes();
+        }
+
+        @Override
+        public ValidationError validate(String formId, FormField f, Integer idx, Object v) throws ExecutionException {
+            ValidationError error = delegate.validate(formId, f, idx, v);
+            if (error != null) {
+                return error;
+            }
+            String inputType = f.getOption(new FormField.Option<>("inputType", String.class));
+            if ("email".equalsIgnoreCase(inputType)) {
+                boolean valid = EmailValidator.getInstance().isValid((String)v);
+                if (!valid) {
+                    return new ValidationError(f.getName(), "Invalid email address");
+                }
+            }
             return null;
         }
     }
