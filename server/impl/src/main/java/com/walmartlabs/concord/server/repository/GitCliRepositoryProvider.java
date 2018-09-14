@@ -38,12 +38,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +53,7 @@ import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 
 @Named
+@Singleton
 public class GitCliRepositoryProvider implements RepositoryProvider {
 
     private static final Logger log = LoggerFactory.getLogger(GitCliRepositoryProvider.class);
@@ -62,12 +65,14 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     private final GitConfiguration cfg;
 
     private final List<String> sensitiveData;
+    private final ExecutorService executor;
 
     @Inject
     public GitCliRepositoryProvider(SecretManager secretManager, GitConfiguration cfg) {
         this.secretManager = secretManager;
         this.cfg = cfg;
         this.sensitiveData = cfg.getOauthToken() != null ? Collections.singletonList(cfg.getOauthToken()) : Collections.emptyList();
+        this.executor = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -471,29 +476,38 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         try {
             Process p = pb.start();
 
-            StringBuilder out = new StringBuilder();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                log.info("GIT: {}", hideSensitiveData(line));
-                out.append(line).append("\n");
-            }
+            Future<StringBuilder> out = executor.submit(() -> {
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        log.info("GIT: {}", hideSensitiveData(line));
+                        sb.append(line).append("\n");
+                    }
+                }
+                return sb;
+            });
 
-            StringBuilder error = new StringBuilder();
-            reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            while ((line = reader.readLine()) != null) {
-                error.append(line).append("\n");
-            }
+            Future<StringBuilder> error = executor.submit(() -> {
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line).append("\n");
+                    }
+                }
+                return sb;
+            });
 
             int code = p.waitFor();
             if (code != SUCCESS_EXIT_CODE) {
-                String msg = hideSensitiveData(error.toString());
+                String msg = hideSensitiveData(error.get().toString());
                 log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'", cmd, code, msg);
                 throw new RepositoryException(msg);
             }
 
-            return out.toString();
-        } catch (IOException | InterruptedException e) {
+            return out.get().toString();
+        } catch (ExecutionException | IOException | InterruptedException e) {
             log.error("launchCommand ['{}'] -> error", cmd, e);
             throw new RepositoryException("git operation error: " + e.getMessage());
         }

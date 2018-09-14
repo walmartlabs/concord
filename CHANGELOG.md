@@ -14,6 +14,8 @@ organization- and project-level metadata.
 
 ### Changed
 
+- concord-server: fixed a bug preventing GIT repositories with large
+number of tags from working;
 - concord-server: apply RBAC filters when listing secrets.
 
 
