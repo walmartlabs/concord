@@ -20,17 +20,18 @@
 
 import * as React from 'react';
 import { Icon, Table } from 'semantic-ui-react';
+import { ConcordId } from '../../../api/common';
+import { ProcessStatus } from '../../../api/process';
 import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
 import { formatTimestamp } from '../../../utils';
 import { HumanizedDuration } from '../../molecules';
-import { ConcordId } from '../../../api/common';
 import { ProcessRestoreActivity } from '../../organisms';
-import { ProcessStatus } from '../../../api/process';
 
 interface Props {
     instanceId: ConcordId;
     processStatus: ProcessStatus;
     events: Array<ProcessEventEntry<ProcessElementEvent>>;
+    tooMuchData?: boolean;
 }
 
 const renderDefinitionId = (
@@ -122,7 +123,7 @@ const renderElementRow = (
 
 class ProcessElementList extends React.PureComponent<Props> {
     render() {
-        const { instanceId, processStatus, events } = this.props;
+        const { instanceId, processStatus, events, tooMuchData } = this.props;
         return (
             <Table celled={true} definition={true}>
                 <Table.Header>
@@ -146,6 +147,16 @@ class ProcessElementList extends React.PureComponent<Props> {
                         renderElementRow(instanceId, processStatus, e, idx, arr)
                     )}
                 </Table.Body>
+
+                {tooMuchData && (
+                    <Table.Footer fullWidth={true}>
+                        <Table.Row>
+                            <Table.HeaderCell colSpan={6}>
+                                <Icon name="warning sign" /> <strong>Partial data</strong>
+                            </Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Footer>
+                )}
             </Table>
         );
     }

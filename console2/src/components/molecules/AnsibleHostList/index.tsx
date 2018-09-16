@@ -37,9 +37,14 @@ interface State {
 }
 
 interface Props {
+    events: Array<ProcessEventEntry<AnsibleEvent>>;
     hosts: AnsibleHostListEntry[];
     hostGroups: string[];
-    hostEventsFn: (host: string, hostGroup?: string) => Array<ProcessEventEntry<AnsibleEvent>>;
+    hostEventsFn: (
+        events: Array<ProcessEventEntry<AnsibleEvent>>,
+        host: string,
+        hostGroup?: string
+    ) => Array<ProcessEventEntry<AnsibleEvent>>;
     selectedStatus?: AnsibleStatus;
 }
 
@@ -76,7 +81,7 @@ const makeHostGroupOptions = (data: string[]): DropdownItemProps[] => {
     }
 
     const opts = data.map((value) => ({ value, text: value }));
-    return [{ text: 'all' }].concat(opts);
+    return [{ value: '', text: 'all' }].concat(opts);
 };
 
 class AnsibleHostList extends React.Component<Props, State> {
@@ -86,8 +91,9 @@ class AnsibleHostList extends React.Component<Props, State> {
     }
 
     renderHostItem(host: string, duration: number, idx: number) {
-        const { hostEventsFn } = this.props;
+        const { hostEventsFn, events } = this.props;
         const { hostGroupFilter } = this.state;
+
         return (
             <Modal
                 key={idx}
@@ -103,7 +109,11 @@ class AnsibleHostList extends React.Component<Props, State> {
                     </Table.Row>
                 }>
                 <Modal.Content>
-                    <AnsibleTaskList title={host} events={hostEventsFn(host, hostGroupFilter)} />
+                    <AnsibleTaskList
+                        title={host}
+                        events={events}
+                        filter={(evs) => hostEventsFn(evs, host, hostGroupFilter)}
+                    />
                 </Modal.Content>
             </Modal>
         );

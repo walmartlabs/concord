@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { push as pushHistory } from 'react-router-redux';
-import { Button, Divider, Header, Icon } from 'semantic-ui-react';
+import { Button, Divider, Header, Icon, Message } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
 import { canBeCancelled, hasState, ProcessEntry } from '../../../api/process';
@@ -33,16 +33,16 @@ import {
     ProcessEventType
 } from '../../../api/process/event';
 import { FormListEntry } from '../../../api/process/form';
-import { actions } from '../../../state/data/processes/poll';
+import { actions, MAX_EVENT_COUNT } from '../../../state/data/processes/poll';
 import { ProcessEvents, State } from '../../../state/data/processes/poll/types';
+import { timestampDiffMs } from '../../../utils';
 import {
     AnsibleStats,
     ProcessActionList,
     ProcessElementList,
     ProcessStatusTable
 } from '../../molecules';
-import { CancelProcessPopup } from '../index';
-import { timestampDiffMs } from '../../../utils';
+import { CancelProcessPopup } from '../../organisms';
 
 interface OwnState {
     selectedStatus?: AnsibleStatus;
@@ -56,12 +56,13 @@ interface StateProps {
     loading: boolean;
     process?: ProcessEntry;
     forms: FormListEntry[];
-    events: Array<ProcessEventEntry<ProcessElementEvent>>;
+    elementEvents: Array<ProcessEventEntry<ProcessElementEvent>>;
     ansibleEvents: Array<ProcessEventEntry<AnsibleEvent>>;
+    tooMuchData?: boolean;
 }
 
 interface DispatchProps {
-    startPolling: () => void;
+    startPolling: (forceLoadAll?: boolean) => void;
     stopPolling: () => void;
     refresh: () => void;
     startWizard: () => void;
@@ -113,6 +114,11 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
         );
     }
 
+    handleForceLoadAll(ev: React.SyntheticEvent) {
+        ev.preventDefault();
+        this.props.startPolling(true);
+    }
+
     render() {
         const {
             loading,
@@ -121,8 +127,9 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
             instanceId,
             process,
             forms,
-            events,
-            ansibleEvents
+            elementEvents,
+            ansibleEvents,
+            tooMuchData
         } = this.props;
 
         // TODO replace the loading icon with something more visually pleasing
@@ -137,6 +144,17 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
                     />
                     {process && process.status}
                 </Header>
+
+                {tooMuchData && (
+                    <Message warning={true}>
+                        Looks like there's a lot of data. Only the first {MAX_EVENT_COUNT} events
+                        were loaded. Click{' '}
+                        <a href="#" onClick={(ev) => this.handleForceLoadAll(ev)}>
+                            here
+                        </a>{' '}
+                        to load all events. Note: it may take a while.
+                    </Message>
+                )}
 
                 {process && (
                     <>
@@ -158,13 +176,14 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
                 )}
 
                 {process &&
-                    events.length > 0 && (
+                    elementEvents.length > 0 && (
                         <>
                             <Divider content="Flow Events" horizontal={true} />
                             <ProcessElementList
                                 instanceId={instanceId}
-                                events={events}
+                                events={elementEvents}
                                 processStatus={process.status}
+                                tooMuchData={tooMuchData}
                             />
                         </>
                     )}
@@ -262,19 +281,21 @@ export const mapStateToProps = ({ processes: { poll } }: StateType): StateProps 
     loading: poll.currentRequest.running,
     process: poll.currentRequest.response ? poll.currentRequest.response.process : undefined,
     forms: poll.forms,
-    events: combinePrePostEvents(makeElementEvents(poll.eventById)) as Array<
+    elementEvents: combinePrePostEvents(makeElementEvents(poll.eventById)) as Array<
         ProcessEventEntry<ProcessElementEvent>
     >,
     ansibleEvents: combinePrePostEvents(filterAnsibleEvents(poll.eventById)) as Array<
         ProcessEventEntry<AnsibleEvent>
-    >
+    >,
+    tooMuchData: poll.currentRequest.response ? poll.currentRequest.response.tooMuchData : false
 });
 
 export const mapDispatchToProps = (
     dispatch: Dispatch<{}>,
     { instanceId }: ExternalProps
 ): DispatchProps => ({
-    startPolling: () => dispatch(actions.startProcessPolling(instanceId)),
+    startPolling: (forceLoadAll?: boolean) =>
+        dispatch(actions.startProcessPolling(instanceId, forceLoadAll)),
     stopPolling: () => dispatch(actions.stopProcessPolling()),
     refresh: () => dispatch(actions.forcePoll()),
     startWizard: () => dispatch(pushHistory(`/process/${instanceId}/wizard?fullScreen=true`))

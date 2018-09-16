@@ -23,6 +23,8 @@ import { Grid, Tab } from 'semantic-ui-react';
 import { AnsibleEvent, AnsibleStatus, ProcessEventEntry } from '../../../api/process/event';
 
 import { AnsibleHostList, AnsibleStatChart, AnsibleTaskList } from '../../molecules';
+import { AnsibleHostListEntry } from '../AnsibleHostList';
+import { AnsibleStatChartEntry } from '../AnsibleStatChart';
 import { countUniqueHosts, getFailures, makeHostList, makeHostGroups, makeStats } from './data';
 
 interface State {
@@ -34,19 +36,31 @@ interface Props {
 }
 
 class AnsibleStats extends React.Component<Props, State> {
+    private hosts: AnsibleHostListEntry[];
+    private hostGroups: string[];
+    private stats: AnsibleStatChartEntry[];
+    private failures: Array<ProcessEventEntry<AnsibleEvent>>;
+
     constructor(props: Props) {
         super(props);
         this.state = {};
+        this.update();
+    }
+
+    componentDidUpdate(prevProps: Props) {
+        this.update();
+    }
+
+    update() {
+        const { events } = this.props;
+        this.hosts = makeHostList(events);
+        this.hostGroups = makeHostGroups(events);
+        this.stats = makeStats(events);
+        this.failures = getFailures(events);
     }
 
     render() {
         const { events } = this.props;
-
-        // TODO calculate the data on update
-        const hosts = makeHostList(events);
-        const hostGroups = makeHostGroups(events);
-        const stats = makeStats(events);
-        const failures = getFailures(events);
 
         return (
             <Tab
@@ -60,20 +74,21 @@ class AnsibleStats extends React.Component<Props, State> {
                                         <AnsibleStatChart
                                             width={500}
                                             height={300}
-                                            data={stats}
-                                            uniqueHosts={countUniqueHosts(hosts)}
+                                            data={this.stats}
+                                            uniqueHosts={countUniqueHosts(this.hosts)}
                                             onClick={(s) => this.setState({ selectedStatus: s })}
                                         />
                                     </Grid.Column>
                                     <Grid.Column>
                                         <AnsibleHostList
-                                            hosts={hosts}
-                                            hostGroups={hostGroups}
-                                            hostEventsFn={(host, hostGroup?) =>
-                                                events.filter(
+                                            events={events}
+                                            hosts={this.hosts}
+                                            hostGroups={this.hostGroups}
+                                            hostEventsFn={(evs, host, hostGroup?) =>
+                                                evs.filter(
                                                     (e) =>
                                                         e.data.host === host &&
-                                                        (hostGroup === undefined ||
+                                                        (!hostGroup ||
                                                             e.data.hostGroup === hostGroup)
                                                 )
                                             }
@@ -88,8 +103,12 @@ class AnsibleStats extends React.Component<Props, State> {
                         menuItem: 'Failures',
                         render: () => (
                             <Tab.Pane attached={true}>
-                                {failures.length > 0 && (
-                                    <AnsibleTaskList showHosts={true} events={failures} />
+                                {this.failures.length > 0 && (
+                                    <AnsibleTaskList
+                                        showHosts={true}
+                                        events={this.failures}
+                                        filter={(evs) => evs}
+                                    />
                                 )}
                             </Tab.Pane>
                         )

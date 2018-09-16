@@ -27,6 +27,7 @@ import { RequestState } from '../../common';
 
 export interface StartProcessPolling extends Action {
     instanceId: ConcordId;
+    forceLoadAll?: boolean;
 }
 
 export interface ProcessEventChunk {
@@ -39,6 +40,7 @@ export interface ProcessPollResponse extends Action {
     process?: ProcessEntry;
     forms?: FormListEntry[];
     events?: ProcessEventChunk;
+    tooMuchData?: boolean;
 }
 
 export type ProcessPollState = RequestState<ProcessPollResponse>;

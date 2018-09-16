@@ -29,11 +29,30 @@ interface Props {
     title?: string;
     showHosts?: boolean;
     events: Array<ProcessEventEntry<AnsibleEvent>>;
+    filter: (
+        events: Array<ProcessEventEntry<AnsibleEvent>>
+    ) => Array<ProcessEventEntry<AnsibleEvent>>;
 }
 
-class AnsibleTaskList extends React.PureComponent<Props> {
+class AnsibleTaskList extends React.Component<Props> {
+    private tasks: Array<ProcessEventEntry<AnsibleEvent>>;
+
+    constructor(props: Props) {
+        super(props);
+        this.update();
+    }
+
+    componentDidUpdate(prevProps: Props) {
+        this.update();
+    }
+
+    update() {
+        const { events, filter } = this.props;
+        this.tasks = filter(events);
+    }
+
     render() {
-        const { title, showHosts, events } = this.props;
+        const { title, showHosts } = this.props;
 
         return (
             <>
@@ -58,8 +77,8 @@ class AnsibleTaskList extends React.PureComponent<Props> {
                     </Table.Header>
 
                     <Table.Body>
-                        {events &&
-                            events.map((value, index) => {
+                        {this.tasks &&
+                            this.tasks.map((value, index) => {
                                 const { status, ignore_errors } = value.data;
 
                                 const error = status === AnsibleStatus.FAILED && !ignore_errors;

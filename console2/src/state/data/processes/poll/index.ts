@@ -43,6 +43,7 @@ import {
 } from './types';
 
 const NAMESPACE = 'processes/poll';
+export const MAX_EVENT_COUNT = 5000;
 
 const actionTypes = {
     START_PROCESS_POLLING: `${NAMESPACE}/poll/start`,
@@ -56,9 +57,10 @@ const actionTypes = {
 };
 
 export const actions = {
-    startProcessPolling: (instanceId: ConcordId): StartProcessPolling => ({
+    startProcessPolling: (instanceId: ConcordId, forceLoadAll?: boolean): StartProcessPolling => ({
         type: actionTypes.START_PROCESS_POLLING,
-        instanceId
+        instanceId,
+        forceLoadAll
     }),
 
     stopProcessPolling: () => ({
@@ -72,12 +74,14 @@ export const actions = {
     pollResponse: (
         process: ProcessEntry,
         forms?: FormListEntry[],
-        events?: ProcessEventChunk
+        events?: ProcessEventChunk,
+        tooMuchData?: boolean
     ): ProcessPollResponse => ({
         type: actionTypes.PROCESS_POLL_RESPONSE,
         process,
         forms,
-        events
+        events,
+        tooMuchData
     }),
 
     forcePoll: () => ({
@@ -159,18 +163,24 @@ export const reducers = combineReducers<State>({
 // enforce types
 type BatchData = [FormListEntry[], Array<ProcessEventEntry<{}>>];
 
-function* loadAll(process: ProcessEntry) {
+function* loadAll(process: ProcessEntry, forceLoadAll?: boolean) {
     const { instanceId } = process;
 
     const [forms, events]: BatchData = yield all([
         call(apiListForms, instanceId),
-        call(apiListEvents, instanceId)
+        call(
+            apiListEvents,
+            instanceId,
+            process.createdAt,
+            forceLoadAll ? null : MAX_EVENT_COUNT + 1
+        )
     ]);
 
-    yield put(actions.pollResponse(process, forms, { replace: true, data: events }));
+    const tooMuchData = !forceLoadAll && events && events.length > MAX_EVENT_COUNT;
+    yield put(actions.pollResponse(process, forms, { replace: true, data: events }, tooMuchData));
 }
 
-function* doPoll(instanceId: ConcordId) {
+function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
     let lastEventTimestamp = null;
 
     try {
@@ -183,7 +193,7 @@ function* doPoll(instanceId: ConcordId) {
             if (isFinal(process.status)) {
                 // the process is completed, load everything
                 // TODO probably unnecessary? or just try loading new events once
-                yield loadAll(process);
+                yield loadAll(process, forceLoadAll);
                 return;
             }
 
@@ -211,10 +221,10 @@ function* doPoll(instanceId: ConcordId) {
     }
 }
 
-function* onStartPolling({ instanceId }: StartProcessPolling) {
+function* onStartPolling({ instanceId, forceLoadAll }: StartProcessPolling) {
     yield put(actions.reset());
 
-    const task = yield fork(doPoll, instanceId);
+    const task = yield fork(doPoll, instanceId, forceLoadAll);
     yield take(actionTypes.STOP_PROCESS_POLLING);
     yield cancel(task);
 }

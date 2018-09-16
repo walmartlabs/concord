@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: prevent loading of too much data on the process
+status page, show a warning instead;
 - concord-server: support for email form fields
 (`inputType: "email"`);
 - concord-server: expose Jetty statistics;
