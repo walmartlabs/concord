@@ -94,6 +94,7 @@ class CallbackModule(CallbackBase):
             'host': host.name,
             'hostGroup': self.play.get_name(),
             'task': task.get_name(),
+            'action': result._task.action,
             'correlationId': host.name + task._uuid,
             'phase': "pre"
         }
@@ -107,6 +108,7 @@ class CallbackModule(CallbackBase):
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
+            'action': result._task.action,
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
             'result': self.cleanup_results(result._result)
@@ -127,6 +129,7 @@ class CallbackModule(CallbackBase):
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
+            'action': result._task.action,
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
             'result': self.cleanup_results(result._result),
@@ -142,6 +145,7 @@ class CallbackModule(CallbackBase):
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
+            'action': result._task.action,
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
             'result': self.cleanup_results(result._result)
@@ -156,6 +160,7 @@ class CallbackModule(CallbackBase):
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
+            'action': result._task.action,
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
             'result': self.cleanup_results(result._result)
@@ -170,6 +175,7 @@ class CallbackModule(CallbackBase):
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
+            'action': result._task.action,
             'correlationId': result._host.name + result._task._uuid,
             'phase': "post",
             'result': self.cleanup_results(result._result)

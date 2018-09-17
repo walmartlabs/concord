@@ -68,6 +68,7 @@ class AnsibleTaskList extends React.Component<Props> {
                                 <Table.HeaderCell collapsing={true}>Host</Table.HeaderCell>
                             )}
                             <Table.HeaderCell collapsing={true}>Ansible Task</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true}>Action</Table.HeaderCell>
                             <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
                             <Table.HeaderCell collapsing={true}>Event Time</Table.HeaderCell>
                             <Table.HeaderCell collapsing={true}>Duration</Table.HeaderCell>
@@ -100,6 +101,9 @@ class AnsibleTaskList extends React.Component<Props> {
                                             </Table.Cell>
                                         )}
                                         <Table.Cell singleLine={true}>{value.data.task}</Table.Cell>
+                                        <Table.Cell singleLine={true}>
+                                            {value.data.action ? value.data.action : '-'}
+                                        </Table.Cell>
                                         <Table.Cell>{statusString}</Table.Cell>
                                         <Table.Cell singleLine={true}>
                                             <LocalTimestamp value={value.eventDate} />

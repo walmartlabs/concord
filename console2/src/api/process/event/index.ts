@@ -88,6 +88,7 @@ export interface AnsibleEvent {
     playbook: string;
     status: AnsibleStatus;
     task: string;
+    action?: string;
     result?: object;
     ignore_errors?: boolean;
     phase: 'pre' | 'post';
