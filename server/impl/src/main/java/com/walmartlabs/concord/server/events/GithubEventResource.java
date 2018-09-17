@@ -81,7 +81,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                GithubWebhookManager webhookManager,
                                TriggersConfiguration triggersConfiguration) {
 
-        super(processManager, triggersDao, projectDao, new ProjectOrgEnricher(projectDao), triggersConfiguration);
+        super(processManager, triggersDao, projectDao, new GithubTriggerDefinitionEnricher(projectDao), triggersConfiguration);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -186,11 +186,11 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         return (String) pusher.get("name");
     }
 
-    private static class ProjectOrgEnricher implements TriggerDefinitionEnricher {
+    private static class GithubTriggerDefinitionEnricher implements TriggerDefinitionEnricher {
 
         private final ProjectDao projectDao;
 
-        private ProjectOrgEnricher(ProjectDao projectDao) {
+        private GithubTriggerDefinitionEnricher(ProjectDao projectDao) {
             this.projectDao = projectDao;
         }
 
@@ -209,6 +209,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                 return e.getOrgName();
             });
             conditions.computeIfAbsent(PROJECT_NAME_KEY, k -> entry.getProjectName());
+            conditions.computeIfAbsent(REPO_NAME_KEY, k -> entry.getRepositoryName());
 
             return new TriggerEntry(entry.getId(),
                     entry.getProjectId(),
