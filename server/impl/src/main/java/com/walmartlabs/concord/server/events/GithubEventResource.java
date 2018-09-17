@@ -97,7 +97,6 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     @WithTimer
     @SuppressWarnings("unchecked")
     public String push(@ApiParam Map<String, Object> event) {
-
         if (event == null) {
             return "ok";
         }
@@ -196,6 +195,9 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
         @Override
         public TriggerEntry enrich(TriggerEntry entry) {
+            // note that the resulting conditions must be compatible with the system trigger definitions
+            // see com/walmartlabs/concord/server/org/triggers/concord.yml
+
             Map<String, Object> conditions = entry.getConditions();
             if (conditions == null) {
                 conditions = new HashMap<>();

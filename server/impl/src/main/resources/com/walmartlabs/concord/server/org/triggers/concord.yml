@@ -20,4 +20,7 @@ triggers:
       entryPoint: "onChange"
 
   - github:
+      org: ".*"
+      project: ".*"
+      repository: ".*"
       entryPoint: "onChange"

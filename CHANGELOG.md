@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: fixed a bug preventing repositories from being
+automatically refreshed on GitHub push events;
 - concord-console: fixed project process list filtering.
 
 
