@@ -105,8 +105,8 @@ const renderColumnContent = (e: ProcessEntry, c: ColumnDefinition) => {
     return v;
 };
 
-const renderColumn = (e: ProcessEntry, c: ColumnDefinition) => {
-    return <Table.Cell key={e.instanceId}>{renderColumnContent(e, c)}</Table.Cell>;
+const renderColumn = (idx: number, e: ProcessEntry, c: ColumnDefinition) => {
+    return <Table.Cell key={idx}>{renderColumnContent(e, c)}</Table.Cell>;
 };
 
 const renderColumnCaption = (c: ColumnDefinition) => {
@@ -119,7 +119,7 @@ const renderTableRow = (row: ProcessEntry, columns: ColumnDefinition[]) => {
             <Table.Cell textAlign="center">
                 <ProcessStatusIcon status={row.status} />
             </Table.Cell>
-            {columns.map((c) => renderColumn(row, c))}
+            {columns.map((c, idx) => renderColumn(idx, row, c))}
             <Table.Cell>
                 <ProcessActionDropdown instanceId={row.instanceId} status={row.status} />
             </Table.Cell>

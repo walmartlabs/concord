@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: fixed project process list filtering.
+
+
+
 ## [0.87.0] - 2018-09-16
 
 ### Added

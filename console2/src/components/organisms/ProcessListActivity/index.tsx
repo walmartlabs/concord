@@ -43,6 +43,7 @@ interface RouteProps {
     status?: string;
     initiator?: string;
     orgName?: string;
+    projectName?: string;
 }
 
 interface StateProps {

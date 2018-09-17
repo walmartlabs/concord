@@ -62,15 +62,11 @@ type Props = ExternalProps & StateProps & DispatchProps;
 
 class ProjectActivity extends React.PureComponent<Props> {
     static renderProcesses(p: ProjectEntry) {
-        if (
-            p.meta !== undefined &&
-            p.meta.ui !== undefined &&
-            p.meta.ui.processList !== undefined
-        ) {
-            return <ProcessListActivity orgName={p.orgName} columns={p.meta.ui.processList} />;
-        } else {
-            return <ProcessListActivity orgName={p.orgName} />;
+        let columns;
+        if (p.meta && p.meta.ui && p.meta.ui.processList) {
+            columns = p.meta.ui.processList;
         }
+        return <ProcessListActivity orgName={p.orgName} projectName={p.name} columns={columns} />;
     }
 
     static renderRepositories(p: ProjectEntry) {
