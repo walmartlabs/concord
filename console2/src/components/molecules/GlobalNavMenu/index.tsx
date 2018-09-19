@@ -47,7 +47,7 @@ class GlobalNavMenu extends React.PureComponent<Props> {
         return (
             <Menu fluid={true} inverted={true} size="small" secondary={true}>
                 <Menu.Item>
-                    <Image src="/images/logo.svg" size="small" />
+                    <Image id="concordLogo" src="/images/logo.svg" size="small" />
                 </Menu.Item>
                 <Menu.Item active={activeTab === 'activity'}>
                     <Link to="/activity">Activity</Link>

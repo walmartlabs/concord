@@ -14,15 +14,16 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <db.image>library/postgres</db.image>
+        <db.image>library/postgres:10.4-alpine</db.image>
+        <server.image>walmartlabs/concord-server</server.image>
         <selenium.image>selenium/standalone-chrome</selenium.image>
 
-        <selenium.version>3.7.1</selenium.version>
-        <webdriver.version>0.9.7376</webdriver.version>
-        <webdriver.type>local</webdriver.type>
+        <selenium.version>3.14.0</selenium.version>
 
-        <!-- STRDTORC-324 -->
-        <skip.it.tests>true</skip.it.tests>
+        <it.webdriver.type>local</it.webdriver.type>
+        <it.base.url>http://localhost:3000</it.base.url>
+        <it.server.port>8001</it.server.port>
+        <it.selenium.port>4444</it.selenium.port>
     </properties>
 
     <dependencies>
@@ -68,10 +69,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <!-- required by selenium -->
-            <version>22.0</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -89,8 +93,9 @@
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
                         <IT_SELENIUM_PORT>${it.selenium.port}</IT_SELENIUM_PORT>
-                        <IT_WEBDRIVER_TYPE>${webdriver.type}</IT_WEBDRIVER_TYPE>
+                        <IT_WEBDRIVER_TYPE>${it.webdriver.type}</IT_WEBDRIVER_TYPE>
                         <IT_SCREENSHOTS_DIR>${project.build.directory}/screenshots</IT_SCREENSHOTS_DIR>
+                        <IT_BASE_URL>${it.base.url}</IT_BASE_URL>
                     </environmentVariables>
                 </configuration>
             </plugin>
@@ -104,29 +109,12 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <webdriver.type>remote</webdriver.type>
+                <it.webdriver.type>remote</it.webdriver.type>
+                <it.console.port>8080</it.console.port>
+                <it.base.url>http://localhost:${it.console.port}</it.base.url>
             </properties>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <version>3.0.0</version>
-                        <executions>
-                            <execution>
-                                <id>reserve-ports</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>reserve-network-port</goal>
-                                </goals>
-                                <configuration>
-                                    <portNames>
-                                        <portName>it.selenium.port</portName>
-                                    </portNames>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
@@ -149,16 +137,67 @@
                         </executions>
                         <configuration>
                             <skipRun>${skip.it.tests}</skipRun>
+                            <showLogs>true</showLogs>
                             <images>
+                                <image>
+                                    <name>${db.image}</name>
+                                    <alias>db</alias>
+                                    <run>
+                                        <ports>
+                                            <port>it.db.port:5432</port>
+                                        </ports>
+                                        <env>
+                                            <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
+                                        </env>
+                                        <wait>
+                                            <log>(?s).*ready for start up.*ready to accept connections.*</log>
+                                        </wait>
+                                    </run>
+                                </image>
+                                <image>
+                                    <name>${server.image}</name>
+                                    <alias>server</alias>
+                                    <run>
+                                        <network>
+                                            <mode>host</mode>
+                                        </network>
+                                        <volumes>
+                                            <bind>
+                                                <!-- to access test files -->
+                                                <volume>/tmp:/tmp</volume>
+                                                <!-- allows the server to pick up local dependencies -->
+                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
+                                                <volume>${basedir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
+                                            </bind>
+                                        </volumes>
+                                        <env>
+                                            <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
+                                            <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
+                                            <DB_USERNAME>postgres</DB_USERNAME>
+                                            <DB_PASSWORD>it</DB_PASSWORD>
+                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
+                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
+                                        </env>
+                                        <wait>
+                                            <!--suppress MavenModelInspection -->
+                                            <http>
+                                                <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
+                                            </http>
+                                            <time>30000</time>
+                                        </wait>
+                                    </run>
+                                </image>
                                 <image>
                                     <name>walmartlabs/concord-console</name>
                                     <alias>console</alias>
-                                    <!--suppress MavenModelInspection -->
                                     <run>
-                                        <ports>
-                                            <port>it.console.port:8080</port>
-                                            <port>${it.selenium.port}:4444</port>
-                                        </ports>
+                                        <network>
+                                            <mode>host</mode>
+                                        </network>
+                                        <env>
+                                            <SERVER_ADDR>localhost</SERVER_ADDR>
+                                            <SERVER_PORT>${it.server.port}</SERVER_PORT>
+                                        </env>
                                         <wait>
                                             <http>
                                                 <url>http://localhost:${it.console.port}/index.html</url>
@@ -171,8 +210,7 @@
                                     <alias>selenium-chrome</alias>
                                     <run>
                                         <network>
-                                            <mode>container</mode>
-                                            <name>console</name>
+                                            <mode>host</mode>
                                         </network>
                                         <volumes>
                                             <bind>
@@ -191,8 +229,9 @@
         <profile>
             <id>walmart</id>
             <properties>
-                <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
-                <selenium.image>docker.prod.walmart.com/walmartlabs/concord-selenium-chrome:3.8.1</selenium.image>
+                <db.image>hub.docker.prod.walmart.com/library/postgres:10.4-alpine</db.image>
+                <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
+                <selenium.image>hub.docker.prod.walmart.com/selenium/standalone-chrome:3.14</selenium.image>
             </properties>
         </profile>
     </profiles>

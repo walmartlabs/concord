@@ -51,17 +51,16 @@ import static org.junit.Assert.assertEquals;
 
 public class HttpTaskIT extends AbstractServerIT {
 
-    public static final String mockHttpAuthToken = "Y249dGVzdDpwYXNzd29yZA==";
-    public static final String mockHttpAuthUser = "cn=test";
-    public static final String mockHttpAuthPassword = "password";
-    public static final String mockHttpBaseUrl = "http://localhost:";
-    public static final String mockHttpPathToken = "/token";
-    public static final String mockHttpPathPassword = "/password";
-    public static final String mockHttpPathHeaders = "/headers";
+    private static final String mockHttpAuthToken = "Y249dGVzdDpwYXNzd29yZA==";
+    private static final String mockHttpAuthUser = "cn=test";
+    private static final String mockHttpAuthPassword = "password";
+    private static final String mockHttpBaseUrl = "http://localhost:";
+    private static final String mockHttpPathToken = "/token";
+    private static final String mockHttpPathPassword = "/password";
+    private static final String mockHttpPathHeaders = "/headers";
 
     @Rule
     public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
-            .notifier(new ConsoleNotifier(true))
             .extensions(new RequestHeaders())
             .dynamicPort());
 

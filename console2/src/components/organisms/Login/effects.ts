@@ -36,6 +36,7 @@ const actionTypes = {
 interface LoginAction extends Action {
     username: string;
     password: string;
+    apiKey: string;
 }
 
 interface LoginResponse extends Action {
@@ -46,10 +47,11 @@ interface LoginResponse extends Action {
 type RefreshAction = Action;
 
 export const actions = {
-    doLogin: (username: string, password: string): LoginAction => ({
+    doLogin: (username: string, password: string, apiKey: string): LoginAction => ({
         type: actionTypes.LOGIN_REQUEST,
         username,
-        password
+        password,
+        apiKey
     }),
     doRefresh: (): RefreshAction => ({
         type: actionTypes.LOGIN_REFRESH_REQUEST
@@ -104,9 +106,9 @@ const getDestination = ({ router }: { router: any }) => {
     return from.pathname || DEFAULT_DESTINATION;
 };
 
-function* onLogin({ username, password }: LoginAction) {
+function* onLogin({ username, password, apiKey }: LoginAction) {
     try {
-        const response = yield call(apiWhoami, username, password);
+        const response = yield call(apiWhoami, username, password, apiKey);
         yield put({
             type: actionTypes.LOGIN_RESPONSE,
             ...response

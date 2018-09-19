@@ -23,7 +23,6 @@ package com.walmartlabs.concord.it.console;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -31,13 +30,24 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.logging.LoggingPreferences;
-import org.openqa.selenium.remote.*;
+import org.openqa.selenium.remote.Augmenter;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.LocalFileDetector;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 
 public class WebDriverRule implements TestRule {
+
+    private static final Logger log = LoggerFactory.getLogger(WebDriverRule.class);
 
     private WebDriver driver;
 
@@ -60,10 +70,12 @@ public class WebDriverRule implements TestRule {
 
         if (isRemote()) {
             URL url = new URL("http://localhost:" + ITConstants.SELENIUM_PORT + "/wd/hub");
+            log.info("Using a remote driver: {}", url);
             RemoteWebDriver d = new RemoteWebDriver(url, opts);
             d.setFileDetector(new LocalFileDetector());
             driver = new Augmenter().augment(d);
         } else {
+            log.info("Using a local driver...");
             driver = new ChromeDriver();
         }
     }
@@ -72,19 +84,18 @@ public class WebDriverRule implements TestRule {
         driver.quit();
     }
 
-    private void takeScreenshot(Description d) {
+    private void takeScreenshot(Description d) throws IOException {
         File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+
+        Path dstDir = Paths.get(ITConstants.SCREENSHOTS_DIR);
+        Files.createDirectories(dstDir);
+
         String fileName = d.getTestClass().getName() + "-" + d.getMethodName() + ".png";
+        Path dst = dstDir.resolve(fileName);
 
-        File dstDir = new File(ITConstants.SCREENSHOTS_DIR);
-        if (!dstDir.exists()) {
-            dstDir.mkdirs();
-        }
+        Files.copy(src.toPath(), dst);
 
-        File dst = new File(dstDir, fileName);
-        src.renameTo(dst);
-
-        System.out.println("Screenshot saved to: " + dst.getAbsolutePath());
+        System.out.println("Screenshot saved to: " + dst);
     }
 
     @Override

@@ -372,8 +372,8 @@
         <profile>
             <id>walmart</id>
             <properties>
+                <db.image>hub.docker.prod.walmart.com/library/postgres:10.4-alpine</db.image>
                 <ansible.image>docker.prod.walmart.com/walmartlabs/concord-ansible</ansible.image>
-                <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
                 <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
                 <dind.image>docker.prod.walmart.com/walmartlabs/concord-dind</dind.image>
                 <agent.image>docker.prod.walmart.com/walmartlabs/concord-agent</agent.image>

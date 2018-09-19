@@ -26,11 +26,19 @@ export interface UserResponse {
     displayName: string;
 }
 
-export const whoami = async (username?: string, password?: string): Promise<UserResponse> => {
+export const whoami = async (
+    username?: string,
+    password?: string,
+    apiKey?: string
+): Promise<UserResponse> => {
     const opts: RequestInit = {};
     if (username && password) {
         opts.headers = {
             Authorization: 'Basic ' + btoa(username + ':' + password)
+        };
+    } else if (apiKey) {
+        opts.headers = {
+            Authorization: apiKey
         };
     }
 

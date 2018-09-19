@@ -1,5 +1,3 @@
-package com.walmartlabs.concord.it.console;
-
 /*-
  * *****
  * Concord
@@ -19,16 +17,8 @@ package com.walmartlabs.concord.it.console;
  * limitations under the License.
  * =====
  */
-
-import org.junit.Test;
-import org.openqa.selenium.By;
-
-public class SimpleIT extends AbstractIT {
-
-    @Test(timeout = 30000)
-    public void test() throws Exception {
-        start();
-        waitForPage();
-        waitFor("Logo should be visible", By.id("strati-logo"));
-    }
+#useApiKeyLink {
+    font-size: smaller;
+    text-align: right;
+    width: 100%;
 }

@@ -21,10 +21,14 @@ package com.walmartlabs.concord.it.console;
  */
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class ITConstants {
 
-    public static final int LOCAL_CONSOLE_PORT = 3000;
-    public static final int REMOTE_CONSOLE_PORT = 8080;
+    private static final Logger log = LoggerFactory.getLogger(ITConstants.class);
+
+    public static final String BASE_URL;
 
     public static final int SELENIUM_PORT;
 
@@ -32,6 +36,9 @@ public final class ITConstants {
     public static final String SCREENSHOTS_DIR;
 
     static {
+        BASE_URL = env("IT_BASE_URL", "http://localhost:3000");
+        log.info("Using BASE_URL: {}", BASE_URL);
+
         SELENIUM_PORT = Integer.parseInt(env("IT_SELENIUM_PORT", "4444"));
         WEBDRIVER_TYPE = env("IT_WEBDRIVER_TYPE", "local");
         SCREENSHOTS_DIR = env("IT_SCREENSHOTS_DIR", "target/screenshots");

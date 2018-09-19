@@ -20,40 +20,47 @@
 
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
+import { RouteComponentProps, withRouter } from 'react-router';
 import {
     Card,
     CardContent,
     Dimmer,
+    Divider,
     Form,
     Image,
     InputOnChangeData,
     Loader,
     Message
 } from 'semantic-ui-react';
-import { State as AppState } from '../../../reducers';
 
+import { State as AppState } from '../../../reducers';
 import { actions, selectors } from './effects';
+
+import './styles.css';
 
 export { actions, selectors, sagas, reducers, State } from './effects';
 
 interface LoginData {
     username: string;
     password: string;
+    apiKey: string;
 }
 
-interface LoginStateProps {
+interface StateProps {
     loggingIn: boolean;
     apiError: string | null;
 }
 
-interface LoginDispatchProps {
+interface DispatchProps {
     onSubmit: (data: LoginData) => void;
 }
 
-class Login extends React.Component<LoginStateProps & LoginDispatchProps, LoginData> {
-    constructor(props: LoginStateProps & LoginDispatchProps) {
+type Props = StateProps & DispatchProps & RouteComponentProps<{}>;
+
+class Login extends React.Component<Props, LoginData> {
+    constructor(props: Props) {
         super(props);
-        this.state = { username: '', password: '' };
+        this.state = { username: '', password: '', apiKey: '' };
     }
 
     handleUsernameChange(e: {}, { value }: InputOnChangeData) {
@@ -64,12 +71,18 @@ class Login extends React.Component<LoginStateProps & LoginDispatchProps, LoginD
         this.setState({ password: value });
     }
 
+    handleApiKeyChange(e: {}, { value }: InputOnChangeData) {
+        this.setState({ apiKey: value });
+    }
+
     handleSubmit() {
         this.props.onSubmit(this.state);
     }
 
     render() {
-        const { username, password } = this.state;
+        const { username, password, apiKey } = this.state;
+
+        const useApiKey = this.props.location.search.search('useApiKey=true') >= 0;
 
         return (
             <Card centered={true}>
@@ -81,27 +94,46 @@ class Login extends React.Component<LoginStateProps & LoginDispatchProps, LoginD
                     </Dimmer>
 
                     <Form error={!!this.props.apiError} onSubmit={() => this.handleSubmit()}>
-                        <Form.Input
-                            name="username"
-                            label="Username"
-                            icon="user"
-                            required={true}
-                            value={username}
-                            onChange={(e, data) => this.handleUsernameChange(e, data)}
-                        />
-                        <Form.Input
-                            name="password"
-                            label="Password"
-                            type="password"
-                            icon="lock"
-                            required={true}
-                            value={password}
-                            autoComplete="current-password"
-                            onChange={(e, data) => this.handlePasswordChange(e, data)}
-                        />
+                        {!useApiKey && (
+                            <Form.Input
+                                name="username"
+                                label="Username"
+                                icon="user"
+                                required={true}
+                                value={username}
+                                onChange={(e, data) => this.handleUsernameChange(e, data)}
+                            />
+                        )}
+                        {!useApiKey && (
+                            <Form.Input
+                                name="password"
+                                label="Password"
+                                type="password"
+                                icon="lock"
+                                required={true}
+                                value={password}
+                                autoComplete="current-password"
+                                onChange={(e, data) => this.handlePasswordChange(e, data)}
+                            />
+                        )}
+
+                        {useApiKey && (
+                            <Form.Input
+                                name="apiKey"
+                                label="API Key"
+                                type="password"
+                                icon="lock"
+                                required={true}
+                                value={apiKey}
+                                autoComplete="current-password"
+                                onChange={(e, data) => this.handleApiKeyChange(e, data)}
+                            />
+                        )}
+
+                        <Divider />
 
                         <Message error={true} content={this.props.apiError} />
-                        <Form.Button primary={true} fluid={true}>
+                        <Form.Button id="loginButton" primary={true} fluid={true}>
                             Login
                         </Form.Button>
                     </Form>
@@ -111,16 +143,19 @@ class Login extends React.Component<LoginStateProps & LoginDispatchProps, LoginD
     }
 }
 
-const mapStateToProps = ({ login }: AppState): LoginStateProps => ({
+const mapStateToProps = ({ login }: AppState): StateProps => ({
     loggingIn: selectors.isLoggingIn(login),
     apiError: selectors.getError(login)
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): LoginDispatchProps => ({
-    onSubmit: ({ username, password }: LoginData) => dispatch(actions.doLogin(username, password))
+const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+    onSubmit: ({ username, password, apiKey }: LoginData) =>
+        dispatch(actions.doLogin(username, password, apiKey))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(Login);
+export default withRouter(
+    connect(
+        mapStateToProps,
+        mapDispatchToProps
+    )(Login)
+);
