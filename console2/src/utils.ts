@@ -18,7 +18,7 @@
  * =====
  */
 
-import * as moment from 'moment';
+import { format as formatDate, getMilliseconds } from 'date-fns';
 
 interface HasName {
     name: string;
@@ -53,12 +53,12 @@ export const notEmpty = (x: {}) => {
     return false;
 };
 
-export const formatTimestamp = (t?: moment.MomentInput): string | undefined => {
+export const formatTimestamp = (t?: Date | string): string | undefined => {
     if (!t) {
         return;
     }
 
-    return moment(t).format('YYYY-MM-DD HH:mm:ss');
+    return formatDate(t, 'YYYY-MM-DD HH:mm:ss');
 };
 
 const second2Ms = 1000;
@@ -112,14 +112,14 @@ export const formatDuration = (ms?: number): string | undefined => {
 };
 
 export const timestampDiffMs = (
-    t1?: moment.MomentInput,
-    t2?: moment.MomentInput
+    t1?: Date | string,
+    t2?: Date | string
 ): number | undefined => {
     if (!t1 || !t2) {
         return;
     }
 
-    return moment(t1).diff(moment(t2));
+    return getMilliseconds(t1) - getMilliseconds(t2);
 };
 
 export const escapeHtml = (s: string): string =>
