@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:git:0.53.1"
+  - "mvn://com.walmartlabs.concord.plugins:git:0.54.0"
 
 flows:
   default:
