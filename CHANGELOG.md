@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- dependency-manager: load plugin versions from a file. Allows
+omitting the version qualifier for the registered plugins.
+
 ### Changed
 
 - concord-server: fixed a bug preventing repositories from being

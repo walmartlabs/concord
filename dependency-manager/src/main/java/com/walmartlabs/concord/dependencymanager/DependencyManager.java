@@ -9,9 +9,9 @@ package com.walmartlabs.concord.dependencymanager;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.dependencymanager;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.*;
 import org.eclipse.aether.artifact.Artifact;
@@ -60,10 +61,12 @@ public class DependencyManager {
 
     private static final Logger log = LoggerFactory.getLogger(DependencyManager.class);
 
-    public static final String MAVEN_SCHEME = "mvn";
-
     private static final String CFG_FILE_KEY = "CONCORD_MAVEN_CFG";
+    private static final String CFG_PLUGIN_VERSION_KEY = "CONCORD_PLUGIN_VERSION_CFG";
+
     private static final String FILES_CACHE_DIR = "files";
+    public static final String MAVEN_SCHEME = "mvn";
+    private static final String MVN_VERSION_PATTERN = ".*:[\\d]+(?:\\.\\d+)*(?:-\\w*)?$";
 
     private static final MavenRepository MAVEN_CENTRAL = new MavenRepository("central", "default", "https://repo.maven.apache.org/maven2/", false);
     private static final List<MavenRepository> DEFAULT_REPOS = Collections.singletonList(MAVEN_CENTRAL);
@@ -73,6 +76,7 @@ public class DependencyManager {
     private final Object mutex = new Object();
     private final RepositorySystem maven = newMavenRepositorySystem();
     private final RepositoryCache mavenCache = new DefaultRepositoryCache();
+    private final Map<String, String> pluginsVersion;
 
     public DependencyManager(Path cacheDir) throws IOException {
         this(cacheDir, readCfg());
@@ -86,6 +90,15 @@ public class DependencyManager {
 
         log.info("init -> using repositories: {}", repositories);
         this.repositories = toRemote(repositories);
+
+        String pluginsVersionCfgPath = System.getenv(CFG_PLUGIN_VERSION_KEY);
+
+        if (pluginsVersionCfgPath == null) {
+            this.pluginsVersion = Collections.emptyMap();
+        } else {
+            this.pluginsVersion = new ObjectMapper().readValue(new FileInputStream(pluginsVersionCfgPath),
+                    TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class, String.class));
+        }
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -119,6 +132,11 @@ public class DependencyManager {
             String scheme = item.getScheme();
             if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
                 String id = item.getAuthority();
+
+                if (!pluginsVersion.isEmpty() && !hasVersion(id)) {
+                    id = appendVersion(id);
+                }
+
                 Artifact artifact = new DefaultArtifact(id);
 
                 Map<String, String> cfg = splitQuery(item);
@@ -147,11 +165,6 @@ public class DependencyManager {
         } else {
             return new DependencyEntity(resolveFile(item), item);
         }
-    }
-
-    private static DependencyEntity toDependency(Artifact artifact) {
-        return new DependencyEntity(artifact.getFile().toPath(),
-                artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
     }
 
     private Collection<DependencyEntity> resolveDirectLinks(Collection<URI> items) throws IOException {
@@ -259,6 +272,26 @@ public class DependencyManager {
         });
 
         return session;
+    }
+
+    private String appendVersion(String dep) {
+        if (!isOfficialPlugin(dep)) {
+            throw new IllegalArgumentException("Unofficial plugin '" + dep + "': version is required");
+        }
+        return dep + ":" + pluginsVersion.get(dep);
+    }
+
+    private boolean isOfficialPlugin(String s) {
+        return pluginsVersion.containsKey(s);
+    }
+
+    private Boolean hasVersion(String s) {
+        return s.matches(MVN_VERSION_PATTERN);
+    }
+
+    private static DependencyEntity toDependency(Artifact artifact) {
+        return new DependencyEntity(artifact.getFile().toPath(),
+                artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
     }
 
     private static void download(URI uri, Path dst) throws IOException {
