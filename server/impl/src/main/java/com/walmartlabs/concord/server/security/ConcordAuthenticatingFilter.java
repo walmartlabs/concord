@@ -43,6 +43,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -69,6 +71,13 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             "/api/v1/server/ping",
             "/api/v1/server/version",
             "/api/service/console/logout"};
+
+    /**
+     * List of URLs which allows only local connection without authentication or authorization.
+     */
+    private static final String[] LOCAL_URLS = {
+            "/api/v1/server/maintenance-mode",
+    };
 
     private final ApiKeyDao apiKeyDao;
     private final SecretStoreConfiguration secretCfg;
@@ -98,6 +107,16 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         for (String s : ANON_URLS) {
             if (p.matches(s)) {
                 return true;
+            }
+        }
+
+        for (String s : LOCAL_URLS) {
+            if (p.matches(s)) {
+                if(isLocalRequest(r)) {
+                    return true;
+                } else {
+                    throw new AuthenticationException("Only localhost requests allowed");
+                }
             }
         }
 
@@ -224,5 +243,10 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         String password = s.substring(idx + 1);
 
         return new UsernamePasswordToken(username, password);
+    }
+
+    private static boolean isLocalRequest(HttpServletRequest request) throws UnknownHostException {
+        InetAddress addr = InetAddress.getByName(request.getRemoteAddr());
+        return addr.isAnyLocalAddress() || addr.isLoopbackAddress();
     }
 }

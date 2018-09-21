@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -80,11 +78,6 @@ public class ServerResource implements Resource {
     @POST
     @Path("maintenance-mode")
     public void maintenanceMode() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (!p.isAdmin()) {
-            throw new UnauthorizedException("Only admins can trigger the maintenance mode.");
-        }
-
         tasks.forEach(BackgroundTask::stop);
     }
 }
