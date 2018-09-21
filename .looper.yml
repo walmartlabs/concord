@@ -24,6 +24,9 @@ envs:
 
 triggers:
   - manual:
+    name: "Build master"
+    call: default
+  - manual:
       name: "Perform a release"
       call: release
   - manual:
