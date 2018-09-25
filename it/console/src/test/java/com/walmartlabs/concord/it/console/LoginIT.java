@@ -50,7 +50,7 @@ public class LoginIT {
         wait.until(condition);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test() {
         WebDriver driver = rule.getDriver();
 

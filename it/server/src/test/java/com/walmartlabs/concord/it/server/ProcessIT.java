@@ -141,7 +141,8 @@ public class ProcessIT extends AbstractServerIT {
             ProcessEntry pir = getApiClient().getJSON().deserialize(s, ProcessEntry.class);
             assertTrue("Unexpected status: " + pir.getStatus(), StatusEnum.RUNNING.equals(pir.getStatus())
                     || StatusEnum.ENQUEUED.equals(pir.getStatus())
-                    || StatusEnum.PREPARING.equals(pir.getStatus()));
+                    || StatusEnum.PREPARING.equals(pir.getStatus())
+                    || StatusEnum.STARTING.equals(pir.getStatus()));
         }
 
         processApi.kill(spr.getInstanceId());
