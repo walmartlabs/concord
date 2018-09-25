@@ -23,6 +23,8 @@ package com.walmartlabs.concord.runner;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ClientUtils;
+import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.ProcessEntry;
 
 import java.util.Map;
 import java.util.UUID;
@@ -33,12 +35,14 @@ public class ProcessApiClient {
     private static final String RETRY_INTERVAL_KEY = "api.retry.interval";
 
     private final ApiClient apiClient;
+    private final ProcessApi processApi;
 
     private final int retryCount;
     private final long retryInterval;
 
     public ProcessApiClient(ApiClient apiClient) {
         this.apiClient = apiClient;
+        this.processApi = new ProcessApi(apiClient);
 
         this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "3"));
         this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "5000"));
@@ -49,6 +53,13 @@ public class ProcessApiClient {
 
         ClientUtils.withRetry(retryCount, retryInterval, () -> {
             ClientUtils.postData(apiClient, path, data, null);
+            return null;
+        });
+    }
+
+    public void updateStatus(UUID instanceId, String agentId, ProcessEntry.StatusEnum status) throws ApiException {
+        ClientUtils.withRetry(retryCount, retryInterval, () -> {
+            processApi.updateStatus(instanceId, agentId, status.name());
             return null;
         });
     }

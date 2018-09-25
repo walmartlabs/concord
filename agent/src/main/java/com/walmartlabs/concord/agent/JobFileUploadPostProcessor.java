@@ -34,8 +34,6 @@ import java.util.UUID;
 
 public class JobFileUploadPostProcessor implements JobPostProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(JobFileUploadPostProcessor.class);
-
     private final String sourcePath;
     private final String name;
     private final Uploader uploader;

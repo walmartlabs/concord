@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER_LOCAL_MODE_KEY;
 
-public class DefaultJobExecutor implements JobExecutor {
+public class DefaultJobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultJobExecutor.class);
 
@@ -122,19 +122,19 @@ public class DefaultJobExecutor implements JobExecutor {
         return paths;
     }
 
-    @Override
-    public JobInstance start(UUID instanceId, Path workDir, String entryPoint) {
+    public JobInstance start(UUID instanceId, Path workDir) {
         try {
             Collection<Path> resolvedDeps = resolveDeps(instanceId, workDir);
 
-            String[] cmd = createCommand(resolvedDeps, workDir);
-
             ProcessEntry entry;
             if (canUsePrefork(workDir)) {
+                String[] cmd = createCmd(instanceId, resolvedDeps, workDir, null);
                 entry = fork(instanceId, workDir, cmd);
             } else {
                 log.info("start ['{}'] -> can't use a pre-forked instance", instanceId);
-                entry = startOneTime(instanceId, workDir, cmd);
+                Path procDir = IOUtils.createTempDir("onetime");
+                String[] cmd = createCmd(instanceId, resolvedDeps, workDir, procDir);
+                entry = startOneTime(instanceId, workDir, cmd, procDir);
             }
 
             Path payloadDir = entry.getWorkDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
@@ -150,6 +150,74 @@ public class DefaultJobExecutor implements JobExecutor {
             f.completeExceptionally(e);
             return createJobInstance(instanceId, workDir, null, f);
         }
+    }
+
+    private String[] createCmd(UUID instanceId, Collection<Path> deps, Path workDir, Path procDir) throws IOException, ExecutionException {
+        Map<String, Object> containerCfg = readContainerCfg(workDir);
+        boolean withContainer = !containerCfg.isEmpty();
+
+        String javaCmd = withContainer ? DockerCommandBuilder.getJavaCmd() : cfg.getAgentJavaCmd();
+        Path depsFile = storeDeps(deps);
+        if (withContainer) {
+            depsFile = DockerCommandBuilder.getDependencyListsDir().resolve(depsFile.getFileName());
+        }
+        Path runnerPath = withContainer ? DockerCommandBuilder.getRunnerPath(cfg.getRunnerPath()) : cfg.getRunnerPath().toAbsolutePath();
+        Path runnerDir = withContainer ? DockerCommandBuilder.getWorkspaceDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME) : null;
+
+        RunnerCommandBuilder runner = new RunnerCommandBuilder()
+                .javaCmd(javaCmd)
+                .workDir(workDir)
+                .procDir(runnerDir)
+                .agentId(cfg.getAgentId())
+                .serverApiBaseUrl(cfg.getServerApiBaseUrl())
+                .securityManagerEnabled(cfg.isRunnerSecurityManagerEnabled())
+                .dependencies(depsFile)
+                .runnerPath(runnerPath);
+
+        if (!withContainer) {
+            return runner.build();
+        }
+
+        return new DockerCommandBuilder(logManager, containerCfg)
+                .procDir(procDir)
+                .instanceId(instanceId)
+                .javaPath(cfg.getJavaPath())
+                .dependencyListsDir(cfg.getDependencyListsDir())
+                .dependencyCacheDir(cfg.getDependencyCacheDir())
+                .dependencyDir(dependencyManager.getLocalCacheDir())
+                .runnerPath(cfg.getRunnerPath())
+                .args(runner.build())
+                .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> readContainerCfg(Path workDir) throws ExecutionException {
+        Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
+        if (!Files.exists(p)) {
+            return Collections.emptyMap();
+        }
+
+        try (InputStream in = Files.newInputStream(p)) {
+            Map<String, Object> m = objectMapper.readValue(in, Map.class);
+            return (Map<String, Object>) m.getOrDefault(InternalConstants.Request.CONTAINER, Collections.emptyMap());
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading container options", e);
+        }
+    }
+
+    private Path storeDeps(Collection<Path> dependencies) throws IOException {
+        List<String> deps = dependencies.stream().map(p -> p.toAbsolutePath().toString()).collect(Collectors.toList());
+        HashCode depsHash = hash(deps.toArray(new String[0]));
+
+        Path result = cfg.getDependencyListsDir().resolve(depsHash.toString() + ".deps");
+        if (Files.exists(result)) {
+            return result;
+        }
+
+        Files.write(result,
+                (Iterable<String>) deps.stream()::iterator,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        return result;
     }
 
     private void checkDependencies(UUID instanceId, Path workDir, Collection<DependencyEntity> resolvedDepEntities) throws IOException {
@@ -275,9 +343,7 @@ public class DefaultJobExecutor implements JobExecutor {
         };
     }
 
-    private ProcessEntry startOneTime(UUID instanceId, Path workDir, String[] cmd) throws IOException {
-        Path procDir = IOUtils.createTempDir("onetime");
-
+    private ProcessEntry startOneTime(UUID instanceId, Path workDir, String[] cmd, Path procDir) throws IOException {
         Path payloadDir = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
         Files.move(workDir, payloadDir, StandardCopyOption.ATOMIC_MOVE);
         writeInstanceId(instanceId, payloadDir);
@@ -322,65 +388,6 @@ public class DefaultJobExecutor implements JobExecutor {
         if (Utils.kill(proc)) {
             log.warn("handleError ['{}', '{}'] -> killed by agent", id, workDir);
         }
-    }
-
-    private String[] createCommand(Collection<Path> dependencies, Path workDir) throws IOException {
-        List<String> l = new ArrayList<>();
-
-        l.add(cfg.getAgentJavaCmd());
-
-        // JVM arguments
-
-        List<String> agentParams = getAgentJvmParams(workDir);
-        if (agentParams != null) {
-            l.addAll(agentParams);
-        } else {
-            // default JVM parameters
-            l.add("-noverify");
-            l.add("-Xmx128m");
-            l.add("-Djavax.el.varArgs=true");
-            l.add("-Djava.security.egd=file:/dev/./urandom");
-            l.add("-Djava.net.preferIPv4Stack=true");
-
-            // workaround for JDK-8142508
-            l.add("-Dsun.zip.disableMemoryMapping=true");
-        }
-
-        // Concord properties
-        l.add("-DagentId=" + cfg.getAgentId());
-        l.add("-Dapi.baseUrl=" + cfg.getServerApiBaseUrl());
-
-        // Runner's security manager
-        l.add("-Dconcord.securityManager.enabled=" + cfg.isRunnerSecurityManagerEnabled());
-
-        // classpath
-        l.add("-cp");
-
-        // the runner's runtime is stored somewhere in the agent's libraries
-        String runner = cfg.getRunnerPath().toAbsolutePath().toString();
-        l.add(runner);
-
-        // main class
-        l.add("com.walmartlabs.concord.runner.Main");
-
-        l.add(storeDeps(dependencies).toString());
-
-        return l.toArray(new String[0]);
-    }
-
-    private Path storeDeps(Collection<Path> dependencies) throws IOException {
-        List<String> deps = dependencies.stream().map(p -> p.toAbsolutePath().toString()).collect(Collectors.toList());
-        HashCode depsHash = hash(deps.toArray(new String[0]));
-
-        Path result = cfg.getDependencyListsDir().resolve(depsHash.toString() + ".deps");
-        if (Files.exists(result)) {
-            return result;
-        }
-
-        Files.write(result,
-                (Iterable<String>) deps.stream()::iterator,
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -460,22 +467,11 @@ public class DefaultJobExecutor implements JobExecutor {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
-    private List<String> getAgentJvmParams(Path workDir) {
-        Path p = workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME);
-        if (!Files.exists(p)) {
-            return null;
+    private boolean canUsePrefork(Path workDir) throws ExecutionException {
+        if (!readContainerCfg(workDir).isEmpty()) {
+            return false;
         }
 
-        try (InputStream in = Files.newInputStream(p)) {
-            Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            return (List<String>) m.get(InternalConstants.Agent.JVM_ARGS_KEY);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static boolean canUsePrefork(Path workDir) {
         if (Files.exists(workDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME))) {
             // payload supplied its own libraries
             return false;

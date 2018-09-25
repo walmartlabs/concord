@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent, concord-runner: initial support for
+"container-per-process" execution model.
+
+
+
 ## [0.88.0] - 2018-09-19
 
 ### Added

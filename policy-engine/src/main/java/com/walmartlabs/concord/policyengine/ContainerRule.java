@@ -25,33 +25,41 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
-import java.util.Set;
 
-public class ProcessRule implements Serializable {
+public class ContainerRule implements Serializable {
 
     private final String msg;
-    private final Integer maxConcurrent;
+    private final String maxRam;
+    private final Integer maxCpu;
 
     @JsonCreator
-    public ProcessRule(@JsonProperty("msg") String msg,
-                       @JsonProperty("maxConcurrent") Integer maxConcurrent) {
+    public ContainerRule(@JsonProperty("msg") String msg,
+                         @JsonProperty("maxRam") String maxRam,
+                         @JsonProperty("maxCpu") Integer maxCpu) {
+
         this.msg = msg;
-        this.maxConcurrent = maxConcurrent;
+        this.maxRam = maxRam;
+        this.maxCpu = maxCpu;
     }
 
     public String getMsg() {
         return msg;
     }
 
-    public Integer getMaxConcurrent() {
-        return maxConcurrent;
+    public String getMaxRam() {
+        return maxRam;
+    }
+
+    public Integer getMaxCpu() {
+        return maxCpu;
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
                 .append("msg", msg)
-                .append("maxConcurrent", maxConcurrent)
+                .append("maxRam", maxRam)
+                .append("maxCpu", maxCpu)
                 .toString();
     }
 }

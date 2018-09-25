@@ -164,17 +164,6 @@ public class Worker implements Runnable {
             return;
         }
 
-        Supplier<Boolean> isRunning = () -> executionManager.getStatus(instanceId) == ProcessEntry.StatusEnum.RUNNING;
-
-        // check the status to avoid races
-        if (isRunning.get()) {
-            try {
-                processApiClient.updateStatus(instanceId, ProcessEntry.StatusEnum.RUNNING);
-            } catch (ApiException e) {
-                log.error("execute ['{}', '{}'] -> status update error", instanceId, payload, e);
-            }
-        }
-
         Consumer<Chunk> sink = chunk -> {
             byte[] ab = new byte[chunk.len];
             System.arraycopy(chunk.ab, 0, ab, 0, chunk.len);
@@ -186,8 +175,7 @@ public class Worker implements Runnable {
             }
         };
 
-        CompletableFuture<?> f = i.future();
-
+        Supplier<Boolean> isRunning = () -> !i.future().isDone();
         try {
             streamLog(i.logFile(), isRunning, sink);
         } catch (IOException e) {
@@ -195,7 +183,7 @@ public class Worker implements Runnable {
         }
 
         try {
-            f.join();
+            i.future().join();
             handleSuccess(instanceId);
         } catch (CancellationException | CompletionException e) {
             handleError(instanceId, e);

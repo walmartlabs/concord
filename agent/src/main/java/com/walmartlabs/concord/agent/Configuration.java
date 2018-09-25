@@ -68,6 +68,8 @@ public class Configuration {
     public static final String USER_AGENT_KEY = "USER_AGENT";
     public static final String STORE_DEPS_DIR_KEY = "STORE_DEPS_DIR";
 
+    public static final String JAVA_PATH_KEY = "JAVA_PATH";
+
     /**
      * As defined in server/db/src/main/resources/com/walmartlabs/concord/server/db/v0.69.0.xml
      */
@@ -100,6 +102,8 @@ public class Configuration {
     private final String userAgent;
 
     private final Path dependencyListsDir;
+
+    private final Path javaPath;
 
     @SuppressWarnings("unchecked")
     public Configuration() {
@@ -153,6 +157,12 @@ public class Configuration {
             this.userAgent = getEnv(USER_AGENT_KEY, "Concord-Agent: id=" + agentId);
 
             this.dependencyListsDir = getDir(STORE_DEPS_DIR_KEY, "dependencyListsDir");
+            String java = getEnv(JAVA_PATH_KEY, null);
+            if (java != null) {
+                this.javaPath = Paths.get(java);
+            } else {
+                this.javaPath = null;
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -252,6 +262,10 @@ public class Configuration {
 
     public Path getDependencyListsDir() {
         return dependencyListsDir;
+    }
+
+    public Path getJavaPath() {
+        return javaPath;
     }
 
     private static String getEnv(String key, String defaultValue) {

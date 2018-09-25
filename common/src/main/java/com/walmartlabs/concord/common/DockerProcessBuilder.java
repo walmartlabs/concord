@@ -44,6 +44,8 @@ public class DockerProcessBuilder {
     private String user = DEFAULT_USER;
     private String workdir;
     private String entryPoint;
+    private String cpu;
+    private String memory;
 
     private List<String> args = new ArrayList<>();
     private Map<String, String> env;
@@ -77,12 +79,7 @@ public class DockerProcessBuilder {
     }
 
     public Process build() throws IOException {
-        String[] cmd;
-        if (forcePull) {
-            cmd = new String[]{"/bin/sh", "-c", "docker pull " + q(image) + " && " + buildCmd()};
-        } else {
-            cmd = new String[]{"/bin/sh", "-c", buildCmd()};
-        }
+        String[] cmd = buildCmd();
 
         if (debug) {
             log.info("CMD: {}", (Object) cmd);
@@ -93,7 +90,15 @@ public class DockerProcessBuilder {
                 .start());
     }
 
-    private String buildCmd() throws IOException {
+    public String[] buildCmd() throws IOException {
+        if (forcePull) {
+            return new String[]{"/bin/sh", "-c", "docker pull " + q(image) + " && " + buildDockerCmd()};
+        } else {
+            return new String[]{"/bin/sh", "-c", buildDockerCmd()};
+        }
+    }
+
+    private String buildDockerCmd() throws IOException {
         List<String> c = new ArrayList<>();
         c.add("docker");
         c.add("run");
@@ -161,6 +166,14 @@ public class DockerProcessBuilder {
         if (useHostNetwork) {
             c.add("--net=host");
         }
+        if (cpu != null) {
+            c.add("--cpus");
+            c.add(cpu);
+        }
+        if (memory != null) {
+            c.add("-m");
+            c.add(memory);
+        }
         options.forEach(o -> {
             c.add(o.getKey());
             if (o.getValue() != null) {
@@ -172,6 +185,16 @@ public class DockerProcessBuilder {
             args.forEach(a -> c.add(q(a)));
         }
         return String.join(" ", c);
+    }
+
+    public DockerProcessBuilder cpu(String cpu) {
+        this.cpu = cpu;
+        return this;
+    }
+
+    public DockerProcessBuilder memory(String memory) {
+        this.memory = memory;
+        return this;
     }
 
     public DockerProcessBuilder name(String name) {
@@ -204,6 +227,11 @@ public class DockerProcessBuilder {
 
     public DockerProcessBuilder volume(String hostSrc, String containerDest) {
         volumes.add(new AbstractMap.SimpleEntry<>(hostSrc, containerDest));
+        return this;
+    }
+
+    public DockerProcessBuilder volume(String hostSrc, String containerDest, boolean readOnly) {
+        volumes.add(new AbstractMap.SimpleEntry<>(hostSrc, containerDest + ":ro"));
         return this;
     }
 

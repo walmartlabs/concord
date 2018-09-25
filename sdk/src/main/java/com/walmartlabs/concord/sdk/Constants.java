@@ -156,6 +156,11 @@ public class Constants {
          * Process metadata.
          */
         public static final String META = "meta";
+
+        /**
+         * Container configuration
+         */
+        public static final String CONTAINER = "container";
     }
 
     /**
@@ -229,7 +234,7 @@ public class Constants {
         public static final String ERROR_MESSAGES_FILE_NAME = "locale.properties";
 
         /**
-         * File which contains checkpoint metadata
+         * File which contains checkpoint metadata.
          */
         public static final String CHECKPOINT_META_FILE_NAME = ".checkpoint";
     }

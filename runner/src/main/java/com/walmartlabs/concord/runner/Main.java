@@ -26,6 +26,7 @@ import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
@@ -54,6 +55,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Named
@@ -99,7 +101,11 @@ public class Main {
         String sessionToken = getSessionToken(baseDir);
         heartbeat.start(instanceId, sessionToken);
 
+        String agentId = ConfigurationUtils.getSystemProperty("agentId", "n/a");
+
         ProcessApiClient processApiClient = new ProcessApiClient(apiClientFactory.create(sessionToken));
+        processApiClient.updateStatus(instanceId, agentId, ProcessEntry.StatusEnum.RUNNING);
+
         CheckpointManager checkpointManager = new CheckpointManager(instanceId, processApiClient);
 
         executeProcess(instanceId.toString(), checkpointManager, baseDir);

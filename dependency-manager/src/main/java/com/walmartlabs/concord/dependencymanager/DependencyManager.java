@@ -72,6 +72,7 @@ public class DependencyManager {
     private static final List<MavenRepository> DEFAULT_REPOS = Collections.singletonList(MAVEN_CENTRAL);
 
     private final Path cacheDir;
+    private final Path localCacheDir;
     private final List<RemoteRepository> repositories;
     private final Object mutex = new Object();
     private final RepositorySystem maven = newMavenRepositorySystem();
@@ -87,6 +88,7 @@ public class DependencyManager {
         if (!Files.exists(cacheDir)) {
             Files.createDirectories(cacheDir);
         }
+        this.localCacheDir = Paths.get(System.getProperty("user.home")).resolve(".m2/repository");
 
         log.info("init -> using repositories: {}", repositories);
         this.repositories = toRemote(repositories);
@@ -99,6 +101,10 @@ public class DependencyManager {
             this.pluginsVersion = new ObjectMapper().readValue(new FileInputStream(pluginsVersionCfgPath),
                     TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class, String.class));
         }
+    }
+
+    public Path getLocalCacheDir() {
+        return localCacheDir;
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -250,8 +256,7 @@ public class DependencyManager {
         session.setCache(mavenCache);
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
 
-        File localCacheDir = new File(System.getProperty("user.home") + "/.m2/repository");
-        LocalRepository localRepo = new LocalRepository(localCacheDir);
+        LocalRepository localRepo = new LocalRepository(localCacheDir.toFile());
         session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
         session.setTransferListener(new AbstractTransferListener() {
             @Override

@@ -38,8 +38,7 @@ import java.util.stream.Stream;
 public class DefaultDependencies {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultDependencies.class);
-
-    public static final String CFG_KEY = "DEFAULT_DEPS_CFG";
+    private static final String CFG_KEY = "DEFAULT_DEPS_CFG";
 
     private final List<URI> dependencies;
 

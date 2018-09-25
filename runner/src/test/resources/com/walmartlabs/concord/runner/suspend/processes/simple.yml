@@ -1,4 +1,0 @@
-simple:
-  - ${testBean.call("aaa")}
-  - event: ev1
-  - ${testBean.call("bbb")}

@@ -22,10 +22,9 @@ package com.walmartlabs.concord.agent;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.project.InternalConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,11 +32,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ExecutionManager {
@@ -45,19 +42,13 @@ public class ExecutionManager {
     private static final Logger log = LoggerFactory.getLogger(ExecutionManager.class);
     private static final long JOB_ENTRY_TTL = 8 * 60 * 60 * 1000; // 8 hours
 
-    private final JobExecutor jobExecutor;
+    private final DefaultJobExecutor jobExecutor;
     private final LogManager logManager;
     private final Configuration cfg;
-
-    private final Cache<UUID, ProcessEntry.StatusEnum> statuses = CacheBuilder.newBuilder()
-            .expireAfterAccess(JOB_ENTRY_TTL, TimeUnit.MILLISECONDS)
-            .build();
 
     private final Cache<UUID, JobInstance> instances = CacheBuilder.newBuilder()
             .expireAfterAccess(JOB_ENTRY_TTL, TimeUnit.MILLISECONDS)
             .build();
-
-    private final Object mutex = new Object();
 
     public ExecutionManager(Configuration cfg, ProcessApi processApi) throws IOException {
 
@@ -79,53 +70,20 @@ public class ExecutionManager {
 
         Path tmpDir = extract(payload);
 
-        synchronized (mutex) {
-            statuses.put(instanceId, ProcessEntry.StatusEnum.RUNNING);
-        }
-
         JobInstance i;
         try {
-            i = jobExecutor.start(instanceId, tmpDir, entryPoint);
+            i = jobExecutor.start(instanceId, tmpDir);
         } catch (Exception e) {
             log.warn("start ['{}', {}] -> failed", instanceId, entryPoint, e);
-            handleError(instanceId);
             throw e;
         }
 
-        synchronized (mutex) {
-            instances.put(instanceId, i);
-        }
-
-        CompletableFuture<?> f = i.future();
-        f.thenRun(() -> {
-            synchronized (mutex) {
-                statuses.put(instanceId, ProcessEntry.StatusEnum.FINISHED);
-            }
-        }).exceptionally(e -> {
-            handleError(instanceId);
-            return null;
-        });
+        instances.put(instanceId, i);
 
         return i;
     }
 
-    private void handleError(UUID instanceId) {
-        synchronized (mutex) {
-            ProcessEntry.StatusEnum s = statuses.getIfPresent(instanceId);
-            if (s != ProcessEntry.StatusEnum.CANCELLED) {
-                statuses.put(instanceId, ProcessEntry.StatusEnum.FAILED);
-            }
-        }
-    }
-
     public void cancel(UUID id) {
-        synchronized (mutex) {
-            ProcessEntry.StatusEnum s = statuses.getIfPresent(id);
-            if (s != null && s == ProcessEntry.StatusEnum.RUNNING) {
-                statuses.put(id, ProcessEntry.StatusEnum.CANCELLED);
-            }
-        }
-
         JobInstance i = instances.getIfPresent(id);
         if (i == null) {
             return;
@@ -134,37 +92,17 @@ public class ExecutionManager {
         i.cancel();
     }
 
-    public ProcessEntry.StatusEnum getStatus(UUID id) {
-        ProcessEntry.StatusEnum s;
-        synchronized (mutex) {
-            s = statuses.getIfPresent(id);
-        }
-
-        if (s == null) {
-            throw new IllegalArgumentException("Unknown execution ID: " + id);
-        }
-
-        return s;
-    }
-
     public boolean isRunning(UUID id) {
-        ProcessEntry.StatusEnum s;
-        synchronized (mutex) {
-            s = statuses.getIfPresent(id);
+        JobInstance i = instances.getIfPresent(id);
+        if (i == null) {
+            return false;
         }
 
-        if (s == null) {
-             return false;
-        }
-
-        return s == ProcessEntry.StatusEnum.RUNNING;
+        return !i.future().isDone();
     }
 
     public void cleanup() {
-        synchronized (mutex) {
-            statuses.cleanUp();
-            instances.cleanUp();
-        }
+        instances.cleanUp();
     }
 
     private static List<JobPostProcessor> createPostProcessors(ProcessApiClient client) {

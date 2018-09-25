@@ -10,6 +10,8 @@ flows:
         arguments:
           color: "red"
 
+  - "${concord.waitForCompletion(jobs)}"
+
   aJob:
   - log: "FORK (${color}) starting..."
   - ${sleep.ms(10000)}

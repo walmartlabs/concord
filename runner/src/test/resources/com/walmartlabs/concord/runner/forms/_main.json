@@ -1,8 +1,0 @@
-{
-  "entryPoint": "simple",
-  "arguments": {
-    "myForm": {
-      "field1": "test"
-    }
-  }
-}

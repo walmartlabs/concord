@@ -97,7 +97,7 @@ public class OrphanSweeper implements Runnable {
             }
 
             UUID k = UUID.fromString(line.substring(0, idx));
-            String v = line.substring(idx + 1, line.length());
+            String v = line.substring(idx + 1);
 
             ids.put(k, v);
         });

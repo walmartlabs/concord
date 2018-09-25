@@ -36,17 +36,21 @@ public class PolicyEngineRules {
 
     private final ProcessRule processRules;
 
+    private final ContainerRule containerRules;
+
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
                              @JsonProperty("task") PolicyRules<TaskRule> taskRules,
                              @JsonProperty("workspace") WorkspaceRule workspaceRule,
-                             @JsonProperty("process") ProcessRule processRules) {
+                             @JsonProperty("process") ProcessRule processRules,
+                             @JsonProperty("container") ContainerRule containerRules) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
         this.taskRules = taskRules;
         this.workspaceRule = workspaceRule;
         this.processRules = processRules;
+        this.containerRules = containerRules;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -69,6 +73,10 @@ public class PolicyEngineRules {
         return processRules;
     }
 
+    public ContainerRule getContainerRules() {
+        return containerRules;
+    }
+
     @Override
     public String toString() {
         return "PolicyEngineRules{" +
@@ -77,6 +85,7 @@ public class PolicyEngineRules {
                 ", taskRules=" + taskRules +
                 ", workspaceRule=" + workspaceRule +
                 ", processRules=" + processRules +
+                ", containerRules=" + containerRules +
                 '}';
     }
 }

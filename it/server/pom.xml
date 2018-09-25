@@ -339,6 +339,7 @@
                                         </wait>
                                     </run>
                                 </image>
+                                <!-- TODO start DIND? -->
                                 <image>
                                     <name>${agent.image}</name>
                                     <alias>agent</alias>

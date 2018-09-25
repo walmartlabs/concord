@@ -21,10 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.policyengine.CheckResult;
-import com.walmartlabs.concord.policyengine.FileRule;
-import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.policyengine.WorkspaceRule;
+import com.walmartlabs.concord.policyengine.*;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -33,6 +30,7 @@ import com.walmartlabs.concord.server.process.logs.LogManager;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -70,12 +68,44 @@ public class PolicyProcessor implements PayloadProcessor {
             // TODO merge check results
             applyWorkspacePolicy(instanceId, policy, workDir);
             applyFilePolicy(instanceId, policy, workDir);
+            applyContainerPolicy(instanceId, policy, workDir);
         } catch (IOException e) {
             logManager.error(instanceId, "Error while applying policy: {}", e);
             throw new ProcessException(instanceId, "Policy error", e);
         }
 
         return chain.process(payload);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void applyContainerPolicy(UUID instanceId, Map<String,Object> policy, Path workDir) {
+        Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
+        if (!Files.exists(p)) {
+            return;
+        }
+
+        Map<String, Object> containerOptions;
+        try (InputStream in = Files.newInputStream(p)) {
+            Map<String, Object> m = objectMapper.readValue(in, Map.class);
+            containerOptions = (Map<String, Object>) m.get(InternalConstants.Request.CONTAINER);
+        } catch (IOException e) {
+            logManager.error(instanceId, "Error while reading container configuration: {}", e);
+            throw new ProcessException(instanceId, "Error while reading container configuration", e);
+        }
+
+        CheckResult<ContainerRule, Object> result = new PolicyEngine(policy).getContainerPolicy().check(containerOptions);
+
+        result.getWarn().forEach(i -> {
+            logManager.warn(instanceId, appendMsg("Potential container policy violation (policy: {})", i.getMsg()), i.getRule());
+        });
+
+        result.getDeny().forEach(i -> {
+            logManager.error(instanceId, appendMsg("Container policy violation", i.getMsg()), i.getRule());
+        });
+
+        if (!result.getDeny().isEmpty()) {
+            throw new ProcessException(instanceId, "Found container policy violations");
+        }
     }
 
     private void applyWorkspacePolicy(UUID instanceId, Map<String, Object> policy, Path workDir) throws IOException {
