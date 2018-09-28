@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.GitHubEventsApi;
 import org.junit.Test;
 
@@ -37,13 +38,22 @@ public class GithubCallbackIT extends AbstractServerIT {
     private static final String CONCORD_TRIGGERS_REPO_NAME = "triggers";
 
     @Test(timeout = 60000)
-    public void test() throws Exception {
+    public void testPushEvent() throws Exception {
+        test("push");
+    }
+
+    @Test(timeout = 60000)
+    public void testPullRequestEvent() throws Exception {
+        test("pull_request");
+    }
+
+    private void test(String eventType) throws ApiException {
         setGithubKey(AUTH);
 
         GitHubEventsApi eventsApi = new GitHubEventsApi(getApiClient());
         Map<String, Object> event = new HashMap<>();
         event.put("repository", ImmutableMap.of("full_name", CONCORD_TRIGGERS_REPO_NAME));
-        String result = eventsApi.push(event);
+        String result = eventsApi.onEvent(event, eventType);
         assertNotNull(result);
         assertEquals("ok", result);
     }

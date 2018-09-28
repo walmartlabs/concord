@@ -217,6 +217,9 @@
                                                 <volume>/dev/shm:/dev/shm</volume>
                                             </bind>
                                         </volumes>
+                                        <wait>
+                                            <log>(?s).*Selenium Server is up and running.*</log>
+                                        </wait>
                                     </run>
                                 </image>
                             </images>

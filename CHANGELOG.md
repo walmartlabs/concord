@@ -4,8 +4,9 @@
 
 ### Added
 
-- concord-agent, concord-runner: initial support for
-"container-per-process" execution model.
+- concord-server: added support for GitHub PR events;
+- concord-agent, concord-runner: initial support for "container per
+process" execution model.
 
 ### Changed
 

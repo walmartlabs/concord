@@ -42,7 +42,7 @@ public class GithubWebhookManager {
 
     private static final Logger log = LoggerFactory.getLogger(GithubWebhookManager.class);
 
-    private static final Set<GHEvent> EVENTS = ImmutableSet.of(GHEvent.PUSH);
+    private static final Set<GHEvent> EVENTS = ImmutableSet.of(GHEvent.PUSH, GHEvent.PULL_REQUEST);
 
     private final Supplier<GitHub> client;
     private final GithubConfiguration cfg;
@@ -50,7 +50,7 @@ public class GithubWebhookManager {
     @Inject
     public GithubWebhookManager(GithubConfiguration cfg) {
         this.cfg = cfg;
-        this.client = Suppliers.memoize(this::connect)::get;
+        this.client = Suppliers.memoize(this::connect);
     }
 
     public Long register(String githubRepoName) {
@@ -115,7 +115,7 @@ public class GithubWebhookManager {
         try {
             return GitHub.connectToEnterprise(cfg.getApiUrl(), cfg.getOauthAccessToken());
         } catch (IOException e) {
-            log.error("error -> connecting to the GitHub API '{}'", cfg.getApiUrl(), e.getMessage());
+            log.error("error -> connecting to the GitHub API '{}'", cfg.getApiUrl());
             throw new RuntimeException(e);
         }
     }

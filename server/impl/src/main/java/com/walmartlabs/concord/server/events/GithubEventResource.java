@@ -39,10 +39,7 @@ import org.sonatype.siesta.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
@@ -65,7 +62,13 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private static final String PROJECT_NAME_KEY = "project";
     private static final String REPO_BRANCH_KEY = "branch";
     private static final String COMMIT_ID_KEY = "commitId";
-    private static final String PUSHER_KEY = "author";
+    private static final String AUTHOR_KEY = "author";
+    private static final String TYPE_KEY = "type";
+    private static final String STATUS_KEY = "status";
+
+    private static final String PULL_REQUEST = "pull_request";
+    private static final String PUSH = "push";
+    private static final String DEFAULT_EVENT_TYPE = "push";
 
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
@@ -90,18 +93,20 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     }
 
     @POST
-    @ApiOperation("Handles GitHub push events")
-    @Path("/push")
+    @ApiOperation("Handles GitHub events")
+    @Path("/webhook")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     @WithTimer
     @SuppressWarnings("unchecked")
-    public String push(@ApiParam Map<String, Object> event) {
+    public String onEvent(@ApiParam Map<String, Object> event,
+                          @HeaderParam("X-GitHub-Event") String eventName) {
+
         if (event == null) {
             return "ok";
         }
 
-        Map<String, Object> repo = (Map<String, Object>) event.getOrDefault("repository", Collections.emptyMap());
+        Map<String, Object> repo = (Map<String, Object>) event.getOrDefault(REPO_NAME_KEY, Collections.emptyMap());
         String repoName = (String) repo.get("full_name");
         if (repoName == null) {
             return "ok";
@@ -109,12 +114,12 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
         List<RepositoryEntry> repos = repositoryDao.find(repoName);
         if (repos.isEmpty()) {
-            log.info("push ['{}'] -> repository not found, delete webhook", repoName);
+            log.info("'{}' event ['{}'] -> repository not found, delete webhook", eventName, repoName);
             webhookManager.unregister(repoName);
             return "ok";
         }
 
-        String eventBranch = getBranch(event);
+        String eventBranch = getBranch(event, eventName);
 
         for (RepositoryEntry r : repos) {
             String rBranch = Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH);
@@ -124,13 +129,15 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
             ProjectEntry project = projectDao.get(r.getProjectId());
             if (project == null) {
-                log.warn("push ['{}'] -> project '{}' not found", repoName, r.getProjectId());
+                log.warn("'{}' event ['{}'] -> project '{}' not found", eventName, repoName, r.getProjectId());
                 continue;
             }
 
-            repositoryCacheDao.updateLastPushDate(r.getId(), new Date());
+            if (PUSH.equalsIgnoreCase(eventName)) {
+                repositoryCacheDao.updateLastPushDate(r.getId(), new Date());
+            }
 
-            Map<String, Object> triggerConditions = buildConditions(r, event, project);
+            Map<String, Object> triggerConditions = buildConditions(r, event, project, eventName);
             Map<String, Object> triggerEvent = buildTriggerEvent(event, r, project, triggerConditions);
 
             String eventId = r.getId().toString();
@@ -155,34 +162,59 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         return result;
     }
 
-    private static String getBranch(Map<String, Object> event) {
+    private static String getBranch(Map<String, Object> event, String eventName) {
+        if (PUSH.equalsIgnoreCase(eventName)) {
+            return getBranchPush(event);
+        } else if (PULL_REQUEST.equalsIgnoreCase(eventName)) {
+            return getBranchPullRequest(event);
+        }
+
+        return null;
+    }
+
+    private static String getBranchPush(Map<String, Object> event) {
         String ref = (String) event.get("ref");
         if (ref == null) {
             return null;
         }
 
         String[] refPath = ref.split("/");
+
         return refPath[refPath.length - 1];
     }
 
-    private static Map<String, Object> buildConditions(RepositoryEntry repo, Map<String, Object> event, ProjectEntry project) {
+    @SuppressWarnings("unchecked")
+    private static String getBranchPullRequest(Map<String, Object> event) {
+        Map<String, Object> pr = (Map<String, Object>) event.get(PULL_REQUEST);
+        if (pr != null) {
+            Map<String, Object> base = (Map<String, Object>) pr.get("base");
+
+            return (String) base.get("ref");
+        }
+
+        return null;
+    }
+
+    private static Map<String, Object> buildConditions(RepositoryEntry repo, Map<String, Object> event, ProjectEntry project, String eventName) {
         Map<String, Object> result = new HashMap<>();
         result.put(ORG_NAME_KEY, project.getOrgName());
         result.put(PROJECT_NAME_KEY, project.getName());
         result.put(REPO_NAME_KEY, repo.getName());
         result.put(REPO_BRANCH_KEY, Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH));
-        result.put(PUSHER_KEY, getPusher(event));
+        result.put(AUTHOR_KEY, getSender(event));
+        result.put(TYPE_KEY, eventName);
+        result.put(STATUS_KEY, event.get("action"));
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    private static String getPusher(Map<String, Object> event) {
-        Map<String, Object> pusher = (Map<String, Object>) event.get("pusher");
-        if (pusher == null) {
+    private static String getSender(Map<String, Object> event) {
+        Map<String, Object> sender = (Map<String, Object>) event.get("sender");
+        if (sender == null) {
             return null;
         }
 
-        return (String) pusher.get("name");
+        return (String) sender.get("login");
     }
 
     private static class GithubTriggerDefinitionEnricher implements TriggerDefinitionEnricher {
@@ -212,6 +244,9 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             });
             conditions.computeIfAbsent(PROJECT_NAME_KEY, k -> entry.getProjectName());
             conditions.computeIfAbsent(REPO_NAME_KEY, k -> entry.getRepositoryName());
+
+            // TODO remove once the documentation and existing triggers are updated
+            conditions.putIfAbsent(TYPE_KEY, DEFAULT_EVENT_TYPE);
 
             return new TriggerEntry(entry.getId(),
                     entry.getProjectId(),
