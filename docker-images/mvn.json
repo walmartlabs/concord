@@ -1,6 +1,10 @@
 {
   "repositories": [
     {
+      "id": "local",
+      "url": "file:///home/concord/.m2/repository"
+    },
+    {
       "id": "central",
       "url": "https://repo.maven.apache.org/maven2/"
     },

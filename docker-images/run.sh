@@ -38,8 +38,9 @@ docker run -d \
 --link dind \
 --link server \
 -v /tmp:/tmp \
+-v "${HOME}/.m2/repository:/home/concord/.m2/repository" \
 -v "${BASE_DIR}/mvn.json:/opt/concord/conf/mvn.json:ro" \
--e "CONCORD_MAVEN_CFG=${BASE_URL}/mvn.json" \
+-e "CONCORD_MAVEN_CFG=/opt/concord/conf/mvn.json" \
 -e "CONCORD_DOCKER_LOCAL_MODE=false" \
 -e "SERVER_API_BASE_URL=http://server:8001" \
 docker.prod.walmart.com/walmartlabs/concord-agent:${VERSION}
