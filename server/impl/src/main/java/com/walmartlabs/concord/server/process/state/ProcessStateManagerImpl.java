@@ -175,8 +175,14 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
     }
 
     @Override
-    public void delete(UUID instanceId, String path) {
-        tx(tx -> delete(tx, instanceId, path));
+    public void deleteFile(UUID instanceId, String path) {
+        tx(tx -> deleteFile(tx, instanceId, path));
+    }
+
+    @Override
+    @WithTimer
+    public void deleteDirectory(UUID instanceId, String path) {
+        tx(tx -> deleteDirectory(tx, instanceId, path));
     }
 
     @Override
@@ -185,17 +191,25 @@ public class ProcessStateManagerImpl extends AbstractDao implements ProcessState
         tx(tx -> delete(tx, instanceId));
     }
 
-    private void delete(DSLContext tx, UUID instanceId, String path) {
+    private void deleteFile(DSLContext tx, UUID instanceId, String path) {
         tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId))
-                .and(PROCESS_STATE.ITEM_PATH.startsWith(path))
+                .and(PROCESS_STATE.ITEM_PATH.eq(path))
+                .execute();
+    }
+
+    private void deleteDirectory(DSLContext tx, UUID instanceId, String path) {
+        tx.deleteFrom(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId))
+                .and(PROCESS_STATE.ITEM_PATH.eq(path)
+                        .or(PROCESS_STATE.ITEM_PATH.startsWith(fixPath(path))))
                 .execute();
     }
 
     @Override
     public void replace(UUID instanceId, String path, byte[] data) {
         tx(tx -> {
-            delete(tx, instanceId, path);
+            deleteDirectory(tx, instanceId, path);
             insert(tx, instanceId, path, data);
         });
     }

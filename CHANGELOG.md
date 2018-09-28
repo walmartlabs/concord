@@ -7,6 +7,11 @@
 - concord-agent, concord-runner: initial support for
 "container-per-process" execution model.
 
+### Changed
+
+- concord-server: fixed a bug preventing checkpoints from working
+with `.concord.yml` files.
+
 
 
 ## [0.88.0] - 2018-09-19

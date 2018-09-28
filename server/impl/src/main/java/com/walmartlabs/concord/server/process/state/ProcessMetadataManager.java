@@ -42,7 +42,7 @@ public class ProcessMetadataManager {
     }
 
     public void deleteOnFailureMarker(UUID instanceId) {
-        stateManager.delete(instanceId, ON_FAILURE_MARKER_PATH);
+        stateManager.deleteFile(instanceId, ON_FAILURE_MARKER_PATH);
     }
 
     public void addOnCancelMarker(UUID instanceId) {
@@ -50,6 +50,6 @@ public class ProcessMetadataManager {
     }
 
     public void deleteOnCancelMarker(UUID instanceId) {
-        stateManager.delete(instanceId, ON_CANCEL_MARKER_PATH);
+        stateManager.deleteFile(instanceId, ON_CANCEL_MARKER_PATH);
     }
 }

@@ -69,9 +69,14 @@ public interface ProcessStateManager {
     boolean exists(UUID instanceId, String path);
 
     /**
-     * Removes a single value.
+     * Removes single value.
      */
-    void delete(UUID instanceId, String path);
+    void deleteFile(UUID instanceId, String path);
+
+    /**
+     * Remove a directory and all content from it.
+     */
+    void deleteDirectory(UUID instanceId, String path);
 
     /**
      * Removes all process data.

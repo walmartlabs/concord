@@ -85,8 +85,8 @@ public class ProcessCheckpointManager {
 
                 String checkpointName = readCheckpointName(extractedDir.path());
 
-                stateManager.delete(instanceId, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME);
-                stateManager.delete(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
+                stateManager.deleteDirectory(instanceId, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME);
+                stateManager.deleteDirectory(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
                 stateManager.importPath(instanceId, null, extractedDir.path());
 
                 return checkpointName;

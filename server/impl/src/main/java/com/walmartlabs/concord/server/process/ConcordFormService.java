@@ -136,7 +136,7 @@ public class ConcordFormService {
                     InternalConstants.Files.JOB_FORMS_DIR_NAME,
                     formName);
 
-            stateManager.delete(processInstanceId, resource);
+            stateManager.deleteFile(processInstanceId, resource);
 
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();

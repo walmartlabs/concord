@@ -813,7 +813,7 @@ public class ProcessResource implements Resource {
             IOUtils.unzip(tmpIn, tmpDir);
 
             Path finalTmpDir = tmpDir;
-            stateManager.delete(instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
+            stateManager.deleteDirectory(instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
             stateManager.importPath(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, finalTmpDir);
         } catch (IOException e) {
             log.error("uploadAttachments ['{}'] -> error", instanceId, e);
