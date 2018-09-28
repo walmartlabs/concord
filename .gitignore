@@ -30,4 +30,4 @@ pom.xml.versionsBackup
 release.properties
 target/
 yarn.lock
-yarn.lock
+.mvn/wrapper/maven-wrapper.jar
