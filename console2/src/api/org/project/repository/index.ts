@@ -48,12 +48,16 @@ export interface EditRepositoryEntry {
     secretId: string;
 }
 
+export interface TriggerCfg {
+    entryPoint: string;
+}
+
 export interface TriggerEntry {
     id: ConcordId;
     eventSource: ConcordKey;
-    entryPoint: string;
     arguments?: object;
     conditions?: object;
+    cfg: TriggerCfg;
 }
 
 export interface RepositoryValidationResponse {

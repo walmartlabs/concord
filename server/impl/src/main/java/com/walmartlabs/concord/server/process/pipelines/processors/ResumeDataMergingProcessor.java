@@ -57,6 +57,7 @@ public class ResumeDataMergingProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path src = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);

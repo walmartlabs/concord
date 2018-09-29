@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.model;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.project.model;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.model.SourceMap;
 
 import java.io.Serializable;
@@ -29,19 +30,19 @@ import java.util.Map;
 public class Trigger implements Serializable {
 
     private final String name;
-    private final String entryPoint;
     private final List<String> activeProfiles;
     private final Map<String, Object> arguments;
     private final Map<String, Object> params;
     private final SourceMap sourceMap;
+    private final Map<String, Object> cfg;
 
-    public Trigger(String name, String entryPoint, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> params, SourceMap sourceMap) {
+    public Trigger(String name, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> params, Map<String, Object> cfg, SourceMap sourceMap) {
         this.name = name;
-        this.entryPoint = entryPoint;
         this.activeProfiles = activeProfiles;
         this.arguments = arguments;
         this.params = params;
         this.sourceMap = sourceMap;
+        this.cfg = cfg;
     }
 
     public String getName() {
@@ -52,8 +53,19 @@ public class Trigger implements Serializable {
         return params;
     }
 
+    public Map<String, Object> getCfg() {
+        return cfg;
+    }
+
     public String getEntryPoint() {
-        return entryPoint;
+        return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
+    }
+
+    public Boolean getUseInitiator() {
+        if (cfg.get(Constants.Request.USE_INITIATOR) == null) {
+            return false;
+        }
+        return (Boolean) cfg.get(Constants.Request.USE_INITIATOR);
     }
 
     public List<String> getActiveProfiles() {
@@ -72,11 +84,11 @@ public class Trigger implements Serializable {
     public String toString() {
         return "Trigger{" +
                 "name='" + name + '\'' +
-                ", entryPoint='" + entryPoint + '\'' +
                 ", activeProfiles=" + activeProfiles +
                 ", arguments=" + arguments +
                 ", params=" + params +
                 ", sourceMap=" + sourceMap +
+                ", cfg=" + cfg +
                 '}';
     }
 }

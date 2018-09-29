@@ -27,6 +27,8 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.security.ldap.LdapManager;
+import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.Authorization;
 import org.slf4j.Logger;
@@ -62,11 +64,12 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
     private static final String PLATFORM_KEY = "platform";
     private static final String STATE_KEY = "state";
     private static final String TYPE_KEY = "type";
-    private static final String COMPONENT = "component";
-    private static final String SOURCE = "source";
-    private static final String SUBJECT = "subject";
-    private static final String DEPLOYMENT_STATE = "deploymentState";
-    private static final String IP_ADDRESSES = "ips";
+    private static final String COMPONENT_KEY = "component";
+    private static final String SOURCE_KEY = "source";
+    private static final String SUBJECT_KEY = "subject";
+    private static final String DEPLOYMENT_STATE_KEY = "deploymentState";
+    private static final String IPS_KEY = "ips";
+    private static final String AUTHOR_KEY = "author";
 
     private final ObjectMapper objectMapper;
 
@@ -74,9 +77,11 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
     public OneOpsEventResource(ProcessManager processManager,
                                TriggersDao triggersDao,
                                ProjectDao projectDao,
-                               TriggersConfiguration triggersCfg) {
+                               TriggersConfiguration triggersCfg,
+                               UserManager userManager,
+                               LdapManager ldapManager) {
 
-        super(processManager, triggersDao, projectDao, triggersCfg);
+        super(processManager, triggersDao, projectDao, triggersCfg, userManager, ldapManager);
         this.objectMapper = new ObjectMapper();
     }
 
@@ -130,13 +135,14 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
 
         Map<String, Object> result = new HashMap<>();
         result.put(STATE_KEY, get("ciState", cis));
-        result.put(COMPONENT, get("ciClassName", cis));
+        result.put(COMPONENT_KEY, get("ciClassName", cis));
         result.put(TYPE_KEY, get("type", event));
-        result.put(SOURCE, get("source", event));
-        result.put(SUBJECT, get("subject", event));
-        result.put(DEPLOYMENT_STATE, get("deploymentState", payload));
+        result.put(SOURCE_KEY, get("source", event));
+        result.put(SUBJECT_KEY, get("subject", event));
+        result.put(DEPLOYMENT_STATE_KEY, get("deploymentState", payload));
 
-        result.put(IP_ADDRESSES, getIPs(event));
+        result.put(IPS_KEY, getIPs(event));
+        result.put(AUTHOR_KEY, payload.get("createdBy"));
 
         // example: /testing/twst/localtest/bom/sts/1
         //          / org   /asm /env      /.../platform/...

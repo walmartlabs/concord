@@ -38,6 +38,9 @@ import java.util.Map;
 
 public final class YamlProjectConverter {
 
+    private static final String[] TRIGGER_CONFIG_KEYS = { Constants.Request.USE_INITIATOR, Constants.Request.ENTRY_POINT_KEY };
+
+
     public static ProjectDefinition convert(YamlProject project) throws YamlConverterException {
         Map<String, ProcessDefinition> flows = convertFlows(project.getFlows());
         Map<String, FormDefinition> forms = convertForms(project.getForms());
@@ -59,9 +62,13 @@ public final class YamlProjectConverter {
 
             Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(t.getOptions());
 
-            String entryPoint = (String) opts.remove(Constants.Request.ENTRY_POINT_KEY);
             List<String> activeProfiles = (List<String>) opts.remove(Constants.Request.ACTIVE_PROFILES_KEY);
             Map<String, Object> arguments = (Map<String, Object>) opts.remove(Constants.Request.ARGUMENTS_KEY);
+
+            Map<String, Object> cfg = new HashMap<>();
+            for(String key : TRIGGER_CONFIG_KEYS) {
+                cfg.put(key,  opts.remove(key));
+            }
 
             JsonLocation l = t.getLocation();
             SourceMap sourceMap = new SourceMap(SourceMap.Significance.HIGH,
@@ -70,7 +77,7 @@ public final class YamlProjectConverter {
                     l.getColumnNr(),
                     "Trigger: " + name);
 
-            result.add(new Trigger(name, entryPoint, activeProfiles, arguments, opts, sourceMap));
+            result.add(new Trigger(name, activeProfiles, arguments, opts, cfg, sourceMap));
         }
 
         return result;

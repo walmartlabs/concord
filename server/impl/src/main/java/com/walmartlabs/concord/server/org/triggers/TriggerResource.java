@@ -180,7 +180,7 @@ public class TriggerResource extends AbstractDao implements Resource {
             pd.getTriggers().forEach(t -> {
                 UUID triggerId = triggersDao.insert(tx,
                         r.getProjectId(), r.getId(), t.getName(),
-                        t.getEntryPoint(), t.getActiveProfiles(), t.getArguments(), t.getParams());
+                        t.getActiveProfiles(), t.getArguments(), t.getParams(), t.getCfg());
 
                 TriggerProcessor processor = triggerProcessors.get(t.getName());
                 if (processor != null) {

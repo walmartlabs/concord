@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.triggers;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,10 +21,12 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.sdk.Constants;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -51,14 +53,14 @@ public class TriggerEntry implements Serializable {
     @ConcordKey
     private final String eventSource;
 
-    @NotNull
-    private final String entryPoint;
-
     private final List<String> activeProfiles;
 
     private final Map<String, Object> arguments;
 
     private final Map<String, Object> conditions;
+
+    @NotNull
+    private final Map<String, Object> cfg;
 
     @JsonCreator
     public TriggerEntry(@JsonProperty("id") UUID id,
@@ -67,10 +69,10 @@ public class TriggerEntry implements Serializable {
                         @JsonProperty("repositoryId") UUID repositoryId,
                         @JsonProperty("repositoryName") String repositoryName,
                         @JsonProperty("eventSource") String eventSource,
-                        @JsonProperty("entryPoint") String entryPoint,
                         @JsonProperty("activeProfiles") List<String> activeProfiles,
                         @JsonProperty("arguments") Map<String, Object> arguments,
-                        @JsonProperty("conditions") Map<String, Object> conditions) {
+                        @JsonProperty("conditions") Map<String, Object> conditions,
+                        @JsonProperty("cfg") Map<String, Object> cfg) {
 
         this.id = id;
         this.repositoryId = repositoryId;
@@ -78,10 +80,10 @@ public class TriggerEntry implements Serializable {
         this.projectId = projectId;
         this.projectName = projectName;
         this.eventSource = eventSource;
-        this.entryPoint = entryPoint;
         this.activeProfiles = activeProfiles;
         this.arguments = arguments;
         this.conditions = conditions;
+        this.cfg = cfg;
     }
 
     public UUID getId() {
@@ -108,8 +110,27 @@ public class TriggerEntry implements Serializable {
         return eventSource;
     }
 
+    @JsonIgnore
     public String getEntryPoint() {
-        return entryPoint;
+        if (cfg == null) {
+            return null;
+        }
+
+        return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
+    }
+
+    @JsonInclude
+    public boolean isUseInitiator() {
+        if (cfg == null) {
+            return false;
+        }
+
+        Boolean v = (Boolean) cfg.get(Constants.Request.USE_INITIATOR);
+        if (v == null) {
+            return false;
+        }
+
+        return v;
     }
 
     public List<String> getActiveProfiles() {
@@ -124,6 +145,10 @@ public class TriggerEntry implements Serializable {
         return conditions;
     }
 
+    public Map<String, Object> getCfg() {
+        return cfg;
+    }
+
     @Override
     public String toString() {
         return "TriggerEntry{" +
@@ -133,10 +158,10 @@ public class TriggerEntry implements Serializable {
                 ", projectId=" + projectId +
                 ", projectName='" + projectName + '\'' +
                 ", eventSource='" + eventSource + '\'' +
-                ", entryPoint='" + entryPoint + '\'' +
                 ", activeProfiles=" + activeProfiles +
                 ", arguments=" + arguments +
                 ", conditions=" + conditions +
+                ", cfg=" + cfg +
                 '}';
     }
 }

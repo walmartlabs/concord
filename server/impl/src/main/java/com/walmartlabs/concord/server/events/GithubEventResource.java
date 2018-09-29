@@ -29,6 +29,8 @@ import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.security.ldap.LdapManager;
+import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -82,9 +84,11 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                RepositoryCacheDao repositoryCacheDao,
                                ProcessManager processManager,
                                GithubWebhookManager webhookManager,
-                               TriggersConfiguration triggersConfiguration) {
+                               TriggersConfiguration triggersConfiguration,
+                               UserManager userManager,
+                               LdapManager ldapManager) {
 
-        super(processManager, triggersDao, projectDao, new GithubTriggerDefinitionEnricher(projectDao), triggersConfiguration);
+        super(processManager, triggersDao, projectDao, new GithubTriggerDefinitionEnricher(projectDao), triggersConfiguration, userManager, ldapManager);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -186,13 +190,12 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     @SuppressWarnings("unchecked")
     private static String getBranchPullRequest(Map<String, Object> event) {
         Map<String, Object> pr = (Map<String, Object>) event.get(PULL_REQUEST);
-        if (pr != null) {
-            Map<String, Object> base = (Map<String, Object>) pr.get("base");
-
-            return (String) base.get("ref");
+        if (pr == null) {
+            return null;
         }
 
-        return null;
+        Map<String, Object> base = (Map<String, Object>) pr.get("base");
+        return (String) base.get("ref");
     }
 
     private static Map<String, Object> buildConditions(RepositoryEntry repo, Map<String, Object> event, ProjectEntry project, String eventName) {
@@ -254,10 +257,10 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                     entry.getRepositoryId(),
                     entry.getRepositoryName(),
                     entry.getEventSource(),
-                    entry.getEntryPoint(),
                     entry.getActiveProfiles(),
                     entry.getArguments(),
-                    conditions);
+                    conditions,
+                    entry.getCfg());
         }
     }
 }

@@ -158,9 +158,14 @@ public class Constants {
         public static final String META = "meta";
 
         /**
-         * Container configuration
+         * Container configuration.
          */
         public static final String CONTAINER = "container";
+
+        /**
+         * Whether to use the trigger's initiator as the process' initiator.
+         */
+        public static final String USE_INITIATOR = "useInitiator";
     }
 
     /**

@@ -25,6 +25,8 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.security.ldap.LdapManager;
+import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -58,9 +60,11 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
     public ExternalEventResource(ProcessManager processManager,
                                  TriggersDao triggersDao,
                                  ProjectDao projectDao,
-                                 TriggersConfiguration triggersCfg) {
+                                 TriggersConfiguration triggersCfg,
+                                 UserManager userManager,
+                                 LdapManager ldapManager) {
 
-        super(processManager, triggersDao, projectDao, triggersCfg);
+        super(processManager, triggersDao, projectDao, triggersCfg, userManager, ldapManager);
     }
 
     @POST

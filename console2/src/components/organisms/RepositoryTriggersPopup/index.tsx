@@ -103,7 +103,7 @@ class RepositoryTriggersPopup extends React.Component<Props, OwnState> {
                                         />
                                     )}
                                 </Table.Cell>
-                                <Table.Cell>{t.entryPoint}</Table.Cell>
+                                <Table.Cell>{t.cfg.entryPoint}</Table.Cell>
                                 <Table.Cell>
                                     {t.arguments && (
                                         <ReactJson
@@ -139,7 +139,7 @@ const prepareData = (resp: ListTriggersResponse | null) => {
     }
 
     return resp.items
-        .sort(comparators.byProperty((i) => i.entryPoint))
+        .sort(comparators.byProperty((i) => i.cfg.entryPoint))
         .sort(comparators.byProperty((i) => i.eventSource));
 };
 

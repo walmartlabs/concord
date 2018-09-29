@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: "initiator passthrough" support for OneOps and
+GitHub events;
 - concord-server: added support for GitHub PR events;
 - concord-agent, concord-runner: initial support for "container per
 process" execution model.

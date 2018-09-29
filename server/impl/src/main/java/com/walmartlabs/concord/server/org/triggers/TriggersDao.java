@@ -65,42 +65,42 @@ public class TriggersDao extends AbstractDao {
                     t.REPO_ID,
                     repositoryNameField,
                     t.EVENT_SOURCE,
-                    t.ENTRY_POINT,
                     t.ACTIVE_PROFILES,
                     t.ARGUMENTS.cast(String.class),
-                    t.CONDITIONS.cast(String.class))
+                    t.CONDITIONS.cast(String.class),
+                    t.TRIGGER_CFG.cast(String.class))
                     .from(t)
                     .where(t.TRIGGER_ID.eq(id))
                     .fetchOne(this::toEntity);
         }
     }
 
-    public UUID insert(UUID projectId, UUID repositoryId, String eventSource, String entryPoint, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions) {
-        return txResult(tx -> insert(tx, projectId, repositoryId, eventSource, entryPoint, activeProfiles, args, conditions));
+    public UUID insert(UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
+        return txResult(tx -> insert(tx, projectId, repositoryId, eventSource, activeProfiles, args, conditions, config));
     }
 
-    public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String eventSource, String entryPoint, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions) {
+    public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
         return tx.insertInto(TRIGGERS)
-                .columns(TRIGGERS.PROJECT_ID, TRIGGERS.REPO_ID, TRIGGERS.EVENT_SOURCE, TRIGGERS.ENTRY_POINT, TRIGGERS.ACTIVE_PROFILES, TRIGGERS.ARGUMENTS, TRIGGERS.CONDITIONS)
-                .values(projectId, repositoryId, eventSource, entryPoint, Utils.toArray(activeProfiles), field("?::jsonb", serialize(args)), field("?::jsonb", serialize(conditions)))
+                .columns(TRIGGERS.PROJECT_ID, TRIGGERS.REPO_ID, TRIGGERS.EVENT_SOURCE, TRIGGERS.ACTIVE_PROFILES, TRIGGERS.ARGUMENTS, TRIGGERS.CONDITIONS, TRIGGERS.TRIGGER_CFG)
+                .values(projectId, repositoryId, eventSource, Utils.toArray(activeProfiles), field("?::jsonb", serialize(args)), field("?::jsonb", serialize(conditions)), field("?::jsonb", serialize(config)))
                 .returning(TRIGGERS.TRIGGER_ID)
                 .fetchOne()
                 .getTriggerId();
     }
 
-    public void update(UUID id, UUID projectId, UUID repositoryId, String eventSource, String entryPoint, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions) {
-        tx(tx -> update(tx, id, projectId, repositoryId, eventSource, entryPoint, activeProfiles, args, conditions));
+    public void update(UUID id, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
+        tx(tx -> update(tx, id, projectId, repositoryId, eventSource, activeProfiles, args, conditions, config));
     }
 
-    private void update(DSLContext tx, UUID id, UUID projectId, UUID repositoryId, String eventSource, String entryPoint, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions) {
+    private void update(DSLContext tx, UUID id, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
         tx.update(TRIGGERS)
                 .set(TRIGGERS.PROJECT_ID, projectId)
                 .set(TRIGGERS.REPO_ID, repositoryId)
                 .set(TRIGGERS.EVENT_SOURCE, eventSource)
-                .set(TRIGGERS.ENTRY_POINT, entryPoint)
                 .set(TRIGGERS.ACTIVE_PROFILES, Utils.toArray(activeProfiles))
                 .set(TRIGGERS.ARGUMENTS, field("?::jsonb", String.class, serialize(args)))
                 .set(TRIGGERS.CONDITIONS, field("?::jsonb", String.class, serialize(conditions)))
+                .set(TRIGGERS.TRIGGER_CFG, field("?::jsonb", String.class, serialize(config)))
                 .where(TRIGGERS.TRIGGER_ID.eq(id))
                 .execute();
     }
@@ -130,10 +130,10 @@ public class TriggersDao extends AbstractDao {
                     t.REPO_ID,
                     repositoryNameField,
                     t.EVENT_SOURCE,
-                    t.ENTRY_POINT,
                     t.ACTIVE_PROFILES,
                     t.ARGUMENTS.cast(String.class),
-                    t.CONDITIONS.cast(String.class))
+                    t.CONDITIONS.cast(String.class),
+                    t.TRIGGER_CFG.cast(String.class))
                     .from(t)
                     .where(t.PROJECT_ID.eq(projectId).and(t.REPO_ID.eq(repositoryId)))
                     .fetch(this::toEntity);
@@ -164,10 +164,10 @@ public class TriggersDao extends AbstractDao {
                 t.REPO_ID,
                 repositoryNameField,
                 t.EVENT_SOURCE,
-                t.ENTRY_POINT,
                 t.ACTIVE_PROFILES,
                 t.ARGUMENTS.cast(String.class),
-                t.CONDITIONS.cast(String.class))
+                t.CONDITIONS.cast(String.class),
+                t.TRIGGER_CFG.cast(String.class))
                 .from(t)
                 .where(buildConditionClause(t, eventSource, conditions))
                 .fetch(this::toEntity);
@@ -217,13 +217,13 @@ public class TriggersDao extends AbstractDao {
         }
     }
 
-    private TriggerEntry toEntity(Record10<UUID, UUID, String, UUID, String, String, String, String[], String, String> item) {
+    private TriggerEntry toEntity(Record10<UUID, UUID, String, UUID, String, String, String[], String, String, String> item) {
         List<String> activeProfiles = null;
-        if (item.value8() != null) {
-            activeProfiles = Arrays.asList(item.value8());
+        if (item.value7() != null) {
+            activeProfiles = Arrays.asList(item.value7());
         }
 
-        return new TriggerEntry(item.value1(), item.value2(), item.value3(), item.value4(), item.value5(), item.value6(), item.value7(),
-                activeProfiles, deserialize(item.value9()), deserialize(item.value10()));
+        return new TriggerEntry(item.value1(), item.value2(), item.value3(), item.value4(), item.value5(), item.value6(),
+                activeProfiles, deserialize(item.value8()), deserialize(item.value9()), deserialize(item.value10()));
     }
 }
