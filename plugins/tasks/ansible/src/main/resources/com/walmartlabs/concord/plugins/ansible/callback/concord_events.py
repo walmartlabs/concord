@@ -94,7 +94,7 @@ class CallbackModule(CallbackBase):
             'host': host.name,
             'hostGroup': self.play.get_name(),
             'task': task.get_name(),
-            'action': result._task.action,
+            'action': task.action,
             'correlationId': host.name + task._uuid,
             'phase': "pre"
         }

@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- ansible: fix a bug preventing the task callback from recording task
+start events.
+
+
+
 ## [0.89.0] - 2018-09-30
 
 ### Added
