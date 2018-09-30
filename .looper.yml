@@ -34,7 +34,6 @@ triggers:
       call: siteDeploy
 
 tools:
-  jdk: 8
   maven: 3.5.2
   sonarscanner: 3.0.3.778
 
