@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: user-defined process timeouts support;
 - concord-server: "initiator passthrough" support for OneOps and
 GitHub events;
 - concord-server: added support for GitHub PR events;
