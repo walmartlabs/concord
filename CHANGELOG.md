@@ -13,6 +13,7 @@ process" execution model.
 
 ### Changed
 
+- ansible: use ANSI colors by default;
 - concord-server: fixed a bug preventing checkpoints from working
 with `.concord.yml` files.
 

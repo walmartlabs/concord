@@ -111,8 +111,8 @@ public class AnsibleEnv {
 
     private static Map<String, String> mergeEnv(Map<String, String> defaultEnv, Map<String, String> concordEnv, Map<String, Object> args) {
         Map<String, Object> extraEnv = ArgUtils.getMap(args, TaskParams.EXTRA_ENV_KEY);
-        if (extraEnv == null || extraEnv.isEmpty()) {
-            return concordEnv;
+        if (extraEnv == null) {
+            extraEnv = Collections.emptyMap();
         }
 
         Map<String, String> result = new HashMap<>(defaultEnv.size() + concordEnv.size() + extraEnv.size());
