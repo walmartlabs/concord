@@ -64,7 +64,8 @@ public class ProcessCheckpointResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCheckpointResource.class);
 
-    private static final Set<ProcessStatus> RESTORE_ALLOWED_STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.FAILED, ProcessStatus.FINISHED, ProcessStatus.SUSPENDED));
+    private static final Set<ProcessStatus> RESTORE_ALLOWED_STATUSES = new HashSet<>(Arrays.asList(
+            ProcessStatus.FAILED, ProcessStatus.FINISHED, ProcessStatus.SUSPENDED, ProcessStatus.TIMED_OUT));
 
     private final ProcessManager processManager;
     private final PayloadManager payloadManager;

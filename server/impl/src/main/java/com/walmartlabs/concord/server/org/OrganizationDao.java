@@ -56,7 +56,8 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META.cast(String.class))
+            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY,
+                    ORGANIZATIONS.META.cast(String.class), ORGANIZATIONS.ORG_CFG.cast(String.class))
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_ID.eq(id))
                     .fetchOne(this::toEntry);
@@ -74,35 +75,47 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry getByName(String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META.cast(String.class))
+            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY,
+                    ORGANIZATIONS.META.cast(String.class), ORGANIZATIONS.ORG_CFG.cast(String.class))
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_NAME.eq(name))
                     .fetchOne(this::toEntry);
         }
     }
 
-    public UUID insert(String name, OrganizationVisibility visibility, Map<String, Object> meta) {
-        return txResult(tx -> insert(tx, name, visibility, meta));
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getConfiguration(UUID orgId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(ORGANIZATIONS.ORG_CFG.cast(String.class))
+                    .from(ORGANIZATIONS)
+                    .where(ORGANIZATIONS.ORG_ID.eq(orgId))
+                    .fetchOne(e -> deserialize(e.value1()));
+        }
     }
 
-    public UUID insert(DSLContext tx, String name, OrganizationVisibility visibility, Map<String, Object> meta) {
+    public UUID insert(String name, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
+        return txResult(tx -> insert(tx, name, visibility, meta, cfg));
+    }
+
+    public UUID insert(DSLContext tx, String name, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
         if (visibility == null) {
             visibility = OrganizationVisibility.PUBLIC;
         }
 
         return tx.insertInto(ORGANIZATIONS)
-                .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META)
-                .values(value(name), value(visibility.toString()), field("?::jsonb", serialize(meta)))
+                .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META, ORGANIZATIONS.ORG_CFG)
+                .values(value(name), value(visibility.toString()),
+                        field("?::jsonb", serialize(meta)), field("?::jsonb", serialize(cfg)))
                 .returning()
                 .fetchOne()
                 .getOrgId();
     }
 
-    public void update(UUID id, String name, OrganizationVisibility visibility, Map<String, Object> meta) {
-        tx(tx -> update(tx, id, name, visibility, meta));
+    public void update(UUID id, String name, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
+        tx(tx -> update(tx, id, name, visibility, meta, cfg));
     }
 
-    public void update(DSLContext tx, UUID id, String name, OrganizationVisibility visibility, Map<String, Object> meta) {
+    public void update(DSLContext tx, UUID id, String name, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
         UpdateQuery<OrganizationsRecord> q = tx.updateQuery(ORGANIZATIONS);
 
         if (name != null) {
@@ -117,16 +130,21 @@ public class OrganizationDao extends AbstractDao {
             q.addValue(ORGANIZATIONS.META, field("?::jsonb", String.class, serialize(meta)));
         }
 
+        if (cfg != null) {
+            q.addValue(ORGANIZATIONS.ORG_CFG, field("?::jsonb", String.class, serialize(cfg)));
+        }
+
         q.addConditions(ORGANIZATIONS.ORG_ID.eq(id));
         q.execute();
     }
 
     public List<OrganizationEntry> list(UUID userId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record4<UUID, String, String, String>> q = tx.select(ORGANIZATIONS.ORG_ID,
+            SelectJoinStep<Record5<UUID, String, String, String, String>> q = tx.select(ORGANIZATIONS.ORG_ID,
                     ORGANIZATIONS.ORG_NAME,
                     ORGANIZATIONS.VISIBILITY,
-                    ORGANIZATIONS.META.cast(String.class))
+                    ORGANIZATIONS.META.cast(String.class),
+                    ORGANIZATIONS.ORG_CFG.cast(String.class))
                     .from(ORGANIZATIONS);
 
             if (userId != null) {
@@ -180,8 +198,9 @@ public class OrganizationDao extends AbstractDao {
         }
     }
 
-    private OrganizationEntry toEntry(Record4<UUID, String, String, String> r) {
+    private OrganizationEntry toEntry(Record5<UUID, String, String, String, String> r) {
         Map<String, Object> meta = deserialize(r.value4());
-        return new OrganizationEntry(r.value1(), r.value2(), OrganizationVisibility.valueOf(r.value3()), meta);
+        Map<String, Object> cfg = deserialize(r.value5());
+        return new OrganizationEntry(r.value1(), r.value2(), OrganizationVisibility.valueOf(r.value3()), meta, cfg);
     }
 }

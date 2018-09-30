@@ -213,7 +213,7 @@ public class CustomFormService implements Resource {
                                     FormSessionResponse nextSession = startSession(processInstanceId, nextFormId);
                                     return redirectTo(nextSession.getUri());
                                 }
-                            } else if (s == ProcessStatus.FAILED || s == ProcessStatus.CANCELLED) {
+                            } else if (s == ProcessStatus.FAILED || s == ProcessStatus.CANCELLED || s == ProcessStatus.TIMED_OUT) {
                                 writeData(formDir, processFailed(form, m));
                                 break;
                             } else if (s == ProcessStatus.FINISHED) {

@@ -356,10 +356,11 @@
                                             </bind>
                                         </volumes>
                                         <env>
+                                            <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
+                                            <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
+                                            <QUEUE_POLL_INTERVAL>500</QUEUE_POLL_INTERVAL>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
                                             <WORKERS_COUNT>3</WORKERS_COUNT>
-                                            <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
-                                            <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
                                         </env>
                                     </run>
                                 </image>

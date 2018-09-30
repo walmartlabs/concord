@@ -32,7 +32,8 @@ const status: ProcessStatus[] = [
     ProcessStatus.SUSPENDED,
     ProcessStatus.RESUMING,
     ProcessStatus.FINISHED,
-    ProcessStatus.FAILED
+    ProcessStatus.FAILED,
+    ProcessStatus.TIMED_OUT
 ];
 
 export type IconSizeProp = 'mini' | 'tiny' | 'small' | 'large' | 'big' | 'huge' | 'massive';

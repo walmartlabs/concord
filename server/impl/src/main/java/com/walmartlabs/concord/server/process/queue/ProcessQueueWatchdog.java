@@ -24,8 +24,11 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.agent.AgentCommandsDao;
+import com.walmartlabs.concord.server.agent.Commands;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
+import com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.state.ProcessMetadataManager;
@@ -46,6 +49,7 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory.PROCESS_STATUS_HISTORY;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -63,7 +67,12 @@ public class ProcessQueueWatchdog implements BackgroundTask {
             new PollEntry(ProcessStatus.CANCELLED,
                     ProcessMetadataManager.ON_CANCEL_MARKER_PATH,
                     InternalConstants.Flows.ON_CANCEL_FLOW,
-                    ProcessKind.CANCEL_HANDLER, 3)
+                    ProcessKind.CANCEL_HANDLER, 3),
+
+            new PollEntry(ProcessStatus.TIMED_OUT,
+                    ProcessMetadataManager.ON_TIMEOUT_MARKER_PATH,
+                    InternalConstants.Flows.ON_TIMEOUT_FLOW,
+                    ProcessKind.TIMEOUT_HANDLER, 3)
     };
 
     private static final long HANDLERS_POLL_DELAY = 2000;
@@ -75,13 +84,17 @@ public class ProcessQueueWatchdog implements BackgroundTask {
     private static final long FAILED_TO_START_POLL_DELAY = 30000;
     private static final long FAILED_TO_START_ERROR_DELAY = 30000;
 
+    private static final long TIMED_OUT_POLL_DELAY = 30000;
+    private static final long TIMED_OUT_ERROR_DELAY = 30000;
+
     private static final ProcessKind[] HANDLED_PROCESS_KINDS = {
             ProcessKind.DEFAULT
     };
 
     private static final ProcessKind[] SPECIAL_HANDLERS = {
             ProcessKind.FAILURE_HANDLER,
-            ProcessKind.CANCEL_HANDLER
+            ProcessKind.CANCEL_HANDLER,
+            ProcessKind.TIMEOUT_HANDLER
     };
 
     private static final ProcessStatus[] ACTIVE_PROCESS_STATUSES = {
@@ -103,6 +116,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
 
     private final ProcessWatchdogConfiguration cfg;
     private final ProcessQueueDao queueDao;
+    private final AgentCommandsDao agentCommandsDao;
     private final LogManager logManager;
     private final WatchdogDao watchdogDao;
     private final UserDao userDao;
@@ -112,10 +126,12 @@ public class ProcessQueueWatchdog implements BackgroundTask {
     private Thread processHandlersWorker;
     private Thread processStalledWorker;
     private Thread processStartFailuresWorker;
+    private Thread processTimedOutWorker;
 
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
                                 ProcessQueueDao queueDao,
+                                AgentCommandsDao agentCommandsDao,
                                 LogManager logManager,
                                 WatchdogDao watchdogDao,
                                 UserDao userDao,
@@ -124,6 +140,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         this.cfg = cfg;
 
         this.queueDao = queueDao;
+        this.agentCommandsDao = agentCommandsDao;
         this.logManager = logManager;
         this.watchdogDao = watchdogDao;
         this.userDao = userDao;
@@ -148,6 +165,12 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                 "process-start-failures-worker");
         this.processStartFailuresWorker.start();
 
+
+        this.processTimedOutWorker = new Thread(new Worker(TIMED_OUT_POLL_DELAY, TIMED_OUT_ERROR_DELAY,
+                new ProcessTimedOutWorker()),
+                "process-timed-out-worker");
+        this.processTimedOutWorker.start();
+
         log.info("init -> watchdog started");
     }
 
@@ -163,6 +186,10 @@ public class ProcessQueueWatchdog implements BackgroundTask {
 
         if (this.processStartFailuresWorker != null) {
             this.processStartFailuresWorker.interrupt();
+        }
+
+        if (this.processTimedOutWorker != null) {
+            this.processTimedOutWorker.interrupt();
         }
     }
 
@@ -266,6 +293,24 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         }
     }
 
+    private final class ProcessTimedOutWorker implements Runnable {
+        @Override
+        public void run() {
+            watchdogDao.transaction(tx -> {
+                List<TimedOutEntry> items = watchdogDao.pollExpired(tx, 1);
+                for (TimedOutEntry i : items) {
+                    queueDao.updateAgentId(tx, i.instanceId, null, ProcessStatus.TIMED_OUT);
+
+                    // TODO should AgentManager be used instead?
+                    agentCommandsDao.insert(UUID.randomUUID(), i.agentId, Commands.cancel(i.instanceId.toString()));
+
+                    logManager.warn(i.instanceId, "Process timed out ({}s limit)", i.timeout);
+                    log.info("processTimedOut -> marked as timed out: {}", i.instanceId);
+                }
+            });
+        }
+    }
+
     private static final class PollEntry {
 
         private final ProcessStatus status;
@@ -326,6 +371,30 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .fetch(q.INSTANCE_ID);
         }
 
+        public List<TimedOutEntry> pollExpired(DSLContext tx, int maxEntries) {
+            ProcessQueue q = PROCESS_QUEUE.as("q");
+            ProcessStatusHistory s = PROCESS_STATUS_HISTORY.as("psh");
+
+            Field<Object> runningAt = tx.select(max(s.CHANGE_DATE))
+                    .from(s)
+                    .where(s.INSTANCE_ID.eq(s.INSTANCE_ID)
+                            .and(s.STATUS.eq(ProcessStatus.RUNNING.toString())))
+                    .asField();
+
+            @SuppressWarnings("unchecked")
+            Field<? extends Number> i = (Field<? extends Number>) interval("1 second");
+
+            return tx.select(q.INSTANCE_ID, q.LAST_AGENT_ID, q.TIMEOUT)
+                    .from(q)
+                    .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
+                            .and(runningAt.plus(q.TIMEOUT.mul(i)).lessOrEqual(currentTimestamp())))
+                    .orderBy(q.CREATED_AT)
+                    .limit(maxEntries)
+                    .forUpdate()
+                    .skipLocked()
+                    .fetch(WatchdogDao::toExpiredEntry);
+        }
+
         private Field<Number> count(DSLContext tx, Field<UUID> parentInstanceId, ProcessKind kind) {
             return tx.selectCount()
                     .from(PROCESS_QUEUE)
@@ -358,6 +427,10 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     r.get(PROCESS_QUEUE.PROJECT_ID),
                     r.get(PROCESS_QUEUE.INITIATOR_ID));
         }
+
+        private static TimedOutEntry toExpiredEntry(Record3<UUID, String, Long> r) {
+            return new TimedOutEntry(r.value1(), r.value2(), r.value3());
+        }
     }
 
     private static final class ProcessEntry implements Serializable {
@@ -370,6 +443,19 @@ public class ProcessQueueWatchdog implements BackgroundTask {
             this.instanceId = instanceId;
             this.projectId = projectId;
             this.initiatorId = initiatorId;
+        }
+    }
+
+    private static class TimedOutEntry {
+
+        private final UUID instanceId;
+        private final String agentId;
+        private final Long timeout;
+
+        private TimedOutEntry(UUID instanceId, String agentId, Long timeout) {
+            this.instanceId = instanceId;
+            this.agentId = agentId;
+            this.timeout = timeout;
         }
     }
 }

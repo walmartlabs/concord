@@ -42,27 +42,31 @@ public class OrganizationEntry implements Serializable {
 
     private final Map<String, Object> meta;
 
+    private final Map<String, Object> cfg;
+
     public OrganizationEntry(String name) {
-        this(null, name, null, null);
+        this(null, name, null, null, null);
     }
 
     public OrganizationEntry(String name, OrganizationVisibility visibility) {
-        this(null, name, visibility, null);
+        this(null, name, visibility, null, null);
     }
 
     public OrganizationEntry(String name, Map<String, Object> meta) {
-        this(null, name, null, meta);
+        this(null, name, null, meta, null);
     }
 
     @JsonCreator
     public OrganizationEntry(@JsonProperty("id") UUID id,
                              @JsonProperty("name") String name,
                              @JsonProperty("visibility") OrganizationVisibility visibility,
-                             @JsonProperty("meta") Map<String, Object> meta) {
+                             @JsonProperty("meta") Map<String, Object> meta,
+                             @JsonProperty("cfg") Map<String, Object> cfg) {
         this.id = id;
         this.name = name;
         this.visibility = visibility;
         this.meta = meta;
+        this.cfg = cfg;
     }
 
     public UUID getId() {
@@ -81,6 +85,10 @@ public class OrganizationEntry implements Serializable {
         return meta;
     }
 
+    public Map<String, Object> getCfg() {
+        return cfg;
+    }
+
     @Override
     public String toString() {
         return "OrganizationEntry{" +
@@ -88,6 +96,7 @@ public class OrganizationEntry implements Serializable {
                 ", name='" + name + '\'' +
                 ", visibility=" + visibility +
                 ", meta=" + meta +
+                ", cfg=" + cfg +
                 '}';
     }
 }

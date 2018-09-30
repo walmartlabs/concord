@@ -113,6 +113,7 @@
                         </executions>
                         <configuration>
                             <skipRun>${skip.it.tests}</skipRun>
+                            <showLogs>true</showLogs>
                             <images>
                                 <image>
                                     <name>docker.prod.walmart.com/walmartlabs/concord-keywhiz</name>

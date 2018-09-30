@@ -62,7 +62,8 @@ public class ProcessStateArchiver extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessStateArchiver.class);
 
-    private static final ProcessStatus[] ALLOWED_STATUSES = {ProcessStatus.CANCELLED, ProcessStatus.FAILED, ProcessStatus.FINISHED};
+    private static final ProcessStatus[] ALLOWED_STATUSES = {
+            ProcessStatus.CANCELLED, ProcessStatus.FAILED, ProcessStatus.FINISHED, ProcessStatus.TIMED_OUT};
     private static final String ARCHIVE_CONTENT_TYPE = "application/zip";
 
     private final ProcessStateArchiveConfiguration cfg;

@@ -133,6 +133,11 @@ public class Constants {
         public static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
 
         /**
+         * If {@code true}, then `onTimeout` flow will be ignored.
+         */
+        public static final String DISABLE_ON_TIMEOUT_KEY = "disableOnTimeout";
+
+        /**
          * Declares a list of OUT variables or expressions.
          */
         public static final String OUT_EXPRESSIONS_KEY = "out";
@@ -161,6 +166,11 @@ public class Constants {
          * Container configuration.
          */
         public static final String CONTAINER = "container";
+
+        /**
+         * Process timeout.
+         */
+        public static final String PROCESS_TIMEOUT = "processTimeout";
 
         /**
          * Whether to use the trigger's initiator as the process' initiator.
@@ -255,6 +265,11 @@ public class Constants {
          * Cancel-handling flow.RUN_AS
          */
         public static final String ON_CANCEL_FLOW = "onCancel";
+
+        /**
+         * Timeout-handling flow.
+         */
+        public static final String ON_TIMEOUT_FLOW = "onTimeout";
     }
 
     public static class Multipart {

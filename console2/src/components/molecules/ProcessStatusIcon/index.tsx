@@ -35,7 +35,8 @@ const statusToIcon: {
     RUNNING: { name: 'circle notched', color: 'blue', loading: true },
     FINISHED: { name: 'check', color: 'green' },
     FAILED: { name: 'remove', color: 'red' },
-    CANCELLED: { name: 'remove', color: 'grey' }
+    CANCELLED: { name: 'remove', color: 'grey' },
+    TIMED_OUT: { name: 'wait', color: 'red' }
 };
 
 interface ProcessStatusIconProps {

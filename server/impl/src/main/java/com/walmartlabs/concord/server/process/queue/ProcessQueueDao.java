@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.server.agent.AgentCommand;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
@@ -50,7 +51,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory.PROCESS_STATUS_HISTORY;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.VProcessQueue.V_PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
@@ -104,6 +107,8 @@ public class ProcessQueueDao extends AbstractDao {
                         currentTimestamp(),
                         field("?::jsonb", serialize(meta)))
                 .execute();
+
+        insertHistoryStatus(tx, instanceId, ProcessStatus.PREPARING);
     }
 
     public void updateAgentId(UUID instanceId, String agentId, ProcessStatus status) {
@@ -121,25 +126,27 @@ public class ProcessQueueDao extends AbstractDao {
         if (i != 1) {
             throw new DataAccessException("Invalid number of rows updated: " + i);
         }
+
+        insertHistoryStatus(tx, instanceId, status);
     }
 
     public void update(UUID instanceId, ProcessStatus status) {
-        update(instanceId, status, null, null, null, null, null, null, null, null);
+        update(instanceId, status, null, null, null, null, null, null, null, null, null);
     }
 
     public void update(UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt,
                        Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
-                       String commitId, String commitMsg) {
-        tx(tx -> update(tx, instanceId, status, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg));
+                       String commitId, String commitMsg, Long processTimeout) {
+        tx(tx -> update(tx, instanceId, status, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout));
     }
 
     public void update(DSLContext tx, UUID instanceId, ProcessStatus status) {
-        update(tx, instanceId, status, null, null, null, null, null, null, null, null);
+        update(tx, instanceId, status, null, null, null, null, null, null, null, null, null);
     }
 
     public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt,
                        Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
-                       String commitId, String commitMsg) {
+                       String commitId, String commitMsg, Long processTimeout) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
@@ -177,6 +184,10 @@ public class ProcessQueueDao extends AbstractDao {
             q.set(PROCESS_QUEUE.COMMIT_MSG, commitMsg);
         }
 
+        if (processTimeout != null) {
+            q.set(PROCESS_QUEUE.TIMEOUT, processTimeout);
+        }
+
         int i = q
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .execute();
@@ -184,6 +195,8 @@ public class ProcessQueueDao extends AbstractDao {
         if (i != 1) {
             throw new DataAccessException("Invalid number of rows updated: " + i);
         }
+
+        insertHistoryStatus(tx, instanceId, status);
     }
 
     public boolean update(UUID instanceId, ProcessStatus expected, ProcessStatus status) {
@@ -194,6 +207,8 @@ public class ProcessQueueDao extends AbstractDao {
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)
                             .and(PROCESS_QUEUE.CURRENT_STATUS.eq(expected.toString())))
                     .execute();
+
+            insertHistoryStatus(tx, instanceId, status);
 
             return i == 1;
         });
@@ -226,8 +241,34 @@ public class ProcessQueueDao extends AbstractDao {
             }
 
             int i = q.execute();
+
+            insertHistoryStatus(tx, instanceIds, status);
+
             return i == instanceIds.size();
         });
+    }
+
+    private void insertHistoryStatus(DSLContext tx, UUID instanceId, ProcessStatus status) {
+        tx.insertInto(PROCESS_STATUS_HISTORY)
+                .columns(PROCESS_STATUS_HISTORY.INSTANCE_ID,
+                        PROCESS_STATUS_HISTORY.STATUS,
+                        PROCESS_STATUS_HISTORY.CHANGE_DATE)
+                .values(value(instanceId), value(status.toString()), currentTimestamp())
+                .execute();
+    }
+
+    private void insertHistoryStatus(DSLContext tx, List<UUID> instanceIds, ProcessStatus status) {
+        BatchBindStep q = tx.batch(tx.insertInto(PROCESS_STATUS_HISTORY,
+                PROCESS_STATUS_HISTORY.INSTANCE_ID,
+                PROCESS_STATUS_HISTORY.STATUS,
+                PROCESS_STATUS_HISTORY.CHANGE_DATE)
+                .values((UUID) null, null, null));
+
+        for (UUID id : instanceIds) {
+            q.bind(value(id), value(status.toString()), currentTimestamp());
+        }
+
+        q.execute();
     }
 
     public boolean touch(UUID instanceId) {
@@ -247,6 +288,19 @@ public class ProcessQueueDao extends AbstractDao {
                     .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
                     .fetchOne(this::toEntry);
+        }
+    }
+
+    public ProcessStatus getStatus(UUID instanceId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            String status = tx.select(PROCESS_QUEUE.CURRENT_STATUS)
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .fetchOne(PROCESS_QUEUE.CURRENT_STATUS);
+            if (status == null) {
+                return null;
+            }
+            return ProcessStatus.valueOf(status);
         }
     }
 

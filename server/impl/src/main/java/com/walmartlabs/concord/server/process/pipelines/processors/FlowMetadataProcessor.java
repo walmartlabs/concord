@@ -51,6 +51,7 @@ public class FlowMetadataProcessor implements PayloadProcessor {
         UUID instanceId = payload.getInstanceId();
         metadataManager.deleteOnFailureMarker(instanceId);
         metadataManager.deleteOnCancelMarker(instanceId);
+        metadataManager.deleteOnTimeoutMarker(instanceId);
 
         ProjectDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
         if (pd == null) {
@@ -77,6 +78,16 @@ public class FlowMetadataProcessor implements PayloadProcessor {
             } else {
                 metadataManager.addOnCancelMarker(instanceId);
                 log.info("process ['{}'] -> added onCancel marker", instanceId);
+            }
+        }
+
+        if (hasFlow(pd, profiles, InternalConstants.Flows.ON_TIMEOUT_FLOW)) {
+            boolean suppressed = getBoolean(payload, InternalConstants.Request.DISABLE_ON_TIMEOUT_KEY);
+            if (suppressed) {
+                log.info("process ['{}'] -> onTimeout is suppressed, skipping...", instanceId);
+            } else {
+                metadataManager.addOnTimeoutMarker(instanceId);
+                log.info("process ['{}'] -> added onTimeout marker", instanceId);
             }
         }
 

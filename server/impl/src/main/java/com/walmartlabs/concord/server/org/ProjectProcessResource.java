@@ -213,7 +213,7 @@ public class ProjectProcessResource implements Resource {
         ProcessEntry entry = queueDao.get(processInstanceId);
 
         ProcessStatus processStatus = entry.getStatus();
-        if (processStatus == ProcessStatus.FAILED || processStatus == ProcessStatus.CANCELLED) {
+        if (processStatus == ProcessStatus.FAILED || processStatus == ProcessStatus.CANCELLED || processStatus == ProcessStatus.TIMED_OUT) {
             return processError(processInstanceId, "Process failed");
         } else if (processStatus == ProcessStatus.FINISHED) {
             return processFinished(processInstanceId);

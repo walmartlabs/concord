@@ -74,7 +74,7 @@ public class TriggerScheduleDao extends AbstractDao {
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(t.PROJECT_ID)).asField();
             Field<String> specField = field("{0}->>'spec'", String.class, t.CONDITIONS);
 
-            TriggerSchedulerEntry result = tx.select(t.TRIGGER_ID, t.PROJECT_ID, t.REPO_ID, t.ENTRY_POINT,
+            TriggerSchedulerEntry result = tx.select(t.TRIGGER_ID, t.PROJECT_ID, t.REPO_ID, t.CONDITIONS.cast(String.class),
                     orgIdField, specField, t.ARGUMENTS.cast(String.class))
                     .from(t)
                     .where(t.TRIGGER_ID.eq(id))
@@ -105,13 +105,8 @@ public class TriggerScheduleDao extends AbstractDao {
     }
 
     private static TriggerSchedulerEntry toEntry(Date fireAt, Record7<UUID, UUID, UUID, String, UUID, String, String> r) {
-        return new TriggerSchedulerEntry(fireAt, r.value5(), r.value1(), r.value2(), r.value3(), r.value4(),
-                r.value6(), deserialize(r.value7()));
-    }
-
-    private static String getCronSpec(String ab) {
-        Map<String, Object> conditions = deserialize(ab);
-        return (String) conditions.get("spec");
+        return new TriggerSchedulerEntry(fireAt, r.value5(), r.value1(), r.value2(), r.value3(),
+                r.value6(), deserialize(r.value7()), deserialize(r.value4()));
     }
 
     @SuppressWarnings("unchecked")

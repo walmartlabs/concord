@@ -111,10 +111,7 @@ export const formatDuration = (ms?: number): string | undefined => {
     return s;
 };
 
-export const timestampDiffMs = (
-    t1?: Date | string,
-    t2?: Date | string
-): number | undefined => {
+export const timestampDiffMs = (t1?: Date | string, t2?: Date | string): number | undefined => {
     if (!t1 || !t2) {
         return;
     }

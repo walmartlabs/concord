@@ -56,7 +56,8 @@ public class SessionKeyRealm extends AuthorizingRealm {
     private static final Set<ProcessStatus> FINISHED_STATUSES = ImmutableSet.of(
             ProcessStatus.FINISHED,
             ProcessStatus.FAILED,
-            ProcessStatus.CANCELLED);
+            ProcessStatus.CANCELLED,
+            ProcessStatus.TIMED_OUT);
 
     @Inject
     public SessionKeyRealm(ProcessSecurityContext processSecurityContext,

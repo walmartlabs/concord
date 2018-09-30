@@ -4,6 +4,48 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <changeSet id="89000" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="TIMEOUT" type="bigint" remarks="Timeout (in seconds)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="89100" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_STATUS_HISTORY">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STATUS" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CHANGE_DATE" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_STATUS_HISTORY"
+                                 baseColumnNames="INSTANCE_ID"
+                                 constraintName="FK_PSH_INSTANCE_ID"
+                                 referencedTableName="PROCESS_QUEUE"
+                                 referencedColumnNames="INSTANCE_ID"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="PROCESS_STATUS_HISTORY" indexName="IDX_PROC_STAT_HIST_INST_ID">
+            <column name="INSTANCE_ID"/>
+            <column name="STATUS"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="89200" author="ybrigo@gmail.com">
+        <addColumn tableName="ORGANIZATIONS">
+            <column name="org_cfg" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
     <changeSet id="89500" author="muhammad.amir@walmart.com">
         <addColumn tableName="TRIGGERS">
             <column name="TRIGGER_CFG" type="jsonb">

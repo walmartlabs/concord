@@ -33,8 +33,10 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.xml.bind.DatatypeConverter;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Set;
@@ -68,8 +70,6 @@ public class EnqueueingProcessor implements PayloadProcessor {
             throw new ProcessException(instanceId, "Invalid process status: " + s);
         }
 
-        Instant startAt = getStartAt(payload);
-
         Map<String, Object> requirements = payload.getHeader(Payload.REQUIREMENTS);
 
         UUID repoId = null;
@@ -95,7 +95,10 @@ public class EnqueueingProcessor implements PayloadProcessor {
             }
         }
 
-        queueDao.update(instanceId, ProcessStatus.ENQUEUED, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg);
+        Instant startAt = getStartAt(payload);
+        Long processTimeout = getProcessTimeout(payload);
+
+        queueDao.update(instanceId, ProcessStatus.ENQUEUED, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout);
         return chain.process(payload);
     }
 
@@ -127,5 +130,29 @@ public class EnqueueingProcessor implements PayloadProcessor {
         }
 
         throw new ProcessException(p.getInstanceId(), "Invalid 'startAt' value, expected an ISO-8601 value, got: " + v);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Long getProcessTimeout(Payload p) {
+        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP);
+        if (cfg == null) {
+            return null;
+        }
+
+        Object processTimeout = cfg.get(Constants.Request.PROCESS_TIMEOUT);
+        if (processTimeout == null) {
+            return null;
+        }
+
+        if (processTimeout instanceof String) {
+            Duration duration = Duration.parse((CharSequence) processTimeout);
+            return duration.get(ChronoUnit.SECONDS);
+        }
+
+        if (processTimeout instanceof Number) {
+            return ((Number) processTimeout).longValue();
+        }
+
+        throw new IllegalArgumentException("Invalid process timeout value type: expected an ISO-8601 value, got: " + processTimeout);
     }
 }

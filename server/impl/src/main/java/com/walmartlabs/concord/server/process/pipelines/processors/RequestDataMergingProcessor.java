@@ -28,6 +28,7 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.DefaultVariablesConfiguration;
+import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -49,11 +50,13 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     public static final List<String> DEFAULT_PROFILES = Collections.singletonList("default");
 
     private final ProjectDao projectDao;
+    private final OrganizationDao orgDao;
     private final DefaultVariablesConfiguration defaultVars;
 
     @Inject
-    public RequestDataMergingProcessor(ProjectDao projectDao, DefaultVariablesConfiguration defaultVars) {
+    public RequestDataMergingProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultVariablesConfiguration defaultVars) {
         this.projectDao = projectDao;
+        this.orgDao = orgDao;
         this.defaultVars = defaultVars;
     }
 
@@ -66,6 +69,9 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         // configuration from the user's request
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
 
+        // org configuration
+        Map<String, Object> orgCfg = getOrgCfg(payload);
+
         // project configuration
         Map<String, Object> projectCfg = getProjectCfg(payload);
 
@@ -76,14 +82,14 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         Map<String, Object> attachedCfg = getAttachedCfg(payload);
 
         // determine the active profile names
-        List<String> activeProfiles = getActiveProfiles(ImmutableList.of(req, attachedCfg, workspaceCfg, projectCfg));
+        List<String> activeProfiles = getActiveProfiles(ImmutableList.of(req, attachedCfg, workspaceCfg, projectCfg, orgCfg));
         payload = payload.putHeader(Payload.ACTIVE_PROFILES, activeProfiles);
 
         // merged profile data
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defVars, projectCfg, profileCfg, workspaceCfg, attachedCfg, req);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(defVars, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, req);
         m.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
@@ -98,6 +104,16 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         }
 
         Map<String, Object> m = projectDao.getConfiguration(projectId);
+        return m != null ? m : Collections.emptyMap();
+    }
+
+    private Map<String, Object> getOrgCfg(Payload payload) {
+        UUID orgId = payload.getHeader(Payload.ORGANIZATION_ID);
+        if (orgId == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Object> m = orgDao.getConfiguration(orgId);
         return m != null ? m : Collections.emptyMap();
     }
 

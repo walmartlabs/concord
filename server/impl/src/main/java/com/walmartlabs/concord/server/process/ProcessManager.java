@@ -76,7 +76,8 @@ public class ProcessManager {
     private static final List<ProcessStatus> TERMINATED_PROCESS_STATUSES = Arrays.asList(
             ProcessStatus.CANCELLED,
             ProcessStatus.FAILED,
-            ProcessStatus.FINISHED);
+            ProcessStatus.FINISHED,
+            ProcessStatus.TIMED_OUT);
     private static final List<ProcessStatus> AGENT_PROCESS_STATUSES = Arrays.asList(
             ProcessStatus.STARTING,
             ProcessStatus.RUNNING,
@@ -172,6 +173,11 @@ public class ProcessManager {
             status = ProcessStatus.SUSPENDED;
         }
 
+        if (status == ProcessStatus.CANCELLED && isFinished(instanceId)) {
+            log.info("updateStatus [{}, '{}', {}] -> ignored, process finished", instanceId, agentId, status);
+            return;
+        }
+
         queueDao.updateAgentId(instanceId, agentId, status);
         logManager.info(instanceId, "Process status: {}", status);
 
@@ -184,6 +190,14 @@ public class ProcessManager {
                 InternalConstants.Files.SUSPEND_MARKER_FILE_NAME);
 
         return stateManager.exists(instanceId, resource);
+    }
+
+    private boolean isFinished(UUID instanceId) {
+        ProcessStatus status = queueDao.getStatus(instanceId);
+        if (status == null) {
+            return true;
+        }
+        return TERMINATED_PROCESS_STATUSES.contains(status);
     }
 
     private ProcessResult start(Chain pipeline, Payload payload, boolean sync) {

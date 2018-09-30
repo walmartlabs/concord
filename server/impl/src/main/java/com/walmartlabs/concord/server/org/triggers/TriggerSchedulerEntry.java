@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
@@ -28,31 +30,24 @@ import java.util.UUID;
 public class TriggerSchedulerEntry implements Serializable {
 
     private final Date fireAt;
-
     private final UUID triggerId;
-
     private final UUID orgId;
-
     private final UUID projectId;
-
     private final UUID repoId;
-
-    private final String entryPoint;
-
     private final String cronSpec;
-
     private final Map<String, Object> arguments;
+    private final Map<String, Object> cfg;
 
-    public TriggerSchedulerEntry(Date fireAt, UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String entryPoint,
-                                 String cronSpec, Map<String, Object> arguments) {
+    public TriggerSchedulerEntry(Date fireAt, UUID triggerId, UUID orgId, UUID projectId, UUID repoId,
+                                 String cronSpec, Map<String, Object> arguments, Map<String, Object> cfg) {
         this.fireAt = fireAt;
         this.triggerId = triggerId;
         this.orgId = orgId;
         this.projectId = projectId;
         this.repoId = repoId;
-        this.entryPoint = entryPoint;
         this.cronSpec = cronSpec;
         this.arguments = arguments;
+        this.cfg = cfg;
     }
 
     public Date getFireAt() {
@@ -75,8 +70,8 @@ public class TriggerSchedulerEntry implements Serializable {
         return repoId;
     }
 
-    public String getEntryPoint() {
-        return entryPoint;
+    public Map<String, Object> getCfg() {
+        return cfg;
     }
 
     public String getCronSpec() {
@@ -87,6 +82,14 @@ public class TriggerSchedulerEntry implements Serializable {
         return arguments;
     }
 
+    public String getEntryPoint() {
+        if (cfg == null) {
+            return null;
+        }
+
+        return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
+    }
+
     @Override
     public String toString() {
         return "TriggerSchedulerEntry{" +
@@ -95,9 +98,9 @@ public class TriggerSchedulerEntry implements Serializable {
                 ", orgId=" + orgId +
                 ", projectId=" + projectId +
                 ", repoId=" + repoId +
-                ", entryPoint='" + entryPoint + '\'' +
                 ", cronSpec='" + cronSpec + '\'' +
                 ", arguments=" + arguments +
+                ", cfg=" + cfg +
                 '}';
     }
 }

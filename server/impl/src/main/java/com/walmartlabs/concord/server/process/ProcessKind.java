@@ -39,5 +39,11 @@ public enum  ProcessKind {
      * Process running a cancel-handling flow of a parent process.
      * Created when a user cancels a process.
      */
-    CANCEL_HANDLER
+    CANCEL_HANDLER,
+
+    /**
+     * Process running a timeout-handling flow of a parent process.
+     * Created when process terminated by timeout.
+     */
+    TIMEOUT_HANDLER
 }

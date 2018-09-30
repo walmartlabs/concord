@@ -35,7 +35,8 @@ export enum ProcessStatus {
     RESUMING = 'RESUMING',
     FINISHED = 'FINISHED',
     FAILED = 'FAILED',
-    CANCELLED = 'CANCELLED'
+    CANCELLED = 'CANCELLED',
+    TIMED_OUT = 'TIMED_OUT'
 }
 
 export const getStatusSemanticColor = (s: ProcessStatus): SemanticCOLORS => {
@@ -56,6 +57,8 @@ export const getStatusSemanticColor = (s: ProcessStatus): SemanticCOLORS => {
             return 'green';
         case ProcessStatus.FAILED:
             return 'red';
+        case ProcessStatus.TIMED_OUT:
+            return 'red';
         case ProcessStatus.CANCELLED:
         default:
             return 'grey';
@@ -63,7 +66,10 @@ export const getStatusSemanticColor = (s: ProcessStatus): SemanticCOLORS => {
 };
 
 export const isFinal = (s: ProcessStatus) =>
-    s === ProcessStatus.FINISHED || s === ProcessStatus.FAILED || s === ProcessStatus.CANCELLED;
+    s === ProcessStatus.FINISHED ||
+    s === ProcessStatus.FAILED ||
+    s === ProcessStatus.CANCELLED ||
+    s === ProcessStatus.TIMED_OUT;
 
 export const hasState = (s: ProcessStatus) => s !== ProcessStatus.PREPARING;
 

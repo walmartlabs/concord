@@ -433,7 +433,8 @@ public class ProcessResource implements Resource {
         ProcessEntry r;
         while (true) {
             r = get(instanceId);
-            if (r.getStatus() == ProcessStatus.FINISHED || r.getStatus() == ProcessStatus.FAILED || r.getStatus() == ProcessStatus.CANCELLED) {
+            if (r.getStatus() == ProcessStatus.FINISHED || r.getStatus() == ProcessStatus.FAILED
+                    || r.getStatus() == ProcessStatus.CANCELLED || r.getStatus() == ProcessStatus.TIMED_OUT) {
                 break;
             }
 

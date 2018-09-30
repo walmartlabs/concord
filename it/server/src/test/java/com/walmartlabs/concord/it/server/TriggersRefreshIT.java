@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.jgit.api.Git;
 import org.junit.Test;
 
@@ -131,7 +132,7 @@ public class TriggersRefreshIT extends AbstractServerIT {
         // ---
 
         List<TriggerEntry> l = waitForTriggers(orgName, projectName, repoName, 1);
-        assertEquals("onTrigger", l.get(0).getEntryPoint());
+        assertEquals("onTrigger", getEntryPoint(l.get(0)));
 
         // ---
 
@@ -151,8 +152,8 @@ public class TriggersRefreshIT extends AbstractServerIT {
         // ---
 
         l = waitForTriggers(orgName, projectName, repoName, 2);
-        assertEquals("onTrigger", l.get(0).getEntryPoint());
-        assertEquals("onTrigger2", l.get(1).getEntryPoint());
+        assertEquals("onTrigger", getEntryPoint(l.get(0)));
+        assertEquals("onTrigger2", getEntryPoint(l.get(1)));
     }
 
     private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {
@@ -165,5 +166,13 @@ public class TriggersRefreshIT extends AbstractServerIT {
 
             Thread.sleep(1000);
         }
+    }
+
+    private static String getEntryPoint(TriggerEntry e) {
+        Map<String, Object> cfg = e.getCfg();
+        if (cfg == null) {
+            return null;
+        }
+        return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
     }
 }

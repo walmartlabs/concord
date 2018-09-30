@@ -132,7 +132,7 @@ public class UserDao extends AbstractDao {
         List<OrganizationEntry> orgs = tx.selectDistinct(TEAMS.ORG_ID, orgNameField)
                 .from(TEAMS)
                 .where(TEAMS.TEAM_ID.in(teamIds))
-                .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null));
+                .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null,null));
 
         List<RoleEntry> roles = tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME, ROLES.GLOBAL_READER, ROLES.GLOBAL_WRITER)
                 .from(ROLES)

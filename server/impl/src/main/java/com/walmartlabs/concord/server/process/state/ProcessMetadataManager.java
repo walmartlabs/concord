@@ -29,6 +29,7 @@ public class ProcessMetadataManager {
 
     public static final String ON_FAILURE_MARKER_PATH = ".concord/meta/has_on_failure";
     public static final String ON_CANCEL_MARKER_PATH = ".concord/meta/has_on_cancel";
+    public static final String ON_TIMEOUT_MARKER_PATH = ".concord/meta/has_on_timeout";
 
     private final ProcessStateManager stateManager;
 
@@ -51,5 +52,13 @@ public class ProcessMetadataManager {
 
     public void deleteOnCancelMarker(UUID instanceId) {
         stateManager.deleteFile(instanceId, ON_CANCEL_MARKER_PATH);
+    }
+
+    public void addOnTimeoutMarker(UUID instanceId) {
+        stateManager.insert(instanceId, ON_TIMEOUT_MARKER_PATH, "true".getBytes());
+    }
+
+    public void deleteOnTimeoutMarker(UUID instanceId) {
+        stateManager.deleteFile(instanceId, ON_TIMEOUT_MARKER_PATH);
     }
 }
