@@ -18,14 +18,30 @@
  * =====
  */
 
-import 'raf/polyfill';
-
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import 'lato-font/css/lato-font.min.css';
-import 'semantic-ui-css/semantic.css';
-import './index.css';
 
 import App from './App';
+import registerServiceWorker from './registerServiceWorker';
 
-ReactDOM.render(<App />, document.getElementById('root') as HTMLElement);
+import 'semantic-ui-css/semantic.min.css';
+import './index.css';
+
+const rootEl = document.getElementById('root') as HTMLElement;
+
+ReactDOM.render(
+    <App />,
+    rootEl
+);
+
+if (module.hot) {
+    module.hot.accept('./App', () => {
+        const NextApp = require('./App').default;
+        ReactDOM.render(
+            <NextApp />,
+            rootEl
+        );
+    });
+}
+
+registerServiceWorker();
