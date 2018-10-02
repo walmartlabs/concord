@@ -20,6 +20,7 @@ package com.walmartlabs.concord.project.model;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.model.SourceMap;
 
@@ -57,15 +58,26 @@ public class Trigger implements Serializable {
         return cfg;
     }
 
+    @JsonIgnore
     public String getEntryPoint() {
+        if (cfg == null) {
+            return null;
+        }
+
         return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
     }
 
-    public Boolean getUseInitiator() {
-        if (cfg.get(Constants.Request.USE_INITIATOR) == null) {
+    @JsonIgnore
+    public boolean isUseInitiator() {
+        if (cfg == null) {
             return false;
         }
-        return (Boolean) cfg.get(Constants.Request.USE_INITIATOR);
+        Boolean v = (Boolean) cfg.get(Constants.Request.USE_INITIATOR);
+        if (v == null) {
+            return false;
+        }
+
+        return v;
     }
 
     public List<String> getActiveProfiles() {

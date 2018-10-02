@@ -119,12 +119,11 @@ public class TriggerEntry implements Serializable {
         return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
     }
 
-    @JsonInclude
+    @JsonIgnore
     public boolean isUseInitiator() {
         if (cfg == null) {
             return false;
         }
-
         Boolean v = (Boolean) cfg.get(Constants.Request.USE_INITIATOR);
         if (v == null) {
             return false;
