@@ -11,7 +11,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>0.89.2</version>
+    <version>0.89.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -738,7 +738,7 @@
 
     <scm>
         <developerConnection>scm:git:https://gecgithub01.walmart.com/devtools/concord.git</developerConnection>
-        <tag>0.89.2</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <profiles>
