@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.triggers;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Record7;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -74,11 +73,25 @@ public class TriggerScheduleDao extends AbstractDao {
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(t.PROJECT_ID)).asField();
             Field<String> specField = field("{0}->>'spec'", String.class, t.CONDITIONS);
 
-            TriggerSchedulerEntry result = tx.select(t.TRIGGER_ID, t.PROJECT_ID, t.REPO_ID, t.CONDITIONS.cast(String.class),
-                    orgIdField, specField, t.ARGUMENTS.cast(String.class))
+            TriggerSchedulerEntry result = tx.select(
+                    t.TRIGGER_ID,
+                    orgIdField,
+                    t.PROJECT_ID,
+                    t.REPO_ID,
+                    specField,
+                    t.ARGUMENTS.cast(String.class),
+                    t.TRIGGER_CFG.cast(String.class))
                     .from(t)
                     .where(t.TRIGGER_ID.eq(id))
-                    .fetchOne(r -> toEntry(fireAt, r));
+                    .fetchOne(r -> new TriggerSchedulerEntry(
+                            fireAt,
+                            r.value1(),
+                            r.value2(),
+                            r.value3(),
+                            r.value4(),
+                            r.value5(),
+                            deserialize(r.value6()),
+                            deserialize(r.value7())));
 
             if (result == null) {
                 return null;
@@ -102,11 +115,6 @@ public class TriggerScheduleDao extends AbstractDao {
                 .set(TRIGGER_SCHEDULE.FIRE_AT, Timestamp.from(fireAt))
                 .where(TRIGGER_SCHEDULE.TRIGGER_ID.eq(triggerId))
                 .execute();
-    }
-
-    private static TriggerSchedulerEntry toEntry(Date fireAt, Record7<UUID, UUID, UUID, String, UUID, String, String> r) {
-        return new TriggerSchedulerEntry(fireAt, r.value5(), r.value1(), r.value2(), r.value3(),
-                r.value6(), deserialize(r.value7()), deserialize(r.value4()));
     }
 
     @SuppressWarnings("unchecked")

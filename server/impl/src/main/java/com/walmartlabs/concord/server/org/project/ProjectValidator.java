@@ -26,6 +26,7 @@ import com.cronutils.parser.CronParser;
 import com.google.common.base.Strings;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceMap;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -63,17 +64,18 @@ public class ProjectValidator {
 
         t.getParams().entrySet().stream()
                 .filter(v -> v.getValue() instanceof String)
+                .filter(v -> !"spec".equals(v.getKey()))
                 .forEach(v -> validateRegex(t, errors, v));
     }
 
     private static void validateEntryPoint(Trigger t, List<String> errors, Map<String, ProcessDefinition> flows) {
         if (Strings.isNullOrEmpty(t.getEntryPoint())) {
-            errors.add(makeErrorMessage(t, "entryPoint", "is missing"));
+            errors.add(makeErrorMessage(t, Constants.Request.ENTRY_POINT_KEY, "is missing"));
             return;
         }
 
         if (Objects.isNull(flows) || !flows.containsKey(t.getEntryPoint())) {
-            errors.add(makeErrorMessage(t, "entryPoint", "does not point to valid flow"));
+            errors.add(makeErrorMessage(t, Constants.Request.ENTRY_POINT_KEY, "does not point to valid flow"));
         }
     }
 

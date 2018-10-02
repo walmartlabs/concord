@@ -1,5 +1,16 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed variabled of the `spec` field in `cron`
+triggers; 
+- concord-server: fixed an issue causing `cron` triggers to use the
+default flow.
+
+
+
 ## [0.89.1] - 2018-09-30
 
 ### Changed
