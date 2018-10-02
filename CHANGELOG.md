@@ -1,15 +1,15 @@
 # Change log
 
-## [Unreleased]
+## [0.89.3] - 2018-10-02
 
 ### Changed
 
-- concord-console: fix an issue preventing the process start redirect
-from working in Firefox.
+- concord-console: fixed an issue preventing the process start
+redirect from working.
 
 
 
-## [0.88.2] - 2018-10-01
+## [0.89.2] - 2018-10-01
 
 ### Changed
 
