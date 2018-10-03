@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.cfg.DefaultVariablesConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.PolicyReader;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 
@@ -52,17 +53,24 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
     private final DefaultVariablesConfiguration defaultVars;
+    private final PolicyReader policyReader;
 
     @Inject
-    public RequestDataMergingProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultVariablesConfiguration defaultVars) {
+    public RequestDataMergingProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultVariablesConfiguration defaultVars, PolicyReader policyReader) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
         this.defaultVars = defaultVars;
+        this.policyReader = policyReader;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        Map<String, Object> policy = policyReader.readPolicy(payload);
+
+        // configuration from the policy
+        Map<String, Object> policyCfg = getPolicyCfg(payload, policy);
+
         // system-level default variables
         Map<String, Object> defVars = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, new HashMap<>(defaultVars.getVars()));
 
@@ -89,7 +97,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defVars, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, req);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(defVars, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, req, policyCfg);
         m.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
@@ -118,7 +126,21 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getWorkspaceCfg(Payload payload) {
+    private Map<String, Object> getPolicyCfg(Payload payload, Map<String, Object> policy) {
+        Object v = policy.get(InternalConstants.Policy.PROCESS_CFG);
+        if (v == null) {
+            return Collections.emptyMap();
+        }
+
+        if (!(v instanceof Map)) {
+            throw new ProcessException(payload.getInstanceId(), "Invalid policy value. Expected a JSON object '" + InternalConstants.Policy.PROCESS_CFG + "', got: " + v);
+        }
+
+        return (Map<String, Object>) v;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path src = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(src)) {
@@ -133,7 +155,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         }
     }
 
-    private Map<String, Object> getProfileCfg(Payload payload, List<String> activeProfiles) {
+    private static Map<String, Object> getProfileCfg(Payload payload, List<String> activeProfiles) {
         if (activeProfiles == null) {
             activeProfiles = Collections.emptyList();
         }
@@ -148,7 +170,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getAttachedCfg(Payload payload) {
+    private static Map<String, Object> getAttachedCfg(Payload payload) {
         Path p = payload.getAttachment(REQUEST_ATTACHMENT_KEY);
         if (p == null) {
             return Collections.emptyMap();
@@ -163,7 +185,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private List<String> getActiveProfiles(List<Map<String, Object>> mm) {
+    private static List<String> getActiveProfiles(List<Map<String, Object>> mm) {
         for (Map<String, Object> m : mm) {
             Object o = m.get(InternalConstants.Request.ACTIVE_PROFILES_KEY);
             if (o == null) {

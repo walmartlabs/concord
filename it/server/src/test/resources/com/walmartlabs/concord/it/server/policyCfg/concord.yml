@@ -1,0 +1,9 @@
+flows:
+  default:
+  - log: "${x.msg}, ${x.name}"
+
+configuration:
+  arguments:
+    x:
+      msg: "Hello"
+      name: "Stranger"

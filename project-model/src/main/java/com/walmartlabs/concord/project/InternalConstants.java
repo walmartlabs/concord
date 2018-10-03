@@ -152,4 +152,9 @@ public final class InternalConstants extends Constants {
 
         public static final String SECRET_TYPE = "X-Concord-SecretType";
     }
+
+    public static final class Policy {
+
+        public static final String PROCESS_CFG = "processCfg";
+    }
 }

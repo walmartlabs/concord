@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.policyengine.*;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.PolicyReader;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
@@ -43,25 +44,22 @@ import java.util.UUID;
 public class PolicyProcessor implements PayloadProcessor {
 
     private final LogManager logManager;
+    private final PolicyReader policyReader;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public PolicyProcessor(LogManager logManager) {
+    public PolicyProcessor(LogManager logManager, PolicyReader policyReader) {
         this.logManager = logManager;
+        this.policyReader = policyReader;
         this.objectMapper = new ObjectMapper();
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
-
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path policyFile = workDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.POLICY_FILE_NAME);
-        if (!Files.exists(policyFile)) {
-            return chain.process(payload);
-        }
 
-        Map<String, Object> policy = readPolicy(instanceId, policyFile);
+        Map<String, Object> policy = policyReader.readPolicy(instanceId, workDir);
         logManager.info(instanceId, "Applying policies...");
 
         try {
@@ -139,16 +137,6 @@ public class PolicyProcessor implements PayloadProcessor {
 
         if (!result.getDeny().isEmpty()) {
             throw new ProcessException(instanceId, "Found forbidden files");
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> readPolicy(UUID instanceId, Path policyFile) {
-        try {
-            return objectMapper.readValue(policyFile.toFile(), Map.class);
-        } catch (IOException e) {
-            logManager.error(instanceId, "Error while reading policy: {}", e);
-            throw new ProcessException(instanceId, "Reading process policy error", e);
         }
     }
 

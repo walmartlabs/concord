@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: abillity to overwrite process configuration using
+policies.
+
+
+
 ## [0.89.3] - 2018-10-02
 
 ### Changed
