@@ -377,7 +377,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
 
             Field<Object> runningAt = tx.select(max(s.CHANGE_DATE))
                     .from(s)
-                    .where(s.INSTANCE_ID.eq(s.INSTANCE_ID)
+                    .where(s.INSTANCE_ID.eq(q.INSTANCE_ID)
                             .and(s.STATUS.eq(ProcessStatus.RUNNING.toString())))
                     .asField();
 

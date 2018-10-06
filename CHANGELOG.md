@@ -12,6 +12,8 @@ policies.
 
 ### Changed
 
+- concord-server: fixed an issue preventing process timeouts from
+correctly working with multiple running processes; 
 - concord-tasks: override the API endpoint with `baseUrl`. 
 
 
