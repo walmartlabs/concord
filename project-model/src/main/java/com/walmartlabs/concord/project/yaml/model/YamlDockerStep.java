@@ -22,7 +22,6 @@ package com.walmartlabs.concord.project.yaml.model;
 
 import com.fasterxml.jackson.core.JsonLocation;
 
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +32,7 @@ public class YamlDockerStep extends YamlStep {
     private final boolean forcePull;
     private final boolean debug;
     private final Map<String, Object> env;
+    private final String envFile;
     private final List<Map.Entry<String, String>> options;
     private final String stdout;
 
@@ -42,7 +42,7 @@ public class YamlDockerStep extends YamlStep {
                           boolean forcePull,
                           boolean debug,
                           Map<String, Object> env,
-                          List<Map.Entry<String, String>> options,
+                          String envFile, List<Map.Entry<String, String>> options,
                           String stdout) {
 
         super(location);
@@ -52,6 +52,7 @@ public class YamlDockerStep extends YamlStep {
         this.forcePull = forcePull;
         this.debug = debug;
         this.env = env;
+        this.envFile = envFile;
         this.options = options;
         this.stdout = stdout;
     }
@@ -76,6 +77,10 @@ public class YamlDockerStep extends YamlStep {
         return env;
     }
 
+    public String getEnvFile() {
+        return envFile;
+    }
+
     public List<Map.Entry<String, String>> getOptions() {
         return options;
     }
@@ -92,6 +97,7 @@ public class YamlDockerStep extends YamlStep {
                 ", forcePull=" + forcePull +
                 ", debug=" + debug +
                 ", env=" + env +
+                ", envFile='" + envFile + '\'' +
                 ", options=" + options +
                 ", stdout='" + stdout + '\'' +
                 "} " + super.toString();

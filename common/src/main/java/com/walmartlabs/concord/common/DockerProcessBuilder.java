@@ -49,6 +49,7 @@ public class DockerProcessBuilder {
 
     private List<String> args = new ArrayList<>();
     private Map<String, String> env;
+    private String envFile;
     private Map<String, String> labels;
     private List<Map.Entry<String, String>> volumes = new ArrayList<>();
     private List<Map.Entry<String, String>> options = new ArrayList<>();
@@ -125,6 +126,10 @@ public class DockerProcessBuilder {
                 c.add("-e");
                 c.add(q(k + "=" + v));
             });
+        }
+        if (envFile != null) {
+            c.add("--env-file");
+            c.add(q(envFile));
         }
         if (workdir != null) {
             c.add("-w");
@@ -258,6 +263,11 @@ public class DockerProcessBuilder {
 
     public DockerProcessBuilder env(Map<String, String> env) {
         this.env = env;
+        return this;
+    }
+
+    public DockerProcessBuilder envFile(String envFile) {
+        this.envFile = envFile;
         return this;
     }
 

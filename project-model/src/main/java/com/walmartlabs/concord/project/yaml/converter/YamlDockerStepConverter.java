@@ -42,6 +42,7 @@ public class YamlDockerStepConverter implements StepConverter<YamlDockerStep> {
         args.put("debug", s.isDebug());
         args.put("cmd", s.getCmd());
         args.put("env", s.getEnv());
+        args.put("envFile", s.getEnvFile());
         args.put("options", s.getOptions());
         args.put("stdout", s.getStdout());
 

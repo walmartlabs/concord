@@ -53,6 +53,7 @@ public class DockerTask implements Task {
     public static final String CMD_KEY = "cmd";
     public static final String IMAGE_KEY = "image";
     public static final String ENV_KEY = "env";
+    public static final String ENV_FILE_KEY = "envFile";
     public static final String OPTIONS_KEY = "options";
     public static final String FORCE_PULL_KEY = "forcePull";
     public static final String DEBUG_KEY = "debug";
@@ -70,36 +71,29 @@ public class DockerTask implements Task {
     @InjectVariable(Constants.Context.CONTEXT_KEY)
     Context ctx;
 
-    @Deprecated
-    public void call(String dockerImage, boolean forcePull, boolean debug,
-                     String cmd, Map<String, Object> env, String payloadPath,
-                     List<Map.Entry<String, String>> options) {
-
-        Map<String, Object> args = new HashMap<>();
-        args.put(IMAGE_KEY, dockerImage);
-        args.put(FORCE_PULL_KEY, forcePull);
-        args.put(DEBUG_KEY, debug);
-        args.put(CMD_KEY, cmd);
-        args.put(ENV_KEY, env);
-        args.put(OPTIONS_KEY, options);
-
-        call(args);
-    }
-
     @SuppressWarnings("unchecked")
     public void call(Map<String, Object> args) {
         String image = assertString(args, IMAGE_KEY);
         String cmd = assertString(args, CMD_KEY);
         Map<String, Object> env = (Map<String, Object>) args.get(ENV_KEY);
+        String envFile = (String) args.get(ENV_FILE_KEY);
         List<Map.Entry<String, String>> options = (List<Map.Entry<String, String>>) args.get(OPTIONS_KEY);
         boolean forcePull = (boolean) args.getOrDefault(FORCE_PULL_KEY, true);
         boolean debug = (boolean) args.getOrDefault(DEBUG_KEY, false);
         String stdOutVar = getString(args, STDOUT_KEY);
 
-        try {
-            Path baseDir = Paths.get(workDir);
+        Path baseDir = Paths.get(workDir);
+        Path containerDir = Paths.get(VOLUME_CONTAINER_DEST);
 
-            Path containerDir = Paths.get(VOLUME_CONTAINER_DEST);
+        if (envFile != null) {
+            Path p = baseDir.resolve(envFile);
+            if (!Files.exists(p)) {
+                throw new IllegalArgumentException("'" + ENV_FILE_KEY + "' file not found: " + envFile);
+            }
+            envFile = p.toAbsolutePath().toString();
+        }
+
+        try {
             Path entryPoint = containerDir.resolve(baseDir.relativize(createRunScript(baseDir, cmd)));
 
             Process p = new DockerProcessBuilder(image)
@@ -107,6 +101,7 @@ public class DockerTask implements Task {
                     .cleanup(true)
                     .volume(workDir, VOLUME_CONTAINER_DEST)
                     .env(stringify(env))
+                    .envFile(envFile)
                     .entryPoint(entryPoint.toAbsolutePath().toString())
                     .forcePull(forcePull)
                     .options(options)

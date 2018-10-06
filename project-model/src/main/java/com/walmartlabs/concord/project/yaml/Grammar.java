@@ -324,6 +324,7 @@ public class Grammar {
                                     (boolean) options.getOrDefault("forcePull", true),
                                     (boolean) options.getOrDefault("debug", false),
                                     (Map<String, Object>) options.get("env"),
+                                    (String) options.get("envFile"),
                                     DockerOptionsConverter.convert(options),
                                     (String) options.get("stdout")))));
 
