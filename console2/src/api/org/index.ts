@@ -28,7 +28,7 @@ export enum OrganizationVisibility {
 export interface ColumnDefinition {
     caption: string;
     source: string;
-    render?: 'process-link' | 'project-link' | 'timestamp';
+    render?: 'process-link' | 'project-link' | 'timestamp' | 'repo-link';
 }
 
 export interface OrganizationEntryMetaUI {

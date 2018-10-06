@@ -33,6 +33,7 @@ import { ProcessList, ProcessStatusDropdown, RequestErrorMessage } from '../../m
 import {
     CREATED_AT_COLUMN,
     INITIATOR_COLUMN,
+    REPO_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     UPDATED_AT_COLUMN
@@ -77,6 +78,7 @@ const defaultColumns = [
 ];
 const withoutProjectColumns = [
     INSTANCE_ID_COLUMN,
+    REPO_COLUMN,
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN,
     UPDATED_AT_COLUMN

@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: show repository names in the project process list;
 - concord-server: abillity to overwrite process configuration using
 policies.
 

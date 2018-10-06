@@ -34,6 +34,7 @@ import { comparators } from '../../../utils';
 import {
     CREATED_AT_COLUMN,
     INITIATOR_COLUMN,
+    REPO_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     UPDATED_AT_COLUMN
@@ -127,6 +128,7 @@ class UserProcesses extends React.PureComponent<SessionProps & StateProps & Disp
                     columns={[
                         INSTANCE_ID_COLUMN,
                         PROJECT_COLUMN,
+                        REPO_COLUMN,
                         INITIATOR_COLUMN,
                         CREATED_AT_COLUMN,
                         UPDATED_AT_COLUMN
