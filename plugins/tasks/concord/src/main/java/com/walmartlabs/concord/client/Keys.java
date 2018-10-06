@@ -23,8 +23,9 @@ package com.walmartlabs.concord.client;
 
 public final class Keys {
 
-    public static final String SESSION_TOKEN_KEY = "sessionToken";
     public static final String ACTION_KEY = "action";
+    public static final String BASE_URL_KEY = "baseUrl";
+    public static final String SESSION_TOKEN_KEY = "sessionToken";
 
     private Keys() {
     }

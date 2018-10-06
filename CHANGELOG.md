@@ -8,6 +8,10 @@
 - concord-server: abillity to overwrite process configuration using
 policies.
 
+### Changed
+
+- concord-tasks: override the API endpoint with `baseUrl`. 
+
 
 
 ## [0.89.3] - 2018-10-02

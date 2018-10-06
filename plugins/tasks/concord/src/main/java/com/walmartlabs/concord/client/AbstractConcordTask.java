@@ -48,7 +48,7 @@ public abstract class AbstractConcordTask implements Task {
     ApiClientFactory apiClientFactory;
 
     protected <T> T withClient(Context ctx, CheckedFunction<ApiClient, T> f) throws Exception {
-        ApiClient c = apiClientFactory.create(ctx);
+        ApiClient c = overrideBaseUrl(apiClientFactory.create(ctx), ctx);
         return f.apply(c);
     }
 
@@ -179,6 +179,19 @@ public abstract class AbstractConcordTask implements Task {
 
         contentType = contentType.toLowerCase();
         return contentType.contains("json");
+    }
+
+    private static ApiClient overrideBaseUrl(ApiClient client, Context ctx) {
+        Object v = ctx.getVariable(Keys.BASE_URL_KEY);
+        if (v == null) {
+            return client;
+        }
+
+        if (!(v instanceof String)) {
+            throw new IllegalArgumentException("Expected a string value '" + Keys.BASE_URL_KEY + "', got: " + v);
+        }
+
+        return client.setBasePath((String) v);
     }
 
     @FunctionalInterface
