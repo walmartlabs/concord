@@ -375,6 +375,10 @@ public class ConcordTask extends AbstractConcordTask {
             log.warn("'" + ARCHIVE_KEY + "' parameter is not supported for fork action and will be ignored");
         }
 
+        if (!cfg.containsKey(ENTRY_POINT_KEY)) {
+            throw new IllegalArgumentException("'" + ENTRY_POINT_KEY + "' is required");
+        }
+
         UUID instanceId = UUID.fromString(get(cfg, INSTANCE_ID_KEY));
         boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
 
