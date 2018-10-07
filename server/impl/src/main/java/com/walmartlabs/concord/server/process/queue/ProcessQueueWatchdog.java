@@ -67,7 +67,12 @@ public class ProcessQueueWatchdog implements BackgroundTask {
             new PollEntry(ProcessStatus.CANCELLED,
                     ProcessMetadataManager.ON_CANCEL_MARKER_PATH,
                     InternalConstants.Flows.ON_CANCEL_FLOW,
-                    ProcessKind.CANCEL_HANDLER, 3)
+                    ProcessKind.CANCEL_HANDLER, 3),
+
+            new PollEntry(ProcessStatus.TIMED_OUT,
+                    ProcessMetadataManager.ON_TIMEOUT_MARKER_PATH,
+                    InternalConstants.Flows.ON_TIMEOUT_FLOW,
+                    ProcessKind.TIMEOUT_HANDLER, 3)
     };
 
     private static final long HANDLERS_POLL_DELAY = 2000;
