@@ -72,5 +72,10 @@ public class CheckResult<R, E> {
         public String getMsg() {
             return msg;
         }
+
+        @Override
+        public String toString() {
+            return msg;
+        }
     }
 }

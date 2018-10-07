@@ -67,12 +67,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
             new PollEntry(ProcessStatus.CANCELLED,
                     ProcessMetadataManager.ON_CANCEL_MARKER_PATH,
                     InternalConstants.Flows.ON_CANCEL_FLOW,
-                    ProcessKind.CANCEL_HANDLER, 3),
-
-            new PollEntry(ProcessStatus.TIMED_OUT,
-                    ProcessMetadataManager.ON_TIMEOUT_MARKER_PATH,
-                    InternalConstants.Flows.ON_TIMEOUT_FLOW,
-                    ProcessKind.TIMEOUT_HANDLER, 3)
+                    ProcessKind.CANCEL_HANDLER, 3)
     };
 
     private static final long HANDLERS_POLL_DELAY = 2000;
@@ -164,7 +159,6 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                 new ProcessStartFailuresWorker()),
                 "process-start-failures-worker");
         this.processStartFailuresWorker.start();
-
 
         this.processTimedOutWorker = new Thread(new Worker(TIMED_OUT_POLL_DELAY, TIMED_OUT_ERROR_DELAY,
                 new ProcessTimedOutWorker()),
@@ -267,7 +261,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
             watchdogDao.transaction(tx -> {
                 Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStalledAge()));
 
-                List<UUID> ids = watchdogDao.pollOutdated(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
+                List<UUID> ids = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
                 for (UUID id : ids) {
                     queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
                     logManager.warn(id, "Process stalled, no heartbeat for more than a minute");
@@ -283,7 +277,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
             watchdogDao.transaction(tx -> {
                 Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStartFailureAge()));
 
-                List<UUID> ids = watchdogDao.pollOutdated(tx, FAILED_TO_START_STATUSES, cutOff, 1);
+                List<UUID> ids = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (UUID id : ids) {
                     queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
                     logManager.warn(id, "Process failed to start");
@@ -348,8 +342,8 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .where(q.PROCESS_KIND.in(Utils.toString(HANDLED_PROCESS_KINDS))
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
                             .and(q.CREATED_AT.greaterOrEqual(maxAge))
-                            .and(existsMarker(q.INSTANCE_ID, entry.marker))
-                            .and(notExistsSuccess(q.INSTANCE_ID, entry.handlerKind))
+                            .and(hasMarker(q.INSTANCE_ID, entry.marker))
+                            .and(noSuccessfulHandlers(q.INSTANCE_ID, entry.handlerKind))
                             .and(count(tx, q.INSTANCE_ID, entry.handlerKind).lessThan(entry.maxTries))
                             .and(noRunningHandlers(q.INSTANCE_ID)))
                     .limit(maxEntries)
@@ -358,7 +352,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .fetch(WatchdogDao::toEntry);
         }
 
-        public List<UUID> pollOutdated(DSLContext tx, ProcessStatus[] statuses, Field<Timestamp> cutOff, int maxEntries) {
+        public List<UUID> pollStalled(DSLContext tx, ProcessStatus[] statuses, Field<Timestamp> cutOff, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
             return tx.select(q.INSTANCE_ID)
                     .from(q)
@@ -403,7 +397,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .asField();
         }
 
-        private Condition notExistsSuccess(Field<UUID> parentInstanceId, ProcessKind kind) {
+        private Condition noSuccessfulHandlers(Field<UUID> parentInstanceId, ProcessKind kind) {
             return notExists(selectOne().from(PROCESS_QUEUE)
                     .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
                             .and(PROCESS_QUEUE.PROCESS_KIND.eq(kind.toString()))
@@ -417,7 +411,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                             .and(PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
         }
 
-        private Condition existsMarker(Field<UUID> instanceId, String marker) {
+        private Condition hasMarker(Field<UUID> instanceId, String marker) {
             return exists(selectOne().from(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
                     .and(PROCESS_STATE.ITEM_PATH.eq(marker))));
         }

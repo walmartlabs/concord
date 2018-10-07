@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.server.agent.AgentCommand;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
@@ -51,7 +50,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory.PROCESS_STATUS_HISTORY;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
@@ -464,7 +462,7 @@ public class ProcessQueueDao extends AbstractDao {
                 boolean locked = tryLock(tx, prjId);
                 if (locked) {
                     int count = countRunning(tx, prjId);
-                    if (!pe.getProcessPolicy().check(count).getDeny().isEmpty()) {
+                    if (!pe.getConcurrentProcessPolicy().check(count).getDeny().isEmpty()) {
                         log.debug("findEntry ['{}'] -> {} running", prjId, count);
                         return FindResult.findNext(prjId);
                     }
@@ -510,7 +508,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         PolicyEngine pe = new PolicyEngine(policy.getRules());
-        return pe.getProcessPolicy().hasRule() ? pe : null;
+        return pe.getConcurrentProcessPolicy().hasRule() ? pe : null;
     }
 
     private Record4<UUID, UUID, UUID, UUID> nextItem(DSLContext tx, Map<String, Object> capabilities, Set<UUID> excludeProjectIds) {

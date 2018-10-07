@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
+import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -70,13 +70,15 @@ public class PolicyExportProcessor implements PayloadProcessor {
 
         try {
             Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
-
             objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
 
-            return chain.process(payload);
         } catch (IOException e) {
             logManager.error(instanceId, "Error while storing process policy: {}", e);
             throw new ProcessException(instanceId, "Storing process policy error", e);
         }
+
+        payload = payload.putHeader(Payload.POLICY, policy);
+
+        return chain.process(payload);
     }
 }

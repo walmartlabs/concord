@@ -4,10 +4,12 @@
 
 ### Added
 
+- concord-server: ability to restrict the max number of processes in
+the queue for a given status using policies;
 - docker: `envFile` parameter to define environment variables using a
 file;
 - concord-console: show repository names in the project process list;
-- concord-server: abillity to overwrite process configuration using
+- concord-server: ability to overwrite process configuration using
 policies.
 
 ### Changed

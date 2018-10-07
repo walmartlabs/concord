@@ -33,8 +33,9 @@ public class PolicyEngine {
     private final FilePolicy filePolicy;
     private final TaskPolicy taskPolicy;
     private final WorkspacePolicy workspacePolicy;
-    private final ProcessPolicy processPolicy;
     private final ContainerPolicy containerPolicy;
+    private final QueueProcessPolicy queueProcessPolicy;
+    private final ConcurrentProcessPolicy concurrentProcessPolicy;
 
     public PolicyEngine(Map<String, Object> rules) {
         this(objectMapper.convertValue(rules, PolicyEngineRules.class));
@@ -45,8 +46,14 @@ public class PolicyEngine {
         this.filePolicy = new FilePolicy(rules.getFileRules());
         this.taskPolicy = new TaskPolicy(rules.getTaskRules());
         this.workspacePolicy = new WorkspacePolicy(rules.getWorkspaceRule());
-        this.processPolicy = new ProcessPolicy(rules.getProcessRule());
         this.containerPolicy = new ContainerPolicy(rules.getContainerRules());
+
+        QueueRule qr = rules.getQueueRules();
+        if (qr == null) {
+            qr = new QueueRule(null, null, null, null );
+        }
+        this.queueProcessPolicy = new QueueProcessPolicy(qr.getProcess(), qr.getProcessPerOrg(), qr.getProcessPerProject());
+        this.concurrentProcessPolicy = new ConcurrentProcessPolicy(qr.getConcurrent());
     }
 
     public DependencyPolicy getDependencyPolicy() {
@@ -65,12 +72,16 @@ public class PolicyEngine {
         return workspacePolicy;
     }
 
-    public ProcessPolicy getProcessPolicy() {
-        return processPolicy;
-    }
-
     public ContainerPolicy getContainerPolicy() {
         return containerPolicy;
+    }
+
+    public QueueProcessPolicy getQueueProcessPolicy() {
+        return queueProcessPolicy;
+    }
+
+    public ConcurrentProcessPolicy getConcurrentProcessPolicy() {
+        return concurrentProcessPolicy;
     }
 
     private static ObjectMapper createObjectMapper() {

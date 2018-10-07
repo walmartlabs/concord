@@ -20,38 +20,44 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
-public class ProcessRule implements Serializable {
+public class QueueProcessRule  implements Serializable {
 
     private final String msg;
-    private final Integer maxConcurrent;
+    private final Map<String, Integer> max;
 
     @JsonCreator
-    public ProcessRule(@JsonProperty("msg") String msg,
-                       @JsonProperty("maxConcurrent") Integer maxConcurrent) {
+    public QueueProcessRule(@JsonProperty("msg") String msg) {
         this.msg = msg;
-        this.maxConcurrent = maxConcurrent;
+        this.max = new HashMap<>();
+    }
+
+    @JsonAnySetter
+    public void addMax(String status, int max) {
+        this.max.put(status, max);
+    }
+
+    public Map<String, Integer> getMax() {
+        return max;
     }
 
     public String getMsg() {
         return msg;
     }
 
-    public Integer getMaxConcurrent() {
-        return maxConcurrent;
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
                 .append("msg", msg)
-                .append("maxConcurrent", maxConcurrent)
+                .append("max", max)
                 .toString();
     }
 }

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.policy;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -63,6 +64,11 @@ public class PolicyEntry implements Serializable {
 
     public Map<String, Object> getRules() {
         return rules;
+    }
+
+    @JsonIgnore
+    public boolean isEmpty() {
+        return rules == null || rules.isEmpty();
     }
 
     @Override

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.common;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -176,26 +176,39 @@ public class ServerClient {
         int retries = 10;
         while (true) {
             List<ProcessEntry> l = api.listSubprocesses(parentInstanceId, null);
-            for (ProcessEntry e : l) {
-                if (e.getKind() == kind) {
-                    if (e.getStatus() == status) {
-                        return e;
-                    }
-
-                    for (ProcessEntry.StatusEnum s : more) {
-                        if (e.getStatus() == s) {
-                            return e;
-                        }
-                    }
-                }
+            ProcessEntry e = findByKindAndStatus(l, kind, status, more);
+            if (e != null) {
+                return e;
             }
 
             if (--retries < 0) {
-                throw new IllegalStateException("Child process not found: " + kind);
+                throw new IllegalStateException("Child process not found: " + kind + ", got " + l);
             }
 
             Thread.sleep(2000);
         }
+    }
+
+    private static ProcessEntry findByKindAndStatus(Collection<ProcessEntry> c, ProcessEntry.KindEnum kind,
+                                            ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) {
+
+        for (ProcessEntry e : c) {
+            if (e.getKind() != kind) {
+                continue;
+            }
+
+            if (e.getStatus() == status) {
+                return e;
+            }
+
+            for (ProcessEntry.StatusEnum s : more) {
+                if (e.getStatus() == s) {
+                    return e;
+                }
+            }
+        }
+
+        return null;
     }
 
     public static ProcessEntry waitForCompletion(ProcessApi api, UUID instanceId) throws InterruptedException {

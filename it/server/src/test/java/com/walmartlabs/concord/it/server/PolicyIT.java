@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,18 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static java.util.Collections.singletonMap;
+import static org.junit.Assert.fail;
 
 public class PolicyIT extends AbstractServerIT {
 
@@ -87,5 +89,70 @@ public class PolicyIT extends AbstractServerIT {
 
         ab = getLog(pir.getLogFileName());
         assertLog(".*Hello, Concord.*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testMaxProcess() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
+
+        String policyName = "policy_" + randomString();
+        PolicyApi policyApi = new PolicyApi(getApiClient());
+        Map<String, Object> processPerProject = new HashMap<>();
+        processPerProject.put("RUNNING", 1);
+        Map<String, Object> queueRules = new HashMap<>();
+        queueRules.put("processPerProject", processPerProject);
+        queueRules.put("concurrent", singletonMap("max", 1));
+
+        Map<String, Object> rules = singletonMap("queue", queueRules);
+        policyApi.createOrUpdate(new PolicyEntry()
+                .setName(policyName)
+                .setRules(rules));
+
+        policyApi.link(policyName, new PolicyLinkEntry()
+                .setOrgName(orgName)
+                .setProjectName(projectName));
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("withDelay").toURI());
+
+        Map<String, Object> input1 = new HashMap<>();
+        input1.put("archive", payload);
+        input1.put("org", orgName);
+        input1.put("project", projectName);
+        input1.put("request", singletonMap("arguments", singletonMap("delayValue", 10000)));
+
+        StartProcessResponse spr1 = start(input1);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForStatus(processApi, spr1.getInstanceId(), StatusEnum.RUNNING);
+
+        // ---
+
+        Map<String, Object> input2 = new HashMap<>(input1);
+        input2.put("request", singletonMap("arguments", singletonMap("delayValue", 0)));
+
+        try {
+            start(input2);
+            fail("must fail");
+        } catch (ApiException e) {
+        }
+
+        // ---
+
+        waitForCompletion(processApi, spr1.getInstanceId());
+
+        // ---
+
+        StartProcessResponse spr2 = start(input2);
+        waitForCompletion(processApi, spr2.getInstanceId());
     }
 }

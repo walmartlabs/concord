@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.policyengine.*;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PolicyReader;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
@@ -44,13 +44,11 @@ import java.util.UUID;
 public class PolicyProcessor implements PayloadProcessor {
 
     private final LogManager logManager;
-    private final PolicyReader policyReader;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public PolicyProcessor(LogManager logManager, PolicyReader policyReader) {
+    public PolicyProcessor(LogManager logManager) {
         this.logManager = logManager;
-        this.policyReader = policyReader;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -59,24 +57,30 @@ public class PolicyProcessor implements PayloadProcessor {
         UUID instanceId = payload.getInstanceId();
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
-        Map<String, Object> policy = policyReader.readPolicy(instanceId, workDir);
+        PolicyEntry policy = payload.getHeader(Payload.POLICY);
+        if (policy == null || policy.isEmpty()) {
+            return chain.process(payload);
+        }
+
         logManager.info(instanceId, "Applying policies...");
+
+        Map<String, Object> rules = policy.getRules();
 
         try {
             // TODO merge check results
-            applyWorkspacePolicy(instanceId, policy, workDir);
-            applyFilePolicy(instanceId, policy, workDir);
-            applyContainerPolicy(instanceId, policy, workDir);
+            applyWorkspacePolicy(instanceId, rules, workDir);
+            applyFilePolicy(instanceId, rules, workDir);
+            applyContainerPolicy(instanceId, rules, workDir);
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while applying policy: {}", e);
-            throw new ProcessException(instanceId, "Policy error", e);
+            logManager.error(instanceId, "Error while applying policy '{}': {}", policy.getName(), e);
+            throw new ProcessException(instanceId, "Policy '" + policy.getName() + "' error", e);
         }
 
         return chain.process(payload);
     }
 
     @SuppressWarnings("unchecked")
-    private void applyContainerPolicy(UUID instanceId, Map<String,Object> policy, Path workDir) {
+    private void applyContainerPolicy(UUID instanceId, Map<String, Object> policy, Path workDir) {
         Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {
             return;

@@ -29,9 +29,9 @@ import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.DefaultVariablesConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
+import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PolicyReader;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 
@@ -53,20 +53,18 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
     private final DefaultVariablesConfiguration defaultVars;
-    private final PolicyReader policyReader;
 
     @Inject
-    public RequestDataMergingProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultVariablesConfiguration defaultVars, PolicyReader policyReader) {
+    public RequestDataMergingProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultVariablesConfiguration defaultVars) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
         this.defaultVars = defaultVars;
-        this.policyReader = policyReader;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        Map<String, Object> policy = policyReader.readPolicy(payload);
+        PolicyEntry policy = payload.getHeader(Payload.POLICY);
 
         // configuration from the policy
         Map<String, Object> policyCfg = getPolicyCfg(payload, policy);
@@ -126,8 +124,13 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getPolicyCfg(Payload payload, Map<String, Object> policy) {
-        Object v = policy.get(InternalConstants.Policy.PROCESS_CFG);
+    private Map<String, Object> getPolicyCfg(Payload payload, PolicyEntry policy) {
+        if (policy == null || policy.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Object> rules = policy.getRules();
+        Object v = rules.get(InternalConstants.Policy.PROCESS_CFG);
         if (v == null) {
             return Collections.emptyMap();
         }

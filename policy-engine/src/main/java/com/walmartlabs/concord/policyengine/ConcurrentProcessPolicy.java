@@ -22,29 +22,27 @@ package com.walmartlabs.concord.policyengine;
 
 import java.util.Collections;
 
-import static com.walmartlabs.concord.policyengine.CheckResult.Item;
+public class ConcurrentProcessPolicy {
 
-public class ProcessPolicy {
+    private final ConcurrentProcessRule rule;
 
-    private final ProcessRule rule;
-
-    public ProcessPolicy(ProcessRule rule) {
+    public ConcurrentProcessPolicy(ConcurrentProcessRule rule) {
         this.rule = rule;
     }
 
-    public boolean hasRule() {
-        return rule != null;
-    }
-
-    public CheckResult<ProcessRule, Integer> check(int processCount) {
+    public CheckResult<ConcurrentProcessRule, Integer> check(int processCount) {
         if (rule == null) {
             return new CheckResult<>();
         }
 
-        if (processCount >= rule.getMaxConcurrent()) {
+        if (processCount >= rule.getMax()) {
             return new CheckResult<>(Collections.emptyList(),
-                    Collections.singletonList(new Item<>(rule, processCount, rule.getMsg())));
+                    Collections.singletonList(new CheckResult.Item<>(rule, processCount)));
         }
         return new CheckResult<>();
+    }
+
+    public boolean hasRule() {
+        return rule != null;
     }
 }

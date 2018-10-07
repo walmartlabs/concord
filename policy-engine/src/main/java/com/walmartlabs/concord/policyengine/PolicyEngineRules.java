@@ -34,23 +34,23 @@ public class PolicyEngineRules {
 
     private final WorkspaceRule workspaceRule;
 
-    private final ProcessRule processRules;
-
     private final ContainerRule containerRules;
+
+    private final QueueRule queueRules;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
                              @JsonProperty("task") PolicyRules<TaskRule> taskRules,
                              @JsonProperty("workspace") WorkspaceRule workspaceRule,
-                             @JsonProperty("process") ProcessRule processRules,
-                             @JsonProperty("container") ContainerRule containerRules) {
+                             @JsonProperty("container") ContainerRule containerRules,
+                             @JsonProperty("queue") QueueRule queueRules) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
         this.taskRules = taskRules;
         this.workspaceRule = workspaceRule;
-        this.processRules = processRules;
         this.containerRules = containerRules;
+        this.queueRules = queueRules;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -69,12 +69,12 @@ public class PolicyEngineRules {
         return workspaceRule;
     }
 
-    public ProcessRule getProcessRule() {
-        return processRules;
-    }
-
     public ContainerRule getContainerRules() {
         return containerRules;
+    }
+
+    public QueueRule getQueueRules() {
+        return queueRules;
     }
 
     @Override
@@ -84,8 +84,8 @@ public class PolicyEngineRules {
                 ", fileRules=" + fileRules +
                 ", taskRules=" + taskRules +
                 ", workspaceRule=" + workspaceRule +
-                ", processRules=" + processRules +
                 ", containerRules=" + containerRules +
+                ", queueRules=" + queueRules +
                 '}';
     }
 }

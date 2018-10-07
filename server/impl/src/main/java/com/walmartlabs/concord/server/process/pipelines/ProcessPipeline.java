@@ -44,10 +44,11 @@ public class ProcessPipeline extends Pipeline {
     public ProcessPipeline(Injector injector) {
         super(injector,
                 AuthorizationProcessor.class,
+                PolicyExportProcessor.class,
+                QueuePolicyProcessor.class,
                 InitialQueueEntryProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,
-                PolicyExportProcessor.class,
                 InventoryProcessor.class,
                 AttachmentStoringProcessor.class,
                 ProjectDefinitionProcessor.class,
