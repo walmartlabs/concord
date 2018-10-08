@@ -182,7 +182,9 @@ public class ServerClient {
             }
 
             if (--retries < 0) {
-                throw new IllegalStateException("Child process not found: " + kind + ", got " + l);
+                throw new IllegalStateException("Child process not found: " +
+                        "kind=" + kind + "status=" + status + "+" + Arrays.toString(more) + ", " +
+                        "got " + l);
             }
 
             Thread.sleep(2000);
@@ -190,7 +192,7 @@ public class ServerClient {
     }
 
     private static ProcessEntry findByKindAndStatus(Collection<ProcessEntry> c, ProcessEntry.KindEnum kind,
-                                            ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) {
+                                                    ProcessEntry.StatusEnum status, ProcessEntry.StatusEnum... more) {
 
         for (ProcessEntry e : c) {
             if (e.getKind() != kind) {

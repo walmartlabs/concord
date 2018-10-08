@@ -36,6 +36,7 @@ public class PolicyEngine {
     private final ContainerPolicy containerPolicy;
     private final QueueProcessPolicy queueProcessPolicy;
     private final ConcurrentProcessPolicy concurrentProcessPolicy;
+    private final ForkDepthPolicy forkDepthPolicy;
 
     public PolicyEngine(Map<String, Object> rules) {
         this(objectMapper.convertValue(rules, PolicyEngineRules.class));
@@ -50,10 +51,11 @@ public class PolicyEngine {
 
         QueueRule qr = rules.getQueueRules();
         if (qr == null) {
-            qr = new QueueRule(null, null, null, null );
+            qr = new QueueRule(null, null, null, null, null );
         }
         this.queueProcessPolicy = new QueueProcessPolicy(qr.getProcess(), qr.getProcessPerOrg(), qr.getProcessPerProject());
         this.concurrentProcessPolicy = new ConcurrentProcessPolicy(qr.getConcurrent());
+        this.forkDepthPolicy = new ForkDepthPolicy(qr.getForkDepthRule());
     }
 
     public DependencyPolicy getDependencyPolicy() {
@@ -82,6 +84,10 @@ public class PolicyEngine {
 
     public ConcurrentProcessPolicy getConcurrentProcessPolicy() {
         return concurrentProcessPolicy;
+    }
+
+    public ForkDepthPolicy getForkDepthPolicy() {
+        return forkDepthPolicy;
     }
 
     private static ObjectMapper createObjectMapper() {

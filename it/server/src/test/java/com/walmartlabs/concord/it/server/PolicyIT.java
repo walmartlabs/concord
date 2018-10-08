@@ -92,6 +92,35 @@ public class PolicyIT extends AbstractServerIT {
     }
 
     @Test(timeout = 60000)
+    public void testMaxForkDepth() throws Exception {
+        String orgName = createOrg();
+        String projectName = createProject(orgName);
+
+        Map<String, Object> queueRules = new HashMap<>();
+        queueRules.put("forkDepth", singletonMap("max", 2));
+
+        Map<String, Object> rules = singletonMap("queue", queueRules);
+
+        createPolicy(orgName, projectName, rules);
+
+        // ---
+        byte[] payload = archive(ProcessIT.class.getResource("forkDepth").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.RUNNING);
+
+        waitForCompletion(processApi, spr.getInstanceId());
+    }
+
+
+    @Test(timeout = 60000)
     public void testMaxProcess() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
@@ -154,5 +183,40 @@ public class PolicyIT extends AbstractServerIT {
 
         StartProcessResponse spr2 = start(input2);
         waitForCompletion(processApi, spr2.getInstanceId());
+    }
+
+    private String createOrg() throws ApiException {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        return orgName;
+    }
+
+    private String createProject(String orgName) throws ApiException {
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
+
+        return projectName;
+    }
+
+    private String createPolicy(String orgName, String projectName, Map<String, Object> rules) throws ApiException {
+        String policyName = "policy_" + randomString();
+
+        PolicyApi policyApi = new PolicyApi(getApiClient());
+        policyApi.createOrUpdate(new PolicyEntry()
+                .setName(policyName)
+                .setRules(rules));
+
+        policyApi.link(policyName, new PolicyLinkEntry()
+                .setOrgName(orgName)
+                .setProjectName(projectName));
+
+        return policyName;
     }
 }

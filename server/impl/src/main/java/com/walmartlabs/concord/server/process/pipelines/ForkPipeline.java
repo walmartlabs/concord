@@ -35,7 +35,9 @@ public class ForkPipeline extends Pipeline {
     @Inject
     public ForkPipeline(Injector injector) {
         super(injector,
+                PolicyExportProcessor.class,
                 InitialQueueEntryProcessor.class,
+                ForkPolicyProcessor.class,
                 ForkCleanupProcessor.class,
                 RequestDataMergingProcessor.class,
                 ProjectInfoProcessor.class,

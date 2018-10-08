@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: ability to restrict the max number of forks using
+policies;
 - concord-server: ability to restrict the max number of processes in
 the queue for a given status using policies;
 - docker: `envFile` parameter to define environment variables using a

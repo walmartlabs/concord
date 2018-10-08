@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -102,13 +103,14 @@ public class QueuePolicyProcessor implements PayloadProcessor {
     }
 
     @Named
-    private static final class QueueMetricsDao extends AbstractDao {
+    private static class QueueMetricsDao extends AbstractDao {
 
         @Inject
         public QueueMetricsDao(@Named("app") Configuration cfg) {
             super(cfg);
         }
 
+        @WithTimer
         public QueueMetrics metrics(UUID orgId, UUID prjId, Set<String> statuses) {
             return txResult(tx -> {
 

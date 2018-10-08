@@ -32,17 +32,20 @@ public class QueueRule implements Serializable {
     private final QueueProcessRule process;
     private final QueueProcessRule processPerOrg;
     private final QueueProcessRule processPerProject;
+    private final ForkDepthRule forkDepthRule;
 
     @JsonCreator
     public QueueRule(@JsonProperty("concurrent") ConcurrentProcessRule concurrent,
                      @JsonProperty("process") QueueProcessRule process,
                      @JsonProperty("processPerOrg") QueueProcessRule processPerOrg,
-                     @JsonProperty("processPerProject") QueueProcessRule processPerProject) {
+                     @JsonProperty("processPerProject") QueueProcessRule processPerProject,
+                     @JsonProperty("forkDepth") ForkDepthRule forkDepthRule) {
 
         this.concurrent = concurrent;
         this.process = process;
         this.processPerOrg = processPerOrg;
         this.processPerProject = processPerProject;
+        this.forkDepthRule = forkDepthRule;
     }
 
     public ConcurrentProcessRule getConcurrent() {
@@ -61,6 +64,10 @@ public class QueueRule implements Serializable {
         return processPerProject;
     }
 
+    public ForkDepthRule getForkDepthRule() {
+        return forkDepthRule;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
@@ -68,6 +75,7 @@ public class QueueRule implements Serializable {
                 .append("process", process)
                 .append("processPerOrg", processPerOrg)
                 .append("processPerProject", processPerProject)
+                .append("forkDepthRule", forkDepthRule)
                 .toString();
     }
 }

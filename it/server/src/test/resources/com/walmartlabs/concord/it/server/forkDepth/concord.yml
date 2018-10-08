@@ -1,0 +1,20 @@
+flows:
+  default:
+  - task: concord
+    in:
+      action: fork
+      entryPoint: fork1
+      sync: true
+
+  - log: "Done! ${jobs} is completed"
+
+  fork1:
+  - log: "FORK1"
+  - task: concord
+    in:
+      action: fork
+      sync: true
+      entryPoint: fork2
+
+  fork2:
+  - log: "FORK2"
