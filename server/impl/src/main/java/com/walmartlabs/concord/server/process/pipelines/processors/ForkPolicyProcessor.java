@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,12 +61,8 @@ public class ForkPolicyProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
-        if (parentInstanceId == null) {
-            return chain.process(payload);
-        }
-
         UUID instanceId = payload.getInstanceId();
+        UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
 
         PolicyEntry policy = payload.getHeader(Payload.POLICY);
         if (policy == null || policy.isEmpty()) {
@@ -92,9 +88,9 @@ public class ForkPolicyProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private String buildErrorMessage(List<CheckResult.Item<ForkDepthRule,Integer>> errors) {
+    private String buildErrorMessage(List<CheckResult.Item<ForkDepthRule, Integer>> errors) {
         StringBuilder sb = new StringBuilder();
-        for(CheckResult.Item<ForkDepthRule, Integer> e : errors) {
+        for (CheckResult.Item<ForkDepthRule, Integer> e : errors) {
             ForkDepthRule r = e.getRule();
 
             String msg = r.getMsg() != null ? r.getMsg() : DEFAULT_POLICY_MESSAGE;
@@ -117,15 +113,15 @@ public class ForkPolicyProcessor implements PayloadProcessor {
         @WithTimer
         public int getDepth(UUID parentInstanceId) {
             return txResult(tx -> tx.withRecursive("ancestors").as(
-                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.PARENT_INSTANCE_ID, field("1", Integer.class).as("depth"))
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
-                    .unionAll(
-                        select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.PARENT_INSTANCE_ID, field("1 + ancestors.depth", Integer.class).as("depth"))
-                        .from(PROCESS_QUEUE)
-                        .join(name("ancestors"))
-                        .on(PROCESS_QUEUE.INSTANCE_ID.eq(
-                                field(name("ancestors", "PARENT_INSTANCE_ID"), UUID.class)))))
+                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.PARENT_INSTANCE_ID, field("1", Integer.class).as("depth"))
+                            .from(PROCESS_QUEUE)
+                            .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                            .unionAll(
+                                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.PARENT_INSTANCE_ID, field("1 + ancestors.depth", Integer.class).as("depth"))
+                                            .from(PROCESS_QUEUE)
+                                            .join(name("ancestors"))
+                                            .on(PROCESS_QUEUE.INSTANCE_ID.eq(
+                                                    field(name("ancestors", "PARENT_INSTANCE_ID"), UUID.class)))))
                     .select(max(field(name("ancestors", "depth"), Integer.class)))
                     .from(name("ancestors"))
                     .fetchOne(Record1::value1));
