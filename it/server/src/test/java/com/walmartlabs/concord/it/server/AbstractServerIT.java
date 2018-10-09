@@ -143,13 +143,11 @@ public abstract class AbstractServerIT {
     }
 
     protected String randomPwd() {
-        return "pwd_" + ITUtils.randomString() + "A!";
+        return ITUtils.randomPwd();
     }
 
     protected static Path createTempDir() throws IOException {
-        Path tmpDir = Files.createTempDirectory("test");
-        Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rwxr-xr-x"));
-        return tmpDir;
+        return ITUtils.createTempDir();
     }
 
     protected static Path createTempFile(String suffix) throws IOException {

@@ -43,23 +43,36 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
+
+import static com.walmartlabs.concord.it.console.Utils.env;
 
 public class WebDriverRule implements TestRule {
 
     private static final Logger log = LoggerFactory.getLogger(WebDriverRule.class);
 
+    private final int seleniumPort;
+    private final String driverType;
+    private final String screenshotsDir;
+
     private WebDriver driver;
+
+    public WebDriverRule() {
+        this.seleniumPort = Integer.parseInt(env("IT_SELENIUM_PORT", "4444"));
+        this.driverType = env("IT_WEBDRIVER_TYPE", "local");
+        this.screenshotsDir = env("IT_SCREENSHOTS_DIR", "target/screenshots");
+    }
 
     public WebDriver getDriver() {
         return driver;
     }
 
     public boolean isRemote() {
-        return "remote".equals(ITConstants.WEBDRIVER_TYPE);
+        return "remote".equals(driverType);
     }
 
-    private void setUp() throws Exception {
+    protected void setUp() throws Exception {
         ChromeOptions opts = new ChromeOptions();
 
         LoggingPreferences logPrefs = new LoggingPreferences();
@@ -69,7 +82,7 @@ public class WebDriverRule implements TestRule {
         opts.addArguments("--dns-prefetch-disable");
 
         if (isRemote()) {
-            URL url = new URL("http://localhost:" + ITConstants.SELENIUM_PORT + "/wd/hub");
+            URL url = new URL("http://localhost:" + seleniumPort + "/wd/hub");
             log.info("Using a remote driver: {}", url);
             RemoteWebDriver d = new RemoteWebDriver(url, opts);
             d.setFileDetector(new LocalFileDetector());
@@ -87,13 +100,13 @@ public class WebDriverRule implements TestRule {
     private void takeScreenshot(Description d) throws IOException {
         File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
 
-        Path dstDir = Paths.get(ITConstants.SCREENSHOTS_DIR);
+        Path dstDir = Paths.get(screenshotsDir);
         Files.createDirectories(dstDir);
 
         String fileName = d.getTestClass().getName() + "-" + d.getMethodName() + ".png";
         Path dst = dstDir.resolve(fileName);
 
-        Files.copy(src.toPath(), dst);
+        Files.copy(src.toPath(), dst, StandardCopyOption.REPLACE_EXISTING);
 
         System.out.println("Screenshot saved to: " + dst);
     }

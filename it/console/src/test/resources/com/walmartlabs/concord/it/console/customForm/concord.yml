@@ -1,0 +1,9 @@
+flows:
+  default:
+  - form: testForm
+    values:
+      testValue: "${requestInfo.query.testValue}"
+
+forms:
+  testForm:
+  - x: { type: "string?" }

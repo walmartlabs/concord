@@ -23,45 +23,15 @@ package com.walmartlabs.concord.it.console;
 import org.junit.Rule;
 import org.junit.Test;
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class LoginIT {
 
-    private static final String ADMIN_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
-
     @Rule
-    public WebDriverRule rule = new WebDriverRule();
-
-    private static void waitFor(WebDriver driver, By by) {
-        ExpectedCondition<Boolean> condition = d -> {
-            try {
-                d.findElement(by);
-                return true;
-            } catch (NoSuchElementException e) {
-                return false;
-            }
-        };
-
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        wait.until(condition);
-    }
+    public ConcordConsoleRule consoleRule = new ConcordConsoleRule();
 
     @Test(timeout = 60000)
-    public void test() {
-        WebDriver driver = rule.getDriver();
-
-        driver.get(ITConstants.BASE_URL + "/#/login?useApiKey=true");
-
-        WebElement apiKey = driver.findElement(By.name("apiKey"));
-        apiKey.sendKeys(ADMIN_API_KEY);
-
-        WebElement loginButton = driver.findElement(By.id("loginButton"));
-        loginButton.click();
-
-        waitFor(driver, By.id("concordLogo"));
+    public void test() throws Exception {
+        consoleRule.login(Concord.ADMIN_API_KEY);
+        consoleRule.waitFor(By.id("concordLogo"));
     }
 }

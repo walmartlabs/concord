@@ -105,6 +105,11 @@
             <artifactId>commons-compress</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

@@ -46,7 +46,7 @@ export const REPO_COLUMN: ColumnDefinition = {
     caption: 'Repository',
     source: 'repoName',
     render: 'repo-link'
-}
+};
 
 export const INITIATOR_COLUMN: ColumnDefinition = {
     caption: 'Initiator',
@@ -107,7 +107,11 @@ const renderColumnContent = (e: ProcessEntry, c: ColumnDefinition) => {
     } else if (c.render === 'project-link') {
         return <Link to={`/org/${e.orgName}/project/${e.projectName}`}>{v}</Link>;
     } else if (c.render === 'repo-link') {
-        return <Link to={`/org/${e.orgName}/project/${e.projectName}/repository/${e.repoName}`}>{v}</Link>;
+        return (
+            <Link to={`/org/${e.orgName}/project/${e.projectName}/repository/${e.repoName}`}>
+                {v}
+            </Link>
+        );
     }
 
     return v;

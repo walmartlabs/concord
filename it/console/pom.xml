@@ -16,12 +16,14 @@
     <properties>
         <db.image>library/postgres:10.4-alpine</db.image>
         <server.image>walmartlabs/concord-server</server.image>
+        <agent.image>walmartlabs/concord-agent</agent.image>
         <selenium.image>selenium/standalone-chrome</selenium.image>
 
         <selenium.version>3.14.0</selenium.version>
+        <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
 
         <it.webdriver.type>local</it.webdriver.type>
-        <it.base.url>http://localhost:3000</it.base.url>
+        <it.console.base.url>http://localhost:3000</it.console.base.url>
         <it.server.port>8001</it.server.port>
         <it.selenium.port>4444</it.selenium.port>
     </properties>
@@ -30,6 +32,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>concord-common-it</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-client</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -78,6 +86,11 @@
             <artifactId>logback-classic</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -95,7 +108,7 @@
                         <IT_SELENIUM_PORT>${it.selenium.port}</IT_SELENIUM_PORT>
                         <IT_WEBDRIVER_TYPE>${it.webdriver.type}</IT_WEBDRIVER_TYPE>
                         <IT_SCREENSHOTS_DIR>${project.build.directory}/screenshots</IT_SCREENSHOTS_DIR>
-                        <IT_BASE_URL>${it.base.url}</IT_BASE_URL>
+                        <IT_CONSOLE_BASE_URL>${it.console.base.url}</IT_CONSOLE_BASE_URL>
                     </environmentVariables>
                 </configuration>
             </plugin>
@@ -111,7 +124,7 @@
             <properties>
                 <it.webdriver.type>remote</it.webdriver.type>
                 <it.console.port>8080</it.console.port>
-                <it.base.url>http://localhost:${it.console.port}</it.base.url>
+                <it.console.base.url>http://localhost:${it.console.port}</it.console.base.url>
             </properties>
             <build>
                 <plugins>
@@ -222,6 +235,28 @@
                                         </wait>
                                     </run>
                                 </image>
+                                <image>
+                                    <name>${agent.image}</name>
+                                    <alias>agent</alias>
+                                    <run>
+                                        <network>
+                                            <mode>host</mode>
+                                        </network>
+                                        <volumes>
+                                            <bind>
+                                                <volume>/tmp:/tmp</volume>
+                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
+                                            </bind>
+                                        </volumes>
+                                        <env>
+                                            <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
+                                            <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
+                                            <QUEUE_POLL_INTERVAL>500</QUEUE_POLL_INTERVAL>
+                                            <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
+                                            <WORKERS_COUNT>3</WORKERS_COUNT>
+                                        </env>
+                                    </run>
+                                </image>
                             </images>
                         </configuration>
                     </plugin>
@@ -234,6 +269,7 @@
             <properties>
                 <db.image>hub.docker.prod.walmart.com/library/postgres:10.4-alpine</db.image>
                 <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
+                <agent.image>docker.prod.walmart.com/walmartlabs/concord-agent</agent.image>
                 <selenium.image>hub.docker.prod.walmart.com/selenium/standalone-chrome:3.14</selenium.image>
             </properties>
         </profile>

@@ -26,9 +26,12 @@ import com.walmartlabs.concord.auth.ApiKeyAuth;
 
 public class ConcordApiClient extends ApiClient {
 
+    public ConcordApiClient(String baseUrl) {
+        this(baseUrl, new OkHttpClient());
+    }
+
     public ConcordApiClient(String baseUrl, OkHttpClient ok) {
         super(ok);
-
         setBasePath(baseUrl);
     }
 

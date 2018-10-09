@@ -1,3 +1,5 @@
+package com.walmartlabs.concord.it.console;
+
 /*-
  * *****
  * Concord
@@ -18,21 +20,10 @@
  * =====
  */
 
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+public final class Concord {
 
-import App from './App';
+    public static final String ADMIN_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
 
-import 'semantic-ui-css/semantic.min.css';
-import './index.css';
-
-const rootEl = document.getElementById('root') as HTMLElement;
-
-ReactDOM.render(<App />, rootEl);
-
-if (module.hot) {
-    module.hot.accept('./App', () => {
-        const NextApp = require('./App').default;
-        ReactDOM.render(<NextApp />, rootEl);
-    });
+    private Concord() {
+    }
 }

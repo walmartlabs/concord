@@ -23,11 +23,18 @@ package com.walmartlabs.concord.it.common;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -50,6 +57,28 @@ public final class ITUtils {
         return out.toByteArray();
     }
 
+    public static Path createTempDir() throws IOException {
+        Path dir = Files.createTempDirectory("test");
+        Files.setPosixFilePermissions(dir, PosixFilePermissions.fromString("rwxr-xr-x"));
+        return dir;
+    }
+
+    public static String createGitRepo(Class<?> klass, String resource) throws IOException, GitAPIException, URISyntaxException {
+        File src = new File(klass.getResource(resource).toURI());
+        return createGitRepo(src);
+    }
+
+    public static String createGitRepo(File src) throws IOException, GitAPIException {
+        Path tmpDir = createTempDir();
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        return tmpDir.toAbsolutePath().toString();
+    }
+
     public static String randomString() {
         StringBuilder b = new StringBuilder();
         b.append(System.currentTimeMillis()).append("_");
@@ -61,6 +90,10 @@ public final class ITUtils {
         }
 
         return b.toString();
+    }
+
+    public static String randomPwd() {
+        return "pwd_" + randomString() + "A!";
     }
 
     private ITUtils() {

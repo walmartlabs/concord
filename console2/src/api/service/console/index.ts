@@ -32,13 +32,13 @@ export const whoami = async (
     apiKey?: string
 ): Promise<UserResponse> => {
     const opts: RequestInit = {};
-    if (username && password) {
-        opts.headers = {
-            Authorization: 'Basic ' + btoa(username + ':' + password)
-        };
-    } else if (apiKey) {
+    if (apiKey) {
         opts.headers = {
             Authorization: apiKey
+        };
+    } else if (username && password) {
+        opts.headers = {
+            Authorization: 'Basic ' + btoa(username + ':' + password)
         };
     }
 
