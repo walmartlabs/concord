@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.policyengine.*;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,6 +44,8 @@ import java.util.UUID;
  */
 @Named
 public class PolicyProcessor implements PayloadProcessor {
+
+    private static final String DEFAULT_PROCESS_TIMEOUT_MSG = "Maximum 'processTimeout' value exceeded: current {0}, limit {1}";
 
     private final LogManager logManager;
     private final ObjectMapper objectMapper;
@@ -71,6 +75,7 @@ public class PolicyProcessor implements PayloadProcessor {
             applyWorkspacePolicy(instanceId, rules, workDir);
             applyFilePolicy(instanceId, rules, workDir);
             applyContainerPolicy(instanceId, rules, workDir);
+            applyProcessTimeoutPolicy(instanceId, rules, payload);
         } catch (IOException e) {
             logManager.error(instanceId, "Error while applying policy '{}': {}", policy.getName(), e);
             throw new ProcessException(instanceId, "Policy '" + policy.getName() + "' error", e);
@@ -141,6 +146,31 @@ public class PolicyProcessor implements PayloadProcessor {
 
         if (!result.getDeny().isEmpty()) {
             throw new ProcessException(instanceId, "Found forbidden files");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void applyProcessTimeoutPolicy(UUID instanceId, Map<String, Object> policy, Payload p) {
+        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP);
+        if (cfg == null) {
+            return;
+        }
+
+        Object processTimeout = cfg.get(Constants.Request.PROCESS_TIMEOUT);
+        if (processTimeout == null) {
+            return;
+        }
+
+        CheckResult<ProcessTimeoutRule, Object> result = new PolicyEngine(policy).getProcessTimeoutPolicy().check(processTimeout);
+        result.getDeny().forEach(i -> {
+            String msg = i.getRule().getMsg() != null ? i.getRule().getMsg() : DEFAULT_PROCESS_TIMEOUT_MSG;
+            Object actualTimeout = i.getEntity();
+            String limit = i.getRule().getMax();
+            logManager.error(instanceId, MessageFormat.format(msg, actualTimeout, limit));
+        });
+
+        if (!result.getDeny().isEmpty()) {
+            throw new ProcessException(instanceId, "'processTimeout' value policy violation");
         }
     }
 

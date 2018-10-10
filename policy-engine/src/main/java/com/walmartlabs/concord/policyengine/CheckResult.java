@@ -25,6 +25,13 @@ import java.util.List;
 
 public class CheckResult<R, E> {
 
+    private static final CheckResult SUCCESS = new CheckResult<>();
+
+    @SuppressWarnings("unchecked")
+    public static <R, E> CheckResult<R, E> success() {
+        return (CheckResult<R, E>)SUCCESS;
+    }
+
     private final List<Item<R, E>> warn;
     private final List<Item<R, E>> deny;
 

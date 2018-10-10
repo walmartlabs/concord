@@ -40,12 +40,12 @@ public class TaskPolicy {
 
     public CheckResult<TaskRule, String> check(String taskName, String methodName, Object[] params) {
         if (rules == null || rules.isEmpty()) {
-            return new CheckResult<>();
+            return CheckResult.success();
         }
 
         for(TaskRule r : rules.getAllow()) {
             if (matchRule(taskName, methodName, params, r)) {
-                return new CheckResult<>();
+                return CheckResult.success();
             }
         }
 
@@ -61,7 +61,7 @@ public class TaskPolicy {
             }
         }
 
-        return new CheckResult<>();
+        return CheckResult.success();
     }
 
     private boolean matchRule(String taskName, String methodName, Object[] params, TaskRule r) {

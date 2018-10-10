@@ -37,6 +37,7 @@ public class PolicyEngine {
     private final QueueProcessPolicy queueProcessPolicy;
     private final ConcurrentProcessPolicy concurrentProcessPolicy;
     private final ForkDepthPolicy forkDepthPolicy;
+    private final ProcessTimeoutPolicy processTimeoutPolicy;
 
     public PolicyEngine(Map<String, Object> rules) {
         this(objectMapper.convertValue(rules, PolicyEngineRules.class));
@@ -49,13 +50,11 @@ public class PolicyEngine {
         this.workspacePolicy = new WorkspacePolicy(rules.getWorkspaceRule());
         this.containerPolicy = new ContainerPolicy(rules.getContainerRules());
 
-        QueueRule qr = rules.getQueueRules();
-        if (qr == null) {
-            qr = new QueueRule(null, null, null, null, null );
-        }
+        QueueRule qr = getQueueRule(rules);
         this.queueProcessPolicy = new QueueProcessPolicy(qr.getProcess(), qr.getProcessPerOrg(), qr.getProcessPerProject());
         this.concurrentProcessPolicy = new ConcurrentProcessPolicy(qr.getConcurrent());
         this.forkDepthPolicy = new ForkDepthPolicy(qr.getForkDepthRule());
+        this.processTimeoutPolicy = new ProcessTimeoutPolicy(qr.getProcessTimeoutRule());
     }
 
     public DependencyPolicy getDependencyPolicy() {
@@ -88,6 +87,18 @@ public class PolicyEngine {
 
     public ForkDepthPolicy getForkDepthPolicy() {
         return forkDepthPolicy;
+    }
+
+    public ProcessTimeoutPolicy getProcessTimeoutPolicy() {
+        return processTimeoutPolicy;
+    }
+
+    private static QueueRule getQueueRule(PolicyEngineRules rules) {
+        if (rules.getQueueRules() == null) {
+            return QueueRule.empty();
+        }
+
+        return rules.getQueueRules();
     }
 
     private static ObjectMapper createObjectMapper() {

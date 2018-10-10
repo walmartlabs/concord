@@ -35,7 +35,7 @@ public class ContainerPolicy {
 
     public CheckResult<ContainerRule, Object> check(Map<String, Object> containerOptions) {
         if (rule == null) {
-            return new CheckResult<>();
+            return CheckResult.success();
         }
 
         List<CheckResult.Item<ContainerRule, Object>> deny = new ArrayList<>();

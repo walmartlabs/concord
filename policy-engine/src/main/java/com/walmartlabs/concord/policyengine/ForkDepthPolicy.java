@@ -33,7 +33,7 @@ public class ForkDepthPolicy {
 
     public CheckResult<ForkDepthRule, Integer> check(Callable<Integer> c) throws Exception {
         if (rule == null) {
-            return new CheckResult<>();
+            return CheckResult.success();
         }
 
         int depth = c.call();
@@ -41,6 +41,6 @@ public class ForkDepthPolicy {
             return new CheckResult<>(Collections.emptyList(),
                     Collections.singletonList(new CheckResult.Item<>(rule, depth)));
         }
-        return new CheckResult<>();
+        return CheckResult.success();
     }
 }

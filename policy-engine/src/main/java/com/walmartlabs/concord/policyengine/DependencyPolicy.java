@@ -40,7 +40,7 @@ public class DependencyPolicy {
 
     public CheckResult<DependencyRule, DependencyEntity> check(Collection<DependencyEntity> dependencies) {
         if (rules == null || rules.isEmpty()) {
-            return new CheckResult<>();
+            return CheckResult.success();
         }
 
         List<CheckResult.Item<DependencyRule, DependencyEntity>> warn = new ArrayList<>();

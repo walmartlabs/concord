@@ -40,7 +40,7 @@ public class QueueProcessPolicy {
     public CheckResult<ProcessRule, Integer> check(Function<Set<String>, QueueMetrics> c) {
         Set<String> statuses = collectStatuses();
         if (statuses.isEmpty()) {
-            return new CheckResult<>();
+            return CheckResult.success();
         }
 
         QueueMetrics m = c.apply(statuses);

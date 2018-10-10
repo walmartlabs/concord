@@ -32,14 +32,14 @@ public class ConcurrentProcessPolicy {
 
     public CheckResult<ConcurrentProcessRule, Integer> check(int processCount) {
         if (rule == null) {
-            return new CheckResult<>();
+            return CheckResult.success();
         }
 
         if (processCount >= rule.getMax()) {
             return new CheckResult<>(Collections.emptyList(),
                     Collections.singletonList(new CheckResult.Item<>(rule, processCount)));
         }
-        return new CheckResult<>();
+        return CheckResult.success();
     }
 
     public boolean hasRule() {

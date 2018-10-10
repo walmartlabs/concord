@@ -43,7 +43,7 @@ public class WorkspacePolicy {
 
     public CheckResult<WorkspaceRule, Path> check(Path p) throws IOException {
         if (rule == null) {
-            return new CheckResult<>();
+            return CheckResult.success();
         }
 
         List<CheckResult.Item<WorkspaceRule, Path>> deny = new ArrayList<>();

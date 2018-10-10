@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: a policy rule for setting the maximum allowed
+`processTimeout` value.
+
+
+
 ## [0.90.0] - 2018-10-09
 
 ### Added
