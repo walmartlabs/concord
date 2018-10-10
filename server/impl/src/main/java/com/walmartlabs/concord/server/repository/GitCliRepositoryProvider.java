@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.repository;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -437,6 +437,9 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
                 log.info("using GIT_ASKPASS to set credentials ");
             }
 
+            env.put("GIT_HTTP_LOW_SPEED_LIMIT", cfg.getHttpLowSpeedLimit());
+            env.put("GIT_HTTP_LOW_SPEED_TIME", cfg.getHttpLowSpeedTime());
+
             launchCommand(workDir, env, args);
         } catch (IOException e) {
             throw new RepositoryException("Failed to setup credentials", e);
@@ -545,7 +548,9 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             w.println("  DISPLAY=:123.456");
             w.println("  export DISPLAY");
             w.println("fi");
-            w.println("ssh -i \"" + key.toAbsolutePath().toString() + "\" -o StrictHostKeyChecking=no \"$@\"");
+            w.println("ssh -i \"" + key.toAbsolutePath().toString() + "\" -o ServerAliveCountMax=" + cfg.getSshTimeoutRetryCount() +
+                    " -o ServerAliveInterval=" + cfg.getSshTimeout() +
+                    " -o StrictHostKeyChecking=no \"$@\"");
         }
         Files.setPosixFilePermissions(ssh, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));
         return ssh;

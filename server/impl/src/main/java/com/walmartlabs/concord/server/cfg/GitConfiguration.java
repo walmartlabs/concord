@@ -41,11 +41,43 @@ public class GitConfiguration implements Serializable {
     @Config("git.shallowClone")
     private boolean shallowClone;
 
+    @Inject
+    @Config("git.httpLowSpeedLimit")
+    private String httpLowSpeedLimit;
+
+    @Inject
+    @Config("git.httpLowSpeedTime")
+    private String httpLowSpeedTime;
+
+    @Inject
+    @Config("git.sshTimeout")
+    private String sshTimeout;
+
+    @Inject
+    @Config("git.sshTimeoutRetryCount")
+    private String sshTimeoutRetryCount;
+
     public boolean isShallowClone() {
         return shallowClone;
     }
 
     public String getOauthToken() {
         return oauthToken;
+    }
+
+    public String getHttpLowSpeedLimit() {
+        return httpLowSpeedLimit;
+    }
+
+    public String getHttpLowSpeedTime() {
+        return httpLowSpeedTime;
+    }
+
+    public String getSshTimeout() {
+        return sshTimeout;
+    }
+
+    public String getSshTimeoutRetryCount() {
+        return sshTimeoutRetryCount;
     }
 }
