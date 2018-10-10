@@ -157,7 +157,7 @@ public class ProcessManager {
         while (!updated) {
             l = queueDao.getCascade(instanceId);
             List<UUID> ids = filterProcessIds(l, SERVER_PROCESS_STATUSES);
-            updated = ids.isEmpty() || queueDao.update(ids, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
+            updated = ids.isEmpty() || queueDao.updateStatus(ids, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
         }
 
         List<UUID> ids = filterProcessIds(l, AGENT_PROCESS_STATUSES);
@@ -263,7 +263,7 @@ public class ProcessManager {
             }
         }
 
-        return found && queueDao.update(instanceId, current, ProcessStatus.CANCELLED);
+        return found && queueDao.updateStatus(instanceId, current, ProcessStatus.CANCELLED);
     }
 
     @SuppressWarnings("unchecked")

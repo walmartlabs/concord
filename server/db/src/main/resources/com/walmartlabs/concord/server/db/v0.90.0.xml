@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="90000" author="ibodrov@gmail.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="HANDLERS" type="text[]" remarks="List of process handlers">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="90010" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
+            select
+                q1.INSTANCE_ID,
+                q1.PROCESS_KIND,
+                q1.PARENT_INSTANCE_ID,
+                prj.ORG_ID,
+                prj.ORG_NAME,
+                prj.PROJECT_ID,
+                prj.PROJECT_NAME,
+                q1.REPO_ID,
+                repos.REPO_NAME,
+                q1.REPO_URL,
+                q1.REPO_PATH,
+                q1.COMMIT_ID,
+                q1.COMMIT_MSG,
+                q1.CREATED_AT,
+                users.username as INITIATOR,
+                q1.INITIATOR_ID,
+                q1.CURRENT_STATUS,
+                q1.LAST_AGENT_ID,
+                q1.LAST_UPDATED_AT,
+                q1.PROCESS_TAGS,
+                array(select q2.INSTANCE_ID from PROCESS_QUEUE as q2 where q2.PARENT_INSTANCE_ID = q1.INSTANCE_ID) as CHILDREN_IDS,
+                cast(q1.META as varchar) as META,
+                q1.HANDLERS
+
+            from PROCESS_QUEUE as q1
+
+            left join
+            (select
+                PROJECT_ID,
+                PROJECT_NAME,
+                ORG_ID,
+                (select ORG_NAME from ORGANIZATIONS where ORGANIZATIONS.ORG_ID = PROJECTS.ORG_ID)
+                from PROJECTS) prj
+            on prj.PROJECT_ID = q1.PROJECT_ID
+
+            left join
+            REPOSITORIES repos on repos.REPO_ID = q1.REPO_ID
+
+            left join
+            USERS users on users.user_id = q1.INITIATOR_ID
+        </createView>
+    </changeSet>
+
+</databaseChangeLog>

@@ -56,7 +56,7 @@ public class AgentManager {
         String agentId = e.getLastAgentId();
         if (agentId == null) {
             log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", instanceId);
-            queueDao.update(instanceId, ProcessStatus.CANCELLED);
+            queueDao.updateStatus(instanceId, ProcessStatus.CANCELLED);
             return;
         }
 
@@ -73,7 +73,7 @@ public class AgentManager {
 
         if (!withoutAgent.isEmpty()) {
             withoutAgent.forEach(p -> log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", p));
-            queueDao.update(withoutAgent, ProcessStatus.CANCELLED, null);
+            queueDao.updateStatus(withoutAgent, ProcessStatus.CANCELLED, null);
         }
 
         List<AgentCommand> commands = l.stream()

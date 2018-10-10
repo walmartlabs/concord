@@ -52,6 +52,6 @@ public class FailProcessor implements ExceptionProcessor {
         }
 
         logManager.error(instanceId, "Process failed: {}", e.getMessage());
-        queueDao.update(instanceId, ProcessStatus.FAILED);
+        queueDao.updateStatus(instanceId, ProcessStatus.FAILED);
     }
 }

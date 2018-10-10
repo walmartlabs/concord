@@ -98,7 +98,10 @@ public class EnqueueingProcessor implements PayloadProcessor {
         Instant startAt = getStartAt(payload);
         Long processTimeout = getProcessTimeout(payload);
 
-        queueDao.update(instanceId, ProcessStatus.ENQUEUED, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout);
+        Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
+
+        queueDao.enqueue(instanceId, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout, handlers);
+
         return chain.process(payload);
     }
 

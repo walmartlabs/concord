@@ -133,7 +133,7 @@ public class ProcessCheckpointResource implements Resource {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        processQueueDao.update(instanceId, ProcessStatus.SUSPENDED);
+        processQueueDao.updateStatus(instanceId, ProcessStatus.SUSPENDED);
 
         processManager.resume(payload);
         return new ResumeProcessResponse();

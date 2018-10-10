@@ -68,7 +68,7 @@ public class ProcessPipeline extends Pipeline {
                 RequestDataStoringProcessor.class,
                 PolicyProcessor.class,
                 StateImportingProcessor.class,
-                FlowMetadataProcessor.class,
+                ProcessHandlersProcessor.class,
                 SecuritySubjectProcessor.class,
                 EnqueueingProcessor.class);
 

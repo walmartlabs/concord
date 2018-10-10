@@ -56,6 +56,7 @@ public class ProcessEntry implements Serializable {
     private final Set<String> tags;
     private final Set<UUID> childrenIds;
     private final Map<String, Object> meta;
+    private final Set<String> handlers;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private final Date createdAt;
@@ -84,7 +85,8 @@ public class ProcessEntry implements Serializable {
                         @JsonProperty("lastAgentId") String lastAgentId,
                         @JsonProperty("tags") Set<String> tags,
                         @JsonProperty("childrenIds") Set<UUID> childrenIds,
-                        @JsonProperty("meta") Map<String, Object> meta) {
+                        @JsonProperty("meta") Map<String, Object> meta,
+                        @JsonProperty("handlers") Set<String> handlers) {
 
         this.instanceId = instanceId;
         this.kind = kind;
@@ -105,13 +107,13 @@ public class ProcessEntry implements Serializable {
         this.lastUpdatedAt = lastUpdatedAt;
         this.status = status;
         this.lastAgentId = lastAgentId;
-
-        // TODO left for backwards compatibility
-        this.logFileName = instanceId + ".log";
-
         this.tags = tags;
         this.childrenIds = childrenIds;
         this.meta = meta;
+        this.handlers = handlers;
+
+        // TODO left for backwards compatibility
+        this.logFileName = instanceId + ".log";
     }
 
     public UUID getInstanceId() {
@@ -206,6 +208,10 @@ public class ProcessEntry implements Serializable {
         return meta;
     }
 
+    public Set<String> getHandlers() {
+        return handlers;
+    }
+
     @Override
     public String toString() {
         return "ProcessEntry{" +
@@ -223,15 +229,16 @@ public class ProcessEntry implements Serializable {
                 ", commitId='" + commitId + '\'' +
                 ", commitMsg='" + commitMsg + '\'' +
                 ", initiator='" + initiator + '\'' +
-                ", initiatorId='" + initiatorId + '\'' +
+                ", initiatorId=" + initiatorId +
                 ", status=" + status +
                 ", lastAgentId='" + lastAgentId + '\'' +
                 ", logFileName='" + logFileName + '\'' +
                 ", tags=" + tags +
                 ", childrenIds=" + childrenIds +
+                ", meta=" + meta +
+                ", handlers=" + handlers +
                 ", createdAt=" + createdAt +
                 ", lastUpdatedAt=" + lastUpdatedAt +
-                ", meta=" + meta +
                 '}';
     }
 }

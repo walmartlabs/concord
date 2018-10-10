@@ -48,6 +48,7 @@ public class Payload {
     public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");
     public static final HeaderKey<Map<String, Object>> REQUIREMENTS = HeaderKey.registerMap("_requirements");
     public static final HeaderKey<PolicyEntry> POLICY = HeaderKey.register("_policy", PolicyEntry.class);
+    public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 

@@ -21,7 +21,9 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.agent.AgentCommandsDao;
@@ -31,7 +33,6 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.process.state.ProcessMetadataManager;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.*;
 import org.slf4j.Logger;
@@ -48,7 +49,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory.PROCESS_STATUS_HISTORY;
 import static org.jooq.impl.DSL.*;
 
@@ -60,18 +60,15 @@ public class ProcessQueueWatchdog implements BackgroundTask {
 
     private static final PollEntry POLL_ENTRIES[] = {
             new PollEntry(ProcessStatus.FAILED,
-                    ProcessMetadataManager.ON_FAILURE_MARKER_PATH,
-                    InternalConstants.Flows.ON_FAILURE_FLOW,
+                    Constants.Flows.ON_FAILURE_FLOW,
                     ProcessKind.FAILURE_HANDLER, 3),
 
             new PollEntry(ProcessStatus.CANCELLED,
-                    ProcessMetadataManager.ON_CANCEL_MARKER_PATH,
-                    InternalConstants.Flows.ON_CANCEL_FLOW,
+                    Constants.Flows.ON_CANCEL_FLOW,
                     ProcessKind.CANCEL_HANDLER, 3),
 
             new PollEntry(ProcessStatus.TIMED_OUT,
-                    ProcessMetadataManager.ON_TIMEOUT_MARKER_PATH,
-                    InternalConstants.Flows.ON_TIMEOUT_FLOW,
+                    Constants.Flows.ON_TIMEOUT_FLOW,
                     ProcessKind.TIMEOUT_HANDLER, 3)
     };
 
@@ -313,14 +310,12 @@ public class ProcessQueueWatchdog implements BackgroundTask {
     private static final class PollEntry {
 
         private final ProcessStatus status;
-        private final String marker;
         private final String flow;
         private final ProcessKind handlerKind;
         private final int maxTries;
 
-        private PollEntry(ProcessStatus status, String marker, String flow, ProcessKind handlerKind, int maxTries) {
+        private PollEntry(ProcessStatus status, String flow, ProcessKind handlerKind, int maxTries) {
             this.status = status;
-            this.marker = marker;
             this.flow = flow;
             this.handlerKind = handlerKind;
             this.maxTries = maxTries;
@@ -347,7 +342,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .where(q.PROCESS_KIND.in(Utils.toString(HANDLED_PROCESS_KINDS))
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
                             .and(q.CREATED_AT.greaterOrEqual(maxAge))
-                            .and(hasMarker(q.INSTANCE_ID, entry.marker))
+                            .and(PgUtils.contains(q.HANDLERS, new String[]{entry.flow}))
                             .and(noSuccessfulHandlers(q.INSTANCE_ID, entry.handlerKind))
                             .and(count(tx, q.INSTANCE_ID, entry.handlerKind).lessThan(entry.maxTries))
                             .and(noRunningHandlers(q.INSTANCE_ID)))
@@ -414,11 +409,6 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .where(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId)
                             .and(PROCESS_QUEUE.CURRENT_STATUS.in(Utils.toString(ACTIVE_PROCESS_STATUSES)))
                             .and(PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
-        }
-
-        private Condition hasMarker(Field<UUID> instanceId, String marker) {
-            return exists(selectOne().from(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
-                    .and(PROCESS_STATE.ITEM_PATH.eq(marker))));
         }
 
         private static ProcessEntry toEntry(Record3<UUID, UUID, UUID> r) {

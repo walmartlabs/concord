@@ -128,76 +128,83 @@ public class ProcessQueueDao extends AbstractDao {
         insertHistoryStatus(tx, instanceId, status);
     }
 
-    public void update(UUID instanceId, ProcessStatus status) {
-        update(instanceId, status, null, null, null, null, null, null, null, null, null);
+    public void enqueue(UUID instanceId, Set<String> tags, Instant startAt,
+                        Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
+                        String commitId, String commitMsg, Long processTimeout,
+                        Set<String> handlers) {
+
+        tx(tx -> {
+            UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
+
+            if (tags != null) {
+                q.set(PROCESS_QUEUE.PROCESS_TAGS, toArray(tags));
+            }
+
+            if (startAt != null) {
+                q.set(PROCESS_QUEUE.START_AT, Timestamp.from(startAt));
+            }
+
+            if (requirements != null) {
+                q.set(PROCESS_QUEUE.REQUIREMENTS, field("?::jsonb", String.class, serialize(requirements)));
+            }
+
+            if (repoId != null) {
+                q.set(PROCESS_QUEUE.REPO_ID, repoId);
+            }
+
+            if (repoUrl != null) {
+                q.set(PROCESS_QUEUE.REPO_URL, repoUrl);
+            }
+
+            if (repoPath != null) {
+                q.set(PROCESS_QUEUE.REPO_PATH, repoPath);
+            }
+
+            if (commitId != null) {
+                q.set(PROCESS_QUEUE.COMMIT_ID, commitId);
+            }
+
+            if (commitMsg != null) {
+                q.set(PROCESS_QUEUE.COMMIT_MSG, commitMsg);
+            }
+
+            if (processTimeout != null) {
+                q.set(PROCESS_QUEUE.TIMEOUT, processTimeout);
+            }
+
+            if (handlers != null) {
+                q.set(PROCESS_QUEUE.HANDLERS, toArray(handlers));
+            }
+
+            int i = q
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .execute();
+
+            if (i != 1) {
+                throw new DataAccessException("Invalid number of rows updated: " + i);
+            }
+
+            insertHistoryStatus(tx, instanceId, ProcessStatus.ENQUEUED);
+        });
     }
 
-    public void update(UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt,
-                       Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
-                       String commitId, String commitMsg, Long processTimeout) {
-        tx(tx -> update(tx, instanceId, status, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout));
+    public void updateStatus(UUID instanceId, ProcessStatus status) {
+        tx(tx -> updateStatus(tx, instanceId, status));
     }
 
-    public void update(DSLContext tx, UUID instanceId, ProcessStatus status) {
-        update(tx, instanceId, status, null, null, null, null, null, null, null, null, null);
-    }
-
-    public void update(DSLContext tx, UUID instanceId, ProcessStatus status, Set<String> tags, Instant startAt,
-                       Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
-                       String commitId, String commitMsg, Long processTimeout) {
-
-        UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
+    public void updateStatus(DSLContext tx, UUID instanceId, ProcessStatus status) {
+        tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
-
-        if (tags != null) {
-            q.set(PROCESS_QUEUE.PROCESS_TAGS, toArray(tags));
-        }
-
-        if (startAt != null) {
-            q.set(PROCESS_QUEUE.START_AT, Timestamp.from(startAt));
-        }
-
-        if (requirements != null) {
-            q.set(PROCESS_QUEUE.REQUIREMENTS, field("?::jsonb", String.class, serialize(requirements)));
-        }
-
-        if (repoId != null) {
-            q.set(PROCESS_QUEUE.REPO_ID, repoId);
-        }
-
-        if (repoUrl != null) {
-            q.set(PROCESS_QUEUE.REPO_URL, repoUrl);
-        }
-
-        if (repoPath != null) {
-            q.set(PROCESS_QUEUE.REPO_PATH, repoPath);
-        }
-
-        if (commitId != null) {
-            q.set(PROCESS_QUEUE.COMMIT_ID, commitId);
-        }
-
-        if (commitMsg != null) {
-            q.set(PROCESS_QUEUE.COMMIT_MSG, commitMsg);
-        }
-
-        if (processTimeout != null) {
-            q.set(PROCESS_QUEUE.TIMEOUT, processTimeout);
-        }
-
-        int i = q
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .execute();
-
-        if (i != 1) {
-            throw new DataAccessException("Invalid number of rows updated: " + i);
-        }
 
         insertHistoryStatus(tx, instanceId, status);
     }
 
-    public boolean update(UUID instanceId, ProcessStatus expected, ProcessStatus status) {
+    public boolean updateStatus(UUID instanceId, ProcessStatus expected, ProcessStatus status) {
         return txResult(tx -> {
             int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
@@ -212,7 +219,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean update(UUID instanceId, Map<String, Object> meta) {
+    public boolean updateMeta(UUID instanceId, Map<String, Object> meta) {
         return txResult(tx -> {
             int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta)))
@@ -223,7 +230,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean update(List<UUID> instanceIds, ProcessStatus status, List<ProcessStatus> expected) {
+    public boolean updateStatus(List<UUID> instanceIds, ProcessStatus status, List<ProcessStatus> expected) {
         return txResult(tx -> {
             UpdateConditionStep q = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
@@ -472,7 +479,7 @@ public class ProcessQueueDao extends AbstractDao {
                 }
             }
 
-            update(tx, id, ProcessStatus.STARTING);
+            updateStatus(tx, id, ProcessStatus.STARTING);
 
             return FindResult.done(tx.selectFrom(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(id))
@@ -607,10 +614,18 @@ public class ProcessQueueDao extends AbstractDao {
                 r.getLastAgentId(),
                 tags,
                 toSet(r.getChildrenIds()),
-                deserialize(r.getMeta()));
+                deserialize(r.getMeta()),
+                toSet(r.getHandlers()));
     }
 
     private static Set<UUID> toSet(UUID[] arr) {
+        if (arr == null) {
+            return null;
+        }
+        return new HashSet<>(Arrays.asList(arr));
+    }
+
+    private static Set<String> toSet(String[] arr) {
         if (arr == null) {
             return null;
         }
