@@ -179,6 +179,22 @@ public class Constants {
     }
 
     /**
+     * Process metadata keys.
+     */
+    public static class Meta {
+
+        /**
+         * Internal metadata group.
+         */
+        public static final String SYSTEM_GROUP = "_system";
+
+        /**
+         * ID of the request which created the process.
+         */
+        public static final String REQUEST_ID = "requestId";
+    }
+
+    /**
      * Project files and directories.
      */
     public static class Files {

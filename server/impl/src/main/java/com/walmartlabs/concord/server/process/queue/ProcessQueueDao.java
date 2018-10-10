@@ -557,6 +557,10 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     private String serialize(Object details) {
+        if (details == null) {
+            return null;
+        }
+
         try {
             return objectMapper.writeValueAsString(details);
         } catch (IOException e) {

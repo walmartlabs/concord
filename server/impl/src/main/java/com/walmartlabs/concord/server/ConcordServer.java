@@ -67,6 +67,7 @@ public class ConcordServer {
                 .serve("/logs/*").with(LogServlet.class) // backward compatibility
                 .serve("/metrics").with(MetricsServlet.class) // prometheus integration
                 .serve("/concord/*").with(new ServiceInitServlet()) // only to start the background services
+                .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(RequestIdFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
                 .secureCookiesEnabled(ServerConfiguration.secureCookies)

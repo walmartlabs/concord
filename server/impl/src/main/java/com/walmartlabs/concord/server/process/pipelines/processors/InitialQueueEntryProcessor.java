@@ -21,14 +21,16 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -53,10 +55,23 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
         UUID initiatorId = payload.getHeader(Payload.INITIATOR_ID);
 
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
-        Map<String, Object> meta = (Map<String, Object>) cfg.get(Constants.Request.META);
+        Map<String, Object> meta = getMeta(cfg);
 
         queueDao.insertInitial(instanceId, kind, parentInstanceId, projectId, initiatorId, meta);
 
         return chain.process(payload);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> getMeta(Map<String, Object> cfg) {
+        Map<String, Object> m = (Map<String, Object>) cfg.get(Constants.Request.META);
+        if (m == null) {
+            m = Collections.emptyMap();
+        }
+
+        m = new HashMap<>(m);
+        m.put(Constants.Meta.SYSTEM_GROUP, Collections.singletonMap(Constants.Meta.REQUEST_ID, RequestId.get()));
+
+        return m;
     }
 }

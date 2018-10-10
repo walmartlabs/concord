@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: assign an save a unique "request ID" to link audit
+logs and the process queue data; 
 - concord-server: ability to restrict the max number of forks using
 policies;
 - concord-server: ability to restrict the max number of processes in

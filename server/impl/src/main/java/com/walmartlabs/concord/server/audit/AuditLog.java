@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.audit;
  * =====
  */
 
+import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
@@ -110,6 +111,8 @@ public class AuditLog {
                 actionSource.put("type", ActionSource.API_REQUEST);
             }
             details.put("actionSource", actionSource);
+
+            details.put("requestId", RequestId.get());
 
             auditDao.insert(userId, object, action, details);
         }
