@@ -119,7 +119,6 @@ public class PolicyIT extends AbstractServerIT {
         waitForCompletion(processApi, spr.getInstanceId());
     }
 
-
     @Test(timeout = 60000)
     public void testMaxProcess() throws Exception {
         String orgName = "org_" + randomString();
@@ -183,6 +182,35 @@ public class PolicyIT extends AbstractServerIT {
 
         StartProcessResponse spr2 = start(input2);
         waitForCompletion(processApi, spr2.getInstanceId());
+    }
+
+    @Test(timeout = 60000)
+    public void testMaxProcessTimeout() throws Exception {
+        String orgName = createOrg();
+        String projectName = createProject(orgName);
+
+        Map<String, Object> queueRules = new HashMap<>();
+        queueRules.put("processTimeout", singletonMap("max", "PT1M"));
+
+        Map<String, Object> rules = singletonMap("queue", queueRules);
+
+        createPolicy(orgName, projectName, rules);
+
+        // ---
+        byte[] payload = archive(ProcessIT.class.getResource("process").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("request", singletonMap("processTimeout", "PT10M"));
+
+        try {
+            StartProcessResponse spr = start(input);
+            fail("exception expected");
+        } catch (ApiException e) {
+            // expected
+        }
     }
 
     private String createOrg() throws ApiException {
