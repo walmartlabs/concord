@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
+import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -62,6 +63,7 @@ public class RepositoryResource implements Resource {
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final ProjectRepositoryManager projectRepositoryManager;
+    private final GithubWebhookService githubWebhookService;
 
     @Inject
     public RepositoryResource(OrganizationManager orgManager,
@@ -70,7 +72,8 @@ public class RepositoryResource implements Resource {
                               ExternalEventResource externalEventResource,
                               ProjectDao projectDao,
                               RepositoryDao repositoryDao,
-                              ProjectRepositoryManager projectRepositoryManager) {
+                              ProjectRepositoryManager projectRepositoryManager,
+                              GithubWebhookService githubWebhookService) {
 
         this.orgManager = orgManager;
         this.accessManager = accessManager;
@@ -79,6 +82,7 @@ public class RepositoryResource implements Resource {
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.projectRepositoryManager = projectRepositoryManager;
+        this.githubWebhookService = githubWebhookService;
     }
 
     @POST
@@ -150,7 +154,9 @@ public class RepositoryResource implements Resource {
             throw new ConcordApplicationException("Repository not found: " + projectName, Status.NOT_FOUND);
         }
 
-        repositoryCacheDao.updateLastPushDate(repos.get(repositoryName).getId(), new Date());
+        RepositoryEntry repo = repos.get(repositoryName);
+        repositoryCacheDao.updateLastPushDate(repo.getId(), new Date());
+        githubWebhookService.refreshWebhook(projectId, repo.getId(), repo.getName(), repo.getUrl());
 
         Map<String, Object> event = new HashMap<>();
         event.put("event", "repositoryRefresh");

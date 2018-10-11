@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: refresh GitHub webhooks when a
+repository is refreshed;
 - concord-server: timeout options for GIT's HTTPS and SSH transports; 
 - concord-server: a policy rule for setting the maximum allowed
 `processTimeout` value.
