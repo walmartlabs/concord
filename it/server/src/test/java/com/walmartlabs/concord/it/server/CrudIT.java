@@ -21,12 +21,12 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.googlecode.junittoolbox.ParallelRunner;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -261,7 +261,7 @@ public class CrudIT extends AbstractServerIT {
         String repositoryName = "repository_" + randomString();
         String name = "lp-name-1";
         String description = "description";
-        String icon = Base64.encode("icon".getBytes());
+        String icon = new String(Base64.getEncoder().encode("icon".getBytes()));
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()

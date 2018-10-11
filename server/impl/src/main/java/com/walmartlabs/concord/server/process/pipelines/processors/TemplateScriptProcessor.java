@@ -24,13 +24,13 @@ import com.walmartlabs.concord.common.CycleChecker;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -52,9 +52,9 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     private final ScriptEngine scriptEngine;
 
     @Inject
-    public TemplateScriptProcessor(LogManager logManager) throws IOException {
+    public TemplateScriptProcessor(LogManager logManager) {
         this.logManager = logManager;
-        this.scriptEngine = new NashornScriptEngineFactory().getScriptEngine("--no-java");
+        this.scriptEngine = new ScriptEngineManager().getEngineByName("nashorn");
     }
 
     @Override

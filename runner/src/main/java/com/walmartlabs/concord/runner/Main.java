@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.*;
+import com.google.inject.Module;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
