@@ -83,13 +83,9 @@ public class GithubWebhookService extends PeriodicTask {
     }
 
     public void refreshWebhook(UUID projectId, UUID repoId, String repoName, String repoUrl) {
-        try {
-            unregister(projectId, repoName, repoUrl);
-            boolean success = register(projectId, repoName, repoUrl);
-            refresherDao.update(repoId, success);
-        } catch (Exception e) {
-            log.warn("refreshWebhook ['{}', '{}', '{}'] -> failed: {}", projectId, repoName, repoUrl, e.getMessage());
-        }
+        unregister(projectId, repoName, repoUrl);
+        boolean success = register(projectId, repoName, repoUrl);
+        refresherDao.update(repoId, success);
     }
 
     @Override
@@ -105,7 +101,14 @@ public class GithubWebhookService extends PeriodicTask {
     protected void performTask() {
         exclusiveLock.withTryLock(TASK_LOCK_KEY, () -> {
             List<Entry> repositories = refresherDao.list();
-            repositories.forEach(r -> refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoName(), r.getRepoUrl()));
+            for (Entry r : repositories) {
+                try {
+                    refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoName(), r.getRepoUrl());
+                } catch (Exception e) {
+                    log.warn("performTask ['{}', '{}', '{}'] -> failed: {}",
+                            r.getProjectId(), r.getRepoId(), r.getRepoUrl(), e.getMessage());
+                }
+            }
             log.info("performTask -> {} repositories processed", repositories.size());
         });
     }

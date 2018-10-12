@@ -156,7 +156,11 @@ public class RepositoryResource implements Resource {
 
         RepositoryEntry repo = repos.get(repositoryName);
         repositoryCacheDao.updateLastPushDate(repo.getId(), new Date());
-        githubWebhookService.refreshWebhook(projectId, repo.getId(), repo.getName(), repo.getUrl());
+        try {
+            githubWebhookService.refreshWebhook(projectId, repo.getId(), repo.getName(), repo.getUrl());
+        } catch (Exception e) {
+            throw new ConcordApplicationException("Refresh repository web hook error: " + e.getMessage(), e);
+        }
 
         Map<String, Object> event = new HashMap<>();
         event.put("event", "repositoryRefresh");
