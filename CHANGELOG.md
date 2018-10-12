@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: the secret decryption error now contains the
+secret's name;
 - concord-server, concord-console: refresh GitHub webhooks when a
 repository is refreshed;
 - concord-server: timeout options for GIT's HTTPS and SSH transports; 

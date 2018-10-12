@@ -58,8 +58,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
-
 @Named
 @Singleton
 @Api(value = "Secrets", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
@@ -193,7 +191,7 @@ public class SecretResource implements Resource {
             }
         } catch (SecurityException e) {
             log.warn("fetchSecret -> error: {}", e.getMessage());
-            throw new SecretException("Error while fetching a secret: " + e.getMessage());
+            throw new SecretException("Error while fetching a secret '" + secretName + "': " + e.getMessage());
         } catch (ValidationErrorsException e) {
             log.warn("fetchSecret -> error: {}", e.getMessage());
             return null;
@@ -206,7 +204,7 @@ public class SecretResource implements Resource {
                     .build();
         } catch (Exception e) {
             log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
-            throw new ConcordApplicationException("Error while fetching a secret: " + e.getMessage());
+            throw new ConcordApplicationException("Error while fetching a secret '" + secretName + "': " + e.getMessage());
         }
     }
 
