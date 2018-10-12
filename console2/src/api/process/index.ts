@@ -117,3 +117,14 @@ export const get = (instanceId: ConcordId): Promise<ProcessEntry> =>
 
 export const kill = (instanceId: ConcordId): Promise<{}> =>
     managedFetch(`/api/v1/process/${instanceId}`, { method: 'DELETE' });
+
+export const killBulk = (instanceIds: ConcordId[]): Promise<{}> => {
+    const opts = {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(instanceIds)
+    };
+    return managedFetch('/api/v1/process/bulk', opts);
+};

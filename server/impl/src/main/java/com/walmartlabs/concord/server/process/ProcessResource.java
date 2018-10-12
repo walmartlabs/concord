@@ -469,6 +469,19 @@ public class ProcessResource implements Resource {
     }
 
     /**
+     * Forcefully stops list of processes.
+     *
+     * @param instanceIdList
+     */
+    @DELETE
+    @ApiOperation("Forcefully stop processes")
+    @javax.ws.rs.Path("/bulk")
+    @WithTimer
+    public void batchKill(@ApiParam List<UUID> instanceIdList) {
+        instanceIdList.stream().forEach(this::kill);
+    }
+
+    /**
      * Forcefully stops a process and all its children.
      *
      * @param instanceId

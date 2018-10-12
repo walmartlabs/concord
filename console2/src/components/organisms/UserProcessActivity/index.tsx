@@ -97,7 +97,7 @@ class UserProcesses extends React.PureComponent<SessionProps & StateProps & Disp
     }
 
     render() {
-        const { userActivity, loading, error } = this.props;
+        const { userActivity, loading, error, load } = this.props;
         if (error) {
             return <RequestErrorMessage error={error} />;
         }
@@ -124,7 +124,8 @@ class UserProcesses extends React.PureComponent<SessionProps & StateProps & Disp
                     Your last {MAX_OWN_PROCESSES} processes:
                 </Header>
                 <ProcessList
-                    processes={processes}
+                    data={processes}
+                    refresh={load}
                     columns={[
                         INSTANCE_ID_COLUMN,
                         PROJECT_COLUMN,

@@ -23,12 +23,19 @@ import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { list as apiOrgList, SearchFilter } from '../../../api/org/process';
-import { get as apiGet, kill as apiKill, start as apiStart } from '../../../api/process';
+import {
+    get as apiGet,
+    kill as apiKill,
+    start as apiStart,
+    killBulk as apiKillBulk
+} from '../../../api/process';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
 import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } from './poll';
 import {
+    CancelBulkProcessRequest,
+    CancelBullkProcessState,
     CancelProcessRequest,
     CancelProcessState,
     GetProcessRequest,
@@ -57,10 +64,14 @@ const actionTypes = {
     CANCEL_PROCESS_REQUEST: `${NAMESPACE}/cancel/request`,
     CANCEL_PROCESS_RESPONSE: `${NAMESPACE}/cancel/response`,
 
+    CANCEL_BULK_PROCESS_REQUEST: `${NAMESPACE}/cancel/bulk/process/request`,
+    CANCEL_BULK_PROCESS_RESPONSE: `${NAMESPACE}/cancel/bulk/process/response`,
+
     RESTORE_PROCESS_REQUEST: `${NAMESPACE}/restore/request`,
     RESTORE_PROCESS_RESPONSE: `${NAMESPACE}/restore/response`,
 
-    RESET_PROCESS: `${NAMESPACE}/reset`
+    RESET_PROCESS: `${NAMESPACE}/reset`,
+    RESET_BULK_PROCESS: `${NAMESPACE}/reset/bulk`
 };
 
 export const actions = {
@@ -100,6 +111,13 @@ export const actions = {
     cancel: (instanceId: ConcordId): CancelProcessRequest => ({
         type: actionTypes.CANCEL_PROCESS_REQUEST,
         instanceId
+    }),
+    cancelBulk: (instanceIds: ConcordId[]): CancelBulkProcessRequest => ({
+        type: actionTypes.CANCEL_BULK_PROCESS_REQUEST,
+        instanceIds
+    }),
+    resetBulk: () => ({
+        type: actionTypes.RESET_BULK_PROCESS
     }),
 
     reset: () => ({
@@ -182,6 +200,27 @@ const cancelProcessReducers = combineReducers<CancelProcessState>({
     }
 });
 
+const cancelBulkProcessReducers = combineReducers<CancelBullkProcessState>({
+    running: makeLoadingReducer(
+        [actionTypes.CANCEL_BULK_PROCESS_REQUEST],
+        [actionTypes.RESET_BULK_PROCESS, actionTypes.CANCEL_BULK_PROCESS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.RESET_BULK_PROCESS, actionTypes.CANCEL_BULK_PROCESS_REQUEST],
+        [actionTypes.CANCEL_BULK_PROCESS_RESPONSE]
+    ),
+    response: (state = false, { type, error }: Action & { error?: {} }) => {
+        switch (type) {
+            case actionTypes.RESET_BULK_PROCESS:
+                return false;
+            case actionTypes.CANCEL_BULK_PROCESS_RESPONSE:
+                return !error;
+            default:
+                return state;
+        }
+    }
+});
+
 export const reducers = combineReducers<State>({
     // TODO use RequestState<?>
     processById, // TODO makeEntityByIdReducer
@@ -191,6 +230,7 @@ export const reducers = combineReducers<State>({
     startProcess: startProcessReducers,
     cancelProcess: cancelProcessReducers,
     restoreProcess: restoreProcessReducers,
+    cancelBulkProcess: cancelBulkProcessReducers,
 
     log: logReducers,
     poll: pollReducers
@@ -243,6 +283,17 @@ function* onCancelProcess({ instanceId }: CancelProcessRequest) {
     }
 }
 
+function* onCancelBulkProcess({ instanceIds }: CancelBulkProcessRequest) {
+    try {
+        yield call(apiKillBulk, instanceIds);
+        yield put({
+            type: actionTypes.CANCEL_BULK_PROCESS_RESPONSE
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.CANCEL_BULK_PROCESS_RESPONSE, e);
+    }
+}
+
 function* onRestoreProcess({ instanceId, checkpointId }: RestoreProcessRequest) {
     try {
         const response = yield call(apiRestore, instanceId, checkpointId);
@@ -262,6 +313,7 @@ export const sagas = function*() {
         takeLatest(actionTypes.GET_PROCESS_REQUEST, onGetProcess),
         throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProjectList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
+        takeLatest(actionTypes.CANCEL_BULK_PROCESS_REQUEST, onCancelBulkProcess),
         takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),
         takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),
         fork(logSagas),

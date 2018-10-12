@@ -61,6 +61,9 @@ export interface RestoreProcessRequest extends Action {
 export interface CancelProcessRequest extends Action {
     instanceId: ConcordId;
 }
+export interface CancelBulkProcessRequest extends Action {
+    instanceIds: ConcordId[];
+}
 
 export interface Processes {
     [id: string]: ProcessEntry;
@@ -69,6 +72,7 @@ export interface Processes {
 export type StartProcessState = RequestState<StartProcessResponse>;
 export type CancelProcessState = RequestState<boolean>;
 export type RestoreProcessState = RequestState<RestoreProcessResponse>;
+export type CancelBullkProcessState = RequestState<boolean>;
 
 export interface State {
     processById: Processes;
@@ -79,6 +83,7 @@ export interface State {
 
     startProcess: StartProcessState;
     cancelProcess: CancelProcessState;
+    cancelBulkProcess: CancelBullkProcessState;
     restoreProcess: RestoreProcessState;
 
     log: LogState;

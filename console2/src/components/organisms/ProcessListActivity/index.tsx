@@ -23,13 +23,13 @@ import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { replace as pushHistory } from 'react-router-redux';
-import { Button, Input, Menu } from 'semantic-ui-react';
+import { Loader } from 'semantic-ui-react';
 
 import { queryParams, RequestError } from '../../../api/common';
 import { SearchFilter } from '../../../api/org/process';
 import { ProcessEntry, ProcessStatus } from '../../../api/process';
 import { actions, Processes, State } from '../../../state/data/processes';
-import { ProcessList, ProcessStatusDropdown, RequestErrorMessage } from '../../molecules';
+import { RequestErrorMessage } from '../../molecules';
 import {
     CREATED_AT_COLUMN,
     INITIATOR_COLUMN,
@@ -39,6 +39,22 @@ import {
     UPDATED_AT_COLUMN
 } from '../../molecules/ProcessList';
 import { ColumnDefinition } from '../../../api/org';
+import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
+
+const defaultColumns = [
+    INSTANCE_ID_COLUMN,
+    PROJECT_COLUMN,
+    INITIATOR_COLUMN,
+    CREATED_AT_COLUMN,
+    UPDATED_AT_COLUMN
+];
+const withoutProjectColumns = [
+    INSTANCE_ID_COLUMN,
+    REPO_COLUMN,
+    INITIATOR_COLUMN,
+    CREATED_AT_COLUMN,
+    UPDATED_AT_COLUMN
+];
 
 interface RouteProps {
     status?: string;
@@ -50,7 +66,7 @@ interface RouteProps {
 interface StateProps {
     processes: ProcessEntry[];
     loading: boolean;
-    error: RequestError;
+    loadError: RequestError;
 }
 
 interface DispatchProps {
@@ -68,21 +84,6 @@ interface ExternalProps {
 }
 
 type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
-
-const defaultColumns = [
-    INSTANCE_ID_COLUMN,
-    PROJECT_COLUMN,
-    INITIATOR_COLUMN,
-    CREATED_AT_COLUMN,
-    UPDATED_AT_COLUMN
-];
-const withoutProjectColumns = [
-    INSTANCE_ID_COLUMN,
-    REPO_COLUMN,
-    INITIATOR_COLUMN,
-    CREATED_AT_COLUMN,
-    UPDATED_AT_COLUMN
-];
 
 const parseSearchFilter = (s: string): SearchFilter => {
     const v: any = parseQueryString(s);
@@ -136,31 +137,28 @@ class ProcessListActivity extends React.Component<Props> {
         load(orgName, projectName, this.currentFilter);
     }
 
-    handleStatusChange(s?: string) {
-        this.currentFilter.status = s && s.length > 0 ? ProcessStatus[s] : undefined;
-        this.update();
-    }
-
-    handleInitiatorChange(s?: string) {
-        this.currentFilter.initiator = s && s.length > 0 ? s : undefined;
-        this.update();
-    }
-
     render() {
         const {
-            loading,
-            error,
             processes,
             showInitiatorFilter = false,
             columns,
-            projectName
+            orgName,
+            projectName,
+            loadError,
+            loading,
+            load
         } = this.props;
 
-        if (error) {
-            return <RequestErrorMessage error={error} />;
+        if (loadError) {
+            return <RequestErrorMessage error={loadError} />;
         }
+
+        if (loading) {
+            return <Loader active={true} />;
+        }
+
         if (!processes) {
-            return <p>No processes found.</p>;
+            return <h3>No processes found.</h3>;
         }
 
         const showProjectColumn = !projectName;
@@ -168,35 +166,16 @@ class ProcessListActivity extends React.Component<Props> {
 
         return (
             <>
-                <Menu attached="top" borderless={true}>
-                    <Menu.Item>
-                        <Button
-                            basic={true}
-                            icon="refresh"
-                            loading={loading}
-                            onClick={() => this.update()}
-                        />
-                    </Menu.Item>
-                    <Menu.Item>
-                        <ProcessStatusDropdown
-                            value={this.currentFilter.status}
-                            onChange={(ev, data) => this.handleStatusChange(data.value as string)}
-                        />
-                    </Menu.Item>
-                    {showInitiatorFilter && (
-                        <Menu.Item>
-                            <Input
-                                placeholder="Initiator"
-                                value={
-                                    this.currentFilter.initiator ? this.currentFilter.initiator : ''
-                                }
-                                onChange={(ev, data) => this.handleInitiatorChange(data.value)}
-                            />
-                        </Menu.Item>
-                    )}
-                </Menu>
+                {loadError && <RequestErrorMessage error={loadError} />}
 
-                <ProcessList processes={processes} columns={cols} />
+                <ProcessListWithSearch
+                    processes={processes}
+                    columns={cols}
+                    loading={loading}
+                    loadError={loadError}
+                    refresh={() => load(orgName, projectName, this.currentFilter)}
+                    showInitiatorFilter={showInitiatorFilter}
+                />
             </>
         );
     }
@@ -211,7 +190,7 @@ const makeProcessList = (data: Processes): ProcessEntry[] => {
 
 const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
     loading: processes.loading,
-    error: processes.error,
+    loadError: processes.error,
     processes: makeProcessList(processes.processById)
 });
 

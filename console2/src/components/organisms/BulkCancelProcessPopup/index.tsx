@@ -26,7 +26,7 @@ import { actions, State } from '../../../state/data/processes';
 import { SingleOperationPopup } from '../../molecules';
 
 interface ExternalProps {
-    instanceId: ConcordId;
+    data: ConcordId[];
     refresh: () => void;
     trigger: (onClick: () => void) => React.ReactNode;
 }
@@ -44,43 +44,40 @@ interface StateProps {
 
 type Props = DispatchProps & ExternalProps & StateProps;
 
-class CancelProcessPopup extends React.Component<Props> {
+class BulkCancelProcessPopup extends React.Component<Props> {
     render() {
         const { trigger, cancelling, success, error, reset, refresh, onConfirm } = this.props;
 
         return (
             <SingleOperationPopup
                 trigger={trigger}
-                title="Cancel the process?"
-                introMsg={<p>Are you sure you want to cancel the selected process?</p>}
+                title="Cancel the process(es)?"
+                introMsg={<p>Are you sure you want to cancel the selected process(es)?</p>}
                 running={cancelling}
                 runningMsg={<p>Cancelling...</p>}
                 success={success}
                 successMsg={<p>The cancel command was sent successfully.</p>}
                 error={error}
                 reset={reset}
-                onDone={refresh}
                 onConfirm={onConfirm}
+                onDone={refresh}
             />
         );
     }
 }
 
 const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
-    cancelling: processes.cancelProcess.running,
-    success: !!processes.cancelProcess.response,
-    error: processes.cancelProcess.error
+    cancelling: processes.cancelBulkProcess.running,
+    success: !!processes.cancelBulkProcess.response,
+    error: processes.cancelBulkProcess.error
 });
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<{}>,
-    { instanceId }: ExternalProps
-): DispatchProps => ({
-    reset: () => dispatch(actions.reset()),
-    onConfirm: () => dispatch(actions.cancel(instanceId))
+const mapDispatchToProps = (dispatch: Dispatch<{}>, { data }: ExternalProps): DispatchProps => ({
+    reset: () => dispatch(actions.resetBulk()),
+    onConfirm: () => dispatch(actions.cancelBulk(data))
 });
 
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(CancelProcessPopup);
+)(BulkCancelProcessPopup);

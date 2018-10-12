@@ -22,27 +22,24 @@ import * as React from 'react';
 import { Dropdown, Icon } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { canBeCancelled, ProcessStatus } from '../../../api/process';
-import { CancelProcessPopup } from '../../organisms';
+import { BulkCancelProcessPopup } from '../../organisms';
 
 interface ExternalProps {
-    instanceId: ConcordId;
-    status: ProcessStatus;
+    data: ConcordId[];
     refresh: () => void;
 }
 
-class ProcessActionDropdown extends React.PureComponent<ExternalProps> {
+class BulkProcessActionDropdown extends React.PureComponent<ExternalProps> {
     render() {
-        const { instanceId, status, refresh } = this.props;
-
+        const { data, refresh } = this.props;
         return (
-            <Dropdown icon="ellipsis vertical">
+            <Dropdown text="Actions" disabled={data.length === 0} button={true}>
                 <Dropdown.Menu>
-                    <CancelProcessPopup
-                        instanceId={instanceId}
+                    <BulkCancelProcessPopup
+                        data={data}
                         refresh={refresh}
                         trigger={(onClick) => (
-                            <Dropdown.Item onClick={onClick} disabled={!canBeCancelled(status)}>
+                            <Dropdown.Item onClick={onClick}>
                                 <Icon name="delete" color="red" />
                                 <span className="text">Cancel</span>
                             </Dropdown.Item>
@@ -54,4 +51,4 @@ class ProcessActionDropdown extends React.PureComponent<ExternalProps> {
     }
 }
 
-export default ProcessActionDropdown;
+export default BulkProcessActionDropdown;

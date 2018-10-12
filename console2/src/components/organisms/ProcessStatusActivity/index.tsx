@@ -94,7 +94,7 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
     }
 
     createAdditionalAction() {
-        const { process } = this.props;
+        const { process, refresh } = this.props;
 
         if (!process) {
             return;
@@ -107,6 +107,7 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
         return (
             <CancelProcessPopup
                 instanceId={process.instanceId}
+                refresh={refresh}
                 trigger={(onClick) => (
                     <Button negative={true} icon="delete" content="Cancel" onClick={onClick} />
                 )}

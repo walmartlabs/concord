@@ -23,6 +23,7 @@ export { default as AnsibleStatChart } from './AnsibleStatChart';
 export { default as AnsibleStats } from './AnsibleStats';
 export { default as AnsibleTaskList } from './AnsibleTaskList';
 export { default as BreadcrumbSegment } from './BreadcrumbSegment';
+export { default as BulkProcessActionDropdown } from './BulkProcessActionDropdown';
 export { default as ButtonWithConfirmation } from './ButtonWithConfirmation';
 export { default as DonutChart } from './DonutChart';
 export { default as EntityRenameForm } from './EntityRenameForm';
