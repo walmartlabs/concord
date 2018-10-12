@@ -31,10 +31,7 @@ import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceMap;
 import org.sonatype.siesta.ValidationErrorsException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class ProjectValidator {
@@ -58,13 +55,15 @@ public class ProjectValidator {
 
         validateSpec(t, errors);
 
+        validateTimezone(t, errors);
+
         if (Objects.isNull(t.getParams())) {
             return;
         }
 
         t.getParams().entrySet().stream()
                 .filter(v -> v.getValue() instanceof String)
-                .filter(v -> !"spec".equals(v.getKey()))
+                .filter(v -> !Constants.Trigger.CRON_SPEC.equals(v.getKey()))
                 .forEach(v -> validateRegex(t, errors, v));
     }
 
@@ -85,23 +84,49 @@ public class ProjectValidator {
             return;
         }
 
-        String specParamKey = "spec";
+        String k = Constants.Trigger.CRON_SPEC;
 
         if (Objects.isNull(t.getParams())) {
-            errors.add(makeErrorMessage(t, specParamKey, "is missing"));
+            errors.add(makeErrorMessage(t, k, "is missing"));
             return;
         }
 
-        Object spec = t.getParams().get(specParamKey);
+        Object spec = t.getParams().get(k);
         if (Objects.isNull(spec)) {
-            errors.add(makeErrorMessage(t, specParamKey, "is missing"));
+            errors.add(makeErrorMessage(t, k, "is missing"));
             return;
         }
 
         try {
             parser.parse((String) spec);
         } catch (ValidationErrorsException e) {
-            errors.add(makeErrorMessage(t, specParamKey, "is not valid: " + e.getMessage()));
+            errors.add(makeErrorMessage(t, k, "is not valid: " + e.getMessage()));
+        }
+    }
+
+    private static void validateTimezone(Trigger t, List<String> errors) {
+        String triggerName = t.getName();
+        if (!triggerName.equals("cron")) {
+            return;
+        }
+
+        if (Objects.isNull(t.getParams())) {
+            return;
+        }
+
+        Object timezone = t.getParams().get("timezone");
+        if (Objects.isNull(timezone)) {
+            return;
+        }
+
+        if (!(timezone instanceof String)) {
+            errors.add(makeErrorMessage(t, "timezone", "invalid type: string expected"));
+            return;
+        }
+
+        if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(timezone)) {
+            errors.add(makeErrorMessage(t, "timezone", "with value '" + timezone + "' not found"));
+            return;
         }
     }
 

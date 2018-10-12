@@ -38,7 +38,7 @@ import java.util.Map;
 
 public final class YamlProjectConverter {
 
-    private static final String[] TRIGGER_CONFIG_KEYS = { Constants.Request.USE_INITIATOR, Constants.Request.ENTRY_POINT_KEY };
+    private static final String[] TRIGGER_CONFIG_KEYS = { Constants.Trigger.USE_INITIATOR, Constants.Request.ENTRY_POINT_KEY };
 
 
     public static ProjectDefinition convert(YamlProject project) throws YamlConverterException {

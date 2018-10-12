@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.sdk.Constants;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.TimeZone;
 import java.util.UUID;
 
 @Named("cron")
@@ -45,23 +49,38 @@ public class CronTriggerProcessor implements TriggerProcessor {
     @Override
     public void process(DSLContext tx, UUID triggerId, Trigger t) {
         if (t.getParams() == null) {
-            log.warn("processCronTrigger ['{}'] -> cron trigger without params, ignore", triggerId);
+            log.warn("process ['{}'] -> cron trigger without params, ignore", triggerId);
             return;
         }
 
-        String spec = (String) t.getParams().get("spec");
+        String spec = (String) t.getParams().get(Constants.Trigger.CRON_SPEC);
 
         if (spec == null) {
-            log.warn("processCronTrigger ['{}'] -> cron trigger without spec, ignore", triggerId);
+            log.warn("process ['{}'] -> cron trigger without spec, ignore", triggerId);
             return;
         }
 
-        Instant fireAt = CronUtils.nextExecution(spec);
+        ZoneId zoneId = null;
+        String timezone = (String) t.getParams().get(Constants.Trigger.CRON_TIMEZONE);
+        if (timezone != null) {
+            if (!validTimeZone(timezone)) {
+                log.warn("process ['{}'] -> cron trigger invalid timezone, ignore", triggerId);
+                return;
+            }
+
+            zoneId = TimeZone.getTimeZone(timezone).toZoneId();
+        }
+
+        Instant fireAt = CronUtils.nextExecution(spec, zoneId);
         if (fireAt == null) {
-            log.warn("processCronTrigger ['{}'] -> cron spec empty", triggerId);
+            log.warn("process ['{}'] -> cron spec empty", triggerId);
             return;
         }
 
         schedulerDao.insert(tx, triggerId, fireAt);
+    }
+
+    private static boolean validTimeZone(String timezone) {
+        return Arrays.asList(TimeZone.getAvailableIDs()).contains(timezone);
     }
 }

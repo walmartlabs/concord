@@ -26,13 +26,17 @@ import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.chrono.ChronoZonedDateTime;
 
 public final class CronUtils {
 
-    public static Instant nextExecution(String expression) {
-        return nextExecution(ZonedDateTime.now(), expression);
+    public static Instant nextExecution(String expression, ZoneId zone) {
+        if (zone == null) {
+            zone = ZoneId.systemDefault();
+        }
+        return nextExecution(ZonedDateTime.now(zone), expression);
     }
 
     private static Instant nextExecution(ZonedDateTime now, String expression) {

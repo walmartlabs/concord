@@ -35,17 +35,19 @@ public class TriggerSchedulerEntry implements Serializable {
     private final UUID projectId;
     private final UUID repoId;
     private final String cronSpec;
+    private final String timezone;
     private final Map<String, Object> arguments;
     private final Map<String, Object> cfg;
 
     public TriggerSchedulerEntry(Date fireAt, UUID triggerId, UUID orgId, UUID projectId, UUID repoId,
-                                 String cronSpec, Map<String, Object> arguments, Map<String, Object> cfg) {
+                                 String cronSpec, String timezone, Map<String, Object> arguments, Map<String, Object> cfg) {
         this.fireAt = fireAt;
         this.triggerId = triggerId;
         this.orgId = orgId;
         this.projectId = projectId;
         this.repoId = repoId;
         this.cronSpec = cronSpec;
+        this.timezone = timezone;
         this.arguments = arguments;
         this.cfg = cfg;
     }
@@ -78,6 +80,10 @@ public class TriggerSchedulerEntry implements Serializable {
         return cronSpec;
     }
 
+    public String getTimezone() {
+        return timezone;
+    }
+
     public Map<String, Object> getArguments() {
         return arguments;
     }
@@ -99,6 +105,7 @@ public class TriggerSchedulerEntry implements Serializable {
                 ", projectId=" + projectId +
                 ", repoId=" + repoId +
                 ", cronSpec='" + cronSpec + '\'' +
+                ", timezone='" + timezone + '\'' +
                 ", arguments=" + arguments +
                 ", cfg=" + cfg +
                 '}';

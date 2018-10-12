@@ -32,8 +32,10 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROJECTS;
@@ -72,6 +74,7 @@ public class TriggerScheduleDao extends AbstractDao {
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(t.PROJECT_ID)).asField();
             Field<String> specField = field("{0}->>'spec'", String.class, t.CONDITIONS);
+            Field<String> timezoneField = field("{0}->>'timezone'", String.class, t.CONDITIONS);
 
             TriggerSchedulerEntry result = tx.select(
                     t.TRIGGER_ID,
@@ -79,6 +82,7 @@ public class TriggerScheduleDao extends AbstractDao {
                     t.PROJECT_ID,
                     t.REPO_ID,
                     specField,
+                    timezoneField,
                     t.ARGUMENTS.cast(String.class),
                     t.TRIGGER_CFG.cast(String.class))
                     .from(t)
@@ -90,14 +94,19 @@ public class TriggerScheduleDao extends AbstractDao {
                             r.value3(),
                             r.value4(),
                             r.value5(),
-                            deserialize(r.value6()),
-                            deserialize(r.value7())));
+                            r.value6(),
+                            deserialize(r.value7()),
+                            deserialize(r.value8())));
 
             if (result == null) {
                 return null;
             }
 
-            updateFireAt(tx, id, CronUtils.nextExecution(result.getCronSpec()));
+            ZoneId zoneId = null;
+            if (result.getTimezone() != null) {
+                zoneId = TimeZone.getTimeZone(result.getTimezone()).toZoneId();
+            }
+            updateFireAt(tx, id, CronUtils.nextExecution(result.getCronSpec(), zoneId));
 
             return result;
         });

@@ -124,7 +124,8 @@ public class TriggerEntry implements Serializable {
         if (cfg == null) {
             return false;
         }
-        Boolean v = (Boolean) cfg.get(Constants.Request.USE_INITIATOR);
+
+        Boolean v = (Boolean) cfg.get(Constants.Trigger.USE_INITIATOR);
         if (v == null) {
             return false;
         }

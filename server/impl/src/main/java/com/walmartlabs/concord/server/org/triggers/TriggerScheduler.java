@@ -188,11 +188,12 @@ public class TriggerScheduler implements BackgroundTask {
 
     private static Map<String, Object> makeEvent(TriggerSchedulerEntry t) {
         Map<String, Object> m = new HashMap<>();
-        m.put("spec", t.getCronSpec());
+        m.put(Constants.Trigger.CRON_SPEC, t.getCronSpec());
+        m.put(Constants.Trigger.CRON_TIMEZONE, t.getTimezone());
 
         Calendar c = Calendar.getInstance();
         c.setTime(t.getFireAt());
-        m.put("fireAt", DatatypeConverter.printDateTime(c));
+        m.put(Constants.Trigger.CRON_EVENT_FIREAT, DatatypeConverter.printDateTime(c));
 
         return m;
     }

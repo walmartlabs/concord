@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: support for `timezone` in `cron` triggers;
 - concord-console: ability to cancel multiple processes;
 - concord-server: the secret decryption error now contains the
 secret's name;
@@ -12,6 +13,11 @@ repository is refreshed;
 - concord-server: timeout options for GIT's HTTPS and SSH transports; 
 - concord-server: a policy rule for setting the maximum allowed
 `processTimeout` value.
+
+### Breaking
+
+- concord-sdk: `Constants.Request.USE_INITIATOR` renamed to
+`Constants.Trigger.USE_INITIATOR`.
 
 
 

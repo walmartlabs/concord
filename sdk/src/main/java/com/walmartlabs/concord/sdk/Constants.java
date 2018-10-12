@@ -171,6 +171,24 @@ public class Constants {
          * Process timeout.
          */
         public static final String PROCESS_TIMEOUT = "processTimeout";
+    }
+
+    public static class Trigger {
+
+        /**
+         * Cron expression.
+         */
+        public static final String CRON_SPEC = "spec";
+
+        /**
+         * Cron target time zone.
+         */
+        public static final String CRON_TIMEZONE = "timezone";
+
+        /**
+         * The time a cron event was scheduled for.
+         */
+        public static final String CRON_EVENT_FIREAT = "fireAt";
 
         /**
          * Whether to use the trigger's initiator as the process' initiator.
