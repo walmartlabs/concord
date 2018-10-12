@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.cfg.DefaultVariablesConfiguration;
+import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -54,8 +54,8 @@ public class RequestDataMergingProcessorTest {
         projectDao = mock(ProjectDao.class);
         orgDao = mock(OrganizationDao.class);
 
-        DefaultVariablesConfiguration defaultVars = mock(DefaultVariablesConfiguration.class);
-        p = new RequestDataMergingProcessor(projectDao, orgDao, defaultVars);
+        DefaultProcessConfiguration defaultCfg = mock(DefaultProcessConfiguration.class);
+        p = new RequestDataMergingProcessor(projectDao, orgDao, defaultCfg);
     }
 
     @Test
@@ -99,7 +99,6 @@ public class RequestDataMergingProcessorTest {
 
         // ---
         Map<String, Object> expected = new HashMap<>();
-        expected.put("arguments", Collections.emptyMap());
         expected.put("activeProfiles", Collections.singletonList("default"));
 
         // orgCfg < prjCfg < req < org-policy < prj-policy
@@ -146,7 +145,6 @@ public class RequestDataMergingProcessorTest {
 
         // ---
         Map<String, Object> expected = new HashMap<>();
-        expected.put("arguments", Collections.emptyMap());
         expected.put("activeProfiles", Collections.singletonList("default"));
 
         // orgCfg < prjCfg < req

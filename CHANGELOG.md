@@ -14,8 +14,16 @@ repository is refreshed;
 - concord-server: a policy rule for setting the maximum allowed
 `processTimeout` value.
 
+### Changed
+
+- concord-server: the "default variables" file replaced with the
+"default configuration" file. Instead of containing the `arguments`
+section, it now contains the while `configuration` object.
+
 ### Breaking
 
+- concord-server: `process.defaultVariables` configuration file
+parameter renamed to `process.defaultConfiguration`;
 - concord-sdk: `Constants.Request.USE_INITIATOR` renamed to
 `Constants.Trigger.USE_INITIATOR`.
 

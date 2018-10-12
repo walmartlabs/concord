@@ -38,32 +38,40 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Default values for {@code configuration} object in processes.
+ */
 @Named
 @Singleton
-public class DefaultVariablesConfiguration {
+public class DefaultProcessConfiguration {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultVariablesConfiguration.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultProcessConfiguration.class);
 
-    private final Map<String, Object> vars;
+    private final Map<String, Object> cfg;
 
     @Inject
     @SuppressWarnings("unchecked")
-    public DefaultVariablesConfiguration(@Config("process.defaultVariables") @Nullable String path) throws IOException {
+    public DefaultProcessConfiguration(@Config("process.defaultConfiguration") @Nullable String path) throws IOException {
         if (path == null) {
-            log.warn("init -> no default process variables");
-            this.vars = Collections.emptyMap();
+            log.warn("init -> no default process configuration");
+            this.cfg = Collections.emptyMap();
             return;
         }
 
-        log.info("init -> using external default process variables configuration: {}", path);
+        log.info("init -> using external default process configuration: {}", path);
 
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         try (InputStream in = Files.newInputStream(Paths.get(path))) {
-            this.vars = Optional.ofNullable(mapper.readValue(in, Map.class)).orElse(Collections.emptyMap());
+            this.cfg = Optional.ofNullable(mapper.readValue(in, Map.class)).orElse(Collections.emptyMap());
         }
     }
 
-    public Map<String, Object> getVars() {
-        return vars;
+    @SuppressWarnings(value = "unchecked")
+    public Map<String, Object> getCfg() {
+        if (cfg.get("configuration") == null) {
+            return Collections.emptyMap();
+        }
+
+        return (Map<String, Object>) cfg.get("configuration");
     }
 }

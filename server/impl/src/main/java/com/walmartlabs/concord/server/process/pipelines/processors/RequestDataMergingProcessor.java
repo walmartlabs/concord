@@ -26,8 +26,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.cfg.DefaultVariablesConfiguration;
+import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -52,25 +51,23 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
-    private final DefaultVariablesConfiguration defaultVars;
+    private final DefaultProcessConfiguration defaultCfg;
 
     @Inject
-    public RequestDataMergingProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultVariablesConfiguration defaultVars) {
+    public RequestDataMergingProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultProcessConfiguration defaultCfg) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
-        this.defaultVars = defaultVars;
+        this.defaultCfg = defaultCfg;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        PolicyEntry policy = payload.getHeader(Payload.POLICY);
+        // system-level default configuration
+        Map<String, Object> defCfg = defaultCfg.getCfg();
 
         // configuration from the policy
-        Map<String, Object> policyCfg = getPolicyCfg(payload, policy);
-
-        // system-level default variables
-        Map<String, Object> defVars = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, new HashMap<>(defaultVars.getVars()));
+        Map<String, Object> policyCfg = getPolicyCfg(payload);
 
         // configuration from the user's request
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
@@ -95,7 +92,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defVars, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, req, policyCfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, req, policyCfg);
         m.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
@@ -124,7 +121,9 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getPolicyCfg(Payload payload, PolicyEntry policy) {
+    private Map<String, Object> getPolicyCfg(Payload payload) {
+        PolicyEntry policy = payload.getHeader(Payload.POLICY);
+
         if (policy == null || policy.isEmpty()) {
             return Collections.emptyMap();
         }
