@@ -31,8 +31,11 @@ import com.walmartlabs.concord.client.ConcordApiClient;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 import java.nio.file.Path;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
 
 @Named
@@ -47,18 +50,23 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
     private final OkHttpClient httpClient;
 
     @Inject
-    public ApiClientFactoryImpl(ApiConfiguration cfg) throws IOException {
+    public ApiClientFactoryImpl(ApiConfiguration cfg) throws Exception {
         this.cfg = cfg;
         this.tmpDir = IOUtils.createTempDir("task-client");
 
-        this.httpClient = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient();
 
-        int connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "10000"));
-        int readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "60000"));
+        // init the SSL socket factory early to save time on the first request
+        client = withSslSocketFactory(client);
 
-        this.httpClient.setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
-        this.httpClient.setReadTimeout(readTimeout, TimeUnit.MILLISECONDS);
-        this.httpClient.setWriteTimeout(30, TimeUnit.SECONDS);
+        int connectTimeout = Integer.parseInt(getProperty(CONNECT_TIMEOUT_KEY, "10000"));
+        int readTimeout = Integer.parseInt(getProperty(READ_TIMEOUT_KEY, "60000"));
+
+        client.setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
+        client.setReadTimeout(readTimeout, TimeUnit.MILLISECONDS);
+        client.setWriteTimeout(30, TimeUnit.SECONDS);
+
+        this.httpClient = client;
     }
 
     @Override
@@ -74,7 +82,7 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
         return create(cfg.getSessionToken(ctx));
     }
 
-    private static String getEnv(String key, String def) {
+    private static String getProperty(String key, String def) {
         String value = System.getProperty(key);
         if (value != null) {
             return value;
@@ -83,5 +91,12 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
             return def;
         }
         throw new IllegalArgumentException(key + " must be specified");
+    }
+
+    private static OkHttpClient withSslSocketFactory(OkHttpClient client) throws NoSuchAlgorithmException, KeyManagementException {
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, null, null);
+        SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+        return client.setSslSocketFactory(sslSocketFactory);
     }
 }
