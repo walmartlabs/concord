@@ -20,23 +20,16 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.policyengine.*;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.pipelines.processors.policy.PolicyApplier;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.MessageFormat;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -45,21 +38,18 @@ import java.util.UUID;
 @Named
 public class PolicyProcessor implements PayloadProcessor {
 
-    private static final String DEFAULT_PROCESS_TIMEOUT_MSG = "Maximum 'processTimeout' value exceeded: current {0}, limit {1}";
-
     private final LogManager logManager;
-    private final ObjectMapper objectMapper;
+    private final Set<PolicyApplier> appliers;
 
     @Inject
-    public PolicyProcessor(LogManager logManager) {
+    public PolicyProcessor(LogManager logManager, Set<PolicyApplier> appliers) {
         this.logManager = logManager;
-        this.objectMapper = new ObjectMapper();
+        this.appliers = appliers;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
-        Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
         PolicyEntry policy = payload.getHeader(Payload.POLICY);
         if (policy == null || policy.isEmpty()) {
@@ -67,117 +57,20 @@ public class PolicyProcessor implements PayloadProcessor {
         }
 
         logManager.info(instanceId, "Applying policies...");
-
         Map<String, Object> rules = policy.getRules();
 
         try {
             // TODO merge check results
-            applyWorkspacePolicy(instanceId, rules, workDir);
-            applyFilePolicy(instanceId, rules, workDir);
-            applyContainerPolicy(instanceId, rules, workDir);
-            applyProcessTimeoutPolicy(instanceId, rules, payload);
-        } catch (IOException e) {
+            for (PolicyApplier a : appliers) {
+                a.apply(payload, rules);
+            }
+        } catch (ProcessException e) {
+            throw e;
+        } catch (Exception e) {
             logManager.error(instanceId, "Error while applying policy '{}': {}", policy.getName(), e);
             throw new ProcessException(instanceId, "Policy '" + policy.getName() + "' error", e);
         }
 
         return chain.process(payload);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void applyContainerPolicy(UUID instanceId, Map<String, Object> policy, Path workDir) {
-        Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
-        if (!Files.exists(p)) {
-            return;
-        }
-
-        Map<String, Object> containerOptions;
-        try (InputStream in = Files.newInputStream(p)) {
-            Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            containerOptions = (Map<String, Object>) m.get(InternalConstants.Request.CONTAINER);
-        } catch (IOException e) {
-            logManager.error(instanceId, "Error while reading container configuration: {}", e);
-            throw new ProcessException(instanceId, "Error while reading container configuration", e);
-        }
-
-        CheckResult<ContainerRule, Object> result = new PolicyEngine(policy).getContainerPolicy().check(containerOptions);
-
-        result.getWarn().forEach(i -> {
-            logManager.warn(instanceId, appendMsg("Potential container policy violation (policy: {})", i.getMsg()), i.getRule());
-        });
-
-        result.getDeny().forEach(i -> {
-            logManager.error(instanceId, appendMsg("Container policy violation", i.getMsg()), i.getRule());
-        });
-
-        if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "Found container policy violations");
-        }
-    }
-
-    private void applyWorkspacePolicy(UUID instanceId, Map<String, Object> policy, Path workDir) throws IOException {
-        CheckResult<WorkspaceRule, Path> result = new PolicyEngine(policy).getWorkspacePolicy().check(workDir);
-
-        result.getWarn().forEach(i -> {
-            logManager.warn(instanceId, appendMsg("Potential workspace policy violation (policy: {})", i.getMsg()), i.getRule());
-        });
-
-        result.getDeny().forEach(i -> {
-            logManager.error(instanceId, appendMsg("Workspace policy violation", i.getMsg()), i.getRule());
-        });
-
-        if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "Found workspace policy violations");
-        }
-    }
-
-    private void applyFilePolicy(UUID instanceId, Map<String, Object> policy, Path workDir) throws IOException {
-        CheckResult<FileRule, Path> result = new PolicyEngine(policy).getFilePolicy().check(workDir);
-
-        result.getWarn().forEach(i -> {
-            logManager.warn(instanceId, "Potentially restricted file '{}' (file policy: {})",
-                    workDir.relativize(i.getEntity()), i.getRule());
-        });
-
-        result.getDeny().forEach(i -> {
-            logManager.error(instanceId, "File '{}' is forbidden by the file policy {}",
-                    workDir.relativize(i.getEntity()), i.getRule());
-        });
-
-        if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "Found forbidden files");
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void applyProcessTimeoutPolicy(UUID instanceId, Map<String, Object> policy, Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP);
-        if (cfg == null) {
-            return;
-        }
-
-        Object processTimeout = cfg.get(Constants.Request.PROCESS_TIMEOUT);
-        if (processTimeout == null) {
-            return;
-        }
-
-        CheckResult<ProcessTimeoutRule, Object> result = new PolicyEngine(policy).getProcessTimeoutPolicy().check(processTimeout);
-        result.getDeny().forEach(i -> {
-            String msg = i.getRule().getMsg() != null ? i.getRule().getMsg() : DEFAULT_PROCESS_TIMEOUT_MSG;
-            Object actualTimeout = i.getEntity();
-            String limit = i.getRule().getMax();
-            logManager.error(instanceId, MessageFormat.format(msg, actualTimeout, limit));
-        });
-
-        if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "'processTimeout' value policy violation");
-        }
-    }
-
-    private static String appendMsg(String msg, String s) {
-        if (s == null) {
-            return msg;
-        }
-        return msg + ": " + s;
     }
 }

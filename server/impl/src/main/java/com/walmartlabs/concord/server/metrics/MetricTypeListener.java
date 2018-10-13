@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.metrics;
  * =====
  */
 
+import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
@@ -38,32 +39,62 @@ public class MetricTypeListener implements TypeListener {
         Class<?> clazz = type.getRawType();
         while (clazz != null) {
             for (Field f : clazz.getDeclaredFields()) {
-                InjectMeter i = f.getAnnotation(InjectMeter.class);
-                if (f.getType() == Meter.class && i != null) {
-                    String name = i.value();
-                    if (name.isEmpty()) {
-                        name = f.getName();
-                    }
-
-                    String fqn = MetricUtils.createFqn("meter", clazz, name, null);
-
-                    Provider<Injector> injector = encounter.getProvider(Injector.class);
-                    encounter.register((MembersInjector<I>) instance -> {
-                        MetricRegistry registry = injector.get().getInstance(MetricRegistry.class);
-                        try {
-                            boolean accessible = f.isAccessible();
-                            f.setAccessible(true);
-                            f.set(instance, registry.meter(fqn));
-                            f.setAccessible(accessible);
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                }
+                processMeters(encounter, clazz, f);
+                processCounters(encounter, clazz, f);
             }
 
             clazz = clazz.getSuperclass();
         }
     }
 
+    private static <I> void processMeters(TypeEncounter<I> encounter, Class<?> clazz, Field f) {
+        InjectMeter i = f.getAnnotation(InjectMeter.class);
+        if (f.getType() != Meter.class || i == null) {
+            return;
+        }
+
+        String name = i.value();
+        if (name.isEmpty()) {
+            name = f.getName();
+        }
+
+        String fqn = MetricUtils.createFqn("meter", clazz, name, null);
+
+        Provider<Injector> injector = encounter.getProvider(Injector.class);
+        encounter.register((MembersInjector<I>) instance -> {
+            MetricRegistry registry = injector.get().getInstance(MetricRegistry.class);
+            set(f, instance, registry.meter(fqn));
+        });
+    }
+
+    private static <I> void processCounters(TypeEncounter<I> encounter, Class<?> clazz, Field f) {
+        InjectCounter i = f.getAnnotation(InjectCounter.class);
+        if (f.getType() != Counter.class || i == null) {
+            return;
+        }
+
+        String name = i.value();
+        if (name.isEmpty()) {
+            name = f.getName();
+        }
+
+        String fqn = MetricUtils.createFqn("counter", clazz, name, null);
+
+        Provider<Injector> injector = encounter.getProvider(Injector.class);
+        encounter.register((MembersInjector<I>) instance -> {
+            MetricRegistry registry = injector.get().getInstance(MetricRegistry.class);
+            set(f, instance, registry.counter(fqn));
+        });
+    }
+
+    private static void set(Field f, Object i, Object v) {
+        try {
+            boolean accessible = f.isAccessible();
+            f.setAccessible(true);
+            f.set(i, v);
+            f.setAccessible(accessible);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
