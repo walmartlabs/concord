@@ -45,6 +45,7 @@ import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.task.JavaDelegateHandler;
+import io.takari.bpm.task.ServiceTaskRegistry;
 import io.takari.bpm.task.UserTaskHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,10 +63,10 @@ public class EngineFactory {
     private static final Logger log = LoggerFactory.getLogger(EngineFactory.class);
 
     private final ApiClientFactory apiClientFactory;
-    private final NamedTaskRegistry taskRegistry;
+    private final ServiceTaskRegistry taskRegistry;
 
     @Inject
-    public EngineFactory(ApiClientFactory apiClientFactory, NamedTaskRegistry taskRegistry) {
+    public EngineFactory(ApiClientFactory apiClientFactory, ServiceTaskRegistry taskRegistry) {
         this.apiClientFactory = apiClientFactory;
         this.taskRegistry = taskRegistry;
     }

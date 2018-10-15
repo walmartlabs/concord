@@ -22,7 +22,9 @@ package com.walmartlabs.concord.runner.engine;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.common.DynamicTaskRegistry;
+import com.walmartlabs.concord.runner.TaskClasses;
 import com.walmartlabs.concord.sdk.Task;
+import io.takari.bpm.task.ServiceTaskRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,22 +34,30 @@ import javax.inject.Singleton;
 
 @Named
 @Singleton
-public class DynamicTaskRegistryImpl extends AbstractTaskRegistry implements DynamicTaskRegistry {
+public class TaskRegistry implements ServiceTaskRegistry, DynamicTaskRegistry {
 
-    private static final Logger log = LoggerFactory.getLogger(DynamicTaskRegistryImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(TaskRegistry.class);
 
     private final Injector injector;
+    private final TaskClasses taskClasses;
 
     @Inject
-    public DynamicTaskRegistryImpl(Injector injector) {
+    public TaskRegistry(Injector injector, TaskClasses taskClasses) {
         this.injector = injector;
+        this.taskClasses = taskClasses;
     }
 
     @Override
     public Task getByKey(String key) {
-        return get(key, injector);
+        Class<? extends Task> taskClass = taskClasses.get(key);
+        if(taskClass == null) {
+            return null;
+        }
+
+        return injector.getInstance(taskClass);
     }
 
+    @Override
     @SuppressWarnings("deprecation")
     public void register(Class<? extends Task> taskClass) {
         Named n = taskClass.getAnnotation(Named.class);
@@ -61,6 +71,6 @@ public class DynamicTaskRegistryImpl extends AbstractTaskRegistry implements Dyn
                     Task.class.getName());
         }
 
-        register(n.value(), taskClass);
+        taskClasses.add(n.value(), taskClass);
     }
 }

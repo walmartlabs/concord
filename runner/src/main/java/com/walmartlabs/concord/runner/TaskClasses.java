@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runner.engine;
+package com.walmartlabs.concord.runner;
 
 /*-
  * *****
@@ -25,24 +25,18 @@ import com.walmartlabs.concord.sdk.Task;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TaskClassHolder {
+public class TaskClasses {
 
-    private static final TaskClassHolder INSTANCE = new TaskClassHolder();
+    private final Map<String, Class<? extends Task>> classes = new HashMap<>();
 
-    public static TaskClassHolder getInstance() {
-        return INSTANCE;
+    public void add(String taskName, Class<? extends Task> clazz) {
+        Class<? extends Task> old = classes.put(taskName, clazz);
+        if (old != null) {
+            throw new IllegalArgumentException("Non-unique task name: " + taskName);
+        }
     }
 
-    private final Map<String, Class<? extends Task>> tasks = new HashMap<>();
-
-    public void register(String name, Class<? extends Task> task) {
-        tasks.putIfAbsent(name, task);
-    }
-
-    public Map<String, Class<? extends Task>> getTasks() {
-        return tasks;
-    }
-
-    private TaskClassHolder() {
+    public Class<? extends Task> get(String taskName) {
+        return classes.get(taskName);
     }
 }

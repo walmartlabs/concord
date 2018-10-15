@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.*;
-import com.google.inject.Module;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
@@ -34,7 +33,6 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
-import com.walmartlabs.concord.runner.engine.TaskClassHolder;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
 import org.eclipse.sisu.space.BeanScanning;
@@ -56,7 +54,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Named
@@ -340,7 +337,7 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         try {
             List<URL> deps = Collections.emptyList();
             if (args.length > 0) {
@@ -431,15 +428,13 @@ public class Main {
 
     private static Injector createInjector(ClassLoader depsClassLoader) {
         ClassLoader cl = Main.class.getClassLoader();
-        Module m = new WireModule(
-                new SpaceModule(new URLClassSpace(cl), BeanScanning.CACHE),
-                new SpaceModule(new URLClassSpace(depsClassLoader), BeanScanning.CACHE));
 
-        // TODO: find a way to inject task classes directly
         Module tasks = new AbstractModule() {
             @Override
             protected void configure() {
-                bindListener(new SubClassesOf(Task.class), new TaskClassesListener(false));
+                TaskClasses taskClassesHolder = new TaskClasses();
+                bindListener(new SubClassesOf(Task.class), new TaskClassesListener(taskClassesHolder, false));
+                bind(TaskClasses.class).toInstance(taskClassesHolder);
             }
         };
 
@@ -458,7 +453,13 @@ public class Main {
             }
         };
 
-        return Guice.createInjector(tasks, m, taskCallModule);
+        Module m = new WireModule(
+                tasks,
+                taskCallModule,
+                new SpaceModule(new URLClassSpace(cl), BeanScanning.CACHE),
+                new SpaceModule(new URLClassSpace(depsClassLoader), BeanScanning.CACHE));
+
+        return Guice.createInjector(m);
     }
 
     private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {
@@ -477,15 +478,17 @@ public class Main {
 
     private static class TaskClassesListener implements TypeListener {
 
+        private final TaskClasses taskClasses;
         private final boolean debug;
 
-        private TaskClassesListener(boolean debug) {
+        private TaskClassesListener(TaskClasses taskClasses, boolean debug) {
+            this.taskClasses = taskClasses;
             this.debug = debug;
         }
 
         @SuppressWarnings("unchecked")
         public <T> void hear(TypeLiteral<T> typeLiteral, TypeEncounter<T> typeEncounter) {
-            Class<?> clazz = typeLiteral.getRawType();
+            Class<Task> clazz = (Class<Task>) typeLiteral.getRawType();
 
             Named n = clazz.getAnnotation(Named.class);
             if (n == null) {
@@ -496,8 +499,7 @@ public class Main {
                 log.info("Registering {} as {}...", clazz, n);
             }
 
-            TaskClassHolder h = TaskClassHolder.getInstance();
-            h.register(n.value(), (Class<? extends Task>) clazz);
+            taskClasses.add(n.value(), clazz);
         }
     }
 }
