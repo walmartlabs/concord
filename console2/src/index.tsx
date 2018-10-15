@@ -21,9 +21,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-import App from './App';
-
 import 'semantic-ui-css/semantic.min.css';
+
+import App from './App';
 import './index.css';
 
 const rootEl = document.getElementById('root') as HTMLElement;
@@ -36,3 +36,6 @@ if (module.hot) {
         ReactDOM.render(<NextApp />, rootEl);
     });
 }
+
+// remove any old service worker
+navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((reg) => reg.unregister()));
