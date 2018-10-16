@@ -18,7 +18,7 @@
  * =====
  */
 
-import { format as formatDate, getMilliseconds } from 'date-fns';
+import { format as formatDate, getTime } from 'date-fns';
 
 interface HasName {
     name: string;
@@ -116,7 +116,7 @@ export const timestampDiffMs = (t1?: Date | string, t2?: Date | string): number 
         return;
     }
 
-    return getMilliseconds(t1) - getMilliseconds(t2);
+    return getTime(t1) - getTime(t2);
 };
 
 export const escapeHtml = (s: string): string =>
