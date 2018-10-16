@@ -23,6 +23,7 @@ package com.walmartlabs.concord.plugins.http;
 import com.walmartlabs.concord.sdk.Context;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -126,6 +127,17 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         task.execute(mockContext);
         assertNotNull(response);
         assertTrue((Boolean) response.get("success"));
+        assertEquals("stringFile", (new File((String)response.get("content"))).getName());
+    }
+
+    @Test
+    public void testFileGetRequestWithNoFilename() throws Exception {
+        initCxtForRequest(mockContext, "GET", "json", "file", "http://localhost:" + rule.port() + "/fileUrlWithoutName/");
+        when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
+        task.execute(mockContext);
+        assertNotNull(response);
+        assertTrue((Boolean) response.get("success"));
+        assertTrue(((String)response.get("content")).matches(".*/tmpfile_.*\\.tmp$"));
     }
 
     @Test
@@ -134,7 +146,6 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         when(mockContext.getVariable("workDir")).thenReturn(folder.getRoot().toString());
         task.execute(mockContext);
         assertNotNull(response);
-        assertTrue((Boolean)response.get("success"));
     }
 
     @Test

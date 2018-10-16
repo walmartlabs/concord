@@ -152,8 +152,8 @@ public class SimpleHttpClient {
     private String storeFile(HttpEntity entity) throws IOException {
         Path baseDir = Paths.get(config.getWorkDir());
         Path tmpDir = assertTempDir(baseDir);
+        Path tempFile = uriToPath(this.request.getURI(), tmpDir);
 
-        Path tempFile = Files.createTempFile(tmpDir, "temp_", ".bin");
         entity.writeTo(new FileOutputStream(tempFile.toFile()));
         // Return the relative path instead of absolute path
         return baseDir.relativize(tempFile.toAbsolutePath()).toString();
@@ -171,7 +171,34 @@ public class SimpleHttpClient {
         if (!Files.exists(p)) {
             Files.createDirectories(p);
         }
-        return p;
+        return p.resolve(Files.createTempDirectory(p, "tmpdir_"));
+    }
+
+    /**
+     * Converts a URI to a temporary Path. If no filename can be parsed from the URI, then a filename will be generated
+     * @param uri URI of the file
+     * @param dir Directory in which to save the file
+     * @return Path object representing the file
+     * @throws IOException when the file cannot be created with {@link Files#createFile(Path, FileAttribute[])} or
+     * {@link Files#createTempFile(Path, String, String, FileAttribute[])}
+     */
+    private Path uriToPath(java.net.URI uri, Path dir) throws IOException {
+        String filename = null;
+        String s = uri.toString();
+        Path path;
+
+        final int lastSlashIndex = s.lastIndexOf("/");
+        if (lastSlashIndex > 0) {
+            filename = s.substring(lastSlashIndex+1);
+        }
+
+        if (filename == null || filename.isEmpty()) {
+            path = Files.createTempFile(dir, "tmpfile_", ".tmp");
+        } else {
+            path = Files.createFile(dir.resolve(filename));
+        }
+
+        return  path;
     }
 
     /**

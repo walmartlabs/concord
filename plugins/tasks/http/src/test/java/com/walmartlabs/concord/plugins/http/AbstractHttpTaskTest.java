@@ -64,6 +64,7 @@ public abstract class AbstractHttpTaskTest {
         stubForPostSecureEndpoint();
         stubForPostRequestForRequestTypeFile();
         stubForGetRequestForResponseTypeStringFile();
+        stubForGetRequestForResponseTypeStringFileWithNoFilename();
         stubForGetRequestForResponseTypeJSONFile();
         stubForUnsuccessfulResponse();
         stubForDeleteRequest();
@@ -163,6 +164,16 @@ public abstract class AbstractHttpTaskTest {
 
     protected void stubForGetRequestForResponseTypeStringFile() {
         rule.stubFor(get(urlEqualTo("/stringFile"))
+                .withHeader("Accept", equalTo("*/*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/octet-stream")
+                        .withBodyFile("file.bin"))
+        );
+    }
+
+    protected void stubForGetRequestForResponseTypeStringFileWithNoFilename() {
+        rule.stubFor(get(urlEqualTo("/fileUrlWithoutName/"))
                 .withHeader("Accept", equalTo("*/*"))
                 .willReturn(aResponse()
                         .withStatus(200)
