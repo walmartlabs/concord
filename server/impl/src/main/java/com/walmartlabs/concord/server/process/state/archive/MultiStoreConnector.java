@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -57,11 +58,12 @@ public class MultiStoreConnector {
     @Inject
     public MultiStoreConnector(S3Configuration cfg) {
         List<Map<String, Object>> dst = cfg.getDestinations();
-        if (cfg.isEnabled() && (dst == null || dst.isEmpty())) {
-            throw new IllegalStateException("Archive destinations must contain at least one entry");
+        if (dst == null || dst.isEmpty()) {
+            log.warn("init -> no destinations defined");
+            dst = Collections.emptyList();
         }
 
-        this.clients = cfg.getDestinations().stream()
+        this.clients = dst.stream()
                 .map(MultiStoreConnector::createClient)
                 .collect(Collectors.toList());
     }

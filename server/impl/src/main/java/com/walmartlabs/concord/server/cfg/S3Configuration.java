@@ -35,10 +35,6 @@ import java.util.stream.Collectors;
 @Singleton
 public class S3Configuration implements Serializable {
 
-    @Inject
-    @Config("s3.enabled")
-    private boolean enabled;
-
     private final List<Map<String, Object>> destinations;
 
     @Inject
@@ -46,10 +42,6 @@ public class S3Configuration implements Serializable {
         this.destinations = destinations.stream()
                 .map(ConfigObject::unwrapped)
                 .collect(Collectors.toList());
-    }
-
-    public boolean isEnabled() {
-        return enabled;
     }
 
     public List<Map<String, Object>> getDestinations() {
