@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlStep;
-import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.model.*;
@@ -77,21 +76,26 @@ public interface StepConverter<T extends YamlStep> {
 
         VariableMapping taskVars = new VariableMapping(null, null, withItems, "items", true);
 
+        String startId        = ctx.nextId();
         String nextItemTaskId = ctx.nextId();
+        String hasNextGwId    = ctx.nextId();
+        String cleanupTaskId  = ctx.nextId();
+
         result.addElement(new ServiceTask(nextItemTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.nextItem(execution)}", Collections.singleton(taskVars), null, true));
-
-        result.addElement(new SequenceFlow(ctx.nextId(), nextItemTaskId, c.firstElement().getId()));
-
-        String hasNextGwId = ctx.nextId();
-        c.getOutputs().forEach(o -> {
-            result.addElement(new SequenceFlow(ctx.nextId(), o, hasNextGwId));
-        });
         result.addElement(new ExclusiveGateway(hasNextGwId));
-        result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, nextItemTaskId, "${__withItemsHasNext}"));
-
-        String cleanupTaskId = ctx.nextId();
         result.addElement(new ServiceTask(cleanupTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.cleanup(execution)}", null, null, true));
+
+        /*  ::bpm flow::      --------theTask ----Y
+                              v                   |
+         startId -----> hasNextTaskId -----> hasNextGwId --N--> cleanupTaskId
+         */
+        result.addElement(new SequenceFlow(ctx.nextId(), startId, nextItemTaskId));
+        result.addElement(new SequenceFlow(ctx.nextId(), nextItemTaskId, hasNextGwId));
+        result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, c.firstElement().getId(), "${__withItemsHasNext}"));
         result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, cleanupTaskId));
+        c.getOutputs().forEach(o -> {
+            result.addElement(new SequenceFlow(ctx.nextId(), o, nextItemTaskId));
+        });
 
         result.addOutput(cleanupTaskId);
 
@@ -268,6 +272,14 @@ public interface StepConverter<T extends YamlStep> {
     @Named("__withItemsUtils")
     class WithItemsUtilsTask implements Task {
 
+        /**
+         * Checks for an item to process next. Will set variables within the execution context with the results.
+         * <ul>
+         * <li><code>__withItemsHasNext</code> - boolean - true if there's an item to process</li>
+         * <li><code>item</code> - Object - item to be processed</li>
+         * </ul>
+         * @param ctx context containing execution variables
+         */
         @SuppressWarnings("unchecked")
         public void nextItem(ExecutionContext ctx) {
             int currentItemIndex = 0;
@@ -277,11 +289,14 @@ public interface StepConverter<T extends YamlStep> {
             }
 
             List<Object> items = assertItems(ctx);
-            ctx.setVariable("item", items.get(currentItemIndex));
 
+            if (currentItemIndex < items.size()) {
+                ctx.setVariable("item", items.get(currentItemIndex));
+            }
+
+            ctx.setVariable("__withItemsHasNext", currentItemIndex < items.size());
             currentItemIndex++;
             ctx.setVariable("__currentWithItemIndex", currentItemIndex);
-            ctx.setVariable("__withItemsHasNext", currentItemIndex < items.size());
         }
 
         public void cleanup(ExecutionContext ctx) {
@@ -294,7 +309,7 @@ public interface StepConverter<T extends YamlStep> {
         private static List<Object> assertItems(ExecutionContext ctx) {
             Object result = ctx.getVariable("items");
             if (result == null) {
-                throw new IllegalArgumentException("'withItems' value cannot be null");
+                return new ArrayList<>(0);
             }
 
             if (result instanceof List) {

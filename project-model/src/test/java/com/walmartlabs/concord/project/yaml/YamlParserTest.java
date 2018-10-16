@@ -1784,12 +1784,13 @@ public class YamlParserTest extends AbstractYamlParserTest {
         Map<String, Object> args = new HashMap<>();
         args.put("nullVariable", null);
 
-        try {
-            start(key, "main", args);
-            fail("exception expected");
-        } catch (ExecutionException e) {
-            assertTrue(e.getCause().getMessage().contains("cannot be null"));
-        }
+        start(key, "main", args);
+
+        // ---
+
+        verify(task, times(0)).execute(any(ExecutionContext.class));
+        verify(task, times(0)).log(eq("hello a1"));
+        verifyNoMoreInteractions(task);
     }
 
     @Test
@@ -2119,6 +2120,48 @@ public class YamlParserTest extends AbstractYamlParserTest {
         assertTrue(result.isValid());
 
         verify(testBean, times(1)).toString(eq("else"));
+    }
+
+    @Test
+    public void test110() throws Exception {
+        /*
+        Variables provided to withItems may be null. The Task should only execute in cases where the variable provided
+        to withItems is non-null
+         */
+        deploy("110.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("myLogger", task);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("nullVariable", null); // should't execute the task
+        List<String> theList = new ArrayList<>(3);
+        theList.add("hello");
+        theList.add(null);
+        theList.add("world");
+        args.put("listWithNull", theList);
+        theList = new ArrayList<>(2);
+        theList.add("Hello");
+        theList.add("World");
+        args.put("fineList", theList);
+
+        start(key, "main", args);
+
+        // ---
+
+        verify(task, times(5)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("None of these are null -> Hello"));
+        verify(task, times(1)).log(eq("None of these are null -> World"));
+
+        verify(task, times(1)).log(eq("It's okay to have a null item -> hello"));
+        verify(task, times(1)).log(eq("It's okay to have a null item -> "));
+        verify(task, times(1)).log(eq("It's okay to have a null item -> world"));
+
+        verifyNoMoreInteractions(task);
     }
 
     @Test

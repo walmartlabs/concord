@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- project-model: using `withItems` with `null` now skips the block's
+execution instead of throwing an error.  
+
+
+
 ## [0.91.0] - 2018-10-14
 
 ### Added
