@@ -51,9 +51,9 @@ flows:
   - docker pull "${CONSOLE_IMAGE_TAG}:latest"
 
   # build new images
-  - cd docker-images/server && docker build -t "${SERVER_IMAGE_TAG}:${concord_version}" -f oss/Dockerfile --build-arg "concord_version=${concord_version}" .
-  - cd docker-images/agent && docker build -t "${AGENT_IMAGE_TAG}:${concord_version}" -f oss/Dockerfile --build-arg "concord_version=${concord_version}" .
-  - cd docker-images/console && docker build -t "${CONSOLE_IMAGE_TAG}:${concord_version}" -f oss/Dockerfile --build-arg "concord_version=${concord_version}" .
+  - cd docker-images/server && docker build -t "${SERVER_IMAGE_TAG}:${concord_version}" -f walmart/Dockerfile --build-arg "concord_version=${concord_version}" .
+  - cd docker-images/agent && docker build -t "${AGENT_IMAGE_TAG}:${concord_version}" -f walmart/Dockerfile --build-arg "concord_version=${concord_version}" .
+  - cd docker-images/console && docker build -t "${CONSOLE_IMAGE_TAG}:${concord_version}" -f walmart/Dockerfile --build-arg "concord_version=${concord_version}" .
 
   # push the images
   - docker push ${SERVER_IMAGE_TAG}:${concord_version}
