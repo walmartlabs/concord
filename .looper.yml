@@ -5,19 +5,6 @@ envs:
       DEPLOYMENT_USERNAME: "%{credentials.username('walmart-deployment')}"
       DEPLOYMENT_PASSWORD: "%{credentials.password('walmart-deployment')}"
 
-      # until we will be able to run docker images from mvn directly on a looper's slave
-      CI_DB_HOST: "docker.dev.concord-ci.devtools.prod.walmart.com"
-      CI_DB_USERNAME: "%{credentials.username('concordCiDb')}"
-      CI_DB_PASSWORD: "%{credentials.password('concordCiDb')}"
-      DOCKER_HOST: "tcp://docker.dev.concord-ci.devtools.prod.walmart.com:2375"
-      DOCKER_API_VERSION: "1.22"
-
-      # until we get proper .m2 caching
-      CONCORD_BUILD_DEPS_URL: https://repository.walmart.com/content/repositories/devtools/com/walmartlabs/concord/build-dependencies/0.0.1/build-dependencies-0.0.1.gz
-
-      CONCORD_API_TOKEN: ENC[T1dy4zsvOVkdoDbFyimDBAAa64/OPXdb04rMfaIHfyY=]
-      CONCORD_SECRET_PWD: ENC[kEzaZJe5TNNs02USeRjxvQ==]
-      
       SERVER_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-server"
       CONSOLE_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-console"
       AGENT_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-agent"
@@ -37,117 +24,75 @@ tools:
   maven: 3.5.2
   sonarscanner: 3.0.3.778
 
+docker:
+- name: 'looper-agent'
+  image: 'docker.prod.walmart.com/devtools/looper-agent-docker:0.1.0-centos'
+  hostname: 'localhost'
+  port: 5432
+
 flows:
   buildImages:
-  - dockerImage:
-      baseDir: "docker-images/server"
-      dockerfile: "walmart/Dockerfile"
-      tags:
-      - "${SERVER_IMAGE_TAG}:${concord_version}"
-      - "${SERVER_IMAGE_TAG}:latest"
-      buildArgs:
-        concord_version: ${concord_version}
-      push: true
-  - dockerImage:
-      baseDir: "docker-images/console"
-      dockerfile: "walmart/Dockerfile"
-      tags:
-      - "${CONSOLE_IMAGE_TAG}:${concord_version}"
-      - "${CONSOLE_IMAGE_TAG}:latest"
-      buildArgs:
-        concord_version: ${concord_version}
-      push: true
-  - dockerImage:
-      baseDir: "docker-images/agent"
-      dockerfile: "walmart/Dockerfile"
-      tags:
-      - "${AGENT_IMAGE_TAG}:${concord_version}"
-      - "${AGENT_IMAGE_TAG}:latest"
-      buildArgs:
-        concord_version: ${concord_version}
-      push: true
+  - call: buildImagesNoLatest
+
+  # tag new images with latest
+  - docker tag "${SERVER_IMAGE_TAG}:${concord_version}" "${SERVER_IMAGE_TAG}:latest"
+  - docker tag "${AGENT_IMAGE_TAG}:${concord_version}" "${AGENT_IMAGE_TAG}:latest"
+  - docker tag "${CONSOLE_IMAGE_TAG}:${concord_version}" "${CONSOLE_IMAGE_TAG}:latest"
+
+  # push the latest
+  - docker push "${SERVER_IMAGE_TAG}:latest"
+  - docker push "${AGENT_IMAGE_TAG}:latest"
+  - docker push "${CONSOLE_IMAGE_TAG}:latest"
 
   buildImagesNoLatest:
-  - dockerImage:
-      baseDir: "docker-images/server"
-      dockerfile: "walmart/Dockerfile"
-      tags:
-        - "${SERVER_IMAGE_TAG}:${concord_version}"
-      buildArgs:
-        concord_version: ${concord_version}
-      push: true
-  - dockerImage:
-      baseDir: "docker-images/console"
-      dockerfile: "walmart/Dockerfile"
-      tags:
-        - "${CONSOLE_IMAGE_TAG}:${concord_version}"
-      buildArgs:
-        concord_version: ${concord_version}
-      push: true
-  - dockerImage:
-      baseDir: "docker-images/agent"
-      dockerfile: "walmart/Dockerfile"
-      tags:
-        - "${AGENT_IMAGE_TAG}:${concord_version}"
-      buildArgs:
-        concord_version: ${concord_version}
-      push: true
+  # pull the latest images in order to cache as much as possible
+  - docker pull "${SERVER_IMAGE_TAG}:latest"
+  - docker pull "${AGENT_IMAGE_TAG}:latest"
+  - docker pull "${CONSOLE_IMAGE_TAG}:latest"
+
+  # build new images
+  - cd docker-images/server && docker build -t "${SERVER_IMAGE_TAG}:${concord_version}" -f oss/Dockerfile --build-arg "concord_version=${concord_version}" .
+  - cd docker-images/agent && docker build -t "${AGENT_IMAGE_TAG}:${concord_version}" -f oss/Dockerfile --build-arg "concord_version=${concord_version}" .
+  - cd docker-images/console && docker build -t "${CONSOLE_IMAGE_TAG}:${concord_version}" -f oss/Dockerfile --build-arg "concord_version=${concord_version}" .
+
+  # push the images
+  - docker push ${SERVER_IMAGE_TAG}:${concord_version}
+  - docker push "${AGENT_IMAGE_TAG}:${concord_version}"
+  - docker push "${CONSOLE_IMAGE_TAG}:${concord_version}"
 
   build:
   - node(docker-daemon):
-    - call: cleanup
-    - call: fetchDeps
-    - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests
-    - call: runsonar
-    - hygieia.publishBuild()
-    - call: buildImagesNoLatest
+    - dockguardAgent(looper-agent):
+      - docker network create testnet$DOCKGUARD_STEP_UID
+      - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
+      - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests
+      - call: runsonar
+      - hygieia.publishBuild()
+      - call: buildImagesNoLatest
 
   runsonar:
   - sonar("Sonar"):
     - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
     - hygieia.publishSonar()
 
-  # poor man's .m2 cache
-  fetchDeps:
-  - mkdir -p target && mkdir -p ~/.m2/repository
-  - curl --silent --insecure ${CONCORD_BUILD_DEPS_URL} | tar xz -C ~/.m2/repository
-
   cleanup:
   - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
 
-  deployEnv:
-  - concord.start:
-      apiUrl: http://server.ci-driver.concord-dev.devtools.prod.walmart.com:8001/api/v1
-      apiKey: ${CONCORD_API_TOKEN}
-      org: "Default"
-      project: "concord"
-      repo: "default"
-      entryPoint: "fullAuto"
-      activeProfiles:
-      - "test"
-      sync: false
-      arguments:
-        auto:
-          nextVersion: ${concord_version}
-          secretPwd: ${CONCORD_SECRET_PWD}
-
   default:
   - call: build(concord_version = latest-master-looper)
-#  - call: deployEnv(concord_version = latest-master-looper)
 
   pr:
   - call: build(concord_version = latest-pr-looper)
 
   release:
   - node(docker-daemon):
-    - exposeVars(maven)
-    - call: cleanup
-    - call: fetchDeps
-    - mvn -U -B -s $MVN_SETTINGS release:prepare release:perform
-    - ws_snapshot: binaries
-      includes: docker-images/**
-    - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
-    - call: buildImages(concord_version = ${RELEASE_VERSION})
+    - dockguardAgent(looper-agent):
+      - docker network create testnet$DOCKGUARD_STEP_UID
+      - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
+      - exposeVars(maven)
+      - (name build) mvn -U -B -s $MVN_SETTINGS release:prepare release:perform -DskipTests
+      - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
+      - call: buildImages(concord_version = ${RELEASE_VERSION})
 
   siteDeploy:
   - exposeVars(maven):
