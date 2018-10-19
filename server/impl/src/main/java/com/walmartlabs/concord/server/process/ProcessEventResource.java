@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.IsoDateParam;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.event.EventDao;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -65,11 +66,13 @@ public class ProcessEventResource implements Resource {
     @ApiOperation(value = "Register a process event", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
     @Path("/{processInstanceId}/event")
     @Consumes(MediaType.APPLICATION_JSON)
+    @WithTimer
     public void event(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                       @ApiParam ProcessEventRequest req) {
 
         String data;
         try {
+            // TODO we should be able to capture the event as is, without converting it from JSON and to JSON again
             data = objectMapper.writeValueAsString(req.getData());
         } catch (IOException e) {
             throw new ConcordApplicationException("Error while serializing the event's data: " + e.getMessage(), e);
@@ -88,6 +91,7 @@ public class ProcessEventResource implements Resource {
     @ApiOperation(value = "List process events", responseContainer = "list", response = ProcessEventEntry.class)
     @Path("/{processInstanceId}/event")
     @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
     public List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                                         @ApiParam @QueryParam("after") IsoDateParam geTimestamp,
                                         @ApiParam @QueryParam("limit") @DefaultValue("-1") int limit) {
