@@ -133,14 +133,39 @@ public class GroupVarsProcessor {
 
         Map<String, Object> params = (Map<String, Object>) v;
 
-        String orgName = (String) params.get("orgName");
-        orgName = (String) params.getOrDefault("org", orgName); // alternative parameter name
+        String orgName = getString(params, "orgName", null);
+        orgName = getString(params, "org", orgName); // alternative parameter name
 
-        String secretName = (String) params.get("secretName");
-        String password = (String) params.get("password");
-        String type = (String) params.getOrDefault("type", "yml");
+        String secretName = assertString(params, "secretName", null);
+
+        String password = getString(params, "password", null);
+        String type = getString(params, "type", "yml");
 
         return new Ref(groupName, orgName, secretName, password, type);
+    }
+
+    private static String assertString(Map<String, Object> m, String k, String defaultValue) {
+        String s = getString(m, k, defaultValue);
+
+        if (s == null) {
+            throw new IllegalArgumentException("Value is required: " + k);
+        }
+
+        return s;
+    }
+
+    private static String getString(Map<String, Object> m, String k, String defaultValue) {
+        Object v = m.get(k);
+
+        if (v == null) {
+            return defaultValue;
+        }
+
+        if (!(v instanceof String)) {
+            throw new IllegalArgumentException("Expected a string value in '" + k + "', got: " + v);
+        }
+
+        return (String) v;
     }
 
     private static class Ref {

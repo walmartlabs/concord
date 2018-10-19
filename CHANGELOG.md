@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- ansible: additional validation for `groupVars`.
+
 ### Changed
 
 - project-model: using `withItems` with `null` now skips the block's
