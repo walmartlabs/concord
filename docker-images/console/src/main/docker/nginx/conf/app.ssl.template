@@ -13,6 +13,8 @@ server {
 	server_name             _;
 	root                    /opt/concord/console/dist;
 
+	access_log              /opt/concord/logs/access.log main;
+
     ssl_certificate         /SSL_CERT_PATH/server.pem;
     ssl_certificate_key     /SSL_CERT_PATH/server.key;
     ssl_protocols           TLSv1.1 TLSv1.2;

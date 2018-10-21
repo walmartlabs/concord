@@ -3,6 +3,8 @@ server {
 	server_name             _;
 	root                    /opt/concord/console/dist;
 
+	access_log              /opt/concord/logs/access.log main;
+
 	proxy_read_timeout      1800;
     client_max_body_size    32M;
 
