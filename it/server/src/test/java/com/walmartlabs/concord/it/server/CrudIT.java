@@ -37,6 +37,34 @@ import static org.junit.Assert.*;
 public class CrudIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
+    public void testOrgUpdate() throws Exception {
+        String orgName = "org_" + randomString();
+        Map<String, Object> meta = Collections.singletonMap("x", "123");
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .setMeta(meta)
+                .setVisibility(OrganizationEntry.VisibilityEnum.PUBLIC));
+
+        // ---
+
+        OrganizationEntry e = orgApi.get(orgName);
+        assertNotNull(e.getMeta());
+        assertEquals("123", e.getMeta().get("x"));
+
+        // ---
+
+        orgApi.createOrUpdate(e.setMeta(Collections.singletonMap("x", "234")));
+
+        // ---
+
+        e = orgApi.get(orgName);
+        assertNotNull(e.getMeta());
+        assertEquals("234", e.getMeta().get("x"));
+    }
+
+    @Test(timeout = 60000)
     public void testProject() throws Exception {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 

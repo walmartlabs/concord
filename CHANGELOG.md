@@ -10,6 +10,8 @@
 
 ### Changed
 
+- concord-server: fixed an issue preventing organization data from
+being correctly updated via REST;
 - project-model: using `withItems` with `null` now skips the block's
 execution instead of throwing an error.  
 

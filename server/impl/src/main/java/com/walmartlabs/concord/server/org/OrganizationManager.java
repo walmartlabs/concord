@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
-import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.org.OrganizationEntry;
-import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
+import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.AuthorizationException;
@@ -84,10 +83,9 @@ public class OrganizationManager {
         return id;
     }
 
-    public void update(OrganizationEntry entry) {
+    public void update(UUID orgId, OrganizationEntry entry) {
         assertAdmin();
 
-        UUID orgId = entry.getId();
         orgDao.update(orgId, entry.getName(), entry.getVisibility(), entry.getMeta(), entry.getCfg());
 
         // TODO delta?

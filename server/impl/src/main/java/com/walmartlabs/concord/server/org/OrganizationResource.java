@@ -60,10 +60,14 @@ public class OrganizationResource implements Resource {
     public CreateOrganizationResponse createOrUpdate(@ApiParam @Valid OrganizationEntry entry) {
         UUID orgId = entry.getId();
         if (orgId == null) {
+            orgId = orgDao.getId(entry.getName());
+        }
+
+        if (orgId == null) {
             orgId = orgManager.create(entry);
             return new CreateOrganizationResponse(orgId, OperationResult.CREATED);
         } else {
-            orgManager.update(entry);
+            orgManager.update(orgId, entry);
             return new CreateOrganizationResponse(orgId, OperationResult.UPDATED);
         }
     }
