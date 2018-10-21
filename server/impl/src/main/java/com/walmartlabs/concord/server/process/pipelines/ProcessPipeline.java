@@ -43,6 +43,7 @@ public class ProcessPipeline extends Pipeline {
     @Inject
     public ProcessPipeline(Injector injector) {
         super(injector,
+                RateLimitProcessor.class,
                 AuthorizationProcessor.class,
                 PolicyExportProcessor.class,
                 QueuePolicyProcessor.class,

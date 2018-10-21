@@ -121,8 +121,12 @@ public class RepositoryManagerImpl implements RepositoryManager {
     public <T> T withLock(UUID projectId, String repoName, Callable<T> f) {
         Lock l = locks.get(projectId + "/" + repoName);
         try {
-            l.tryLock(cfg.getLockTimeout(), TimeUnit.MILLISECONDS);
+            if (!l.tryLock(cfg.getLockTimeout(), TimeUnit.MILLISECONDS)) {
+                throw new IllegalStateException("Timeout waiting for the repository lock. Project ID: " + projectId + ", repository name: " + repoName);
+            }
             return f.call();
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
