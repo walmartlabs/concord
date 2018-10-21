@@ -58,8 +58,9 @@ public class PolicyExportProcessor implements PayloadProcessor {
 
         UUID orgId = payload.getHeader(Payload.ORGANIZATION_ID);
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
+        UUID userId = payload.getHeader(Payload.INITIATOR_ID);
 
-        PolicyEntry policy = policyDao.getLinked(orgId, projectId);
+        PolicyEntry policy = policyDao.getLinked(orgId, projectId, userId);
         if (policy == null) {
             return chain.process(payload);
         }

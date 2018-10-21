@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: ability to assign a policy to a user;
 - ansible: additional validation for `groupVars`.
 
 ### Changed

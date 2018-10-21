@@ -57,5 +57,4 @@
             USERS users on users.user_id = q1.INITIATOR_ID
         </createView>
     </changeSet>
-
 </databaseChangeLog>

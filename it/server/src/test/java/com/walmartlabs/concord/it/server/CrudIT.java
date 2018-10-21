@@ -539,6 +539,15 @@ public class CrudIT extends AbstractServerIT {
 
         // ---
 
+        String userName = "user_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        CreateUserResponse createUserResponse = usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(userName)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        // ---
+
         PolicyApi policyResource = new PolicyApi(getApiClient());
 
         String policyName = "policy_" + randomString();
@@ -552,6 +561,11 @@ public class CrudIT extends AbstractServerIT {
         policyResource.createOrUpdate(new PolicyEntry()
                 .setId(por.getId())
                 .setName(newPolicyName)
+                .setRules(policyRules));
+
+        String policyForUser = "policy3_" + randomString();
+        policyResource.createOrUpdate(new PolicyEntry()
+                .setName(policyForUser)
                 .setRules(policyRules));
 
         policyResource.createOrUpdate(new PolicyEntry()
@@ -570,7 +584,7 @@ public class CrudIT extends AbstractServerIT {
                 .setOrgName(orgName)
                 .setProjectName(projectName));
 
-        List<PolicyEntry> l = policyResource.list(orgName, projectName);
+        List<PolicyEntry> l = policyResource.list(orgName, projectName, null);
         assertEquals(1, l.size());
         assertEquals(policyName, l.get(0).getName());
 
@@ -578,35 +592,72 @@ public class CrudIT extends AbstractServerIT {
 
         policyResource.link(policyName, new PolicyLinkEntry().setOrgName(orgName));
 
-        l = policyResource.list(orgName, null);
+        l = policyResource.list(orgName, null, null);
         assertEquals(1, l.size());
         assertEquals(policyName, l.get(0).getName());
 
         // ---
 
-        policyResource.unlink(policyName, orgName, projectName);
-        l = policyResource.list(orgName, projectName);
+        policyResource.link(policyName, new PolicyLinkEntry().setUserName(userName));
+
+        l = policyResource.list(null, null, userName);
         assertEquals(1, l.size());
-        l = policyResource.list(orgName, null);
+        assertEquals(policyName, l.get(0).getName());
+
+        // ---
+
+        policyResource.link(policyForUser, new PolicyLinkEntry()
+                .setOrgName(orgName)
+                .setProjectName(projectName)
+                .setUserName(userName));
+
+        l = policyResource.list(orgName, projectName, userName);
+        assertEquals(1, l.size());
+        assertEquals(policyForUser, l.get(0).getName());
+
+        // ---
+
+        policyResource.unlink(policyName, orgName, projectName, null);
+        l = policyResource.list(orgName, projectName, null);
+        assertEquals(1, l.size());
+        l = policyResource.list(orgName, null, null);
         assertEquals(1, l.size());
 
         // ---
 
-        policyResource.unlink(policyName, orgName, null);
-        l = policyResource.list(orgName, projectName);
+        policyResource.unlink(policyName, orgName, null, null);
+        l = policyResource.list(orgName, projectName, null);
         assertEquals(0, l.size());
-        l = policyResource.list(orgName, null);
+        l = policyResource.list(orgName, null, null);
+        assertEquals(0, l.size());
+
+        // ---
+
+        policyResource.unlink(policyName, null, null, userName);
+        l = policyResource.list(null, null, userName);
+        assertEquals(0, l.size());
+        l = policyResource.list(orgName, null, null);
+        assertEquals(0, l.size());
+
+        // ---
+
+        policyResource.unlink(policyForUser, orgName, projectName, userName);
+        l = policyResource.list(orgName, projectName, userName);
+        assertEquals(0, l.size());
+        l = policyResource.list(orgName, null, null);
         assertEquals(0, l.size());
 
         // ---
 
         policyResource.delete(policyName);
-        l = policyResource.list(null, null);
+        l = policyResource.list(null, null, null);
         for (PolicyEntry e : l) {
             if (policyName.equals(e.getName())) {
                 fail("Should've been removed: " + e.getName());
             }
         }
+
+        usersApi.delete(createUserResponse.getId());
     }
 
     private static OrganizationEntry findOrganization(List<OrganizationEntry> l, String name) {

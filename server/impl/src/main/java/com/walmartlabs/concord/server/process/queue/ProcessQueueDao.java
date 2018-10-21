@@ -454,7 +454,7 @@ public class ProcessQueueDao extends AbstractDao {
 
     private FindResult findEntry(Map<String, Object> capabilities, Set<UUID> excludeProjects) {
         return txResult(tx -> {
-            Record4<UUID, UUID, UUID, UUID> r = nextItem(tx, capabilities, excludeProjects);
+            Record5<UUID, UUID, UUID, UUID, UUID> r = nextItem(tx, capabilities, excludeProjects);
             if (r == null) {
                 return FindResult.notFound();
             }
@@ -462,9 +462,10 @@ public class ProcessQueueDao extends AbstractDao {
             UUID id = r.value1();
             UUID prjId = r.value2();
             UUID orgId = r.value3();
-            UUID parentInstanceId = r.value4();
+            UUID userId = r.value4();
+            UUID parentInstanceId = r.value5();
 
-            PolicyEngine pe = getPolicyEngine(tx, orgId, prjId, parentInstanceId);
+            PolicyEngine pe = getPolicyEngine(tx, orgId, prjId, userId, parentInstanceId);
             if (pe != null) {
                 boolean locked = tryLock(tx, prjId);
                 if (locked) {
@@ -500,7 +501,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    private PolicyEngine getPolicyEngine(DSLContext tx, UUID orgId, UUID prjId, UUID parentInstanceId) {
+    private PolicyEngine getPolicyEngine(DSLContext tx, UUID orgId, UUID prjId, UUID userId,  UUID parentInstanceId) {
         if (prjId == null) {
             return null;
         }
@@ -509,7 +510,7 @@ public class ProcessQueueDao extends AbstractDao {
             return null;
         }
 
-        PolicyEntry policy = policyDao.getLinked(tx, orgId, prjId);
+        PolicyEntry policy = policyDao.getLinked(tx, orgId, prjId, userId);
         if (policy == null) {
             return null;
         }
@@ -518,12 +519,12 @@ public class ProcessQueueDao extends AbstractDao {
         return pe.getConcurrentProcessPolicy().hasRule() ? pe : null;
     }
 
-    private Record4<UUID, UUID, UUID, UUID> nextItem(DSLContext tx, Map<String, Object> capabilities, Set<UUID> excludeProjectIds) {
+    private Record5<UUID, UUID, UUID, UUID, UUID> nextItem(DSLContext tx, Map<String, Object> capabilities, Set<UUID> excludeProjectIds) {
         ProcessQueue q = PROCESS_QUEUE.as("q");
 
         Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-        SelectJoinStep<Record4<UUID, UUID, UUID, UUID>> s = tx.select(q.INSTANCE_ID, q.PROJECT_ID, orgIdField, q.PARENT_INSTANCE_ID)
+        SelectJoinStep<Record5<UUID, UUID, UUID, UUID, UUID>> s = tx.select(q.INSTANCE_ID, q.PROJECT_ID, orgIdField, q.INITIATOR_ID, q.PARENT_INSTANCE_ID)
                 .from(q);
 
         s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())

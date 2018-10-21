@@ -70,31 +70,44 @@ public class PolicyDao extends AbstractDao {
         }
     }
 
-    public PolicyEntry getLinked(UUID orgId, UUID projectId) {
+    public PolicyEntry getLinked(UUID orgId, UUID projectId, UUID userId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return getLinked(tx, orgId, projectId);
+            return getLinked(tx, orgId, projectId, userId);
         }
     }
 
-    public PolicyEntry getLinked(DSLContext tx, UUID orgId, UUID projectId) {
-        SelectOnConditionStep<Record5<UUID, String, String, UUID, UUID>> q =
+    public PolicyEntry getLinked(DSLContext tx, UUID orgId, UUID projectId, UUID userId) {
+        SelectOnConditionStep<Record6<UUID, String, String, UUID, UUID, UUID>> q =
                 tx.select(POLICIES.POLICY_ID,
                         POLICIES.POLICY_NAME,
                         POLICIES.RULES.cast(String.class),
                         POLICY_LINKS.ORG_ID,
-                        POLICY_LINKS.PROJECT_ID)
+                        POLICY_LINKS.PROJECT_ID,
+                        POLICY_LINKS.USER_ID)
                         .from(POLICY_LINKS)
                         .leftOuterJoin(POLICIES).on(POLICY_LINKS.POLICY_ID.eq(POLICIES.POLICY_ID));
 
         // system policy
-        Condition c = (POLICY_LINKS.ORG_ID.isNull().and(POLICY_LINKS.PROJECT_ID.isNull()));
+        Condition c = ((POLICY_LINKS.ORG_ID.isNull().and(POLICY_LINKS.PROJECT_ID.isNull()).and(POLICY_LINKS.USER_ID.isNull())));
 
         if (projectId != null) {
-            c = c.or(POLICY_LINKS.PROJECT_ID.eq(projectId));
+            c = c.or((POLICY_LINKS.PROJECT_ID.eq(projectId).and(POLICY_LINKS.USER_ID.isNull())));
         }
 
         if (orgId != null) {
-            c = c.or(POLICY_LINKS.ORG_ID.eq(orgId).and(POLICY_LINKS.PROJECT_ID.isNull()));
+            c = c.or((POLICY_LINKS.ORG_ID.eq(orgId).and(POLICY_LINKS.PROJECT_ID.isNull()).and(POLICY_LINKS.USER_ID.isNull())));
+        }
+
+        if (userId != null) {
+            if (projectId != null) {
+                c = c.or((POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.PROJECT_ID.eq(projectId)));
+            }
+
+            if (orgId != null) {
+                c = c.or((POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.ORG_ID.eq(orgId)).and(POLICY_LINKS.PROJECT_ID.isNull()));
+            }
+
+            c = c.or((POLICY_LINKS.USER_ID.eq(userId)).and(POLICY_LINKS.ORG_ID.isNull()).and(POLICY_LINKS.PROJECT_ID.isNull()));
         }
 
         q.where(c);
@@ -125,14 +138,14 @@ public class PolicyDao extends AbstractDao {
                 .execute());
     }
 
-    public void link(UUID policyId, UUID orgId, UUID projectId) {
+    public void link(UUID policyId, UUID orgId, UUID projectId, UUID userId) {
         tx(tx -> tx.insertInto(POLICY_LINKS)
-                .columns(POLICY_LINKS.POLICY_ID, POLICY_LINKS.ORG_ID, POLICY_LINKS.PROJECT_ID)
-                .values(policyId, orgId, projectId)
+                .columns(POLICY_LINKS.POLICY_ID, POLICY_LINKS.ORG_ID, POLICY_LINKS.PROJECT_ID, POLICY_LINKS.USER_ID)
+                .values(policyId, orgId, projectId, userId)
                 .execute());
     }
 
-    public void unlink(UUID policyId, UUID orgId, UUID projectId) {
+    public void unlink(UUID policyId, UUID orgId, UUID projectId, UUID userId) {
         tx(tx -> {
             DeleteConditionStep<PolicyLinksRecord> q = tx.deleteFrom(POLICY_LINKS)
                     .where(POLICY_LINKS.POLICY_ID.eq(policyId));
@@ -141,6 +154,10 @@ public class PolicyDao extends AbstractDao {
                 q.and(POLICY_LINKS.PROJECT_ID.eq(projectId));
             } else if (orgId != null) {
                 q.and(POLICY_LINKS.ORG_ID.eq(orgId));
+            }
+
+            if (userId != null) {
+                q.and(POLICY_LINKS.USER_ID.eq(userId));
             }
 
             q.execute();
@@ -158,18 +175,45 @@ public class PolicyDao extends AbstractDao {
     }
 
     private PolicyEntry findPolicyEntry(List<PolicyRule> rules) {
-        PolicyRule prj = rules.stream().filter(r -> r.prjId != null).findFirst().orElse(null);
-        if (prj != null) {
-            return toEntry(prj);
+        PolicyRule userRule = findUserLevelRule(rules);
+        if (userRule != null) {
+            return toEntry(userRule);
         }
-        PolicyRule org = rules.stream().filter(r -> r.orgId != null && r.prjId == null).findFirst().orElse(null);
-        if (org != null) {
-            return toEntry(org);
+
+        PolicyRule prjRule = rules.stream().filter(r -> r.prjId != null).findFirst().orElse(null);
+        if (prjRule != null) {
+            return toEntry(prjRule);
         }
-        PolicyRule system = rules.stream().filter(r -> r.orgId == null && r.prjId == null).findFirst().orElse(null);
-        if (system != null) {
-            return toEntry(system);
+
+        PolicyRule orgRule = rules.stream().filter(r -> r.orgId != null && r.prjId == null).findFirst().orElse(null);
+        if (orgRule != null) {
+            return toEntry(orgRule);
         }
+
+        PolicyRule systemRule = rules.stream().filter(r -> r.orgId == null && r.prjId == null).findFirst().orElse(null);
+        if (systemRule != null) {
+            return toEntry(systemRule);
+        }
+
+        return null;
+    }
+
+    private PolicyRule findUserLevelRule(List<PolicyRule> rules) {
+        PolicyRule userPrjRule = rules.stream().filter(r -> r.userId != null && r.prjId != null).findFirst().orElse(null);
+        if (userPrjRule != null) {
+            return userPrjRule;
+        }
+
+        PolicyRule userOrgRule = rules.stream().filter(r -> r.userId != null && r.orgId != null && r.prjId == null).findFirst().orElse(null);
+        if (userOrgRule != null) {
+            return userOrgRule;
+        }
+
+        PolicyRule userRule = rules.stream().filter(r -> r.userId != null && r.orgId == null && r.prjId == null).findFirst().orElse(null);
+        if (userRule != null) {
+            return userRule;
+        }
+
         return null;
     }
 
@@ -183,10 +227,11 @@ public class PolicyDao extends AbstractDao {
                 deserialize(r.value3()));
     }
 
-    private PolicyRule toRule(Record5<UUID, String, String, UUID, UUID> r) {
+    private PolicyRule toRule(Record6<UUID, String, String, UUID, UUID, UUID> r) {
         return new PolicyRule(
                 r.get(POLICY_LINKS.ORG_ID),
                 r.get(POLICY_LINKS.PROJECT_ID),
+                r.get(POLICY_LINKS.USER_ID),
                 r.get(POLICIES.POLICY_ID),
                 r.get(POLICIES.POLICY_NAME),
                 deserialize(r.value3()));
@@ -221,13 +266,15 @@ public class PolicyDao extends AbstractDao {
 
         private final UUID orgId;
         private final UUID prjId;
+        private final UUID userId;
         private final UUID policyId;
         private final String policyName;
         private final Map<String, Object> rules;
 
-        private PolicyRule(UUID orgId, UUID prjId, UUID policyId, String policyName, Map<String, Object> rules) {
+        private PolicyRule(UUID orgId, UUID prjId, UUID userId, UUID policyId, String policyName, Map<String, Object> rules) {
             this.orgId = orgId;
             this.prjId = prjId;
+            this.userId = userId;
             this.policyId = policyId;
             this.policyName = policyName;
             this.rules = rules;

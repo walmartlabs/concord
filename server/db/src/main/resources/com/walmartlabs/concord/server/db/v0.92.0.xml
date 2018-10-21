@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="92000" author="muhammad.wasi@walmart.com">
+        <addColumn tableName="POLICY_LINKS">
+            <column name="USER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="POLICY_LINKS"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="FK_POLICY_LINKS_USER_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="92010" author="muhammad.wasi@walmart.com">
+        <createIndex tableName="POLICY_LINKS" indexName="IDX_POLICY_LINK_5" unique="true">
+            <column name="ORG_ID"/>
+            <column name="PROJECT_ID"/>
+            <column name="POLICY_ID"/>
+            <column name="USER_ID"/>
+        </createIndex>
+        <modifySql>
+            <append value="where ORG_ID is not null and PROJECT_ID is not null and USER_ID is not null"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="92030" author="muhammad.wasi@walmart.com">
+        <createIndex tableName="POLICY_LINKS" indexName="IDX_POLICY_LINK_6" unique="true">
+            <column name="USER_ID"/>
+            <column name="POLICY_ID"/>
+        </createIndex>
+        <modifySql>
+            <append value="WHERE ORG_ID is null and PROJECT_ID is null and USER_ID is not null"/>
+        </modifySql>
+    </changeSet>
+</databaseChangeLog>
