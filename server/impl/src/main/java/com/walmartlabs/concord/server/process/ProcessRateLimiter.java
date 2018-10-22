@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.server.ExtraStatus;
 import com.walmartlabs.concord.server.RateLimiter;
 import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
@@ -55,7 +56,7 @@ public class ProcessRateLimiter {
 
         int timeout = cfg.getMaxRateTimeout();
         if (!limiter.tryAcquire(timeout)) {
-            throw new ProcessException(payload.getInstanceId(), "Rate limit timeout");
+            throw new ProcessException(payload.getInstanceId(), "Request timeout while being rate limited", ExtraStatus.TOO_MANY_REQUESTS);
         }
     }
 }

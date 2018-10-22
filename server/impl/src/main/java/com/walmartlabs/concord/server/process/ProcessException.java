@@ -21,18 +21,19 @@ package com.walmartlabs.concord.server.process;
  */
 
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.StatusType;
 import java.util.UUID;
 
 public class ProcessException extends RuntimeException {
 
     private final UUID instanceId;
-    private final Status status;
+    private final StatusType status;
 
     public ProcessException(UUID instanceId, String message) {
         this(instanceId, message, Status.INTERNAL_SERVER_ERROR);
     }
 
-    public ProcessException(UUID instanceId, String message, Status status) {
+    public ProcessException(UUID instanceId, String message, StatusType status) {
         super(message);
         this.instanceId = instanceId;
         this.status = status;
@@ -42,7 +43,7 @@ public class ProcessException extends RuntimeException {
         this(instanceId, message, cause, Status.INTERNAL_SERVER_ERROR);
     }
 
-    public ProcessException(UUID instanceId, String message, Throwable cause, Status status) {
+    public ProcessException(UUID instanceId, String message, Throwable cause, StatusType status) {
         super(message, cause);
         this.instanceId = instanceId;
         this.status = status;
@@ -52,7 +53,7 @@ public class ProcessException extends RuntimeException {
         return instanceId;
     }
 
-    public Status getStatus() {
+    public StatusType getStatus() {
         return status;
     }
 }

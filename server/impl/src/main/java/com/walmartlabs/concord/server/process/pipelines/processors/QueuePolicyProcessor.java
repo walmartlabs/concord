@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.server.ExtraStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
@@ -77,11 +78,11 @@ public class QueuePolicyProcessor implements PayloadProcessor {
                     .check(statuses -> dao.metrics(orgId, prjId, statuses));
         } catch (Exception e) {
             log.error("process ['{}'] -> error", instanceId, e);
-            throw new ProcessException(instanceId, "Checking process queue policy error", e);
+            throw new ProcessException(instanceId, "Error while processing queue policies", e);
         }
 
         if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "Process queue policy violations: " + buildErrorMessage(result.getDeny()));
+            throw new ProcessException(instanceId, "Process queue policy violations: " + buildErrorMessage(result.getDeny()), ExtraStatus.TOO_MANY_REQUESTS);
         }
 
         return chain.process(payload);

@@ -10,6 +10,8 @@
 
 ### Changed
 
+- concord-server: return `429` then requests are rate-limited or
+rejected by the queue policy;
 - concord-server: fixed an issue preventing organization data from
 being correctly updated via REST;
 - project-model: using `withItems` with `null` now skips the block's
