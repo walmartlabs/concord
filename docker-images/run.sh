@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.88.2"
+VERSION="0.92.0"
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ -z "$CONCORD_CFG_FILE" ]; then
