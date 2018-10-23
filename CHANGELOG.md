@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- bpm: updated to 0.48.0, fixed `context#getVariableNames` issue.
+
+
+
 ## [0.92.0] - 2018-10-21
 
 ### Added
