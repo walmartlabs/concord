@@ -33,6 +33,7 @@ import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
 import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } from './poll';
+import { reducers as historyReducers, sagas as historySagas } from './history';
 import {
     CancelBulkProcessRequest,
     CancelBullkProcessState,
@@ -233,7 +234,8 @@ export const reducers = combineReducers<State>({
     cancelBulkProcess: cancelBulkProcessReducers,
 
     log: logReducers,
-    poll: pollReducers
+    poll: pollReducers,
+    history: historyReducers
 });
 
 function* onGetProcess({ instanceId }: GetProcessRequest) {
@@ -317,6 +319,7 @@ export const sagas = function*() {
         takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),
         takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),
         fork(logSagas),
-        fork(pollSagas)
+        fork(pollSagas),
+        fork(historySagas)
     ]);
 };

@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.ProcessStatusHistoryRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
@@ -33,6 +34,7 @@ import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.ProcessStatusHistoryEntry;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -309,6 +311,16 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public List<ProcessStatusHistoryEntry> getStatusHistory(UUID instanceId)
+    {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return  tx.selectFrom(PROCESS_STATUS_HISTORY)
+                    .where(PROCESS_STATUS_HISTORY.INSTANCE_ID.eq(instanceId))
+                    .orderBy(PROCESS_STATUS_HISTORY.CHANGE_DATE.desc())
+                    .fetch(this::toStatusHistoryEntry);
+        }
+    }
+
     public List<ProcessEntry> get(List<UUID> instanceId) {
         try (DSLContext tx = DSL.using(cfg)) {
             List<VProcessQueueRecord> r = tx.selectFrom(V_PROCESS_QUEUE)
@@ -580,6 +592,12 @@ public class ProcessQueueDao extends AbstractDao {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private ProcessStatusHistoryEntry toStatusHistoryEntry(ProcessStatusHistoryRecord r) {
+        return new ProcessStatusHistoryEntry(r.getInstanceId(),
+                ProcessStatus.valueOf(r.getStatus()),
+                r.getChangeDate());
     }
 
     private ProcessEntry toEntry(VProcessQueueRecord r) {

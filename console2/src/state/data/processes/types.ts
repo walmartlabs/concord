@@ -30,6 +30,7 @@ import { ProcessEntry } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as LogState } from './logs/types';
 import { State as PollState } from './poll/types';
+import { State as historyState } from './history/types';
 
 export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
@@ -88,4 +89,5 @@ export interface State {
 
     log: LogState;
     poll: PollState;
+    history: historyState;
 }

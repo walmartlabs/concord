@@ -36,6 +36,7 @@ export { default as OrganizationList } from './OrganizationList';
 export { default as OrganizationListActivity } from './OrganizationListActivity';
 export { default as ProcessActivity } from './ProcessActivity';
 export { default as ProcessFormActivity } from './ProcessFormActivity';
+export { default as ProcessHistoryActivity } from './ProcessHistoryActivity';
 export { default as ProcessListActivity } from './ProcessListActivity';
 export { default as ProcessLogActivity } from './ProcessLogActivity';
 export { default as ProcessStatusActivity } from './ProcessStatusActivity';

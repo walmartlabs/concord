@@ -34,6 +34,8 @@ const pathToTab = (s: string): TabLink => {
         return 'status';
     } else if (s.endsWith('/log')) {
         return 'log';
+    } else if (s.endsWith('/history')) {
+        return 'history';
     }
 
     return null;

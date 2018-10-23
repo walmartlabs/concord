@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: new process history tab on the status page.
+
 ### Changed
 
 - bpm: updated to 0.48.0, fixed `context#getVariableNames` issue.

@@ -28,9 +28,9 @@ import { ProcessEntry } from '../../../api/process';
 import { actions, State } from '../../../state/data/processes';
 import { BreadcrumbSegment, RequestErrorMessage } from '../../molecules';
 import { NotFoundPage } from '../../pages';
-import { ProcessLogActivity, ProcessStatusActivity } from '../index';
+import { ProcessLogActivity, ProcessStatusActivity, ProcessHistoryActivity } from '../index';
 
-export type TabLink = 'status' | 'log' | 'events' | null;
+export type TabLink = 'status' | 'log' | 'events' | 'history' | null;
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -129,6 +129,10 @@ class ProcessActivity extends React.PureComponent<Props> {
                         <Icon name="book" />
                         <Link to={`${baseUrl}/log`}>Logs</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'history'}>
+                        <Icon name="history" />
+                        <Link to={`${baseUrl}/history`}>History</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
@@ -140,6 +144,9 @@ class ProcessActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/log`} exact={true}>
                         <ProcessLogActivity instanceId={instanceId} />
+                    </Route>
+                    <Route path={`${baseUrl}/history`} exact={true}>
+                        <ProcessHistoryActivity instanceId={instanceId} />
                     </Route>
 
                     <Route component={NotFoundPage} />

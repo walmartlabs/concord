@@ -514,6 +514,28 @@ public class ProcessResource implements Resource {
         return e;
     }
 
+
+    /**
+     * Returns a process status history.
+     *
+     * @param instanceId
+     * @return
+     */
+    @GET
+    @ApiOperation("Get process status history")
+    @javax.ws.rs.Path("/{instanceId}/history")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public List<ProcessStatusHistoryEntry> getStatusHistory(@ApiParam @PathParam("instanceId") UUID instanceId) {
+        List<ProcessStatusHistoryEntry> statusHistoryList = queueDao.getStatusHistory(instanceId);
+        if (statusHistoryList == null) {
+            log.warn("get ['{}'] -> not found", instanceId);
+            throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
+        }
+
+        return statusHistoryList;
+    }
+
     /**
      * Returns a process' attachment file.
      *
