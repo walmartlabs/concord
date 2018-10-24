@@ -27,59 +27,76 @@ tools:
 docker:
 - name: 'looper-agent'
   image: 'docker.prod.walmart.com/devtools/looper-agent-docker:0.1.0-centos'
-  hostname: 'localhost'
-  port: 5432
 
 flows:
   buildImages:
-  # pull the latest images in order to cache as much as possible
-  - docker pull "${SERVER_IMAGE_TAG}:latest"
-  - docker pull "${AGENT_IMAGE_TAG}:latest"
-  - docker pull "${CONSOLE_IMAGE_TAG}:latest"
+  - dockerImage:
+      baseDir: "docker-images/server"
+      dockerfile: "walmart/Dockerfile"
+      tags:
+      - "${SERVER_IMAGE_TAG}:${concord_version}"
+      - "${SERVER_IMAGE_TAG}:latest"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+  - dockerImage:
+      baseDir: "docker-images/console"
+      dockerfile: "walmart/Dockerfile"
+      tags:
+      - "${CONSOLE_IMAGE_TAG}:${concord_version}"
+      - "${CONSOLE_IMAGE_TAG}:latest"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+  - dockerImage:
+      baseDir: "docker-images/agent"
+      dockerfile: "walmart/Dockerfile"
+      tags:
+      - "${AGENT_IMAGE_TAG}:${concord_version}"
+      - "${AGENT_IMAGE_TAG}:latest"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
 
-  # build new images
-  - cd docker-images/server && docker build -t "${SERVER_IMAGE_TAG}:${concord_version}"  -f walmart/Dockerfile --build-arg "concord_version=${concord_version}" .
-  - cd docker-images/agent && docker build -t "${AGENT_IMAGE_TAG}:${concord_version}" -f walmart/Dockerfile --build-arg "concord_version=${concord_version}" .
-  - cd docker-images/console && docker build -t "${CONSOLE_IMAGE_TAG}:${concord_version}" -t "${CONSOLE_IMAGE_TAG}:latest" -f walmart/Dockerfile --build-arg "concord_version=${concord_version}" .
-
-  # push the images
-  - docker push "${SERVER_IMAGE_TAG}:${concord_version}"
-  - docker push "${AGENT_IMAGE_TAG}:${concord_version}"
-  - docker push "${CONSOLE_IMAGE_TAG}:${concord_version}"
-
-  # tag and push the latest
-  - if: $use_latest
-    then:
-    - docker tag "${SERVER_IMAGE_TAG}:${concord_version}" "${SERVER_IMAGE_TAG}:latest"
-    - docker push "${SERVER_IMAGE_TAG}:latest"
-    - docker tag "${AGENT_IMAGE_TAG}:${concord_version}" "${AGENT_IMAGE_TAG}:latest"
-    - docker push "${AGENT_IMAGE_TAG}:latest"
-    - docker tag "${CONSOLE_IMAGE_TAG}:${concord_version}" "${CONSOLE_IMAGE_TAG}:latest"
-    - docker push "${CONSOLE_IMAGE_TAG}:latest"
+  buildImagesNoLatest:
+  - dockerImage:
+      baseDir: "docker-images/server"
+      dockerfile: "walmart/Dockerfile"
+      tags:
+      - "${SERVER_IMAGE_TAG}:${concord_version}"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+  - dockerImage:
+      baseDir: "docker-images/console"
+      dockerfile: "walmart/Dockerfile"
+      tags:
+      - "${CONSOLE_IMAGE_TAG}:${concord_version}"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
+  - dockerImage:
+      baseDir: "docker-images/agent"
+      dockerfile: "walmart/Dockerfile"
+      tags:
+      - "${AGENT_IMAGE_TAG}:${concord_version}"
+      buildArgs:
+        concord_version: ${concord_version}
+      push: true
 
   build:
   - node(docker-daemon):
     - dockguardAgent(looper-agent):
       - docker network create testnet$DOCKGUARD_STEP_UID
       - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
+      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db hub.docker.prod.walmart.com/library/postgres:10.4-alpine
       - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests
       - call: runsonar
       - hygieia.publishBuild()
-      - call: buildImages(use_latest = false)
-
-  runsonar:
-  - sonar("Sonar"):
-    - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
-    - hygieia.publishSonar()
-
-  cleanup:
-  - (name cleanup) docker rm -f $(docker ps -aq) &> /dev/null || true
-
-  default:
-  - call: build(concord_version = latest-master-looper)
-
-  pr:
-  - call: build(concord_version = latest-pr-looper)
+      - ws_snapshot: binaries
+        includes: docker-images/**
+    - ws_restore: binaries
+    - call: buildImagesNoLatest
 
   release:
   - node(docker-daemon):
@@ -87,9 +104,25 @@ flows:
     - dockguardAgent(looper-agent):
       - docker network create testnet$DOCKGUARD_STEP_UID
       - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
+      - docker run --network testnet$DOCKGUARD_STEP_UID --name db hub.docker.prod.walmart.com/library/postgres:10.4-alpine
       - (name build) mvn -U -B -s $MVN_SETTINGS release:prepare release:perform -DskipTests
       - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
-      - call: buildImages(concord_version = ${RELEASE_VERSION}, use_latest = true)
+      - hygieia.publishBuild()
+      - ws_snapshot: binaries
+        includes: docker-images/**
+    - ws_restore: binaries
+    - call: buildImages(concord_version = ${RELEASE_VERSION})
+
+  default:
+  - call: build(concord_version = latest-master-looper)
+
+  pr:
+  - call: build(concord_version = latest-pr-looper)
+
+  runsonar:
+  - sonar("Sonar"):
+    - (name sonar) mvn -B -fae -s $MVN_SETTINGS $SONAR_MAVEN_GOAL
+    - hygieia.publishSonar()
 
   siteDeploy:
   - exposeVars(maven):

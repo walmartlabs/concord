@@ -94,47 +94,47 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <id>start</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <images>
-                        <image>
-                            <name>${db.image}</name>
-                            <alias>db</alias>
-                            <run>
-                                <ports>
-                                    <port>${db.port}:5432</port>
-                                </ports>
-                                <env>
-                                    <POSTGRES_PASSWORD>${db.password}</POSTGRES_PASSWORD>
-                                </env>
-                                <wait>
-                                    <log>(?s).*ready for start up.*ready to accept connections.*</log>
-                                    <time>30000</time>
-                                </wait>
-                            </run>
-                        </image>
-                    </images>
-                </configuration>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>io.fabric8</groupId>-->
+                <!--<artifactId>docker-maven-plugin</artifactId>-->
+                <!--<extensions>true</extensions>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>start</id>-->
+                        <!--<phase>generate-sources</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>start</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                    <!--<execution>-->
+                        <!--<id>stop</id>-->
+                        <!--<phase>prepare-package</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>stop</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<images>-->
+                        <!--<image>-->
+                            <!--<name>${db.image}</name>-->
+                            <!--<alias>db</alias>-->
+                            <!--<run>-->
+                                <!--<ports>-->
+                                    <!--<port>${db.port}:5432</port>-->
+                                <!--</ports>-->
+                                <!--<env>-->
+                                    <!--<POSTGRES_PASSWORD>${db.password}</POSTGRES_PASSWORD>-->
+                                <!--</env>-->
+                                <!--<wait>-->
+                                    <!--<log>(?s).*ready for start up.*ready to accept connections.*</log>-->
+                                    <!--<time>30000</time>-->
+                                <!--</wait>-->
+                            <!--</run>-->
+                        <!--</image>-->
+                    <!--</images>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
             <plugin>
                 <groupId>org.liquibase</groupId>
                 <artifactId>liquibase-maven-plugin</artifactId>
@@ -207,7 +207,6 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
                 <db.host>db</db.host>
                 <db.port>5432</db.port>
             </properties>
@@ -227,46 +226,8 @@
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
                         <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>start</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>start</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>stop</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>stop</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                         <configuration>
-                            <images>
-                                <image>
-                                    <name>${db.image}</name>
-                                    <alias>db</alias>
-                                    <run>
-                                        <ports>
-                                            <port>${db.port}:5432</port>
-                                        </ports>
-                                        <env>
-                                            <POSTGRES_PASSWORD>${db.password}</POSTGRES_PASSWORD>
-                                        </env>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>testnet${env.DOCKGUARD_STEP_UID}</name>
-                                            <alias>db</alias>
-                                        </network>
-                                        <wait>
-                                            <log>(?s).*ready for start up.*ready to accept connections.*</log>
-                                            <time>30000</time>
-                                        </wait>
-                                    </run>
-                                </image>
-                            </images>
+                            <skip>true</skip>
                         </configuration>
                     </plugin>
                 </plugins>
