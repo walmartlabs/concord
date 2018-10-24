@@ -223,16 +223,12 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         }
     }
 
-    private static Field<?> interval(String s) {
-        return field("interval '" + s + "'");
-    }
-
     private final class ProcessHandlersWorker implements Runnable {
 
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> maxAge = currentTimestamp().minus(interval(cfg.getMaxFailureHandlingAge()));
+                Field<Timestamp> maxAge = currentTimestamp().minus(PgUtils.interval(cfg.getMaxFailureHandlingAge()));
 
                 for (PollEntry e : POLL_ENTRIES) {
                     List<ProcessEntry> parents = watchdogDao.poll(tx, e, maxAge, 1);
@@ -261,7 +257,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStalledAge()));
+                Field<Timestamp> cutOff = currentTimestamp().minus(PgUtils.interval(cfg.getMaxStalledAge()));
 
                 List<UUID> ids = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
                 for (UUID id : ids) {
@@ -277,7 +273,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStartFailureAge()));
+                Field<Timestamp> cutOff = currentTimestamp().minus(PgUtils.interval(cfg.getMaxStartFailureAge()));
 
                 List<UUID> ids = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (UUID id : ids) {
@@ -376,7 +372,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .asField();
 
             @SuppressWarnings("unchecked")
-            Field<? extends Number> i = (Field<? extends Number>) interval("1 second");
+            Field<? extends Number> i = (Field<? extends Number>) PgUtils.interval("1 second");
 
             return tx.select(q.INSTANCE_ID, q.LAST_AGENT_ID, q.TIMEOUT)
                     .from(q)

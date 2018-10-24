@@ -24,10 +24,16 @@ import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
 
+import static org.jooq.impl.DSL.field;
+
 public final class PgUtils {
 
     public static Condition contains(Field<String[]> left, String[] right) {
         return DSL.condition("{0} @> {1}::text[]", left, DSL.val(right, left.getDataType()));
+    }
+
+    public static Field<?> interval(String s) {
+        return field("interval '" + s + "'");
     }
 
     private PgUtils() {

@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-server: process metrics changed from showing total counts
+to showing last minute sums;
 - bpm: updated to 0.48.0, fixed `context#getVariableNames` issue.
 
 

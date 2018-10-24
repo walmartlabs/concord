@@ -52,6 +52,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory.PROCESS_STATUS_HISTORY;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
@@ -431,11 +432,12 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public int count(ProcessStatus status) {
+    public Map<ProcessStatus, Integer> countLastMinute() {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.selectCount().from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(status.toString()))
-                    .fetchOne(0, int.class);
+            return tx.select(PROCESS_QUEUE.CURRENT_STATUS, DSL.count(asterisk())).from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(currentTimestamp().minus(interval("1 minute"))))
+                    .groupBy(PROCESS_QUEUE.CURRENT_STATUS)
+                    .fetchMap(r -> ProcessStatus.valueOf(r.value1()), r -> r.value2());
         }
     }
 
