@@ -57,6 +57,16 @@ public class MockContext implements Context {
     }
 
     @Override
+    public void setProtectedVariable(String key, Object value) {
+        throw new IllegalArgumentException("Not supported");
+    }
+
+    @Override
+    public Object getProtectedVariable(String key) {
+        throw new IllegalArgumentException("Not supported");
+    }
+
+    @Override
     public <T> T eval(String expr, Class<T> type) {
         throw new IllegalStateException("Not supported");
     }

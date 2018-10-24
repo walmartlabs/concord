@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-sdk: support for "protected" variables that can be set only
+by allowed tasks;
+- ansible, policy-engine: support for restricting of allowed URLs in
+`maven_artifact`, `uri` and `docker_container`;
+- policy-engine: support for value expressions;
 - concord-console: new process history tab on the status page.
 
 ### Changed

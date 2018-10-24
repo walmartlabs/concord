@@ -38,12 +38,15 @@ public class PolicyEngineRules {
 
     private final QueueRule queueRules;
 
+    private final ProtectedTasksRule protectedTasksRules;
+
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
                              @JsonProperty("task") PolicyRules<TaskRule> taskRules,
                              @JsonProperty("workspace") WorkspaceRule workspaceRule,
                              @JsonProperty("container") ContainerRule containerRules,
-                             @JsonProperty("queue") QueueRule queueRules) {
+                             @JsonProperty("queue") QueueRule queueRules,
+                             @JsonProperty("protectedTask") ProtectedTasksRule protectedTasksRules) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -51,6 +54,7 @@ public class PolicyEngineRules {
         this.workspaceRule = workspaceRule;
         this.containerRules = containerRules;
         this.queueRules = queueRules;
+        this.protectedTasksRules = protectedTasksRules;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -77,6 +81,10 @@ public class PolicyEngineRules {
         return queueRules;
     }
 
+    public ProtectedTasksRule getProtectedTasksRules() {
+        return protectedTasksRules;
+    }
+
     @Override
     public String toString() {
         return "PolicyEngineRules{" +
@@ -86,6 +94,7 @@ public class PolicyEngineRules {
                 ", workspaceRule=" + workspaceRule +
                 ", containerRules=" + containerRules +
                 ", queueRules=" + queueRules +
+                ", protectedTasksRules=" + protectedTasksRules +
                 '}';
     }
 }

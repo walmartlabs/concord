@@ -21,9 +21,12 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.common.ReflectionUtils;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.runner.PolicyEngineHolder;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
 import com.walmartlabs.concord.runner.engine.el.TaskResolver;
 import com.walmartlabs.concord.sdk.Context;
@@ -72,7 +75,8 @@ public class EngineFactory {
     }
 
     @SuppressWarnings("deprecation")
-    public Engine create(ProjectDefinition project, Path baseDir, Collection<String> activeProfiles, Set<String> metaVariables) {
+    public Engine create(ProjectDefinition project, Path baseDir,
+                         Collection<String> activeProfiles, Set<String> metaVariables) {
         log.info("create -> using profiles: {}", activeProfiles);
 
         Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
@@ -95,7 +99,8 @@ public class EngineFactory {
                 new TaskResolver(taskRegistry),
                 new InjectVariableELResolver());
 
-        ConcordExecutionContextFactory contextFactory = new ConcordExecutionContextFactory(expressionManager);
+        ProtectedVarContext protectedVarContext = new ProtectedVarContext(PolicyEngineHolder.INSTANCE.getEngine());
+        ConcordExecutionContextFactory contextFactory = new ConcordExecutionContextFactory(expressionManager, protectedVarContext);
 
         EventStorage eventStorage = new FileEventStorage(eventsDir);
         PersistenceManager persistenceManager = new FilePersistenceManager(instancesDir);
@@ -115,13 +120,18 @@ public class EngineFactory {
         ElementEventProcessor eventProcessor = new ElementEventProcessor(apiClientFactory, adapter.processes());
         ProcessOutVariables outVariables = new ProcessOutVariables(contextFactory);
 
+        List<TaskInterceptor> taskInterceptors = new ArrayList<>();
+        taskInterceptors.add(protectedVarContext);
+        taskInterceptors.add(new TaskEventInterceptor(eventProcessor));
+        taskInterceptors.add(new PolicyPreprocessor(baseDir));
+
         Engine engine = new EngineBuilder()
                 .withContextFactory(contextFactory)
                 .withLockManager(new NoopLockManager())
                 .withExpressionManager(expressionManager)
                 .withDefinitionProvider(adapter.processes())
                 .withTaskRegistry(taskRegistry)
-                .withJavaDelegateHandler(new JavaDelegateHandlerImpl(new TaskEventInterceptor(eventProcessor)))
+                .withJavaDelegateHandler(new JavaDelegateHandlerImpl(taskInterceptors))
                 .withEventStorage(eventStorage)
                 .withPersistenceManager(persistenceManager)
                 .withUserTaskHandler(uth)
@@ -185,30 +195,47 @@ public class EngineFactory {
 
     private static final class JavaDelegateHandlerImpl implements JavaDelegateHandler {
 
-        private final TaskEventInterceptor interceptor;
+        private final List<TaskInterceptor> interceptors;
 
-        private JavaDelegateHandlerImpl(TaskEventInterceptor interceptor) {
-            this.interceptor = interceptor;
+        private JavaDelegateHandlerImpl(List<TaskInterceptor> interceptors) {
+            this.interceptors = interceptors;
         }
 
         @Override
         public void execute(Object task, ExecutionContext ctx) throws Exception {
+            Named n = ReflectionUtils.findAnnotation(task.getClass(), Named.class);
+            String taskName = null;
+            if (n != null) {
+                taskName = n.value();
+            }
+
             // check JavaDelegate first because tasks can implement both JavaDelegate and Task
             if (task instanceof JavaDelegate) {
                 JavaDelegate d = (JavaDelegate) task;
-                interceptor.preTask((Context) ctx);
+                preTask(taskName, (Context) ctx);
                 d.execute(ctx);
-                interceptor.postTask((Context) ctx);
+                postTask(taskName, (Context) ctx);
             } else if (task instanceof Task) {
                 Task t = (Task) task;
-                interceptor.preTask((Context) ctx);
+                preTask(taskName, (Context) ctx);
                 t.execute((Context) ctx);
-                interceptor.postTask((Context) ctx);
+                postTask(taskName, (Context) ctx);
             } else {
                 throw new ExecutionException("Unsupported task type: " + task + ": tasks must implement either " +
                         Task.class.getName() + " or " + JavaDelegate.class.getName() + " interfaces");
             }
         }
-    }
 
+        private void preTask(String taskName, Context ctx) throws ExecutionException {
+            for (TaskInterceptor i : interceptors) {
+                i.preTask(taskName, ctx);
+            }
+        }
+
+        private void postTask(String taskName, Context ctx) throws ExecutionException {
+            for (TaskInterceptor i : interceptors) {
+                i.postTask(taskName, ctx);
+            }
+        }
+    }
 }

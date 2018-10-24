@@ -93,7 +93,8 @@ public class TaskPolicy {
             if (!paramMatches(
                     Optional.ofNullable(p.getName()).map(n -> n.split("\\.")).orElse(null),
                     0,
-                    p.getValues(), params[p.getIndex()])) {
+                    p.getValues(), params[p.getIndex()],
+                    p.isProtected())) {
                 return false;
             }
         }
@@ -102,26 +103,27 @@ public class TaskPolicy {
     }
 
     @SuppressWarnings("unchecked")
-    private static boolean paramMatches(String[] names, int nameIndex, List<Object> values, Object param) {
+    private static boolean paramMatches(String[] names, int nameIndex, List<Object> values, Object param, boolean isProtected) {
         if (param == null) {
-            return false;
+            return values.contains(null);
         }
 
         if (param instanceof Map) {
             Map<String, Object> m = (Map<String, Object>) param;
             String name = names[nameIndex];
             nameIndex += 1;
-            return paramMatches(names, nameIndex, values, m.get(name));
+            return paramMatches(names, nameIndex, values, m.get(name), isProtected);
         } else if (param instanceof Context) {
             Context ctx = (Context) param;
             String name = names[nameIndex];
             nameIndex += 1;
-            return paramMatches(names, nameIndex, values, ctx.getVariable(name));
+            Object v = isProtected ? ctx.getProtectedVariable(name) : ctx.getVariable(name);
+            return paramMatches(names, nameIndex, values, v, isProtected);
         } else if (param instanceof String) {
             return Utils.matchAny(values.stream().map(Object::toString).collect(Collectors.toList()), param.toString());
         } else {
             for (Object v : values) {
-                if (v.equals(param)) {
+                if (v != null && v.equals(param)) {
                     return true;
                 }
             }

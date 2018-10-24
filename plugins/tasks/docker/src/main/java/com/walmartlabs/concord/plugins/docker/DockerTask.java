@@ -46,6 +46,7 @@ import java.util.concurrent.Future;
 public class DockerTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(DockerTask.class);
+    private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
     private static final int SUCCESS_EXIT_CODE = 0;
     private static final String VOLUME_CONTAINER_DEST = "/workspace";
@@ -154,7 +155,7 @@ public class DockerTask implements Task {
         BufferedReader reader = new TruncBufferedReader(new InputStreamReader(in));
         String line;
         while ((line = reader.readLine()) != null) {
-            log.info("DOCKER: {}", line);
+            processLog.info("DOCKER: {}", line);
         }
     }
 

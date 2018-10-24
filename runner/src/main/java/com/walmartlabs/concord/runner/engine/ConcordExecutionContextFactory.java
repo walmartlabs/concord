@@ -29,25 +29,26 @@ import io.takari.bpm.context.DefaultExecutionContextFactory;
 import io.takari.bpm.context.ExecutionContextImpl;
 import io.takari.bpm.el.ExpressionManager;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ConcordExecutionContextFactory implements ExecutionContextFactory<ConcordExecutionContextFactory.ConcordExecutionContext> {
 
     private final ExpressionManager expressionManager;
+    private final ProtectedVarContext protectedVarContext;
 
-    public ConcordExecutionContextFactory(ExpressionManager expressionManager) {
+    public ConcordExecutionContextFactory(ExpressionManager expressionManager, ProtectedVarContext protectedVarContext) {
         this.expressionManager = expressionManager;
+        this.protectedVarContext = protectedVarContext;
     }
 
     @Override
     public ConcordExecutionContext create(Variables source) {
-        return new ConcordExecutionContext(this, expressionManager, source);
+        return new ConcordExecutionContext(this, expressionManager, source, protectedVarContext);
     }
 
     @Override
     public ConcordExecutionContext create(Variables source, String processDefinitionId, String elementId) {
-        return new ConcordExecutionContext(this, expressionManager, source, processDefinitionId, elementId);
+        return new ConcordExecutionContext(this, expressionManager, source, processDefinitionId, elementId, protectedVarContext);
     }
 
     @Override
@@ -57,20 +58,93 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
     public static class ConcordExecutionContext extends ExecutionContextImpl implements Context {
 
+        private static final String PROTECTED_VAR_KEY = "__protected_vars";
+
+        private final ProtectedVarContext protectedVarContext;
+
         public ConcordExecutionContext(ExecutionContextFactory<? extends ExecutionContext> ctxFactory,
-                                       ExpressionManager expressionManager, Variables source) {
-            super(ctxFactory, expressionManager, source);
+                                       ExpressionManager expressionManager, Variables source,
+                                       ProtectedVarContext protectedVarContext) {
+            this(ctxFactory, expressionManager, source, null, null, protectedVarContext);
         }
 
         public ConcordExecutionContext(ExecutionContextFactory<? extends ExecutionContext> ctxFactory,
                                        ExpressionManager expressionManager, Variables source,
-                                       String processDefinitionId, String elementId) {
+                                       String processDefinitionId, String elementId,
+                                       ProtectedVarContext protectedVarContext) {
             super(ctxFactory, expressionManager, source, processDefinitionId, elementId);
+            this.protectedVarContext = protectedVarContext;
         }
 
         @Override
         public UUID getEventCorrelationId() {
             return (UUID) getVariable(InternalConstants.Context.EVENT_CORRELATION_KEY);
+        }
+
+        @Override
+        public void setVariable(String key, Object value) {
+            if (PROTECTED_VAR_KEY.equals(key)) {
+                throw new RuntimeException("Can't set concord internal variables");
+            }
+
+            Set<String> protectedVars = getProtectedVariableNames();
+            if (protectedVars.contains(key)) {
+                throw new RuntimeException("Can't rewrite protected variable with name '" + key + "'");
+            }
+
+            super.setVariable(key, value);
+        }
+
+        @Override
+        public void setProtectedVariable(String key, Object value) {
+            assertProtectedVarAccess();
+
+            Set<String> protectedVars = new HashSet<>(getProtectedVariableNames());
+            protectedVars.add(key);
+            super.setVariable(PROTECTED_VAR_KEY, Collections.unmodifiableSet(protectedVars));
+            super.setVariable(key, value);
+        }
+
+        @Override
+        public Object getProtectedVariable(String key) {
+            Set<String> protectedVars = getProtectedVariableNames();
+            if (!protectedVars.contains(key)) {
+                return null;
+            }
+            return getVariable(key);
+        }
+
+        @Override
+        public void removeVariable(String key) {
+            if (PROTECTED_VAR_KEY.equals(key)) {
+                throw new RuntimeException("Can't remove concord internal variables");
+            }
+
+            Set<String> protectedVars = getProtectedVariableNames();
+            if (protectedVars.contains(key)) {
+                assertProtectedVarAccess();
+
+                Set<String> newVars = new HashSet<>(protectedVars);
+                newVars.remove(key);
+                super.setVariable(PROTECTED_VAR_KEY, Collections.unmodifiableSet(newVars));
+            }
+
+            super.removeVariable(key);
+        }
+
+        @SuppressWarnings("unchecked")
+        private Set<String> getProtectedVariableNames() {
+            Set<String> result = (Set<String>) getVariable(PROTECTED_VAR_KEY);
+            if (result == null) {
+                return Collections.emptySet();
+            }
+            return result;
+        }
+
+        private void assertProtectedVarAccess() {
+            if (!protectedVarContext.hasToken()) {
+                throw new RuntimeException("Not allowed to set protected variable");
+            }
         }
     }
 
@@ -78,6 +152,16 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
         public MapBackedExecutionContext(ExecutionContext delegate, Map<Object, Object> overrides) {
             super(delegate, overrides);
+        }
+
+        @Override
+        public void setProtectedVariable(String key, Object value) {
+            throw new IllegalStateException("Not supported");
+        }
+
+        @Override
+        public Object getProtectedVariable(String key) {
+            return super.getVariable(key);
         }
     }
 }

@@ -82,8 +82,8 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByStringParams() {
-        TaskRule.Param p1 = new TaskRule.Param(1, null, Collections.singletonList("value-1"));
-        TaskRule.Param p2 = new TaskRule.Param(0, null, Collections.singletonList("value-2"));
+        TaskRule.Param p1 = new TaskRule.Param(1, null, false, Collections.singletonList("value-1"));
+        TaskRule.Param p2 = new TaskRule.Param(0, null, false, Collections.singletonList("value-2"));
 
         TaskRule r = new TaskRule(null, "taskName-.*", "foo", Arrays.asList(p1, p2));
 
@@ -97,7 +97,7 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByMapStringParam() {
-        TaskRule.Param p1 = new TaskRule.Param(1, "k", Collections.singletonList("v"));
+        TaskRule.Param p1 = new TaskRule.Param(1, "k", false, Collections.singletonList("v"));
 
         TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1));
 
@@ -111,7 +111,7 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByMapMapStringParam() {
-        TaskRule.Param p1 = new TaskRule.Param(1, "k.kk", Collections.singletonList("v"));
+        TaskRule.Param p1 = new TaskRule.Param(1, "k.kk", false, Collections.singletonList("v"));
 
         TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1));
 
@@ -121,6 +121,20 @@ public class TaskPolicyTest {
 
         // ---
         assertDeny(policy, "taskName-12", "foo", "xxx", Collections.singletonMap("k", Collections.singletonMap("kk", "v")));
+    }
+
+    @Test
+    public void testDenyByMapMapStringParamNull() {
+        TaskRule.Param p1 = new TaskRule.Param(1, "k.kk", false, Collections.singletonList(null));
+
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1));
+
+        PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
+
+        TaskPolicy policy = new TaskPolicy(rules);
+
+        // ---
+        assertDeny(policy, "taskName-12", "foo", "xxx", Collections.singletonMap("k1", "v"));
     }
 
     private static void assertDeny(TaskPolicy policy, String taskName, String methodName, Object...params) {

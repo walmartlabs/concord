@@ -133,6 +133,16 @@ public class ContextUtilsTest {
         }
 
         @Override
+        public void setProtectedVariable(String key, Object value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object getProtectedVariable(String key) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void removeVariable(String key) {
             throw new UnsupportedOperationException();
         }

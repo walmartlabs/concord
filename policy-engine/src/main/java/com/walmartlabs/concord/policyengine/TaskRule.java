@@ -81,8 +81,9 @@ public class TaskRule implements Serializable {
 
         private final int index;
 
-
         private final String name;
+
+        private final boolean protectedVariable;
 
         private final List<Object> values;
 
@@ -90,9 +91,11 @@ public class TaskRule implements Serializable {
         public Param(
                 @JsonProperty("index") int index,
                 @JsonProperty("name") String name,
+                @JsonProperty("protected") boolean protectedVariable,
                 @JsonProperty("values") List<Object> values) {
             this.index = index;
             this.name = name;
+            this.protectedVariable = protectedVariable;
             this.values = Optional.ofNullable(values).orElse(Collections.emptyList());
         }
 
@@ -104,6 +107,10 @@ public class TaskRule implements Serializable {
             return name;
         }
 
+        public boolean isProtected() {
+            return protectedVariable;
+        }
+
         public List<Object> getValues() {
             return values;
         }
@@ -113,6 +120,7 @@ public class TaskRule implements Serializable {
             return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
                     .append("index", index)
                     .append("name", name)
+                    .append("protected", protectedVariable)
                     .append("values", values)
                     .toString();
         }

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.project.InternalConstants.Context.EVENT_CORRELATION_KEY;
 
-public class TaskEventInterceptor {
+public class TaskEventInterceptor implements TaskInterceptor {
 
     private final ElementEventProcessor eventProcessor;
 
@@ -44,11 +44,13 @@ public class TaskEventInterceptor {
         this.eventProcessor = eventProcessor;
     }
 
-    public void preTask(Context ctx) throws ExecutionException {
+    @Override
+    public void preTask(String taskName, Context ctx) throws ExecutionException {
         UUID correlationId = UUID.randomUUID();
 
         eventProcessor.process(buildEvent(ctx), (element) -> {
             Map<String, Object> params = new HashMap<>();
+            params.put("name", taskName);
             params.put("correlationId", correlationId);
             params.put("phase", "pre");
             List<VariableMapping> p = getInParams(ctx, element);
@@ -61,11 +63,13 @@ public class TaskEventInterceptor {
         ctx.setVariable(EVENT_CORRELATION_KEY, correlationId);
     }
 
-    public void postTask(Context ctx) throws ExecutionException {
+    @Override
+    public void postTask(String taskName, Context ctx) throws ExecutionException {
         UUID correlationId = (UUID) ctx.getVariable(EVENT_CORRELATION_KEY);
 
         eventProcessor.process(buildEvent(ctx), (element) -> {
             Map<String, Object> params = new HashMap<>();
+            params.put("name", taskName);
             params.put("correlationId", correlationId);
             params.put("phase", "post");
             List<VariableMapping> p = getOutParams(ctx, element);

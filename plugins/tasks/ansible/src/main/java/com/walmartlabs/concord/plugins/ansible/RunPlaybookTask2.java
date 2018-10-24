@@ -43,6 +43,7 @@ import static com.walmartlabs.concord.plugins.ansible.ArgUtils.*;
 public class RunPlaybookTask2 implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(RunPlaybookTask2.class);
+    private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
     private static final int SUCCESS_EXIT_CODE = 0;
 
@@ -166,7 +167,7 @@ public class RunPlaybookTask2 implements Task {
             BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                log.info("ANSIBLE: {}", line);
+                processLog.info("ANSIBLE: {}", line);
             }
 
             int code = p.waitFor();

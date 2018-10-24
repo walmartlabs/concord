@@ -1,0 +1,20 @@
+{
+  "ansible": {
+    "allow": [
+    ],
+    "warn": [
+    ],
+    "deny": [
+      {
+        "msg": "Can't download artifacts without Gatekeeper",
+        "action": "uri",
+        "params": [
+          {
+            "name": "url",
+            "values": "${gatekeeperArtifacts}"
+          }
+        ]
+      }
+    ]
+  }
+}

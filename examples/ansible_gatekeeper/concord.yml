@@ -1,0 +1,34 @@
+configuration:
+  arguments:
+    gatekeeperParams:
+      apiUrl: "http://gk.test.concord-gatekepeer-test.devtools.prod.walmart.com:9000/api/notify/common"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.92.1-SNAPSHOT"
+    - "mvn://com.walmartlabs.concord.plugins:gatekeeper-task:0.61.1-20181024.115043-1"
+
+flows:
+  default:
+  - task: gatekeeper
+    in:
+      artifacts:
+        - artifact:
+            version: latest
+            groupId: com.walmartlabs.looper.examples
+            artifactId: e2econcordflow-looper-example-maven
+            extension: jar
+            repositoryUrl: 'https://repository.walmart.com/content/repositories/devtools-snapshots/'
+        - "https://repository.walmart.com/content/repositories/devtools-snapshots/com/walmartlabs/looper/examples/e2econcordflow-looper-example-maven/latest/e2econcordflow-looper-example-maven-latest.jar1"
+
+  - task: ansible
+    in:
+      debug: true
+      verbose: 4
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        greetings: "Hi there!"

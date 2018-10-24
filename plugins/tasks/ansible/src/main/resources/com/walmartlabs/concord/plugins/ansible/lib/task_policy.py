@@ -11,6 +11,11 @@ import json
 import re
 import os
 import os.path
+import string
+
+class SafeDict(dict):
+    def __missing__(self, key):
+        return '{' + key + '}'
 
 class TaskPolicy:
 
@@ -30,7 +35,7 @@ class TaskPolicy:
         ansible_rules = self.policy_rules['ansible']
 
         action = task.action
-        args = task._attributes.get('args')
+        args = self._enrich_args(action, task._attributes.get('args'))
 
         if 'allow' in ansible_rules:
             for r in ansible_rules['allow']:
@@ -40,16 +45,29 @@ class TaskPolicy:
         if 'deny' in ansible_rules:
             for r in ansible_rules['deny']:
                 if self._match_ansible_rule(r, action, args):
-                    display.error("Task '{}' is forbidden by the task policy {}".format(task.get_name(), r))
+                    display.error("Task '{0} ({1})' is forbidden by the task policy: {2}".format(
+                        task.get_name(), action, self._format_rule_message(r, args)))
                     return True
 
         if 'warn' in ansible_rules:
             for r in ansible_rules['warn']:
                 if self._match_ansible_rule(r, action, args):
-                    display.warning("Potentially restricted task '{}' (task policy: {})".format(task.get_name(), r))
+                    display.warning("Potentially restricted task '{0} ({1})' (task policy: {2})".format(
+                        task.get_name(), action, self._format_rule_message(r, args)))
                     return False
 
         return False
+
+    @staticmethod
+    def _format_rule_message(rule, args):
+        if 'msg' not in rule:
+            return ''
+
+        args_dict = rule.copy()
+        for ta_name, ta_value in args.iteritems():
+            args_dict[ta_name] = ta_value
+
+        return string.Formatter().vformat(rule['msg'], (), SafeDict(args_dict))
 
     def _match_ansible_rule(self, rule, task_action, task_args):
         display.vv("match_ansible_rule: {} on {}".format(rule, task_action, task_args))
@@ -86,6 +104,25 @@ class TaskPolicy:
                     return True
 
         return False
+
+    def _enrich_args(self, action, args):
+        display.vv("enrich_args: {} ({})".format(action, args))
+
+        new_args = args
+        if action == 'maven_artifact':
+            new_args = args.copy()
+            new_args['artifact_url'] = self._build_artifact_url(args)
+
+        return new_args
+
+    # /$groupId[0]/../$groupId[n]/$artifactId/$version/$artifactId-$version-$classifier.$extension
+    def _build_artifact_url(self, args):
+        name = args['artifact_id'] + '-' + args['version']
+        if 'classifier' in args:
+            name = name + '-' + args['classifier']
+        name = name + '.' + args.get('extension', 'jar')
+
+        return args['repository_url'].rstrip('/') + '/' + args['group_id'].replace('.', '/') + '/' + args['artifact_id'] + '/' + args['version'] + '/' + name
 
     @staticmethod
     def _match(pattern, s):

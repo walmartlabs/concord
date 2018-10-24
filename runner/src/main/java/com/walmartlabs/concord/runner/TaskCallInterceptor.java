@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runner;
 
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
+import com.walmartlabs.concord.common.ReflectionUtils;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.TaskRule;
 import com.walmartlabs.concord.sdk.Task;
@@ -31,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 public class TaskCallInterceptor implements MethodInterceptor {
@@ -64,7 +64,7 @@ public class TaskCallInterceptor implements MethodInterceptor {
             return invocation.proceed();
         }
 
-        Named n = findAnnotation(invocation.getThis().getClass(), Named.class);
+        Named n = ReflectionUtils.findAnnotation(invocation.getThis().getClass(), Named.class);
         if (n == null) {
             return invocation.proceed();
         }
@@ -86,26 +86,5 @@ public class TaskCallInterceptor implements MethodInterceptor {
         }
 
         return invocation.proceed();
-    }
-
-    private static <A extends Annotation> A findAnnotation(Class<?> clazz, Class<A> annotationType) {
-        A annotation = clazz.getAnnotation(annotationType);
-        if (annotation != null) {
-            return annotation;
-        }
-
-        for (Class<?> ifc : clazz.getInterfaces()) {
-            annotation = findAnnotation(ifc, annotationType);
-            if (annotation != null) {
-                return annotation;
-            }
-        }
-
-        Class<?> superClass = clazz.getSuperclass();
-        if (superClass == null || superClass == Object.class) {
-            return null;
-        }
-
-        return findAnnotation(superClass, annotationType);
     }
 }

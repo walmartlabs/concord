@@ -53,6 +53,24 @@ public interface Context {
     void removeVariable(String key);
 
     /**
+     * Sets a "protected" variable. Such variables can be set only by the tasks that are
+     * listed in "protectedTask" category in the process' policy.
+     *
+     * @param key
+     * @param value
+     */
+    void setProtectedVariable(String key, Object value);
+
+    /**
+     * Returns the value of a "protected" variable.
+     *
+     * @see #setProtectedVariable(String, Object)
+     * @param key
+     * @return
+     */
+    Object getProtectedVariable(String key);
+
+    /**
      * Returns names of all existing variables of the process.
      *
      * @return

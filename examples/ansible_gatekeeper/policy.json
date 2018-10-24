@@ -1,0 +1,83 @@
+{
+  "ansible":{
+    "deny":[
+      {
+        "msg":"Can't download artifacts without Gatekeeper. `Artifact used in gatekeeper task does not match with that of Ansible Task`: GateKeeper Atrifact: {gatekeeperArtifacts}, AnsibleTask Artifact: {url}",
+        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}",
+        "action":"uri"
+      },
+      {
+        "msg":"Can't download artifacts without Gatekeeper. `Artifact used in gatekeeper task does not match with that of Ansible Task`: GateKeeper Atrifact: {gatekeeperArtifacts}, AnsibleTask Artifact: {artifact_url}",
+        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}",
+        "action":"maven_artifact"
+      },
+      {
+        "msg":"Can't download artifacts without Gatekeeper. `Artifact used in gatekeeper task does not match with that of Ansible Task`: GateKeeper Atrifact: {gatekeeperArtifacts}, AnsibleTask Artifact: {image}",
+        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}",
+        "action":"docker_container"
+      }
+    ],
+    "warn":[
+
+    ],
+    "allow":[
+      {
+        "action":"uri",
+        "params":[
+          {
+            "name":"url",
+            "values":"${context.getProtectedVariable('gatekeeperArtifacts')}"
+          }
+        ]
+      },
+      {
+        "action":"maven_artifact",
+        "params":[
+          {
+            "name":"artifact_url",
+            "values":"${context.getProtectedVariable('gatekeeperArtifacts')}"
+          }
+        ]
+      },
+      {
+        "action":"docker_container",
+        "params":[
+          {
+            "name":"image",
+            "values":"${context.getProtectedVariable('gatekeeperArtifacts')}"
+          }
+        ]
+      }
+    ]
+  },
+  "task":{
+    "allow":[
+
+    ],
+    "warn":[
+
+    ],
+    "deny":[
+      {
+        "msg":"Can't run Ansible without or failed Gatekeeper",
+        "taskName":"ansible.*",
+        "method":"execute",
+        "params":[
+          {
+            "index":0,
+            "name":"gatekeeperResult",
+            "protected": true,
+            "values":[
+              false,
+              null
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  "protectedTask": {
+    "names": ["gatekeeper"]
+  }
+}

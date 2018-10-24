@@ -159,7 +159,6 @@ public interface StepConverter<T extends YamlStep> {
         if (key.equals("in") && getWithItems(options) != null) {
            result = appendWithItemsVar(result);
         }
-
         return result;
     }
 
