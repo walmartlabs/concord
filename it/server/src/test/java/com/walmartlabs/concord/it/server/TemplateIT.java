@@ -29,6 +29,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,12 +40,13 @@ import static org.junit.Assert.assertEquals;
 public class TemplateIT extends AbstractServerIT {
 
     private static final String META_JS = "({ entryPoint: \"main\", arguments: { greeting: \"Hello, \" + _input.name }})";
-    private static final String PROCESS_YAML = "main:\n- expr: ${log.info(\"test\", greeting)}";
 
     @Test(timeout = 60000)
     public void test() throws Exception {
+        final String processYml = "main:\n- expr: ${log.info(\"test\", greeting)}";
+
         String templateAlias = "template_" + randomString();
-        Path templatePath = createTemplate();
+        Path templatePath = createTemplate(processYml);
 
         TemplateAliasApi templateAliasResource = new TemplateAliasApi(getApiClient());
         templateAliasResource.createOrUpdate(new TemplateAliasEntry()
@@ -87,7 +89,58 @@ public class TemplateIT extends AbstractServerIT {
         assertLog(".*Hello, " + myName + ".*", ab);
     }
 
-    private static Path createTemplate() throws IOException {
+    @Test(timeout = 60000)
+    public void testInputVariablesStillPresent() throws Exception {
+        final String processYml = "main:\n- expr: ${log.info(\"test\", xxx)}";
+
+        String templateAlias = "template_" + randomString();
+        Path templatePath = createTemplate(processYml);
+
+        TemplateAliasApi templateAliasResource = new TemplateAliasApi(getApiClient());
+        templateAliasResource.createOrUpdate(new TemplateAliasEntry()
+                .setAlias(templateAlias)
+                .setUrl(templatePath.toUri().toString()));
+
+        // ---
+
+        String orgName = "Default";
+        String projectName = "project_" + randomString();
+        String myName = "myName_" + randomString();
+
+        // ---
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        Map<String, Object> cfg = new HashMap<>();
+        cfg.put(Constants.Request.TEMPLATE_KEY, templateAlias);
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setCfg(cfg)
+                .setAcceptsRawPayload(true));
+
+        // ---
+        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
+                Collections.singletonMap("xxx", "BOO"));
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("name", myName);
+        input.put("request", args);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*BOO.*", ab);
+    }
+
+    private static Path createTemplate(String process) throws IOException {
         Path tmpDir = createTempDir();
 
         Path metaPath = tmpDir.resolve("_main.js");
@@ -97,7 +150,7 @@ public class TemplateIT extends AbstractServerIT {
         Files.createDirectories(processesPath);
 
         Path procPath = processesPath.resolve("hello.yml");
-        Files.write(procPath, PROCESS_YAML.getBytes());
+        Files.write(procPath, process.getBytes());
 
         Path tmpZip = createTempFile(".zip");
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmpZip))) {
