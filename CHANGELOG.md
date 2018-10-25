@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: configurable period values for cleanup tasks;
 - concord-sdk: support for "protected" variables that can be set only
 by allowed tasks;
 - ansible, policy-engine: support for restricting of allowed URLs in

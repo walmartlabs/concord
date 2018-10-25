@@ -32,6 +32,10 @@ import java.io.Serializable;
 public class ProcessWatchdogConfiguration implements Serializable {
 
     @Inject
+    @Config("process.watchdogPeriod")
+    private long period;
+
+    @Inject
     @Config("process.maxFailureHandlingAge")
     private String maxFailureHandlingAge;
 
@@ -42,6 +46,10 @@ public class ProcessWatchdogConfiguration implements Serializable {
     @Inject
     @Config("process.maxStartFailureAge")
     private String maxStartFailureAge;
+
+    public long getPeriod() {
+        return period;
+    }
 
     public String getMaxFailureHandlingAge() {
         return maxFailureHandlingAge;

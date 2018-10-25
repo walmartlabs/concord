@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process.state.archive;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessCheckpointArchiveConfiguration;
 import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.jooq.Configuration;
@@ -32,7 +31,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_CHECKPOINT_ARCHIVE;
 
@@ -53,7 +51,7 @@ public class StalledCheckpointUploadHandler implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.isEnabled() ? TimeUnit.MINUTES.toSeconds(1) : 0;
+        return cfg.getStalledCheckPeriod();
     }
 
     @Override

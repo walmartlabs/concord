@@ -31,9 +31,12 @@ import java.io.Serializable;
 @Singleton
 public class AuditConfiguration implements Serializable {
 
-    @Inject
     @Config("audit.enabled")
     private boolean enabled;
+
+    @Inject
+    @Config("audit.cleanupPeriod")
+    private long period;
 
     @Inject
     @Config("audit.maxLogAge")
@@ -41,6 +44,10 @@ public class AuditConfiguration implements Serializable {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    public long getPeriod() {
+        return period;
     }
 
     public long getMaxLogAge() {

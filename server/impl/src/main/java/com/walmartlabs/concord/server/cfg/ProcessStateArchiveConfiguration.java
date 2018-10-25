@@ -32,12 +32,12 @@ import java.io.Serializable;
 public class ProcessStateArchiveConfiguration implements Serializable {
 
     @Inject
-    @Config("process.archive.enabled")
-    private boolean enabled;
-
-    @Inject
     @Config("process.archive.period")
     private long period;
+
+    @Inject
+    @Config("process.archive.stalledCheckPeriod")
+    private long stalledCheckPeriod;
 
     @Inject
     @Config("process.archive.stalledAge")
@@ -56,7 +56,15 @@ public class ProcessStateArchiveConfiguration implements Serializable {
     private long maxArchiveAge;
 
     public boolean isEnabled() {
-        return enabled;
+        return period > 0;
+    }
+
+    public long getPeriod() {
+        return period;
+    }
+
+    public long getStalledCheckPeriod() {
+        return stalledCheckPeriod;
     }
 
     public long getStalledAge() {
@@ -65,10 +73,6 @@ public class ProcessStateArchiveConfiguration implements Serializable {
 
     public long getProcessAge() {
         return processAge;
-    }
-
-    public long getPeriod() {
-        return period;
     }
 
     public int getUploadThreads() {

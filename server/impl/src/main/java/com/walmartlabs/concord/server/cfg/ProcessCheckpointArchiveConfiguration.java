@@ -32,12 +32,12 @@ import java.io.Serializable;
 public class ProcessCheckpointArchiveConfiguration implements Serializable {
 
     @Inject
-    @Config("process.checkpoints.archive.enabled")
-    private boolean enabled;
-
-    @Inject
     @Config("process.checkpoints.archive.period")
     private long period;
+
+    @Inject
+    @Config("process.archive.stalledCheckPeriod")
+    private long stalledCheckPeriod;
 
     @Inject
     @Config("process.checkpoints.archive.stalledAge")
@@ -52,15 +52,19 @@ public class ProcessCheckpointArchiveConfiguration implements Serializable {
     private long maxArchiveAge;
 
     public boolean isEnabled() {
-        return enabled;
-    }
-
-    public long getStalledAge() {
-        return stalledAge;
+        return period > 0;
     }
 
     public long getPeriod() {
         return period;
+    }
+
+    public long getStalledCheckPeriod() {
+        return stalledCheckPeriod;
+    }
+
+    public long getStalledAge() {
+        return stalledAge;
     }
 
     public int getUploadThreads() {

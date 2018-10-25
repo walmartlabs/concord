@@ -31,7 +31,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStateArchive.PROCESS_STATE_ARCHIVE;
 
@@ -52,7 +51,7 @@ public class StalledStateUploadHandler implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.isEnabled() ? TimeUnit.MINUTES.toSeconds(1) : 0;
+        return cfg.getStalledCheckPeriod();
     }
 
     @Override

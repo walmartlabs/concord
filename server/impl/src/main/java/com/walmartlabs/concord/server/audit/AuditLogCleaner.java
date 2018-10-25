@@ -31,7 +31,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
 
@@ -41,25 +40,23 @@ public class AuditLogCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLogCleaner.class);
 
-    private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toSeconds(1);
-
+    private final AuditConfiguration cfg;
     private final CleanerDao cleanerDao;
-    private final long maxAge;
 
     @Inject
-    public AuditLogCleaner(CleanerDao cleanerDao, AuditConfiguration cfg) {
+    public AuditLogCleaner(AuditConfiguration cfg, CleanerDao cleanerDao) {
+        this.cfg = cfg;
         this.cleanerDao = cleanerDao;
-        this.maxAge = cfg.getMaxLogAge();
     }
 
     @Override
     public long getIntervalInSec() {
-        return CLEANUP_INTERVAL;
+        return cfg.getPeriod();
     }
 
     @Override
     public void performTask() {
-        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - maxAge);
+        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cfg.getMaxLogAge());
         cleanerDao.deleteOldLogs(cutoff);
     }
 

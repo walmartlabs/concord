@@ -33,6 +33,10 @@ import java.util.List;
 public class ProcessStateConfiguration implements Serializable {
 
     @Inject
+    @Config("process.cleanupInterval")
+    private long cleanupInterval;
+
+    @Inject
     @Config("process.maxStateAge")
     private long maxStateAge;
 
@@ -46,6 +50,10 @@ public class ProcessStateConfiguration implements Serializable {
     public ProcessStateConfiguration(long maxStateAge, List<String> secureFiles) {
         this.maxStateAge = maxStateAge;
         this.secureFiles = secureFiles;
+    }
+
+    public long getCleanupInterval() {
+        return cleanupInterval;
     }
 
     public long getMaxStateAge() {

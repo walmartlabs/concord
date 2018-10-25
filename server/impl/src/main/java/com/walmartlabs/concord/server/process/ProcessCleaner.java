@@ -35,7 +35,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessLogs.PROCESS_LOGS;
@@ -48,31 +47,29 @@ public class ProcessCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCleaner.class);
 
-    private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toSeconds(1);
-
     private static final String[] EXCLUDE_STATUSES = {
             ProcessStatus.STARTING.toString(),
             ProcessStatus.RUNNING.toString(),
             ProcessStatus.RESUMING.toString()
     };
 
+    private final ProcessStateConfiguration cfg;
     private final CleanerDao cleanerDao;
-    private final long maxAge;
 
     @Inject
-    public ProcessCleaner(CleanerDao cleanerDao, ProcessStateConfiguration cfg) {
+    public ProcessCleaner(ProcessStateConfiguration cfg, CleanerDao cleanerDao) {
+        this.cfg = cfg;
         this.cleanerDao = cleanerDao;
-        this.maxAge = cfg.getMaxStateAge();
     }
 
     @Override
     public long getIntervalInSec() {
-        return CLEANUP_INTERVAL;
+        return cfg.getCleanupInterval();
     }
 
     @Override
     public void performTask() {
-        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - maxAge);
+        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cfg.getMaxStateAge());
         cleanerDao.deleteOldState(cutoff);
         cleanerDao.deleteOrphans();
     }
