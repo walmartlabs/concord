@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,13 +48,16 @@ public class TaskScheduler extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(TaskScheduler.class);
 
+    private static final long POLL_INTERVAL = TimeUnit.SECONDS.toMillis(1);
+    private static final long ERROR_DELAY = TimeUnit.SECONDS.toMillis(10);
+
     private final ExecutorService executor;
     private final SchedulerDao dao;
     private final Map<String, ScheduledTask> tasks;
 
     @Inject
     public TaskScheduler(Map<String, ScheduledTask> tasks, SchedulerDao dao) {
-        super(TimeUnit.SECONDS.toMillis(1), TimeUnit.MINUTES.toMillis(5));
+        super(POLL_INTERVAL, ERROR_DELAY);
 
         this.executor = Executors.newCachedThreadPool();
         this.dao = dao;
@@ -63,14 +68,24 @@ public class TaskScheduler extends PeriodicTask {
 
     @Override
     protected void performTask() {
-        String id = dao.poll();
-        if (id == null) {
+        List<String> ids = dao.poll();
+        if (ids.isEmpty()) {
             return;
         }
 
+        ids.forEach(this::startTask);
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        executor.shutdown();
+    }
+
+    private void startTask(String id) {
         ScheduledTask task = tasks.get(id);
         if (task == null) {
-            log.error("performTask -> task with id '{}' not found", id);
+            log.error("startTask -> task with id '{}' not found", id);
             return;
         }
 
@@ -80,9 +95,9 @@ public class TaskScheduler extends PeriodicTask {
 
                 dao.success(id);
 
-                log.info("performTask ['{}'] -> done", id);
+                log.info("startTask ['{}'] -> done", id);
             } catch (Exception e) {
-                log.error("performTask ['{}'] -> error", id, e);
+                log.error("startTask ['{}'] -> error", id, e);
 
                 dao.fail(id);
             }
@@ -97,32 +112,32 @@ public class TaskScheduler extends PeriodicTask {
             super(cfg);
         }
 
-        public String poll() {
+        public List<String> poll() {
             @SuppressWarnings("unchecked")
             Field<? extends Number> i = (Field<? extends Number>) PgUtils.interval("1 second");
 
             return txResult(tx -> {
-                String id = tx.select(TASKS.TASK_ID)
+                List<String> ids = tx.select(TASKS.TASK_ID)
                         .from(TASKS)
                         .where(TASKS.TASK_INTERVAL.greaterThan(0L).and(TASKS.STARTED_AT.isNull()
                                 .or(TASKS.FINISHED_AT.isNotNull()
                                         .and(TASKS.FINISHED_AT.plus(TASKS.TASK_INTERVAL.mul(i)).lessOrEqual(currentTimestamp())))))
-                        .limit(1)
                         .forUpdate()
                         .skipLocked()
-                        .fetchOne(TASKS.TASK_ID);
+                        .fetch(TASKS.TASK_ID);
 
-                if (id == null) {
-                    return null;
+                if (ids.isEmpty()) {
+                    return ids;
                 }
 
                 tx.update(TASKS)
                         .set(TASKS.STARTED_AT, currentTimestamp())
                         .set(TASKS.TASK_STATUS, value("RUNNING"))
-                        .where(TASKS.TASK_ID.eq(id))
+                        .set(TASKS.FINISHED_AT, (Timestamp)null)
+                        .where(TASKS.TASK_ID.in(ids))
                         .execute();
 
-                return id;
+                return ids;
             });
         }
 
