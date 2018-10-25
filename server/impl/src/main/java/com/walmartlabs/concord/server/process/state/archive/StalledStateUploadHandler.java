@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.process.state.archive;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessStateArchiveConfiguration;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +31,13 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStateArchive.PROCESS_STATE_ARCHIVE;
 
-@Named
+@Named("staled-state-uploader")
 @Singleton
-public class StalledStateUploadHandler extends PeriodicTask {
+public class StalledStateUploadHandler implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(StalledStateUploadHandler.class);
 
@@ -45,13 +46,17 @@ public class StalledStateUploadHandler extends PeriodicTask {
 
     @Inject
     public StalledStateUploadHandler(ProcessStateArchiveConfiguration cfg, CleanupDao cleanupDao) {
-        super(cfg.isEnabled() ? 60000 : 0, 30000);
         this.cfg = cfg;
         this.cleanupDao = cleanupDao;
     }
 
     @Override
-    protected void performTask() {
+    public long getIntervalInSec() {
+        return cfg.isEnabled() ? TimeUnit.MINUTES.toSeconds(1) : 0;
+    }
+
+    @Override
+    public void performTask() {
         Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cfg.getStalledAge());
         cleanupDao.process(cutoff);
     }

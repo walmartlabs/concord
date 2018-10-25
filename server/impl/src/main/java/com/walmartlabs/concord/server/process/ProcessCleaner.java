@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.Record1;
 import org.jooq.SelectConditionStep;
@@ -42,14 +42,13 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessLogs.PROCESS_LOG
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
 
-@Named
+@Named("process-cleaner")
 @Singleton
-public class ProcessCleaner extends PeriodicTask {
+public class ProcessCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCleaner.class);
 
-    private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toMillis(1);
-    private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
+    private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toSeconds(1);
 
     private static final String[] EXCLUDE_STATUSES = {
             ProcessStatus.STARTING.toString(),
@@ -62,13 +61,17 @@ public class ProcessCleaner extends PeriodicTask {
 
     @Inject
     public ProcessCleaner(CleanerDao cleanerDao, ProcessStateConfiguration cfg) {
-        super(CLEANUP_INTERVAL, RETRY_INTERVAL);
         this.cleanerDao = cleanerDao;
         this.maxAge = cfg.getMaxStateAge();
     }
 
     @Override
-    protected void performTask() {
+    public long getIntervalInSec() {
+        return CLEANUP_INTERVAL;
+    }
+
+    @Override
+    public void performTask() {
         Timestamp cutoff = new Timestamp(System.currentTimeMillis() - maxAge);
         cleanerDao.deleteOldState(cutoff);
         cleanerDao.deleteOrphans();

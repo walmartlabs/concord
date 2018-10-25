@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class PeriodicTask implements BackgroundTask {
+public abstract class PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(PeriodicTask.class);
 
@@ -37,7 +37,6 @@ public abstract class PeriodicTask implements BackgroundTask {
         this.errorDelay = errorDelay;
     }
 
-    @Override
     public void start() {
         if (interval <= 0) {
             log.warn("start -> task is disabled: {}", taskName());
@@ -49,7 +48,6 @@ public abstract class PeriodicTask implements BackgroundTask {
         log.info("start -> done: {}", this.getClass());
     }
 
-    @Override
     public void stop() {
         if (worker != null) {
             worker.interrupt();

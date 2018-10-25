@@ -21,9 +21,8 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.ExclusiveLock;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record4;
@@ -36,36 +35,33 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static org.jooq.impl.DSL.value;
 
-@Named
+@Named("github-webhook-service")
 @Singleton
-public class GithubWebhookService extends PeriodicTask {
+public class GithubWebhookService implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(GithubWebhookService.class);
-
-    private static final String TASK_LOCK_KEY = "githubWebhookService";
-    private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
 
     private final GithubConfiguration cfg;
     private final GithubWebhookManager webhookManager;
     private final RefresherDao refresherDao;
-    private final ExclusiveLock exclusiveLock;
 
     @Inject
     public GithubWebhookService(GithubConfiguration cfg,
                                 GithubWebhookManager webhookManager,
-                                RefresherDao refresherDao,
-                                ExclusiveLock exclusiveLock) {
+                                RefresherDao refresherDao) {
 
-        super(cfg.getRefreshInterval(), RETRY_INTERVAL);
         this.cfg = cfg;
         this.webhookManager = webhookManager;
         this.refresherDao = refresherDao;
-        this.exclusiveLock = exclusiveLock;
+    }
+
+    @Override
+    public long getIntervalInSec() {
+        return this.cfg.isEnabled() ? cfg.getRefreshInterval() : 0;
     }
 
     public boolean register(UUID projectId, String repoName, String repoUrl) {
@@ -89,28 +85,17 @@ public class GithubWebhookService extends PeriodicTask {
     }
 
     @Override
-    public void start() {
-        if (!this.cfg.isEnabled() || this.cfg.getRefreshInterval() <= 0) {
-            log.info("start -> the webhook refresh is disabled");
-            return;
-        }
-        super.start();
-    }
-
-    @Override
-    protected void performTask() {
-        exclusiveLock.withTryLock(TASK_LOCK_KEY, () -> {
-            List<Entry> repositories = refresherDao.list();
-            for (Entry r : repositories) {
-                try {
-                    refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoName(), r.getRepoUrl());
-                } catch (Exception e) {
-                    log.warn("performTask ['{}', '{}', '{}'] -> failed: {}",
-                            r.getProjectId(), r.getRepoId(), r.getRepoUrl(), e.getMessage());
-                }
+    public void performTask() {
+        List<Entry> repositories = refresherDao.list();
+        for (Entry r : repositories) {
+            try {
+                refreshWebhook(r.getProjectId(), r.getRepoId(), r.getRepoName(), r.getRepoUrl());
+            } catch (Exception e) {
+                log.warn("performTask ['{}', '{}', '{}'] -> failed: {}",
+                        r.getProjectId(), r.getRepoId(), r.getRepoUrl(), e.getMessage());
             }
-            log.info("performTask -> {} repositories processed", repositories.size());
-        });
+        }
+        log.info("performTask -> {} repositories processed", repositories.size());
     }
 
 

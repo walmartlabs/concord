@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.security.apikey;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,37 +35,30 @@ import java.util.concurrent.TimeUnit;
 import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
 import static org.jooq.impl.DSL.currentTimestamp;
 
-@Named
+@Named("api-key-cleanup")
 @Singleton
-public class ApiKeyCleaner extends PeriodicTask {
+public class ApiKeyCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyCleaner.class);
 
-    private static final long CLEANUP_INTERVAL = TimeUnit.DAYS.toMillis(1);
-    private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
+    private static final long CLEANUP_INTERVAL = TimeUnit.DAYS.toSeconds(1);
 
     private final boolean enabled;
     private final CleanerDao cleanerDao;
 
     @Inject
     public ApiKeyCleaner(ApiKeyConfiguration cfg, CleanerDao cleanerDao) {
-        super(CLEANUP_INTERVAL, RETRY_INTERVAL);
         this.enabled = cfg.isExpirationEnabled();
         this.cleanerDao = cleanerDao;
     }
 
     @Override
-    public void start() {
-        if (!this.enabled) {
-            log.info("start -> removal of expired API keys is disabled");
-            return;
-        }
-
-        super.start();
+    public long getIntervalInSec() {
+        return this.enabled ? CLEANUP_INTERVAL : 0;
     }
 
     @Override
-    protected void performTask() {
+    public void performTask() {
         cleanerDao.deleteExpiredKeys();
     }
 

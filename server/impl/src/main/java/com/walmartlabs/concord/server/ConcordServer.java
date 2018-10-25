@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.ldap.LdapRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
+import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.ollie.OllieServer;
 import com.walmartlabs.ollie.OllieServerBuilder;
 import io.prometheus.client.exporter.MetricsServlet;
@@ -44,7 +45,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class ConcordServer {
 
@@ -111,7 +111,7 @@ public class ConcordServer {
     public static class ServiceInitServlet extends HttpServlet {
 
         @Inject
-        Set<BackgroundTask> tasks;
+        TaskScheduler scheduler;
 
         @Override
         public void init() throws ServletException {
@@ -122,15 +122,13 @@ public class ConcordServer {
 
             injector.injectMembers(this);
 
-            if (tasks != null) {
-                tasks.forEach(BackgroundTask::start);
-            }
+            scheduler.start();
         }
 
         @Override
         public void destroy() {
-            if (tasks != null) {
-                tasks.forEach(BackgroundTask::stop);
+            if (scheduler != null) {
+                scheduler.stop();
             }
 
             super.destroy();

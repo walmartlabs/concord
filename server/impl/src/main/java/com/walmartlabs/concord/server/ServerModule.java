@@ -21,20 +21,8 @@ package com.walmartlabs.concord.server;
  */
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.db.DatabaseModule;
-import com.walmartlabs.concord.server.agent.AgentCommandWatchdog;
-import com.walmartlabs.concord.server.audit.AuditLogCleaner;
-import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.metrics.MetricModule;
-import com.walmartlabs.concord.server.org.triggers.TriggerScheduler;
-import com.walmartlabs.concord.server.process.ProcessCleaner;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueWatchdog;
-import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
-import com.walmartlabs.concord.server.process.state.archive.StalledCheckpointUploadHandler;
-import com.walmartlabs.concord.server.process.state.archive.StalledStateUploadHandler;
-import com.walmartlabs.concord.server.security.apikey.ApiKeyCleaner;
-import com.walmartlabs.concord.server.security.apikey.ApiKeyExpirationNotifier;
 
 public class ServerModule extends AbstractModule {
 
@@ -42,18 +30,5 @@ public class ServerModule extends AbstractModule {
     protected void configure() {
         install(new MetricModule());
         install(new DatabaseModule());
-
-        Multibinder<BackgroundTask> tasks = Multibinder.newSetBinder(binder(), BackgroundTask.class);
-        tasks.addBinding().to(AgentCommandWatchdog.class);
-        tasks.addBinding().to(ApiKeyCleaner.class);
-        tasks.addBinding().to(ApiKeyExpirationNotifier.class);
-        tasks.addBinding().to(AuditLogCleaner.class);
-        tasks.addBinding().to(GithubWebhookService.class);
-        tasks.addBinding().to(ProcessCleaner.class);
-        tasks.addBinding().to(ProcessQueueWatchdog.class);
-        tasks.addBinding().to(TriggerScheduler.class);
-        tasks.addBinding().to(ProcessStateArchiver.class);
-        tasks.addBinding().to(StalledStateUploadHandler.class);
-        tasks.addBinding().to(StalledCheckpointUploadHandler.class);
     }
 }

@@ -22,11 +22,11 @@ package com.walmartlabs.concord.server.process.state.archive;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.cfg.ProcessStateArchiveConfiguration;
 import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -56,9 +56,9 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessStateArchive.PRO
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 import static org.jooq.impl.DSL.*;
 
-@Named
+@Named("process-state-archiver")
 @Singleton
-public class ProcessStateArchiver extends PeriodicTask {
+public class ProcessStateArchiver implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessStateArchiver.class);
 
@@ -77,14 +77,16 @@ public class ProcessStateArchiver extends PeriodicTask {
                                 ProcessStateManager stateManager,
                                 MultiStoreConnector store,
                                 ArchiverDao dao) {
-
-        super(cfg.getPeriod(), 30000);
-
         this.cfg = cfg;
         this.dao = dao;
         this.stateManager = stateManager;
         this.store = store;
         this.forkJoinPool = new ForkJoinPool(cfg.getUploadThreads());
+    }
+
+    @Override
+    public long getIntervalInSec() {
+        return cfg.isEnabled() ? cfg.getPeriod() : 0;
     }
 
     public void export(UUID instanceId, OutputStream out) throws IOException {
@@ -102,17 +104,7 @@ public class ProcessStateArchiver extends PeriodicTask {
     }
 
     @Override
-    public void start() {
-        if (!cfg.isEnabled()) {
-            log.info("start -> state archiving is disabled");
-            return;
-        }
-
-        super.start();
-    }
-
-    @Override
-    protected void performTask() throws Exception {
+    public void performTask() throws Exception {
         while (!Thread.currentThread().isInterrupted()) {
             Timestamp ageCutoff = new Timestamp(System.currentTimeMillis() - cfg.getProcessAge());
             List<UUID> ids = dao.grabNext(ALLOWED_STATUSES, ageCutoff, 10);

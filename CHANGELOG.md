@@ -13,6 +13,8 @@ by allowed tasks;
 
 ### Changed
 
+- concord-server: `task_locks` are replaced with the task schedule
+table;
 - concord-server: merge the existing process variables with template
 variables;
 - concord-server: process metrics changed from showing total counts

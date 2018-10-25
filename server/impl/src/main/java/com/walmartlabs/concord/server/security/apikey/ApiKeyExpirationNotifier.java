@@ -24,9 +24,8 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.ExclusiveLock;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.Configuration;
 import org.jooq.Record4;
@@ -50,55 +49,40 @@ import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
 import static org.jooq.impl.DSL.currentTimestamp;
 import static org.jooq.impl.DSL.trunc;
 
-@Named
+@Named("api-key-expiration-notifier")
 @Singleton
-public class ApiKeyExpirationNotifier extends PeriodicTask {
+public class ApiKeyExpirationNotifier implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyExpirationNotifier.class);
 
-    private static final String TASK_LOCK_KEY = "apiKeyNotifier";
     private static final String EMAIL_SUBJECT = "Your Concord API Token Is Expiring";
-    private static final long POLL_INTERVAL = TimeUnit.DAYS.toMillis(1);
-    private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
+    private static final long POLL_INTERVAL = TimeUnit.DAYS.toSeconds(1);
     private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> new SimpleDateFormat("YYYY-MM-dd"));
 
     private final ApiKeyConfiguration cfg;
-    private final ExclusiveLock exclusiveLock;
     private final ExpiredKeysDao dao;
     private final UserDao userDao;
     private final EmailNotifier notifier;
 
     @Inject
     public ApiKeyExpirationNotifier(ApiKeyConfiguration cfg,
-                                    ExclusiveLock exclusiveLock,
                                     ExpiredKeysDao dao,
                                     UserDao userDao,
                                     EmailNotifier notifier) {
 
-        super(POLL_INTERVAL, RETRY_INTERVAL);
         this.cfg = cfg;
-        this.exclusiveLock = exclusiveLock;
         this.dao = dao;
         this.userDao = userDao;
         this.notifier = notifier;
     }
 
     @Override
-    public void start() {
-        if (!cfg.isExpirationEnabled()) {
-            log.info("start -> notifications of API key expiration is disabled");
-            return;
-        }
-
-        super.start();
+    public long getIntervalInSec() {
+        return cfg.isExpirationEnabled() ? POLL_INTERVAL : 0;
     }
 
     @Override
-    protected void performTask() {
-        exclusiveLock.withTryLock(TASK_LOCK_KEY, this::processKeys);
-    }
-
-    private void processKeys() {
+    public void performTask() {
         for (int days : cfg.getNotifyBeforeDays()) {
             List<ApiKeyEntry> keys = dao.poll(days);
 
@@ -113,7 +97,7 @@ public class ApiKeyExpirationNotifier extends PeriodicTask {
                 }
             }
 
-            log.info("processKeys -> {} keys, for days {}", keys.size(), days);
+            log.info("performTask -> {} keys, for days {}", keys.size(), days);
         }
     }
 

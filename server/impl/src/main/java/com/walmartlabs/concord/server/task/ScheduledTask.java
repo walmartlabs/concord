@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server;
+package com.walmartlabs.concord.server.task;
 
 /*-
  * *****
@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-public interface BackgroundTask {
+public interface ScheduledTask {
 
-    void start();
+    long getIntervalInSec();
 
-    void stop();
+    void performTask() throws Exception;
 }

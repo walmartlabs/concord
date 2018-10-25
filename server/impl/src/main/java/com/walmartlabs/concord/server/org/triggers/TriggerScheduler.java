@@ -21,12 +21,12 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadBuilder;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +37,9 @@ import javax.xml.bind.DatatypeConverter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-@Named
+@Named("trigger-scheduler")
 @Singleton
-public class TriggerScheduler implements BackgroundTask {
+public class TriggerScheduler implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerScheduler.class);
 
@@ -49,14 +49,11 @@ public class TriggerScheduler implements BackgroundTask {
     private static final String REALM = "cron";
     private static final String EVENT_SOURCE = "cron";
 
-    private static final long ERROR_DELAY = TimeUnit.MINUTES.toMillis(5);
-
+    private final Date startedAt;
     private final TriggerScheduleDao scheduleDao;
     private final ProcessManager processManager;
     private final ProcessSecurityContext processSecurityContext;
     private final TriggersConfiguration triggerCfg;
-
-    private Thread worker;
 
     @Inject
     public TriggerScheduler(TriggerScheduleDao scheduleDao,
@@ -64,6 +61,7 @@ public class TriggerScheduler implements BackgroundTask {
                             ProcessSecurityContext processSecurityContext,
                             TriggersConfiguration triggerCfg) {
 
+        this.startedAt = new Date();
         this.scheduleDao = scheduleDao;
         this.processManager = processManager;
         this.processSecurityContext = processSecurityContext;
@@ -71,119 +69,78 @@ public class TriggerScheduler implements BackgroundTask {
     }
 
     @Override
-    public void start() {
-        Runnable w = new SchedulerWorker(scheduleDao, processManager, processSecurityContext, triggerCfg);
-        this.worker = new Thread(w, "cron-trigger-worker");
-        this.worker.start();
+    public long getIntervalInSec() {
+        return TimeUnit.MINUTES.toSeconds(1);
     }
 
     @Override
-    public void stop() {
-        if (this.worker != null) {
-            this.worker.interrupt();
+    public void performTask() {
+        TriggerSchedulerEntry e = scheduleDao.findNext();
+
+        if (e != null && e.getFireAt().after(startedAt)) {
+            startProcess(e);
         }
     }
 
-    private static final class SchedulerWorker implements Runnable {
-
-        private final TriggerScheduleDao schedulerDao;
-        private final ProcessManager processManager;
-        private final ProcessSecurityContext processSecurityContext;
-        private final Date startedAt;
-        private final TriggersConfiguration triggerCfg;
-
-        private SchedulerWorker(TriggerScheduleDao schedulerDao,
-                                ProcessManager processManager,
-                                ProcessSecurityContext processSecurityContext,
-                                TriggersConfiguration triggerCfg) {
-
-            this.schedulerDao = schedulerDao;
-            this.processManager = processManager;
-            this.processSecurityContext = processSecurityContext;
-            this.startedAt = new Date();
-            this.triggerCfg = triggerCfg;
+    private void startProcess(TriggerSchedulerEntry t) {
+        if (isDisabled(EVENT_SOURCE)) {
+            log.warn("startProcess ['{}'] -> disabled, skipping", t);
+            return;
         }
 
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    TriggerSchedulerEntry e = schedulerDao.findNext();
+        log.info("run -> starting {}...", t);
 
-                    if (e != null && e.getFireAt().after(startedAt)) {
-                        startProcess(e);
-                    } else {
-                        long now = System.currentTimeMillis();
-                        long millisWithinMinute = now % 60000;
-                        sleep(60000 - millisWithinMinute);
-                    }
-                } catch (Exception e) {
-                    log.error("run -> error", e);
-                    sleep(ERROR_DELAY);
-                }
-            }
+        Map<String, Object> args = new HashMap<>();
+        if (t.getArguments() != null) {
+            args.putAll(t.getArguments());
+        }
+        args.put("event", makeEvent(t));
+
+        startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), args);
+    }
+
+    private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) {
+        UUID instanceId = UUID.randomUUID();
+
+        Map<String, Object> request = new HashMap<>();
+        request.put(Constants.Request.ARGUMENTS_KEY, args);
+
+        Payload payload;
+        try {
+            payload = new PayloadBuilder(instanceId)
+                    .initiator(INITIATOR_ID, INITIATOR)
+                    .organization(orgId)
+                    .project(projectId)
+                    .repository(repoId)
+                    .entryPoint(flowName)
+                    .configuration(request)
+                    .build();
+        } catch (Exception e) {
+            log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error creating a payload",
+                    triggerId, orgId, projectId, repoId, flowName, e);
+            return;
         }
 
-        private void startProcess(TriggerSchedulerEntry t) {
-            if (isDisabled(EVENT_SOURCE)) {
-                log.warn("startProcess ['{}'] -> disabled, skipping", t);
-                return;
-            }
-
-            log.info("run -> starting {}...", t);
-
-            Map<String, Object> args = new HashMap<>();
-            if (t.getArguments() != null) {
-                args.putAll(t.getArguments());
-            }
-            args.put("event", makeEvent(t));
-
-            startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), args);
+        try {
+            processSecurityContext.runAs(REALM, INITIATOR, () -> processManager.start(payload, false));
+        } catch (Exception e) {
+            log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error starting process",
+                    triggerId, orgId, projectId, repoId, flowName, e);
         }
 
-        private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) {
-            UUID instanceId = UUID.randomUUID();
+        log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started", triggerId, orgId, projectId, repoId, flowName, instanceId);
+    }
 
-            Map<String, Object> request = new HashMap<>();
-            request.put(Constants.Request.ARGUMENTS_KEY, args);
-
-            Payload payload;
-            try {
-                payload = new PayloadBuilder(instanceId)
-                        .initiator(INITIATOR_ID, INITIATOR)
-                        .organization(orgId)
-                        .project(projectId)
-                        .repository(repoId)
-                        .entryPoint(flowName)
-                        .configuration(request)
-                        .build();
-            } catch (Exception e) {
-                log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error creating a payload",
-                        triggerId, orgId, projectId, repoId, flowName, e);
-                return;
-            }
-
-            try {
-                processSecurityContext.runAs(REALM, INITIATOR, () -> processManager.start(payload, false));
-            } catch (Exception e) {
-                log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error starting process",
-                        triggerId, orgId, projectId, repoId, flowName, e);
-            }
-
-            log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started", triggerId, orgId, projectId, repoId, flowName, instanceId);
+    private void sleep(long t) {
+        try {
+            Thread.sleep(t);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+    }
 
-        private void sleep(long t) {
-            try {
-                Thread.sleep(t);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        private boolean isDisabled(String eventName) {
-            return triggerCfg.isDisableAll() || triggerCfg.getDisabled().contains(eventName);
-        }
+    private boolean isDisabled(String eventName) {
+        return triggerCfg.isDisableAll() || triggerCfg.getDisabled().contains(eventName);
     }
 
     private static Map<String, Object> makeEvent(TriggerSchedulerEntry t) {

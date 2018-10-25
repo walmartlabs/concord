@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.audit;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,27 +35,30 @@ import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
 
-@Named
+@Named("audit-log-cleaner")
 @Singleton
-public class AuditLogCleaner extends PeriodicTask {
+public class AuditLogCleaner implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLogCleaner.class);
 
-    private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toMillis(1);
-    private static final long RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(10);
+    private static final long CLEANUP_INTERVAL = TimeUnit.HOURS.toSeconds(1);
 
     private final CleanerDao cleanerDao;
     private final long maxAge;
 
     @Inject
     public AuditLogCleaner(CleanerDao cleanerDao, AuditConfiguration cfg) {
-        super(CLEANUP_INTERVAL, RETRY_INTERVAL);
         this.cleanerDao = cleanerDao;
         this.maxAge = cfg.getMaxLogAge();
     }
 
     @Override
-    protected void performTask() {
+    public long getIntervalInSec() {
+        return CLEANUP_INTERVAL;
+    }
+
+    @Override
+    public void performTask() {
         Timestamp cutoff = new Timestamp(System.currentTimeMillis() - maxAge);
         cleanerDao.deleteOldLogs(cutoff);
     }

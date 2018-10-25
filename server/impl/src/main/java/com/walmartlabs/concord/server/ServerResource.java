@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.walmartlabs.concord.server.task.TaskScheduler;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -32,7 +33,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Properties;
 
 @Named
@@ -43,10 +43,10 @@ public class ServerResource implements Resource {
     private final String version;
     private final String env;
 
-    private final List<BackgroundTask> tasks;
+    private final TaskScheduler scheduler;
 
     @Inject
-    public ServerResource(List<BackgroundTask> tasks) {
+    public ServerResource(TaskScheduler scheduler) {
         Properties props = new Properties();
 
         try (InputStream in = ServerResource.class.getResourceAsStream("version.properties")) {
@@ -58,7 +58,7 @@ public class ServerResource implements Resource {
         this.version = props.getProperty("version");
         this.env = Utils.getEnv("CONCORD_ENV", "n/a");
 
-        this.tasks = tasks;
+        this.scheduler = scheduler;
     }
 
     @GET
@@ -78,6 +78,6 @@ public class ServerResource implements Resource {
     @POST
     @Path("maintenance-mode")
     public void maintenanceMode() {
-        tasks.forEach(BackgroundTask::stop);
+        scheduler.stop();
     }
 }

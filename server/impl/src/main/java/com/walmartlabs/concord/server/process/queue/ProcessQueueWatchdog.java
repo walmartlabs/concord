@@ -24,7 +24,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.agent.AgentCommandsDao;
 import com.walmartlabs.concord.server.agent.Commands;
@@ -33,6 +32,7 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.*;
 import org.slf4j.Logger;
@@ -47,14 +47,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory.PROCESS_STATUS_HISTORY;
 import static org.jooq.impl.DSL.*;
 
-@Named
+@Named("process-queue-watchdog")
 @Singleton
-public class ProcessQueueWatchdog implements BackgroundTask {
+public class ProcessQueueWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessQueueWatchdog.class);
 
@@ -71,18 +73,6 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     Constants.Flows.ON_TIMEOUT_FLOW,
                     ProcessKind.TIMEOUT_HANDLER, 3)
     };
-
-    private static final long HANDLERS_POLL_DELAY = 2000;
-    private static final long HANDLERS_ERROR_DELAY = 10000;
-
-    private static final long STALLED_POLL_DELAY = 10000;
-    private static final long STALLED_ERROR_DELAY = 10000;
-
-    private static final long FAILED_TO_START_POLL_DELAY = 30000;
-    private static final long FAILED_TO_START_ERROR_DELAY = 30000;
-
-    private static final long TIMED_OUT_POLL_DELAY = 30000;
-    private static final long TIMED_OUT_ERROR_DELAY = 30000;
 
     private static final ProcessKind[] HANDLED_PROCESS_KINDS = {
             ProcessKind.DEFAULT
@@ -120,11 +110,6 @@ public class ProcessQueueWatchdog implements BackgroundTask {
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
 
-    private Thread processHandlersWorker;
-    private Thread processStalledWorker;
-    private Thread processStartFailuresWorker;
-    private Thread processTimedOutWorker;
-
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
                                 ProcessQueueDao queueDao,
@@ -146,81 +131,16 @@ public class ProcessQueueWatchdog implements BackgroundTask {
     }
 
     @Override
-    public void start() {
-        this.processHandlersWorker = new Thread(new Worker(HANDLERS_POLL_DELAY, HANDLERS_ERROR_DELAY,
-                new ProcessHandlersWorker()),
-                "process-handlers-worker");
-        this.processHandlersWorker.start();
-
-        this.processStalledWorker = new Thread(new Worker(STALLED_POLL_DELAY, STALLED_ERROR_DELAY,
-                new ProcessStalledWorker()),
-                "process-stalled-worker");
-        this.processStalledWorker.start();
-
-        this.processStartFailuresWorker = new Thread(new Worker(FAILED_TO_START_POLL_DELAY, FAILED_TO_START_ERROR_DELAY,
-                new ProcessStartFailuresWorker()),
-                "process-start-failures-worker");
-        this.processStartFailuresWorker.start();
-
-        this.processTimedOutWorker = new Thread(new Worker(TIMED_OUT_POLL_DELAY, TIMED_OUT_ERROR_DELAY,
-                new ProcessTimedOutWorker()),
-                "process-timed-out-worker");
-        this.processTimedOutWorker.start();
-
-        log.info("init -> watchdog started");
+    public long getIntervalInSec() {
+        return TimeUnit.SECONDS.toSeconds(2);
     }
 
     @Override
-    public void stop() {
-        if (this.processHandlersWorker != null) {
-            this.processHandlersWorker.interrupt();
-        }
-
-        if (this.processStalledWorker != null) {
-            this.processStalledWorker.interrupt();
-        }
-
-        if (this.processStartFailuresWorker != null) {
-            this.processStartFailuresWorker.interrupt();
-        }
-
-        if (this.processTimedOutWorker != null) {
-            this.processTimedOutWorker.interrupt();
-        }
-    }
-
-    private static final class Worker implements Runnable {
-
-        private final long interval;
-        private final long errorInterval;
-        private final Runnable delegate;
-
-        private Worker(long interval, long errorInterval, Runnable delegate) {
-            this.interval = interval;
-            this.errorInterval = errorInterval;
-            this.delegate = delegate;
-        }
-
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    delegate.run();
-                    sleep(interval);
-                } catch (Exception e) {
-                    log.error("run -> error: {}", e.getMessage(), e);
-                    sleep(errorInterval);
-                }
-            }
-        }
-
-        private void sleep(long ms) {
-            try {
-                Thread.sleep(ms);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+    public void performTask() {
+        new ProcessHandlersWorker().run();
+        new ProcessStalledWorker().run();
+        new ProcessStartFailuresWorker().run();
+        new ProcessTimedOutWorker().run();
     }
 
     private final class ProcessHandlersWorker implements Runnable {
@@ -228,7 +148,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> maxAge = currentTimestamp().minus(PgUtils.interval(cfg.getMaxFailureHandlingAge()));
+                Field<Timestamp> maxAge = currentTimestamp().minus(interval(cfg.getMaxFailureHandlingAge()));
 
                 for (PollEntry e : POLL_ENTRIES) {
                     List<ProcessEntry> parents = watchdogDao.poll(tx, e, maxAge, 1);
@@ -257,7 +177,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> cutOff = currentTimestamp().minus(PgUtils.interval(cfg.getMaxStalledAge()));
+                Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStalledAge()));
 
                 List<UUID> ids = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
                 for (UUID id : ids) {
@@ -273,7 +193,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
         @Override
         public void run() {
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> cutOff = currentTimestamp().minus(PgUtils.interval(cfg.getMaxStartFailureAge()));
+                Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStartFailureAge()));
 
                 List<UUID> ids = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (UUID id : ids) {
@@ -372,7 +292,7 @@ public class ProcessQueueWatchdog implements BackgroundTask {
                     .asField();
 
             @SuppressWarnings("unchecked")
-            Field<? extends Number> i = (Field<? extends Number>) PgUtils.interval("1 second");
+            Field<? extends Number> i = (Field<? extends Number>) interval("1 second");
 
             return tx.select(q.INSTANCE_ID, q.LAST_AGENT_ID, q.TIMEOUT)
                     .from(q)

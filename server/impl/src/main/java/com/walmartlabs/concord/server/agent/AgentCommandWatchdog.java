@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.agent;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.Field;
 import org.slf4j.Logger;
@@ -32,30 +32,32 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
+import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 import static org.jooq.impl.DSL.currentTimestamp;
 import static org.jooq.impl.DSL.field;
 
-@Named
+@Named("agent-command-watchdog")
 @Singleton
-public class AgentCommandWatchdog extends PeriodicTask {
+public class AgentCommandWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(AgentCommandWatchdog.class);
-
-    private static final long POLL_DELAY = 60 * 1000; // 1 min
-    private static final long ERROR_DELAY = 3 * 60 * 1000; // 3 min
 
     private final WatchdogDao watchdogDao;
 
     @Inject
     public AgentCommandWatchdog(WatchdogDao watchdogDao) {
-        super(POLL_DELAY, ERROR_DELAY);
         this.watchdogDao = watchdogDao;
     }
 
     @Override
-    protected void performTask() {
+    public long getIntervalInSec() {
+        return TimeUnit.MINUTES.toSeconds(1);
+    }
+
+    @Override
+    public void performTask() {
         Field<Timestamp> cutoff = currentTimestamp().minus(field("interval '10 minutes'"));
         int n = watchdogDao.failStalled(cutoff);
         log.info("run -> {} command(s) are timed out", n);
