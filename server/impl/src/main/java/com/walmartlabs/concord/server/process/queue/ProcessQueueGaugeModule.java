@@ -40,51 +40,45 @@ public class ProcessQueueGaugeModule extends AbstractModule {
     protected void configure() {
         Provider<ProcessQueueDao> queueDaoProvider = getProvider(ProcessQueueDao.class);
 
-        // fetch and cache the data in a single request
-        Gauge<Map<ProcessStatus, Integer>> baseGauge = createBaseGauge(queueDaoProvider);
+        // create the base gauge that caches all individual values
+        Gauge<Map<ProcessStatus, Integer>> base = new CachedGauge<Map<ProcessStatus, Integer>>(5, TimeUnit.SECONDS) {
+            @Override
+            protected Map<ProcessStatus, Integer> loadValue() {
+                return queueDaoProvider.get().getStatistics();
+            }
+        };
 
         Multibinder<GaugeProvider> tasks = Multibinder.newSetBinder(binder(), GaugeProvider.class);
-        tasks.addBinding().toInstance(createBaseGaugeProvider(baseGauge));
-
-        // create gauges for individual statuses
+        tasks.addBinding().toInstance(createBaseProvider(base));
         for (ProcessStatus s : ProcessStatus.values()) {
-            GaugeProvider<Integer> p = createStatusGaugeProvider(baseGauge, s);
-            tasks.addBinding().toInstance(p);
+            tasks.addBinding().toInstance(create(base, s));
         }
     }
 
-    private static Gauge<Map<ProcessStatus, Integer>> createBaseGauge(Provider<ProcessQueueDao> queueDaoProvider) {
-        return () -> {
-            ProcessQueueDao dao = queueDaoProvider.get();
-            return dao.countLastMinute();
-        };
-    }
-
-    private static GaugeProvider<Map<ProcessStatus, Integer>> createBaseGaugeProvider(Gauge<Map<ProcessStatus, Integer>> baseGauge) {
+    private static GaugeProvider<Map<ProcessStatus, Integer>> createBaseProvider(Gauge<Map<ProcessStatus, Integer>> base) {
         return new GaugeProvider<Map<ProcessStatus, Integer>>() {
             @Override
             public String name() {
-                return "process-queue-last-minute-status";
+                return "process-queue-statistics";
             }
 
             @Override
             public Gauge<Map<ProcessStatus, Integer>> gauge() {
-                return baseGauge;
+                return base;
             }
         };
     }
 
-    private static GaugeProvider<Integer> createStatusGaugeProvider(Gauge<Map<ProcessStatus, Integer>> statusGauge, ProcessStatus status) {
+    private static GaugeProvider<Integer> create(Gauge<Map<ProcessStatus, Integer>> base, ProcessStatus status) {
         return new GaugeProvider<Integer>() {
             @Override
             public String name() {
-                return "process-queue-last-minute-" + status.toString().toLowerCase();
+                return "process-queue-" + status.toString().toLowerCase();
             }
 
             @Override
             public Gauge<Integer> gauge() {
-                return new DerivativeGauge<Map<ProcessStatus, Integer>, Integer>(statusGauge) {
-
+                return new DerivativeGauge<Map<ProcessStatus, Integer>, Integer>(base) {
                     @Override
                     protected Integer transform(Map<ProcessStatus, Integer> value) {
                         return value.getOrDefault(status, 0);
