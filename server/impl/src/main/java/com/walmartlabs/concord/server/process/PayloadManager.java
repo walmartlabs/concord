@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -92,7 +93,7 @@ public class PayloadManager {
             meta = Collections.emptyMap();
         }
 
-        return new PayloadBuilder(instanceId)
+        return PayloadBuilder.start(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .with(input)
                 .organization(orgId)
@@ -121,7 +122,7 @@ public class PayloadManager {
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, MultipartInput input, String[] out) throws IOException {
 
-        return new PayloadBuilder(instanceId)
+        return PayloadBuilder.start(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .with(input)
                 .apply(p(entryPoint))
@@ -145,7 +146,7 @@ public class PayloadManager {
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, Map<String, Object> request, String[] out) throws IOException {
 
-        return new PayloadBuilder(instanceId)
+        return PayloadBuilder.start(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .initiator(initiatorId, initiator)
                 .apply(p(entryPoint))
@@ -169,7 +170,7 @@ public class PayloadManager {
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, InputStream in, String[] out) throws IOException {
 
-        return new PayloadBuilder(instanceId)
+        return PayloadBuilder.start(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .initiator(initiatorId, initiator)
                 .apply(p(entryPoint))
@@ -193,7 +194,7 @@ public class PayloadManager {
     public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  InputStream in, String[] out) throws IOException {
 
-        return new PayloadBuilder(instanceId)
+        return PayloadBuilder.start(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .initiator(initiatorId, initiator)
                 .workspace(in)
@@ -210,13 +211,14 @@ public class PayloadManager {
      * @return
      */
     public Payload createResumePayload(UUID instanceId, String eventName, Map<String, Object> req) throws IOException {
-        Path tmpDir = IOUtils.createTempDir("payload");
+        Timestamp createdAt = stateManager.assertCreatedAt(instanceId);
 
-        if (!stateManager.export(instanceId, copyTo(tmpDir))) {
+        Path tmpDir = IOUtils.createTempDir("payload");
+        if (!stateManager.export(instanceId, createdAt, copyTo(tmpDir))) {
             throw new ProcessException(instanceId, "Can't resume '" + instanceId + "', state snapshot not found");
         }
 
-        return new PayloadBuilder(instanceId)
+        return PayloadBuilder.resume(instanceId, createdAt)
                 .workspace(tmpDir)
                 .configuration(req)
                 .resumeEventName(eventName)
@@ -237,12 +239,13 @@ public class PayloadManager {
     public Payload createFork(UUID instanceId, UUID parentInstanceId, ProcessKind kind,
                               UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
 
+
         Path tmpDir = IOUtils.createTempDir("payload");
         if (!stateManager.export(parentInstanceId, copyTo(tmpDir))) {
             throw new ProcessException(instanceId, "Can't fork '" + instanceId + "', parent state snapshot not found");
         }
 
-        return new PayloadBuilder(instanceId)
+        return PayloadBuilder.start(instanceId)
                 .parentInstanceId(parentInstanceId)
                 .kind(kind)
                 .initiator(initiatorId, initiator)

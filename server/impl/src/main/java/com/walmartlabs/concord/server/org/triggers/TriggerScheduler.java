@@ -107,7 +107,7 @@ public class TriggerScheduler implements ScheduledTask {
 
         Payload payload;
         try {
-            payload = new PayloadBuilder(instanceId)
+            payload = PayloadBuilder.start(instanceId)
                     .initiator(INITIATOR_ID, INITIATOR)
                     .organization(orgId)
                     .project(projectId)

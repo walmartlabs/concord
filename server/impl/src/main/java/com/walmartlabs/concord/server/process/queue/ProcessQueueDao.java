@@ -79,13 +79,13 @@ public class ProcessQueueDao extends AbstractDao {
         this.policyDao = policyDao;
     }
 
-    public void insertInitial(UUID instanceId, ProcessKind kind, UUID parentInstanceId,
+    public void insertInitial(UUID instanceId, Timestamp createdAt, ProcessKind kind, UUID parentInstanceId,
                               UUID projectId, UUID initiatorId, Map<String, Object> meta) {
 
-        tx(tx -> insertInitial(tx, instanceId, kind, parentInstanceId, projectId, initiatorId, meta));
+        tx(tx -> insertInitial(tx, instanceId, createdAt, kind, parentInstanceId, projectId, initiatorId, meta));
     }
 
-    public void insertInitial(DSLContext tx, UUID instanceId, ProcessKind kind, UUID parentInstanceId,
+    public void insertInitial(DSLContext tx, UUID instanceId, Timestamp createdAt, ProcessKind kind, UUID parentInstanceId,
                               UUID projectId, UUID initiatorId, Map<String, Object> meta) {
 
         tx.insertInto(PROCESS_QUEUE)
@@ -102,7 +102,7 @@ public class ProcessQueueDao extends AbstractDao {
                         value(kind.toString()),
                         value(parentInstanceId),
                         value(projectId),
-                        currentTimestamp(),
+                        value(createdAt),
                         value(initiatorId),
                         value(ProcessStatus.PREPARING.toString()),
                         currentTimestamp(),

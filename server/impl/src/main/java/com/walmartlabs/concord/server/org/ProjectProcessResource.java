@@ -183,7 +183,7 @@ public class ProjectProcessResource implements Resource {
             UUID repoId = getRepoId(projectId, repoName);
             UserPrincipal initiator = UserPrincipal.assertCurrent();
 
-            Payload payload = new PayloadBuilder(instanceId)
+            Payload payload = PayloadBuilder.start(instanceId)
                     .organization(orgId)
                     .project(projectId)
                     .repository(repoId)

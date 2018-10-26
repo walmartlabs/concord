@@ -54,7 +54,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         //
         ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Arrays.asList(Constants.Files.REQUEST_DATA_FILE_NAME));
-        ProcessStateManager stateManager = new ProcessStateManagerImpl(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
+        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(instanceId, null, baseDir);
 
         Path tmpDir = Files.createTempDirectory("testExport");
@@ -97,7 +97,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         }
 
         ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Arrays.asList(Constants.Files.REQUEST_DATA_FILE_NAME));
-        ProcessStateManager stateManager = new ProcessStateManagerImpl(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
+        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(UUID.randomUUID(), "/", baseDir);
     }
 

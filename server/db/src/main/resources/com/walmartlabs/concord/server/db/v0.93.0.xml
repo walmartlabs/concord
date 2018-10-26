@@ -32,4 +32,22 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="93500" author="ibodrov@gmail.com">
+        <addColumn tableName="PROCESS_STATE">
+            <column name="INSTANCE_CREATED_AT" type="timestamp" remarks="Same as PROCESS_QUEUE.CREATED_AT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <sql>
+            lock table PROCESS_STATE;
+            update PROCESS_STATE s set INSTANCE_CREATED_AT = (select CREATED_AT from PROCESS_QUEUE q where q.INSTANCE_ID = s.INSTANCE_ID);
+        </sql>
+
+        <addNotNullConstraint tableName="PROCESS_STATE" columnName="INSTANCE_CREATED_AT"/>
+
+        <dropPrimaryKey tableName="PROCESS_STATE"/>
+
+        <addPrimaryKey tableName="PROCESS_STATE" columnNames="INSTANCE_ID, INSTANCE_CREATED_AT, ITEM_PATH"/>
+    </changeSet>
 </databaseChangeLog>

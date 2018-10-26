@@ -31,6 +31,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -56,14 +57,14 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
         UUID projectId = projectDao.insert(orgId, projectName, null, null, null, null, true, new byte[0], null);
 
         UUID instanceA = UUID.randomUUID();
-        queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, null, null);
+        queueDao.insertInitial(instanceA, new Timestamp(System.currentTimeMillis()), ProcessKind.DEFAULT, null, projectId, null, null);
         queueDao.updateStatus(instanceA, ProcessStatus.ENQUEUED);
 
         // add a small delay between two jobs
         Thread.sleep(100);
 
         UUID instanceB = UUID.randomUUID();
-        queueDao.insertInitial(instanceB, ProcessKind.DEFAULT, null, projectId, null, null);
+        queueDao.insertInitial(instanceB, new Timestamp(System.currentTimeMillis()), ProcessKind.DEFAULT, null, projectId, null, null);
         queueDao.updateStatus(instanceB, ProcessStatus.ENQUEUED);
 
         // ---

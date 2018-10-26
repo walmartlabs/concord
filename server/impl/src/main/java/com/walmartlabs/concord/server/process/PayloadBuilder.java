@@ -35,21 +35,34 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.function.Function;
 
 public final class PayloadBuilder {
 
+    public static PayloadBuilder start(UUID instanceId) {
+        return new PayloadBuilder(instanceId, new Timestamp(System.currentTimeMillis()));
+    }
+
+    public static PayloadBuilder resume(UUID instanceId, Timestamp createdAt) {
+        return new PayloadBuilder(instanceId, createdAt);
+    }
+
+    public static PayloadBuilder basedOn(Payload payload) {
+        return new PayloadBuilder(payload);
+    }
+
     private static final String INPUT_ARCHIVE_NAME = "_input.zip";
 
     private Payload payload;
 
-    public PayloadBuilder(Payload payload) {
+    private PayloadBuilder(Payload payload) {
         this.payload = payload;
     }
 
-    public PayloadBuilder(UUID instanceId) {
-        this.payload = new Payload(instanceId);
+    private PayloadBuilder(UUID instanceId, Timestamp createdAt) {
+        this.payload = new Payload(instanceId, createdAt);
     }
 
     public PayloadBuilder parentInstanceId(UUID parentInstanceId) {

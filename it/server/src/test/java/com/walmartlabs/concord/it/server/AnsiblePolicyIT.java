@@ -76,7 +76,7 @@ public class AnsiblePolicyIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Task 'Copy a local file' is forbidden by the task policy.*", ab);
+        assertLog(".*Task 'Copy a local file \\(copy\\)' is forbidden by the task policy.*", ab);
     }
 
     @SuppressWarnings("unchecked")

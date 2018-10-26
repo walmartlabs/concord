@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Named
@@ -49,9 +50,9 @@ public class StateImportingProcessor implements PayloadProcessor {
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
         UUID instanceId = payload.getInstanceId();
+        Timestamp instanceCreatedAt = payload.getCreatedAt();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-
-        stateManager.replacePath(instanceId, workspace, (this::filter));
+        stateManager.replacePath(instanceId, instanceCreatedAt, workspace, (this::filter));
 
         return chain.process(payload);
     }

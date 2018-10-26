@@ -240,7 +240,7 @@ public class ProcessResource implements Resource {
             payload = payloadManager.createPayload(input);
 
             // TODO remove after deprecating the old endpoints
-            payload = new PayloadBuilder(payload)
+            payload = PayloadBuilder.basedOn(payload)
                     .parentInstanceId(parentInstanceId)
                     .mergeOutExpressions(out)
                     .build();

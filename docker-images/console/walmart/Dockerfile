@@ -13,6 +13,6 @@ ADD target/dist/console.tar.gz /opt/concord/console/dist/
 COPY src/main/docker/start.sh /opt/concord/console/
 COPY src/main/docker/nginx /opt/concord/console/nginx
 
-RUN mkdir -p /opt/concord/console/logs
+RUN mkdir -p /opt/concord/logs
 
 CMD ["bash", "/opt/concord/console/start.sh"]

@@ -174,7 +174,7 @@ public abstract class AbstractEventResource {
             request.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
-        Payload payload = new PayloadBuilder(instanceId)
+        Payload payload = PayloadBuilder.start(instanceId)
                 .initiator(initiator.getId(), initiator.getName())
                 .organization(orgId)
                 .project(projectId)
