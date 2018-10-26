@@ -20,12 +20,11 @@
 
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Table, Checkbox } from 'semantic-ui-react';
+import { Checkbox, Table } from 'semantic-ui-react';
+import { ConcordId } from '../../../api/common';
+import { ColumnDefinition } from '../../../api/org';
 import { canBeCancelled, ProcessEntry } from '../../../api/process';
 import { LocalTimestamp, ProcessStatusIcon } from '../../molecules';
-import { ColumnDefinition } from '../../../api/org';
-import { ConcordId } from '../../../api/common';
-import { SearchFilter } from '../../../api/org/process';
 
 export const INSTANCE_ID_COLUMN: ColumnDefinition = {
     caption: 'Instance ID',
@@ -69,7 +68,6 @@ interface Entry extends ProcessEntry {
 interface Props {
     data: ProcessEntry[];
     orgName?: string;
-    filterProps?: SearchFilter;
     columns: ColumnDefinition[];
     refresh: () => void;
     onSelectProcess?: (selectedIds: ConcordId[]) => void;
@@ -77,7 +75,6 @@ interface Props {
 
 interface State {
     data: Entry[];
-    filterState: SearchFilter;
 }
 
 const toState = (data: ProcessEntry[]): Entry[] => {
@@ -139,19 +136,18 @@ const renderColumnCaption = (c: ColumnDefinition) => {
     return <Table.HeaderCell key={c.caption}>{c.caption}</Table.HeaderCell>;
 };
 
-class ProcessList extends React.PureComponent<Props, State> {
+class ProcessList extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
 
-        this.state = { data: toState(props.data), filterState: {} };
+        this.state = { data: toState(props.data) };
     }
 
     componentDidUpdate(prevProps: Props) {
-        if (
-            prevProps.data !== this.props.data ||
-            prevProps.filterProps !== this.props.filterProps
-        ) {
-            this.setState({ filterState: this.props.filterProps || {} });
+        if (prevProps.data !== this.props.data) {
+            this.setState({
+                data: toState(this.props.data)
+            });
         }
     }
 
@@ -277,35 +273,18 @@ class ProcessList extends React.PureComponent<Props, State> {
     }
 
     render() {
-        const { columns, filterProps, refresh } = this.props;
+        const { columns, refresh } = this.props;
         const { data } = this.state;
 
-        let filteredData: Entry[] = data;
-
-        if (filterProps) {
-            if (filterProps.initiator) {
-                const expr = filterProps.initiator;
-                filteredData = filteredData.filter((p) => p.initiator.match(expr));
-            }
-            if (filterProps.status) {
-                const expr = filterProps.status;
-                filteredData = filteredData.filter((p) => p.status.match(expr));
-            }
-        }
-
-        if (!filteredData || filteredData.length === 0) {
+        if (!data || data.length === 0) {
             return <h3>No processes found.</h3>;
         }
 
         return (
             <Table celled={true} attached="bottom" selectable={true}>
-                <Table.Header>
-                    {this.renderTableHeader(filteredData, refresh, columns)}
-                </Table.Header>
+                <Table.Header>{this.renderTableHeader(data, refresh, columns)}</Table.Header>
 
-                <Table.Body>
-                    {filteredData.map((p, idx) => this.renderTableRow(p, columns))}
-                </Table.Body>
+                <Table.Body>{data.map((p, idx) => this.renderTableRow(p, columns))}</Table.Body>
             </Table>
         );
     }

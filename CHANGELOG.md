@@ -14,6 +14,8 @@ by allowed tasks;
 
 ### Changed
 
+- concord-console: the process filtering list is performed on the
+server now;
 - concord-server: `task_locks` are replaced with the task schedule
 table;
 - concord-server: merge the existing process variables with template

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Button, Input, Menu, Loader } from 'semantic-ui-react';
+import { Button, Input, Menu } from 'semantic-ui-react';
 
 import { RequestError, ConcordId } from '../../../api/common';
 import { SearchFilter } from '../../../api/org/process';
@@ -67,7 +67,7 @@ interface Props {
 
     loading: boolean;
     loadError: RequestError;
-    refresh: () => void;
+    refresh: (filters?: SearchFilter) => void;
 }
 
 interface State {
@@ -79,50 +79,49 @@ const toState = (selectedProcessIds: ConcordId[], data?: SearchFilter): State =>
     return { filterState: data || {}, selectedProcessIds };
 };
 
-const compareFilter = (left?: SearchFilter, right?: SearchFilter): boolean => {
-    if (left === right) {
-        return true;
-    }
-    if (!left || !right) {
-        return false;
-    }
-    if (left.status !== right.status || left.initiator !== right.initiator) {
-        return false;
-    }
-    return true;
-};
-
-class ProcessListWithSearch extends React.PureComponent<Props, State> {
+class ProcessListWithSearch extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = toState([], this.props.filterProps);
         this.onSelectProcess = this.onSelectProcess.bind(this);
-    }
-
-    componentDidUpdate(prevProps: Props) {
-        const { filterProps } = this.props;
-        const { filterState } = this.state;
-        if (compareFilter(filterProps, filterState)) {
-            this.setState({ filterState: filterProps || {} });
-        }
+        this.onRefresh = this.onRefresh.bind(this);
     }
 
     handleStatusChange(s?: string) {
         const { filterState } = this.state;
+        const { refresh } = this.props;
         const status: ProcessStatus = s && s.length > 0 ? ProcessStatus[s] : undefined;
-
-        this.setState({ filterState: { initiator: filterState.initiator, status } });
+        if (filterState.status !== status) {
+            this.setState({ filterState: { initiator: filterState.initiator, status } });
+            refresh({ initiator: filterState.initiator, status });
+        }
     }
 
     handleInitiatorChange(s?: string) {
         const { filterState } = this.state;
         const initiator = s && s.length > 0 ? s : undefined;
 
-        this.setState({ filterState: { status: filterState.status, initiator } });
+        if (filterState.initiator !== s) {
+            this.setState({ filterState: { status: filterState.status, initiator } });
+        }
+    }
+
+    handleInitiatorOnBlur() {
+        const { refresh, filterProps } = this.props;
+        const { filterState } = this.state;
+        const prevInitiator = filterProps ? filterProps.initiator : '';
+        if (prevInitiator !== filterState.initiator) {
+            refresh({ initiator: filterState.initiator, status: filterState.status });
+        }
     }
 
     onSelectProcess(processIds: ConcordId[]) {
         this.setState({ selectedProcessIds: processIds });
+    }
+
+    onRefresh() {
+        const { refresh } = this.props;
+        refresh(this.state.filterState);
     }
 
     render() {
@@ -132,18 +131,13 @@ class ProcessListWithSearch extends React.PureComponent<Props, State> {
             columns,
             projectName,
             loadError,
-            loading,
-            refresh
+            loading
         } = this.props;
 
         const { filterState } = this.state;
 
         if (loadError) {
             return <RequestErrorMessage error={loadError} />;
-        }
-
-        if (loading) {
-            return <Loader active={true} />;
         }
 
         if (!processes) {
@@ -159,7 +153,12 @@ class ProcessListWithSearch extends React.PureComponent<Props, State> {
 
                 <Menu attached="top" borderless={true}>
                     <Menu.Item>
-                        <Button basic={true} icon="refresh" loading={loading} onClick={refresh} />
+                        <Button
+                            basic={true}
+                            icon="refresh"
+                            loading={loading}
+                            onClick={this.onRefresh}
+                        />
                     </Menu.Item>
                     <Menu.Item>
                         <ProcessStatusDropdown
@@ -172,6 +171,7 @@ class ProcessListWithSearch extends React.PureComponent<Props, State> {
                             <Input
                                 placeholder="Initiator"
                                 value={filterState.initiator ? filterState.initiator : ''}
+                                onBlur={() => this.handleInitiatorOnBlur()}
                                 onChange={(ev, data) => this.handleInitiatorChange(data.value)}
                             />
                         </Menu.Item>
@@ -180,16 +180,15 @@ class ProcessListWithSearch extends React.PureComponent<Props, State> {
                     <Menu.Item position="right">
                         <BulkProcessActionDropdown
                             data={this.state.selectedProcessIds}
-                            refresh={refresh}
+                            refresh={this.onRefresh}
                         />
                     </Menu.Item>
                 </Menu>
 
                 <ProcessList
                     data={processes}
-                    filterProps={filterState}
                     columns={cols}
-                    refresh={refresh}
+                    refresh={this.onRefresh}
                     onSelectProcess={this.onSelectProcess}
                 />
             </>

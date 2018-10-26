@@ -23,7 +23,6 @@ import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { replace as pushHistory } from 'react-router-redux';
-import { Loader } from 'semantic-ui-react';
 
 import { queryParams, RequestError } from '../../../api/common';
 import { SearchFilter } from '../../../api/org/process';
@@ -82,7 +81,6 @@ interface ExternalProps {
 
     columns?: ColumnDefinition[];
 }
-
 type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
 
 const parseSearchFilter = (s: string): SearchFilter => {
@@ -94,47 +92,14 @@ const parseSearchFilter = (s: string): SearchFilter => {
 };
 
 class ProcessListActivity extends React.Component<Props> {
-    private currentFilter: SearchFilter = {};
-
     constructor(props: Props) {
         super(props);
-        this.currentFilter = parseSearchFilter(props.location.search);
     }
 
     componentWillMount() {
-        this.update();
-    }
-
-    componentDidUpdate(prevProps: Props) {
-        const {
-            location: { search: newSearch }
-        } = this.props;
-        const {
-            location: { search: oldSearch }
-        } = prevProps;
-
-        let update = false;
-
-        if (newSearch !== oldSearch) {
-            this.currentFilter = parseSearchFilter(newSearch);
-            update = true;
-        }
-
-        const { orgName: newOrgName, projectName: newProjectName } = this.props;
-        const { orgName: oldOrgName, projectName: oldProjectName } = prevProps;
-
-        if (newOrgName !== oldOrgName || newProjectName !== oldProjectName) {
-            update = true;
-        }
-
-        if (update) {
-            this.update();
-        }
-    }
-
-    update() {
-        const { orgName, projectName, load } = this.props;
-        load(orgName, projectName, this.currentFilter);
+        const { orgName, projectName, load, location } = this.props;
+        const filters = parseSearchFilter(location.search);
+        load(orgName, projectName, filters);
     }
 
     render() {
@@ -146,15 +111,12 @@ class ProcessListActivity extends React.Component<Props> {
             projectName,
             loadError,
             loading,
-            load
+            load,
+            history
         } = this.props;
 
         if (loadError) {
             return <RequestErrorMessage error={loadError} />;
-        }
-
-        if (loading) {
-            return <Loader active={true} />;
         }
 
         if (!processes) {
@@ -163,17 +125,18 @@ class ProcessListActivity extends React.Component<Props> {
 
         const showProjectColumn = !projectName;
         const cols = columns || (showProjectColumn ? defaultColumns : withoutProjectColumns);
-
+        const filter = parseSearchFilter(history.location.search);
         return (
             <>
                 {loadError && <RequestErrorMessage error={loadError} />}
 
                 <ProcessListWithSearch
+                    filterProps={filter}
                     processes={processes}
                     columns={cols}
                     loading={loading}
                     loadError={loadError}
-                    refresh={() => load(orgName, projectName, this.currentFilter)}
+                    refresh={(filters) => load(orgName, projectName, filters)}
                     showInitiatorFilter={showInitiatorFilter}
                 />
             </>
