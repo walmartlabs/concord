@@ -23,4 +23,13 @@
             </column>
         </createTable>
     </changeSet>
+
+    <changeSet id="93100" author="ybrigo@gmail.com">
+        <addColumn tableName="TASKS">
+            <column name="LAST_UPDATED_AT" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
