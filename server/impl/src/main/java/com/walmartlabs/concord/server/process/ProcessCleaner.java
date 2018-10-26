@@ -70,8 +70,8 @@ public class ProcessCleaner implements ScheduledTask {
     @Override
     public void performTask() {
         Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cfg.getMaxStateAge());
-        cleanerDao.deleteOldState(cutoff);
-        cleanerDao.deleteOrphans();
+        cleanerDao.deleteOldState(cutoff, cfg);
+        cleanerDao.deleteOrphans(cfg);
     }
 
     @Named
@@ -82,7 +82,7 @@ public class ProcessCleaner implements ScheduledTask {
             super(cfg);
         }
 
-        void deleteOldState(Timestamp cutoff) {
+        void deleteOldState(Timestamp cutoff, ProcessStateConfiguration jobCfg) {
             long t1 = System.currentTimeMillis();
 
             tx(tx -> {
@@ -91,21 +91,33 @@ public class ProcessCleaner implements ScheduledTask {
                         .where(PROCESS_QUEUE.LAST_UPDATED_AT.lessThan(cutoff)
                                 .and(PROCESS_QUEUE.CURRENT_STATUS.notIn(EXCLUDE_STATUSES)));
 
-                int queueEntries = tx.deleteFrom(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
-                        .execute();
+                int queueEntries = 0;
+                if (jobCfg.isQueueCleanup()) {
+                    queueEntries = tx.deleteFrom(PROCESS_QUEUE)
+                            .where(PROCESS_QUEUE.INSTANCE_ID.in(ids))
+                            .execute();
+                }
 
-                int stateRecords = tx.deleteFrom(PROCESS_STATE)
-                        .where(PROCESS_STATE.INSTANCE_ID.in(ids))
-                        .execute();
+                int stateRecords = 0;
+                if (jobCfg.isStateCleanup()) {
+                    stateRecords = tx.deleteFrom(PROCESS_STATE)
+                            .where(PROCESS_STATE.INSTANCE_ID.in(ids))
+                            .execute();
+                }
 
-                int events = tx.deleteFrom(PROCESS_EVENTS)
-                        .where(PROCESS_EVENTS.INSTANCE_ID.in(ids))
-                        .execute();
+                int events = 0;
+                if (jobCfg.isEventsCleanup()) {
+                    events = tx.deleteFrom(PROCESS_EVENTS)
+                            .where(PROCESS_EVENTS.INSTANCE_ID.in(ids))
+                            .execute();
+                }
 
-                int logEntries = tx.deleteFrom(PROCESS_LOGS)
-                        .where(PROCESS_LOGS.INSTANCE_ID.in(ids))
-                        .execute();
+                int logEntries = 0;
+                if (jobCfg.isLogsCleanup()) {
+                    logEntries = tx.deleteFrom(PROCESS_LOGS)
+                            .where(PROCESS_LOGS.INSTANCE_ID.in(ids))
+                            .execute();
+                }
 
                 log.info("deleteOldState -> removed older than {}: {} queue entries, {} log entries, {} state item(s), {} event(s)",
                         cutoff, queueEntries, logEntries, stateRecords, events);
@@ -115,23 +127,32 @@ public class ProcessCleaner implements ScheduledTask {
             log.info("deleteOldState -> took {}ms", (t2 - t1));
         }
 
-        void deleteOrphans() {
+        void deleteOrphans(ProcessStateConfiguration jobCfg) {
             long t1 = System.currentTimeMillis();
 
             tx(tx -> {
                 SelectJoinStep<Record1<UUID>> alive = tx.select(PROCESS_QUEUE.INSTANCE_ID).from(PROCESS_QUEUE);
 
-                int stateRecords = tx.deleteFrom(PROCESS_STATE)
-                        .where(PROCESS_STATE.INSTANCE_ID.notIn(alive))
-                        .execute();
+                int stateRecords = 0;
+                if (jobCfg.isStateCleanup()) {
+                    stateRecords = tx.deleteFrom(PROCESS_STATE)
+                            .where(PROCESS_STATE.INSTANCE_ID.notIn(alive))
+                            .execute();
+                }
 
-                int events = tx.deleteFrom(PROCESS_EVENTS)
-                        .where(PROCESS_EVENTS.INSTANCE_ID.notIn(alive))
-                        .execute();
+                int events = 0;
+                if (jobCfg.isEventsCleanup()) {
+                    events = tx.deleteFrom(PROCESS_EVENTS)
+                            .where(PROCESS_EVENTS.INSTANCE_ID.notIn(alive))
+                            .execute();
+                }
 
-                int logEntries = tx.deleteFrom(PROCESS_LOGS)
-                        .where(PROCESS_LOGS.INSTANCE_ID.notIn(alive))
-                        .execute();
+                int logEntries = 0;
+                if (jobCfg.isLogsCleanup()) {
+                    logEntries = tx.deleteFrom(PROCESS_LOGS)
+                            .where(PROCESS_LOGS.INSTANCE_ID.notIn(alive))
+                            .execute();
+                }
 
                 log.info("deleteOrphans -> removed orphan data: {} log entries, {} state item(s), {} event(s)",
                         logEntries, stateRecords, events);

@@ -37,6 +37,22 @@ public class ProcessStateConfiguration implements Serializable {
     private long cleanupInterval;
 
     @Inject
+    @Config("process.queueCleanup")
+    private boolean queueCleanup;
+
+    @Inject
+    @Config("process.stateCleanup")
+    private boolean stateCleanup;
+
+    @Inject
+    @Config("process.eventsCleanup")
+    private boolean eventsCleanup;
+
+    @Inject
+    @Config("process.logsCleanup")
+    private boolean logsCleanup;
+
+    @Inject
     @Config("process.maxStateAge")
     private long maxStateAge;
 
@@ -54,6 +70,22 @@ public class ProcessStateConfiguration implements Serializable {
 
     public long getCleanupInterval() {
         return cleanupInterval;
+    }
+
+    public boolean isQueueCleanup() {
+        return queueCleanup;
+    }
+
+    public boolean isStateCleanup() {
+        return stateCleanup;
+    }
+
+    public boolean isEventsCleanup() {
+        return eventsCleanup;
+    }
+
+    public boolean isLogsCleanup() {
+        return logsCleanup;
     }
 
     public long getMaxStateAge() {
