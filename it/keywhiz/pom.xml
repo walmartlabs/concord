@@ -18,6 +18,9 @@
         <it.server.port>8001</it.server.port>
         <db.image>library/postgres</db.image>
         <server.image>walmartlabs/concord-server</server.image>
+
+        <!-- TODO requires an OSS Docker image of Keywhiz -->
+        <skip.it.tests>true</skip.it.tests>
     </properties>
 
     <dependencies>
@@ -190,6 +193,7 @@
         <profile>
             <id>walmart</id>
             <properties>
+                <skip.it.tests>false</skip.it.tests>
                 <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
                 <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
             </properties>
