@@ -193,7 +193,6 @@
         <profile>
             <id>walmart</id>
             <properties>
-                <skip.it.tests>false</skip.it.tests>
                 <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
                 <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
             </properties>
