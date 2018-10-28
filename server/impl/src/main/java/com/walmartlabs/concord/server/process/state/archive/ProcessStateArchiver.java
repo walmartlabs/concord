@@ -86,7 +86,7 @@ public class ProcessStateArchiver implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.getPeriod();
+        return cfg.isEnabled() ? cfg.getPeriod() : 0;
     }
 
     public void export(UUID instanceId, OutputStream out) throws IOException {

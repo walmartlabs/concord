@@ -51,7 +51,7 @@ public class StalledStateUploadHandler implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.getStalledCheckPeriod();
+        return cfg.isEnabled() ? cfg.getStalledCheckPeriod() : 0;
     }
 
     @Override

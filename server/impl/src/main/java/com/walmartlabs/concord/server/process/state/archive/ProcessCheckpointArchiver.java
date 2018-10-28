@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessCheckpointArchiveConfiguration;
 import com.walmartlabs.concord.server.process.state.CheckpointDao;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -54,9 +55,9 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStateArchive.PROCESS_STATE_ARCHIVE;
 import static org.jooq.impl.DSL.*;
 
-@Named
+@Named("process-checkpoint-archiver")
 @Singleton
-public class ProcessCheckpointArchiver extends PeriodicTask {
+public class ProcessCheckpointArchiver implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessCheckpointArchiver.class);
 
@@ -73,8 +74,6 @@ public class ProcessCheckpointArchiver extends PeriodicTask {
                                      MultiStoreConnector store,
                                      CheckpointDao checkpointDao,
                                      ArchiverDao dao) {
-
-        super(cfg.getPeriod(), 30000);
 
         this.cfg = cfg;
         this.checkpointDao = checkpointDao;
@@ -97,17 +96,12 @@ public class ProcessCheckpointArchiver extends PeriodicTask {
     }
 
     @Override
-    public void start() {
-        if (!cfg.isEnabled()) {
-            log.info("start -> checkpoint archiving is disabled");
-            return;
-        }
-
-        super.start();
+    public long getIntervalInSec() {
+        return cfg.isEnabled() ? cfg.getPeriod() : 0;
     }
 
     @Override
-    protected void performTask() throws Exception {
+    public void performTask() throws Exception {
         while (!Thread.currentThread().isInterrupted()) {
             List<UUID> ids = dao.grabNext(10);
 
