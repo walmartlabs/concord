@@ -106,11 +106,11 @@ flows:
       - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
       - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db hub.docker.prod.walmart.com/library/postgres:10.4-alpine
       - (name build) mvn -U -B -s $MVN_SETTINGS release:prepare release:perform -DskipTests
-      - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
       - hygieia.publishBuild()
       - ws_snapshot: binaries
         includes: docker-images/**
     - ws_restore: binaries
+    - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
     - call: buildImages(concord_version = ${RELEASE_VERSION})
 
   default:
