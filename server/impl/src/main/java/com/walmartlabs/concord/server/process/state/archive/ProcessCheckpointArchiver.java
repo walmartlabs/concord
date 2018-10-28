@@ -179,7 +179,7 @@ public class ProcessCheckpointArchiver implements ScheduledTask {
                         .limit(limit)
                         .forUpdate()
                         .skipLocked()
-                        .fetch(PROCESS_QUEUE.INSTANCE_ID);
+                        .fetch(PROCESS_CHECKPOINTS.INSTANCE_ID);
 
                 if (ids.isEmpty()) {
                     return ids;
