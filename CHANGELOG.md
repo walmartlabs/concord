@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed a bug preventing the checkpoint archiver
+from working correctly.
+
+
+
 ## [0.93.0] - 2018-10-28
 
 ### Added
