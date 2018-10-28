@@ -62,7 +62,7 @@ public class ConcordServer {
                 .filterChain("/api/**", ConcordAuthenticatingFilter.class)
                 .filterChain("/forms/**", ConcordAuthenticatingFilter.class)
                 .filterChain("/jolokia/**", ConcordAuthenticatingFilter.class)
-                .filterChain("/events/github/*", GithubAuthenticatingFilter.class)
+                .filterChain("/events/github/**", GithubAuthenticatingFilter.class)
                 .serve("/forms/*").with(DefaultServlet.class, formsServletParams())
                 .serve("/logs/*").with(LogServlet.class) // backward compatibility
                 .serve("/metrics").with(MetricsServlet.class) // prometheus integration

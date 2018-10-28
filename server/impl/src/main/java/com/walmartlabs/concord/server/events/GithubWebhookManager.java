@@ -106,9 +106,8 @@ public class GithubWebhookManager {
     }
 
     private GitHub connect() {
-        if (!cfg.isEnabled()) {
-            log.warn("init -> the GitHub API URL is not configured, skipping");
-            return null;
+        if (!cfg.isWebhookRegistrationEnabled()) {
+            throw new IllegalStateException("Webhook registration is disabled, won't create a GitHub API client");
         }
 
         log.info("init -> connecting to the GitHub API '{}'", cfg.getApiUrl());

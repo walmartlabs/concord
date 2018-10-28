@@ -51,20 +51,15 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
     private static final String SIGNATURE_HEADER = "X-Hub-Signature";
 
-    private final GithubConfiguration githubCfg;
+    private final GithubConfiguration cfg;
 
     @Inject
-    public GithubAuthenticatingFilter(GithubConfiguration githubCfg) {
-        this.githubCfg = githubCfg;
+    public GithubAuthenticatingFilter(GithubConfiguration cfg) {
+        this.cfg = cfg;
     }
 
     @Override
     public void doFilterInternal(ServletRequest request, ServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (!githubCfg.isEnabled()) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         HttpServletRequest req = WebUtils.toHttp(request);
         super.doFilterInternal(new CachingRequestWrapper(req), response, filterChain);
     }
@@ -91,7 +86,7 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         final byte[] payload = req.getPayload();
-        SecretKeySpec signingKey = new SecretKeySpec(githubCfg.getSecret().getBytes(), HMAC_SHA1_ALGORITHM);
+        SecretKeySpec signingKey = new SecretKeySpec(cfg.getSecret().getBytes(), HMAC_SHA1_ALGORITHM);
         try {
             Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
             mac.init(signingKey);

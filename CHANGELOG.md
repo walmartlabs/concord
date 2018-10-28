@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: add `payload` to `github` trigger events; 
+- concord-server: GitHub webhook URLs can now supply additional
+parameters via query parameters;
 - concord-server: configurable period values for cleanup tasks;
 - concord-sdk: support for "protected" variables that can be set only
 by allowed tasks;
@@ -14,6 +17,8 @@ by allowed tasks;
 
 ### Changed
 
+- concord-server: allow GitHub events without explicit webhook
+registration (e.g. organization-level hooks);
 - concord-console: the process filtering list is performed on the
 server now;
 - concord-server: `task_locks` are replaced with the task schedule
@@ -21,6 +26,11 @@ table;
 - concord-server: merge the existing process variables with template
 variables;
 - bpm: updated to 0.48.0, fixed `context#getVariableNames` issue.
+
+### Breaking
+
+- concord-server: `github.enabled` configuration parameters renamed
+to `github.webhookRegistrationEnabled`;
 
 
 

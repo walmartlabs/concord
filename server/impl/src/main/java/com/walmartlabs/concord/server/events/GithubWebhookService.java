@@ -61,10 +61,14 @@ public class GithubWebhookService implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return this.cfg.isEnabled() ? cfg.getRefreshInterval() : 0;
+        return this.cfg.isWebhookRegistrationEnabled() ? cfg.getRefreshInterval() : 0;
     }
 
     public boolean register(UUID projectId, String repoName, String repoUrl) {
+        if (!cfg.isWebhookRegistrationEnabled()) {
+            return false;
+        }
+
         if (!needsWebhook(repoUrl)) {
             log.info("register ['{}', '{}', '{}'] -> not a GitHub URL", projectId, repoName, repoUrl);
             return false;
@@ -79,6 +83,10 @@ public class GithubWebhookService implements ScheduledTask {
     }
 
     public void refreshWebhook(UUID projectId, UUID repoId, String repoName, String repoUrl) {
+        if (!cfg.isWebhookRegistrationEnabled()) {
+            return;
+        }
+
         unregister(projectId, repoName, repoUrl);
         boolean success = register(projectId, repoName, repoUrl);
         refresherDao.update(repoId, success);
@@ -100,6 +108,10 @@ public class GithubWebhookService implements ScheduledTask {
 
 
     private void unregister(UUID projectId, String repoName, String repoUrl) {
+        if (!cfg.isWebhookRegistrationEnabled()) {
+            return;
+        }
+
         if (!needsWebhook(repoUrl)) {
             log.info("unregister ['{}', '{}', '{}'] -> not a GitHub URL", projectId, repoName, repoUrl);
             return;

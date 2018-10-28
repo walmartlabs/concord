@@ -33,8 +33,8 @@ import javax.inject.Singleton;
 public class GithubConfiguration {
 
     @Inject
-    @Config("github.enabled")
-    private boolean enabled;
+    @Config("github.webhookRegistrationEnabled")
+    private boolean webhookRegistrationEnabled;
 
     @Inject
     @Config("github.apiUrl")
@@ -68,7 +68,7 @@ public class GithubConfiguration {
 
     @Inject
     public GithubConfiguration() {
-        if (!enabled) {
+        if (!webhookRegistrationEnabled) {
             return;
         }
 
@@ -81,8 +81,8 @@ public class GithubConfiguration {
         }
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public boolean isWebhookRegistrationEnabled() {
+        return webhookRegistrationEnabled;
     }
 
     public String getSecret() {

@@ -183,7 +183,7 @@
                                             <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
                                             <GITHUB_API_URL>http://localhost:${github.mock.port}</GITHUB_API_URL>
                                             <GITHUB_DOMAIN>localhost</GITHUB_DOMAIN>
-                                            <GITHUB_ENABLED>true</GITHUB_ENABLED>
+                                            <GITHUB_WEBHOOK_REGISTRATION_ENABLED>true</GITHUB_WEBHOOK_REGISTRATION_ENABLED>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
