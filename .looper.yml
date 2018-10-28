@@ -104,7 +104,7 @@ flows:
     - dockguardAgent(looper-agent):
       - docker network create testnet$DOCKGUARD_STEP_UID
       - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
-      - docker run --network testnet$DOCKGUARD_STEP_UID --name db hub.docker.prod.walmart.com/library/postgres:10.4-alpine
+      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db hub.docker.prod.walmart.com/library/postgres:10.4-alpine
       - (name build) mvn -U -B -s $MVN_SETTINGS release:prepare release:perform -DskipTests
       - var(RELEASE_VERSION = '%{MAVEN_VERSION.replace("-SNAPSHOT", "")}')
       - hygieia.publishBuild()
