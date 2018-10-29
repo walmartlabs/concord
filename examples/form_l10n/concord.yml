@@ -1,0 +1,17 @@
+flows:
+  default:
+  # this form uses locale.properties in the root directory
+  - form: myForm
+
+  # this form has it's own locale.properties file in forms/myOtherForm directory
+  # per-form localization files are supported only for custom forms
+  - form: myOtherForm
+
+forms:
+  myForm:
+  - name: { type: "string", label: "Name" }
+  - age: { type: "int", label: "Age", min: 21 }
+
+  myOtherForm:
+  - name: { type: "string", label: "Name" }
+  - age: { type: "int", label: "Age", min: 21 }
