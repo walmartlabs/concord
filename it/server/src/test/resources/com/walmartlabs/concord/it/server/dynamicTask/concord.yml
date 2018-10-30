@@ -1,0 +1,10 @@
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+  - "mvn://com.walmartlabs.concord.plugins.basic:dynamic-tasks:0.93.1"
+
+flows:
+  default:
+  - loadTasks: "tasks"
+  - ${myTask.hey("world")}
+

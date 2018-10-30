@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-runner: fixed a bug preventing dynamic task registration
+from working correctly.
+
+
+
 ## [0.93.1] - 2018-10-28
 
 ### Changed

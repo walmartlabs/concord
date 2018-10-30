@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Named
 @Singleton
@@ -40,6 +42,7 @@ public class TaskRegistry implements ServiceTaskRegistry, DynamicTaskRegistry {
 
     private final Injector injector;
     private final TaskClasses taskClasses;
+    private final Map<String, Class<? extends Task>> dynamicTasks = new ConcurrentHashMap<>();
 
     @Inject
     public TaskRegistry(Injector injector, TaskClasses taskClasses) {
@@ -51,7 +54,10 @@ public class TaskRegistry implements ServiceTaskRegistry, DynamicTaskRegistry {
     public Task getByKey(String key) {
         Class<? extends Task> taskClass = taskClasses.get(key);
         if(taskClass == null) {
-            return null;
+            taskClass = dynamicTasks.get(key);
+            if (taskClass == null) {
+                return null;
+            }
         }
 
         return injector.getInstance(taskClass);
@@ -71,6 +77,6 @@ public class TaskRegistry implements ServiceTaskRegistry, DynamicTaskRegistry {
                     Task.class.getName());
         }
 
-        taskClasses.add(n.value(), taskClass);
+        dynamicTasks.put(n.value(), taskClass);
     }
 }
