@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,6 +35,8 @@ public class ProcessStatusHistoryEntry implements Serializable {
 
     private final UUID id;
     private final ProcessStatus status;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private final Timestamp changeDate;
 
     @JsonCreator
