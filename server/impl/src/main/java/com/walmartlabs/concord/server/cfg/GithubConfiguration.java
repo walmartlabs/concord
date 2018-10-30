@@ -27,6 +27,7 @@ import org.eclipse.sisu.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Map;
 
 @Named
 @Singleton
@@ -65,6 +66,14 @@ public class GithubConfiguration {
     @Inject
     @Config("github.cacheEnabled")
     private boolean cacheEnabled;
+
+    @Inject
+    @Config("github.autoRemoveUnknownWebhooks")
+    private boolean autoRemoveUnknownWebhooks;
+
+    @Inject
+    @Config("github.defaultFilter")
+    private Map<String, Object> defaultFilter;
 
     @Inject
     public GithubConfiguration() {
@@ -111,5 +120,13 @@ public class GithubConfiguration {
 
     public boolean isCacheEnabled() {
         return cacheEnabled;
+    }
+
+    public boolean isAutoRemoveUnknownWebhooks() {
+        return autoRemoveUnknownWebhooks;
+    }
+
+    public Map<String, Object> getDefaultFilter() {
+        return defaultFilter;
     }
 }

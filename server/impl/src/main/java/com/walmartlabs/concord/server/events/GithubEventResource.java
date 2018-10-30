@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -81,6 +82,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private final RepositoryDao repositoryDao;
     private final RepositoryCacheDao repositoryCacheDao;
     private final GithubWebhookManager webhookManager;
+    private final GithubConfiguration cfg;
 
     @Inject
     public GithubEventResource(ProjectDao projectDao,
@@ -91,14 +93,16 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                GithubWebhookManager webhookManager,
                                TriggersConfiguration triggersConfiguration,
                                UserManager userManager,
-                               LdapManager ldapManager) {
+                               LdapManager ldapManager,
+                               GithubConfiguration cfg) {
 
-        super(processManager, triggersDao, projectDao, new GithubTriggerDefinitionEnricher(projectDao), triggersConfiguration, userManager, ldapManager);
+        super(processManager, triggersDao, projectDao, new GithubTriggerDefinitionEnricher(projectDao, cfg), triggersConfiguration, userManager, ldapManager);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.repositoryCacheDao = repositoryCacheDao;
         this.webhookManager = webhookManager;
+        this.cfg = cfg;
     }
 
     @POST
@@ -124,8 +128,12 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
         List<RepositoryEntry> repos = repositoryDao.find(repoName);
         if (repos.isEmpty()) {
-            log.info("'onEvent ['{}'] -> repository '{}' not found, delete webhook", eventName, repoName);
-            webhookManager.unregister(repoName);
+            if (cfg.isAutoRemoveUnknownWebhooks()) {
+                log.info("'onEvent ['{}'] -> repository '{}' not found, delete webhook", eventName, repoName);
+                webhookManager.unregister(repoName);
+            } else {
+                log.warn("'onEvent ['{}'] -> repository '{}' not found", eventName, repoName);
+            }
             return "ok";
         }
 
@@ -148,9 +156,9 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             }
 
             Map<String, Object> conditions = buildConditions(r, payload, project, eventName);
+            conditions = enrich(conditions, uriInfo);
 
             Map<String, Object> event = buildTriggerEvent(payload, r, project, conditions);
-            event = enrich(event, uriInfo);
 
             String eventId = r.getId().toString();
             int count = process(eventId, EVENT_SOURCE, conditions, event);
@@ -250,9 +258,11 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private static class GithubTriggerDefinitionEnricher implements TriggerDefinitionEnricher {
 
         private final ProjectDao projectDao;
+        private final GithubConfiguration cfg;
 
-        private GithubTriggerDefinitionEnricher(ProjectDao projectDao) {
+        private GithubTriggerDefinitionEnricher(ProjectDao projectDao, GithubConfiguration cfg) {
             this.projectDao = projectDao;
+            this.cfg = cfg;
         }
 
         @Override
@@ -260,11 +270,19 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             // note that the resulting conditions must be compatible with the system trigger definitions
             // see com/walmartlabs/concord/server/org/triggers/concord.yml
 
-            Map<String, Object> conditions = entry.getConditions();
-            if (conditions == null) {
-                conditions = new HashMap<>();
+            Map<String, Object> conditions = new HashMap<>();
+
+            // add default conditions from the cfg file
+            if (cfg.getDefaultFilter() != null) {
+                conditions.putAll(cfg.getDefaultFilter());
             }
 
+            // add the trigger definition's conditions
+            if (entry.getConditions() != null) {
+                conditions.putAll(entry.getConditions());
+            }
+
+            // compute the additional filters
             conditions.computeIfAbsent(ORG_NAME_KEY, k -> {
                 ProjectEntry e = projectDao.get(entry.getProjectId());
                 if (e == null) {
