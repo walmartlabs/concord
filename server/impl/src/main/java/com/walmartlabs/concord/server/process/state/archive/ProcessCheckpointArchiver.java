@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.state.archive;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessCheckpointArchiveConfiguration;
 import com.walmartlabs.concord.server.process.state.CheckpointDao;
 import com.walmartlabs.concord.server.task.ScheduledTask;
@@ -51,7 +50,6 @@ import java.util.concurrent.ForkJoinTask;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_CHECKPOINT_ARCHIVE;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessStateArchive.PROCESS_STATE_ARCHIVE;
 import static org.jooq.impl.DSL.*;
 
@@ -103,7 +101,7 @@ public class ProcessCheckpointArchiver implements ScheduledTask {
     @Override
     public void performTask() throws Exception {
         while (!Thread.currentThread().isInterrupted()) {
-            List<UUID> ids = dao.grabNext(10);
+            List<UUID> ids = dao.grabNextCheckpointId(10);
 
             if (ids.isEmpty()) {
                 log.info("performTask -> nothing to do");
@@ -169,7 +167,7 @@ public class ProcessCheckpointArchiver implements ScheduledTask {
             }
         }
 
-        public List<UUID> grabNext(int limit) {
+        public List<UUID> grabNextCheckpointId(int limit) {
             return txResult(tx -> {
                 List<UUID> ids = tx.select(PROCESS_CHECKPOINTS.CHECKPOINT_ID)
                         .from(PROCESS_CHECKPOINTS)
@@ -179,7 +177,7 @@ public class ProcessCheckpointArchiver implements ScheduledTask {
                         .limit(limit)
                         .forUpdate()
                         .skipLocked()
-                        .fetch(PROCESS_CHECKPOINTS.INSTANCE_ID);
+                        .fetch(PROCESS_CHECKPOINTS.CHECKPOINT_ID);
 
                 if (ids.isEmpty()) {
                     return ids;
