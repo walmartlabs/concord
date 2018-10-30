@@ -399,6 +399,10 @@ public class ProcessQueueDao extends AbstractDao {
                 s.where(V_PROCESS_QUEUE.PROJECT_ID.eq(filter.getProjectId()));
             }
 
+            if (filter.getAfterCreatedAt() != null) {
+                s.where(V_PROCESS_QUEUE.CREATED_AT.greaterThan(filter.getAfterCreatedAt()));
+            }
+
             if (filter.getBeforeCreatedAt() != null) {
                 s.where(V_PROCESS_QUEUE.CREATED_AT.lessThan(filter.getBeforeCreatedAt()));
             }

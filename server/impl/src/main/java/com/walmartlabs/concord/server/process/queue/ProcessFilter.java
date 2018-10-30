@@ -28,6 +28,8 @@ import java.util.UUID;
 
 public class ProcessFilter {
 
+    private final Timestamp afterCreatedAt;
+
     private final Timestamp beforeCreatedAt;
 
     private final boolean includeWoProjects;
@@ -42,7 +44,8 @@ public class ProcessFilter {
 
     private final Set<String> tags;
 
-    protected ProcessFilter(Timestamp beforeCreatedAt, boolean includeWoProjects, String initiator, Set<UUID> orgIds, UUID projectId, ProcessStatus processStatus, Set<String> tags) {
+    protected ProcessFilter(Timestamp afterCreatedAt, Timestamp beforeCreatedAt, boolean includeWoProjects, String initiator, Set<UUID> orgIds, UUID projectId, ProcessStatus processStatus, Set<String> tags) {
+        this.afterCreatedAt = afterCreatedAt;
         this.beforeCreatedAt = beforeCreatedAt;
         this.includeWoProjects = includeWoProjects;
         this.initiator = initiator;
@@ -50,6 +53,10 @@ public class ProcessFilter {
         this.projectId = projectId;
         this.processStatus = processStatus;
         this.tags = tags;
+    }
+
+    public Timestamp getAfterCreatedAt() {
+        return afterCreatedAt;
     }
 
     public Timestamp getBeforeCreatedAt() {
@@ -86,6 +93,7 @@ public class ProcessFilter {
 
     public static class Builder {
 
+        private Timestamp afterCreatedAt;
         private Timestamp beforeCreatedAt;
         private boolean includeWoProjects;
         private String initiator;
@@ -106,6 +114,11 @@ public class ProcessFilter {
 
         public Builder ordIds(Set<UUID> orgIds) {
             this.orgIds = orgIds;
+            return this;
+        }
+
+        public Builder afterCreatedAt(Timestamp afterCreatedAt) {
+            this.afterCreatedAt = afterCreatedAt;
             return this;
         }
 
@@ -130,7 +143,7 @@ public class ProcessFilter {
         }
 
         public ProcessFilter build() {
-            return new ProcessFilter(beforeCreatedAt, includeWoProjects, initiator, orgIds, projectId, processStatus, tags);
+            return new ProcessFilter(afterCreatedAt, beforeCreatedAt, includeWoProjects, initiator, orgIds, projectId, processStatus, tags);
         }
     }
 }

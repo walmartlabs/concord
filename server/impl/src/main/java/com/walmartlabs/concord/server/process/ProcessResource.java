@@ -622,6 +622,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public List<ProcessEntry> list(@ApiParam @QueryParam("projectId") UUID projectId,
+                                   @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
                                    @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                                    @ApiParam @QueryParam("tags") Set<String> tags,
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,
@@ -642,6 +643,7 @@ public class ProcessResource implements Resource {
                 .projectId(projectId)
                 .includeWithoutProjects(true)
                 .ordIds(orgIds)
+                .afterCreatedAt(toTimestamp(afterCreatedAt))
                 .beforeCreatedAt(toTimestamp(beforeCreatedAt))
                 .tags(tags)
                 .status(processStatus)

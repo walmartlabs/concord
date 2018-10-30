@@ -150,7 +150,7 @@ public class TriggerIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
 
         while (true) {
-            List<ProcessEntry> l = processApi.list(id, null, null, null, null, 10);
+            List<ProcessEntry> l = processApi.list(id, null, null, null, null, null, 10);
             if (l != null && l.size() == expectedCount && allHasStatus(l, expectedStatus)) {
                 return l;
             }
