@@ -202,6 +202,11 @@
                                     <artifactId>concord-tasks</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+                                    <artifactId>dynamic-tasks</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
 
                                 <!-- TODO this should be automated -->
                                 <artifactItem>

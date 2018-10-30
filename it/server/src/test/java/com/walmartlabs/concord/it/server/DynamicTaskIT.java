@@ -39,7 +39,7 @@ public class DynamicTaskIT extends AbstractServerIT {
     public void testDynamicTask() throws Exception {
         // prepare the payload
 
-        byte[] payload = archive(DynamicTaskIT.class.getResource("dynamicTask").toURI());
+        byte[] payload = archive(DynamicTaskIT.class.getResource("dynamicTask").toURI(), ITConstants.DEPENDENCIES_DIR);
 
         // start the process
 
