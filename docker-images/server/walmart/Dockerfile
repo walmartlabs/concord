@@ -2,8 +2,6 @@ FROM docker.prod.walmart.com/walmartlabs/concord-base:latest
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 EXPOSE 8001
-EXPOSE 8101
-EXPOSE 5555
 
 # moved to the base image
 # RUN yum -y install git && yum clean all
