@@ -75,10 +75,15 @@ public class TriggerScheduler implements ScheduledTask {
 
     @Override
     public void performTask() {
-        TriggerSchedulerEntry e = scheduleDao.findNext();
+        while (!Thread.currentThread().isInterrupted()) {
+            TriggerSchedulerEntry e = scheduleDao.findNext();
+            if (e == null) {
+                break;
+            }
 
-        if (e != null && e.getFireAt().after(startedAt)) {
-            startProcess(e);
+            if (e.getFireAt().after(startedAt)) {
+                startProcess(e);
+            }
         }
     }
 
