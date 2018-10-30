@@ -7,8 +7,6 @@
 - concord-server: optional "default filter" for all GitHub triggers;
 - concord-server: make optional the unknown GitHub webhook removal.
 
- 
-
 ### Changed
 
 - concord-runner: fixed a bug preventing dynamic task registration
