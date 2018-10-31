@@ -7,6 +7,11 @@
 - concord-server: `afterCreatedAt` parameter to the process list API
 endpoint.
 
+### Changed
+
+- bpm: updated to 0.49.0. Now all context types implement `eval` and
+`interpolate` methods.
+
 
 
 ## [0.94.0] - 2018-10-29

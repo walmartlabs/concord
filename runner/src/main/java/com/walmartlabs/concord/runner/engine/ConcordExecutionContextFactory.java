@@ -53,7 +53,7 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
     @Override
     public ExecutionContext withOverrides(ExecutionContext delegate, Map<Object, Object> overrides) {
-        return new MapBackedExecutionContext(delegate, overrides);
+        return new MapBackedExecutionContext(this, expressionManager, delegate, overrides);
     }
 
     public static class ConcordExecutionContext extends ExecutionContextImpl implements Context {
@@ -150,8 +150,12 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
     public static class MapBackedExecutionContext extends DefaultExecutionContextFactory.MapBackedExecutionContext implements Context {
 
-        public MapBackedExecutionContext(ExecutionContext delegate, Map<Object, Object> overrides) {
-            super(delegate, overrides);
+        public MapBackedExecutionContext(ExecutionContextFactory<? extends ExecutionContext> executionContextFactory,
+                                         ExpressionManager exprManager,
+                                         ExecutionContext delegate,
+                                         Map<Object, Object> overrides) {
+
+            super(executionContextFactory, exprManager, delegate, overrides);
         }
 
         @Override
